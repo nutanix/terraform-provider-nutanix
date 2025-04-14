@@ -139,8 +139,8 @@ func datsourceNutanixCalmRuntimeEditablesRead(ctx context.Context, d *schema.Res
 		bpUUID = entity["uuid"].(string)
 	}
 
-	if bpUUID, ok := d.GetOk("bp_uuid"); ok {
-		bpUUID = bpUUID.(string)
+	if bpUUIDRead, ok := d.GetOk("bp_uuid"); ok {
+		bpUUID = bpUUIDRead.(string)
 	}
 
 	getRuntime, err := conn.Service.GetRuntimeEditables(ctx, bpUUID)

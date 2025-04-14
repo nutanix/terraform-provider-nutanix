@@ -342,8 +342,8 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 		bpUUID = entity["uuid"].(string)
 	}
 
-	if bpUUID, ok := d.GetOk("bp_uuid"); ok {
-		bpUUID = bpUUID.(string)
+	if bpUUIDRead, ok := d.GetOk("bp_uuid"); ok {
+		bpUUID = bpUUIDRead.(string)
 	}
 
 	// call bp
@@ -765,7 +765,6 @@ func flattenVM(pr map[string]interface{}) []interface{} {
 									configMap["vcpus"] = resources["num_sockets"]
 									configMap["cores"] = resources["num_vcpus_per_socket"]
 									configMap["memory"] = resources["memory_size_mib"]
-
 								}
 
 								// if resource, ok := createSpec["resources"].(map[string]interface{}); ok {
@@ -888,7 +887,6 @@ func flattenNicMacAddress(subs map[string]interface{}) []map[string]interface{} 
 			elemMap := elem.(map[string]interface{})
 
 			if elemMap["name"] == "platform_data" {
-
 				var result []interface{}
 
 				// Unmarshal the JSON string into the []interface{} slice

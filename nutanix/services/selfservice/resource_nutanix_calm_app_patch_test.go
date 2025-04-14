@@ -24,7 +24,7 @@ func TestAccNutanixCalmAppVmUpdateResource(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppVmUpdateBasic(configNameBasic),
+				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppVMUpdateBasic(configNameBasic),
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
 						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceNamePatch].Primary.Attributes, "", "  ")
@@ -37,7 +37,7 @@ func TestAccNutanixCalmAppVmUpdateResource(t *testing.T) {
 				),
 			},
 			{
-				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppVmUpdateEditable(configNameEditable),
+				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppVMUpdateEditable(configNameEditable),
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
 						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceNamePatch].Primary.Attributes, "", "  ")
@@ -153,7 +153,7 @@ func testCalmAppProvisionWithUpdateConfig(name, desc string) string {
 `, name, desc)
 }
 
-func testCalmAppVmUpdateBasic(name string) string {
+func testCalmAppVMUpdateBasic(name string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_calm_app_patch" "test" {
 		app_uuid = nutanix_calm_app_provision.test.id
@@ -163,7 +163,7 @@ func testCalmAppVmUpdateBasic(name string) string {
 `, name)
 }
 
-func testCalmAppVmUpdateEditable(name string) string {
+func testCalmAppVMUpdateEditable(name string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_calm_app_patch" "test" {
 		app_uuid = nutanix_calm_app_provision.test.id

@@ -13,7 +13,7 @@ const datasourceNameApp = "data.nutanix_calm_app.test"
 
 func TestCalmAppGetDatasource(t *testing.T) {
 	r := acctest.RandInt()
-	bp_name := "demo_bp"
+	bpName := "demo_bp"
 	name := fmt.Sprintf("test-app-%d", r)
 	desc := "Test App created using Nutanix Terraform Plugin"
 
@@ -22,7 +22,7 @@ func TestCalmAppGetDatasource(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testCalmAppProvisionConfig(bp_name, name, desc) + testAppReadDataSourceConfig(),
+				Config: testCalmAppProvisionConfig(bpName, name, desc) + testAppReadDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceNameApp, "app_name", name),
 					resource.TestCheckResourceAttr(datasourceNameApp, "state", "running"),

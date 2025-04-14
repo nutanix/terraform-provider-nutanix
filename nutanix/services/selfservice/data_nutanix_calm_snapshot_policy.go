@@ -94,8 +94,8 @@ func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.Reso
 		bpUUID = entity["uuid"].(string)
 	}
 
-	if bpUUID, ok := d.GetOk("bp_uuid"); ok {
-		bpUUID = bpUUID.(string)
+	if bpUUIDRead, ok := d.GetOk("bp_uuid"); ok {
+		bpUUID = bpUUIDRead.(string)
 	}
 
 	// call bp

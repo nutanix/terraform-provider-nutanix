@@ -11,14 +11,14 @@ import (
 const datasourceNameSnapshotPolicy = "data.nutanix_calm_snapshot_policy_list.test"
 
 func TestCalmSnapshotPolicyGetDatasource(t *testing.T) {
-	bp_name := "demo_bp2"
+	bpName := "demo_bp2"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testSnapshotPolicyDataSourceConfig(bp_name),
+				Config: testSnapshotPolicyDataSourceConfig(bpName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameSnapshotPolicy, "policy_list.0.snapshot_config_name"),
 					resource.TestCheckResourceAttrSet(datasourceNameSnapshotPolicy, "policy_list.0.snapshot_config_uuid"),

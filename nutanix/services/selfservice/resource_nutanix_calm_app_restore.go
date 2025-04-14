@@ -53,11 +53,11 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 
 	var appUUID string
 
-	app_name := d.Get("app_name").(string)
+	appName := d.Get("app_name").(string)
 
 	appFilter := &calm.ApplicationListInput{}
 
-	appFilter.Filter = fmt.Sprintf("name==%s;_state!=deleted", app_name)
+	appFilter.Filter = fmt.Sprintf("name==%s;_state!=deleted", appName)
 
 	log.Printf("[Debug] Qeurying apps/list API with filter %s", appFilter)
 
@@ -152,12 +152,13 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 	d.SetId(runlogUUID)
 
 	// poll till action is completed
+	const delayDuration = 5 * time.Second
 	appStateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "POLICY_EXEC", "ABORTING", "APPROVAL"},
 		Target:  []string{"SUCCESS", "FAILURE", "WARNING", "ERROR", "SYS_FAILURE", "SYS_ERROR", "SYS_ABORTED", "TIMEOUT", "APPROVAL_FAILED"},
 		Refresh: RestoreStateRefreshFunc(ctx, conn, appUUID, runlogUUID),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
-		Delay:   5 * time.Second,
+		Delay:   delayDuration,
 	}
 
 	if _, errWaitTask := appStateConf.WaitForStateContext(ctx); errWaitTask != nil {

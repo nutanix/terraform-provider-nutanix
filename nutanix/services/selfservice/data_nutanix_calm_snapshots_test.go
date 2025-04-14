@@ -11,14 +11,14 @@ import (
 const datasourceNameSnapshot = "data.nutanix_calm_app_snapshots.test"
 
 func TestCalmSnapshotGetDatasource(t *testing.T) {
-	app_name := "test_terraform_snapshot_restore_app"
+	appName := "test_terraform_snapshot_restore_app"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testSnapshotDataSourceConfig(app_name),
+				Config: testSnapshotDataSourceConfig(appName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameSnapshot, "entities.#"),
 					resource.TestCheckResourceAttrSet(datasourceNameSnapshot, "entities.0.%"),

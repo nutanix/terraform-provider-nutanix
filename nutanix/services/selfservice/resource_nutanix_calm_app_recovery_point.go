@@ -145,12 +145,13 @@ func resourceNutanixCalmAppRecoveryPointCreate(ctx context.Context, d *schema.Re
 	fmt.Println("Runlog UUID:", runlogUUID)
 	d.SetId(runlogUUID)
 	// poll till action is completed
+	const delayDuration = 5 * time.Second
 	appStateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "POLICY_EXEC", "ABORTING", "APPROVAL"},
 		Target:  []string{"SUCCESS", "FAILURE", "WARNING", "ERROR", "SYS_FAILURE", "SYS_ERROR", "SYS_ABORTED", "TIMEOUT", "APPROVAL_FAILED"},
 		Refresh: SnapshotStateRefreshFunc(ctx, conn, appUUID, runlogUUID),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
-		Delay:   5 * time.Second,
+		Delay:   delayDuration,
 	}
 	if _, errWaitTask := appStateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("Error waiting for app to perform Restore Action: %s", errWaitTask)
@@ -168,7 +169,6 @@ func resourceNutanixCalmAppRecoveryPointUpdate(ctx context.Context, d *schema.Re
 }
 
 func resourceNutanixCalmAppRecoveryPointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.Client).Calm
 
 	var appUUID string
