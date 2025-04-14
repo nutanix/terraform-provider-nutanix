@@ -13,7 +13,7 @@ const resourceNameApp = "nutanix_calm_app_provision.test"
 
 func TestAccNutanixCalmAppProvisionResource_Launch(t *testing.T) {
 	r := acctest.RandInt()
-	bpName := "demo_bp"
+	bpName := "test_terraform_bp"
 	name := fmt.Sprintf("test-app-%d", r)
 	desc := "Test App created using Nutanix Terraform Plugin"
 	resource.Test(t, resource.TestCase{
@@ -33,7 +33,7 @@ func TestAccNutanixCalmAppProvisionResource_Launch(t *testing.T) {
 
 func TestAccNutanixCalmAppProvisionResource_SystemAction(t *testing.T) {
 	r := acctest.RandInt()
-	bpName := "demo_bp"
+	bpName := "test_terraform_bp"
 	name := fmt.Sprintf("test-app-%d", r)
 	desc := "Test App created using Nutanix Terraform Plugin"
 	systemAction1 := "stop"
@@ -80,7 +80,7 @@ func TestAccNutanixCalmAppProvisionResource_SystemAction(t *testing.T) {
 
 func TestAccNutanixCalmAppProvisionResource_SoftDelete(t *testing.T) {
 	r := acctest.RandInt()
-	bpName := "demo_bp"
+	bpName := "test_terraform_bp"
 	name := fmt.Sprintf("test-app-%d", r)
 	desc := "Test App created using Nutanix Terraform Plugin"
 

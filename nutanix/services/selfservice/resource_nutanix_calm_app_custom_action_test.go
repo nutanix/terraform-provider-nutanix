@@ -33,7 +33,7 @@ func TestAccNutanixCalmAppResource_CustomAction(t *testing.T) {
 func testCalmAppRunCustomAction(name, desc, actionName string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_calm_app_provision" "test" {
-		bp_name         = "demo_bp"
+		bp_name         = "test_terraform_bp"
 		app_name        = "%[1]s"
 		app_description = "%[2]s"
 		}

@@ -13,7 +13,7 @@ const datasourceNameApp = "data.nutanix_calm_app.test"
 
 func TestCalmAppGetDatasource(t *testing.T) {
 	r := acctest.RandInt()
-	bpName := "demo_bp"
+	bpName := "test_terraform_bp"
 	name := fmt.Sprintf("test-app-%d", r)
 	desc := "Test App created using Nutanix Terraform Plugin"
 

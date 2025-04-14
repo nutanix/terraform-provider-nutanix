@@ -116,7 +116,7 @@ func TestAccNutanixCalmAppNicAddResource(t *testing.T) {
 func testCalmAppProvisionWithUpdateConfig(name, desc string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_calm_app_provision" "test" {
-		bp_name         = "demo_bp"
+		bp_name         = "test_terraform_bp"
 		app_name        = "%[1]s"
 		app_description = "%[2]s"
 		}
