@@ -155,8 +155,8 @@ func testCalmAppCategoryAdd(name string) string {
 		patch_name = "%[1]s"
 		config_name = "%[1]s"
 		categories {
-		value = "AppType: Default"
-		operation = "add"
+			value = "AppType:Default"
+			operation = "add"
   		}
 	}
 `, name)
@@ -169,7 +169,7 @@ func testCalmAppCategoryDelete(name string) string {
 		patch_name = "%[1]s"
 		config_name = "%[1]s"
 		categories {
-			value = "AppType: Default"
+			value = "AppType:Default"
 			operation = "delete"
 		}
 	}

@@ -10,7 +10,7 @@ import (
 
 const datasourceNameSnapshotPolicy = "data.nutanix_calm_snapshot_policy_list.test"
 
-func TestCalmSnapshotPolicyGetDatasource(t *testing.T) {
+func TestAccNutanixCalmSnapshotPolicyGetDatasource(t *testing.T) {
 	bpName := "test_terraform_bp_with_snapshot_config"
 
 	resource.Test(t, resource.TestCase{

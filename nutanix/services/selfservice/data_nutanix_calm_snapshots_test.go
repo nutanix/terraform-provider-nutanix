@@ -10,7 +10,7 @@ import (
 
 const datasourceNameSnapshot = "data.nutanix_calm_app_snapshots.test"
 
-func TestCalmSnapshotGetDatasource(t *testing.T) {
+func TestAccNutanixCalmSnapshotGetDatasource(t *testing.T) {
 	appName := "test_terraform_snapshot_restore_app"
 
 	resource.Test(t, resource.TestCase{

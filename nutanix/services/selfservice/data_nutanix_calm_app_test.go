@@ -11,7 +11,7 @@ import (
 
 const datasourceNameApp = "data.nutanix_calm_app.test"
 
-func TestCalmAppGetDatasource(t *testing.T) {
+func TestAccNutanixCalmAppGetDatasource(t *testing.T) {
 	r := acctest.RandInt()
 	bpName := "test_terraform_bp"
 	name := fmt.Sprintf("test-app-%d", r)
