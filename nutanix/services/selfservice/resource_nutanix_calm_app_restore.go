@@ -79,8 +79,8 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 		appUUID = entity["uuid"].(string)
 	}
 
-	if appUUID, ok := d.GetOk("app_uuid"); ok {
-		appUUID = appUUID.(string)
+	if appUUIDRead, ok := d.GetOk("app_uuid"); ok {
+		appUUID = appUUIDRead.(string)
 	}
 
 	restoreActionName := d.Get("restore_action_name").(string)
@@ -140,7 +140,7 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 	restoreInput.Metadata = appMetadata
 	restoreInput.Spec = *restoreSpec
 
-	restoreResp, err := conn.Service.PerformActionUuid(ctx, appUUID, restoreActionUUID, restoreInput)
+	restoreResp, err := conn.Service.PerformActionUUID(ctx, appUUID, restoreActionUUID, restoreInput)
 	if err != nil {
 		return diag.FromErr(err)
 	}

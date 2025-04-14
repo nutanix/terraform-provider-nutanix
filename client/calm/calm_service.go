@@ -25,7 +25,7 @@ type Service interface {
 	ListApplication(ctx context.Context, filter *ApplicationListInput) (*ApplicationListResponse, error)
 	GetRuntimeEditables(ctx context.Context, bpUUID string) (*RuntimeEditablesResponse, error)
 	PatchApp(ctx context.Context, appUUID string, patchUUID string, input *PatchInput) (*AppTaskResponse, error)
-	PerformActionUuid(ctx context.Context, appUUID string, actionUUID string, input *ActionInput) (*AppTaskResponse, error)
+	PerformActionUUID(ctx context.Context, appUUID string, actionUUID string, input *ActionInput) (*AppTaskResponse, error)
 	RecoveryPointsList(ctx context.Context, appUUID string, input *RecoveryPointsListInput) (*RecoveryPointsListResponse, error)
 	GetAppProtectionPolicyList(ctx context.Context, bpUUID string, appUUID string, configUUID string, policyListInput *PolicyListInput) (*PolicyListResponse, error)
 	RecoveryPointsDelete(ctx context.Context, appUUID string, input *ActionInput) (*AppTaskResponse, error)
@@ -184,7 +184,7 @@ func (op Operations) PatchApp(ctx context.Context, appUUID string, patchUUID str
 	return appResponse, op.client.Do(ctx, req, appResponse)
 }
 
-func (op Operations) PerformActionUuid(ctx context.Context, appUUID string, actionUUID string, input *ActionInput) (*AppTaskResponse, error) {
+func (op Operations) PerformActionUUID(ctx context.Context, appUUID string, actionUUID string, input *ActionInput) (*AppTaskResponse, error) {
 	path := fmt.Sprintf("/apps/%s/actions/%s/run", appUUID, actionUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)

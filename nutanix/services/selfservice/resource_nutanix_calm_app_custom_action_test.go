@@ -15,22 +15,22 @@ func TestAccNutanixCalmAppResource_CustomAction(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-app-%d", r)
 	desc := "Test App created using Nutanix Terraform Plugin"
-	action_name := "custom1"
+	actionName := "custom1"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testCalmAppRunCustomAction(name, desc, action_name),
+				Config: testCalmAppRunCustomAction(name, desc, actionName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameAction, "action_name", action_name),
+					resource.TestCheckResourceAttr(resourceNameAction, "action_name", actionName),
 				),
 			},
 		},
 	})
 }
 
-func testCalmAppRunCustomAction(name, desc, action_name string) string {
+func testCalmAppRunCustomAction(name, desc, actionName string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_calm_app_provision" "test" {
 		bp_name         = "demo_bp"
@@ -42,5 +42,5 @@ func testCalmAppRunCustomAction(name, desc, action_name string) string {
 		app_name        = nutanix_calm_app_provision.test.app_name
 		action_name = "%[3]s"
 		}
-`, name, desc, action_name)
+`, name, desc, actionName)
 }

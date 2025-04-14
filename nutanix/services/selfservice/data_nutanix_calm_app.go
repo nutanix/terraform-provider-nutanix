@@ -250,14 +250,13 @@ func datsourceNutanixCalmAppRead(ctx context.Context, d *schema.ResourceData, me
 	if err := json.Unmarshal(resp.Metadata, &objMetadata); err != nil {
 		fmt.Println("Error unmarshalling Spec:", err)
 	}
-	var app_state string
+	var appState string
 
 	if state, ok := objStatus["state"].(string); ok {
-		app_state = state
-		// fmt.Printf("State of APPP: %s\n", state)
+		appState = state
 	}
 
-	if err := d.Set("state", app_state); err != nil {
+	if err := d.Set("state", appState); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -288,12 +287,12 @@ func flattenAppSummary(pr map[string]interface{}, meta map[string]interface{}) [
 	appSummaryList := make([]interface{}, 0)
 
 	if resource, ok := pr["resources"].(map[string]interface{}); ok {
-		// Access the list "app_profile"
-		if app_profile, ok := resource["app_profile_config_reference"].(map[string]interface{}); ok {
-			appSummaryMap["application_profile"] = app_profile["name"]
+		// Access the list "appProfile"
+		if appProfile, ok := resource["app_profile_config_reference"].(map[string]interface{}); ok {
+			appSummaryMap["application_profile"] = appProfile["name"]
 		}
-		if bp_reference, ok := resource["app_blueprint_reference"].(map[string]interface{}); ok {
-			appSummaryMap["blueprint"] = bp_reference["name"]
+		if bpReference, ok := resource["app_blueprint_reference"].(map[string]interface{}); ok {
+			appSummaryMap["blueprint"] = bpReference["name"]
 		}
 	}
 	if project, ok := meta["project_reference"].(map[string]interface{}); ok {
@@ -302,11 +301,11 @@ func flattenAppSummary(pr map[string]interface{}, meta map[string]interface{}) [
 	if owner, ok := meta["owner_reference"].(map[string]interface{}); ok {
 		appSummaryMap["owner"] = owner["name"]
 	}
-	if created_on, ok := meta["creation_time"].(string); ok {
-		appSummaryMap["created_on"] = created_on
+	if createdOn, ok := meta["creation_time"].(string); ok {
+		appSummaryMap["created_on"] = createdOn
 	}
-	if last_updated_on, ok := meta["last_update_time"].(string); ok {
-		appSummaryMap["last_updated_on"] = last_updated_on
+	if lastUpdatedOn, ok := meta["last_update_time"].(string); ok {
+		appSummaryMap["last_updated_on"] = lastUpdatedOn
 	}
 	if appUUUID, ok := meta["uuid"].(string); ok {
 		appSummaryMap["application_uuid"] = appUUUID

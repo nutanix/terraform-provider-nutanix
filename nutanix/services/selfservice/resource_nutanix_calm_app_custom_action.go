@@ -49,11 +49,11 @@ func ResourceNutanixCalmAppCustomActionCreate(ctx context.Context, d *schema.Res
 
 	var appUUID string
 
-	app_name := d.Get("app_name").(string)
+	appName := d.Get("app_name").(string)
 
 	appFilter := &calm.ApplicationListInput{}
 
-	appFilter.Filter = fmt.Sprintf("name==%s;_state!=deleted", app_name)
+	appFilter.Filter = fmt.Sprintf("name==%s;_state!=deleted", appName)
 
 	log.Printf("[Debug] Qeurying apps/list API with filter %s", appFilter)
 
@@ -75,8 +75,8 @@ func ResourceNutanixCalmAppCustomActionCreate(ctx context.Context, d *schema.Res
 		appUUID = entity["uuid"].(string)
 	}
 
-	if appUUID, ok := d.GetOk("app_uuid"); ok {
-		appUUID = appUUID.(string)
+	if appUUIDRead, ok := d.GetOk("app_uuid"); ok {
+		appUUID = appUUIDRead.(string)
 	}
 
 	actionName := d.Get("action_name").(string)
@@ -118,7 +118,7 @@ func ResourceNutanixCalmAppCustomActionCreate(ctx context.Context, d *schema.Res
 
 	fetchInput.Spec = *fetchSpec
 
-	fetchResp, err := conn.Service.PerformActionUuid(ctx, appUUID, actionUUID, fetchInput)
+	fetchResp, err := conn.Service.PerformActionUUID(ctx, appUUID, actionUUID, fetchInput)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -128,12 +128,13 @@ func ResourceNutanixCalmAppCustomActionCreate(ctx context.Context, d *schema.Res
 	fmt.Println("Response:", runlogUUID)
 	d.SetId(runlogUUID)
 	// poll till action is completed
+	const delayDuration = 5 * time.Second
 	appStateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "POLICY_EXEC", "ABORTING", "APPROVAL"},
 		Target:  []string{"SUCCESS", "FAILURE", "WARNING", "ERROR", "SYS_FAILURE", "SYS_ERROR", "SYS_ABORTED", "TIMEOUT", "APPROVAL_FAILED"},
 		Refresh: ActionStateRefreshFunc(ctx, conn, appUUID, runlogUUID),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
-		Delay:   5 * time.Second,
+		Delay:   delayDuration,
 	}
 
 	if _, errWaitTask := appStateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -157,14 +158,14 @@ func ResourceNutanixCalmAppCustomActionDelete(ctx context.Context, d *schema.Res
 }
 
 func expandCustomActionSpec(pr map[string]interface{}, actionName string) (map[string]interface{}, string) {
-	calm_action_name := "action_" + strings.ToLower(actionName)
+	calmActionName := "action_" + strings.ToLower(actionName)
 	if resource, ok := pr["resources"].(map[string]interface{}); ok {
 		// fmt.Println("RESOURCESSSSS")
 		if actionList, ok := resource["action_list"].([]interface{}); ok {
 			for _, action := range actionList {
 				if dep, ok := action.(map[string]interface{}); ok {
 					fmt.Println("DEP UUID::::", dep["uuid"])
-					if dep["name"] == actionName || dep["name"] == calm_action_name {
+					if dep["name"] == actionName || dep["name"] == calmActionName {
 						fmt.Println("DEP UUID::::", dep["uuid"])
 						return action.(map[string]interface{}), dep["uuid"].(string)
 					}

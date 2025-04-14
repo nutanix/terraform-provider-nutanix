@@ -115,13 +115,13 @@ func DatsourceNutanixCalmRuntimeEditables() *schema.Resource {
 func datsourceNutanixCalmRuntimeEditablesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).Calm
 
-	var bp_uuid string
+	var bpUUID string
 	// fetch bp_uuid from bp_name
-	bp_name := d.Get("bp_name").(string)
+	bpName := d.Get("bp_name").(string)
 
 	bpFilter := &calm.BlueprintListInput{}
 
-	bpFilter.Filter = fmt.Sprintf("name==%s;state!=DELETED", bp_name)
+	bpFilter.Filter = fmt.Sprintf("name==%s;state!=DELETED", bpName)
 
 	bpNameResp, err := conn.Service.ListBlueprint(ctx, bpFilter)
 	if err != nil {
@@ -136,14 +136,14 @@ func datsourceNutanixCalmRuntimeEditablesRead(ctx context.Context, d *schema.Res
 	entities := BpNameStatus[0].(map[string]interface{})
 
 	if entity, ok := entities["metadata"].(map[string]interface{}); ok {
-		bp_uuid = entity["uuid"].(string)
+		bpUUID = entity["uuid"].(string)
 	}
 
 	if bpUUID, ok := d.GetOk("bp_uuid"); ok {
-		bp_uuid = bpUUID.(string)
+		bpUUID = bpUUID.(string)
 	}
 
-	getRuntime, err := conn.Service.GetRuntimeEditables(ctx, bp_uuid)
+	getRuntime, err := conn.Service.GetRuntimeEditables(ctx, bpUUID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -155,7 +155,7 @@ func datsourceNutanixCalmRuntimeEditablesRead(ctx context.Context, d *schema.Res
 	}
 	fmt.Println("res:", getRuntime.Resources[0].RuntimeEditables)
 
-	d.SetId(bp_uuid)
+	d.SetId(bpUUID)
 	return nil
 }
 
@@ -191,9 +191,6 @@ func flattenRuntimeSpec(pr []*calm.RuntimeSpec) []interface{} {
 			"type":        r.Type,
 			"context":     r.Context,
 			"value": func() string {
-
-				// raw = &data
-				// value := *raw
 				data := json.RawMessage(*r.Value)
 				return string(data)
 			}(),

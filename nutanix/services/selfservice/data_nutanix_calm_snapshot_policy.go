@@ -70,13 +70,13 @@ func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.Reso
 	length := d.Get("length").(int)
 	offset := d.Get("offset").(int)
 
-	var bp_uuid string
+	var bpUUID string
 	// fetch bp_uuid from bp_name
-	bp_name := d.Get("bp_name").(string)
+	bpName := d.Get("bp_name").(string)
 
 	bpFilter := &calm.BlueprintListInput{}
 
-	bpFilter.Filter = fmt.Sprintf("name==%s;state!=DELETED", bp_name)
+	bpFilter.Filter = fmt.Sprintf("name==%s;state!=DELETED", bpName)
 
 	bpNameResp, err := conn.Service.ListBlueprint(ctx, bpFilter)
 	if err != nil {
@@ -91,16 +91,16 @@ func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.Reso
 	entities := BpNameStatus[0].(map[string]interface{})
 
 	if entity, ok := entities["metadata"].(map[string]interface{}); ok {
-		bp_uuid = entity["uuid"].(string)
+		bpUUID = entity["uuid"].(string)
 	}
 
 	if bpUUID, ok := d.GetOk("bp_uuid"); ok {
-		bp_uuid = bpUUID.(string)
+		bpUUID = bpUUID.(string)
 	}
 
 	// call bp
 
-	bpOut, er := conn.Service.GetBlueprint(ctx, bp_uuid)
+	bpOut, er := conn.Service.GetBlueprint(ctx, bpUUID)
 	if er != nil {
 		return diag.Errorf("Error getting Blueprint: %s", er)
 	}
@@ -114,21 +114,21 @@ func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.Reso
 	if err := json.Unmarshal(bpOut.Spec, &objStatus); err != nil {
 		fmt.Println("Error unmarshalling Spec:", err)
 	}
-	var app_uuid, env_uuid string
-	var snapshot_config_uuid_list *[]string
-	var snapshot_config_name_list *[]string
+	var appUUID, envRefUUID string
+	var snapshotConfigUUIDList *[]string
+	var snapshotConfigNameList *[]string
 	if resource, ok := objStatus["resources"].(map[string]interface{}); ok {
 		// Access the list "app_profile"
 		if appProfileList, ok := resource["app_profile_list"].([]interface{}); ok {
 			for i, item := range appProfileList {
 				if appProfile, ok := item.(map[string]interface{}); ok {
 					// Print values in each "app_profile" map
-					app_uuid = appProfile["uuid"].(string)
+					appUUID = appProfile["uuid"].(string)
 
 					//Get env uuid
 					if envList, ok := appProfile["environment_reference_list"].([]interface{}); ok {
 						for _, envUUID := range envList {
-							env_uuid = envUUID.(string)
+							envRefUUID = envUUID.(string)
 						}
 					}
 
@@ -143,8 +143,8 @@ func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.Reso
 							}
 						}
 					}
-					snapshot_config_uuid_list = &snapshotUUIDList
-					snapshot_config_name_list = &snapshotNameList
+					snapshotConfigUUIDList = &snapshotUUIDList
+					snapshotConfigNameList = &snapshotNameList
 					fmt.Printf("app_profile %d: name = %s, uuid = %s\n", i+1, appProfile["name"], appProfile["uuid"])
 				} else {
 					fmt.Printf("app_profile %d is not a map\n", i+1)
@@ -153,49 +153,17 @@ func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.Reso
 		}
 	}
 
-	fmt.Printf("env_uuid is %s\n", env_uuid)
-
-	// var proj_uuid string
-
-	// var objMetadata map[string]interface{}
-	// if err := json.Unmarshal(bpOut.Metadata, &objMetadata); err != nil {
-	// 	fmt.Println("Error unmarshalling metadata:", err)
-	// }
-
-	// if proj_reference, ok := objMetadata["project_refernce"].(map[string]string); ok {
-	// 	proj_uuid = proj_reference["uuid"]
-	// 	fmt.Printf("proj_uuid is %s p\n", proj_uuid)
-	// } else {
-	// 	fmt.Println("Error getting project uuid")
-	// }
-
-	// projOut, er := conn.Service.GetProject(ctx, proj_uuid)
-
-	// var projSpec map[string]interface{}
-	// if err := json.Unmarshal(projOut.Spec, &projSpec); err != nil {
-	// 	fmt.Println("Error unmarshalling Spec:", err)
-	// }
-
-	// var env_uuid string
-
-	// if detail, ok := projSpec["project_detail"].(map[string]interface{}); ok {
-	// 	if resources, ok := detail["resources"].(map[string]interface{}); ok {
-	// 		if env_ref, ok := resources["default_environment_reference"].(map[string]string); ok {
-	// 			env_uuid = env_ref["uuid"]
-	// 			fmt.Printf("env_uuid is %s p\n", env_uuid)
-	// 		}
-	// 	}
-	// }
+	fmt.Printf("envRefUUID is %s\n", envRefUUID)
 
 	PolicyList := make([]map[string]interface{}, 0)
 
-	for idx, config_uuid := range *snapshot_config_uuid_list {
+	for idx, configUUID := range *snapshotConfigUUIDList {
 		policyListInput := &calm.PolicyListInput{}
 		policyListInput.Length = length
 		policyListInput.Offset = offset
-		policyListInput.Filter = fmt.Sprintf("environment_references==%s", env_uuid)
+		policyListInput.Filter = fmt.Sprintf("environment_references==%s", envRefUUID)
 
-		policyResp, err := conn.Service.GetAppProtectionPolicyList(ctx, bp_uuid, app_uuid, config_uuid, policyListInput)
+		policyResp, err := conn.Service.GetAppProtectionPolicyList(ctx, bpUUID, appUUID, configUUID, policyListInput)
 		if err != nil {
 			fmt.Println("Error GetAppProtectionPolicyList:", err)
 		}
@@ -211,11 +179,11 @@ func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.Reso
 										PolicyMap := make(map[string]interface{})
 										PolicyMap["policy_name"] = status["name"].(string)
 										PolicyMap["policy_uuid"] = status["uuid"].(string)
-										PolicyMap["snapshot_config_name"] = (*snapshot_config_name_list)[idx]
-										PolicyMap["snapshot_config_uuid"] = config_uuid
+										PolicyMap["snapshot_config_name"] = (*snapshotConfigNameList)[idx]
+										PolicyMap["snapshot_config_uuid"] = configUUID
 										PolicyMap["policy_expiry_days"] = policy.(map[string]interface{})["multiple"].(float64)
 										PolicyList = append(PolicyList, PolicyMap)
-										fmt.Printf("Added policy with param %s %s", status["uuid"].(string), config_uuid)
+										fmt.Printf("Added policy with param %s %s", status["uuid"].(string), configUUID)
 									}
 								}
 							}
@@ -228,7 +196,7 @@ func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.Reso
 
 	fmt.Println("Final PolicyList:", PolicyList)
 
-	d.SetId(bp_uuid)
+	d.SetId(bpUUID)
 
 	if err := d.Set("policy_list", PolicyList); err != nil {
 		fmt.Println("GGGGGG")

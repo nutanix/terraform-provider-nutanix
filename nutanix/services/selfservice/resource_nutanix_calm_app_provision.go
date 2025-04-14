@@ -318,13 +318,13 @@ func ResourceNutanixCalmAppProvision() *schema.Resource {
 func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).Calm
 
-	var bp_uuid string
+	var bpUUID string
 	// fetch bp_uuid from bp_name
-	bp_name := d.Get("bp_name").(string)
+	bpName := d.Get("bp_name").(string)
 
 	bpFilter := &calm.BlueprintListInput{}
 
-	bpFilter.Filter = fmt.Sprintf("name==%s;state!=DELETED", bp_name)
+	bpFilter.Filter = fmt.Sprintf("name==%s;state!=DELETED", bpName)
 
 	bpNameResp, err := conn.Service.ListBlueprint(ctx, bpFilter)
 	if err != nil {
@@ -339,16 +339,16 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 	entities := BpNameStatus[0].(map[string]interface{})
 
 	if entity, ok := entities["metadata"].(map[string]interface{}); ok {
-		bp_uuid = entity["uuid"].(string)
+		bpUUID = entity["uuid"].(string)
 	}
 
 	if bpUUID, ok := d.GetOk("bp_uuid"); ok {
-		bp_uuid = bpUUID.(string)
+		bpUUID = bpUUID.(string)
 	}
 
 	// call bp
 
-	bpOut, er := conn.Service.GetBlueprint(ctx, bp_uuid)
+	bpOut, er := conn.Service.GetBlueprint(ctx, bpUUID)
 	if er != nil {
 		return diag.Errorf("Error getting Blueprint: %s", er)
 	}
@@ -363,15 +363,15 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 		fmt.Println("Error unmarshalling Spec:", err)
 	}
 
-	var app_uuid, app_name string
+	var appUUID, appName string
 	if resource, ok := objStatus["resources"].(map[string]interface{}); ok {
 		// Access the list "app_profile"
 		if appProfileList, ok := resource["app_profile_list"].([]interface{}); ok {
 			for i, item := range appProfileList {
 				if appProfile, ok := item.(map[string]interface{}); ok {
 					// Print values in each "app_profile" map
-					app_name = appProfile["name"].(string)
-					app_uuid = appProfile["uuid"].(string)
+					appName = appProfile["name"].(string)
+					appUUID = appProfile["uuid"].(string)
 					fmt.Printf("app_profile %d: name = %s, uuid = %s\n", i+1, appProfile["name"], appProfile["uuid"])
 				} else {
 					fmt.Printf("app_profile %d is not a map\n", i+1)
@@ -383,7 +383,7 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 	// check for runtime editables
 	runtimeSpec := &calm.RuntimeEditables{}
 	if runtime, ok := d.GetOk("runtime_editables"); ok {
-		getRuntime, err := conn.Service.GetRuntimeEditables(ctx, bp_uuid)
+		getRuntime, err := conn.Service.GetRuntimeEditables(ctx, bpUUID)
 		if err != nil {
 			return diag.Errorf("Error getting Runtime Editables: %s", err)
 		}
@@ -395,8 +395,8 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 		for _, item := range runtimeList {
 			itemMap := item.(map[string]interface{})
 
-			if variable_list, ok := itemMap["variable_list"].([]interface{}); ok {
-				for _, variable := range variable_list {
+			if variableList, ok := itemMap["variable_list"].([]interface{}); ok {
+				for _, variable := range variableList {
 					variableMap := variable.(map[string]interface{})
 
 					for vbs := range runtimeSpec.VariableList {
@@ -409,10 +409,10 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 					}
 				}
 			}
-			if substrate_list, ok := itemMap["substrate_list"].([]interface{}); ok {
-				fmt.Println("Substrate List::: ", len(substrate_list))
+			if substrateList, ok := itemMap["substrate_list"].([]interface{}); ok {
+				fmt.Println("Substrate List::: ", len(substrateList))
 				fmt.Println("RUNTIME SUBSTRATE LIST::: ", runtimeSpec.SubstrateList)
-				for _, substrate := range substrate_list {
+				for _, substrate := range substrateList {
 					substrateMap := substrate.(map[string]interface{})
 
 					for sbs := range runtimeSpec.SubstrateList {
@@ -422,11 +422,10 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 							runtimeSpec.SubstrateList[sbs].Value = &rawMsg
 						}
 					}
-
 				}
 			}
-			if deployment_list, ok := itemMap["deployment_list"].([]interface{}); ok {
-				for _, deployment := range deployment_list {
+			if deploymentList, ok := itemMap["deployment_list"].([]interface{}); ok {
+				for _, deployment := range deploymentList {
 					deploymentMap := deployment.(map[string]interface{})
 
 					for dps := range runtimeSpec.DeploymentList {
@@ -436,7 +435,6 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 							runtimeSpec.DeploymentList[dps].Value = &rawMsg
 						}
 					}
-
 				}
 			}
 		}
@@ -447,8 +445,8 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 		AppDesc: d.Get("app_description").(string),
 		AppProfileReference: calm.AppProfileReference{
 			Kind: "app_profile",
-			Name: app_name,
-			UUID: app_uuid,
+			Name: appName,
+			UUID: appUUID,
 		},
 		RuntimeEditables: runtimeSpec,
 	}
@@ -457,7 +455,7 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 		Spec: *bpSpec,
 	}
 
-	output, err := conn.Service.ProvisionBlueprint(ctx, bp_uuid, input)
+	output, err := conn.Service.ProvisionBlueprint(ctx, bpUUID, input)
 	if err != nil {
 		return diag.Errorf("Error creating App: %s", err)
 	}
@@ -498,7 +496,7 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"running"},
 		Target:  []string{"success"},
-		Refresh: calmtaskStateRefreshFunc(ctx, conn, bp_uuid, taskUUID),
+		Refresh: calmtaskStateRefreshFunc(ctx, conn, bpUUID, taskUUID),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -567,14 +565,14 @@ func resourceNutanixCalmAppProvisionRead(ctx context.Context, d *schema.Resource
 	if err := json.Unmarshal(resp.Status, &objStatus); err != nil {
 		fmt.Println("Error unmarshalling Spec:", err)
 	}
-	var app_state string
+	var appState string
 
 	if state, ok := objStatus["state"].(string); ok {
-		app_state = state
+		appState = state
 		fmt.Printf("State of APPP: %s\n", state)
 	}
 
-	if err := d.Set("state", app_state); err != nil {
+	if err := d.Set("state", appState); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -626,12 +624,13 @@ func resourceNutanixCalmAppProvisionUpdate(ctx context.Context, d *schema.Resour
 	}
 
 	// poll till action is completed
+	const delayDuration = 5 * time.Second
 	appStateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING"},
 		Target:  []string{"SUCCESS"},
 		Refresh: RunlogStateRefreshFunc(ctx, conn, d.Id(), resp.RunlogUUID),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
-		Delay:   5 * time.Second,
+		Delay:   delayDuration,
 	}
 
 	if _, errWaitTask := appStateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -699,17 +698,17 @@ func calmappStateRefreshFunc(ctx context.Context, client *calm.Client, appUUID s
 			fmt.Println("Error unmarshalling Spec:", err)
 		}
 
-		var app_state string
+		var appState string
 		if state, ok := objStatus["state"].(string); ok {
-			app_state = state
+			appState = state
 			fmt.Printf("State of APPP: %s\n", state)
 		}
 
-		if utils.StringValue(&app_state) == "failed" {
+		if utils.StringValue(&appState) == "failed" {
 			return v, appUUID,
-				fmt.Errorf("error_detail: %s, progress_message: %s", *utils.StringPtr(appUUID), app_state)
+				fmt.Errorf("error_detail: %s, progress_message: %s", *utils.StringPtr(appUUID), appState)
 		}
-		return v, app_state, nil
+		return v, appState, nil
 	}
 }
 
@@ -743,7 +742,6 @@ func flattenVM(pr map[string]interface{}) []interface{} {
 				itemList := item.(map[string]interface{})
 
 				if subs, ok := itemList["substrate_configuration"].(map[string]interface{}); ok {
-
 					var configMap map[string]interface{}
 					configMapList := make([]map[string]interface{}, 0)
 					// nicsList := make([]map[string]interface{}, 0)
@@ -753,13 +751,10 @@ func flattenVM(pr map[string]interface{}) []interface{} {
 					// fmt.Println("uuid:", subs["uuid"])
 
 					if elemList, ok := subs["element_list"].([]interface{}); ok {
-
 						for _, elem := range elemList {
 							elemMap := elem.(map[string]interface{})
-
 							// elem for multiple services
 							configMap = make(map[string]interface{})
-
 							configMap["name"] = elemMap["instance_name"]
 							configMap["ip_address"] = elemMap["address"]
 							configMap["vm_uuid"] = elemMap["instance_id"]
@@ -767,7 +762,6 @@ func flattenVM(pr map[string]interface{}) []interface{} {
 
 							if createSpec, ok := elemMap["create_spec"].(map[string]interface{}); ok {
 								if resources, ok := createSpec["resources"].(map[string]interface{}); ok {
-
 									configMap["vcpus"] = resources["num_sockets"]
 									configMap["cores"] = resources["num_vcpus_per_socket"]
 									configMap["memory"] = resources["memory_size_mib"]

@@ -33,7 +33,7 @@ func TestCalmAppGetDatasource(t *testing.T) {
 }
 
 func testAppReadDataSourceConfig() string {
-	return fmt.Sprintf(`
+	return (`
 		data "nutanix_calm_app" "test"{
 			app_uuid = nutanix_calm_app_provision.test.id
 		}

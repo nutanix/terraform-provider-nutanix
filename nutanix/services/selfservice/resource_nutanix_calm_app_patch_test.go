@@ -17,14 +17,14 @@ func TestAccNutanixCalmAppVmUpdateResource(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-app-%d", r)
 	desc := "Testing for patch config"
-	config_name_basic := "VmUpdate"
-	config_name_editable := "VmUpdateEditable"
+	configNameBasic := "VmUpdate"
+	configNameEditable := "VmUpdateEditable"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppVmUpdateBasic(config_name_basic),
+				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppVmUpdateBasic(configNameBasic),
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
 						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceNamePatch].Primary.Attributes, "", "  ")
@@ -33,11 +33,11 @@ func TestAccNutanixCalmAppVmUpdateResource(t *testing.T) {
 						fmt.Printf("\n############################################\n")
 						return nil
 					},
-					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", config_name_basic),
+					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", configNameBasic),
 				),
 			},
 			{
-				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppVmUpdateEditable(config_name_editable),
+				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppVmUpdateEditable(configNameEditable),
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
 						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceNamePatch].Primary.Attributes, "", "  ")
@@ -46,7 +46,7 @@ func TestAccNutanixCalmAppVmUpdateResource(t *testing.T) {
 						fmt.Printf("\n############################################\n")
 						return nil
 					},
-					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", config_name_editable),
+					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", configNameEditable),
 					resource.TestCheckResourceAttr(resourceNamePatch, "vm_config.0.memory_size_mib", "2048"),
 					resource.TestCheckResourceAttr(resourceNamePatch, "vm_config.0.num_sockets", "2"),
 					resource.TestCheckResourceAttr(resourceNamePatch, "vm_config.0.num_vcpus_per_socket", "2"),
@@ -60,14 +60,14 @@ func TestAccNutanixCalmAppCategoryUpdateResource(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-app-%d", r)
 	desc := "Testing for patch config"
-	category_add_config := "CategoriesAdd"
-	category_delete_config := "CategoriesDelete"
+	categoryAddConfig := "CategoriesAdd"
+	categoryDeleteConfig := "CategoriesDelete"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppCategoryAdd(category_add_config),
+				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppCategoryAdd(categoryAddConfig),
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
 						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceNamePatch].Primary.Attributes, "", "  ")
@@ -76,11 +76,11 @@ func TestAccNutanixCalmAppCategoryUpdateResource(t *testing.T) {
 						fmt.Printf("\n############################################\n")
 						return nil
 					},
-					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", category_add_config),
+					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", categoryAddConfig),
 				),
 			},
 			{
-				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppCategoryDelete(category_delete_config),
+				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppCategoryDelete(categoryDeleteConfig),
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
 						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceNamePatch].Primary.Attributes, "", "  ")
@@ -89,7 +89,7 @@ func TestAccNutanixCalmAppCategoryUpdateResource(t *testing.T) {
 						fmt.Printf("\n############################################\n")
 						return nil
 					},
-					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", category_delete_config),
+					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", categoryDeleteConfig),
 				),
 			},
 		},
@@ -100,22 +100,22 @@ func TestAccNutanixCalmAppDiskAddResource(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-app-%d", r)
 	desc := "Testing for patch config"
-	disk_add_config := "DiskAdd"
-	disk_add_config_editables := "DiskAddEditables"
+	diskAddConfig := "DiskAdd"
+	diskAddConfigEditables := "DiskAddEditables"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppDiskAddBasic(disk_add_config),
+				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppDiskAddBasic(diskAddConfig),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", disk_add_config),
+					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", diskAddConfig),
 				),
 			},
 			{
-				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppDiskAddEditable(disk_add_config_editables),
+				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppDiskAddEditable(diskAddConfigEditables),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", disk_add_config_editables),
+					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", diskAddConfigEditables),
 					resource.TestCheckResourceAttr(resourceNamePatch, "disks.0.operation", "add"),
 					resource.TestCheckResourceAttr(resourceNamePatch, "disks.0.disk_size_mib", "3072"),
 				),
@@ -128,15 +128,15 @@ func TestAccNutanixCalmAppNicAddResource(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-app-%d", r)
 	desc := "Testing for patch config"
-	nic_add_config := "NicAdd"
+	nicAddConfig := "NicAdd"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppNicAdd(nic_add_config),
+				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppNicAdd(nicAddConfig),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", nic_add_config),
+					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", nicAddConfig),
 				),
 			},
 		},

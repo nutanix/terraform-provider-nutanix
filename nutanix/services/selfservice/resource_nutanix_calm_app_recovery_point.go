@@ -51,11 +51,11 @@ func resourceNutanixCalmAppRecoveryPointCreate(ctx context.Context, d *schema.Re
 
 	var appUUID string
 
-	app_name := d.Get("app_name").(string)
+	appName := d.Get("app_name").(string)
 
 	appFilter := &calm.ApplicationListInput{}
 
-	appFilter.Filter = fmt.Sprintf("name==%s;_state!=deleted", app_name)
+	appFilter.Filter = fmt.Sprintf("name==%s;_state!=deleted", appName)
 
 	log.Printf("[Debug] Qeurying apps/list API with filter %s", appFilter)
 
@@ -77,8 +77,8 @@ func resourceNutanixCalmAppRecoveryPointCreate(ctx context.Context, d *schema.Re
 		appUUID = entity["uuid"].(string)
 	}
 
-	if appUUID, ok := d.GetOk("app_uuid"); ok {
-		appUUID = appUUID.(string)
+	if appUUIDRead, ok := d.GetOk("app_uuid"); ok {
+		appUUID = appUUIDRead.(string)
 	}
 
 	snapshotActionName := d.Get("action_name").(string)
@@ -104,7 +104,7 @@ func resourceNutanixCalmAppRecoveryPointCreate(ctx context.Context, d *schema.Re
 		fmt.Println("Error unmarshalling Spec to get status:", err)
 	}
 
-	uuid, err := uuid.GenerateUUID()
+	uuid, _ := uuid.GenerateUUID()
 
 	appMetadata["uuid"] = uuid
 	delete(appMetadata, "owner_reference")
@@ -119,14 +119,14 @@ func resourceNutanixCalmAppRecoveryPointCreate(ctx context.Context, d *schema.Re
 
 	snapshotConfig.Name = "snapshot_name"
 	snapshotConfig.Value = snapshotName
-	snapshotActionUUID, snapshotActionTaskUuid := fetchSnapshotActionUUID(appStatus, snapshotActionName)
+	snapshotActionUUID, snapshotActionTaskUUID := fetchSnapshotActionUUID(appStatus, snapshotActionName)
 	if snapshotActionUUID == "" {
 		return diag.Errorf("UUID for snapshot action with name %s not found.", snapshotActionName)
 	}
-	if snapshotActionTaskUuid == "" {
+	if snapshotActionTaskUUID == "" {
 		return diag.Errorf("UUID for snapshot action task with name %s not found.", snapshotActionName)
 	}
-	snapshotConfig.TaskUUID = snapshotActionTaskUuid
+	snapshotConfig.TaskUUID = snapshotActionTaskUUID
 
 	snapshotSpec.Args = append(snapshotSpec.Args, snapshotConfig)
 
@@ -135,7 +135,7 @@ func resourceNutanixCalmAppRecoveryPointCreate(ctx context.Context, d *schema.Re
 	snapshotInput.Metadata = appMetadata
 	snapshotInput.Spec = *snapshotSpec
 
-	snapshotResp, err := conn.Service.PerformActionUuid(ctx, appUUID, snapshotActionUUID, snapshotInput)
+	snapshotResp, err := conn.Service.PerformActionUUID(ctx, appUUID, snapshotActionUUID, snapshotInput)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -173,11 +173,11 @@ func resourceNutanixCalmAppRecoveryPointDelete(ctx context.Context, d *schema.Re
 
 	var appUUID string
 
-	app_name := d.Get("app_name").(string)
+	appName := d.Get("app_name").(string)
 
 	appFilter := &calm.ApplicationListInput{}
 
-	appFilter.Filter = fmt.Sprintf("name==%s;_state!=deleted", app_name)
+	appFilter.Filter = fmt.Sprintf("name==%s;_state!=deleted", appName)
 
 	log.Printf("[Debug] Qeurying apps/list API with filter %s", appFilter)
 
@@ -233,16 +233,16 @@ func resourceNutanixCalmAppRecoveryPointDelete(ctx context.Context, d *schema.Re
 		return diag.FromErr(err)
 	}
 
-	var snapshotGroupId string
+	var snapshotGroupID string
 
 	foundRecoveryPoint := false
 
 	for _, entity := range listResp.Entities {
 		if status, ok := entity["status"].(map[string]interface{}); ok {
-			if recovery_point_info_list, ok := status["recovery_point_info_list"].([]interface{}); ok {
-				for _, recovery_point := range recovery_point_info_list {
-					if snapshotName == recovery_point.(map[string]interface{})["name"].(string) {
-						snapshotGroupId = status["uuid"].(string)
+			if recoveryPointInfoList, ok := status["recovery_point_info_list"].([]interface{}); ok {
+				for _, recoveryPoint := range recoveryPointInfoList {
+					if snapshotName == recoveryPoint.(map[string]interface{})["name"].(string) {
+						snapshotGroupID = status["uuid"].(string)
 						foundRecoveryPoint = true
 						break
 					}
@@ -261,7 +261,7 @@ func resourceNutanixCalmAppRecoveryPointDelete(ctx context.Context, d *schema.Re
 
 	snapshotConfig := &calm.VariableList{}
 	snapshotConfig.Name = "snapshot_group_id"
-	snapshotConfig.Value = snapshotGroupId
+	snapshotConfig.Value = snapshotGroupID
 	snapshotSpec.Args = append(snapshotSpec.Args, snapshotConfig)
 
 	snapshotInput := &calm.ActionInput{}
@@ -282,20 +282,20 @@ func resourceNutanixCalmAppRecoveryPointDelete(ctx context.Context, d *schema.Re
 }
 
 func fetchSnapshotActionUUID(appStatus map[string]interface{}, snapshotActionName string) (string, string) {
-	var snapshotActionTaskUuid string
-	var snapshotActionUuid string
+	var snapshotActionTaskUUID string
+	var snapshotActionUUID string
 	if resources, ok := appStatus["resources"].(map[string]interface{}); ok {
 		if actionList, ok := resources["action_list"].([]interface{}); ok {
 			for _, action := range actionList {
 				if act, ok := action.(map[string]interface{}); ok {
 					if act["name"].(string) == snapshotActionName {
-						snapshotActionUuid = act["uuid"].(string)
+						snapshotActionUUID = act["uuid"].(string)
 						if runbook, ok := act["runbook"].(map[string]interface{}); ok {
 							if taskDefinitionList, ok := runbook["task_definition_list"].([]interface{}); ok {
 								for _, taskDef := range taskDefinitionList {
 									if task, ok := taskDef.(map[string]interface{}); ok {
 										if task["type"].(string) == "CALL_CONFIG" {
-											snapshotActionTaskUuid = task["uuid"].(string)
+											snapshotActionTaskUUID = task["uuid"].(string)
 										}
 									}
 								}
@@ -306,7 +306,7 @@ func fetchSnapshotActionUUID(appStatus map[string]interface{}, snapshotActionNam
 			}
 		}
 	}
-	return snapshotActionUuid, snapshotActionTaskUuid
+	return snapshotActionUUID, snapshotActionTaskUUID
 }
 
 func SnapshotStateRefreshFunc(ctx context.Context, client *calm.Client, appUUID, runlogUUID string) resource.StateRefreshFunc {

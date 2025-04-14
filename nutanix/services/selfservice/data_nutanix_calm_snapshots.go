@@ -163,11 +163,11 @@ func dataSourceNutanixCalmSnapshotsRead(ctx context.Context, d *schema.ResourceD
 
 	var appUUID string
 
-	app_name := d.Get("app_name").(string)
+	appName := d.Get("app_name").(string)
 
 	appFilter := &calm.ApplicationListInput{}
 
-	appFilter.Filter = fmt.Sprintf("name==%s;_state!=deleted", app_name)
+	appFilter.Filter = fmt.Sprintf("name==%s;_state!=deleted", appName)
 
 	log.Printf("[Debug] Qeurying apps/list API with filter %s", appFilter)
 
@@ -189,8 +189,8 @@ func dataSourceNutanixCalmSnapshotsRead(ctx context.Context, d *schema.ResourceD
 		appUUID = entity["uuid"].(string)
 	}
 
-	if appUUID, ok := d.GetOk("app_uuid"); ok {
-		appUUID = appUUID.(string)
+	if appUUIDRead, ok := d.GetOk("app_uuid"); ok {
+		appUUID = appUUIDRead.(string)
 	}
 
 	length := d.Get("length").(int)
@@ -272,17 +272,16 @@ func flattenSnapshotEntities(entities []map[string]interface{}) []map[string]int
 			if description, ok := status["description"].(string); ok {
 				EntityMap["description"] = description
 			}
-			if action_name, ok := status["action_name"].(string); ok {
-				EntityMap["action_name"] = action_name
+			if actionName, ok := status["action_name"].(string); ok {
+				EntityMap["action_name"] = actionName
 			}
-			if recovery_point_info_list, ok := status["recovery_point_info_list"].([]interface{}); ok {
-				EntityMap["recovery_point_info_list"] = recovery_point_info_list
+			if recoveryPointInfoList, ok := status["recovery_point_info_list"].([]interface{}); ok {
+				EntityMap["recovery_point_info_list"] = recoveryPointInfoList
 			}
-
 		}
 
-		if api_version, ok := entity["api_version"].(string); ok {
-			EntityMap["api_version"] = api_version
+		if apiVersion, ok := entity["api_version"].(string); ok {
+			EntityMap["api_version"] = apiVersion
 		}
 
 		if spec, ok := entity["spec"].(map[string]interface{}); ok {
@@ -290,14 +289,14 @@ func flattenSnapshotEntities(entities []map[string]interface{}) []map[string]int
 		}
 
 		if meta, ok := entity["metadata"].(map[string]interface{}); ok {
-			if creation_time, ok := meta["creation_time"].(string); ok {
-				EntityMap["creation_time"] = creation_time
+			if creationTime, ok := meta["creation_time"].(string); ok {
+				EntityMap["creation_time"] = creationTime
 			}
-			if last_update_time, ok := meta["last_update_time"].(string); ok {
-				EntityMap["last_update_time"] = last_update_time
+			if lastUpdateTime, ok := meta["last_update_time"].(string); ok {
+				EntityMap["last_update_time"] = lastUpdateTime
 			}
-			if spec_version, ok := meta["spec_version"].(int); ok {
-				EntityMap["spec_version"] = spec_version
+			if specVersion, ok := meta["spec_version"].(int); ok {
+				EntityMap["spec_version"] = specVersion
 			}
 			if kind, ok := meta["kind"].(string); ok {
 				EntityMap["kind"] = kind

@@ -202,18 +202,16 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 
 	if nicsRuntimeEditable, ok := d.GetOk("nics"); ok {
 		nicsRuntimeEditable := nicsRuntimeEditable.([]interface{})
-		start_index := 0
+		startIndex := 0
 		for _, nic := range nicsRuntimeEditable {
 			nicMap := nic.(map[string]interface{})
 			log.Println("NIC MAP::::", nicMap)
 			nicList := fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_nic_list"].([]interface{})
 			if operation, ok := nicMap["operation"].(string); ok {
 				if operation == "add" {
-					for indx := start_index; indx < len(nicList); indx++ {
-
+					for indx := startIndex; indx < len(nicList); indx++ {
 						nicListOperation := nicList[indx].(map[string]interface{})["operation"].(string)
 						nicListEditable := nicList[indx].(map[string]interface{})["editable"].(bool)
-
 						// Add a nic only if it's editable else proceed with addition of original nic present in nicList
 						if nicListEditable && nicListOperation == operation {
 							nicList[indx].(map[string]interface{})["subnet_reference"] = map[string]interface{}{
@@ -222,7 +220,7 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 								"name": "",
 								"uuid": nicMap["subnet_uuid"],
 							}
-							start_index = indx + 1
+							startIndex = indx + 1
 							break
 						}
 					}
@@ -243,7 +241,7 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 	}
 	if disksRuntimeEditable, ok := d.GetOk("disks"); ok {
 		disksRuntimeEditable := disksRuntimeEditable.([]interface{})
-		start_index := 0
+		startIndex := 0
 		for _, disk := range disksRuntimeEditable {
 			diskMap := disk.(map[string]interface{})
 			log.Println("DISK MAP::::", diskMap)
@@ -252,11 +250,11 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 			if operation, ok := diskMap["operation"].(string); ok {
 				if operation == "add" {
 					// config_details = fetchSpec.Args.Patch["resources"]
-					for indx := start_index; indx < len(diskList); indx++ {
+					for indx := startIndex; indx < len(diskList); indx++ {
 						if diskList[indx].(map[string]interface{})["operation"].(string) == operation {
 							diskSizeMib := diskList[indx].(map[string]interface{})["disk_size_mib"].(map[string]interface{})
 							diskSizeMib["value"] = diskMap["disk_size_mib"]
-							start_index = indx + 1
+							startIndex = indx + 1
 							break
 						}
 					}
@@ -371,12 +369,13 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 	fmt.Println("Response:", runlogUUID)
 
 	// poll till action is completed
+	const delayDuration = 5 * time.Second
 	appStateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "POLICY_EXEC"},
 		Target:  []string{"SUCCESS"},
 		Refresh: RunlogStateRefreshFunc(ctx, conn, appUUID, runlogUUID),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
-		Delay:   5 * time.Second,
+		Delay:   delayDuration,
 	}
 
 	if _, errWaitTask := appStateConf.WaitForStateContext(ctx); errWaitTask != nil {
