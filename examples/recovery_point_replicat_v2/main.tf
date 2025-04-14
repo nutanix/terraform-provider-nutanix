@@ -17,21 +17,43 @@ provider "nutanix" {
 }
 
 
+
+
+data "nutanix_clusters_v2" "clusters" {}
+
+locals {
+  clusterExtId = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+  ][0]
+}
+
+#create a virtual machine with minium configuration
+resource "nutanix_virtual_machine_v2" "vm-1" {
+  name                 = "vm-example-1"
+  num_cores_per_socket = 1
+  num_sockets          = 1
+  cluster {
+    ext_id = local.clusterExtId
+  }
+  power_state = "OFF"
+}
+
+
 # create RP with Vm Rp
-resource "nutanix_recovery_points_v2" "rp-example" {
+resource "nutanix_recovery_points_v2" "rp" {
   name                = "terraform-test-recovery-point"
-  expiration_time     = "2024-09-17T09:20:42Z"
+  expiration_time     = "2029-09-17T09:20:42Z"
   status              = "COMPLETE"
   recovery_point_type = "APPLICATION_CONSISTENT"
   vm_recovery_points {
-    vm_ext_id = "<Vm-uuid-1>"
+    vm_ext_id = nutanix_virtual_machine_v2.vm-1.id
   }
 }
 
 # replicate RP
-resource "nutanix_recovery_point_replicate_v2" "test" {
-  ext_id         = nutanix_recovery_points_v2.rp-example.id
-  cluster_ext_id = "<cluster-uuid>" # remote cluster uuid
-  pc_ext_id      = "<pc-uuid>" # remote pc uuid
-  depends_on     = [nutanix_recovery_points_v2.test]
+resource "nutanix_recovery_point_replicate_v2" "replicate-rp" {
+  ext_id         = nutanix_recovery_points_v2.rp.id
+  cluster_ext_id = var.remote_cluster_uuid # remote cluster uuid
+  pc_ext_id      = var.remote_pc_uuid      # remote pc uuid
 }

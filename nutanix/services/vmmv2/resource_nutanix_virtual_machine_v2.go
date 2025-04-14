@@ -30,6 +30,10 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 		ReadContext:   ResourceNutanixVirtualMachineV2Read,
 		UpdateContext: ResourceNutanixVirtualMachineV2Update,
 		DeleteContext: ResourceNutanixVirtualMachineV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -56,6 +60,10 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{"VM", "VM_RECOVERY_POINT"}, false),
+						},
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -380,6 +388,10 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
+															"disk_ext_id": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
 															"disk_size_bytes": {
 																Type:     schema.TypeInt,
 																Optional: true,
@@ -496,10 +508,75 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 																	},
 																},
 															},
+															"is_migration_in_progress": {
+																Type:     schema.TypeBool,
+																Computed: true,
+															},
 														},
 													},
 												},
 											},
+										},
+									},
+									"boot_device": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"boot_device_disk": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"disk_address": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"bus_type": {
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			Computed:     true,
+																			ValidateFunc: validation.StringInSlice([]string{"SCSI", "SPAPR", "PCI", "IDE", "SATA"}, false),
+																		},
+																		"index": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"boot_device_nic": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"mac_address": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"boot_order": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringInSlice([]string{"CDROM", "DISK", "NETWORK"}, false),
 										},
 									},
 								},
@@ -534,6 +611,10 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 						"is_vtpm_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
+						},
+						"version": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
@@ -949,10 +1030,6 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 															},
 														},
 													},
-												},
-												"is_migration_in_progress": {
-													Type:     schema.TypeBool,
-													Computed: true,
 												},
 											},
 										},
@@ -1679,13 +1756,6 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	return ResourceNutanixVirtualMachineV2Read(ctx, d, meta)
 }
 
-func expandAvailabilityZoneReference(zone interface{}) *config.AvailabilityZoneReference {
-	zoneRef := zone.(map[string]interface{})
-	return &config.AvailabilityZoneReference{
-		ExtId: utils.StringPtr(zoneRef["ext_id"].(string)),
-	}
-}
-
 func ResourceNutanixVirtualMachineV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
@@ -2069,6 +2139,21 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 		if len(updatedDisk) > 0 {
 			for _, disk := range updatedDisk {
+				if diskMap, ok := disk.(map[string]interface{}); ok {
+					if backingInfoRaw, ok := diskMap["backing_info"]; ok {
+						if backingInfoSlice, ok := backingInfoRaw.([]interface{}); ok {
+							if backingInfoMap, ok := backingInfoSlice[0].(map[string]interface{}); ok {
+								if vmDiskArray, ok := backingInfoMap["vm_disk"].([]interface{}); ok {
+									if vmDiskMap, ok := vmDiskArray[0].(map[string]interface{}); ok {
+										if vmDiskMap["data_source"] != nil {
+											delete(vmDiskMap, "data_source")
+										}
+									}
+								}
+							}
+						}
+					}
+				}
 				diskInput := config.Disk{}
 				diskInput = expandDisk([]interface{}{disk})[0]
 
@@ -2662,6 +2747,13 @@ func ResourceNutanixVirtualMachineV2Delete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
+func expandAvailabilityZoneReference(zone interface{}) *config.AvailabilityZoneReference {
+	zoneRef := zone.(map[string]interface{})
+	return &config.AvailabilityZoneReference{
+		ExtId: utils.StringPtr(zoneRef["ext_id"].(string)),
+	}
+}
+
 func expandVMSourceReference(pr interface{}) *config.VmSourceReference {
 	if pr != nil && len(pr.([]interface{})) > 0 {
 		srcRef := &config.VmSourceReference{}
@@ -2855,9 +2947,79 @@ func expandOneOfVMBootConfig(pr interface{}) *config.OneOfVmBootConfig {
 			if nvram, ok := val["nvram_device"]; ok && len(nvram.([]interface{})) > 0 {
 				uefiBootInput.NvramDevice = expandNvramDevice(nvram)
 			}
+			if bootDevice, ok := val["boot_device"]; ok && len(bootDevice.([]interface{})) > 0 {
+				uefiBootInput.BootDevice = expandOneOfUefiBootBootDevice(bootDevice)
+			}
+			if bootOrder, ok := val["boot_order"]; ok && len(bootOrder.([]interface{})) > 0 {
+				bootOrderLen := len(bootOrder.([]interface{}))
+				orders := make([]config.BootDeviceType, bootOrderLen)
+
+				for k, v := range bootOrder.([]interface{}) {
+					const two, three, four = 2, 3, 4
+					subMap := map[string]interface{}{
+						"CDROM":   two,
+						"DISK":    three,
+						"NETWORK": four,
+					}
+					pVal := subMap[v.(string)]
+					p := config.BootDeviceType(pVal.(int))
+					orders[k] = p
+				}
+				uefiBootInput.BootOrder = orders
+			}
 			vmBootConfig.SetValue(*uefiBootInput)
 		}
 		return vmBootConfig
+	}
+	return nil
+}
+
+func expandOneOfUefiBootBootDevice(bootDevice interface{}) *config.OneOfUefiBootBootDevice {
+	if bootDevice != nil && len(bootDevice.([]interface{})) > 0 {
+		prI := bootDevice.([]interface{})
+		val := prI[0].(map[string]interface{})
+		BootDevice := &config.OneOfUefiBootBootDevice{}
+		if bootDisk, ok := val["boot_device_disk"]; ok && len(bootDisk.([]interface{})) > 0 {
+			brI := bootDisk.([]interface{})
+			bootVal := brI[0].(map[string]interface{})
+
+			diskOut := config.NewBootDeviceDisk()
+			if diskAddress, ok := bootVal["disk_address"]; ok && len(diskAddress.([]interface{})) > 0 {
+				daI := diskAddress.([]interface{})
+				diskVal := daI[0].(map[string]interface{})
+				diskAddOut := config.NewDiskAddress()
+				if busType, ok := diskVal["bus_type"]; ok {
+					const two, three, four, five, six = 2, 3, 4, 5, 6
+					subMap := map[string]interface{}{
+						"SCSI":  two,
+						"IDE":   three,
+						"PCI":   four,
+						"SATA":  five,
+						"SPAPR": six,
+					}
+					pVal := subMap[busType.(string)]
+					p := config.DiskBusType(pVal.(int))
+					diskAddOut.BusType = &p
+				}
+				if index, ok := diskVal["index"]; ok {
+					diskAddOut.Index = utils.IntPtr(index.(int))
+				}
+				diskOut.DiskAddress = diskAddOut
+			}
+			BootDevice.SetValue(*diskOut)
+		}
+		if bootNic, ok := val["boot_device_nic"]; ok && len(bootNic.([]interface{})) > 0 {
+			brI := bootNic.([]interface{})
+			bootVal := brI[0].(map[string]interface{})
+
+			diskNicOut := config.NewBootDeviceNic()
+
+			if mac, ok := bootVal["mac_address"]; ok {
+				diskNicOut.MacAddress = utils.StringPtr(mac.(string))
+			}
+			BootDevice.SetValue(*diskNicOut)
+		}
+		return BootDevice
 	}
 	return nil
 }
@@ -3601,7 +3763,7 @@ func checkForHotPlugChanges(d *schema.ResourceData) bool {
 		d.HasChange(("num_threads_per_core")) || d.HasChange(("cd_rom")) || d.HasChange(("num_numa_nodes")) ||
 		d.HasChange("cluster") || d.HasChange("is_cpu_passthrough_enabled") || d.HasChange("enabled_cpu_features") ||
 		d.HasChange("is_vcpu_hard_pinning_enabled") || d.HasChange("guest_customization") || d.HasChange("guest_tools") ||
-		d.HasChange("serial_ports") || d.HasChange("gpus") {
+		d.HasChange("serial_ports") || d.HasChange("gpus") || d.HasChange("boot_config") {
 		return true
 	}
 	return false

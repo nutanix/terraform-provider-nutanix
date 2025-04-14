@@ -150,14 +150,14 @@ func TestAccV2NutanixRoutesResource_Basic(t *testing.T) {
 
 func testRouteSubnetConfig(r int) string {
 	return fmt.Sprintf(`
-	data "nutanix_clusters" "clusters" {}
+	data "nutanix_clusters_v2" "clusters" {}
 
 	locals {
 	  config  = (jsondecode(file("%[1]s")))
 	  subnets = local.config.networking.subnets
 	  cluster1 = [
-		for cluster in data.nutanix_clusters.clusters.entities :
-		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+		for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    		cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 	  ][0]
 	}
 
@@ -196,7 +196,7 @@ func testRouteSubnetConfig(r int) string {
 
 func testRouteVpc1Config(r int) string {
 	return testRouteSubnetConfig(r) + fmt.Sprintf(`
-	
+
 	resource "nutanix_vpc_v2" "test-1" {
 	  name        = "terraform_test_vpc_%[1]d"
 	  description = "terraform test vpc 1 to test create route"
@@ -210,7 +210,7 @@ func testRouteVpc1Config(r int) string {
 }
 
 func testRouteVpc2Config(r int) string {
-	return testRouteSubnetConfig(r) + fmt.Sprintf(`	
+	return testRouteSubnetConfig(r) + fmt.Sprintf(`
 		resource "nutanix_vpc_v2" "test-2" {
 		  name        = "terraform_test_vpc_%[1]d"
 		  description = "terraform test vpc 2 to test create route"
@@ -223,7 +223,7 @@ func testRouteVpc2Config(r int) string {
 }
 
 func testRouteTableInfoVpc1Config(r int) string {
-	return testRouteVpc1Config(r) + `	
+	return testRouteVpc1Config(r) + `
 		data "nutanix_route_tables_v2" "rt_vpc1" {
 		  filter     = "vpcReference eq '${nutanix_vpc_v2.test-1.id}'"
   		  depends_on = [nutanix_vpc_v2.test-1]
@@ -232,7 +232,7 @@ func testRouteTableInfoVpc1Config(r int) string {
 }
 
 func testRouteTableInfoVpc2Config(r int) string {
-	return testRouteVpc2Config(r) + `	
+	return testRouteVpc2Config(r) + `
 		data "nutanix_route_tables_v2" "rt_vpc2" {
 		  filter = "vpcReference eq '${nutanix_vpc_v2.test-2.id}'"
 		  depends_on = [nutanix_vpc_v2.test-2]

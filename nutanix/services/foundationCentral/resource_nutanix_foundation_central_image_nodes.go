@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	fc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -98,6 +99,36 @@ func ResourceNutanixFCImageCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
+						},
+					},
+				},
+			},
+			"hypervisor_isos": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"hyperv_sku": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"url": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"hyperv_product_key": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"sha256sum": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"hypervisor_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"kvm", "hyperv", "esx"}, false),
 						},
 					},
 				},
@@ -673,20 +704,20 @@ func expandNetworklist(pr interface{}) []string {
 	return c
 }
 
-func expandHyperVisorIsoDetails(d *schema.ResourceData) *fc.HypervisorIsoDetails {
-	hid := fc.HypervisorIsoDetails{}
-	resourceData, ok := d.GetOk("hypervisor_iso_details")
-	if !ok {
+func expandHyperVisorIsoDetails(config interface{}) *[]fc.HypervisorIsoDetails {
+	if config.([]interface{}) == nil && len(config.([]interface{})) == 0 {
 		return nil
 	}
-	settingsMap := resourceData.([]interface{})[0].(map[string]interface{})
-
+	settingsMap := config.([]interface{})[0].(map[string]interface{})
+	hid := fc.HypervisorIsoDetails{}
 	hid.HypervSku = utils.StringPtr(settingsMap["hyperv_sku"].(string))
 	hid.URL = utils.StringPtr(settingsMap["url"].(string))
 	hid.HypervProductKey = utils.StringPtr(settingsMap["hyperv_product_key"].(string))
 	hid.Sha256sum = utils.StringPtr(settingsMap["sha256sum"].(string))
-
-	return &hid
+	hid.HypervisorType = utils.StringPtr(settingsMap["hypervisor_type"].(string))
+	var hypervisorIsos []fc.HypervisorIsoDetails
+	hypervisorIsos = append(hypervisorIsos, hid)
+	return &hypervisorIsos
 }
 
 func expandNodesList(d *schema.ResourceData) []*fc.Node {
@@ -830,8 +861,21 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 		req.SkipClusterCreation = skipClusterCreation.(bool)
 	}
 
+	if hypervisorIsos, ok := d.GetOk("hypervisor_isos"); ok {
+		h := expandHyperVisorIsoDetails(hypervisorIsos)
+		if h != nil {
+			req.HypervisorIsos = h
+		}
+	}
+
+	if hypervisorIsos, ok := d.GetOk("hypervisor_iso_details"); ok {
+		h := expandHyperVisorIsoDetails(hypervisorIsos)
+		if h != nil {
+			req.HypervisorIsoDetails = &(*h)[0]
+		}
+	}
+
 	req.CommonNetworkSettings = expandCommonNetworkSettings(d)
-	req.HypervisorIsoDetails = expandHyperVisorIsoDetails(d)
 	req.NodesList = expandNodesList(d)
 
 	// Poll to Check whether Nodes are Available for Imaging - Node Detail GET Call

@@ -14,42 +14,89 @@ Provides a resource to create a subnet based on the input parameters.
 
 ```hcl
 
-    resource "nutanix_subnet_v2" "example-1"{
-        name = "{{ subnet name}}"
-        description = "{{ subnet desc }}"
-        cluster_reference = {{ cluster uuid }}
-        subnet_type = "VLAN"
-        network_id = 112
-    }
+#creating subnet with IP pool
+resource "nutanix_subnet_v2" "vlan-112" {
+  name              = "vlan-112"
+  description       = "subnet VLAN 112 managed by Terraform with IP pool"
+  cluster_reference = "a8fe48c4-f0d3-49c7-a017-efc30dd8fb2b"
+  subnet_type       = "VLAN"
+  network_id        = 122
+  is_external       = true
+  ip_config {
 
-    resource "nutanix_subnet_v2" "example-2"{
-        name = "{{ subnet name}}"
-        description = "{{ subnet desc }}"
-        cluster_reference = {{ cluster uuid }}
-        subnet_type = "VLAN"
-        network_id = 112
-        ip_config {
-            ipv4 {
-                ip_subnet {
-                    ip {
-                        value = "192.168.0.0"
-                    }
-                    prefix_length = 24
-                }
-                default_gateway_ip {
-                    value = "192.168.0.1"
-                }
-                pool_list{
-                    start_ip {
-                        value = "192.168.0.20"
-                    }
-                    end_ip {
-                        value = "192.168.0.30"
-                    }
-                }
-            }
+    ipv4 {
+      ip_subnet {
+        ip {
+          value = "192.168.0.0"
         }
+        prefix_length = 24
+      }
+      default_gateway_ip {
+        value = "192.168.0.1"
+      }
+      pool_list {
+        start_ip {
+          value = "192.168.0.20"
+        }
+        end_ip {
+          value = "192.168.0.30"
+        }
+      }
     }
+  }
+}
+
+
+#creating subnet without IP pool
+resource "nutanix_subnet_v2" "vlan-113" {
+  name              = "vlan-113"
+  description       = "subnet VLAN 113 managed by Terraform"
+  cluster_reference = "a8fe48c4-f0d3-49c7-a017-efc30dd8fb2b"
+  subnet_type       = "VLAN"
+  network_id        = 113
+}
+
+# creating subnet with IP pool and DHCP options
+resource "nutanix_subnet_v2" "van-114" {
+  name              = "vlan-114"
+  description       = "subnet VLAN 114 managed by Terraform"
+  cluster_reference = "a8fe48c4-f0d3-49c7-a017-efc30dd8fb2b"
+  subnet_type       = "VLAN"
+  network_id        = 114
+  ip_config {
+    ipv4 {
+      ip_subnet {
+        ip {
+          value = "192.168.0.0"
+        }
+        prefix_length = 24
+      }
+      default_gateway_ip {
+        value = "192.168.0.1"
+      }
+      pool_list {
+        start_ip {
+          value = "192.168.0.20"
+        }
+        end_ip {
+          value = "192.168.0.30"
+        }
+      }
+    }
+  }
+
+  dhcp_options {
+    domain_name_servers {
+      ipv4 {
+        value = "8.8.8.8"
+      }
+    }
+    search_domains   = ["eng.nutanix.com"]
+    domain_name      = "nutanix.com"
+    tftp_server_name = "10.5.0.10"
+    boot_file_name   = "pxelinux.0"
+  }
+}
 
 ```
 
@@ -188,4 +235,4 @@ Provides a resource to create a subnet based on the input parameters.
 - `value`: value of address
 - `prefix_length`: The prefix length of the network to which this host IPv4/IPv6 address belongs. Default value is 32.
 
-See detailed information in [Nutanix Subnet v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0).
+See detailed information in [Nutanix Subnet v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/Subnets/operation/createSubnet).
