@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/calm"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/selfservice"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 )
 
@@ -159,13 +159,13 @@ func DataSourceNutanixCalmSnapshots() *schema.Resource {
 }
 
 func dataSourceNutanixCalmSnapshotsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).Calm
+	conn := meta.(*conns.Client).CalmAPI
 
 	var appUUID string
 
 	appName := d.Get("app_name").(string)
 
-	appFilter := &calm.ApplicationListInput{}
+	appFilter := &selfservice.ApplicationListInput{}
 
 	appFilter.Filter = fmt.Sprintf("name==%s;_state!=deleted", appName)
 
@@ -209,7 +209,7 @@ func dataSourceNutanixCalmSnapshotsRead(ctx context.Context, d *schema.ResourceD
 
 	currTime := strconv.FormatInt(time.Now().Unix(), 10)
 
-	listInput := &calm.RecoveryPointsListInput{}
+	listInput := &selfservice.RecoveryPointsListInput{}
 
 	listInput.Filter = fmt.Sprintf("substrate_reference==%s;expiration_time=ge=%s", substrateReference, currTime)
 	listInput.Length = length

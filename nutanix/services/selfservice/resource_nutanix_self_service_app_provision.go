@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/calm"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/selfservice"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -308,13 +308,13 @@ func ResourceNutanixCalmAppProvision() *schema.Resource {
 }
 
 func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).Calm
+	conn := meta.(*conns.Client).CalmAPI
 
 	var bpUUID string
 	// fetch bp_uuid from bp_name
 	bpName := d.Get("bp_name").(string)
 
-	bpFilter := &calm.BlueprintListInput{}
+	bpFilter := &selfservice.BlueprintListInput{}
 
 	bpFilter.Filter = fmt.Sprintf("name==%s;state!=DELETED", bpName)
 
@@ -345,7 +345,7 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 		return diag.Errorf("Error getting Blueprint: %s", er)
 	}
 
-	bpResp := &calm.BlueprintResponse{}
+	bpResp := &selfservice.BlueprintResponse{}
 	if err := json.Unmarshal([]byte(bpOut.Spec), &bpResp); err != nil {
 		fmt.Println("Error unmarshalling BPOut:", err)
 	}
@@ -373,7 +373,7 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 	}
 
 	// check for runtime editables
-	runtimeSpec := &calm.RuntimeEditables{}
+	runtimeSpec := &selfservice.RuntimeEditables{}
 	if runtime, ok := d.GetOk("runtime_editables"); ok {
 		getRuntime, err := conn.Service.GetRuntimeEditables(ctx, bpUUID)
 		if err != nil {
@@ -432,10 +432,10 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 		}
 	}
 
-	bpSpec := &calm.BPspec{
+	bpSpec := &selfservice.BPspec{
 		AppName: d.Get("app_name").(string),
 		AppDesc: d.Get("app_description").(string),
-		AppProfileReference: calm.AppProfileReference{
+		AppProfileReference: selfservice.AppProfileReference{
 			Kind: "app_profile",
 			Name: appName,
 			UUID: appUUID,
@@ -443,7 +443,7 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 		RuntimeEditables: runtimeSpec,
 	}
 
-	input := &calm.BlueprintProvisionInput{
+	input := &selfservice.BlueprintProvisionInput{
 		Spec: *bpSpec,
 	}
 
@@ -480,7 +480,7 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 	}
 
 	applicationUUID := ""
-	if taskStatus, ok := obj.(*calm.PollResponse); ok {
+	if taskStatus, ok := obj.(*selfservice.PollResponse); ok {
 		applicationUUID = *taskStatus.Status.AppUUID
 	} else {
 		return diag.Errorf("error extracting UUID from task status")
@@ -502,14 +502,14 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceNutanixCalmAppProvisionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).Calm
+	conn := meta.(*conns.Client).CalmAPI
 
 	resp, err := conn.Service.GetApp(ctx, d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	AppResp := &calm.AppResponse{}
+	AppResp := &selfservice.AppResponse{}
 	if err := json.Unmarshal([]byte(resp.Status), &AppResp.Status); err != nil {
 		fmt.Println("Error unmarshalling App:", err)
 	}
@@ -555,9 +555,9 @@ func resourceNutanixCalmAppProvisionRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceNutanixCalmAppProvisionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).Calm
+	conn := meta.(*conns.Client).CalmAPI
 
-	actionSpec := &calm.ActionSpec{}
+	actionSpec := &selfservice.ActionSpec{}
 
 	if d.HasChange("soft_delete") {
 		log.Printf("[INFO] soft_delete changed to: %v", d.Get("soft_delete").(bool))
@@ -603,7 +603,7 @@ func resourceNutanixCalmAppProvisionUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceNutanixCalmAppProvisionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).Calm
+	conn := meta.(*conns.Client).CalmAPI
 
 	log.Printf("[Debug] Destroying the app with the ID %s", d.Id())
 
@@ -626,7 +626,7 @@ func resourceNutanixCalmAppProvisionDelete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func calmtaskStateRefreshFunc(ctx context.Context, client *calm.Client, bpID, taskUUID string) resource.StateRefreshFunc {
+func calmtaskStateRefreshFunc(ctx context.Context, client *selfservice.Client, bpID, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := client.Service.TaskPoll(ctx, bpID, taskUUID)
 		if err != nil {
@@ -644,7 +644,7 @@ func calmtaskStateRefreshFunc(ctx context.Context, client *calm.Client, bpID, ta
 	}
 }
 
-func calmappStateRefreshFunc(ctx context.Context, client *calm.Client, appUUID string) resource.StateRefreshFunc {
+func calmappStateRefreshFunc(ctx context.Context, client *selfservice.Client, appUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := client.Service.GetApp(ctx, appUUID)
 		if err != nil {
@@ -673,7 +673,7 @@ func calmappStateRefreshFunc(ctx context.Context, client *calm.Client, appUUID s
 	}
 }
 
-func RunlogStateRefreshFunc(ctx context.Context, client *calm.Client, appUUID, runlogUUID string) resource.StateRefreshFunc {
+func RunlogStateRefreshFunc(ctx context.Context, client *selfservice.Client, appUUID, runlogUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := client.Service.AppRunlogs(ctx, appUUID, runlogUUID)
 		if err != nil {

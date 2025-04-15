@@ -9,7 +9,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameAction = "nutanix_calm_app_custom_action.test"
+const resourceNameAction = "nutanix_self_service_app_custom_action.test"
 
 func TestAccNutanixCalmAppResource_CustomAction(t *testing.T) {
 	r := acctest.RandInt()
@@ -32,14 +32,14 @@ func TestAccNutanixCalmAppResource_CustomAction(t *testing.T) {
 
 func testCalmAppRunCustomAction(name, desc, actionName string) string {
 	return fmt.Sprintf(`
-		resource "nutanix_calm_app_provision" "test" {
+		resource "nutanix_self_service_app_provision" "test" {
 		bp_name         = "test_terraform_bp"
 		app_name        = "%[1]s"
 		app_description = "%[2]s"
 		}
 
-		resource "nutanix_calm_app_custom_action" "test" {
-		app_name        = nutanix_calm_app_provision.test.app_name
+		resource "nutanix_self_service_app_custom_action" "test" {
+		app_name        = nutanix_self_service_app_provision.test.app_name
 		action_name = "%[3]s"
 		}
 `, name, desc, actionName)

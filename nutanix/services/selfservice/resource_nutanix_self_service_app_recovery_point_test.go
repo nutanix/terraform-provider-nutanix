@@ -8,7 +8,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameRecoveryPoint = "nutanix_calm_app_recovery_point.test"
+const resourceNameRecoveryPoint = "nutanix_self_service_app_recovery_point.test"
 
 func TestAccNutanixCalmAppCreateRecoveryPoint(t *testing.T) {
 	name := "test_terraform_snapshot_restore_app"
@@ -29,7 +29,7 @@ func TestAccNutanixCalmAppCreateRecoveryPoint(t *testing.T) {
 
 func testCalmAppCreateRecoveryPoint(name string) string {
 	return fmt.Sprintf(`
-		resource "nutanix_calm_app_recovery_point" "test" {
+		resource "nutanix_self_service_app_recovery_point" "test" {
 		app_name = "%[1]s"
 		action_name = "Snapshot_s1"
 		recovery_point_name = "snap1"

@@ -8,7 +8,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameRestore = "nutanix_calm_app_restore.test"
+const resourceNameRestore = "nutanix_self_service_app_restore.test"
 
 func TestAccNutanixCalmAppRestoreRecoveryPoint(t *testing.T) {
 	name := "test_terraform_snapshot_restore_app"
@@ -29,27 +29,27 @@ func TestAccNutanixCalmAppRestoreRecoveryPoint(t *testing.T) {
 
 func testCalmAppRestoreRecoveryPoint(name string) string {
 	return fmt.Sprintf(`
-		resource "nutanix_calm_app_recovery_point" "test" {
+		resource "nutanix_self_service_app_recovery_point" "test" {
 		app_name = "%[1]s"
 		action_name = "Snapshot_s1"
 		recovery_point_name = "snap1"
 		}
 
-		data "nutanix_calm_app_snapshots" "snapshots" {
+		data "nutanix_self_service_app_snapshots" "snapshots" {
 		app_name = "%[1]s"
 		length = 250
 		offset = 0
-		depends_on = [nutanix_calm_app_recovery_point.test]
+		depends_on = [nutanix_self_service_app_recovery_point.test]
 		}
 
 		locals {
 			snapshot_uuid = [
-			for snapshot in data.nutanix_calm_app_snapshots.snapshots.entities :
+			for snapshot in data.nutanix_self_service_app_snapshots.snapshots.entities :
 			snapshot.uuid if snapshot.name == "Snapshot_Configs1"
 			][0]
 		}
 
-		resource "nutanix_calm_app_restore" "test" {
+		resource "nutanix_self_service_app_restore" "test" {
 		restore_action_name = "Restore_s1"
 		app_name = "%[1]s"
 		snapshot_uuid = local.snapshot_uuid

@@ -1,4 +1,4 @@
-package calm
+package selfservice
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ const (
 	libraryVersion = "v3"
 	absolutePath   = "api/nutanix/" + libraryVersion
 	userAgent      = "nutanix/" + libraryVersion
-	clientName     = "calm"
+	clientName     = "Self Service"
 )
 
 // Client manages the foundation central API
@@ -31,7 +31,7 @@ func NewCalmClient(credentials client.Credentials) (*Client, error) {
 		}
 		baseClient = c
 	} else {
-		errorMsg := fmt.Sprintf("Calm Client is missing. "+
+		errorMsg := fmt.Sprintf("Self Service Client is missing. "+
 			"Please provide required details - %s in provider configuration.", strings.Join(credentials.RequiredFields[clientName], ", "))
 
 		baseClient = &client.Client{UserAgent: userAgent, ErrorMsg: errorMsg}

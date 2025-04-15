@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/calm"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/selfservice"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 )
 
@@ -192,7 +192,7 @@ func DatsourceNutanixCalmApp() *schema.Resource {
 }
 
 func datsourceNutanixCalmAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).Calm
+	conn := meta.(*conns.Client).CalmAPI
 
 	appID := d.Get("app_uuid").(string)
 	resp, err := conn.Service.GetApp(ctx, appID)
@@ -200,7 +200,7 @@ func datsourceNutanixCalmAppRead(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 
-	AppResp := &calm.AppResponse{}
+	AppResp := &selfservice.AppResponse{}
 	if err := json.Unmarshal([]byte(resp.Status), &AppResp.Status); err != nil {
 		fmt.Println("Error unmarshalling App:", err)
 	}

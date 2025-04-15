@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/calm"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/selfservice"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 )
 
@@ -115,7 +115,7 @@ func ResourceNutanixCalmAppPatch() *schema.Resource {
 }
 
 func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).Calm
+	conn := meta.(*conns.Client).CalmAPI
 
 	appUUID := d.Get("app_uuid").(string)
 	patchName := d.Get("patch_name").(string)
@@ -144,16 +144,16 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 
 	//fetch input
 
-	fetchInput := &calm.PatchInput{}
+	fetchInput := &selfservice.PatchInput{}
 	fetchInput.APIVersion = appResp.APIVersion
 	fetchInput.Metadata = objMetadata
 
 	var patchUUID string
 	// fetch patch for spec
-	fetchSpec := &calm.PatchSpec{}
+	fetchSpec := &selfservice.PatchSpec{}
 	fetchSpec.TargetUUID = appUUID
 	fetchSpec.TargetKind = "Application"
-	fetchSpec.Args.Variables = []*calm.VariableList{}
+	fetchSpec.Args.Variables = []*selfservice.VariableList{}
 	fetchSpec.Args.Patch, patchUUID = expandPatchSpec(objSpec, patchName)
 
 	if vmConfigRuntimeEditable, ok := d.GetOk("vm_config"); ok {

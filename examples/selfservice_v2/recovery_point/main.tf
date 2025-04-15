@@ -15,13 +15,13 @@ provider "nutanix" {
   port     = 9440
 }
 
-data "nutanix_calm_snapshot_policy_list" "test_snapshot" {
+data "nutanix_self_service_snapshot_policy_list" "test_snapshot" {
   bp_name = "bp2"
   length = 250
   offset = 0
 }
 
-resource "nutanix_calm_app_recovery_point" "test_1" {
+resource "nutanix_self_service_app_recovery_point" "test_1" {
   app_uuid = "59e00130-b7a0-40ef-b6e3-25ae608648fd"
   action_name = "Snapshot_test_1"
   recovery_point_name = "snap0"

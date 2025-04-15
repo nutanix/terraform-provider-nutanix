@@ -9,7 +9,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNamePatch = "nutanix_calm_app_patch.test"
+const resourceNamePatch = "nutanix_self_service_app_patch.test"
 
 func TestAccNutanixCalmAppVmUpdateResource(t *testing.T) {
 	r := acctest.RandInt()
@@ -115,7 +115,7 @@ func TestAccNutanixCalmAppNicAddResource(t *testing.T) {
 
 func testCalmAppProvisionWithUpdateConfig(name, desc string) string {
 	return fmt.Sprintf(`
-		resource "nutanix_calm_app_provision" "test" {
+		resource "nutanix_self_service_app_provision" "test" {
 		bp_name         = "test_terraform_bp"
 		app_name        = "%[1]s"
 		app_description = "%[2]s"
@@ -125,8 +125,8 @@ func testCalmAppProvisionWithUpdateConfig(name, desc string) string {
 
 func testCalmAppVMUpdateBasic(name string) string {
 	return fmt.Sprintf(`
-		resource "nutanix_calm_app_patch" "test" {
-		app_uuid = nutanix_calm_app_provision.test.id
+		resource "nutanix_self_service_app_patch" "test" {
+		app_uuid = nutanix_self_service_app_provision.test.id
 		patch_name = "%[1]s"
 		config_name = "%[1]s"
 	}
@@ -135,8 +135,8 @@ func testCalmAppVMUpdateBasic(name string) string {
 
 func testCalmAppVMUpdateEditable(name string) string {
 	return fmt.Sprintf(`
-		resource "nutanix_calm_app_patch" "test" {
-		app_uuid = nutanix_calm_app_provision.test.id
+		resource "nutanix_self_service_app_patch" "test" {
+		app_uuid = nutanix_self_service_app_provision.test.id
 		patch_name = "%[1]s"
 		config_name = "%[1]s"
 		vm_config {
@@ -150,8 +150,8 @@ func testCalmAppVMUpdateEditable(name string) string {
 
 func testCalmAppCategoryAdd(name string) string {
 	return fmt.Sprintf(`
-		resource "nutanix_calm_app_patch" "test" {
-		app_uuid = nutanix_calm_app_provision.test.id
+		resource "nutanix_self_service_app_patch" "test" {
+		app_uuid = nutanix_self_service_app_provision.test.id
 		patch_name = "%[1]s"
 		config_name = "%[1]s"
 		categories {
@@ -164,8 +164,8 @@ func testCalmAppCategoryAdd(name string) string {
 
 func testCalmAppCategoryDelete(name string) string {
 	return fmt.Sprintf(`
-		resource "nutanix_calm_app_patch" "test" {
-		app_uuid = nutanix_calm_app_provision.test.id
+		resource "nutanix_self_service_app_patch" "test" {
+		app_uuid = nutanix_self_service_app_provision.test.id
 		patch_name = "%[1]s"
 		config_name = "%[1]s"
 		categories {
@@ -178,8 +178,8 @@ func testCalmAppCategoryDelete(name string) string {
 
 func testCalmAppDiskAddBasic(name string) string {
 	return fmt.Sprintf(`
-		resource "nutanix_calm_app_patch" "test" {
-		app_uuid = nutanix_calm_app_provision.test.id
+		resource "nutanix_self_service_app_patch" "test" {
+		app_uuid = nutanix_self_service_app_provision.test.id
 		patch_name = "%[1]s"
 		config_name = "%[1]s"
 	}
@@ -188,8 +188,8 @@ func testCalmAppDiskAddBasic(name string) string {
 
 func testCalmAppDiskAddEditable(name string) string {
 	return fmt.Sprintf(`
-		resource "nutanix_calm_app_patch" "test" {
-		app_uuid = nutanix_calm_app_provision.test.id
+		resource "nutanix_self_service_app_patch" "test" {
+		app_uuid = nutanix_self_service_app_provision.test.id
 		patch_name = "%[1]s"
 		config_name = "%[1]s"
 		disks {
@@ -202,8 +202,8 @@ func testCalmAppDiskAddEditable(name string) string {
 
 func testCalmAppNicAdd(name string) string {
 	return fmt.Sprintf(`
-		resource "nutanix_calm_app_patch" "test" {
-		app_uuid = nutanix_calm_app_provision.test.id
+		resource "nutanix_self_service_app_patch" "test" {
+		app_uuid = nutanix_self_service_app_provision.test.id
 		patch_name = "%[1]s"
 		config_name = "%[1]s"
 	}

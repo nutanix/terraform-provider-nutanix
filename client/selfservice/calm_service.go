@@ -1,4 +1,4 @@
-package calm
+package selfservice
 
 import (
 	"context"
@@ -32,7 +32,7 @@ type Service interface {
 }
 
 func (op Operations) ProvisionBlueprint(ctx context.Context, bpUUID string, input *BlueprintProvisionInput) (*AppProvisionTaskOutput, error) {
-	path := fmt.Sprintf("/blueprints/%s/simple_launch", bpUUID)
+	path := fmt.Sprintf(launchBlueprintAPI, bpUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
 
@@ -46,7 +46,7 @@ func (op Operations) ProvisionBlueprint(ctx context.Context, bpUUID string, inpu
 }
 
 func (op Operations) GetBlueprint(ctx context.Context, bpUUID string) (*BlueprintResponse, error) {
-	path := fmt.Sprintf("/blueprints/%s", bpUUID)
+	path := fmt.Sprintf(getBlueprintAPI, bpUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 
@@ -60,7 +60,7 @@ func (op Operations) GetBlueprint(ctx context.Context, bpUUID string) (*Blueprin
 }
 
 func (op Operations) TaskPoll(ctx context.Context, bpUUID string, launchID string) (*PollResponse, error) {
-	path := fmt.Sprintf("/blueprints/%s/pending_launches/%s", bpUUID, launchID)
+	path := fmt.Sprintf(pendingLaunchBlueprintAPI, bpUUID, launchID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 
@@ -74,7 +74,7 @@ func (op Operations) TaskPoll(ctx context.Context, bpUUID string, launchID strin
 }
 
 func (op Operations) DeleteApp(ctx context.Context, id string) (*DeleteAppResp, error) {
-	httpReq, err := op.client.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/apps/%s", id), nil)
+	httpReq, err := op.client.NewRequest(ctx, http.MethodDelete, fmt.Sprintf(getApplicationAPI, id), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func (op Operations) DeleteApp(ctx context.Context, id string) (*DeleteAppResp, 
 }
 
 func (op Operations) SoftDeleteApp(ctx context.Context, id string) (*DeleteAppResp, error) {
-	httpReq, err := op.client.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/apps/%s?type=soft", id), nil)
+	httpReq, err := op.client.NewRequest(ctx, http.MethodDelete, fmt.Sprintf(softDeleteApplicationAPI, id), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (op Operations) SoftDeleteApp(ctx context.Context, id string) (*DeleteAppRe
 }
 
 func (op Operations) GetApp(ctx context.Context, id string) (*AppResponse, error) {
-	httpReq, err := op.client.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/apps/%s", id), nil)
+	httpReq, err := op.client.NewRequest(ctx, http.MethodGet, fmt.Sprintf(getApplicationAPI, id), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func (op Operations) GetApp(ctx context.Context, id string) (*AppResponse, error
 }
 
 func (op Operations) PerformAction(ctx context.Context, appUUID string, input *ActionSpec) (*AppActionResponse, error) {
-	path := fmt.Sprintf("/apps/%s/actions/run", appUUID)
+	path := fmt.Sprintf(runApplicationSystemActionAPI, appUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
 
@@ -115,7 +115,7 @@ func (op Operations) PerformAction(ctx context.Context, appUUID string, input *A
 }
 
 func (op Operations) AppRunlogs(ctx context.Context, appUUID string, runlogUUID string) (*AppRunlogsResponse, error) {
-	path := fmt.Sprintf("/apps/%s/app_runlogs/%s/output", appUUID, runlogUUID)
+	path := fmt.Sprintf(getAppRunlogOutputAPI, appUUID, runlogUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 
@@ -129,7 +129,7 @@ func (op Operations) AppRunlogs(ctx context.Context, appUUID string, runlogUUID 
 }
 
 func (op Operations) ListBlueprint(ctx context.Context, filter *BlueprintListInput) (*BlueprintListResponse, error) {
-	path := "/blueprints/list"
+	path := listBlueprintAPI
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, filter)
 
@@ -143,7 +143,7 @@ func (op Operations) ListBlueprint(ctx context.Context, filter *BlueprintListInp
 }
 
 func (op Operations) ListApplication(ctx context.Context, filter *ApplicationListInput) (*ApplicationListResponse, error) {
-	path := "/apps/list"
+	path := listApplicationAPI
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, filter)
 
@@ -157,7 +157,7 @@ func (op Operations) ListApplication(ctx context.Context, filter *ApplicationLis
 }
 
 func (op Operations) GetRuntimeEditables(ctx context.Context, bpUUID string) (*RuntimeEditablesResponse, error) {
-	path := fmt.Sprintf("/blueprints/%s/runtime_editables", bpUUID)
+	path := fmt.Sprintf(getBlueprintRuntimeEditables, bpUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 
@@ -171,7 +171,7 @@ func (op Operations) GetRuntimeEditables(ctx context.Context, bpUUID string) (*R
 }
 
 func (op Operations) PatchApp(ctx context.Context, appUUID string, patchUUID string, input *PatchInput) (*AppTaskResponse, error) {
-	path := fmt.Sprintf("/apps/%s/patch/%s/run", appUUID, patchUUID)
+	path := fmt.Sprintf(runPatchActionAPI, appUUID, patchUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
 
@@ -185,7 +185,7 @@ func (op Operations) PatchApp(ctx context.Context, appUUID string, patchUUID str
 }
 
 func (op Operations) PerformActionUUID(ctx context.Context, appUUID string, actionUUID string, input *ActionInput) (*AppTaskResponse, error) {
-	path := fmt.Sprintf("/apps/%s/actions/%s/run", appUUID, actionUUID)
+	path := fmt.Sprintf(runApplicationCustomActionAPI, appUUID, actionUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
 
@@ -199,7 +199,7 @@ func (op Operations) PerformActionUUID(ctx context.Context, appUUID string, acti
 }
 
 func (op Operations) GetAppProtectionPolicyList(ctx context.Context, bpUUID string, appUUID string, configUUID string, policyListInput *PolicyListInput) (*PolicyListResponse, error) {
-	path := fmt.Sprintf("/blueprints/%s/app_profile/%s/config_spec/%s/app_protection_policies/list", bpUUID, appUUID, configUUID)
+	path := fmt.Sprintf(listAppProtectionPolicyAPI, bpUUID, appUUID, configUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, policyListInput)
 
@@ -213,7 +213,7 @@ func (op Operations) GetAppProtectionPolicyList(ctx context.Context, bpUUID stri
 }
 
 func (op Operations) RecoveryPointsList(ctx context.Context, appUUID string, input *RecoveryPointsListInput) (*RecoveryPointsListResponse, error) {
-	path := fmt.Sprintf("/apps/%s/recovery_groups/list", appUUID)
+	path := fmt.Sprintf(listAppRecoveryPointsAPI, appUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
 
@@ -227,7 +227,7 @@ func (op Operations) RecoveryPointsList(ctx context.Context, appUUID string, inp
 }
 
 func (op Operations) RecoveryPointsDelete(ctx context.Context, appUUID string, input *ActionInput) (*AppTaskResponse, error) {
-	path := fmt.Sprintf("/apps/%s/recovery_group_delete", appUUID)
+	path := fmt.Sprintf(deleteRecoveryPointsAPI, appUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
 

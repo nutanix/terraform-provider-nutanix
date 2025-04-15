@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/calm"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/selfservice"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 )
 
@@ -113,13 +113,13 @@ func DatsourceNutanixCalmRuntimeEditables() *schema.Resource {
 }
 
 func datsourceNutanixCalmRuntimeEditablesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).Calm
+	conn := meta.(*conns.Client).CalmAPI
 
 	var bpUUID string
 	// fetch bp_uuid from bp_name
 	bpName := d.Get("bp_name").(string)
 
-	bpFilter := &calm.BlueprintListInput{}
+	bpFilter := &selfservice.BlueprintListInput{}
 
 	bpFilter.Filter = fmt.Sprintf("name==%s;state!=DELETED", bpName)
 
@@ -159,7 +159,7 @@ func datsourceNutanixCalmRuntimeEditablesRead(ctx context.Context, d *schema.Res
 	return nil
 }
 
-func flattenRuntimeEditables(resource *calm.RuntimeEditables) []interface{} {
+func flattenRuntimeEditables(resource *selfservice.RuntimeEditables) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
 			"action_list":         flattenRuntimeSpec(resource.ActionList),
@@ -175,7 +175,7 @@ func flattenRuntimeEditables(resource *calm.RuntimeEditables) []interface{} {
 	}
 }
 
-func flattenRuntimeSpec(pr []*calm.RuntimeSpec) []interface{} {
+func flattenRuntimeSpec(pr []*selfservice.RuntimeSpec) []interface{} {
 	if pr == nil {
 		return nil
 	}

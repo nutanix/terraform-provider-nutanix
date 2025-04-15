@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/calm"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/selfservice"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -47,13 +47,13 @@ func ResourceNutanixCalmAppRecoveryPoint() *schema.Resource {
 }
 
 func resourceNutanixCalmAppRecoveryPointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).Calm
+	conn := meta.(*conns.Client).CalmAPI
 
 	var appUUID string
 
 	appName := d.Get("app_name").(string)
 
-	appFilter := &calm.ApplicationListInput{}
+	appFilter := &selfservice.ApplicationListInput{}
 
 	appFilter.Filter = fmt.Sprintf("name==%s;_state!=deleted", appName)
 
@@ -110,12 +110,12 @@ func resourceNutanixCalmAppRecoveryPointCreate(ctx context.Context, d *schema.Re
 	delete(appMetadata, "owner_reference")
 
 	// create spec
-	snapshotSpec := &calm.TaskSpec{}
+	snapshotSpec := &selfservice.TaskSpec{}
 	snapshotSpec.TargetUUID = appUUID
 	snapshotSpec.TargetKind = "Application"
-	snapshotSpec.Args = []*calm.VariableList{}
+	snapshotSpec.Args = []*selfservice.VariableList{}
 
-	snapshotConfig := &calm.VariableList{}
+	snapshotConfig := &selfservice.VariableList{}
 
 	snapshotConfig.Name = "snapshot_name"
 	snapshotConfig.Value = snapshotName
@@ -130,7 +130,7 @@ func resourceNutanixCalmAppRecoveryPointCreate(ctx context.Context, d *schema.Re
 
 	snapshotSpec.Args = append(snapshotSpec.Args, snapshotConfig)
 
-	snapshotInput := &calm.ActionInput{}
+	snapshotInput := &selfservice.ActionInput{}
 	snapshotInput.APIVersion = appResp.APIVersion
 	snapshotInput.Metadata = appMetadata
 	snapshotInput.Spec = *snapshotSpec
@@ -169,13 +169,13 @@ func resourceNutanixCalmAppRecoveryPointUpdate(ctx context.Context, d *schema.Re
 }
 
 func resourceNutanixCalmAppRecoveryPointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).Calm
+	conn := meta.(*conns.Client).CalmAPI
 
 	var appUUID string
 
 	appName := d.Get("app_name").(string)
 
-	appFilter := &calm.ApplicationListInput{}
+	appFilter := &selfservice.ApplicationListInput{}
 
 	appFilter.Filter = fmt.Sprintf("name==%s;_state!=deleted", appName)
 
@@ -222,7 +222,7 @@ func resourceNutanixCalmAppRecoveryPointDelete(ctx context.Context, d *schema.Re
 
 	currTime := strconv.FormatInt(time.Now().Unix(), 10)
 
-	listInput := &calm.RecoveryPointsListInput{}
+	listInput := &selfservice.RecoveryPointsListInput{}
 
 	listInput.Filter = fmt.Sprintf("substrate_reference==%s;expiration_time=ge=%s", substrateReference, currTime)
 	listInput.Length = length
@@ -254,17 +254,17 @@ func resourceNutanixCalmAppRecoveryPointDelete(ctx context.Context, d *schema.Re
 		}
 	}
 
-	snapshotSpec := &calm.TaskSpec{}
+	snapshotSpec := &selfservice.TaskSpec{}
 	snapshotSpec.TargetUUID = appUUID
 	snapshotSpec.TargetKind = "Application"
-	snapshotSpec.Args = []*calm.VariableList{}
+	snapshotSpec.Args = []*selfservice.VariableList{}
 
-	snapshotConfig := &calm.VariableList{}
+	snapshotConfig := &selfservice.VariableList{}
 	snapshotConfig.Name = "snapshot_group_id"
 	snapshotConfig.Value = snapshotGroupID
 	snapshotSpec.Args = append(snapshotSpec.Args, snapshotConfig)
 
-	snapshotInput := &calm.ActionInput{}
+	snapshotInput := &selfservice.ActionInput{}
 	snapshotInput.APIVersion = appResp.APIVersion
 	snapshotInput.Metadata = appMetadata
 	snapshotInput.Spec = *snapshotSpec
@@ -309,7 +309,7 @@ func fetchSnapshotActionUUID(appStatus map[string]interface{}, snapshotActionNam
 	return snapshotActionUUID, snapshotActionTaskUUID
 }
 
-func SnapshotStateRefreshFunc(ctx context.Context, client *calm.Client, appUUID, runlogUUID string) resource.StateRefreshFunc {
+func SnapshotStateRefreshFunc(ctx context.Context, client *selfservice.Client, appUUID, runlogUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := client.Service.AppRunlogs(ctx, appUUID, runlogUUID)
 		if err != nil {

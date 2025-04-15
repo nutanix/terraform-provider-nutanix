@@ -15,7 +15,7 @@ provider "nutanix" {
   insecure = true
 }
 
-data "nutanix_calm_app_snapshots" "snapshots" {
+data "nutanix_self_service_app_snapshots" "snapshots" {
   app_uuid = var.app_uuid
   length = 250
   offset = 0
@@ -24,12 +24,12 @@ data "nutanix_calm_app_snapshots" "snapshots" {
 #create local variable pointing to desired recovery point
 locals {
 	snapshot_uuid = [
-	  for snapshot in data.nutanix_calm_app_snapshots.snapshots.entities :
+	  for snapshot in data.nutanix_self_service_app_snapshots.snapshots.entities :
 	  snapshot.uuid if snapshot.name == var.snapshot_name
 	][0]
 }
 
-resource "nutanix_calm_app_restore" "RestoreAction" {
+resource "nutanix_self_service_app_restore" "RestoreAction" {
   restore_action_name = var.restore_action_name
   app_uuid = var.app_uuid
   snapshot_uuid = local.snapshot_uuid

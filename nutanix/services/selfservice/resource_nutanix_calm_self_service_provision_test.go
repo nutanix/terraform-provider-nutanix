@@ -9,7 +9,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameApp = "nutanix_calm_app_provision.test"
+const resourceNameApp = "nutanix_self_service_app_provision.test"
 
 func TestAccNutanixCalmAppProvisionResource_Launch(t *testing.T) {
 	r := acctest.RandInt()
@@ -108,7 +108,7 @@ func TestAccNutanixCalmAppProvisionResource_SoftDelete(t *testing.T) {
 
 func testCalmAppProvisionConfig(bpName, name, desc string) string {
 	return fmt.Sprintf(`
-		resource "nutanix_calm_app_provision" "test" {
+		resource "nutanix_self_service_app_provision" "test" {
 		bp_name         = "%[1]s"
 		app_name        = "%[2]s"
 		app_description = "%[3]s"
@@ -118,7 +118,7 @@ func testCalmAppProvisionConfig(bpName, name, desc string) string {
 
 func testCalmAppExecuteAction(name, systemAction string) string {
 	return fmt.Sprintf(`
-		resource "nutanix_calm_app_provision" "test" {
+		resource "nutanix_self_service_app_provision" "test" {
 		app_name        = "%[1]s"
 		action = "%[2]s"
 		}
@@ -127,7 +127,7 @@ func testCalmAppExecuteAction(name, systemAction string) string {
 
 func testCalmAppExecuteSoftDelete(name string) string {
 	return fmt.Sprintf(`
-		resource "nutanix_calm_app_provision" "test" {
+		resource "nutanix_self_service_app_provision" "test" {
 		app_name        = "%[1]s"
 		soft_delete     = true
 		}

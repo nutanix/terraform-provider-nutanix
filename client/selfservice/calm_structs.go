@@ -1,4 +1,4 @@
-package calm
+package selfservice
 
 import "encoding/json"
 

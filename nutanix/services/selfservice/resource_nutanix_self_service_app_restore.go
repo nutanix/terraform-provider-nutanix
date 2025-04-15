@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/calm"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/selfservice"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -49,13 +49,13 @@ func ResourceNutanixCalmAppRestore() *schema.Resource {
 }
 
 func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).Calm
+	conn := meta.(*conns.Client).CalmAPI
 
 	var appUUID string
 
 	appName := d.Get("app_name").(string)
 
-	appFilter := &calm.ApplicationListInput{}
+	appFilter := &selfservice.ApplicationListInput{}
 
 	appFilter.Filter = fmt.Sprintf("name==%s;_state!=deleted", appName)
 
@@ -115,12 +115,12 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 	delete(appMetadata, "owner_reference")
 
 	// create spec
-	restoreSpec := &calm.TaskSpec{}
+	restoreSpec := &selfservice.TaskSpec{}
 	restoreSpec.TargetUUID = appUUID
 	restoreSpec.TargetKind = "Application"
-	restoreSpec.Args = []*calm.VariableList{}
+	restoreSpec.Args = []*selfservice.VariableList{}
 
-	restoreConfig := &calm.VariableList{}
+	restoreConfig := &selfservice.VariableList{}
 
 	restoreConfig.Name = "recovery_point_group_uuid"
 	restoreConfig.Value = recoveryPointUUID
@@ -135,7 +135,7 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 
 	restoreSpec.Args = append(restoreSpec.Args, restoreConfig)
 
-	restoreInput := &calm.ActionInput{}
+	restoreInput := &selfservice.ActionInput{}
 	restoreInput.APIVersion = appResp.APIVersion
 	restoreInput.Metadata = appMetadata
 	restoreInput.Spec = *restoreSpec
@@ -223,7 +223,7 @@ func fetchRestoreActionUUID(appStatus map[string]interface{}, restoreActionName 
 	return restoreActionUUID, restoreActionTaskUUID
 }
 
-func RestoreStateRefreshFunc(ctx context.Context, client *calm.Client, appUUID, runlogUUID string) resource.StateRefreshFunc {
+func RestoreStateRefreshFunc(ctx context.Context, client *selfservice.Client, appUUID, runlogUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := client.Service.AppRunlogs(ctx, appUUID, runlogUUID)
 		if err != nil {

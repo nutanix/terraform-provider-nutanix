@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/calm"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/selfservice"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 )
 
@@ -66,7 +66,7 @@ func DataSourceNutanixSnapshotPolicy() *schema.Resource {
 }
 
 func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).Calm
+	conn := meta.(*conns.Client).CalmAPI
 	length := d.Get("length").(int)
 	offset := d.Get("offset").(int)
 
@@ -74,7 +74,7 @@ func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.Reso
 	// fetch bp_uuid from bp_name
 	bpName := d.Get("bp_name").(string)
 
-	bpFilter := &calm.BlueprintListInput{}
+	bpFilter := &selfservice.BlueprintListInput{}
 
 	bpFilter.Filter = fmt.Sprintf("name==%s;state!=DELETED", bpName)
 
@@ -105,7 +105,7 @@ func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.Reso
 		return diag.Errorf("Error getting Blueprint: %s", er)
 	}
 
-	bpResp := &calm.BlueprintResponse{}
+	bpResp := &selfservice.BlueprintResponse{}
 	if err := json.Unmarshal([]byte(bpOut.Spec), &bpResp); err != nil {
 		fmt.Println("Error unmarshalling BPOut:", err)
 	}
@@ -158,7 +158,7 @@ func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.Reso
 	PolicyList := make([]map[string]interface{}, 0)
 
 	for idx, configUUID := range *snapshotConfigUUIDList {
-		policyListInput := &calm.PolicyListInput{}
+		policyListInput := &selfservice.PolicyListInput{}
 		policyListInput.Length = length
 		policyListInput.Offset = offset
 		policyListInput.Filter = fmt.Sprintf("environment_references==%s", envRefUUID)

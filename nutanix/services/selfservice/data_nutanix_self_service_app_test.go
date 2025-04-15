@@ -9,7 +9,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNameApp = "data.nutanix_calm_app.test"
+const datasourceNameApp = "data.nutanix_self_service_app.test"
 
 func TestAccNutanixCalmAppGetDatasource(t *testing.T) {
 	r := acctest.RandInt()
@@ -34,8 +34,8 @@ func TestAccNutanixCalmAppGetDatasource(t *testing.T) {
 
 func testAppReadDataSourceConfig() string {
 	return (`
-		data "nutanix_calm_app" "test"{
-			app_uuid = nutanix_calm_app_provision.test.id
+		data "nutanix_self_service_app" "test"{
+			app_uuid = nutanix_self_service_app_provision.test.id
 		}
 `)
 }

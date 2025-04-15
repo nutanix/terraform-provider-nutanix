@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/calm"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/selfservice"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -45,13 +45,13 @@ func ResourceNutanixCalmAppCustomAction() *schema.Resource {
 }
 
 func ResourceNutanixCalmAppCustomActionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).Calm
+	conn := meta.(*conns.Client).CalmAPI
 
 	var appUUID string
 
 	appName := d.Get("app_name").(string)
 
-	appFilter := &calm.ApplicationListInput{}
+	appFilter := &selfservice.ApplicationListInput{}
 
 	appFilter.Filter = fmt.Sprintf("name==%s;_state!=deleted", appName)
 
@@ -104,16 +104,16 @@ func ResourceNutanixCalmAppCustomActionCreate(ctx context.Context, d *schema.Res
 
 	//fetch input
 
-	fetchInput := &calm.ActionInput{}
+	fetchInput := &selfservice.ActionInput{}
 	fetchInput.APIVersion = appResp.APIVersion
 	fetchInput.Metadata = objMetadata
 
 	var actionUUID string
 	// fetch patch for spec
-	fetchSpec := &calm.TaskSpec{}
+	fetchSpec := &selfservice.TaskSpec{}
 	fetchSpec.TargetUUID = appUUID
 	fetchSpec.TargetKind = "Application"
-	fetchSpec.Args = []*calm.VariableList{}
+	fetchSpec.Args = []*selfservice.VariableList{}
 	_, actionUUID = expandCustomActionSpec(objSpec, actionName)
 
 	fetchInput.Spec = *fetchSpec
@@ -176,7 +176,7 @@ func expandCustomActionSpec(pr map[string]interface{}, actionName string) (map[s
 	return nil, ""
 }
 
-func ActionStateRefreshFunc(ctx context.Context, client *calm.Client, appUUID, runlogUUID string) resource.StateRefreshFunc {
+func ActionStateRefreshFunc(ctx context.Context, client *selfservice.Client, appUUID, runlogUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := client.Service.AppRunlogs(ctx, appUUID, runlogUUID)
 		if err != nil {

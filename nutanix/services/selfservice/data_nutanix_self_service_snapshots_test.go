@@ -8,7 +8,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNameSnapshot = "data.nutanix_calm_app_snapshots.test"
+const datasourceNameSnapshot = "data.nutanix_self_service_app_snapshots.test"
 
 func TestAccNutanixCalmSnapshotGetDatasource(t *testing.T) {
 	appName := "test_terraform_snapshot_restore_app"
@@ -30,7 +30,7 @@ func TestAccNutanixCalmSnapshotGetDatasource(t *testing.T) {
 
 func testSnapshotDataSourceConfig(name string) string {
 	return fmt.Sprintf(`
-		data "nutanix_calm_app_snapshots" "test" {
+		data "nutanix_self_service_app_snapshots" "test" {
 			app_name = "%[1]s"
 			length = 250
 			offset = 0
