@@ -69,7 +69,7 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 	log.Printf("[Debug] Getting app uuid from app response: %s", appNameResp)
 
 	var AppNameStatus []interface{}
-	if err := json.Unmarshal([]byte(appNameResp.Entities), &AppNameStatus); err != nil {
+	if err = json.Unmarshal([]byte(appNameResp.Entities), &AppNameStatus); err != nil {
 		fmt.Println("Error unmarshalling AppName:", err)
 	}
 
@@ -92,17 +92,17 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 	}
 
 	var appSpec map[string]interface{}
-	if err := json.Unmarshal(appResp.Spec, &appSpec); err != nil {
+	if err = json.Unmarshal(appResp.Spec, &appSpec); err != nil {
 		fmt.Println("Error unmarshalling Spec:", err)
 	}
 
 	var appMetadata map[string]interface{}
-	if err := json.Unmarshal(appResp.Metadata, &appMetadata); err != nil {
+	if err = json.Unmarshal(appResp.Metadata, &appMetadata); err != nil {
 		fmt.Println("Error unmarshalling Spec to get metadata:", err)
 	}
 
 	var appStatus map[string]interface{}
-	if err := json.Unmarshal(appResp.Status, &appStatus); err != nil {
+	if err = json.Unmarshal(appResp.Status, &appStatus); err != nil {
 		fmt.Println("Error unmarshalling Spec to get status:", err)
 	}
 

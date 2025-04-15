@@ -128,17 +128,17 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	var objSpec map[string]interface{}
-	if err := json.Unmarshal(appResp.Spec, &objSpec); err != nil {
+	if err = json.Unmarshal(appResp.Spec, &objSpec); err != nil {
 		fmt.Println("Error unmarshalling Spec:", err)
 	}
 
 	var objMetadata map[string]interface{}
-	if err := json.Unmarshal(appResp.Metadata, &objMetadata); err != nil {
+	if err = json.Unmarshal(appResp.Metadata, &objMetadata); err != nil {
 		fmt.Println("Error unmarshalling Spec:", err)
 	}
 
 	var objStatus map[string]interface{}
-	if err := json.Unmarshal(appResp.Status, &objStatus); err != nil {
+	if err = json.Unmarshal(appResp.Status, &objStatus); err != nil {
 		fmt.Println("Error unmarshalling Spec:", err)
 	}
 

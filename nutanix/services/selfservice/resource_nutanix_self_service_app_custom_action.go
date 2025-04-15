@@ -65,7 +65,7 @@ func ResourceNutanixCalmAppCustomActionCreate(ctx context.Context, d *schema.Res
 	log.Printf("[Debug] Getting app uuid from app response: %s", appNameResp)
 
 	var AppNameStatus []interface{}
-	if err := json.Unmarshal([]byte(appNameResp.Entities), &AppNameStatus); err != nil {
+	if err = json.Unmarshal([]byte(appNameResp.Entities), &AppNameStatus); err != nil {
 		fmt.Println("Error unmarshalling AppName:", err)
 	}
 
@@ -88,17 +88,17 @@ func ResourceNutanixCalmAppCustomActionCreate(ctx context.Context, d *schema.Res
 	}
 
 	var objSpec map[string]interface{}
-	if err := json.Unmarshal(appResp.Spec, &objSpec); err != nil {
+	if err = json.Unmarshal(appResp.Spec, &objSpec); err != nil {
 		fmt.Println("Error unmarshalling Spec:", err)
 	}
 
 	var objMetadata map[string]interface{}
-	if err := json.Unmarshal(appResp.Metadata, &objMetadata); err != nil {
+	if err = json.Unmarshal(appResp.Metadata, &objMetadata); err != nil {
 		fmt.Println("Error unmarshalling Spec:", err)
 	}
 
 	var objStatus map[string]interface{}
-	if err := json.Unmarshal(appResp.Status, &objStatus); err != nil {
+	if err = json.Unmarshal(appResp.Status, &objStatus); err != nil {
 		fmt.Println("Error unmarshalling Spec:", err)
 	}
 

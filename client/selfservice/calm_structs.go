@@ -55,7 +55,7 @@ type PollStatus struct {
 
 type DeleteAppResp struct {
 	Status     DeleteAppStatus `json:"status"`
-	ApiVersion string          `json:"api_version"`
+	APIVersion string          `json:"api_version"`
 }
 
 type DeleteAppStatus struct {

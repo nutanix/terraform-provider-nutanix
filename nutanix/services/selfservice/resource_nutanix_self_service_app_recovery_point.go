@@ -67,7 +67,7 @@ func resourceNutanixCalmAppRecoveryPointCreate(ctx context.Context, d *schema.Re
 	log.Printf("[Debug] Getting app uuid from app response: %s", appNameResp)
 
 	var AppNameStatus []interface{}
-	if err := json.Unmarshal([]byte(appNameResp.Entities), &AppNameStatus); err != nil {
+	if err = json.Unmarshal([]byte(appNameResp.Entities), &AppNameStatus); err != nil {
 		fmt.Println("Error unmarshalling AppName:", err)
 	}
 
@@ -90,17 +90,17 @@ func resourceNutanixCalmAppRecoveryPointCreate(ctx context.Context, d *schema.Re
 	}
 
 	var appSpec map[string]interface{}
-	if err := json.Unmarshal(appResp.Spec, &appSpec); err != nil {
+	if err = json.Unmarshal(appResp.Spec, &appSpec); err != nil {
 		fmt.Println("Error unmarshalling Spec:", err)
 	}
 
 	var appMetadata map[string]interface{}
-	if err := json.Unmarshal(appResp.Metadata, &appMetadata); err != nil {
+	if err = json.Unmarshal(appResp.Metadata, &appMetadata); err != nil {
 		fmt.Println("Error unmarshalling Spec to get metadata:", err)
 	}
 
 	var appStatus map[string]interface{}
-	if err := json.Unmarshal(appResp.Status, &appStatus); err != nil {
+	if err = json.Unmarshal(appResp.Status, &appStatus); err != nil {
 		fmt.Println("Error unmarshalling Spec to get status:", err)
 	}
 
@@ -189,7 +189,7 @@ func resourceNutanixCalmAppRecoveryPointDelete(ctx context.Context, d *schema.Re
 	log.Printf("[Debug] Getting app uuid from app response: %s", appNameResp)
 
 	var AppNameStatus []interface{}
-	if err := json.Unmarshal([]byte(appNameResp.Entities), &AppNameStatus); err != nil {
+	if err = json.Unmarshal([]byte(appNameResp.Entities), &AppNameStatus); err != nil {
 		log.Println("Error unmarshalling AppName:", err)
 	}
 
@@ -209,12 +209,12 @@ func resourceNutanixCalmAppRecoveryPointDelete(ctx context.Context, d *schema.Re
 		return diag.FromErr(err)
 	}
 	var appStatus map[string]interface{}
-	if err := json.Unmarshal(appResp.Status, &appStatus); err != nil {
+	if err = json.Unmarshal(appResp.Status, &appStatus); err != nil {
 		fmt.Println("Error unmarshalling Spec to get status:", err)
 	}
 
 	var appMetadata map[string]interface{}
-	if err := json.Unmarshal(appResp.Metadata, &appMetadata); err != nil {
+	if err = json.Unmarshal(appResp.Metadata, &appMetadata); err != nil {
 		fmt.Println("Error unmarshalling Spec to get metadata:", err)
 	}
 

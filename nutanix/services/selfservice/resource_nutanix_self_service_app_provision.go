@@ -324,7 +324,7 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 	}
 
 	var BpNameStatus []interface{}
-	if err := json.Unmarshal([]byte(bpNameResp.Entities), &BpNameStatus); err != nil {
+	if err = json.Unmarshal([]byte(bpNameResp.Entities), &BpNameStatus); err != nil {
 		fmt.Println("Error unmarshalling BPName:", err)
 	}
 
@@ -346,12 +346,12 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 	}
 
 	bpResp := &selfservice.BlueprintResponse{}
-	if err := json.Unmarshal([]byte(bpOut.Spec), &bpResp); err != nil {
+	if err = json.Unmarshal([]byte(bpOut.Spec), &bpResp); err != nil {
 		fmt.Println("Error unmarshalling BPOut:", err)
 	}
 
 	var objStatus map[string]interface{}
-	if err := json.Unmarshal(bpOut.Spec, &objStatus); err != nil {
+	if err = json.Unmarshal(bpOut.Spec, &objStatus); err != nil {
 		fmt.Println("Error unmarshalling Spec:", err)
 	}
 
@@ -510,12 +510,12 @@ func resourceNutanixCalmAppProvisionRead(ctx context.Context, d *schema.Resource
 	}
 
 	AppResp := &selfservice.AppResponse{}
-	if err := json.Unmarshal([]byte(resp.Status), &AppResp.Status); err != nil {
+	if err = json.Unmarshal([]byte(resp.Status), &AppResp.Status); err != nil {
 		fmt.Println("Error unmarshalling App:", err)
 	}
 
 	var objMetadata map[string]interface{}
-	if err := json.Unmarshal(resp.Metadata, &objMetadata); err != nil {
+	if err = json.Unmarshal(resp.Metadata, &objMetadata); err != nil {
 		fmt.Println("Error unmarshalling Spec:", err)
 	}
 
@@ -525,7 +525,7 @@ func resourceNutanixCalmAppProvisionRead(ctx context.Context, d *schema.Resource
 
 	// unMarshall to get state of an APP
 	var objStatus map[string]interface{}
-	if err := json.Unmarshal(resp.Status, &objStatus); err != nil {
+	if err = json.Unmarshal(resp.Status, &objStatus); err != nil {
 		fmt.Println("Error unmarshalling Spec:", err)
 	}
 	var appState string
@@ -655,7 +655,7 @@ func calmappStateRefreshFunc(ctx context.Context, client *selfservice.Client, ap
 		}
 
 		var objStatus map[string]interface{}
-		if err := json.Unmarshal(v.Status, &objStatus); err != nil {
+		if err = json.Unmarshal(v.Status, &objStatus); err != nil {
 			fmt.Println("Error unmarshalling Spec:", err)
 		}
 

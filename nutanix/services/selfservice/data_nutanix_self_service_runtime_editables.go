@@ -129,7 +129,7 @@ func datsourceNutanixCalmRuntimeEditablesRead(ctx context.Context, d *schema.Res
 	}
 
 	var BpNameStatus []interface{}
-	if err := json.Unmarshal([]byte(bpNameResp.Entities), &BpNameStatus); err != nil {
+	if err = json.Unmarshal([]byte(bpNameResp.Entities), &BpNameStatus); err != nil {
 		fmt.Println("Error unmarshalling BPName:", err)
 	}
 
@@ -180,6 +180,7 @@ func flattenRuntimeSpec(pr []*selfservice.RuntimeSpec) []interface{} {
 		return nil
 	}
 
+	//nolint:unconvert
 	var runtimeSpec []interface{}
 	for _, r := range pr {
 		runtimeSpec = append(runtimeSpec, map[string]interface{}{
@@ -189,6 +190,7 @@ func flattenRuntimeSpec(pr []*selfservice.RuntimeSpec) []interface{} {
 			"type":        r.Type,
 			"context":     r.Context,
 			"value": func() string {
+				//nolint:unconvert
 				data := json.RawMessage(*r.Value)
 				return string(data)
 			}(),

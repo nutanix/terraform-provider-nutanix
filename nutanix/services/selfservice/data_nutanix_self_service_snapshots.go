@@ -179,7 +179,7 @@ func dataSourceNutanixCalmSnapshotsRead(ctx context.Context, d *schema.ResourceD
 	log.Printf("[Debug] Getting app uuid from app response: %s", appNameResp)
 
 	var AppNameStatus []interface{}
-	if err := json.Unmarshal([]byte(appNameResp.Entities), &AppNameStatus); err != nil {
+	if err = json.Unmarshal([]byte(appNameResp.Entities), &AppNameStatus); err != nil {
 		fmt.Println("Error unmarshalling AppName:", err)
 	}
 
@@ -201,7 +201,7 @@ func dataSourceNutanixCalmSnapshotsRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	var appStatus map[string]interface{}
-	if err := json.Unmarshal(appResp.Status, &appStatus); err != nil {
+	if err = json.Unmarshal(appResp.Status, &appStatus); err != nil {
 		fmt.Println("Error unmarshalling Spec to get status:", err)
 	}
 
