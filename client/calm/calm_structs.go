@@ -72,9 +72,6 @@ type AppResponse struct {
 
 type ActionSpec struct {
 	Name string `json:"name"`
-	// Spec *ActionPayload `json:"spec"`
-	// ApiVersion string                 `json:"api_version"`
-	// Metadata   map[string]interface{} `json:"metadata"`
 }
 
 type AppActionResponse struct {
@@ -112,11 +109,6 @@ type BlueprintListResponse struct {
 type ApplicationListResponse struct {
 	Entities json.RawMessage `json:"entities"`
 }
-
-// type ActionPayload struct {
-// 	TargetUUID string `json:"target_uuid"`
-// 	TargetKind string `json:"target_kind"`
-// }
 
 type RuntimeEditablesResponse struct {
 	Resources []*Resources `json:"resources"`
