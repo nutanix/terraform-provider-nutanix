@@ -68,7 +68,8 @@ func resourceNutanixCalmAppRecoveryPointCreate(ctx context.Context, d *schema.Re
 
 	var AppNameStatus []interface{}
 	if err = json.Unmarshal([]byte(appNameResp.Entities), &AppNameStatus); err != nil {
-		fmt.Println("Error unmarshalling AppName:", err)
+		log.Println("[DEBUG] Error unmarshalling AppName:", err)
+		return diag.FromErr(err)
 	}
 
 	entities := AppNameStatus[0].(map[string]interface{})
@@ -91,17 +92,20 @@ func resourceNutanixCalmAppRecoveryPointCreate(ctx context.Context, d *schema.Re
 
 	var appSpec map[string]interface{}
 	if err = json.Unmarshal(appResp.Spec, &appSpec); err != nil {
-		fmt.Println("Error unmarshalling Spec:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec:", err)
+		return diag.FromErr(err)
 	}
 
 	var appMetadata map[string]interface{}
 	if err = json.Unmarshal(appResp.Metadata, &appMetadata); err != nil {
-		fmt.Println("Error unmarshalling Spec to get metadata:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec to get metadata:", err)
+		return diag.FromErr(err)
 	}
 
 	var appStatus map[string]interface{}
 	if err = json.Unmarshal(appResp.Status, &appStatus); err != nil {
-		fmt.Println("Error unmarshalling Spec to get status:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec to get status:", err)
+		return diag.FromErr(err)
 	}
 
 	uuid, _ := uuid.GenerateUUID()
@@ -142,7 +146,7 @@ func resourceNutanixCalmAppRecoveryPointCreate(ctx context.Context, d *schema.Re
 
 	runlogUUID := snapshotResp.Status.RunlogUUID
 
-	fmt.Println("Runlog UUID:", runlogUUID)
+	log.Println("[DEBUG] Runlog UUID:", runlogUUID)
 	d.SetId(runlogUUID)
 	// poll till action is completed
 	const delayDuration = 5 * time.Second
@@ -191,6 +195,7 @@ func resourceNutanixCalmAppRecoveryPointDelete(ctx context.Context, d *schema.Re
 	var AppNameStatus []interface{}
 	if err = json.Unmarshal([]byte(appNameResp.Entities), &AppNameStatus); err != nil {
 		log.Println("Error unmarshalling AppName:", err)
+		return diag.FromErr(err)
 	}
 
 	entities := AppNameStatus[0].(map[string]interface{})
@@ -210,12 +215,14 @@ func resourceNutanixCalmAppRecoveryPointDelete(ctx context.Context, d *schema.Re
 	}
 	var appStatus map[string]interface{}
 	if err = json.Unmarshal(appResp.Status, &appStatus); err != nil {
-		fmt.Println("Error unmarshalling Spec to get status:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec to get status:", err)
+		return diag.FromErr(err)
 	}
 
 	var appMetadata map[string]interface{}
 	if err = json.Unmarshal(appResp.Metadata, &appMetadata); err != nil {
-		fmt.Println("Error unmarshalling Spec to get metadata:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec to get metadata:", err)
+		return diag.FromErr(err)
 	}
 
 	substrateReference := fetchSubstrateReference(appStatus)
@@ -276,7 +283,7 @@ func resourceNutanixCalmAppRecoveryPointDelete(ctx context.Context, d *schema.Re
 
 	runlogUUID := snapshotResp.Status.RunlogUUID
 
-	fmt.Println("[DEBUG] Trigger delete of snapshot with Runlog UUID:", runlogUUID)
+	log.Println("[DEBUG] Trigger delete of snapshot with Runlog UUID:", runlogUUID)
 
 	return nil
 }
@@ -318,10 +325,10 @@ func SnapshotStateRefreshFunc(ctx context.Context, client *selfservice.Client, a
 			}
 			return nil, "", err
 		}
-		fmt.Println("V State: ", v.Status.RunlogState)
-		fmt.Println("V: ", *v)
+		log.Println("[DEBUG] V State: ", v.Status.RunlogState)
+		log.Println("[DEBUG] V: ", *v)
 		runlogstate := utils.StringValue(v.Status.RunlogState)
-		fmt.Printf("Runlog State: %s\n", runlogstate)
+		log.Printf("[DEBUG] Runlog State: %s\n", runlogstate)
 		return v, runlogstate, nil
 	}
 }

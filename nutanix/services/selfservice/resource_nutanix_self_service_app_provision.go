@@ -325,7 +325,8 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 
 	var BpNameStatus []interface{}
 	if err = json.Unmarshal([]byte(bpNameResp.Entities), &BpNameStatus); err != nil {
-		fmt.Println("Error unmarshalling BPName:", err)
+		log.Println("[DEBUG] Error unmarshalling BPName:", err)
+		return diag.FromErr(err)
 	}
 
 	entities := BpNameStatus[0].(map[string]interface{})
@@ -347,12 +348,14 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 
 	bpResp := &selfservice.BlueprintResponse{}
 	if err = json.Unmarshal([]byte(bpOut.Spec), &bpResp); err != nil {
-		fmt.Println("Error unmarshalling BPOut:", err)
+		log.Println("[DEBUG] Error unmarshalling BPOut:", err)
+		return diag.FromErr(err)
 	}
 
 	var objStatus map[string]interface{}
 	if err = json.Unmarshal(bpOut.Spec, &objStatus); err != nil {
-		fmt.Println("Error unmarshalling Spec:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec:", err)
+		return diag.FromErr(err)
 	}
 
 	var appUUID, appName string
@@ -364,9 +367,9 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 					// Print values in each "app_profile" map
 					appName = appProfile["name"].(string)
 					appUUID = appProfile["uuid"].(string)
-					fmt.Printf("app_profile %d: name = %s, uuid = %s\n", i+1, appProfile["name"], appProfile["uuid"])
+					log.Printf("[DEBUG] app_profile %d: name = %s, uuid = %s\n", i+1, appProfile["name"], appProfile["uuid"])
 				} else {
-					fmt.Printf("app_profile %d is not a map\n", i+1)
+					log.Printf("[DEBUG] app_profile %d is not a map\n", i+1)
 				}
 			}
 		}
@@ -402,8 +405,8 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 				}
 			}
 			if substrateList, ok := itemMap["substrate_list"].([]interface{}); ok {
-				fmt.Println("Substrate List::: ", len(substrateList))
-				fmt.Println("RUNTIME SUBSTRATE LIST::: ", runtimeSpec.SubstrateList)
+				log.Println("[DEBUG] Substrate List::: ", len(substrateList))
+				log.Println("[DEBUG] RUNTIME SUBSTRATE LIST::: ", runtimeSpec.SubstrateList)
 				for _, substrate := range substrateList {
 					substrateMap := substrate.(map[string]interface{})
 
@@ -511,12 +514,14 @@ func resourceNutanixCalmAppProvisionRead(ctx context.Context, d *schema.Resource
 
 	AppResp := &selfservice.AppResponse{}
 	if err = json.Unmarshal([]byte(resp.Status), &AppResp.Status); err != nil {
-		fmt.Println("Error unmarshalling App:", err)
+		log.Println("[DEBUG] Error unmarshalling App:", err)
+		return diag.FromErr(err)
 	}
 
 	var objMetadata map[string]interface{}
 	if err = json.Unmarshal(resp.Metadata, &objMetadata); err != nil {
-		fmt.Println("Error unmarshalling Spec:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec:", err)
+		return diag.FromErr(err)
 	}
 
 	if err = d.Set("api_version", AppResp.APIVersion); err != nil {
@@ -526,13 +531,14 @@ func resourceNutanixCalmAppProvisionRead(ctx context.Context, d *schema.Resource
 	// unMarshall to get state of an APP
 	var objStatus map[string]interface{}
 	if err = json.Unmarshal(resp.Status, &objStatus); err != nil {
-		fmt.Println("Error unmarshalling Spec:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec:", err)
+		return diag.FromErr(err)
 	}
 	var appState string
 
 	if state, ok := objStatus["state"].(string); ok {
 		appState = state
-		fmt.Printf("State of APPP: %s\n", state)
+		log.Printf("[DEBUG] State of APPP: %s\n", state)
 	}
 
 	if err := d.Set("state", appState); err != nil {
@@ -656,13 +662,13 @@ func calmappStateRefreshFunc(ctx context.Context, client *selfservice.Client, ap
 
 		var objStatus map[string]interface{}
 		if err = json.Unmarshal(v.Status, &objStatus); err != nil {
-			fmt.Println("Error unmarshalling Spec:", err)
+			log.Println("[DEBUG] Error unmarshalling Spec:", err)
 		}
 
 		var appState string
 		if state, ok := objStatus["state"].(string); ok {
 			appState = state
-			fmt.Printf("State of APPP: %s\n", state)
+			log.Printf("[DEBUG] State of APPP: %s\n", state)
 		}
 
 		if utils.StringValue(&appState) == "failed" {
@@ -682,12 +688,12 @@ func RunlogStateRefreshFunc(ctx context.Context, client *selfservice.Client, app
 			}
 			return nil, "", err
 		}
-		fmt.Println("V State: ", v.Status.RunlogState)
-		fmt.Println("V: ", *v)
+		log.Println("[DEBUG] V State: ", v.Status.RunlogState)
+		log.Println("[DEBUG] V: ", *v)
 
 		runlogstate := utils.StringValue(v.Status.RunlogState)
 
-		fmt.Printf("Runlog State: %s\n", runlogstate)
+		log.Printf("[DEBUG] Runlog State: %s\n", runlogstate)
 
 		return v, runlogstate, nil
 	}
@@ -812,7 +818,7 @@ func flattenNicMacAddress(subs map[string]interface{}) []map[string]interface{} 
 				// Unmarshal the JSON string into the []interface{} slice
 				err := json.Unmarshal([]byte(elemMap["value"].(string)), &result)
 				if err != nil {
-					fmt.Println("Error decoding JSON:", err)
+					log.Println("[DEBUG] Error decoding JSON:", err)
 				}
 
 				for _, elemMap := range result {

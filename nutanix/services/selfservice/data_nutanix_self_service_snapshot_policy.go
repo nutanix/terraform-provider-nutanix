@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -85,7 +86,8 @@ func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.Reso
 
 	var BpNameStatus []interface{}
 	if err := json.Unmarshal([]byte(bpNameResp.Entities), &BpNameStatus); err != nil {
-		fmt.Println("Error unmarshalling BPName:", err)
+		log.Println("[DEBUG] Error unmarshalling BPName:", err)
+		return diag.FromErr(err)
 	}
 
 	entities := BpNameStatus[0].(map[string]interface{})
@@ -107,12 +109,14 @@ func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.Reso
 
 	bpResp := &selfservice.BlueprintResponse{}
 	if err := json.Unmarshal([]byte(bpOut.Spec), &bpResp); err != nil {
-		fmt.Println("Error unmarshalling BPOut:", err)
+		log.Println("[DEBUG] Error unmarshalling BPOut:", err)
+		return diag.FromErr(err)
 	}
 
 	var objStatus map[string]interface{}
 	if err := json.Unmarshal(bpOut.Spec, &objStatus); err != nil {
-		fmt.Println("Error unmarshalling Spec:", err)
+		log.Println("[DEBUG]Error unmarshalling Spec:", err)
+		return diag.FromErr(err)
 	}
 	var appUUID, envRefUUID string
 	var snapshotConfigUUIDList *[]string
@@ -145,15 +149,15 @@ func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.Reso
 					}
 					snapshotConfigUUIDList = &snapshotUUIDList
 					snapshotConfigNameList = &snapshotNameList
-					fmt.Printf("app_profile %d: name = %s, uuid = %s\n", i+1, appProfile["name"], appProfile["uuid"])
+					log.Printf("[DEBUG] app_profile %d: name = %s, uuid = %s\n", i+1, appProfile["name"], appProfile["uuid"])
 				} else {
-					fmt.Printf("app_profile %d is not a map\n", i+1)
+					log.Printf("[DEBUG] app_profile %d is not a map\n", i+1)
 				}
 			}
 		}
 	}
 
-	fmt.Printf("envRefUUID is %s\n", envRefUUID)
+	log.Printf("[DEBUG] envRefUUID is %s\n", envRefUUID)
 
 	PolicyList := make([]map[string]interface{}, 0)
 
@@ -165,7 +169,8 @@ func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.Reso
 
 		policyResp, err := conn.Service.GetAppProtectionPolicyList(ctx, bpUUID, appUUID, configUUID, policyListInput)
 		if err != nil {
-			fmt.Println("Error GetAppProtectionPolicyList:", err)
+			log.Println("[DEBUG] Error GetAppProtectionPolicyList:", err)
+			return diag.FromErr(err)
 		}
 
 		for _, entity := range policyResp.Entities {
@@ -183,7 +188,7 @@ func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.Reso
 										PolicyMap["snapshot_config_uuid"] = configUUID
 										PolicyMap["policy_expiry_days"] = policy.(map[string]interface{})["multiple"].(float64)
 										PolicyList = append(PolicyList, PolicyMap)
-										fmt.Printf("Added policy with param %s %s", status["uuid"].(string), configUUID)
+										log.Printf("[DEBUG] Added policy with param %s %s", status["uuid"].(string), configUUID)
 									}
 								}
 							}
@@ -194,12 +199,11 @@ func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.Reso
 		}
 	}
 
-	fmt.Println("Final PolicyList:", PolicyList)
+	log.Println("[DEBUG] Final PolicyList:", PolicyList)
 
 	d.SetId(bpUUID)
 
 	if err := d.Set("policy_list", PolicyList); err != nil {
-		fmt.Println("GGGGGG")
 		return diag.FromErr(err)
 	}
 

@@ -11,14 +11,14 @@ import (
 const datasourceNameSnapshotPolicy = "data.nutanix_self_service_snapshot_policy_list.test"
 
 func TestAccNutanixCalmSnapshotPolicyGetDatasource(t *testing.T) {
-	bpName := "test_terraform_bp_with_snapshot_config"
+	blueprintName := testVars.SelfService.BlueprintWithSnapshotName
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testSnapshotPolicyDataSourceConfig(bpName),
+				Config: testSnapshotPolicyDataSourceConfig(blueprintName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameSnapshotPolicy, "policy_list.0.snapshot_config_name"),
 					resource.TestCheckResourceAttrSet(datasourceNameSnapshotPolicy, "policy_list.0.snapshot_config_uuid"),

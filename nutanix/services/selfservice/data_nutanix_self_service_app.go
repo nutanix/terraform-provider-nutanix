@@ -3,7 +3,7 @@ package selfservice
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -202,10 +202,12 @@ func datsourceNutanixCalmAppRead(ctx context.Context, d *schema.ResourceData, me
 
 	AppResp := &selfservice.AppResponse{}
 	if err := json.Unmarshal([]byte(resp.Status), &AppResp.Status); err != nil {
-		fmt.Println("Error unmarshalling App:", err)
+		log.Println("[DEBUG] Error unmarshalling App:", err)
+		return diag.FromErr(err)
 	}
 	if specErr := json.Unmarshal([]byte(resp.Spec), &AppResp.Spec); specErr != nil {
-		fmt.Println("Error unmarshalling App:", specErr)
+		log.Println("[DEBUG] Error unmarshalling App:", specErr)
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("api_version", resp.APIVersion); err != nil {
@@ -215,12 +217,14 @@ func datsourceNutanixCalmAppRead(ctx context.Context, d *schema.ResourceData, me
 	// unMarshall to get state of an APP
 	var objStatus map[string]interface{}
 	if err := json.Unmarshal(resp.Status, &objStatus); err != nil {
-		fmt.Println("Error unmarshalling Spec:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec:", err)
+		return diag.FromErr(err)
 	}
 
 	var objMetadata map[string]interface{}
 	if err := json.Unmarshal(resp.Metadata, &objMetadata); err != nil {
-		fmt.Println("Error unmarshalling Spec:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec:", err)
+		return diag.FromErr(err)
 	}
 	var appState string
 

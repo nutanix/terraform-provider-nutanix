@@ -8,21 +8,21 @@ terraform {
 }
 
 provider "nutanix" {
-  username = "admin"
-  password = "Nutanix.123"
-  endpoint = "10.101.176.123"
+  username = var.nutanix_username
+  password = var.nutanix_password
+  endpoint = var.nutanix_endpoint
   insecure = true
-  port     = 9440
+  port     = var.nutanix_port
 }
 
 data "nutanix_self_service_snapshot_policy_list" "test_snapshot" {
-  bp_name = "bp2"
+  bp_name = "sample_blueprint"
   length = 250
   offset = 0
 }
 
 resource "nutanix_self_service_app_recovery_point" "test_1" {
-  app_uuid = "59e00130-b7a0-40ef-b6e3-25ae608648fd"
-  action_name = "Snapshot_test_1"
-  recovery_point_name = "snap0"
+  app_uuid = var.app_uuid
+  action_name = var.snapshot_action_name
+  recovery_point_name = var.recovery_point_name
 }

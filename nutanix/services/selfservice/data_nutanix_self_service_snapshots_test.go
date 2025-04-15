@@ -11,7 +11,7 @@ import (
 const datasourceNameSnapshot = "data.nutanix_self_service_app_snapshots.test"
 
 func TestAccNutanixCalmSnapshotGetDatasource(t *testing.T) {
-	appName := "test_terraform_snapshot_restore_app"
+	appName := testVars.SelfService.AppWithSnapshotName
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },

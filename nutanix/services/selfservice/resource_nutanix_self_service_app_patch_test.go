@@ -22,13 +22,13 @@ func TestAccNutanixCalmAppVmUpdateResource(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppVMUpdateBasic(configNameBasic),
+				Config: testCalmAppProvisionWithUpdateConfig(testVars.SelfService.BlueprintName, name, desc) + testCalmAppVMUpdateBasic(configNameBasic),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", configNameBasic),
 				),
 			},
 			{
-				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppVMUpdateEditable(configNameEditable),
+				Config: testCalmAppProvisionWithUpdateConfig(testVars.SelfService.BlueprintName, name, desc) + testCalmAppVMUpdateEditable(configNameEditable),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", configNameEditable),
 					resource.TestCheckResourceAttr(resourceNamePatch, "vm_config.0.memory_size_mib", "2048"),
@@ -51,13 +51,13 @@ func TestAccNutanixCalmAppCategoryUpdateResource(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppCategoryAdd(categoryAddConfig),
+				Config: testCalmAppProvisionWithUpdateConfig(testVars.SelfService.BlueprintName, name, desc) + testCalmAppCategoryAdd(categoryAddConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", categoryAddConfig),
 				),
 			},
 			{
-				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppCategoryDelete(categoryDeleteConfig),
+				Config: testCalmAppProvisionWithUpdateConfig(testVars.SelfService.BlueprintName, name, desc) + testCalmAppCategoryDelete(categoryDeleteConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", categoryDeleteConfig),
 				),
@@ -77,13 +77,13 @@ func TestAccNutanixCalmAppDiskAddResource(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppDiskAddBasic(diskAddConfig),
+				Config: testCalmAppProvisionWithUpdateConfig(testVars.SelfService.BlueprintName, name, desc) + testCalmAppDiskAddBasic(diskAddConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", diskAddConfig),
 				),
 			},
 			{
-				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppDiskAddEditable(diskAddConfigEditables),
+				Config: testCalmAppProvisionWithUpdateConfig(testVars.SelfService.BlueprintName, name, desc) + testCalmAppDiskAddEditable(diskAddConfigEditables),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", diskAddConfigEditables),
 					resource.TestCheckResourceAttr(resourceNamePatch, "disks.0.operation", "add"),
@@ -104,7 +104,7 @@ func TestAccNutanixCalmAppNicAddResource(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppNicAdd(nicAddConfig),
+				Config: testCalmAppProvisionWithUpdateConfig(testVars.SelfService.BlueprintName, name, desc) + testCalmAppNicAdd(nicAddConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", nicAddConfig),
 				),
@@ -113,14 +113,14 @@ func TestAccNutanixCalmAppNicAddResource(t *testing.T) {
 	})
 }
 
-func testCalmAppProvisionWithUpdateConfig(name, desc string) string {
+func testCalmAppProvisionWithUpdateConfig(blueprintName, name, desc string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_self_service_app_provision" "test" {
-		bp_name         = "test_terraform_bp"
-		app_name        = "%[1]s"
-		app_description = "%[2]s"
+		bp_name         = "%[1]s"
+		app_name        = "%[2]s"
+		app_description = "%[3]s"
 		}
-`, name, desc)
+`, blueprintName, name, desc)
 }
 
 func testCalmAppVMUpdateBasic(name string) string {

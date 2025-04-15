@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -130,7 +131,8 @@ func datsourceNutanixCalmRuntimeEditablesRead(ctx context.Context, d *schema.Res
 
 	var BpNameStatus []interface{}
 	if err = json.Unmarshal([]byte(bpNameResp.Entities), &BpNameStatus); err != nil {
-		fmt.Println("Error unmarshalling BPName:", err)
+		log.Println("[DEBUG] Error unmarshalling BPName:", err)
+		return diag.FromErr(err)
 	}
 
 	entities := BpNameStatus[0].(map[string]interface{})
@@ -148,12 +150,12 @@ func datsourceNutanixCalmRuntimeEditablesRead(ctx context.Context, d *schema.Res
 		return diag.FromErr(err)
 	}
 
-	fmt.Println("Runtime Editables:", getRuntime)
+	log.Println("[DEBUG] Runtime Editables:", getRuntime)
 
 	if err := d.Set("runtime_editables", flattenRuntimeEditables(getRuntime.Resources[0].RuntimeEditables)); err != nil {
 		return diag.FromErr(err)
 	}
-	fmt.Println("res:", getRuntime.Resources[0].RuntimeEditables)
+	log.Println("[DEBUG] res:", getRuntime.Resources[0].RuntimeEditables)
 
 	d.SetId(bpUUID)
 	return nil

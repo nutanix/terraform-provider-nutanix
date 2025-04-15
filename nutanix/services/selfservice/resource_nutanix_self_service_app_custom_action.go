@@ -66,7 +66,8 @@ func ResourceNutanixCalmAppCustomActionCreate(ctx context.Context, d *schema.Res
 
 	var AppNameStatus []interface{}
 	if err = json.Unmarshal([]byte(appNameResp.Entities), &AppNameStatus); err != nil {
-		fmt.Println("Error unmarshalling AppName:", err)
+		log.Println("[DEBUG] Error unmarshalling AppName:", err)
+		return diag.FromErr(err)
 	}
 
 	entities := AppNameStatus[0].(map[string]interface{})
@@ -89,17 +90,20 @@ func ResourceNutanixCalmAppCustomActionCreate(ctx context.Context, d *schema.Res
 
 	var objSpec map[string]interface{}
 	if err = json.Unmarshal(appResp.Spec, &objSpec); err != nil {
-		fmt.Println("Error unmarshalling Spec:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec:", err)
+		return diag.FromErr(err)
 	}
 
 	var objMetadata map[string]interface{}
 	if err = json.Unmarshal(appResp.Metadata, &objMetadata); err != nil {
-		fmt.Println("Error unmarshalling Spec:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec:", err)
+		return diag.FromErr(err)
 	}
 
 	var objStatus map[string]interface{}
 	if err = json.Unmarshal(appResp.Status, &objStatus); err != nil {
-		fmt.Println("Error unmarshalling Spec:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec:", err)
+		return diag.FromErr(err)
 	}
 
 	//fetch input
@@ -125,7 +129,7 @@ func ResourceNutanixCalmAppCustomActionCreate(ctx context.Context, d *schema.Res
 
 	runlogUUID := fetchResp.Status.RunlogUUID
 
-	fmt.Println("Response:", runlogUUID)
+	log.Println("[DEBUG] Response:", runlogUUID)
 	d.SetId(runlogUUID)
 	// poll till action is completed
 	const delayDuration = 5 * time.Second
@@ -160,13 +164,12 @@ func ResourceNutanixCalmAppCustomActionDelete(ctx context.Context, d *schema.Res
 func expandCustomActionSpec(pr map[string]interface{}, actionName string) (map[string]interface{}, string) {
 	calmActionName := "action_" + strings.ToLower(actionName)
 	if resource, ok := pr["resources"].(map[string]interface{}); ok {
-		// fmt.Println("RESOURCESSSSS")
 		if actionList, ok := resource["action_list"].([]interface{}); ok {
 			for _, action := range actionList {
 				if dep, ok := action.(map[string]interface{}); ok {
-					fmt.Println("DEP UUID::::", dep["uuid"])
+					log.Println("[DEBUG] DEP UUID::::", dep["uuid"])
 					if dep["name"] == actionName || dep["name"] == calmActionName {
-						fmt.Println("DEP UUID::::", dep["uuid"])
+						log.Println("[DEBUG] DEP UUID::::", dep["uuid"])
 						return action.(map[string]interface{}), dep["uuid"].(string)
 					}
 				}
@@ -185,12 +188,12 @@ func ActionStateRefreshFunc(ctx context.Context, client *selfservice.Client, app
 			}
 			return nil, "", err
 		}
-		fmt.Println("V State: ", v.Status.RunlogState)
-		fmt.Println("V: ", *v)
+		log.Println("[DEBUG] V State: ", v.Status.RunlogState)
+		log.Println("[DEBUG] V: ", *v)
 
 		runlogstate := utils.StringValue(v.Status.RunlogState)
 
-		fmt.Printf("Runlog State: %s\n", runlogstate)
+		log.Printf("[DEBUG] Runlog State: %s\n", runlogstate)
 
 		return v, runlogstate, nil
 	}

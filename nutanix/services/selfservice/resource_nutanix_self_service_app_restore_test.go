@@ -11,7 +11,7 @@ import (
 const resourceNameRestore = "nutanix_self_service_app_restore.test"
 
 func TestAccNutanixCalmAppRestoreRecoveryPoint(t *testing.T) {
-	name := "test_terraform_snapshot_restore_app"
+	name := testVars.SelfService.AppWithSnapshotName
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

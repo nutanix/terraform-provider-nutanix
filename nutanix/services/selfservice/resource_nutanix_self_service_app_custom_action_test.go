@@ -21,7 +21,7 @@ func TestAccNutanixCalmAppResource_CustomAction(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testCalmAppRunCustomAction(name, desc, actionName),
+				Config: testCalmAppRunCustomAction(testVars.SelfService.BlueprintName, name, desc, actionName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameAction, "action_name", actionName),
 				),
@@ -30,17 +30,17 @@ func TestAccNutanixCalmAppResource_CustomAction(t *testing.T) {
 	})
 }
 
-func testCalmAppRunCustomAction(name, desc, actionName string) string {
+func testCalmAppRunCustomAction(blueprintName, name, desc, actionName string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_self_service_app_provision" "test" {
-		bp_name         = "test_terraform_bp"
-		app_name        = "%[1]s"
-		app_description = "%[2]s"
+		bp_name         = "%[1]s"
+		app_name        = "%[2]s"
+		app_description = "%[3]s"
 		}
 
 		resource "nutanix_self_service_app_custom_action" "test" {
 		app_name        = nutanix_self_service_app_provision.test.app_name
-		action_name = "%[3]s"
+		action_name = "%[4]s"
 		}
-`, name, desc, actionName)
+`, blueprintName, name, desc, actionName)
 }

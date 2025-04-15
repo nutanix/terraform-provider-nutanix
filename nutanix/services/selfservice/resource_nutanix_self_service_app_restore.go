@@ -70,7 +70,8 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 
 	var AppNameStatus []interface{}
 	if err = json.Unmarshal([]byte(appNameResp.Entities), &AppNameStatus); err != nil {
-		fmt.Println("Error unmarshalling AppName:", err)
+		log.Println("[DEBUG] Error unmarshalling AppName:", err)
+		return diag.FromErr(err)
 	}
 
 	entities := AppNameStatus[0].(map[string]interface{})
@@ -93,17 +94,20 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 
 	var appSpec map[string]interface{}
 	if err = json.Unmarshal(appResp.Spec, &appSpec); err != nil {
-		fmt.Println("Error unmarshalling Spec:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec:", err)
+		return diag.FromErr(err)
 	}
 
 	var appMetadata map[string]interface{}
 	if err = json.Unmarshal(appResp.Metadata, &appMetadata); err != nil {
-		fmt.Println("Error unmarshalling Spec to get metadata:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec to get metadata:", err)
+		return diag.FromErr(err)
 	}
 
 	var appStatus map[string]interface{}
 	if err = json.Unmarshal(appResp.Status, &appStatus); err != nil {
-		fmt.Println("Error unmarshalling Spec to get status:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec to get status:", err)
+		return diag.FromErr(err)
 	}
 
 	uuid, err := uuid.GenerateUUID()
@@ -147,7 +151,7 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 
 	runlogUUID := restoreResp.Status.RunlogUUID
 
-	fmt.Println("Runlog UUID:", runlogUUID)
+	log.Println("[DEBUG] Runlog UUID:", runlogUUID)
 
 	d.SetId(runlogUUID)
 
@@ -232,12 +236,12 @@ func RestoreStateRefreshFunc(ctx context.Context, client *selfservice.Client, ap
 			}
 			return nil, "", err
 		}
-		fmt.Println("V State: ", v.Status.RunlogState)
-		fmt.Println("V: ", *v)
+		log.Println("[DEBUG] V State: ", v.Status.RunlogState)
+		log.Println("[DEBUG] V: ", *v)
 
 		runlogstate := utils.StringValue(v.Status.RunlogState)
 
-		fmt.Printf("Runlog State: %s\n", runlogstate)
+		log.Printf("[DEBUG] Runlog State: %s\n", runlogstate)
 
 		return v, runlogstate, nil
 	}

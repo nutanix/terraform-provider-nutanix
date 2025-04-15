@@ -3,7 +3,6 @@ package selfservice
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
@@ -129,17 +128,20 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 
 	var objSpec map[string]interface{}
 	if err = json.Unmarshal(appResp.Spec, &objSpec); err != nil {
-		fmt.Println("Error unmarshalling Spec:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec:", err)
+		return diag.FromErr(err)
 	}
 
 	var objMetadata map[string]interface{}
 	if err = json.Unmarshal(appResp.Metadata, &objMetadata); err != nil {
-		fmt.Println("Error unmarshalling Spec:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec:", err)
+		return diag.FromErr(err)
 	}
 
 	var objStatus map[string]interface{}
 	if err = json.Unmarshal(appResp.Status, &objStatus); err != nil {
-		fmt.Println("Error unmarshalling Spec:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec:", err)
+		return diag.FromErr(err)
 	}
 
 	//fetch input
@@ -160,17 +162,17 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 		vmConfigRuntimeEditable := vmConfigRuntimeEditable.([]interface{})
 		for _, vmConfig := range vmConfigRuntimeEditable {
 			vmConfigMap := vmConfig.(map[string]interface{})
-			// log.Println("VM CONFIG MAP::::", vmConfigMap)
+			log.Println("[DEBUG] VM CONFIG MAP::::", vmConfigMap)
 			if numSockets, ok := vmConfigMap["num_sockets"].(int); ok {
-				log.Println("NUM SOCKETS::::", numSockets)
+				log.Println("[DEBUG] NUM SOCKETS::::", numSockets)
 				fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["num_sockets_ruleset"].(map[string]interface{})["value"] = numSockets
 			}
 			if memorySizeMib, ok := vmConfigMap["memory_size_mib"].(int); ok {
-				log.Println("MEMORY SIZE::::", memorySizeMib)
+				log.Println("[DEBUG] MEMORY SIZE::::", memorySizeMib)
 				fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["memory_size_mib_ruleset"].(map[string]interface{})["value"] = memorySizeMib
 			}
 			if numVcpusPerSocket, ok := vmConfigMap["num_vcpus_per_socket"].(int); ok {
-				log.Println("NUM VCPUS PER SOCKET::::", numVcpusPerSocket)
+				log.Println("[DEBUG] NUM VCPUS PER SOCKET::::", numVcpusPerSocket)
 				fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["num_vcpus_per_socket_ruleset"].(map[string]interface{})["value"] = numVcpusPerSocket
 			}
 		}
@@ -180,7 +182,7 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 		categoriesRuntimeEditable := categoriesRuntimeEditable.([]interface{})
 		for _, category := range categoriesRuntimeEditable {
 			categoryMap := category.(map[string]interface{})
-			log.Println("CATEGORY MAP::::", categoryMap)
+			log.Println("[DEBUG] CATEGORY MAP::::", categoryMap)
 			categoryList := fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_categories"].([]interface{})
 			if operation, ok := categoryMap["operation"].(string); ok {
 				if operation == "add" {
@@ -204,7 +206,7 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 		startIndex := 0
 		for _, nic := range nicsRuntimeEditable {
 			nicMap := nic.(map[string]interface{})
-			log.Println("NIC MAP::::", nicMap)
+			log.Println("[DEBUG] NIC MAP::::", nicMap)
 			nicList := fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_nic_list"].([]interface{})
 			if operation, ok := nicMap["operation"].(string); ok {
 				if operation == "add" {
@@ -243,9 +245,9 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 		startIndex := 0
 		for _, disk := range disksRuntimeEditable {
 			diskMap := disk.(map[string]interface{})
-			log.Println("DISK MAP::::", diskMap)
+			log.Println("[DEBUG] DISK MAP::::", diskMap)
 			diskList := fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_disk_list"].([]interface{})
-			log.Println("DISK LIST::::", diskList)
+			log.Println("[DEBUG] DISK LIST::::", diskList)
 			if operation, ok := diskMap["operation"].(string); ok {
 				if operation == "add" {
 					// config_details = fetchSpec.Args.Patch["resources"]
@@ -277,7 +279,7 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 
 	runlogUUID := fetchResp.Status.RunlogUUID
 
-	fmt.Println("Response:", runlogUUID)
+	log.Println("[DEBUG] Response:", runlogUUID)
 
 	// poll till action is completed
 	const delayDuration = 5 * time.Second
@@ -316,9 +318,9 @@ func expandPatchSpec(pr map[string]interface{}, patchName string) (map[string]in
 		if patchList, ok := resource["patch_list"].([]interface{}); ok {
 			for _, patch := range patchList {
 				if dep, ok := patch.(map[string]interface{}); ok {
-					fmt.Println("DEP UUID::::", dep["uuid"])
+					log.Println("[DEBUG] DEP UUID::::", dep["uuid"])
 					if dep["name"] == patchName {
-						fmt.Println("DEP UUID::::", dep["uuid"])
+						log.Println("[DEBUG] DEP UUID::::", dep["uuid"])
 						return patch.(map[string]interface{}), dep["uuid"].(string)
 					}
 				}

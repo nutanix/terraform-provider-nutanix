@@ -180,7 +180,8 @@ func dataSourceNutanixCalmSnapshotsRead(ctx context.Context, d *schema.ResourceD
 
 	var AppNameStatus []interface{}
 	if err = json.Unmarshal([]byte(appNameResp.Entities), &AppNameStatus); err != nil {
-		fmt.Println("Error unmarshalling AppName:", err)
+		log.Println("[DEBUG] Error unmarshalling AppName:", err)
+		return diag.FromErr(err)
 	}
 
 	entities := AppNameStatus[0].(map[string]interface{})
@@ -202,7 +203,8 @@ func dataSourceNutanixCalmSnapshotsRead(ctx context.Context, d *schema.ResourceD
 
 	var appStatus map[string]interface{}
 	if err = json.Unmarshal(appResp.Status, &appStatus); err != nil {
-		fmt.Println("Error unmarshalling Spec to get status:", err)
+		log.Println("[DEBUG] Error unmarshalling Spec to get status:", err)
+		return diag.FromErr(err)
 	}
 
 	substrateReference := fetchSubstrateReference(appStatus)
