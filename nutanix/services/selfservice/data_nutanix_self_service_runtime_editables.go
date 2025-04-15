@@ -180,7 +180,7 @@ func flattenRuntimeSpec(pr []*selfservice.RuntimeSpec) []interface{} {
 		return nil
 	}
 
-	//nolint:unconvert
+	//nolint:prealloc
 	var runtimeSpec []interface{}
 	for _, r := range pr {
 		runtimeSpec = append(runtimeSpec, map[string]interface{}{

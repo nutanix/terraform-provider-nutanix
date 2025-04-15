@@ -375,9 +375,9 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 	// check for runtime editables
 	runtimeSpec := &selfservice.RuntimeEditables{}
 	if runtime, ok := d.GetOk("runtime_editables"); ok {
-		getRuntime, err := conn.Service.GetRuntimeEditables(ctx, bpUUID)
-		if err != nil {
-			return diag.Errorf("Error getting Runtime Editables: %s", err)
+		getRuntime, errResp := conn.Service.GetRuntimeEditables(ctx, bpUUID)
+		if errResp != nil {
+			return diag.Errorf("Error getting Runtime Editables: %s", errResp)
 		}
 
 		runtimeSpec = getRuntime.Resources[0].RuntimeEditables
@@ -519,7 +519,7 @@ func resourceNutanixCalmAppProvisionRead(ctx context.Context, d *schema.Resource
 		fmt.Println("Error unmarshalling Spec:", err)
 	}
 
-	if err := d.Set("api_version", AppResp.APIVersion); err != nil {
+	if err = d.Set("api_version", AppResp.APIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 
