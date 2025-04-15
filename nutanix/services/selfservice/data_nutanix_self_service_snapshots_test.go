@@ -20,6 +20,9 @@ func TestAccNutanixCalmSnapshotGetDatasource(t *testing.T) {
 			{
 				Config: testSnapshotDataSourceConfig(appName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceNameSnapshot, "app_name", appName),
+					resource.TestCheckResourceAttr(datasourceNameSnapshot, "entities.0.action_name", "Snapshot_s1"),
+					resource.TestCheckResourceAttr(datasourceNameSnapshot, "kind", "vm_recovery_group"),
 					resource.TestCheckResourceAttrSet(datasourceNameSnapshot, "entities.#"),
 					resource.TestCheckResourceAttrSet(datasourceNameSnapshot, "entities.0.%"),
 				),

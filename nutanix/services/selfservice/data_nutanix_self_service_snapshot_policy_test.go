@@ -20,10 +20,12 @@ func TestAccNutanixCalmSnapshotPolicyGetDatasource(t *testing.T) {
 			{
 				Config: testSnapshotPolicyDataSourceConfig(blueprintName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceNameSnapshotPolicy, "policy_list.0.snapshot_config_name"),
+					resource.TestCheckResourceAttr(datasourceNameSnapshotPolicy, "bp_name", blueprintName),
+					resource.TestCheckResourceAttr(datasourceNameSnapshotPolicy, "policy_list.0.snapshot_config_name", "Snapshot_Configs1"),
 					resource.TestCheckResourceAttrSet(datasourceNameSnapshotPolicy, "policy_list.0.snapshot_config_uuid"),
-					resource.TestCheckResourceAttrSet(datasourceNameSnapshotPolicy, "policy_list.0.policy_name"),
+					resource.TestCheckResourceAttr(datasourceNameSnapshotPolicy, "policy_list.0.policy_name", "test_local_snapshot_policy_local_account"),
 					resource.TestCheckResourceAttrSet(datasourceNameSnapshotPolicy, "policy_list.0.policy_uuid"),
+					resource.TestCheckResourceAttrSet(datasourceNameSnapshotPolicy, "policy_list.0.snapshot_config_uuid"),
 				),
 			},
 		},
