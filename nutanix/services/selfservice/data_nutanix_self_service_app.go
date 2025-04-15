@@ -201,7 +201,7 @@ func datsourceNutanixCalmAppRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	AppResp := &selfservice.AppResponse{}
-	if err := json.Unmarshal([]byte(resp.Status), &AppResp.Status); err != nil {
+	if err = json.Unmarshal([]byte(resp.Status), &AppResp.Status); err != nil {
 		log.Println("[DEBUG] Error unmarshalling App:", err)
 		return diag.FromErr(err)
 	}
