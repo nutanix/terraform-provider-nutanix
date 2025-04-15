@@ -173,18 +173,10 @@ func ResourceNutanixCalmAppProvision() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						// "provider": {
-						// 	Type:     schema.TypeString,
-						// 	Computed: true,
-						// },
 						"project": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						// "environment": {
-						// 	Type:     schema.TypeString,
-						// 	Computed: true,
-						// },
 						"owner": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -460,25 +452,6 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 		return diag.Errorf("Error creating App: %s", err)
 	}
 
-	// var objStatusResp map[string]interface{}
-	// if err := json.Unmarshal(output.Spec, &objStatusResp); err != nil {
-	// 	fmt.Println("Error unmarshalling Spec:", err)
-	// }
-	// var objStatus map[string]interface{}
-	// if err := json.Unmarshal(bpOut.Spec, &objStatus); err == nil {
-	// 	fmt.Println("Status as object:", objStatus)
-	// }
-
-	// fmt.Println("app_reference", objStatus["resource"])
-	// d.Set("status", objStatus["resource"])
-	// d.Set("spec", objStatus)
-	// fmt.Println("Status as object:", output.Status)
-
-	// Set the values in the resource data
-	// if err := d.Set("status", output.Status.RequestID); err != nil {
-	// 	return diag.FromErr(err)
-	// }
-
 	// Convert JSON object to JSON string
 	jsonData, err := json.Marshal(output.Spec)
 	if err != nil {
@@ -545,16 +518,6 @@ func resourceNutanixCalmAppProvisionRead(ctx context.Context, d *schema.Resource
 	if err := json.Unmarshal(resp.Metadata, &objMetadata); err != nil {
 		fmt.Println("Error unmarshalling Spec:", err)
 	}
-
-	// Convert JSON object to JSON string
-	// jsonData, err := json.MarshalIndent(AppResp.Status, " ", "  ")
-	// if err != nil {
-	// 	return diag.FromErr(err)
-	// }
-	// Set the JSON data as a string in the Terraform resource data
-	// if err := d.Set("status", string(jsonData)); err != nil {
-	// 	return diag.FromErr(err)
-	// }
 
 	if err := d.Set("api_version", AppResp.APIVersion); err != nil {
 		return diag.FromErr(err)
@@ -666,8 +629,6 @@ func resourceNutanixCalmAppProvisionDelete(ctx context.Context, d *schema.Resour
 func calmtaskStateRefreshFunc(ctx context.Context, client *calm.Client, bpID, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := client.Service.TaskPoll(ctx, bpID, taskUUID)
-		// fmt.Println("V: ", *v)
-		// fmt.Println("V.state: ", *v.Status.State)
 		if err != nil {
 			if strings.Contains(fmt.Sprint(err), "INVALID_UUID") {
 				return v, ERROR, nil
@@ -744,11 +705,6 @@ func flattenVM(pr map[string]interface{}) []interface{} {
 				if subs, ok := itemList["substrate_configuration"].(map[string]interface{}); ok {
 					var configMap map[string]interface{}
 					configMapList := make([]map[string]interface{}, 0)
-					// nicsList := make([]map[string]interface{}, 0)
-					// nicsMap := map[string]interface{}{}
-
-					// fmt.Println("AHV_VM: ", subs["type"])
-					// fmt.Println("uuid:", subs["uuid"])
 
 					if elemList, ok := subs["element_list"].([]interface{}); ok {
 						for _, elem := range elemList {
@@ -767,21 +723,8 @@ func flattenVM(pr map[string]interface{}) []interface{} {
 									configMap["memory"] = resources["memory_size_mib"]
 								}
 
-								// if resource, ok := createSpec["resources"].(map[string]interface{}); ok {
-								// 	if nics, ok := resource["nic_list"].([]interface{}); ok {
-								// 		for _, nic := range nics {
-								// 			nicMap := nic.(map[string]interface{})
-								// 			nicsMap["mac_address"] = flattenNicMacAddress(subs)
-								// 			nicsMap["type"] = nicMap["nic_type"]
-								// 			nicsMap["subnet"] = nicMap["subnet_reference"].(map[string]interface{})["name"]
-								// 			nicsList = append(nicsList, nicsMap)
-								// 			configsVal["nics"] = nicsList
-								// 		}
-								// 	}
-
 								configsVal["nics"] = flattenNicMacAddress(subs)
 
-								// }
 								if categories, ok := createSpec["categories"].(map[string]interface{}); ok {
 									configsVal["categories"] = categories
 								}
@@ -800,29 +743,6 @@ func flattenVM(pr map[string]interface{}) []interface{} {
 							configsVal["configuration"] = configMapList
 						}
 					}
-
-					// if createSpec, ok := subs["create_spec"].(map[string]interface{}); ok {
-					// 	if resource, ok := createSpec["resources"].(map[string]interface{}); ok {
-					// 		if diskList, ok := resource["disk_list"].([]interface{}); ok {
-					// 			for _, disk := range diskList {
-					// 				diskMap := disk.(map[string]interface{})
-					// 				configMap["image"] = diskMap["data_source_reference"].(map[string]interface{})["name"]
-					// 			}
-					// 		}
-					// 	}
-					// }
-
-					// if variableList, ok := subs["variable_list"].([]interface{}); ok {
-					// 	for _, elem := range variableList {
-					// 		elemMap := elem.(map[string]interface{})
-
-					// 		if elemMap["name"] == "mac_address" {
-					// 			nicsMap["mac_address"] = elemMap["value"]
-					// 		}
-					// 	}
-					// }
-					// configMapList = append(configMapList, configMap)
-					// configsVal["configuration"] = configMapList
 				}
 				vms = append(vms, configsVal)
 			}

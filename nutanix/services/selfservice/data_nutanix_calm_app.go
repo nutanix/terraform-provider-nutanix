@@ -148,18 +148,10 @@ func DatsourceNutanixCalmApp() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						// "provider": {
-						// 	Type:     schema.TypeString,
-						// 	Computed: true,
-						// },
 						"project": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						// "environment": {
-						// 	Type:     schema.TypeString,
-						// 	Computed: true,
-						// },
 						"owner": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -215,26 +207,6 @@ func datsourceNutanixCalmAppRead(ctx context.Context, d *schema.ResourceData, me
 	if specErr := json.Unmarshal([]byte(resp.Spec), &AppResp.Spec); specErr != nil {
 		fmt.Println("Error unmarshalling App:", specErr)
 	}
-
-	// Convert JSON object to JSON string
-	// jsonData, err := json.MarshalIndent(AppResp.Status, " ", "  ")
-	// if err != nil {
-	// 	return diag.FromErr(err)
-	// }
-	// Set the JSON data as a string in the Terraform resource data
-	// if err := d.Set("status", string(jsonData)); err != nil {
-	// 	return diag.FromErr(err)
-	// }
-
-	// Convert JSON object to JSON string
-	// jsonSpecData, err := json.MarshalIndent(AppResp.Spec, " ", "  ")
-	// if err != nil {
-	// 	return diag.FromErr(err)
-	// }
-	// // Set the JSON data as a string in the Terraform resource data
-	// if err := d.Set("spec", string(jsonSpecData)); err != nil {
-	// 	return diag.FromErr(err)
-	// }
 
 	if err := d.Set("api_version", resp.APIVersion); err != nil {
 		return diag.FromErr(err)

@@ -162,13 +162,11 @@ func datsourceNutanixCalmRuntimeEditablesRead(ctx context.Context, d *schema.Res
 func flattenRuntimeEditables(resource *calm.RuntimeEditables) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
-			"action_list":     flattenRuntimeSpec(resource.ActionList),
-			"service_list":    flattenRuntimeSpec(resource.ServiceList),
-			"credential_list": flattenRuntimeSpec(resource.CredentialList),
-			"substrate_list":  flattenRuntimeSpec(resource.SubstrateList),
-			"package_list":    flattenRuntimeSpec(resource.PackageList),
-			// "snapshot_config_list": flattenRuntimeSpec(resource.SnapshotConfigList),
-			// "app_profile":          flattenRuntimeSpec(resource.AppProfile),
+			"action_list":         flattenRuntimeSpec(resource.ActionList),
+			"service_list":        flattenRuntimeSpec(resource.ServiceList),
+			"credential_list":     flattenRuntimeSpec(resource.CredentialList),
+			"substrate_list":      flattenRuntimeSpec(resource.SubstrateList),
+			"package_list":        flattenRuntimeSpec(resource.PackageList),
 			"task_list":           flattenRuntimeSpec(resource.TaskList),
 			"restore_config_list": flattenRuntimeSpec(resource.RestoreConfigList),
 			"variable_list":       flattenRuntimeSpec(resource.VariableList),
