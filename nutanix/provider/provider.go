@@ -264,6 +264,7 @@ func Provider() *schema.Provider {
 			"nutanix_users_v2":                                iamv2.DatasourceNutanixUsersV2(),
 			"nutanix_authorization_policy_v2":                 iamv2.DatasourceNutanixAuthorizationPolicyV2(),
 			"nutanix_authorization_policies_v2":               iamv2.DatasourceNutanixAuthorizationPoliciesV2(),
+			"nutanix_keys_v2":																	iamv2.DatasourceNutanixKeysV2(),
 			"nutanix_storage_container_v2":                    storagecontainersv2.DatasourceNutanixStorageContainerV2(),
 			"nutanix_storage_containers_v2":                   storagecontainersv2.DatasourceNutanixStorageContainersV2(),
 			"nutanix_storage_container_stats_info_v2":         storagecontainersv2.DatasourceNutanixStorageStatsInfoV2(),
