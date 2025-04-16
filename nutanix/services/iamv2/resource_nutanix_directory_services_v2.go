@@ -53,8 +53,9 @@ func ResourceNutanixDirectoryServicesV2() *schema.Resource {
 							Required: true,
 						},
 						"password": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:      schema.TypeString,
+							Sensitive: true,
+							Required:  true,
 						},
 					},
 				},
@@ -255,7 +256,7 @@ func ResourceNutanixDirectoryServicesV2Read(ctx context.Context, d *schema.Resou
 	if err := d.Set("directory_type", flattenDirectoryType(getResp.DirectoryType)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("service_account", flattenDsServiceAccountForResource(getResp.ServiceAccount, d.Get("service_account").([]interface{}))); err != nil {
+	if err := d.Set("service_account", flattenDsServiceAccountForResource(getResp.ServiceAccount)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -400,7 +401,7 @@ func ResourceNutanixDirectoryServicesV2Delete(ctx context.Context, d *schema.Res
 }
 
 func expandDsServiceAccount(pr interface{}) *import1.DsServiceAccount {
-	if pr != nil {
+	if pr != nil && len(pr.([]interface{})) > 0 {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
 
@@ -481,17 +482,15 @@ func expandUserGroupConfiguration(pr interface{}) *import1.UserGroupConfiguratio
 	return nil
 }
 
-func flattenDsServiceAccountForResource(pr *import1.DsServiceAccount, serviceAccountConfig []interface{}) []map[string]interface{} {
+func flattenDsServiceAccountForResource(pr *import1.DsServiceAccount) []map[string]interface{} {
 	if pr != nil {
 		accs := make([]map[string]interface{}, 0)
 		acc := make(map[string]interface{})
 
 		// password is not returned in the response
 		// so we are using the password from the configuration as it required for update
-		serviceAccountConfigMap := serviceAccountConfig[0].(map[string]interface{})
-		password := serviceAccountConfigMap["password"].(string)
 		acc["username"] = pr.Username
-		acc["password"] = password
+		acc["password"] = pr.Password
 
 		accs = append(accs, acc)
 		return accs
