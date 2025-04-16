@@ -185,6 +185,11 @@ func testDirectoryServicesResourceConfig() string {
 			password = local.directory_services.service_account.password
 		}
 		white_listed_groups = [ local.directory_services.white_listed_groups[0]]
+		lifecycle {
+			ignore_changes = [
+			  service_account.0.password,
+			]
+	  	}
 	}`, filepath)
 }
 
@@ -207,6 +212,11 @@ func testDirectoryServicesUpdateResourceConfig() string {
 			password = local.directory_services.service_account.password
 		}
 		white_listed_groups = [ local.directory_services.white_listed_groups[1]]
+		lifecycle {
+			ignore_changes = [
+			  service_account.0.password,
+			]
+	  	}
 	}`, filepath)
 }
 
@@ -240,6 +250,11 @@ func testDirectoryOpenLDAPServicesResourceConfig(name string) string {
 				group_member_attribute_value = local.directory_services.open_ldap_configuration.user_group_configuration.group_member_attribute_value
 			}
 		}
+		lifecycle {
+			ignore_changes = [
+				service_account.0.password,
+			]
+	  	}
 	}`, name, filepath)
 }
 
@@ -255,6 +270,11 @@ func testDirectoryServicesDuplicatedResourceConfig() string {
 			password = local.directory_services.service_account.password
 		}
 		white_listed_groups = [ local.directory_services.white_listed_groups[0]]
+		lifecycle {
+			ignore_changes = [
+			  service_account.0.password,
+			]
+	  	}
 	}`
 }
 
@@ -274,6 +294,11 @@ func testDirectoryServicesResourceWithoutNameConfig() string {
 		directory_type = local.directory_services.directory_type
 		domain_name = local.directory_services.domain_name
 		url = local.directory_services.url
+		lifecycle {
+			ignore_changes = [
+			  service_account.0.password,
+			]
+	  	}
 	}`, filepath)
 }
 
@@ -293,6 +318,11 @@ func testDirectoryServicesResourceWithoutURLConfig() string {
 		}
 		directory_type = local.directory_services.directory_type
 		domain_name = local.directory_services.domain_name
+		lifecycle {
+			ignore_changes = [
+			  service_account.0.password,
+			]
+	  	}
 	}`, filepath)
 }
 
@@ -312,6 +342,11 @@ func testDirectoryServicesResourceWithoutDomainNameConfig() string {
 		}
 		directory_type = local.directory_services.directory_type
 		url = local.directory_services.url
+		lifecycle {
+			ignore_changes = [
+			  service_account.0.password,
+			]
+	  	}
 	}`, filepath)
 }
 
@@ -331,6 +366,11 @@ func testDirectoryServicesResourceWithoutDirectoryTypeConfig() string {
 		}
 		domain_name = local.directory_services.domain_name
 		url = local.directory_services.url
+		lifecycle {
+			ignore_changes = [
+			  service_account.0.password,
+			]
+	  	}
 	}`, filepath)
 }
 
@@ -348,5 +388,10 @@ func testDirectoryServicesResourceWithoutServiceAccountConfig() string {
 		directory_type = local.directory_services.directory_type
 		domain_name = local.directory_services.domain_name
 		url = local.directory_services.url
+		lifecycle {
+			ignore_changes = [
+			  service_account.0.password,
+			]
+	  	}
 	}`, filepath)
 }
