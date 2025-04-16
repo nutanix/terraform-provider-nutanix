@@ -3,13 +3,13 @@ package nutanix
 import (
 	"fmt"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/client/selfservice"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
 	foundation_central "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/foundation"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/karbon"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/selfservice"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/clusters"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/datapolicies"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/dataprotection"
