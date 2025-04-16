@@ -13,6 +13,7 @@ import (
 	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -493,11 +494,13 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	if vpcRef, ok := d.GetOk("vpc_reference"); ok {
 		inputSpec.VpcReference = utils.StringPtr(vpcRef.(string))
 	}
-	if isNat, ok := d.GetOk("is_nat_enabled"); ok {
-		inputSpec.IsNatEnabled = utils.BoolPtr(isNat.(bool))
+	if common.IsExplicitlySet(d, "is_nat_enabled") {
+		isNat := d.Get("is_nat_enabled").(bool)
+		inputSpec.IsNatEnabled = utils.BoolPtr(isNat)
 	}
-	if isExt, ok := d.GetOk("is_external"); ok {
-		inputSpec.IsExternal = utils.BoolPtr(isExt.(bool))
+	if common.IsExplicitlySet(d, "is_external") {
+		isExt := d.Get("is_external").(bool)
+		inputSpec.IsExternal = utils.BoolPtr(isExt)
 	}
 	if reservedIPAdd, ok := d.GetOk("reserved_ip_addresses"); ok {
 		inputSpec.ReservedIpAddresses = expandIPAddress(reservedIPAdd.([]interface{}))
@@ -532,10 +535,12 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	if ipUsage, ok := d.GetOk("ip_usage"); ok {
 		inputSpec.IpUsage = expandIPUsage(ipUsage)
 	}
-
 	if ipConfig, ok := d.GetOk("ip_config"); ok {
 		inputSpec.IpConfig = expandIPConfig(ipConfig.([]interface{}))
 	}
+
+	aJSON, _ := json.MarshalIndent(inputSpec, "", " ")
+	log.Printf("[DEBUG] Subnet create payload : %s", string(aJSON))
 
 	resp, err := conn.SubnetAPIInstance.CreateSubnet(&inputSpec)
 	if err != nil {

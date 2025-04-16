@@ -1,5 +1,59 @@
+## 2.1.1 (April 08, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.1.0...v2.1.1)
+
+**Fixed bugs:**
+- Error Creating NoNat Overlay External Network [\#820](https://github.com/nutanix/terraform-provider-nutanix/issues/820)
+
+## 2.1.0 (April 07, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.0.0...v2.1.0)
+
+All new features are v4 SDKs based. 
+
+**New Feature:**
+- Prism [\#815](https://github.com/nutanix/terraform-provider-nutanix/issues/815)
+    - CRUD for Backup Target
+    - CRD for Restore Source
+    - Resource to deploy pc
+    - Resource to restore pc
+    - Restore to unregister pc
+    - Datasource to list pcs
+    - Datasource to fetch pc details
+    - Datasource to list restorable pcs
+    - Datasource to list pc restore points
+    - Datasource to list pc restore points details
+    - Datasource to list backup targets
+    - Datasource to fetch backup target
+    - Datasource to fetch restore source
+
+- Data Protection [\#816](https://github.com/nutanix/terraform-provider-nutanix/issues/816)
+    - CRUD for protection policies
+    - Resource to promote protected resource
+    - Resource to restore protected resource
+    - Datasource to fetch protected resource
+    - Datasource to list protection policies
+    - Datasource to fetch protection policy
+
+- LCM [\#814](https://github.com/nutanix/terraform-provider-nutanix/issues/814)
+   - Resource for Perform Inventory
+   - Resource for Upgrade PreChecks
+   - Resource for Upgrade of entities
+   - Resource for LCM Config
+   - Datasource to fetch LCM status
+   - Datasource to fetch entities
+   - Datasource to fetch specific entity
+   - Datasource to fetch LCM Config
+
+**Fixed bugs:**
+- Fix to add additional disk for virtual machine during update [\#750](https://github.com/nutanix/terraform-provider-nutanix/issues/750)
+- Fix to create a virtual machine with UEFI [\#725](https://github.com/nutanix/terraform-provider-nutanix/issues/725)
+- Fix Nutanix image v2 example in documentation [\#738](https://github.com/nutanix/terraform-provider-nutanix/issues/738)
+- Fix datasource to expand cluster v2 [\#722](https://github.com/nutanix/terraform-provider-nutanix/issues/722)
+- Support import in nutanix_virtual_machine_v2 Resource [\#745](https://github.com/nutanix/terraform-provider-nutanix/issues/745)
+- Fix documentation and examples for existing features [\#755](https://github.com/nutanix/terraform-provider-nutanix/pull/755)
+
+
 ## 2.0.0 (January 07, 2025)
-[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.5...feat/2.0)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.9.5...v2.0.0)
 
 All new features are v4 SDKs based. 
 

@@ -26,7 +26,7 @@ func TestAccV2NutanixRecoveryPointRestoreResource_basic(t *testing.T) {
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			// Create Recovery Point
@@ -64,14 +64,14 @@ func TestAccV2NutanixRecoveryPointRestoreResource_basic(t *testing.T) {
 
 func testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTime string) string {
 	return fmt.Sprintf(`
-	data "nutanix_clusters_v2" "clusters" {} 
+	data "nutanix_clusters_v2" "clusters" {}
 	locals{
 		cluster1 = [
 			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
 			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 		config = (jsondecode(file("%[3]s")))
-		data_protection = local.config.data_protection			
+		availability_zone = local.config.availability_zone
 	}
 
 	resource "nutanix_virtual_machine_v2" "test"{

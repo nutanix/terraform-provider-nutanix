@@ -1,14 +1,14 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_pc_registration_v2 "
-sidebar_current: "docs-nutanix-resource-pe-pc-registration-v2"
+sidebar_current: "docs-nutanix-resource-pc-registration-v2"
 description: |-
   This operation Registers a domain manager (Prism Central) instance to other entities like PE and PC. This process is asynchronous, creating a registration task and returning its UUID.
 
 
 ---
 
-# nutanix_pc_registration_v2 
+# nutanix_pc_registration_v2
 
 Provides a resource to Registers a domain manager (Prism Central) instance to other entities like PE and PC. This process is asynchronous, creating a registration task and returning its UUID.
 
@@ -19,7 +19,7 @@ Provides a resource to Registers a domain manager (Prism Central) instance to ot
 
 
 // DomainManagerRemoteClusterSpec
-resource "nutanix_pc_registration_v2 " "pc1"{
+resource "nutanix_pc_registration_v2 " "pc-domain-manager"{
   pc_ext_id = "00000000-0000-0000-0000-000000000000"
   remote_cluster {
     domain_manager_remote_cluster_spec {
@@ -42,7 +42,7 @@ resource "nutanix_pc_registration_v2 " "pc1"{
 }
 
 // AOSRemoteClusterSpec
-resource "nutanix_pc_registration_v2 " "pc1"{
+resource "nutanix_pc_registration_v2 " "pc-aos"{
   pc_ext_id = "00000000-0000-0000-0000-000000000000"
   remote_cluster {
     aos_remote_cluster_spec {
@@ -64,7 +64,7 @@ resource "nutanix_pc_registration_v2 " "pc1"{
 }
 
 // ClusterReference
-resource "nutanix_pc_registration_v2 " "pc1"{
+resource "nutanix_pc_registration_v2 " "pc-cluster-reference"{
   pc_ext_id = "00000000-0000-0000-0000-000000000000"
   remote_cluster {
     cluster_reference {
@@ -93,7 +93,7 @@ The remote_cluster argument supports the following, depending on the object type
 
 
 * `domain_manager_remote_cluster_spec`: - The registration request consists of the remote cluster details. and cloud type.
-* `aos_remote_cluster_spec`: - The registration request consists of the remote cluster details. 
+* `aos_remote_cluster_spec`: - The registration request consists of the remote cluster details.
 * `cluster_reference`: - The registration request consists of the remote cluster details. using the cluster reference.
 
 ### DomainManagerRemoteClusterSpec
@@ -112,7 +112,7 @@ The `cluster_reference` argument supports the following:
 * `ext_id`: -(Required)  Cluster UUID of a remote cluster.
 
 
-#### Remote Cluster Details 
+#### Remote Cluster Details
 The remote_cluster argument for `prism.v4.management.DomainManagerRemoteClusterSpec` and `prism.v4.management.AOSRemoteClusterSpec` supports the following:
 
 * `address`: -(Required)  An unique address that identifies a device on the internet or a local network in IPv4/IPv6 format or a Fully Qualified Domain Name.

@@ -1,4 +1,4 @@
-#variable definations
+#variable definitions
 variable "nutanix_username" {
   type = string
 }
