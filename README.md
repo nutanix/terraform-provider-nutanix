@@ -46,7 +46,7 @@ The provider is used to interact with the many resources and data sources suppor
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
-| 2.2.0 | | | Self Service == 4.1.0 | yes | 
+| 2.2.0 | | | Self Service v4.1.0 | yes | 
 | 2.1.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.1.0 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.0.0 | 7.0 | pc2024.3 or later  | ndb v2.7, nke v2.8, foundation v5.7 | Yes |
