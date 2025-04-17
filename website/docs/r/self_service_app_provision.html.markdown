@@ -93,11 +93,6 @@ resource "nutanix_self_service_app_provision" "test" {
     app_name        = "NAME OF APPLICATION"
     action = "NAME OF SYSTEM ACTION TO RUN"
 }
-
-resource "nutanix_self_service_app_provision" "test" {
-    app_name        = "NAME OF APPLICATION"
-    soft_delete     = true
-}
 ```
 
 ## Example 4: Soft delete Application
