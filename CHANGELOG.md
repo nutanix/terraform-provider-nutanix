@@ -1,3 +1,30 @@
+## 2.2.0 (April 17, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.1.1...v2.2.0)
+
+**New Feature:**
+- Terraform plugin support for Self Service [\#826](https://github.com/nutanix/terraform-provider-nutanix/issues/826)
+  - Launch a Blueprint (Provision an application)
+    - Launch without runtime editable
+    - Launch with runtime editable on substrate list (change vcpu, numsocket, memory size while launching)
+  - System Actions Execution on Application
+    - Start an application
+    - Stop an application
+    - Soft delete an application
+    - Delete an application
+  - Custom actions execution
+  - Update an application (via patch configs)
+    - Update vCPUs/num_sockets (with runtime editable support)
+    - Update Memory (with runtime editable support)
+    - Update cores-per-vCPU/num_vcpus_per_socket (with runtime editable support)
+    - Update categories (with runtime editable support)
+    - Add a nic (with runtime editable support using nic UUID)
+    - Disk addition (with runtime editable)
+  - Snapshot/Restore actions support
+    - List Snapshot Policies in Blueprints
+    - Create a snapshot by executing snapshot action
+    - List snapshots (recovery points) in application
+    - Restore a snapshot by executing restore action
+
 ## 2.1.1 (April 08, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.1.0...v2.1.1)
 
