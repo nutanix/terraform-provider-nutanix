@@ -153,7 +153,7 @@ func DataSourceNutanixKeysV2Read(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("user_ext_id"); ok {
 		userExtId = utils.StringPtr(v.(string))
 	}
-	log.Printf("userExtId: %v", userExtId)
+
 	// initialize query params
 	var filter, orderBy, selects *string
 	var page, limit *int
@@ -213,8 +213,9 @@ func flattenKeysEntities(data []import3.Key) []map[string]interface{} {
 			"status":            item.Status.GetName(),
 			"created_by":        item.CreatedBy,
 			"last_updated_time": flattenTime(item.LastUpdatedTime),
-			"last_used_time":    flattenTime(item.LastUsedTime),
 			"assigned_to":       item.AssignedTo,
+			"last_used_time":    flattenTime(item.LastUsedTime),
+			"key_details": 			 item.KeyDetails,
 		}
 		flattened = append(flattened, entry)
 	}
