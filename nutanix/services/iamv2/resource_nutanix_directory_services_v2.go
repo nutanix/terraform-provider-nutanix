@@ -320,7 +320,7 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 		return diag.Errorf("service_account is not a list")
 	}
 
-	var serviceAccounts []interface{}
+	serviceAccounts := make([]interface{},0)
 
 	// Extract each element from the list
 	for _, item := range val.AsValueSlice() {
