@@ -30,7 +30,7 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.2.
 
 ### Software Requirements
 The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.2.0, ensure your Nutanix environment meets the following software requirements:
-- Self Service version: 4.1.0 or later
+- Self Service version: 4.1.0
 - AOS Version: 7.0.1, 7.0 or later
 - Prism Central Version: pc2024.3, pc2024.3.1 or later
 - Nutanix Terraform Provider Version: 2.2.0
@@ -39,7 +39,7 @@ The provider is used to interact with the many resources and data sources suppor
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
-| 2.2.0 | | | Self Service >= 4.1.0 | yes | 
+| 2.2.0 | | | Self Service == 4.1.0 | yes | 
 | 2.1.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.1.0 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.0.0 | 7.0 | pc2024.3 or later  | ndb v2.7, nke v2.8, foundation v5.7 | Yes |
