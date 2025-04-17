@@ -206,7 +206,7 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 	}
 
 	aJSON, _ := json.MarshalIndent(input, "", " ")
-	log.Println("[DEBUG] Directory Service JSON: ", string(aJSON))
+	log.Println("[DEBUG] Directory Service create payload: ", string(aJSON))
 
 	resp, err := conn.DirectoryServiceAPIInstance.CreateDirectoryService(input)
 	if err != nil {
@@ -306,8 +306,40 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 	updatedSpec = readResp.Data.GetValue().(import1.DirectoryService)
 
 	// service account required for update
-	serviceAccount := expandDsServiceAccount(d.Get("service_account"))
-	updatedSpec.ServiceAccount = serviceAccount
+	// expand service account from row config as it required for update and
+	// password is saved as sensitive value
+	rawConfig := d.GetRawConfig()
+	configMap := rawConfig.AsValueMap()
+
+	val, exists := configMap["service_account"]
+	if !exists || val.IsNull() || !val.IsKnown() {
+		return diag.Errorf("service_account is missing or unknown")
+	}
+
+	if !val.Type().IsTupleType() && !val.Type().IsListType() {
+		return diag.Errorf("service_account is not a list")
+	}
+
+	var serviceAccounts []interface{}
+
+	// Extract each element from the list
+	for _, item := range val.AsValueSlice() {
+		if item.IsNull() || !item.IsKnown() || !item.Type().IsObjectType() {
+			continue
+		}
+
+		account := make(map[string]interface{})
+		for key, value := range item.AsValueMap() {
+			if value.IsNull() || !value.IsKnown() {
+				continue
+			}
+			account[key] = value.AsString()
+		}
+
+		serviceAccounts = append(serviceAccounts, account)
+	}
+
+	updatedSpec.ServiceAccount = expandDsServiceAccount(serviceAccounts)
 
 	if d.HasChange("name") {
 		updatedSpec.Name = utils.StringPtr(d.Get("name").(string))
@@ -362,7 +394,7 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 	}
 
 	aJSON, _ := json.MarshalIndent(updatedSpec, "", " ")
-	log.Println("[DEBUG] Directory Service JSON: ", string(aJSON))
+	log.Println("[DEBUG] Directory Service update payload: ", string(aJSON))
 
 	updatedResp, err := conn.DirectoryServiceAPIInstance.UpdateDirectoryServiceById(utils.StringPtr(d.Id()), &updatedSpec, headers)
 	if err != nil {
