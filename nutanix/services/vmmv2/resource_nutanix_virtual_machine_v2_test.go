@@ -1415,10 +1415,9 @@ data "nutanix_clusters_v2" "clusters" {}
 
 locals {
 	cluster0 = [
-	for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-	cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+		cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 	][0]
-	gs = base64encode("#cloud-config\nusers:\n  - name: ubuntu\n    ssh-authorized-keys:\n      - ssh-rsa DUMMYSSH mypass\n    sudo: ['ALL=(ALL) NOPASSWD:ALL']")
 	config = jsondecode(file("%[3]s"))
 	vmm = local.config.vmm
 }
@@ -1469,7 +1468,7 @@ resource "nutanix_virtual_machine_v2" "test"{
 			install_type = "PREPARED"
 				sysprep_script {
 					unattend_xml {
-						value = file("%[4]s") # unattend_xml file value
+						value = file("%[4]s") # unattend_xml file value, value is encoded in base64
 					}
 			}
 		}
