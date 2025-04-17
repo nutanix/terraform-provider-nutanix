@@ -23,6 +23,7 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
+| 2.2.0 | | | Self Service >= 4.1.0 | yes | 
 | 2.1.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.1.0 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.0.0   |  7.0  | pc2024.3 or later  | ndb v2.7, nke v2.8, foundation v5.7 | Yes |
@@ -136,6 +137,11 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_lcm_prechecks_v2 |
 | - | nutanix_lcm_upgrade_v2 |
 | - | nutanix_lcm_config_v2 |
+| nutanix_self_service_app_provision | - |
+| nutanix_self_service_app_patch | - |
+| nutanix_self_service_app_recovery_point | - |
+| nutanix_self_service_app_custom_action | - |
+| nutanix_self_service_app_restore | - |
 
 
 ## Data Sources
@@ -261,6 +267,10 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_lcm_entities_v2 |
 | - | nutanix_lcm_entity_v2 |
 | - | nutanix_lcm_config_v2 |
+| nutanix_self_service_app | - |
+| nutanix_blueprint_runtime_editables | - |
+| nutanix_self_service_snapshot_policy_list | - |
+| nutanix_self_service_app_snapshots | - |
 
 ## Example Usage
 

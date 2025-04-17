@@ -1,3 +1,6 @@
+## 2.2.0 (April 17, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.1.1...v2.2.0)
+
 ## 2.1.1 (April 08, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.1.0...v2.1.1)
 
