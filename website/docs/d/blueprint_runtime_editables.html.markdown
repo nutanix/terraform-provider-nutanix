@@ -31,7 +31,7 @@ The following arguments are supported:
 * `bp_uuid`: - (Optional) The UUID of the blueprint for which runtime editables will be listed. If this is provided, it will return runtime editables for the specified blueprint.
 * `bp_name`: - (Optional) The name of the blueprint for which runtime editables will be listed. If this is provided, it will return runtime editables for the specified blueprint.
 
-Both are optional but atleast one of them to be provided for this data source to work.
+Both (`bp_uuid` and `bp_name`) are optional but atleast one of them to be provided for this data source to work.
 
 ## Attribute Reference
 
@@ -41,31 +41,31 @@ The following attributes are exported:
 
 The runtime_editables block contains a list of runtime-editable items associated with the blueprint. Each runtime-editable item contains the following attributes:
 
-* `action_list`: -  A list of actions associated with the blueprint. Each action contains runtime specifications (defined in RuntimeSpecDS()).
+* `action_list`: -  A list of actions associated with the blueprint. Each action contains runtime specifications (defined in RuntimeSpecDS).
 
-* `service_list`: - A list of services associated with the blueprint. Each service contains runtime specifications (defined in RuntimeSpecDS()).
+* `service_list`: - A list of services associated with the blueprint. Each service contains runtime specifications (defined in RuntimeSpecDS).
 
-* `credential_list`: -  A list of credentials associated with the blueprint. Each credential contains runtime specifications (defined in RuntimeSpecDS()).
+* `credential_list`: -  A list of credentials associated with the blueprint. Each credential contains runtime specifications (defined in RuntimeSpecDS).
 
-* `substrate_list`: - A list of substrates associated with the blueprint. Each substrate contains runtime specifications (defined in RuntimeSpecDS()).
+* `substrate_list`: - A list of substrates associated with the blueprint. Each substrate contains runtime specifications (defined in RuntimeSpecDS).
 
-* `package_list`: -  A list of packages associated with the blueprint. Each package contains runtime specifications (defined in RuntimeSpecDS()).
+* `package_list`: -  A list of packages associated with the blueprint. Each package contains runtime specifications (defined in RuntimeSpecDS).
 
-* `snapshot_config_list`: - A list of snapshot configurations associated with the blueprint. Each snapshot configuration contains runtime specifications (defined in RuntimeSpecDS()).
+* `snapshot_config_list`: - A list of snapshot configurations associated with the blueprint. Each snapshot configuration contains runtime specifications (defined in RuntimeSpecDS).
 
-* `app_profile`: -  A list of application profiles associated with the blueprint. Each application profile contains runtime specifications (defined in RuntimeSpecDS()).
+* `app_profile`: -  A list of application profiles associated with the blueprint. Each application profile contains runtime specifications (defined in RuntimeSpecDS).
 
-* `task_list`: - A list of tasks associated with the blueprint. Each task contains runtime specifications (defined in RuntimeSpecDS()).
+* `task_list`: - A list of tasks associated with the blueprint. Each task contains runtime specifications (defined in RuntimeSpecDS).
 
-* `restore_config_list`: -  A list of restore configurations associated with the blueprint. Each restore configuration contains runtime specifications (defined in RuntimeSpecDS()).
+* `restore_config_list`: -  A list of restore configurations associated with the blueprint. Each restore configuration contains runtime specifications (defined in RuntimeSpecDS).
 
-* `variable_list`: - A list of variables associated with the blueprint. Each variable contains runtime specifications (defined in RuntimeSpecDS()).
+* `variable_list`: - A list of variables associated with the blueprint. Each variable contains runtime specifications (defined in RuntimeSpecDS).
 
-* `deployment_list`: -  A list of deployments associated with the blueprint. Each deployment contains runtime specifications (defined in RuntimeSpecDS()).
+* `deployment_list`: -  A list of deployments associated with the blueprint. Each deployment contains runtime specifications (defined in RuntimeSpecDS).
 
 ### RuntimeSpecDS
 
-The RuntimeSpecDS() function defines the runtime specifications for each of the entities listed in the runtime_editables block. Each runtime specification contains the following attributes:
+The RuntimeSpecDS function defines the runtime specifications for each of the entities listed in the runtime_editables block. Each runtime specification contains the following attributes:
 
 - `description`: (Optional, Computed) A textual description of the runtime specification. This field provides additional information or context about the entity.
 - `value`: (Optional, Computed) The value associated with the runtime specification. This can be a string value representing a configuration or setting.

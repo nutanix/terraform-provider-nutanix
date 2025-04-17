@@ -27,7 +27,7 @@ The following arguments are supported:
 * `bp_name`: - (Optional) The UUID of the blueprint for which snapshot policies should be listed.
 * `bp_uuid`: - (Optional) The name of the blueprint for which snapshot policies should be listed.
 
-Both are optional but atleast one of them to be provided for this data source to work.
+Both (`bp_name` and `bp_uuid`) are optional but atleast one of them to be provided for this data source to work.
 
 ## Attribute Reference
 

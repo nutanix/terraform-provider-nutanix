@@ -150,21 +150,21 @@ The following attributes are exported:
 
 (Optional) A block of runtime-editable values to override blueprint configuration. Available lists:
 
-* `action_list`: -  A list of actions associated with the blueprint. Each action contains runtime specifications (defined in RuntimeSpec()).
-* `service_list`: - A list of services associated with the blueprint. Each service contains runtime specifications (defined in RuntimeSpec()).
-* `credential_list`: -  A list of credentials associated with the blueprint. Each credential contains runtime specifications (defined in RuntimeSpec()).
-* `substrate_list`: - A list of substrates associated with the blueprint. Each substrate contains runtime specifications (defined in RuntimeSpec()).
-* `package_list`: -  A list of packages associated with the blueprint. Each package contains runtime specifications (defined in RuntimeSpec()).
-* `snapshot_config_list`: - A list of snapshot configurations associated with the blueprint. Each snapshot configuration contains runtime specifications (defined in RuntimeSpec()).
-* `app_profile`: -  A list of application profiles associated with the blueprint. Each application profile contains runtime specifications (defined in RuntimeSpec()).
-* `task_list`: - A list of tasks associated with the blueprint. Each task contains runtime specifications (defined in RuntimeSpec()).
-* `restore_config_list`: -  A list of restore configurations associated with the blueprint. Each restore configuration contains runtime specifications (defined in RuntimeSpec()).
-* `variable_list`: - A list of variables associated with the blueprint. Each variable contains runtime specifications (defined in RuntimeSpec()).
-* `deployment_list`: -  A list of deployments associated with the blueprint. Each deployment contains runtime specifications (defined in RuntimeSpec()).
+* `action_list`: -  A list of actions associated with the blueprint. Each action contains runtime specifications (defined in RuntimeSpec).
+* `service_list`: - A list of services associated with the blueprint. Each service contains runtime specifications (defined in RuntimeSpec).
+* `credential_list`: -  A list of credentials associated with the blueprint. Each credential contains runtime specifications (defined in RuntimeSpec).
+* `substrate_list`: - A list of substrates associated with the blueprint. Each substrate contains runtime specifications (defined in RuntimeSpec).
+* `package_list`: -  A list of packages associated with the blueprint. Each package contains runtime specifications (defined in RuntimeSpec).
+* `snapshot_config_list`: - A list of snapshot configurations associated with the blueprint. Each snapshot configuration contains runtime specifications (defined in RuntimeSpec).
+* `app_profile`: -  A list of application profiles associated with the blueprint. Each application profile contains runtime specifications (defined in RuntimeSpec).
+* `task_list`: - A list of tasks associated with the blueprint. Each task contains runtime specifications (defined in RuntimeSpec).
+* `restore_config_list`: -  A list of restore configurations associated with the blueprint. Each restore configuration contains runtime specifications (defined in RuntimeSpec).
+* `variable_list`: - A list of variables associated with the blueprint. Each variable contains runtime specifications (defined in RuntimeSpec).
+* `deployment_list`: -  A list of deployments associated with the blueprint. Each deployment contains runtime specifications (defined in RuntimeSpec).
 
 ### RuntimeSpec
 
-The RuntimeSpec() function defines the runtime specifications for each of the entities listed in the runtime_editables block. Each runtime specification contains the following attributes:
+The RuntimeSpec function defines the runtime specifications for each of the entities listed in the runtime_editables block. Each runtime specification contains the following attributes:
 
 - `description`: (Optional, Computed) A textual description of the runtime specification. This field provides additional information or context about the entity.
 - `value`: (Optional, Computed) The value associated with the runtime specification. This can be a string value representing a configuration or setting.

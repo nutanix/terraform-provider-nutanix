@@ -8,9 +8,11 @@ description: |-
 
 # nutanix_self_service_app_patch
 
-Run the specified patch on the application to update vm configuration, add nics, add disks, add/delete categories.
+Run the specified patch on the application by running patch action to update vm configuration, add nics, add disks, add/delete categories.
 
 ## Example 1: Update VM Configuration
+
+This will run set patch config action in application.
 
 ``` hcl
 # Provision Application
@@ -23,7 +25,7 @@ resource "nutanix_self_service_app_provision" "test" {
 # Run patch config (update config)
 resource "nutanix_self_service_app_patch" "test" {
     app_uuid = nutanix_self_service_app_provision.test.id
-    patch_name = "NAME OF PATCH"
+    patch_name = "NAME OF PATCH ACTION"
     config_name = "NAME OF PATCH CONFIG"
 }
 ```
@@ -41,7 +43,7 @@ resource "nutanix_self_service_app_provision" "test" {
 # Run patch config (update config)
 resource "nutanix_self_service_app_patch" "test" {
     app_uuid = nutanix_self_service_app_provision.test.id
-    patch_name = "NAME OF PATCH"
+    patch_name = "NAME OF PATCH ACTION"
     config_name = "NAME OF PATCH CONFIG"
     vm_config {
         memory_size_mib = "SIZE IN MiB"
@@ -64,7 +66,7 @@ resource "nutanix_self_service_app_provision" "test" {
 # Run patch config (update config)
 resource "nutanix_self_service_app_patch" "test" {
     app_uuid = nutanix_self_service_app_provision.test.id
-    patch_name = "NAME OF PATCH"
+    patch_name = "NAME OF PATCH ACTION"
     config_name = "NAME OF PATCH CONFIG"
     categories {
         value = "CATEGORY TO BE ADDED (KEY:VALUE PAIR)"
@@ -86,7 +88,7 @@ resource "nutanix_self_service_app_provision" "test" {
 # Run patch config (update config)
 resource "nutanix_self_service_app_patch" "test" {
     app_uuid = nutanix_self_service_app_provision.test.id
-    patch_name = "NAME OF PATCH"
+    patch_name = "NAME OF PATCH ACTION"
     config_name = "NAME OF PATCH CONFIG"
     categories {
         value = "CATEGORY TO BE ADDED (KEY:VALUE PAIR)"
@@ -108,7 +110,7 @@ resource "nutanix_self_service_app_provision" "test" {
 # Run patch config (update config)
 resource "nutanix_self_service_app_patch" "test" {
     app_uuid = nutanix_self_service_app_provision.test.id
-    patch_name = "NAME OF PATCH"
+    patch_name = "NAME OF PATCH ACTION"
     config_name = "NAME OF PATCH CONFIG"
     disks {
         disk_size_mib = "SIZE OF DISK IN MiB"
@@ -130,7 +132,7 @@ resource "nutanix_self_service_app_provision" "test" {
 # Run patch config (update config)
 resource "nutanix_self_service_app_patch" "test" {
     app_uuid = nutanix_self_service_app_provision.test.id
-    patch_name = "NAME OF PATCH"
+    patch_name = "NAME OF PATCH ACTION"
     config_name = "NAME OF PATCH CONFIG"
     nics {
         index = "DUMMY INDEX VALUE"
@@ -147,8 +149,8 @@ resource "nutanix_self_service_app_patch" "test" {
 The following arguments are supported:
 
 * `app_uuid`: - (Required) The UUID of the application.
-* `patch_name`: - (Required) The name of the patch to be applied. This is used to identify the specific patch configuration.
-* `config_name`: - (Required) The name of the configuration to be updated or patched. (Usually same name as patch)
+* `patch_name`: - (Required) The name of the patch to be applied. This is used to identify the action name which needs to be executed to update an application.
+* `config_name`: - (Required) The name of the patch configuration. (<b>Same as patch_name for SINGLE VM)</b>
 
 
 ## Attribute Reference

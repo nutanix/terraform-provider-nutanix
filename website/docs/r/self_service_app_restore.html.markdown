@@ -47,10 +47,10 @@ resource "nutanix_self_service_app_restore" "test" {
 The following arguments are supported:
 
 * `app_name`: - (Optional) The name of the application
-* `app_uuid`: - (Required) The UUID of the application.
+* `app_uuid`: - (Optional) The UUID of the application.
 * `snapshot_uuid`: - (Required) The UUID of the snapshot to which the application will be restored.
 
-Both are optional but atleast one of them should be provided for resource to work.
+Both (`app_name` and `app_uuid`) are optional but atleast one of them should be provided for resource to work.
 
 ## Attribute Reference
 

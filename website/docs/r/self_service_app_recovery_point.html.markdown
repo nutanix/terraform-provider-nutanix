@@ -27,7 +27,7 @@ The following arguments are supported:
 * `app_name`: - (Optional) The name of the application
 * `app_uuid`: - (Required) The UUID of the application.
 
-Both are optional but atleast one of them should be provided for resource to work.
+Both (`app_name` and `app_uuid`) are optional but atleast one of them should be provided for resource to work.
 
 ## Attribute Reference
 

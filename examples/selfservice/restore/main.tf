@@ -2,7 +2,7 @@ terraform {
   required_providers {
     nutanix = {
       source  = "nutanix/nutanix"
-      version = "1.99.99"
+      version = "2.2.0"
     }
   }
 }
@@ -15,13 +15,14 @@ provider "nutanix" {
   insecure = true
 }
 
+# Read available recovery points in application
 data "nutanix_self_service_app_snapshots" "snapshots" {
   app_uuid = var.app_uuid
   length = 250
   offset = 0
 }
 
-#create local variable pointing to desired recovery point
+# Create local variable pointing to desired recovery point
 locals {
 	snapshot_uuid = [
 	  for snapshot in data.nutanix_self_service_app_snapshots.snapshots.entities :
@@ -29,6 +30,7 @@ locals {
 	][0]
 }
 
+// Restore from a recovery point
 resource "nutanix_self_service_app_restore" "RestoreAction" {
   restore_action_name = var.restore_action_name
   app_uuid = var.app_uuid
