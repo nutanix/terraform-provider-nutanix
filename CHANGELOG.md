@@ -2,7 +2,7 @@
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.1.1...v2.2.0)
 
 **New Feature:**
-Terraform plugin support for Self Service [\#826](https://github.com/nutanix/terraform-provider-nutanix/issues/826)
+- Terraform plugin support for Self Service [\#826](https://github.com/nutanix/terraform-provider-nutanix/issues/826)
   - Launch a Blueprint (Provision an application)
     - Launch without runtime editable
     - Launch with runtime editable on substrate list (change vcpu, numsocket, memory size while launching)
