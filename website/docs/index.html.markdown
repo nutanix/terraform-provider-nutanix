@@ -16,28 +16,6 @@ Use the navigation on the left to read about the available resources and data so
 We're excited to announce the release of Nutanix Terraform Provider Version 2.2.0! This major update brings significant improvements to your infrastructure management experience:
  
 - It will allow you to interact with Self Service API. With this new plugin support you will be able to launch a Single VM Blueprint to create an Application in Self Service and perform some Day 2 actions like updating application, creating snapshot/restore etc.
-- Summary of actions that can be done for Single VM Blueprints and Applications are:
-  - Launch a Blueprint (Provision an application)
-    - Launch without runtime editable
-    - Launch with runtime editable on substrate list (change vcpu, numsocket, memory size while launching)
-  - System Actions Execution on Application
-    - Start an application
-    - Stop an application
-    - Soft delete an application
-    - Delete an application
-  - Custom actions execution
-  - Update an application (via patch configs)
-    - Update vCPUs/num_sockets (with runtime editable support)
-    - Update Memory (with runtime editable support)
-    - Update cores-per-vCPU/num_vcpus_per_socket (with runtime editable support)
-    - Update categories (with runtime editable support)
-    - Add a nic (with runtime editable support using nic UUID)
-    - Disk addition (with runtime editable)
-  - Snapshot/Restore actions support
-    - List Snapshot Policies in Blueprints
-    - Create a snapshot by executing snapshot action
-    - List snapshots (recovery points) in application
-    - Restore a snapshot by executing restore action
 
 ### Introducing Nutanix Terraform Provider Version 2.1.0
 We're excited to announce the release of Nutanix Terraform Provider Version 2.1.0! This major update brings significant improvements to your infrastructure management experience:

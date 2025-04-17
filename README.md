@@ -27,32 +27,13 @@ Modules based on Terraform Nutanix Provider can be found here : [Modules](https:
 We're excited to announce the release of Nutanix Terraform Provider Version 2.2.0! This major update brings significant improvements to your infrastructure management experience:
  
 - It will allow you to interact with Self Service API. With this new plugin support you will be able to launch a Single VM Blueprint to create an Application in Self Service and perform some Day 2 actions like updating application, creating snapshot/restore etc.
-- Summary of actions that can be done for Single VM Blueprints and Applications are:
-  - Launch a Blueprint (Provision an application)
-    - Launch without runtime editable
-    - Launch with runtime editable on substrate list (change vcpu, numsocket, memory size while launching)
-  - System Actions Execution on Application
-    - Start an application
-    - Stop an application
-    - Soft delete an application
-    - Delete an application
-  - Custom actions execution
-  - Update an application (via patch configs)
-    - Update vCPUs/num_sockets (with runtime editable support)
-    - Update Memory (with runtime editable support)
-    - Update cores-per-vCPU/num_vcpus_per_socket (with runtime editable support)
-    - Update categories (with runtime editable support)
-    - Add a nic (with runtime editable support using nic UUID)
-    - Disk addition (with runtime editable)
-  - Snapshot/Restore actions support
-    - List Snapshot Policies in Blueprints
-    - Create a snapshot by executing snapshot action
-    - List snapshots (recovery points) in application
-    - Restore a snapshot by executing restore action
 
 ### Software Requirements
 The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.2.0, ensure your Nutanix environment meets the following software requirements:
 - Self Service version: 4.1.0 or later
+- AOS Version: 7.0.1, 7.0 or later
+- Prism Central Version: pc2024.3, pc2024.3.1 or later
+- Nutanix Terraform Provider Version: 2.2.0
 
 
 ## Compatibility Matrix
