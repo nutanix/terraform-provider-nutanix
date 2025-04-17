@@ -43,7 +43,7 @@ var testVars TestConfig
 var (
 	path, _             = os.Getwd()
 	filepath            = path + "/../../../test_config_v2.json"
-	untendedXmlFilePath = path + "/../../../unattendxml.txt"
+	untendedXMLFilePath = path + "/../../../unattendxml.txt"
 )
 
 func loadVars(filepath string, varStuct interface{}) {
@@ -64,7 +64,7 @@ func loadVars(filepath string, varStuct interface{}) {
 func TestMain(m *testing.M) {
 	log.Println("Do some crazy stuff before tests!")
 	loadVars("../../../test_config_v2.json", &testVars)
-	downloadFile(testVars.VMM.UnattendXML, untendedXmlFilePath)
+	downloadFile(testVars.VMM.UnattendXML, untendedXMLFilePath)
 	os.Exit(m.Run())
 }
 

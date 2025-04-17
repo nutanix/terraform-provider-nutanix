@@ -1482,7 +1482,7 @@ resource "nutanix_virtual_machine_v2" "test"{
 		]
 	}
 }
-`, r, desc, filepath, untendedXmlFilePath)
+`, r, desc, filepath, untendedXMLFilePath)
 }
 
 func testVmsV4ConfigWithCloudInitWithCustomKeys(r int, desc string) string {
