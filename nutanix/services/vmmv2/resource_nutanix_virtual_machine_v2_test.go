@@ -2,7 +2,6 @@ package vmmv2_test
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"testing"
 
@@ -12,11 +11,6 @@ import (
 )
 
 const resourceNameVms = "nutanix_virtual_machine_v2.test"
-
-var (
-	path, _  = os.Getwd()
-	filepath = path + "/../../../test_config_v2.json"
-)
 
 func TestAccV2NutanixVmsResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
@@ -425,6 +419,39 @@ func TestAccV2NutanixVmsResource_WithCloudInit(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameVms, "nics.#"),
 					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
 					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.vlan_mode", "ACCESS"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccV2NutanixVmsResource_WithSysprep(t *testing.T) {
+	r := acctest.RandInt()
+	desc := "test vm description"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testVmsV4ConfigWithSysprep(r, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", fmt.Sprintf("tf-test-vm-%d", r)),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_cores_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_sockets", "1"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "create_time"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "update_time"),
+					resource.TestCheckResourceAttr(resourceNameVms, "protection_type", "UNPROTECTED"),
+					resource.TestCheckResourceAttr(resourceNameVms, "is_agent_vm", "false"),
+					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "disks.#"),
+					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.bus_type", "SCSI"),
+					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.index", "0"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "nics.#"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.vlan_mode", "ACCESS"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "cd_roms.#"),
+					resource.TestCheckResourceAttr(resourceNameVms, "cd_roms.0.iso_type", "GUEST_CUSTOMIZATION"),
 				),
 			},
 		},
@@ -1380,6 +1407,81 @@ func testVmsV4ConfigWithCloudInit(r int, desc string) string {
 			}
 		}
 `, r, desc, filepath)
+}
+
+func testVmsV4ConfigWithSysprep(r int, desc string) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters_v2" "clusters" {}
+
+locals {
+	cluster0 = [
+		for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+		cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+	][0]
+	config = jsondecode(file("%[3]s"))
+	vmm = local.config.vmm
+}
+
+data "nutanix_storage_containers_v2" "ngt-sc" {
+	filter = "clusterExtId eq '${local.cluster0}'"
+	limit = 1
+}
+
+data "nutanix_subnets_v2" "subnets" {
+	filter = "name eq '${local.vmm.subnet_name}'"
+}
+
+resource "nutanix_virtual_machine_v2" "test"{
+	name= "tf-test-vm-%[1]d"
+	description =  "%[2]s"
+	num_cores_per_socket = 1
+	num_sockets = 1
+	cluster {
+		ext_id = local.cluster0
+	}
+	disks{
+		disk_address{
+			bus_type = "SCSI"
+			index = 0
+		}
+		backing_info{
+			vm_disk{
+				disk_size_bytes = "1073741824"
+				storage_container{
+					ext_id = data.nutanix_storage_containers_v2.ngt-sc.storage_containers[0].ext_id
+				}
+			}
+		}
+	}
+	nics{
+		network_info{
+			nic_type = "NORMAL_NIC"
+			subnet{
+				ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+			}
+			vlan_mode = "ACCESS"
+		}
+	}
+	guest_customization {
+		config {
+		sysprep {
+			install_type = "PREPARED"
+				sysprep_script {
+					unattend_xml {
+						value = file("%[4]s") # unattend_xml file value, value is encoded in base64
+					}
+			}
+		}
+		}
+	}
+
+	lifecycle{
+		ignore_changes = [
+			guest_customization, cd_roms
+		]
+	}
+}
+`, r, desc, filepath, untendedXMLFilePath)
 }
 
 func testVmsV4ConfigWithCloudInitWithCustomKeys(r int, desc string) string {
