@@ -12,6 +12,40 @@ The provider is used to interact with the many resources and data sources suppor
 
 Use the navigation on the left to read about the available resources and data sources this provider can use.
 
+### Introducing Nutanix Terraform Provider Version 2.2.0
+We're excited to announce the release of Nutanix Terraform Provider Version 2.2.0! This major update brings significant improvements to your infrastructure management experience:
+ 
+- It will allow you to interact with Self Service API. With this new plugin support you will be able to launch a Single VM Blueprint to create an Application in Self Service and perform some Day 2 actions like updating application, creating snapshot/restore etc.
+- Summary of actions that can be done for Single VM Blueprints and Applications are:
+  - Launch a Blueprint (Provision an application)
+    - Launch without runtime editable
+    - Launch with runtime editable on substrate list (change vcpu, numsocket, memory size while launching)
+  - System Actions Execution on Application
+    - Start an application
+    - Stop an application
+    - Soft delete an application
+    - Delete an application
+  - Custom actions execution
+  - Update an application (via patch configs)
+    - Update vCPUs/num_sockets (with runtime editable support)
+    - Update Memory (with runtime editable support)
+    - Update cores-per-vCPU/num_vcpus_per_socket (with runtime editable support)
+    - Update categories (with runtime editable support)
+    - Add a nic (with runtime editable support using nic UUID)
+    - Disk addition (with runtime editable)
+  - Snapshot/Restore actions support
+    - List Snapshot Policies in Blueprints
+    - Create a snapshot by executing snapshot action
+    - List snapshots (recovery points) in application
+    - Restore a snapshot by executing restore action
+
+### Introducing Nutanix Terraform Provider Version 2.1.0
+We're excited to announce the release of Nutanix Terraform Provider Version 2.1.0! This major update brings significant improvements to your infrastructure management experience:
+ 
+- Built on the latest v4 APIs/SDKs: Leveraging the power of Nutanix v4 APIs/SDKs, this version offers enhanced functionality and better integration with the latest Nutanix features.
+- Expanded Resource Coverage:  Discover new resources and data sources, enabling you to model and manage a broader spectrum of Nutanix infrastructure components within your Terraform configurations.
+- Version Suffix: To easily distinguish resources and data sources specific to version 2.0.0 and later, they are marked with the *_v2 suffix.
+
 ~> **Important Notice:** Upcoming Deprecation of Legacy Nutanix Terraform Provider Resources. Starting with the Nutanix Terraform Provider release planned for Q4-CY2026, legacy resources which are based on v0.8,v1,v2 and v3 APIs will be deprecated and no longer supported. For more information, visit [Legacy API Deprecation Announcement](https://portal.nutanix.com/page/documents/eol/list?type=announcement) [Legacy API Deprecation - FAQs](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA0VO0000005rgP0AQ). Nutanix strongly encourages you to migrate your scripts and applications to the latest v2 version of the Nutanix Terraform Provider resources, which are built on our v4 APIs/SDKs. By adopting the latest v2 version based on v4 APIs and SDKs, our users can leverage the enhanced capabilities and latest innovations from Nutanix. We understand that this transition may require some effort, and we are committed to supporting you throughout the process. Please refer to our documentation and support channels for guidance and assistance.
 
 ## Support
