@@ -28,6 +28,13 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.2.
  
 - It will allow you to interact with Self Service API. With this new plugin support you will be able to launch a Single VM Blueprint to create an Application in Self Service and perform some Day 2 actions like updating application, creating snapshot/restore etc.
 
+### Introducing Nutanix Terraform Provider Version 2.1.0
+We're excited to announce the release of Nutanix Terraform Provider Version 2.1.0! This major update brings significant improvements to your infrastructure management experience:
+ 
+- Built on the latest v4 APIs/SDKs: Leveraging the power of Nutanix v4 APIs/SDKs, this version offers enhanced functionality and better integration with the latest Nutanix features.
+- Expanded Resource Coverage:  Discover new resources and data sources, enabling you to model and manage a broader spectrum of Nutanix infrastructure components within your Terraform configurations.
+- <b>Version Suffix: Modules built based on v4 PC/PE GA sdks are marked with the *_v2 suffix.</b>
+
 ### Software Requirements
 The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.2.0, ensure your Nutanix environment meets the following software requirements:
 - Self Service version: 4.1.0
