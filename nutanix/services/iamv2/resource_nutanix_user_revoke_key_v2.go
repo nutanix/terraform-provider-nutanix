@@ -12,6 +12,9 @@ import (
 func ResourceNutanixUserRevokeKeyV2() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceNutanixUserRevokeKeyV2Create,
+		ReadContext:   resourceNutanixUserRevokeKeyV2Read,
+		UpdateContext: resourceNutanixUserRevokeKeyV2Update,
+		DeleteContext: resourceNutanixUserRevokeKeyV2Delete,
 		Schema: map[string]*schema.Schema{
 			"user_ext_id": {
 				Type:     schema.TypeString,
@@ -95,6 +98,18 @@ func resourceNutanixUserRevokeKeyV2Create(ctx context.Context, d *schema.Resourc
 		d.Set("arguments_map", flattenArgumentsMap(revokeConfig.ArgumentsMap))
 	}
 	d.SetId(*ExtId)
+	return nil
+}
+
+func resourceNutanixUserRevokeKeyV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return nil
+}
+
+func resourceNutanixUserRevokeKeyV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return nil
+}
+
+func resourceNutanixUserRevokeKeyV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
