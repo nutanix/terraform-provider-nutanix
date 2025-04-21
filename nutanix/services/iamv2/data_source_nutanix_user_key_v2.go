@@ -10,9 +10,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func DatasourceNutanixKeyV2() *schema.Resource {
+func DatasourceNutanixUserKeyV2() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceNutanixKeyV2Create,
+		ReadContext: dataSourceNutanixUserKeyV2Create,
 		Schema: map[string]*schema.Schema{
 			"user_ext_id": {
 				Type:     schema.TypeString,
@@ -115,22 +115,18 @@ func DatasourceNutanixKeyV2() *schema.Resource {
 	}
 }
 		
-func dataSourceNutanixKeyV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceNutanixUserKeyV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Get client connection
 	conn := meta.(*conns.Client).IamAPI
 
 	var userExtId *string
 	if v, ok := d.GetOk("user_ext_id"); ok {
 		userExtId = utils.StringPtr(v.(string))
-	} else {
-		return diag.Errorf("user_ext_id is required")
 	}
   
 	var ExtId *string
 	if v, ok := d.GetOk("ext_id"); ok {
 		ExtId = utils.StringPtr(v.(string))
-	} else {
-		return diag.Errorf("ext_id is required")
 	}
 
 	resp, err := conn.UsersAPIInstance.GetUserKeyById(userExtId, ExtId)

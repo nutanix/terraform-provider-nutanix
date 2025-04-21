@@ -13,9 +13,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func DatasourceNutanixKeysV2() *schema.Resource {
+func DatasourceNutanixUserKeysV2() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: DataSourceNutanixKeysV2Read,
+		ReadContext: DataSourceNutanixUserKeysV2Read,
 		Schema: map[string]*schema.Schema{
 			"user_ext_id": {
 				Type:     schema.TypeString,
@@ -146,7 +146,7 @@ func DatasourceNutanixKeysV2() *schema.Resource {
 	}
 }
 
-func DataSourceNutanixKeysV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func DataSourceNutanixUserKeysV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Get client connection
 	conn := meta.(*conns.Client).IamAPI
 	var userExtId *string
