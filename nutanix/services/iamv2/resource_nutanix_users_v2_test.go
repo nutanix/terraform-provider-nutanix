@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
@@ -239,13 +238,6 @@ func TestAccv2NutanixUsersResource_ServiceAccount(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testServiceAccountResourceConfig(filepath, name),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameServiceAccount, "ext_id"),
-					resource.TestCheckResourceAttr(resourceNameServiceAccount, "username", name),
-					resource.TestCheckResourceAttr(resourceNameServiceAccount, "description", "test service account tf"),
-					resource.TestCheckResourceAttr(resourceNameServiceAccount, "user_type", "SERVICE_ACCOUNT"),
-					resource.TestCheckResourceAttr(resourceNameServiceAccount, "email_id", "terraform_plugin@domain.com"),
-				),
 				ExpectError: regexp.MustCompile("Failed to create user as a user already exists with given username."),
 			},
 		},
