@@ -11,6 +11,7 @@ import (
 )
 
 const resourceNameUsers = "nutanix_users_v2.test"
+const resourceNameServiceAccount = "nutanix_users_v2.service_account"
 
 // create local Active user, and test update the username and display name
 func TestAccV2NutanixUsersResource_LocalActiveUser(t *testing.T) {
@@ -229,6 +230,28 @@ func TestAccV2NutanixUsersResource_WithNoUserType(t *testing.T) {
 	})
 }
 
+func TestAccv2NutanixUsersResource_ServiceAccount(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("terraform-test-service-account-%d", r)
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() {},
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testServiceAccountResourceConfig(filepath, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameServiceAccount, "ext_id"),
+					resource.TestCheckResourceAttr(resourceNameServiceAccount, "username", name),
+					resource.TestCheckResourceAttr(resourceNameServiceAccount, "description", "test service account tf"),
+					resource.TestCheckResourceAttr(resourceNameServiceAccount, "user_type", "SERVICE_ACCOUNT"),
+					resource.TestCheckResourceAttr(resourceNameServiceAccount, "email_id", "terraform_plugin@domain.com"),
+				),
+				ExpectError: regexp.MustCompile("Failed to create user as a user already exists with given username."),
+			},
+		},
+	})
+}
+
 func testLocalActiveUserResourceConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 
@@ -423,4 +446,23 @@ func testUsersResourceWithoutUserTypeConfig(filepath, name string) string {
 		force_reset_password = local.users.force_reset_password
 
 	}`, filepath, name)
+}
+
+func testServiceAccountResourceConfig(filepath, name string) string {
+	return fmt.Sprintf(`
+	resource "nutanix_users_v2" "service_account" {
+		username = "%[2]s"
+		description = "test service account tf"
+		email_id = "terraform_plugin@domain.com"
+		user_type = "SERVICE_ACCOUNT"
+	}
+
+	resource "nutanix_users_v2" "service_account_create_duplicate_name" {
+		username = "%[2]s"
+		description = "test service account tf updated"
+		email_id = "terraform_plugin_updated@domain.com"
+		user_type = "SERVICE_ACCOUNT"
+		depends_on = [nutanix_users_v2.service_account]
+	}
+	`, filepath, name)
 }
