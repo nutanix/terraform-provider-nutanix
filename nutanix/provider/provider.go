@@ -23,6 +23,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networkingv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/nke"
+	objectstoresv2 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/objectsv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prismv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/selfservice"
@@ -311,6 +312,10 @@ func Provider() *schema.Provider {
 			"nutanix_lcm_entities_v2":                         lcmv2.DatasourceNutanixLcmEntitiesV2(),
 			"nutanix_lcm_entity_v2":                           lcmv2.DatasourceNutanixLcmEntityV2(),
 			"nutanix_lcm_config_v2":                           lcmv2.DatasourceNutanixLcmConfigV2(),
+			"nutanix_object_store_v2":                         objectstoresv2.DatasourceNutanixObjectStoreV2(),
+			"nutanix_object_stores_v2":                        objectstoresv2.DatasourceNutanixObjectStoresV2(),
+			"nutanix_certificate_v2":                          objectstoresv2.DatasourceNutanixObjectStoreCertificateV2(),
+			"nutanix_certificates_v2":                         objectstoresv2.DatasourceNutanixObjectStoreCertificatesV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
@@ -425,6 +430,8 @@ func Provider() *schema.Provider {
 			"nutanix_lcm_prechecks_v2":                        lcmv2.ResourceNutanixPreChecksV2(),
 			"nutanix_lcm_upgrade_v2":                          lcmv2.ResourceLcmUpgradeV2(),
 			"nutanix_lcm_config_v2":                           lcmv2.ResourceNutanixLcmConfigV2(),
+			"nutanix_object_store_v2":                         objectstoresv2.ResourceNutanixObjectStoresV2(),
+			"nutanix_object_store_certificate_v2":             objectstoresv2.ResourceNutanixObjectStoreCertificateV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

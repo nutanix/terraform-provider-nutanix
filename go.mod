@@ -20,6 +20,7 @@ require (
 	github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.0.1
 	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.0.1
 	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.0.1
+	github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4 v4.0.1
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cast v1.3.1
 	github.com/stretchr/testify v1.7.0
