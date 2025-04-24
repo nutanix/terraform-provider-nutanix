@@ -104,7 +104,6 @@ func testServiceAccountDataSourceV4Config(filepath, name string) string {
 
 	data "nutanix_user_v2" "get_service_account" {
 		ext_id = nutanix_users_v2.service_account.id
-		depends_on = [nutanix_users_v2.service_account]
 	}
 	`, filepath, name)
 }

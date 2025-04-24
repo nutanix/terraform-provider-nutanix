@@ -1,15 +1,20 @@
 package iamv2_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 const datasourceNameUsers = "data.nutanix_users_v2.test"
+const dataSourceServiceAccount = "data.nutanix_users_v2.service_account"
 
 func TestAccV2NutanixUsersDatasource_Basic(t *testing.T) {
 	r := acctest.RandInt()
@@ -166,4 +171,106 @@ func testUsersDatasourceV4WithLimitConfig(filepath, name string) string {
 			depends_on = [nutanix_users_v2.test]
 		}
 	`, filepath, name)
+}
+
+func TestAccV2NutanixUsersDataSourceServiceAccount(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("service-account-unique%d", r)
+	expectedKeys := []map[string]string{
+		{
+			"username":        name,
+			"description": "test service account tf",
+		  "email_id": "terraform_plugin@domain.com",
+		  "user_type": "SERVICE_ACCOUNT",
+		},
+		{
+			"username":        name + "_another",
+		  "description":  "test service account tf another",
+		  "email_id": "terraform_plugin_another@domain.com",
+		  "user_type": "SERVICE_ACCOUNT",
+		},
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() {},
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testServiecAccountDataSourceConfig(filepath, name, "userType eq Schema.Enums.UserType'SERVICE_ACCOUNT' and username contains '"+name+"'"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceServiceAccount, "users.#"),
+					resource.TestCheckResourceAttr(dataSourceServiceAccount, "users.#", "2"),
+					checkServiceAccountValues(expectedKeys, dataSourceServiceAccount),
+				),
+			},
+		},
+	})
+}
+
+func testServiecAccountDataSourceConfig(filepath, name string, query string) string {
+	return fmt.Sprintf(`
+	// Create service account
+	resource "nutanix_users_v2" "service_account" {
+		username = "%[2]s"
+		description = "test service account tf"
+		email_id = "terraform_plugin@domain.com"
+		user_type = "SERVICE_ACCOUNT"
+	}
+
+	// Create another service account
+	resource "nutanix_users_v2" "another_service_account" {
+		username = "%[2]s_another"
+		description = "test service account tf another"
+		email_id = "terraform_plugin_another@domain.com"
+		user_type = "SERVICE_ACCOUNT"
+	}
+	
+	// Data source to fetch the service account
+	data "nutanix_users_v2" "service_account" {
+		filter = "%[3]s"
+		depends_on = [nutanix_users_v2.service_account, nutanix_users_v2.another_service_account]
+	}
+	`, filepath, name, query)
+}
+
+
+func checkServiceAccountValues(expectedKeys []map[string]string, resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Resource Not found")
+		}
+
+		keys := rs.Primary.Attributes
+		keyCount := 0
+
+		// Count keys dynamically
+		for k := range keys {
+			if strings.HasPrefix(k, "users.") && strings.HasSuffix(k, ".username") {
+				keyCount++
+			}
+		}
+
+		if keyCount != len(expectedKeys) {
+			return fmt.Errorf("Expected %d keys, found %d", len(expectedKeys), keyCount)
+		}
+		log.Printf("Akhil Found %d keys\n", keyCount)
+
+		// Match each expected key
+		for _, expected := range expectedKeys {
+			found := false
+			for i := 0; i < keyCount; i++ {
+				if keys[fmt.Sprintf("users.%d.username", i)] == expected["username"] &&
+					keys[fmt.Sprintf("users.%d.description", i)] == expected["description"] &&
+					keys[fmt.Sprintf("users.%d.email_id", i)] == expected["email_id"] &&
+					keys[fmt.Sprintf("users.%d.user_type", i)] == expected["user_type"]{
+					found = true
+					break
+				}
+			}
+			if !found {
+				return fmt.Errorf("Expected key not found: %+v", expected)
+			}
+		}
+		return nil
+	}
 }
