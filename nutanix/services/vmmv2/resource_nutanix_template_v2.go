@@ -2625,7 +2625,7 @@ func expandTemplateUnattendXML(unattendXML interface{}) *vmmConfig.Unattendxml {
 		unattendXMLData := unattendXML.([]interface{})
 
 		if len(unattendXMLData) > 0 {
-			if value, ok := unattendXMLData[0].(map[string]interface{})["unattend_xml"]; ok {
+			if value, ok := unattendXMLData[0].(map[string]interface{})["value"]; ok {
 				unattendXMLObj.Value = utils.StringPtr(value.(string))
 			}
 		}

@@ -1432,10 +1432,11 @@ func schemaForGuestCustomization() *schema.Schema {
 														Computed: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
+																// this value is required but not present in API reference
+																// the create vm request fails if this is not provided or is empty
 																"value": {
 																	Type:     schema.TypeString,
-																	Optional: true,
-																	Computed: true,
+																	Required: true,
 																},
 															},
 														},
