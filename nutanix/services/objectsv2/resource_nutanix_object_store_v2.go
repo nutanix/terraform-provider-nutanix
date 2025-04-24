@@ -674,8 +674,7 @@ func expandState(state string) *config.State {
 		stateEnum = config.STATE_UNKNOWN
 	}
 
-	stateVal := config.State(stateEnum)
-	return &stateVal
+	return &stateEnum
 }
 
 // func to check pc task status, and return the task status or error message
