@@ -114,7 +114,7 @@ func DatasourceNutanixObjectStoreV2() *schema.Resource {
 				Computed: true,
 			},
 			"public_network_ips": {
-				Type:     schema.TypeSet, 
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
