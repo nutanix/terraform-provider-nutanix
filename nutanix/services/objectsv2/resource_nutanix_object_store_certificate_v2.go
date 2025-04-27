@@ -13,7 +13,6 @@ import (
 	objectPrismConfig "github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -28,9 +27,13 @@ func ResourceNutanixObjectStoreCertificateV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"path": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			// computed attributes
 			"alternate_fqdns": {
 				Type:     schema.TypeList,
-				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -43,7 +46,6 @@ func ResourceNutanixObjectStoreCertificateV2() *schema.Resource {
 			},
 			"alternate_ips": {
 				Type:     schema.TypeList,
-				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -52,23 +54,6 @@ func ResourceNutanixObjectStoreCertificateV2() *schema.Resource {
 					},
 				},
 			},
-			"ca": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"public_cert": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"private_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"should_generate": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			// computed attributes
 			"tenant_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -104,29 +89,45 @@ func ResourceNutanixObjectStoreCertificateV2Create(ctx context.Context, d *schem
 	etagValue := conn.ObjectStoresAPIInstance.ApiClient.GetEtag(readResp)
 	args["If-Match"] = utils.StringPtr(etagValue)
 
-	certificate := config.NewCertificate()
+	// certificate := config.NewCertificate()
 
-	if alternateFqdn, ok := d.GetOk("alternate_fqdns"); ok {
-		certificate.AlternateFqdns = expandFqdn(alternateFqdn)
-	}
-	if alternateIps, ok := d.GetOk("alternate_ips"); ok {
-		certificate.AlternateIps = expandIPAddress(alternateIps)
-	}
-	if ca, ok := d.GetOk("ca"); ok {
-		certificate.Ca = utils.StringPtr(ca.(string))
-	}
-	if publicCert, ok := d.GetOk("public_cert"); ok {
-		certificate.PublicCert = utils.StringPtr(publicCert.(string))
-	}
-	if privateKey, ok := d.GetOk("private_key"); ok {
-		certificate.PrivateKey = utils.StringPtr(privateKey.(string))
-	}
-	if common.IsExplicitlySet(d, "should_generate") {
-		shouldGenerate := d.Get("should_generate").(bool)
-		certificate.ShouldGenerate = utils.BoolPtr(shouldGenerate)
-	}
+	// if alternateFqdn, ok := d.GetOk("alternate_fqdns"); ok {
+	// 	certificate.AlternateFqdns = expandFqdn(alternateFqdn)
+	// }
+	// if alternateIps, ok := d.GetOk("alternate_ips"); ok {
+	// 	certificate.AlternateIps = expandIPAddress(alternateIps)
+	// }
+	// if ca, ok := d.GetOk("ca"); ok {
+	// 	certificate.Ca = utils.StringPtr(ca.(string))
+	// }
+	// if publicCert, ok := d.GetOk("public_cert"); ok {
+	// 	certificate.PublicCert = utils.StringPtr(publicCert.(string))
+	// }
+	// if privateKey, ok := d.GetOk("private_key"); ok {
+	// 	certificate.PrivateKey = utils.StringPtr(privateKey.(string))
+	// }
+	// if common.IsExplicitlySet(d, "should_generate") {
+	// 	shouldGenerate := d.Get("should_generate").(bool)
+	// 	certificate.ShouldGenerate = utils.BoolPtr(shouldGenerate)
+	// }
 
-	resp, err := conn.ObjectStoresAPIInstance.CreateCertificate(utils.StringPtr(objectStoreExtID), utils.StringPtr(""), args)
+	// aJSON, _ := json.MarshalIndent(certificate, "", "  ")
+	// log.Printf("[DEBUG] Object store certificate payload: %s", string(aJSON))
+
+	// // Create a temp directory (if you want a specific one, you can customize)
+	// tempDir := os.TempDir()
+
+	// // Define the file path
+	// filePath := filepath.Join(tempDir, "certificate.json")
+
+	// // Write the JSON data to the file
+	// if writeErr := os.WriteFile(filePath, aJSON, 0600); err != nil {
+	// 	return diag.FromErr(fmt.Errorf("failed to write certificate file: %w", writeErr))
+	// }
+
+	filePath := d.Get("path").(string)
+
+	resp, err := conn.ObjectStoresAPIInstance.CreateCertificate(utils.StringPtr(objectStoreExtID), utils.StringPtr(filePath), args)
 	if err != nil {
 		return diag.Errorf("Error creating object store certificate: %s", err)
 	}
@@ -157,7 +158,7 @@ func ResourceNutanixObjectStoreCertificateV2Create(ctx context.Context, d *schem
 	log.Printf("[DEBUG] Object store certificate task details: %s", string(aJSON))
 
 	// Get created object store extID from TASK API
-	objectStoreCertificateExtID := taskDetails.EntitiesAffected[0].ExtId
+	objectStoreCertificateExtID := taskDetails.EntitiesAffected[1].ExtId
 	d.SetId(*objectStoreCertificateExtID)
 
 	return ResourceNutanixObjectStoreCertificateV2Read(ctx, d, meta)
