@@ -81,14 +81,17 @@ func DatasourceNutanixObjectStoreCertificatesV2Read(ctx context.Context, d *sche
 	}
 
 	if listResp.Data == nil {
-		return diag.Errorf("no data returned from api response")
+		if err := d.Set("certificates", []map[string]interface{}{}); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		certificates := listResp.Data.GetValue().([]config.Certificate)
+
+		if err := d.Set("certificates", flattenCertificates(certificates)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
-	certificates := listResp.Data.GetValue().([]config.Certificate)
-
-	if err := d.Set("certificates", flattenCertificates(certificates)); err != nil {
-		return diag.Errorf("error setting certificates: %s", err)
-	}
 
 	d.SetId(utils.GenUUID())
 

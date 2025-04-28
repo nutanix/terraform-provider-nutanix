@@ -91,13 +91,15 @@ func DatasourceNutanixObjectStoresV2Read(ctx context.Context, d *schema.Resource
 	}
 
 	if resp.Data == nil {
-		return diag.Errorf("no data returned from list object stores on Remote site")
-	}
+		if err := d.Set("object_stores", []map[string]interface{}{}); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		objectStoreList := resp.Data.GetValue().([]config.ObjectStore)
 
-	objectStoreList := resp.Data.GetValue().([]config.ObjectStore)
-
-	if err := d.Set("object_stores", flattenObjectStoreEntities(objectStoreList)); err != nil {
-		return diag.FromErr(err)
+		if err := d.Set("object_stores", flattenObjectStoreEntities(objectStoreList)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId(utils.GenUUID())
