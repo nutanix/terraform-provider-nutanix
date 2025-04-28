@@ -16,10 +16,10 @@ Provides Nutanix resource to Create key of a requested type for a user.
 ``` hcl
 # Create Service Account
 resource "nutanix_users_v2" "service_account" {
-		username = "service_account_terraform_example"
-		description = "service account tf"
-		email_id = "terraform_plugin@domain.com"
-		user_type = "SERVICE_ACCOUNT"
+      username = "service_account_terraform_example"
+      description = "service account tf"
+      email_id = "terraform_plugin@domain.com"
+      user_type = "SERVICE_ACCOUNT"
 }
 
 # Create key under service account, never expires
@@ -27,8 +27,8 @@ resource "nutanix_user_key_v2" "create_key" {
    user_ext_id = nutanix_users_v2.service_account.ext_id
    name = "api_key_developers"
    key_type = "API_KEY"
-	 expiry_time = "2125-01-01T00:00:00Z"
-	 assigned_to = "developer_user_1"
+   expiry_time = "2125-01-01T00:00:00Z"
+   assigned_to = "developer_user_1"
 }
 ```
 ##  Argument Reference
@@ -56,7 +56,6 @@ The following arguments are supported:
 * `tenant_id` - A globally unique identifier that represents the tenant that owns this entity. The system automatically assigns it, and it and is immutable from an API consumer perspective (some use cases may cause this Id to change - For instance, a use case may require the transfer of ownership of the entity, but these cases are handled automatically on the server).
 * `ext_id` - The External Identifier of the User Group.
 * `links`: - A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
-* `user_ext_id`: - External Identifier of the User.
 * `name`: - Identifier for the key in the form of a name.
 * `description`: - Brief description of the key.
 * `key_type`: - The type of key.
@@ -75,8 +74,5 @@ The following arguments are supported:
 ### Links
 
 The links attribute supports the following:
-
-* `href`: - The URL at which the entity described by the link can be accessed.
-* `rel`: - A name that identifies the relationship of the link to the object that is returned by the URL. The unique value of "self" identifies the URL for the object.
 
 See detailed information in [Nutanix Create User Key V4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Users/operation/createUserKey)
