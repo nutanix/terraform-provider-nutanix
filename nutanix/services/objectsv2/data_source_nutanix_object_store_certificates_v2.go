@@ -92,7 +92,6 @@ func DatasourceNutanixObjectStoreCertificatesV2Read(ctx context.Context, d *sche
 		}
 	}
 
-
 	d.SetId(utils.GenUUID())
 
 	return nil
