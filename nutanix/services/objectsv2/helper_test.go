@@ -29,11 +29,11 @@ func testAccCheckNutanixObjectStoreDestroy(s *terraform.State) error {
 
 		bucketResp, bucketErr := deleteBucketForObjectStore(rs.Primary.ID)
 		if bucketErr != nil {
-			log.Printf("[ERROR] Error deleting bucket: %v", bucketErr)
+			log.Printf("[ERROR] error deleting bucket: %v", bucketErr)
 			return bucketErr
 		}
 		if bucketResp.StatusCode != http.StatusOK {
-			return fmt.Errorf("Error deleting bucket: %s", bucketResp.Status)
+			return fmt.Errorf("error deleting bucket: %s", bucketResp.Status)
 		}
 
 		log.Println("[DEBUG] Bucket Deleted")
@@ -41,7 +41,7 @@ func testAccCheckNutanixObjectStoreDestroy(s *terraform.State) error {
 		// Check if the object store is deleted
 		_, err := conn.ObjectStoreAPI.ObjectStoresAPIInstance.GetObjectstoreById(utils.StringPtr(rs.Primary.ID))
 		if err == nil {
-			return fmt.Errorf("Object store still exists: %s", rs.Primary.ID)
+			return fmt.Errorf("object store still exists: %s", rs.Primary.ID)
 		}
 		if strings.Contains(err.Error(), "not found") {
 			log.Println("[DEBUG] Object store deleted")
@@ -118,11 +118,12 @@ func deleteObjectStoreBucket() resource.TestCheckFunc {
 			// Delete the object store bucket
 			resp, err := deleteBucketForObjectStore(objectStoreID)
 			if err != nil {
-				return fmt.Errorf("Error deleting bucket: %s", err)
+				return fmt.Errorf("error deleting bucket: %s", err)
 			}
 			if resp.StatusCode != http.StatusAccepted {
-				return fmt.Errorf("Error deleting bucket: %s", resp.Status)
+				return fmt.Errorf("error deleting bucket: %s", resp.Status)
 			}
+			defer resp.Body.Close()
 			log.Println("[DEBUG] Bucket Deleted")
 
 			return nil

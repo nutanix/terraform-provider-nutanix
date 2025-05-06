@@ -40,7 +40,7 @@ func TestAccV2NutanixObjectStoreResource_OneWorkerNode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "public_network_ips.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "public_network_ips.0.ipv4.0.value", testVars.ObjectStore.PublicNetworkIPs[0]),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_dns_ip.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_dns_ip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkDnsIp),
+					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_dns_ip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkDNSIP),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_vip.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_vip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkVip),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "state", "OBJECT_STORE_AVAILABLE"),
@@ -138,7 +138,7 @@ func TestAccV2NutanixObjectStoreResource_DraftObjectStore(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "public_network_ips.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "public_network_ips.0.ipv4.0.value", testVars.ObjectStore.PublicNetworkIPs[0]),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_dns_ip.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_dns_ip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkDnsIp),
+					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_dns_ip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkDNSIP),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_vip.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_vip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkVip),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "state", "UNDEPLOYED_OBJECT_STORE"),
@@ -179,7 +179,7 @@ func TestAccV2NutanixObjectStoreResource_UpdateObjectStore(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "public_network_ips.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "public_network_ips.0.ipv4.0.value", testVars.ObjectStore.PublicNetworkIPs[0]),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_dns_ip.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_dns_ip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkDnsIp),
+					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_dns_ip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkDNSIP),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_vip.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_vip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkVip),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "state", "OBJECT_STORE_AVAILABLE"),
@@ -337,7 +337,7 @@ data "nutanix_certificate_v2" "fetch" {
   ext_id              = nutanix_object_store_certificate_v2.test.id
   depends_on = [nutanix_object_store_certificate_v2.test]
 }
-`, certificateJsonFile)
+`, certificateJSONFile)
 }
 
 func testAccObjectStoreCertificateDatasourceConfig() string {

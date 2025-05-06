@@ -20,7 +20,7 @@ type TestConfig struct {
 		DeploymentVersion   string   `json:"deployment_version"`
 		Domain              string   `json:"domain"`
 		PublicNetworkIPs    []string `json:"public_network_ips"`
-		StorageNetworkDnsIp string   `json:"storage_network_dns_ip"`
+		StorageNetworkDNSIP string   `json:"storage_network_dns_ip"`
 		StorageNetworkVip   string   `json:"storage_network_vip"`
 	} `json:"object_store"`
 }
@@ -30,7 +30,7 @@ var testVars TestConfig
 var (
 	path, _             = os.Getwd()
 	filepath            = path + "/../../../test_config_v2.json"
-	certificateJsonFile = path + "/../../../object_store_cert.json"
+	certificateJSONFile = path + "/../../../object_store_cert.json"
 )
 
 func loadVars(filepath string, varStuct interface{}) {
@@ -72,15 +72,15 @@ func createCertificateJsonFile() error {
 	}
 
 	// Marshal the certificate data to JSON
-	certificateJson, err := json.MarshalIndent(certificate, "", "  ")
+	certificateJSON, err := json.MarshalIndent(certificate, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal certificate data: %w", err)
 	}
 	// Write the JSON data to a file
-	err = os.WriteFile(certificateJsonFile, certificateJson, 0644)
+	err = os.WriteFile(certificateJSONFile, certificateJSON, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write certificate file: %w", err)
 	}
-	log.Printf("Certificate JSON file created at: %s", certificateJsonFile)
+	log.Printf("Certificate JSON file created at: %s", certificateJSONFile)
 	return nil
 }
