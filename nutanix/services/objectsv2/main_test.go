@@ -16,6 +16,7 @@ import (
 type TestConfig struct {
 	ObjectStore struct {
 		SubnetName          string   `json:"subnet_name"`
+		BucketName          string   `json:"bucket_name"`
 		DeploymentVersion   string   `json:"deployment_version"`
 		Domain              string   `json:"domain"`
 		PublicNetworkIPs    []string `json:"public_network_ips"`
@@ -55,7 +56,7 @@ func TestMain(m *testing.M) {
 }
 
 func createCertificateJsonFile() error {
-	
+
 	alternateIps := testVars.ObjectStore.PublicNetworkIPs
 
 	certificate := config.NewCertificate()
@@ -64,7 +65,7 @@ func createCertificateJsonFile() error {
 		for i, ip := range alternateIps {
 			certificate.AlternateIps[i] = import1.IPAddress{
 				Ipv4: &import1.IPv4Address{
-					Value:        utils.StringPtr(ip),
+					Value: utils.StringPtr(ip),
 				},
 			}
 		}

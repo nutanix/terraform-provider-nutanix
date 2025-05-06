@@ -293,6 +293,7 @@
     "ssh_pc_username": "",
     "ssh_pc_password": "",
     "subnet_name": "",
+    "bucket_name": "",
     "deployment_version": "",
     "domain": "",
     "public_network_ips":[""],

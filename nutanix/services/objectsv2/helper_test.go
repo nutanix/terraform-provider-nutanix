@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
@@ -60,8 +61,10 @@ func deleteBucketForObjectStore(objectStoreExtID string) (*http.Response, error)
 	password := os.Getenv("NUTANIX_PASSWORD")
 	port := os.Getenv("NUTANIX_PORT")
 
+	bucketName := testVars.ObjectStore.BucketName
+
 	// 2) Prepare the URL
-	url := fmt.Sprintf("https://%s:%s/oss/api/nutanix/v3/objectstore_proxy/%s/buckets/objectsbrowser?force_empty_bucket=true", endpoint, port, objectStoreExtID)
+	url := fmt.Sprintf("https://%s:%s/oss/api/nutanix/v3/objectstore_proxy/%s/buckets/%s?force_empty_bucket=true", endpoint, port, objectStoreExtID, bucketName)
 
 	// 3) Create the DELETE request
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
@@ -100,4 +103,30 @@ func deleteBucketForObjectStore(objectStoreExtID string) (*http.Response, error)
 
 	return resp, nil
 
+}
+
+func deleteObjectStoreBucket() resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "nutanix_object_store_v2" {
+				continue
+			}
+
+			// get the object store ID
+			objectStoreID := rs.Primary.ID
+
+			// Delete the object store bucket
+			resp, err := deleteBucketForObjectStore(objectStoreID)
+			if err != nil {
+				return fmt.Errorf("Error deleting bucket: %s", err)
+			}
+			if resp.StatusCode != http.StatusAccepted {
+				return fmt.Errorf("Error deleting bucket: %s", resp.Status)
+			}
+			log.Println("[DEBUG] Bucket Deleted")
+
+			return nil
+		}
+		return nil
+	}
 }

@@ -2,15 +2,12 @@ package objectstoresv2_test
 
 import (
 	"fmt"
-	"log"
 	"math"
-	"net/http"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -112,29 +109,9 @@ func TestAccV2NutanixObjectStoreResource_OneWorkerNode(t *testing.T) {
 					// List object store certificate check
 					resource.TestCheckResourceAttrSet(datasourceNameCertificatesList, "certificates.#"),
 					resource.TestCheckResourceAttrPair(datasourceNameCertificatesList, "certificates.0.ext_id", resourceNameObjectStoreCertificate, "id"),
-					func(s *terraform.State) error {
-						for _, rs := range s.RootModule().Resources {
-							if rs.Type != "nutanix_object_store_v2" {
-								continue
-							}
 
-							// get the object store ID
-							objectStoreID := rs.Primary.ID
-
-							// Delete the object store bucket
-							resp, err := deleteBucketForObjectStore(objectStoreID)
-							if err != nil {
-								return fmt.Errorf("Error deleting bucket: %s", err)
-							}
-							if resp.StatusCode != http.StatusAccepted {
-								return fmt.Errorf("Error deleting bucket: %s", resp.Status)
-							}
-							log.Println("[DEBUG] Bucket Deleted")
-
-							return nil
-						}
-						return nil
-					},
+					// delete object store bucket
+					deleteObjectStoreBucket(),
 				),
 			},
 		},
@@ -206,29 +183,9 @@ func TestAccV2NutanixObjectStoreResource_UpdateObjectStore(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_vip.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_vip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkVip),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "state", "OBJECT_STORE_AVAILABLE"),
-					func(s *terraform.State) error {
-						for _, rs := range s.RootModule().Resources {
-							if rs.Type != "nutanix_object_store_v2" {
-								continue
-							}
 
-							// get the object store ID
-							objectStoreID := rs.Primary.ID
-
-							// Delete the object store bucket
-							resp, err := deleteBucketForObjectStore(objectStoreID)
-							if err != nil {
-								return fmt.Errorf("Error deleting bucket: %s", err)
-							}
-							if resp.StatusCode != http.StatusAccepted {
-								return fmt.Errorf("Error deleting bucket: %s", resp.Status)
-							}
-							log.Println("[DEBUG] Bucket Deleted")
-
-							return nil
-						}
-						return nil
-					},
+					// delete object store bucket
+					deleteObjectStoreBucket(),
 				),
 			},
 		},
