@@ -8,6 +8,7 @@ import (
 	objectsCommon "github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4/models/common/v1/config"
 	"github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4/models/objects/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -16,8 +17,9 @@ func DatasourceNutanixObjectStoresV2() *schema.Resource {
 		ReadContext: DatasourceNutanixObjectStoresV2Read,
 		Schema: map[string]*schema.Schema{
 			"page": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"limit"},
 			},
 			"limit": {
 				Type:     schema.TypeInt,
@@ -55,7 +57,8 @@ func DatasourceNutanixObjectStoresV2Read(ctx context.Context, d *schema.Resource
 	var filter, orderBy, expand, selects *string
 	var page, limit *int
 
-	if pagef, ok := d.GetOk("page"); ok {
+	if common.IsExplicitlySet(d, "page") {
+		pagef := d.Get("page")
 		page = utils.IntPtr(pagef.(int))
 	} else {
 		page = nil
