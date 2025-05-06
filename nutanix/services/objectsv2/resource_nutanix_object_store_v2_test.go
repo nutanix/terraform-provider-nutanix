@@ -313,7 +313,6 @@ data "nutanix_object_stores_v2" "filter" {
 
 data "nutanix_object_stores_v2" "limit" {
   limit = 1
-  page  = 0
   depends_on = [nutanix_object_store_v2.test]
 }
 
