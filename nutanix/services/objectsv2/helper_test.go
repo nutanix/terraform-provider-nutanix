@@ -103,7 +103,6 @@ func deleteBucketForObjectStore(objectStoreExtID string) (*http.Response, error)
 	fmt.Printf("Status: %s\nBody: %s\n", resp.Status, body)
 
 	return resp, nil
-
 }
 
 func deleteObjectStoreBucket() resource.TestCheckFunc {
