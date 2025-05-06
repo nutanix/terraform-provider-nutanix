@@ -36,6 +36,7 @@ func testAccCheckNutanixObjectStoreDestroy(s *terraform.State) error {
 			return fmt.Errorf("error deleting bucket: %s", bucketResp.Status)
 		}
 
+		defer bucketResp.Body.Close()
 		log.Println("[DEBUG] Bucket Deleted")
 
 		// Check if the object store is deleted

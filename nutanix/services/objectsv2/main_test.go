@@ -51,12 +51,11 @@ func loadVars(filepath string, varStuct interface{}) {
 func TestMain(m *testing.M) {
 	log.Println("Do some crazy stuff before tests!")
 	loadVars("../../../test_config_v2.json", &testVars)
-	createCertificateJsonFile()
+	createCertificateJSONFile()
 	os.Exit(m.Run())
 }
 
-func createCertificateJsonFile() error {
-
+func createCertificateJSONFile() error {
 	alternateIps := testVars.ObjectStore.PublicNetworkIPs
 
 	certificate := config.NewCertificate()
