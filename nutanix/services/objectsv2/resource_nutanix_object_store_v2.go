@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -31,8 +32,26 @@ func ResourceNutanixObjectStoresV2() *schema.Resource {
 		UpdateContext: ResourceNutanixObjectsV2Update,
 		DeleteContext: ResourceNutanixObjectsV2Delete,
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(1 * time.Hour),
+			Default: schema.DefaultTimeout(1 * time.Hour),
+			Create:  schema.DefaultTimeout(1 * time.Hour),
+			Update:  schema.DefaultTimeout(1 * time.Hour),
+			Delete:  schema.DefaultTimeout(1 * time.Hour),
 		},
+
+		CustomizeDiff: customdiff.ComputedIf("state", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+			if d.Id() == "" {
+				return false
+			}
+			client := meta.(*conns.Client).ObjectStoreAPI
+			resp, err := client.ObjectStoresAPIInstance.GetObjectstoreById(utils.StringPtr(d.Id()))
+			if err != nil {
+				return false
+			}
+			os := resp.Data.GetValue().(config.ObjectStore)
+			// trigger a diff when deployment has failed
+			return os.State.GetName() == "OBJECT_STORE_DEPLOYMENT_FAILED"
+		}),
+
 		Schema: map[string]*schema.Schema{
 			"metadata": {
 				Type:     schema.TypeList,
@@ -233,6 +252,9 @@ func ResourceNutanixObjectsV2Create(ctx context.Context, d *schema.ResourceData,
 	aJSON, _ := json.MarshalIndent(objectStorePayload, "", "  ")
 	log.Printf("[DEBUG] Object Store create payload: %s", string(aJSON))
 
+	// change the timeout for the create operation
+	d.Timeout(schema.TimeoutCreate)
+
 	resp, err := conn.ObjectStoresAPIInstance.CreateObjectstore(objectStorePayload)
 	if err != nil {
 		return diag.Errorf("Error creating object store: %s", err)
@@ -251,20 +273,44 @@ func ResourceNutanixObjectsV2Create(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for object store to be created : %s", err)
+		log.Printf("[DEBUG] deploy object store task error: %s", err)
+
+		taskResp, taskErr := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		if taskErr != nil {
+			return diag.Errorf("error while fetch deploy object store task: %s", taskErr)
+		}
+
+		taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+
+		// Get created object store extID from TASK API
+		objectStoreExtID := taskDetails.EntitiesAffected[0].ExtId
+
+		log.Printf("[DEBUG] object store extID: %s", utils.StringValue(objectStoreExtID))
+
+		// Check if the object store is deployed or not
+		// If not deployed, then return error
+		// If deployed, save the object store details to the state
+		// this code to maintain the state of the object store when its failed and the object store is present in the PC
+		_, readErr := conn.ObjectStoresAPIInstance.GetObjectstoreById(objectStoreExtID)
+		if readErr != nil {
+			log.Printf("[DEBUG] object store not found")
+			// If the object store is not found, object store is not deployed
+			// and return the error
+			return diag.Errorf("error waiting for object store to be deployed : %s", err)
+		}
+		// else, the object store instance exists in the system
 	}
 
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while create object store task: %s", err)
+		return diag.Errorf("error while fetch deploy object store task: %s", err)
 	}
 
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Object store task details: %s", string(aJSON))
+	log.Printf("[DEBUG] deploy object store task details: %s", string(aJSON))
 
 	// Get created object store extID from TASK API
-
 	objectStoreExtID := taskDetails.EntitiesAffected[0].ExtId
 	d.SetId(*objectStoreExtID)
 
@@ -272,6 +318,7 @@ func ResourceNutanixObjectsV2Create(ctx context.Context, d *schema.ResourceData,
 }
 
 func ResourceNutanixObjectsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] Reading object store %s", d.Id())
 	conn := meta.(*conns.Client).ObjectStoreAPI
 
 	readResp, err := conn.ObjectStoresAPIInstance.GetObjectstoreById(utils.StringPtr(d.Id()))
@@ -363,57 +410,10 @@ func ResourceNutanixObjectsV2Update(ctx context.Context, d *schema.ResourceData,
 
 	objectStoreUpdatePayload := readResp.Data.GetValue().(config.ObjectStore)
 
-	if d.HasChange("metadata") {
-		metadata := d.Get("metadata").([]interface{})
-		objectStoreUpdatePayload.Metadata = expandMetadata(metadata)
-	}
-	if d.HasChange("name") {
-		objectStoreUpdatePayload.Name = utils.StringPtr(d.Get("name").(string))
-	}
-	if d.HasChange("description") {
-		objectStoreUpdatePayload.Description = utils.StringPtr(d.Get("description").(string))
-	}
-	if d.HasChange("deployment_version") {
-		objectStoreUpdatePayload.DeploymentVersion = utils.StringPtr(d.Get("deployment_version").(string))
-	}
-	if d.HasChange("domain") {
-		objectStoreUpdatePayload.Domain = utils.StringPtr(d.Get("domain").(string))
-	}
-	if d.HasChange("region") {
-		objectStoreUpdatePayload.Region = utils.StringPtr(d.Get("region").(string))
-	}
-	if d.HasChange("num_worker_nodes") {
-		objectStoreUpdatePayload.NumWorkerNodes = utils.Int64Ptr(int64(d.Get("num_worker_nodes").(int)))
-	}
-	if d.HasChange("cluster_ext_id") {
-		objectStoreUpdatePayload.ClusterExtId = utils.StringPtr(d.Get("cluster_ext_id").(string))
-	}
-	if d.HasChange("storage_network_reference") {
-		objectStoreUpdatePayload.StorageNetworkReference = utils.StringPtr(d.Get("storage_network_reference").(string))
-	}
-	if d.HasChange("storage_network_vip") {
-		storageNetworkVIP := d.Get("storage_network_vip").([]interface{})
-		objectStoreUpdatePayload.StorageNetworkVip = &expandIPAddress(storageNetworkVIP[0].([]interface{}))[0]
-	}
-	if d.HasChange("storage_network_dns_ip") {
-		storageNetworkDNSIP := d.Get("storage_network_dns_ip").([]interface{})
-		objectStoreUpdatePayload.StorageNetworkDnsIp = &expandIPAddress(storageNetworkDNSIP[0].([]interface{}))[0]
-	}
-	if d.HasChange("public_network_reference") {
-		objectStoreUpdatePayload.PublicNetworkReference = utils.StringPtr(d.Get("public_network_reference").(string))
-	}
-	if d.HasChange("public_network_ips") {
-		publicNetworkIPs := d.Get("public_network_ips").(*schema.Set).List()
-		objectStoreUpdatePayload.PublicNetworkIps = expandIPAddress(publicNetworkIPs)
-	}
-	if d.HasChange("total_capacity_gib") {
-		objectStoreUpdatePayload.TotalCapacityGiB = utils.Int64Ptr(int64(d.Get("total_capacity_gib").(int)))
-	}
-	if d.HasChange("state") {
-		objectStoreUpdatePayload.State = expandState(d.Get("state").(string))
-	}
-	aJSON, _ := json.MarshalIndent(objectStoreUpdatePayload, "", "  ")
-	log.Printf("[DEBUG] Object Store update payload: %s", string(aJSON))
+	// change the timeout for the update operation
+	d.Timeout(schema.TimeoutUpdate)
+
+	// resume the object store deployment if the state is OBJECT_STORE_DEPLOYMENT_FAILED
 	resp, err := conn.ObjectStoresAPIInstance.UpdateObjectstoreById(utils.StringPtr(d.Id()), &objectStoreUpdatePayload, args)
 	if err != nil {
 		return diag.Errorf("Error updating object store: %s", err)
@@ -436,8 +436,8 @@ func ResourceNutanixObjectsV2Update(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error while update object store task: %s", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
-	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Object store task details: %s", string(aJSON))
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Object store Update task details: %s", string(aJSON))
 
 	return ResourceNutanixObjectsV2Read(ctx, d, meta)
 }
