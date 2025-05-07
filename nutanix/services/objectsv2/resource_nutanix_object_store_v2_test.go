@@ -309,10 +309,11 @@ data "nutanix_object_stores_v2" "list" {
 
 data "nutanix_object_stores_v2" "filter" {
   filter = "name eq '${nutanix_object_store_v2.test.name}'"
+  depends_on = [nutanix_object_store_v2.test]
 }
 
 data "nutanix_object_stores_v2" "limit" {
-  limit = 1
+  limit      = 1
   depends_on = [nutanix_object_store_v2.test]
 }
 
@@ -439,9 +440,9 @@ resource "nutanix_object_store_v2" "test" {
 # to make sure object store deployment succeeds
 resource "terraform_data" "post_update_hook" {
   provisioner "local-exec" {
-    when = create
     command    = local.restore_command
     on_failure = continue
+	when	   = create
   }
   depends_on = [nutanix_object_store_v2.test]
 }
