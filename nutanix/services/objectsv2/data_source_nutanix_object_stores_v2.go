@@ -17,13 +17,20 @@ func DatasourceNutanixObjectStoresV2() *schema.Resource {
 		ReadContext: DatasourceNutanixObjectStoresV2Read,
 		Schema: map[string]*schema.Schema{
 			"page": {
+<<<<<<< Updated upstream
 				Type:         schema.TypeInt,
 				Optional:     true,
 				RequiredWith: []string{"limit"},
+=======
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default: 0,
+>>>>>>> Stashed changes
 			},
 			"limit": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Default: 50,
 			},
 			"filter": {
 				Type:     schema.TypeString,
@@ -61,12 +68,10 @@ func DatasourceNutanixObjectStoresV2Read(ctx context.Context, d *schema.Resource
 		pagef := d.Get("page")
 		page = utils.IntPtr(pagef.(int))
 	} else {
-		page = nil
+		page = utils.IntPtr(0)
 	}
 	if limitf, ok := d.GetOk("limit"); ok {
 		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
 	}
 	if filterf, ok := d.GetOk("filter"); ok {
 		filter = utils.StringPtr(filterf.(string))

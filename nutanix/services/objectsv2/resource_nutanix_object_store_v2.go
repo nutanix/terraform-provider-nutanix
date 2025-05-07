@@ -37,6 +37,9 @@ func ResourceNutanixObjectStoresV2() *schema.Resource {
 			Update:  schema.DefaultTimeout(1 * time.Hour),
 			Delete:  schema.DefaultTimeout(1 * time.Hour),
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		CustomizeDiff: customdiff.ComputedIf("state", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 			if d.Id() == "" {
@@ -273,6 +276,7 @@ func ResourceNutanixObjectsV2Create(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
+
 		log.Printf("[DEBUG] deploy object store task error: %s", err)
 
 		taskResp, taskErr := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
