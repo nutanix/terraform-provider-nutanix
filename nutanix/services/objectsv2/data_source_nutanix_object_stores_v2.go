@@ -17,14 +17,14 @@ func DatasourceNutanixObjectStoresV2() *schema.Resource {
 		ReadContext: DatasourceNutanixObjectStoresV2Read,
 		Schema: map[string]*schema.Schema{
 			"page": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      0,
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
 			},
 			"limit": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      50,
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  50,
 			},
 			"filter": {
 				Type:     schema.TypeString,
