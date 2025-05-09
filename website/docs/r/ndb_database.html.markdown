@@ -15,7 +15,7 @@ Provides a resource to create database instance based on the input parameters. F
 
 ### NDB database resource with new database server VM
 
-``` hcl
+```hcl
 resource "nutanix_ndb_database" "dbp" {
 
     // name of database type
@@ -102,7 +102,7 @@ resource "nutanix_ndb_database" "dbp" {
 
 ### NDB database resource to provision HA instance with new database server VM
 
-``` hcl
+```hcl
 resource "nutanix_ndb_database" "dbp" {
     databasetype = "postgres_database"
     name = "test-pg-inst-HA-tf"

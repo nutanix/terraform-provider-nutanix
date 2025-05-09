@@ -12,7 +12,7 @@ Provides a datasource to retrieve a user based on the input parameters.
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_user" "user" {
 	directory_service_user {
 		user_principal_name = "test-user@ntnxlab.local"
