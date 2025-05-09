@@ -12,7 +12,7 @@ Get an Address Group by ExtID
 
 ## Example Usage
 
-``` hcl
+```hcl
 data "nutanix_address_group_v2" "get-addr-group"{
   ext_id = "0005b3b0-0b3b-4b3b-8b3b-0b3b3b3b3b3b"
 }

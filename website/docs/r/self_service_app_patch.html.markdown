@@ -14,7 +14,7 @@ Run the specified patch on the application by running patch action to update vm 
 
 This will run set patch config action in application.
 
-``` hcl
+```hcl
 # Provision Application
 resource "nutanix_self_service_app_provision" "test" {
     bp_name         = "NAME OF BLUEPRINT"
@@ -32,7 +32,7 @@ resource "nutanix_self_service_app_patch" "test" {
 
 ## Example 2: Update VM Configuration with runtime editable
 
-``` hcl
+```hcl
 # Provision Application
 resource "nutanix_self_service_app_provision" "test" {
     bp_name         = "NAME OF BLUEPRINT"
@@ -55,7 +55,7 @@ resource "nutanix_self_service_app_patch" "test" {
 
 ## Example 3: Add Category
 
-``` hcl
+```hcl
 # Provision Application
 resource "nutanix_self_service_app_provision" "test" {
     bp_name         = "NAME OF BLUEPRINT"
@@ -77,7 +77,7 @@ resource "nutanix_self_service_app_patch" "test" {
 
 ## Example 4: Delete Category
 
-``` hcl
+```hcl
 # Provision Application
 resource "nutanix_self_service_app_provision" "test" {
     bp_name         = "NAME OF BLUEPRINT"
@@ -99,7 +99,7 @@ resource "nutanix_self_service_app_patch" "test" {
 
 ## Example 5: Add Disk
 
-``` hcl
+```hcl
 # Provision Application
 resource "nutanix_self_service_app_provision" "test" {
     bp_name         = "NAME OF BLUEPRINT"
@@ -121,7 +121,7 @@ resource "nutanix_self_service_app_patch" "test" {
 
 ## Example 6: Add Nic
 
-``` hcl
+```hcl
 # Provision Application
 resource "nutanix_self_service_app_provision" "test" {
     bp_name         = "NAME OF BLUEPRINT"
