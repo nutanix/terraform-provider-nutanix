@@ -12,7 +12,7 @@ Describes a list of access control policies.
 
 ## Example Usage
 
-``` hcl
+```hcl
 data "nutanix_access_control_policies" "test" {}
 ```
 

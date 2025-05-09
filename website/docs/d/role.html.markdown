@@ -12,7 +12,7 @@ Describes a Role.
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_role" "test" {
 	name        = "NAME"
 	description = "DESCRIPTION"

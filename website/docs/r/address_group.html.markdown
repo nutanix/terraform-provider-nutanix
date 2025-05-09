@@ -12,7 +12,7 @@ Provides a resource to create a address group based on the input parameters.
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_address_group" "test_address" {
 	name = "test"
 	description = "test address groups resource"
