@@ -7,8 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -188,6 +190,31 @@ func ResourceNutanixImage() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
+				},
+			},
+			"data_source_reference": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"kind": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"uuid": {
+							Type:  schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$`), "must be a valid UUID"),
+						},
+					},
 				},
 			},
 			"architecture": {
@@ -415,6 +442,16 @@ func resourceNutanixImageRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(err)
 	}
 
+	data_source_reference := make(map[string]string)
+	if resp.Status.Resources.DataSourceReference != nil {
+		data_source_reference["uuid"] = utils.StringValue(resp.Status.Resources.DataSourceReference.UUID)
+		data_source_reference["kind"] = utils.StringValue(resp.Status.Resources.DataSourceReference.Kind)
+		data_source_reference["name"] = utils.StringValue(resp.Status.Resources.DataSourceReference.Name)
+	}
+	if err = d.Set("data_source_reference", []interface{}{data_source_reference}); err != nil {
+		return diag.Errorf("error setting data_source_reference for image UUID(%s), %s", d.Id(), err)
+	}
+
 	return nil
 }
 
@@ -566,6 +603,11 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 			image.ImageType = utils.StringPtr("DISK_IMAGE")
 		}
 		// set source uri
+	}
+
+	if datasourceref, refok := d.GetOk("data_source_reference"); refok && len(datasourceref.([]interface{})) > 0 {
+		datasourceref := datasourceref.([]interface{})[0].(map[string]interface{})
+		image.DataSourceReference = validateRef(datasourceref)
 	}
 
 	if csok {
@@ -741,6 +783,31 @@ func resourceNutanixImageInstanceResourceV0() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
+				},
+			},
+			"data_source_reference": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"kind": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"uuid": {
+							Type:  schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$`), "must be a valid UUID"),
+						},
+					},
 				},
 			},
 			"architecture": {
