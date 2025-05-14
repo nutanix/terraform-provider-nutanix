@@ -12,7 +12,7 @@ Provides a resource to create a service group based on the input parameters.
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_service_group" "test" {
 		name = "test_service_gp"
 		description = "this is service group"
