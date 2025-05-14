@@ -269,8 +269,7 @@ func ResourceNutanixVirtualMachine() *schema.Resource {
 									"type": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringInSlice([]string{"ASSIGNED"}, false),
+										Default: "ASSIGNED",
 									},
 								},
 							},
@@ -2287,7 +2286,7 @@ func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {
 									"type": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										Default: "ASSIGNED",
 									},
 								},
 							},

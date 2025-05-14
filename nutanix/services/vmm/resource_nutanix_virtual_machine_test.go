@@ -1705,7 +1705,6 @@ func testaccnutanixvmconfigwithniclistIPType(r int) string {
 				subnet_uuid = "${nutanix_subnet.sub.id}"
 				 ip_endpoint_list {
 				 	ip = "10.250.140.76"
-					type = "ASSIGNED"
 				 }
 			}
 		}
