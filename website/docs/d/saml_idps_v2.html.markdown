@@ -12,7 +12,7 @@ Provides a datasource to retrieve all the SAML Identity Provider(s).
 
 ## Example Usage
 
-``` hcl
+```hcl
 data "nutanix_saml_identity_providers_v2" "idps-list"{}
 
 # list saml identity providers

@@ -11,7 +11,7 @@ description: |-
 Provides Nutanix resource to Create a User.
 
 ## Example Usage
-``` hcl
+```hcl
 resource "nutanix_users_v2" "user"{
   username = "<username>"
   user_type = "<user_type>"

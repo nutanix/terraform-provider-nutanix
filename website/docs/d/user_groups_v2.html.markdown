@@ -12,7 +12,7 @@ Provides a datasource to retrieve all the user groups.
 
 ## Example Usage
 
-``` hcl
+```hcl
 data "nutanix_user_groups_v2" "user-groups"{}
 ```
 

@@ -12,7 +12,7 @@ Provides a datasource to View a SAML Identity Provider.
 
 ## Example Usage
 
-``` hcl
+```hcl
 data "nutanix_saml_identity_provider_v2" "idp"{
   ext_id = "a2a8650a-358a-4791-90c9-7a8b6e2989d6"
 }

@@ -12,7 +12,7 @@ Run restore action in application to restore from recovery point.
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_self_service_app_recovery_point" "test" {
     app_name = "NAME OF APPLICATION"
     action_name = "SNAPSHOT ACTION NAME"

@@ -14,7 +14,7 @@ Provides Nutanix datasource Get the route table for the specified extId.
 
 ## Example Usage
 
-``` hcl
+```hcl
 
 data "nutanix_route_table_v2" "get-route-table"{
   ext_id = "ad7692ff-50f8-4a47-b3c9-fd5a3462d455"

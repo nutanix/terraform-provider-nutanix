@@ -12,7 +12,7 @@ Provides a datasource to retrieve all Directory Service(s).
 
 ## Example Usage
 
-``` hcl
+```hcl
 # Get a Directory Service.
 data "nutanix_directory_service_v2" "get-active-directory" {
   ext_id = "8a938cc5-282b-48c4-81be-de22de145d07"
