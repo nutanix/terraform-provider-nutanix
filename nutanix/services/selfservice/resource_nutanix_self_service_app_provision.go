@@ -616,17 +616,28 @@ func resourceNutanixCalmAppProvisionDelete(ctx context.Context, d *schema.Resour
 	soft := d.Get("soft_delete").(bool)
 
 	var err error
-
 	if soft {
 		log.Printf("[Debug] Performing soft delete on app: %s", d.Id())
 		_, err = conn.Service.SoftDeleteApp(ctx, d.Id())
 	} else {
 		log.Printf("[Debug] Performing hard delete on app: %s", d.Id())
-		_, err = conn.Service.DeleteApp(ctx, d.Id())
+	  _, err = conn.Service.DeleteApp(ctx, d.Id())
 	}
 
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("Error deleting self-service application: %s", err)
+	}
+
+	// poll till app state is deleted
+	appStateConf := &resource.StateChangeConf{
+		Pending: []string{"running", "deleting"},
+		Target:  []string{"deleted"},
+		Refresh: calmappStateRefreshFunc(ctx, conn, d.Id()),
+		Timeout: d.Timeout(schema.TimeoutDelete),
+	}
+
+	if _, errWaitTask := appStateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("Error waiting for app %s to be deleted: %s", d.Id(), errWaitTask)
 	}
 
 	return nil
@@ -668,7 +679,7 @@ func calmappStateRefreshFunc(ctx context.Context, client *selfservice.Client, ap
 		var appState string
 		if state, ok := objStatus["state"].(string); ok {
 			appState = state
-			log.Printf("[DEBUG] State of APPP: %s\n", state)
+			log.Printf("[DEBUG] State of APP: %s\n", state)
 		}
 
 		if utils.StringValue(&appState) == "failed" {
