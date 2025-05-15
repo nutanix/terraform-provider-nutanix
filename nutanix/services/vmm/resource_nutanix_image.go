@@ -178,11 +178,13 @@ func ResourceNutanixImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ConflictsWith: []string{"source_path", "data_source_reference"},
 			},
 			"source_path": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ConflictsWith: []string{"source_uri", "data_source_reference"},
 			},
 			"version": {
 				Type:     schema.TypeMap,
@@ -196,13 +198,9 @@ func ResourceNutanixImage() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
+				ConflictsWith: []string{"source_uri", "source_path"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
 						"kind": {
 							Type:     schema.TypeString,
 							Optional: true,
