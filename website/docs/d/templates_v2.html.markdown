@@ -19,7 +19,7 @@ data "nutanix_templates_v2" "list-templates"{}
 # List templates with filter, page and limit
 data "nutanix_templates_v2" "filtered-templates"{
     filter="startswith(templateName,'template_name')"
-    page=1
+    page=0
     limit=10
 }
 ```
