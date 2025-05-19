@@ -19,7 +19,7 @@ data "nutanix_images_v2" "list-images"{}
 # List images with filter, page and limit
 data "nutanix_images_v2" "filtered-images"{
     filter="startswith(name,'image_name')"
-    page=1
+    page=0
     limit=10
 }
 ```
