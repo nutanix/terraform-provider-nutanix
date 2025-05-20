@@ -164,7 +164,7 @@ func DataSourceNutanixImage() *schema.Resource {
 							Computed: true,
 						},
 						"uuid": {
-							Type:  schema.TypeString,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},

@@ -3,8 +3,8 @@ package vmm_test
 import (
 	"fmt"
 	"os"
-	"testing"
 	"regexp"
+	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -85,13 +85,12 @@ func TestAccNutanixVirtualMachineNegativeScenario(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVMRequestedImageSizeLess(r),
+				Config:      testAccVMRequestedImageSizeLess(r),
 				ExpectError: regexp.MustCompile("Requested image size 1048576 is less than actual size 41126400"),
 			},
 		},
 	})
 }
-
 
 func testAccVMDataSourceWithDiskContainer(vmName, containerUUID string) string {
 	return fmt.Sprintf(`

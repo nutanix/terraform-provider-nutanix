@@ -5,10 +5,10 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
-	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -187,7 +187,7 @@ func TestAccNutanixImage_WithInvalidConfig(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixImageNegativeConfig(name, description),
+				Config:      testAccNutanixImageNegativeConfig(name, description),
 				ExpectError: regexp.MustCompile("Conflicting configuration arguments"),
 			},
 		},
@@ -203,7 +203,7 @@ func TestAccNutanixImage_WithDataSourceRefInvalidUUID(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixImageNegativeConfigInvalidUUID(name, description),
+				Config:      testAccNutanixImageNegativeConfigInvalidUUID(name, description),
 				ExpectError: regexp.MustCompile("Invalid disk data source reference"),
 			},
 		},
@@ -216,8 +216,8 @@ func TestAccNutanixImage_WithDataSourceRef(t *testing.T) {
 	description := fmt.Sprintf("UbuntuServer-%d", r)
 	name := fmt.Sprintf("UbuntuServer-%d", r)
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
-		Providers:    acc.TestAccProviders,
+		PreCheck:  func() {},
+		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNutanixImageDataSourceRefConfig(name, description, rInt),
@@ -467,7 +467,6 @@ func testAccNutanixImageConfigWithLargeImageURL(r int) string {
 		}
 	`, r)
 }
-
 
 func testAccNutanixImageNegativeConfig(name string, description string) string {
 	return fmt.Sprintf(`

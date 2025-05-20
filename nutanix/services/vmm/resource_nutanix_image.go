@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
-	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -175,15 +175,15 @@ func ResourceNutanixImage() *schema.Resource {
 				},
 			},
 			"source_uri": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
 				ConflictsWith: []string{"source_path", "data_source_reference"},
 			},
 			"source_path": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
 				ConflictsWith: []string{"source_uri", "data_source_reference"},
 			},
 			"version": {
@@ -195,9 +195,9 @@ func ResourceNutanixImage() *schema.Resource {
 				},
 			},
 			"data_source_reference": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
 				ConflictsWith: []string{"source_uri", "source_path"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -207,9 +207,9 @@ func ResourceNutanixImage() *schema.Resource {
 							Computed: true,
 						},
 						"uuid": {
-							Type:  schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$`), "must be a valid UUID"),
 						},
 					},
@@ -799,9 +799,9 @@ func resourceNutanixImageInstanceResourceV0() *schema.Resource {
 							Computed: true,
 						},
 						"uuid": {
-							Type:  schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$`), "must be a valid UUID"),
 						},
 					},

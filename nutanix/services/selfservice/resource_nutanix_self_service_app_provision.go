@@ -621,7 +621,7 @@ func resourceNutanixCalmAppProvisionDelete(ctx context.Context, d *schema.Resour
 		_, err = conn.Service.SoftDeleteApp(ctx, d.Id())
 	} else {
 		log.Printf("[Debug] Performing hard delete on app: %s", d.Id())
-	  _, err = conn.Service.DeleteApp(ctx, d.Id())
+		_, err = conn.Service.DeleteApp(ctx, d.Id())
 	}
 
 	if err != nil {
