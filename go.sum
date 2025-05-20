@@ -470,6 +470,8 @@ github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.0.1 h1:9SC9P
 github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.0.1/go.mod h1:75Ro+aFIepNAkf2eWjFrFR7m+Ct36EVrD9n9pwAYBrc=
 github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.0.1 h1:2D2ZJd5Cn0fMeWYnTEHsR1Fcv2G1BSrOAl1fVURtfn4=
 github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.0.1/go.mod h1:+eZgV1+xL/r84qmuFSVt5R8OFRO70rEz92jOnVgJNco=
+github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4 v4.0.1 h1:hfx71E22s7pzuzjSDrexLbgasdlBPqPNp9t7NU4wmmU=
+github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4 v4.0.1/go.mod h1:dZGm3+O01e9X31VTpChM0GBph1tfw9sfZ+G4DVsd3wY=
 github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.0.1 h1:cPQ5RczmwE98P24bhWrMtJzuPKrnCMB48G7Dzzfca1g=
 github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.0.1/go.mod h1:Yhk+xD4mN90OKEHnk5ARf97CX5p4+MEC/B/YIVoZeZ0=
 github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.0.1 h1:4/neYUoEkERd08WwqE4vQSb8RsZdtp1RxpoYLnVFJGE=
