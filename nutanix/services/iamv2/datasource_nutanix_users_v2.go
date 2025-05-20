@@ -237,10 +237,16 @@ func datasourceNutanixUsersV2Read(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("error while fetching users : %v", err)
 	}
 
-	getResp := resp.Data.GetValue().([]iamConfig.User)
+	if resp.Data == nil {
+		if err := d.Set("users", []map[string]interface{}{}); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		getResp := resp.Data.GetValue().([]iamConfig.User)
 
-	if err := d.Set("users", flattenUsersEntities(getResp)); err != nil {
-		return diag.FromErr(err)
+		if err := d.Set("users", flattenUsersEntities(getResp)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId(resource.UniqueId())

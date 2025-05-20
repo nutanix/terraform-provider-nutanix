@@ -80,11 +80,15 @@ func DatasourceNutanixTemplatesV2Read(ctx context.Context, d *schema.ResourceDat
 	if err != nil {
 		return diag.Errorf("error while fetching templates : %v", err)
 	}
-	getResp := resp.Data
 
-	if getResp != nil {
-		tmp := getResp.GetValue().([]import5.Template)
-		if err := d.Set("templates", flattenTemplatesEntities(tmp)); err != nil {
+	if resp.Data == nil {
+		if err := d.Set("templates", make([]interface{}, 0)); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		getResp := resp.Data.GetValue().([]import5.Template)
+
+		if err := d.Set("templates", flattenTemplatesEntities(getResp)); err != nil {
 			return diag.FromErr(err)
 		}
 	}

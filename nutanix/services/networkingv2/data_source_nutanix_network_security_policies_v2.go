@@ -443,9 +443,15 @@ func DataSourceNutanixNetworkSecurityPoliciesV2Read(ctx context.Context, d *sche
 		return diag.Errorf("error while fetching network security policy: %v", err)
 	}
 
-	getResp := resp.Data.GetValue().([]import1.NetworkSecurityPolicy)
-	if err := d.Set("network_policies", flattenNetworkSecurityPolicy(getResp)); err != nil {
-		return diag.FromErr(err)
+	if resp.Data == nil {
+		if err := d.Set("network_policies", []map[string]interface{}{}); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		getResp := resp.Data.GetValue().([]import1.NetworkSecurityPolicy)
+		if err := d.Set("network_policies", flattenNetworkSecurityPolicy(getResp)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId(resource.UniqueId())

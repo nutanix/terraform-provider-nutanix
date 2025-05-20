@@ -46,14 +46,15 @@ func DatasourceNutanixListPcsV2Read(ctx context.Context, d *schema.ResourceData,
 		if err := d.Set("pcs", []map[string]interface{}{}); err != nil {
 			return diag.Errorf("Error setting pcs: %v", err)
 		}
-	}
-	pcs := resp.Data.GetValue().([]config.DomainManager)
-	if err := d.Set("pcs", flattenPcs(pcs)); err != nil {
-		return diag.Errorf("Error setting pcs: %v", err)
+	} else {
+		pcs := resp.Data.GetValue().([]config.DomainManager)
+
+		if err := d.Set("pcs", flattenPcs(pcs)); err != nil {
+			return diag.Errorf("Error setting pcs: %v", err)
+		}
 	}
 
 	d.SetId(utils.GenUUID())
-
 	return nil
 }
 

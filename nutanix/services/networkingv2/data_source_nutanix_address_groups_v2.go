@@ -145,9 +145,15 @@ func DatasourceNutanixAddressGroupsV2Read(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("error while fetching address groups : %v", err)
 	}
 
-	getResp := resp.Data.GetValue().([]import1.AddressGroup)
-	if err := d.Set("address_groups", flattenAddressGroupsEntities(getResp)); err != nil {
-		return diag.FromErr(err)
+	if resp.Data == nil {
+		if err := d.Set("address_groups", []map[string]interface{}{}); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		getResp := resp.Data.GetValue().([]import1.AddressGroup)
+		if err := d.Set("address_groups", flattenAddressGroupsEntities(getResp)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId(resource.UniqueId())

@@ -246,10 +246,17 @@ func DatasourceNutanixImagesV4Read(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return diag.Errorf("error while fetching images : %v", err)
 	}
-	getResp := resp.Data.GetValue().([]import5.Image)
 
-	if err := d.Set("images", flattenImagesEntities(getResp)); err != nil {
-		return diag.FromErr(err)
+	if resp.Data == nil {
+		if err := d.Set("images", make([]interface{}, 0)); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		getResp := resp.Data.GetValue().([]import5.Image)
+
+		if err := d.Set("images", flattenImagesEntities(getResp)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId(resource.UniqueId())

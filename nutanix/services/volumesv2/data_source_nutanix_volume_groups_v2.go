@@ -227,7 +227,7 @@ func DatasourceNutanixVolumeGroupsV2Read(ctx context.Context, d *schema.Resource
 			return diag.FromErr(err)
 		}
 	} else {
-		// set the volume groups data in the terraform resource
+		// set the volume groups data to empty list
 		d.Set("volumes", make([]volumesClient.VolumeGroup, 0))
 	}
 

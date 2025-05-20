@@ -391,11 +391,14 @@ func DatasourceNutanixPbrsV2Read(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("error while fetching routing policies : %v", err)
 	}
 
-	getResp := resp.Data
+	if resp.Data == nil {
+		if err := d.Set("routing_policies", []map[string]interface{}{}); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		getResp := resp.Data.GetValue().([]import1.RoutingPolicy)
 
-	if getResp != nil {
-		tmp := resp.Data.GetValue().([]import1.RoutingPolicy)
-		if err := d.Set("routing_policies", flattenRoutingEntities(tmp)); err != nil {
+		if err := d.Set("routing_policies", flattenRoutingEntities(getResp)); err != nil {
 			return diag.FromErr(err)
 		}
 	}

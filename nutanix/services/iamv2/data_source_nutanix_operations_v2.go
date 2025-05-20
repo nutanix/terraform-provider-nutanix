@@ -144,10 +144,13 @@ func DatasourceNutanixOperationsV4Read(ctx context.Context, d *schema.ResourceDa
 		return diag.Errorf("error while fetching operations : %v", err)
 	}
 
-	getResp := resp.Data
+	if resp.Data == nil {
+		if err := d.Set("operations", []map[string]interface{}{}); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		operations := resp.Data.GetValue().([]import1.Operation)
 
-	if getResp != nil {
-		operations := getResp.GetValue().([]import1.Operation)
 		if err := d.Set("operations", flattenPermissionEntities(operations)); err != nil {
 			return diag.FromErr(err)
 		}

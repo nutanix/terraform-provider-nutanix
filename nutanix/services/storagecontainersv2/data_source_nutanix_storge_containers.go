@@ -88,10 +88,16 @@ func DatasourceNutanixStorageContainersV2Read(ctx context.Context, d *schema.Res
 		return diag.Errorf("error while fetching Storage Containers : %v", err)
 	}
 
-	getResp := resp.Data.GetValue().([]clustermgmt.StorageContainer)
+	if resp.Data == nil {
+		if err := d.Set("storage_containers", make([]interface{}, 0)); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		getResp := resp.Data.GetValue().([]clustermgmt.StorageContainer)
 
-	if err := d.Set("storage_containers", flattenStorageContainers(getResp)); err != nil {
-		return diag.FromErr(err)
+		if err := d.Set("storage_containers", flattenStorageContainers(getResp)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId(resource.UniqueId())

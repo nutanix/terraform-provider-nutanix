@@ -247,11 +247,15 @@ func dataSourceNutanixVPCsv2Read(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return diag.Errorf("error while fetching vpcs : %v", err)
 	}
-	getResp := resp.Data
 
-	if getResp != nil {
-		tmp := getResp.GetValue().([]import1.Vpc)
-		if err := d.Set("vpcs", flattenVPCsEntities(tmp)); err != nil {
+	if resp.Data == nil {
+		if err := d.Set("vpcs", make([]interface{}, 0)); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		getResp := resp.Data.GetValue().([]import1.Vpc)
+
+		if err := d.Set("vpcs", flattenVPCsEntities(getResp)); err != nil {
 			return diag.FromErr(err)
 		}
 	}

@@ -184,9 +184,15 @@ func DatasourceNutanixServiceGroupsV2Read(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("error while fetching service groups : %v", err)
 	}
 
-	getResp := resp.Data.GetValue().([]import1.ServiceGroup)
-	if err := d.Set("service_groups", flattenServiceGroupsEntities(getResp)); err != nil {
-		return diag.FromErr(err)
+	if resp.Data == nil {
+		if err := d.Set("service_groups", make([]interface{}, 0)); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		getResp := resp.Data.GetValue().([]import1.ServiceGroup)
+		if err := d.Set("service_groups", flattenServiceGroupsEntities(getResp)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId(resource.UniqueId())

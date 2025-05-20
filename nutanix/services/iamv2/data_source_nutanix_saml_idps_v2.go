@@ -179,9 +179,15 @@ func DatasourceNutanixSamlIDPsV2Read(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("error while fetching identity providers: %v", errorMessage["message"])
 	}
 
-	getResp := resp.Data.GetValue().([]import1.SamlIdentityProvider)
-	if err := d.Set("identity_providers", flattenIdentityProvidersEntities(getResp)); err != nil {
-		return diag.FromErr(err)
+	if resp.Data == nil {
+		if err := d.Set("identity_providers", []map[string]interface{}{}); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		getResp := resp.Data.GetValue().([]import1.SamlIdentityProvider)
+		if err := d.Set("identity_providers", flattenIdentityProvidersEntities(getResp)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId(resource.UniqueId())

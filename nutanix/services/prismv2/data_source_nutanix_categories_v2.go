@@ -185,16 +185,18 @@ func DatasourceNutanixCategoriesV2Read(ctx context.Context, d *schema.ResourceDa
 		return diag.Errorf("error while fetching categories : %v", err)
 	}
 
-	checkResp := resp.Data
-
-	if checkResp != nil {
+	if resp.Data == nil {
+		if err := d.Set("categories", make([]interface{}, 0)); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
 		getResp := resp.Data.GetValue().([]import1.Category)
 
 		if err := d.Set("categories", flattenCategoriesEntities(getResp)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
-
+	
 	d.SetId(resource.UniqueId())
 	return nil
 }

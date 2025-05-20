@@ -125,9 +125,16 @@ func DatasourceNutanixUserGroupsV4Read(ctx context.Context, d *schema.ResourceDa
 		errorMessage := errorList[0].(map[string]interface{})
 		return diag.Errorf("error while fetching user groups: %v", errorMessage["message"])
 	}
-	getResp := resp.Data.GetValue().([]import1.UserGroup)
-	if err := d.Set("user_groups", flattenUserGroupEntities(getResp)); err != nil {
-		return diag.FromErr(err)
+
+	if resp.Data == nil {
+		if err := d.Set("user_groups", []map[string]interface{}{}); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		getResp := resp.Data.GetValue().([]import1.UserGroup)
+		if err := d.Set("user_groups", flattenUserGroupEntities(getResp)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId(resource.UniqueId())

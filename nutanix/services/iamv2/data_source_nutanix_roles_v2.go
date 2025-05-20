@@ -188,9 +188,16 @@ func DatasourceNutanixRolesV2Read(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("error while fetching roles: %v", err)
 	}
 
-	getResp := resp.Data.GetValue().([]iamConfig.Role)
-	if err := d.Set("roles", flattenRolesEntities(getResp)); err != nil {
-		return diag.FromErr(err)
+	if resp.Data == nil {
+		if err := d.Set("roles", []map[string]interface{}{}); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		getResp := resp.Data.GetValue().([]iamConfig.Role)
+
+		if err := d.Set("roles", flattenRolesEntities(getResp)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId(resource.UniqueId())

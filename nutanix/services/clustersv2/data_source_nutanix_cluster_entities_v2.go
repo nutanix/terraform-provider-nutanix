@@ -100,10 +100,16 @@ func DatasourceNutanixClusterEntitiesV2Read(ctx context.Context, d *schema.Resou
 		return diag.Errorf("error while fetching cluster entities : %v", err)
 	}
 
-	getResp := resp.Data.GetValue().([]import1.Cluster)
+	if resp.Data == nil {
+		if err := d.Set("cluster_entities", []map[string]interface{}{}); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		getResp := resp.Data.GetValue().([]import1.Cluster)
 
-	if err := d.Set("cluster_entities", flattenClusterEntities(getResp)); err != nil {
-		return diag.FromErr(err)
+		if err := d.Set("cluster_entities", flattenClusterEntities(getResp)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId(resource.UniqueId())
