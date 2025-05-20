@@ -1,6 +1,20 @@
-#Here we will get and list permissions
-#the variable "" present in terraform.tfvars file.
-#Note - Replace appropriate values of variables in terraform.tfvars file as per setup
+
+
+# This Terraform script will do:
+# 1. Deploy an object store with one worker node
+# 2. List all object stores
+# 3. List all object store with filter
+# 4. List all object store with limit
+# 5. Fetch object store details using ext_id
+
+
+
+# NOTE:
+# 1. Before Deleting object store, make sure to delete buckets inside it
+#    Currently, we are not supporting delete bucket API in terraform
+# 2. Object store Update is used only to resume deployment of object store when it fails,
+#    the state will be OBJECT_STORE_DEPLOYMENT_FAILED, update will resume the deployment
+
 
 terraform {
   required_providers {
@@ -19,18 +33,6 @@ provider "nutanix" {
   port     = var.nutanix_port
   insecure = true
 }
-
-
-# This Terraform script will do:
-# 1. Deploy an object store with one worker node
-# 2. Create Certificate for an object store
-# 3. List all certificates for an object store
-# 4. Fetch certificate details for an object store
-# 5. List all object stores
-# 6. List all object store with filter
-# 7. List all object store with limit
-# 8. Fetch object store details using ext_id
-
 
 # subnet name to be used for object store
 locals {
@@ -61,7 +63,7 @@ resource "nutanix_object_store_v2" "example" {
   domain                   = "msp.pc-idbc.nutanix.com"
   num_worker_nodes         = 1
   cluster_ext_id           = local.clusterExtId
-  total_capacity_gib       = 20 * pow(1024, 3) # 20 GB
+  total_capacity_gib       = 20 * pow(1024, 3)
   public_network_reference = local.subnetExtId
   public_network_ips {
     ipv4 {
@@ -81,40 +83,34 @@ resource "nutanix_object_store_v2" "example" {
   }
 }
 
-# This is example of creating certificate for object store
-# check API Ref for more details
-# create object_store_cert.json file, file content :]
-# {
-#   "alternateIps": [
-#     {
-#       "ipv4": {
-#         "value": "10.44.77.123"
-#       }
-#     }
-#   ]
-# }
-
-# Creating certificate for object store
-resource "nutanix_object_store_certificate_v2" "example" {
-  object_store_ext_id = nutanix_object_store_v2.example.id
-  # path to certificate json file
-  path = "./object_store_cert.json"
+# Deploying Object Store in draft state
+resource "nutanix_object_store_v2" "example-draft" {
+  name                     = "tf-draft-os"
+  description              = "terraform deploy object store draft example"
+  deployment_version       = "5.1.1"
+  domain                   = "msp.pc-idbc.nutanix.com"
+  num_worker_nodes         = 1
+  cluster_ext_id           = local.clusterExtId
+  total_capacity_gib       = 20 * pow(1024, 3)
+  public_network_reference = local.subnetExtId
+  state                    = "UNDEPLOYED_OBJECT_STORE"
+  public_network_ips {
+    ipv4 {
+      value = "10.44.77.126"
+    }
+  }
+  storage_network_reference = local.subnetExtId
+  storage_network_dns_ip {
+    ipv4 {
+      value = "10.44.77.127"
+    }
+  }
+  storage_network_vip {
+    ipv4 {
+      value = "10.44.77.128"
+    }
+  }
 }
-
-
-#List all certificates for object store
-data "nutanix_certificates_v2" "list" {
-  object_store_ext_id = nutanix_object_store_v2.example.id
-  depends_on          = [nutanix_object_store_certificate_v2.example]
-}
-
-# fetching certificate details for object store
-data "nutanix_certificate_v2" "fetch" {
-  object_store_ext_id = nutanix_object_store_v2.example.id
-  ext_id              = nutanix_object_store_certificate_v2.example.id
-  depends_on          = [nutanix_object_store_certificate_v2.example]
-}
-
 
 # List all object stores
 data "nutanix_object_stores_v2" "list" {
@@ -136,7 +132,3 @@ data "nutanix_object_stores_v2" "limit" {
 data "nutanix_object_store_v2" "fetch" {
   ext_id = nutanix_object_store_v2.example.id
 }
-
-
-# NOTE: Before Deleting object store, make sure to delete buckets inside it
-# Currently, we are not supporting delete bucket API in terraform

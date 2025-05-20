@@ -1,6 +1,20 @@
-#Here we will get and list permissions
-#the variable "" present in terraform.tfvars file.
-#Note - Replace appropriate values of variables in terraform.tfvars file as per setup
+
+
+
+
+# This Terraform script will do:
+# 1. Deploy an object store with one worker node
+# 2. Create Certificate for an object store
+# 3. List all certificates for an object store
+# 4. Fetch certificate details for an object store
+
+
+# NOTE:
+# 1. Before Deleting object store, make sure to delete buckets inside it
+#    Currently, we are not supporting delete bucket API in terraform
+# 2. Object store Update is used only to resume deployment of object store when it fails,
+#    the state will be OBJECT_STORE_DEPLOYMENT_FAILED, update will resume the deployment
+
 
 terraform {
   required_providers {
@@ -19,14 +33,6 @@ provider "nutanix" {
   port     = var.nutanix_port
   insecure = true
 }
-
-
-# This Terraform script will do:
-# 1. Deploy an object store with one worker node
-# 2. Create Certificate for an object store
-# 3. List all certificates for an object store
-# 4. Fetch certificate details for an object store
-
 
 # subnet name to be used for object store
 locals {
@@ -110,8 +116,3 @@ data "nutanix_certificate_v2" "fetch" {
   ext_id              = nutanix_object_store_certificate_v2.example.id
   depends_on          = [nutanix_object_store_certificate_v2.example]
 }
-
-
-
-# NOTE: Before Deleting object store, make sure to delete buckets inside it
-# Currently, we are not supporting delete bucket API in terraform
