@@ -26,7 +26,7 @@ resource "nutanix_image" "create_image_with_data_source_reference" {
   image_type = "DISK_IMAGE"
   data_source_reference {
     kind = "vm_disk"
-    uuid = "<uuid of the vm from which image need to be created>"
+    uuid = "<uuid of the vm disk>"
   }
 }
 ```

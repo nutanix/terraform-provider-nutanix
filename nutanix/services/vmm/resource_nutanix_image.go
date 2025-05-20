@@ -441,10 +441,9 @@ func resourceNutanixImageRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	data_source_reference := make(map[string]string)
-	if resp.Status.Resources.DataSourceReference != nil {
-		data_source_reference["uuid"] = utils.StringValue(resp.Status.Resources.DataSourceReference.UUID)
-		data_source_reference["kind"] = utils.StringValue(resp.Status.Resources.DataSourceReference.Kind)
-		data_source_reference["name"] = utils.StringValue(resp.Status.Resources.DataSourceReference.Name)
+	if ref := resp.Status.Resources.DataSourceReference; ref != nil {
+		data_source_reference["uuid"] = utils.StringValue(ref.UUID)
+		data_source_reference["kind"] = utils.StringValue(ref.Kind)
 	}
 	if err = d.Set("data_source_reference", []interface{}{data_source_reference}); err != nil {
 		return diag.Errorf("error setting data_source_reference for image UUID(%s), %s", d.Id(), err)
