@@ -276,7 +276,6 @@ func ResourceNutanixObjectsV2Create(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-
 		log.Printf("[DEBUG] deploy object store task error: %s", err)
 
 		taskResp, taskErr := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)

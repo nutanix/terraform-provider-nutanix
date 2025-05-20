@@ -19,12 +19,12 @@ func DatasourceNutanixObjectStoresV2() *schema.Resource {
 			"page": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  0,
+				Default:  0, //nolint:gomnd
 			},
 			"limit": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  50,
+				Default:  50, //nolint:gomnd
 			},
 			"filter": {
 				Type:     schema.TypeString,
