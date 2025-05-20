@@ -12,7 +12,7 @@ List all the service Groups.
 
 ## Example Usage
 
-``` hcl
+```hcl
 
 data "nutanix_service_groups_v2" "service_group"{}
 

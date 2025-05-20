@@ -12,7 +12,7 @@ Describes runtime editables that are present in a blueprint.
 
 ## Example Usage
 
-``` hcl
+```hcl
 data "nutanix_blueprint_runtime_editables" "example" {
     bp_name = "NAME OF BLUEPRINT"
 }

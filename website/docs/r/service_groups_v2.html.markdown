@@ -12,7 +12,7 @@ Create an service Group
 
 ## Example Usage
 
-``` hcl
+```hcl
 
 # Add Service  group. with TCP and UDP
 resource "nutanix_service_groups_v2" "tcp-udp-service" {

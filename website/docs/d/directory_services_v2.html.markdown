@@ -12,7 +12,7 @@ Provides a datasource to retrieve all Directory Service(s).
 
 ## Example Usage
 
-``` hcl
+```hcl
 data "nutanix_directory_services_v2" "example"{}
 ```
 

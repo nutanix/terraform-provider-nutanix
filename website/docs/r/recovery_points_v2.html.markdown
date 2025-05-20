@@ -12,7 +12,7 @@ Create a new recovery point.
 
 ## Example Usage
 
-``` hcl
+```hcl
 # create RP with Vm Rp
 resource "nutanix_recovery_points_v2" "rp-example"{
   name                = "terraform-test-recovery-point"
