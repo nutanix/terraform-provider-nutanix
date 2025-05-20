@@ -432,20 +432,20 @@ func resourceNutanixImageRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("error setting retrieval_uri_list for image UUID(%s), %s", d.Id(), err)
 	}
 
-	if err := d.Set("cluster_references", flattenArrayOfReferenceValues(resp.Status.Resources.InitialPlacementRefList)); err != nil {
+	if err = d.Set("cluster_references", flattenArrayOfReferenceValues(resp.Status.Resources.InitialPlacementRefList)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("current_cluster_reference_list", flattenArrayOfReferenceValues(resp.Status.Resources.CurrentClusterReferenceList)); err != nil {
+	if err = d.Set("current_cluster_reference_list", flattenArrayOfReferenceValues(resp.Status.Resources.CurrentClusterReferenceList)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	data_source_reference := make(map[string]string)
+	dataSrcRef := make(map[string]string)
 	if ref := resp.Status.Resources.DataSourceReference; ref != nil {
-		data_source_reference["uuid"] = utils.StringValue(ref.UUID)
-		data_source_reference["kind"] = utils.StringValue(ref.Kind)
+		dataSrcRef["uuid"] = utils.StringValue(ref.UUID)
+		dataSrcRef["kind"] = utils.StringValue(ref.Kind)
 	}
-	if err = d.Set("data_source_reference", []interface{}{data_source_reference}); err != nil {
+	if err = d.Set("data_source_reference", []interface{}{dataSrcRef}); err != nil {
 		return diag.Errorf("error setting data_source_reference for image UUID(%s), %s", d.Id(), err)
 	}
 
