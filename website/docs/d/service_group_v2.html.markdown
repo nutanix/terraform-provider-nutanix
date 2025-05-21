@@ -12,7 +12,7 @@ Get an service Group by ExtID
 
 ## Example Usage
 
-``` hcl
+```hcl
 data "nutanix_service_group_v2" "service_group" {
   ext_id = "07167778-266d-4052-9992-f30cbfd52e83"
 }
