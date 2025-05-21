@@ -196,7 +196,7 @@ func DatasourceNutanixCategoriesV2Read(ctx context.Context, d *schema.ResourceDa
 			return diag.FromErr(err)
 		}
 	}
-	
+
 	d.SetId(resource.UniqueId())
 	return nil
 }
