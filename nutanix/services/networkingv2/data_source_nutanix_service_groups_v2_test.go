@@ -129,5 +129,4 @@ func testAccServiceGrpsDataSourceWithInvalidFilterConfig() string {
 
 		}
 	`
-
 }

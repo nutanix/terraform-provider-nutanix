@@ -54,7 +54,6 @@ func TestAccV2NutanixImagePlacementsDatasource_WithFilters(t *testing.T) {
 }
 
 func TestAccV2NutanixImagePlacementsDatasource_WithInvalidFilter(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
