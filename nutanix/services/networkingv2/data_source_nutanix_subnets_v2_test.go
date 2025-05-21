@@ -50,11 +50,10 @@ func TestAccV2NutanixSubnetsDataSource_WithInvalidFilter(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSubnetsDataSourceWithInvalidFilterConfig(),
+				Config: testAccSubnetsDataSourceWithInvalidFilterConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameSubnets, "subnets.#"),
 					resource.TestCheckResourceAttr(datasourceNameSubnets, "subnets.#", "0"),
-
 				),
 			},
 		},

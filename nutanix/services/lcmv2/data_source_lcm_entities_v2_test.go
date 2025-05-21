@@ -8,6 +8,7 @@ import (
 )
 
 const datasourceNameLcmEntities = "data.nutanix_lcm_entities_v2.lcm-entities"
+
 func TestAccV2NutanixLcmEntitiesDatasource_InvalidFilter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },

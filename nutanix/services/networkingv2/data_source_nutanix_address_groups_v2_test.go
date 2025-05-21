@@ -70,7 +70,6 @@ func TestAccV2NutanixAddressGroupsDataSource_WithInvalidFilter(t *testing.T) {
 	})
 }
 
-
 func testAccAddGroupsDataSourceConfig(name, desc string) string {
 	return fmt.Sprintf(`
 

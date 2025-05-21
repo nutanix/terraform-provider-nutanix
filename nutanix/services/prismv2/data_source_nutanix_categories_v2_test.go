@@ -84,7 +84,6 @@ func TestAccV2NutanixCategoriesDataSource_WithInvalidFilter(t *testing.T) {
 	})
 }
 
-
 func testAccCategoriesDataSourceConfig() string {
 	return (`
 		data "nutanix_categories_v2" "test" { }

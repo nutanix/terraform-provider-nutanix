@@ -72,7 +72,7 @@ func TestAccV2NutanixRoutesDataSource_WithInvalidFilter(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccRoutesDataSourceWithInvalidFilterConfig(name, desc, r),
+				Config: testAccRoutesDataSourceWithInvalidFilterConfig(name, desc, r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameRoutes, "routes.#"),
 					resource.TestCheckResourceAttr(datasourceNameRoutes, "routes.#", "0"),

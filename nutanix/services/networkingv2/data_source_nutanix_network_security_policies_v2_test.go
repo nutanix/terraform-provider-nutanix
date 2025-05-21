@@ -70,7 +70,6 @@ func TestAccV2NutanixNSPsDataSource_WithInvalidFilter(t *testing.T) {
 	})
 }
 
-
 func testAccNSPsDataSourceConfig(name string) string {
 	return fmt.Sprintf(`
 	data "nutanix_categories_v2" "test" {}

@@ -176,4 +176,3 @@ output "restorable_pc_ext_id" {
 
 `
 }
-

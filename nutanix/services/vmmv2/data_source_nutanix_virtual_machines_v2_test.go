@@ -73,7 +73,6 @@ func TestAccV2NutanixVmsDatasource_ListWithInvalidFilter(t *testing.T) {
 	})
 }
 
-
 func testAccVMDataSourceConfigV4VmsWithInvalidFilter() string {
 	return `
 		data "nutanix_virtual_machines_v2" "test" {
