@@ -82,10 +82,6 @@ func DatasourceNutanixLcmEntitiesV2Create(ctx context.Context, d *schema.Resourc
 	}
 
 	if resp.Data == nil {
-		return diag.Errorf("error while listing the Lcm entities : no data found")
-	}
-
-	if resp.Data == nil {
 		if err := d.Set("entities", []map[string]interface{}{}); err != nil {
 			return diag.FromErr(err)
 		}
