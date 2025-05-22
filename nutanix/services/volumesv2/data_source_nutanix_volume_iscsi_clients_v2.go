@@ -202,6 +202,14 @@ func DatasourceNutanixVolumeIscsiClientsV2Read(ctx context.Context, d *schema.Re
 		if err := d.Set("iscsi_clients", make([]interface{}, 0)); err != nil {
 			return diag.FromErr(err)
 		}
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No Data found",
+			Detail:   "The API returned an empty list of iSCSI clients.",
+		}}
 	} else {
 		// extract the volume groups data from the response
 		iscsiClientsResp := resp.Data.GetValue().([]volumesClient.IscsiClient)

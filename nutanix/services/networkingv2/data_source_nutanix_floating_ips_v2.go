@@ -232,6 +232,14 @@ func datasourceNutanixFloatingIPsV2Read(ctx context.Context, d *schema.ResourceD
 		if err := d.Set("floating_ips", []map[string]interface{}{}); err != nil {
 			return diag.FromErr(err)
 		}
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No Data found",
+			Detail:   "The API returned an empty list of floating IPs.",
+		}}
 	} else {
 		getResp := resp.Data.GetValue().([]import1.FloatingIp)
 		if err := d.Set("floating_ips", flattenFloatingIPsEntities(getResp)); err != nil {

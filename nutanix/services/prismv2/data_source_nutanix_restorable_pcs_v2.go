@@ -70,6 +70,14 @@ func DatasourceNutanixListRestorablePcsV2Read(ctx context.Context, d *schema.Res
 		if err := d.Set("restorable_pcs", make([]interface{}, 0)); err != nil {
 			return diag.Errorf("Error setting Restorable pcs: %v", err)
 		}
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No Data found",
+			Detail:   "The API returned an empty list of restorable PCs.",
+		}}
 	} else {
 		restorablePcs := resp.Data.GetValue().([]management.RestorableDomainManager)
 		if err := d.Set("restorable_pcs", flattenRestorablePcs(restorablePcs)); err != nil {

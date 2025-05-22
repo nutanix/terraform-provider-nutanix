@@ -148,6 +148,14 @@ func DatasourceNutanixOperationsV4Read(ctx context.Context, d *schema.ResourceDa
 		if err := d.Set("operations", []map[string]interface{}{}); err != nil {
 			return diag.FromErr(err)
 		}
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No Data found",
+			Detail:   "The API returned an empty list of operations.",
+		}}
 	} else {
 		operations := resp.Data.GetValue().([]import1.Operation)
 

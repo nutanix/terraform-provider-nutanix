@@ -85,6 +85,14 @@ func DatasourceNutanixLcmEntitiesV2Create(ctx context.Context, d *schema.Resourc
 		if err := d.Set("entities", []map[string]interface{}{}); err != nil {
 			return diag.FromErr(err)
 		}
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No Data found",
+			Detail:   "The API returned an empty list of LCM entities.",
+		}}
 	} else {
 		entities := resp.Data.GetValue().([]lcmEntityPkg.Entity)
 		if err := d.Set("entities", flattenLcmEntities(entities)); err != nil {

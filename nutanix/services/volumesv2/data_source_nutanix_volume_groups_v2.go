@@ -226,12 +226,21 @@ func DatasourceNutanixVolumeGroupsV2Read(ctx context.Context, d *schema.Resource
 		if err := d.Set("volumes", flattenVolumesEntities(volumesResp.GetValue().([]volumesClient.VolumeGroup))); err != nil {
 			return diag.FromErr(err)
 		}
+		d.SetId(resource.UniqueId())
+
 	} else {
 		// set the volume groups data to empty list
 		d.Set("volumes", make([]volumesClient.VolumeGroup, 0))
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No Data found",
+			Detail:   "The API returned an empty list of volume groups.",
+		}}
 	}
 
-	d.SetId(resource.UniqueId())
 	return nil
 }
 

@@ -218,6 +218,14 @@ func DatasourceNutanixDirectoryServicesV2Read(ctx context.Context, d *schema.Res
 		if err := d.Set("directory_services", []map[string]interface{}{}); err != nil {
 			return diag.FromErr(err)
 		}
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No Data found",
+			Detail:   "The API returned an empty list of directory services.",
+		}}
 	} else {
 		getResp := resp.Data.GetValue().([]import1.DirectoryService)
 

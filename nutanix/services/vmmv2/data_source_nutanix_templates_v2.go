@@ -85,6 +85,14 @@ func DatasourceNutanixTemplatesV2Read(ctx context.Context, d *schema.ResourceDat
 		if err := d.Set("templates", make([]interface{}, 0)); err != nil {
 			return diag.FromErr(err)
 		}
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No Data found",
+			Detail:   "The API returned an empty list of templates.",
+		}}
 	} else {
 		getResp := resp.Data.GetValue().([]import5.Template)
 

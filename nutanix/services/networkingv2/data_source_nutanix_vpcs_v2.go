@@ -252,6 +252,14 @@ func dataSourceNutanixVPCsv2Read(ctx context.Context, d *schema.ResourceData, me
 		if err := d.Set("vpcs", make([]interface{}, 0)); err != nil {
 			return diag.FromErr(err)
 		}
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No Data found",
+			Detail:   "The API returned an empty list of VPCs.",
+		}}
 	} else {
 		getResp := resp.Data.GetValue().([]import1.Vpc)
 

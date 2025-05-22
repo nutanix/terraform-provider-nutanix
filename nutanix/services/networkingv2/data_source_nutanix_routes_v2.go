@@ -86,6 +86,14 @@ func DatasourceNutanixRoutesV2Read(ctx context.Context, d *schema.ResourceData, 
 		if err := d.Set("routes", make([]interface{}, 0)); err != nil {
 			return diag.FromErr(err)
 		}
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No Data found",
+			Detail:   "The API returned an empty list of routes.",
+		}}
 	} else {
 		getResp := resp.Data.GetValue().([]config.Route)
 
