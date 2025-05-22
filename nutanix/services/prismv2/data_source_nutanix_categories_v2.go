@@ -185,9 +185,19 @@ func DatasourceNutanixCategoriesV2Read(ctx context.Context, d *schema.ResourceDa
 		return diag.Errorf("error while fetching categories : %v", err)
 	}
 
-	checkResp := resp.Data
+	if resp.Data == nil {
+		if err := d.Set("categories", make([]interface{}, 0)); err != nil {
+			return diag.FromErr(err)
+		}
 
-	if checkResp != nil {
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No Data found",
+			Detail:   "The API returned an empty list of categories.",
+		}}
+	} else {
 		getResp := resp.Data.GetValue().([]import1.Category)
 
 		if err := d.Set("categories", flattenCategoriesEntities(getResp)); err != nil {

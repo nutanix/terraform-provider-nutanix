@@ -62,6 +62,22 @@ func TestAccV2NutanixUserGroupsDatasource_WithLimit(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixUserGroupsDatasource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testUserGroupsDatasourceV4WithInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameUserGroups, "user_groups.#"),
+					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testUserGroupsDatasourceV4Config(filepath string) string {
 	return fmt.Sprintf(`
 	locals{
@@ -126,4 +142,12 @@ func testUserGroupsDatasourceV4WithLimitConfig(filepath string) string {
 			depends_on = [resource.nutanix_user_groups_v2.test]
 		}
 	`, filepath)
+}
+
+func testUserGroupsDatasourceV4WithInvalidFilterConfig() string {
+	return `
+	  data "nutanix_user_groups_v2" "test" {
+		filter     = "name eq 'invalid_filter'"
+	  }
+	`
 }

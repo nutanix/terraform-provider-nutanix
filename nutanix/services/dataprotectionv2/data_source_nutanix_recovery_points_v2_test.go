@@ -92,6 +92,21 @@ func TestAccV2NutanixRecoveryPointsDatasource_WithLimit(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixRecoveryPointsDatasource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testRecoveryPointsDatasourceConfigWithInvalidFilter(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceNameRecoveryPoints, "recovery_points.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testRecoveryPointsDatasourceConfig(name, expirationTime string) string {
 	return fmt.Sprintf(`
 
@@ -150,4 +165,13 @@ func testRecoveryPointsDatasourceConfigWithLimit(name, expirationTime string) st
 	}
 
 `, name, expirationTime)
+}
+
+func testRecoveryPointsDatasourceConfigWithInvalidFilter() string {
+	return `
+	data "nutanix_recovery_points_v2" "test"{
+		filter = "name eq 'invalid_filter'"
+	}
+
+`
 }

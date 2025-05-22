@@ -100,6 +100,23 @@ func TestAccV2NutanixProtectionPoliciesDatasource_WithLimit(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixProtectionPoliciesDatasource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testProtectionPolicyV2CheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testProtectionPoliciesDatasourceConfigWithInvalidFilter(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceNameProtectionPolicies, "protection_policies.#"),
+					checkAttributeLengthEqual(dataSourceNameProtectionPolicies, "protection_policies", 0),
+				),
+			},
+		},
+	})
+}
+
 func testProtectionPoliciesDatasourceConfig() string {
 	return `
 
@@ -130,4 +147,14 @@ data "nutanix_protection_policies_v2" "test" {
 }
 
 `, limit, page)
+}
+
+func testProtectionPoliciesDatasourceConfigWithInvalidFilter() string {
+	return `
+
+data "nutanix_protection_policies_v2" "test" {
+	filter = "name eq 'invalid_filter'"
+}
+
+`
 }

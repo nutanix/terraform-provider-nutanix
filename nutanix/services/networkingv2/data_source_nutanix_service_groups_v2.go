@@ -184,9 +184,24 @@ func DatasourceNutanixServiceGroupsV2Read(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("error while fetching service groups : %v", err)
 	}
 
-	getResp := resp.Data.GetValue().([]import1.ServiceGroup)
-	if err := d.Set("service_groups", flattenServiceGroupsEntities(getResp)); err != nil {
-		return diag.FromErr(err)
+	if resp.Data == nil {
+		if err := d.Set("service_groups", make([]interface{}, 0)); err != nil {
+			return diag.FromErr(err)
+		}
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No Data found",
+			Detail:   "The API returned an empty list of service groups.",
+		}}
+
+	} else {
+		getResp := resp.Data.GetValue().([]import1.ServiceGroup)
+		if err := d.Set("service_groups", flattenServiceGroupsEntities(getResp)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId(resource.UniqueId())

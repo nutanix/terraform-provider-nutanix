@@ -198,13 +198,24 @@ func DatasourceNutanixVolumeIscsiClientsV2Read(ctx context.Context, d *schema.Re
 		return diag.Errorf("error while fetching Iscsi Clients : %v", err)
 	}
 
-	// // Check if resp is nil before accessing its data
-	iscsiClientsResp := resp.Data
+	if resp.Data == nil {
+		if err := d.Set("iscsi_clients", make([]interface{}, 0)); err != nil {
+			return diag.FromErr(err)
+		}
 
-	// extract the volume groups data from the response
-	if iscsiClientsResp != nil {
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No Data found",
+			Detail:   "The API returned an empty list of iSCSI clients.",
+		}}
+	} else {
+		// extract the volume groups data from the response
+		iscsiClientsResp := resp.Data.GetValue().([]volumesClient.IscsiClient)
+
 		// set the volume groups iscsi clients  data in the terraform resource
-		if err := d.Set("iscsi_clients", flattenIscsiClientsEntities(iscsiClientsResp.GetValue().([]volumesClient.IscsiClient))); err != nil {
+		if err := d.Set("iscsi_clients", flattenIscsiClientsEntities(iscsiClientsResp)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
