@@ -1,65 +1,65 @@
 {
   "pre_env": {
     "ngt_image": {
-      "name": "Centos7HadoopMaster.qcow2",
-      "url": "http://10.40.64.33/GoldImages/NuCalm/AHV-UVM-Images/Centos7HadoopMaster.qcow2"
+      "name": "",
+      "url": ""
     },
     "external_nat_subnet": {
-      "name": "tf-integration_test_Ext-Nat-subnet",
+      "name": "",
       "network_id": 208,
-      "network_ip": "10.44.3.192",
+      "network_ip": "",
       "prefix_length": 27,
-      "default_gateway_ip": "10.44.3.193",
-      "start_ip": "10.44.3.198",
-      "end_ip": "10.44.3.207"
+      "default_gateway_ip": "",
+      "start_ip": "",
+      "end_ip": ""
     },
     "overlay_subnet": {
-      "name": "tf-integration-test-overlay-subnet",
-      "network_ip": "192.168.1.0",
+      "name": "",
+      "network_ip": "",
       "prefix_length": 24,
-      "default_gateway_ip": "192.168.1.1"
+      "default_gateway_ip": ""
     },
     "integration_vm": {
-      "name": "tf-integration-test-vm",
-      "ip_address": "192.168.1.15"
+      "name": "",
+      "ip_address": ""
     },
     "volume_group": {
-      "name": "tf-integration-test-vg"
+      "name": ""
     },
     "ngt_vm": {
-      "name": "tf-integration-test-vm-with-ngt"
+      "name": ""
     }
   },
   "availability_zone": {
-    "pc_ext_id": "46866ba1-d32f-419f-b21f-415fa385baa9",
-    "cluster_ext_id": "0006309d-424d-7d91-0e1c-7546e7f0be55",
-    "remote_pc_ip": "10.101.96.27"
+    "pc_ext_id": "",
+    "cluster_ext_id": "",
+    "remote_pc_ip": ""
   },
   "iam": {
     "roles": {
-      "display_name": "test_role",
-      "description": "Test Role Description"
+      "display_name": "",
+      "description": ""
     },
     "users": {
-      "name": "testadmin",
-      "idp_id": "2bfd579d-c5f4-5038-9127-4a46ab066f48",
-      "directory_service_id": "1f076d9c-d45f-552c-8686-6992030950d1",
-      "directory_service_username": "ssptest10@qa.nucalm.io",
-      "email_id": "terraform_test_2@email.com",
-      "locale": "en-US",
-      "region": "en-US",
-      "password": "test.Password.123",
+      "name": "",
+      "idp_id": "",
+      "directory_service_id": "",
+      "directory_service_username": "",
+      "email_id": "",
+      "locale": "",
+      "region": "",
+      "password": "",
       "force_reset_password": true
     },
     "user_groups": {
-      "name": "group_756b68ef",
-      "saml_name": "adfs19admingroup",
-      "distinguished_name": "cn=group_756b68ef,ou=group,dc=devtest,dc=local"
+      "name": "",
+      "saml_name": "",
+      "distinguished_name": ""
     },
     "auth_policies": {
-      "display_name": "auth_policies_test",
-      "description": "auth policies description ",
-      "authorization_policy_type": "USER_DEFINED",
+      "display_name": "",
+      "description": "",
+      "authorization_policy_type": "",
       "identities": [
         "{\"user\":{\"uuid\":{\"anyof\":[\"00000000-0000-0000-0000-000000000000\"]}}}"
       ],
@@ -69,82 +69,82 @@
       ]
     },
     "identity_providers": {
-      "idp_metadata_url": "https://samltest.id/saml/idp",
-      "idp_metadata_xml": "http://filer.calm.nutanix.com/Users/abhinav_bansal/xml_content/content.txt",
+      "idp_metadata_url": "",
+      "idp_metadata_xml": "",
       "idp_metadata": {
-        "entity_id": "http://phxdevadfs02.calmsaastest.com/adfs/services/trust",
-        "login_url": "https://phxdevadfs02.calmsaastest.com/adfs/ls/",
-        "logout_url": "https://phxdevadfs02.calmsaastest.com/adfs/ls/",
-        "error_url": "https://phxdevadfs02.calmsaastest.com/adfs/ls/",
-        "certificate": "-----BEGIN CERTIFICATE-----\nMIIC7jCCAdagAwIBAgIQH2sANxh1ypRO2o9fF4W75zANBgkqhkiG9w0BAQsFADAz\nMTEwLwYDVQQDEyhBREZTIFNpZ25pbmcgLSBwaHhlbmdhZGZzZGV2MS5hZGZzMTku\nY29tMB4XDTIzMTAxMDAzMjAzOFoXDTI0MTAwOTAzMjAzOFowMzExMC8GA1UEAxMo\nQURGUyBTaWduaW5nIC0gcGh4ZW5nYWRmc2RldjEuYWRmczE5LmNvbTCCASIwDQYJ\nKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMgZaFPjbCs1eCn7snj+WthzQDfXMXpO\noXGVi37mNzTDlEnK82v2v/ATHplxSQCBkz3q+G5LTl4JoU4009B1v+7hyq5WSw+9\nkCeyGSfZAz4mNy2ebpv6TZifNU3VyftDPwcJegxIuAUx8mPxPOJeabvawg8t36Xg\nwtVaDOlz2xlG2KBQXJSS3wJYqMIcw72NUcPcWRgIBjOFgJVi+ZySdNI3w9Aa4j7O\n+/EqphGt9KF7XqYfaaoop+wqMHtp7gVH9vCSVCcIgOWqOreWhRVDZsywjnqU/70B\nn7sHa1F5rw80t08jPt1aWSDi8yQCZWHUNgscYkXZvX+vOyeTBf47kRsCAwEAATAN\nBgkqhkiG9w0BAQsFAAOCAQEAbOHwrwxrjkEeUcUakjcmffLCjsBlpFRifF2n1g/w\n6mip3EGuLHpFxKu47i0HLWcvTQGwm2rsPXQsB4T+1hY7LAi0LztWrGs5FBRPKY8/\nheJVOy3BTbQAEeazazYEuypujrwcmZao6QvSN+9P0OEN31KT1nUMCm+ScTbJ59ZP\nTpCkgIdN8TL3xynSDl188d+2v8awDLE6eF4grU7RnQi4sEBe8xdFp6VNKEJpnnu+\nmj7CaiQ38d/+bh0kac7Ha78BwRG09Iiichw6agyjjluYmkGnSL/9lxEgOrB3UNy6\nesdZDaUovT+kt+5otMQ3vraCPkMU1nmAykLBaZZUcOfurQ==\n-----END CERTIFICATE-----\n",
-        "name_id_policy_format": "emailAddress"
+        "entity_id": "",
+        "login_url": "",
+        "logout_url": "",
+        "error_url": "",
+        "certificate": "",
+        "name_id_policy_format": ""
       },
-      "name": "terraform_test_idp_name",
-      "username_attr": "terraform_test_idp_username",
-      "email_attr": "email",
-      "groups_attr": "groups",
-      "groups_delim": ",",
-      "entity_issuer": "entity_issuer_test",
+      "name": "",
+      "username_attr": "",
+      "email_attr": "",
+      "groups_attr": "",
+      "groups_delim": "",
+      "entity_issuer": "",
       "is_signed_authn_req_enabled": true,
       "custom_attributes": ["custom1", "custom2"]
     },
     "directory_services": {
-      "name": "terraform_test_active_directory",
-      "url": "ldap://10.46.1.152:389",
-      "domain_name": "systest.nutanix.com",
+      "name": "",
+      "url": "",
+      "domain_name": "",
       "service_account": {
-        "username": "Administrator@systest.nutanix.com",
-        "password": "Nutanix/4u"
+        "username": "",
+        "password": ""
       },
       "open_ldap_configuration": {
         "user_configuration": {
-          "user_object_class": "inetOrgPerson",
-          "user_search_base": "ou=users,dc=example,dc=com",
-          "username_attribute": "uid"
+          "user_object_class": "",
+          "user_search_base": "",
+          "username_attribute": ""
         },
         "user_group_configuration": {
-          "group_object_class": "groupOfNames",
-          "group_search_base": "ou=groups,dc=example,dc=com",
-          "group_member_attribute": "member",
-          "group_member_attribute_value": "uid"
+          "group_object_class": "",
+          "group_search_base": "",
+          "group_member_attribute": "",
+          "group_member_attribute_value": ""
         }
       },
-      "group_search_type": "NON_RECURSIVE",
+      "group_search_type": "",
       "white_listed_groups": ["test", "test_updated"]
     }
   },
   "networking": {
     "subnets": {
-      "project_id": "17989d72-e5d0-4c4a-9f5c-a91a13d4d8b0",
+      "project_id": "",
       "vlan_id": 999,
-      "network_ip": "10.44.3.192",
+      "network_ip": "",
       "network_prefix": 27,
-      "gateway_ip": "10.44.3.193",
+      "gateway_ip": "",
       "dhcp": {
-        "start_ip": "10.44.3.198",
-        "end_ip": "10.44.3.207"
+        "start_ip": "",
+        "end_ip": ""
       }
     }
   },
   "vmm": {
-    "image_name": "Centos7HadoopMaster.qcow2",
-    "image_url": "http://10.40.64.33/GoldImages/NuCalm/AHV-UVM-Images/Centos7HadoopMaster.qcow2",
-    "subnet_name": "vlan.800",
-    "assigned_ip": "10.44.76.45",
-    "unattend_xml": "http://filer.calm.nutanix.com/Users/abhinav_bansal/unattendxml/unattendxml.txt",
+    "image_name": "",
+    "image_url": "",
+    "subnet_name": "",
+    "assigned_ip": "",
+    "unattend_xml": "",
     "subnet": {
       "network_id": 534,
-      "ip": "10.44.76.0",
+      "ip": "",
       "prefix": 24,
-      "gateway_ip": "10.44.76.10",
-      "dhcp_ip": "10.44.79.254",
-      "start_ip": "10.44.76.20",
-      "end_ip": "10.44.76.50"
+      "gateway_ip": "",
+      "dhcp_ip": "",
+      "start_ip": "",
+      "end_ip": ""
     },
     "ngt": {
       "credential": {
-        "username": "root",
-        "password": "nutanix/4u"
+        "username": "",
+        "password": ""
       }
     },
     "gpus": [
@@ -156,143 +156,138 @@
     ]
   },
   "storage_container": {
-    "name": "terraform_storage_container_test",
+    "name": "",
     "logical_advertised_capacity_bytes": 1073741824000,
     "logical_explicit_reserved_capacity_bytes": 20,
     "replication_factor": 1,
     "nfs_whitelist_addresses": {
       "ipv4": {
-        "value": "192.168.14.0",
+        "value": "",
         "prefix_length": 32
       }
     }
   },
   "clusters": {
-    "pe_username": "nutanix",
-    "pe_password": "RDMCluster.123",
+    "pe_username": "",
+    "pe_password": "",
     "nodes": [
       {
-        "cvm_ip": "10.102.112.161",
-        "username": "admin",
-        "password": "Nutanix.123"
+        "cvm_ip": "",
+        "username": "",
+        "password": ""
       },
       {
         "cvm_ip": "",
-        "username": "admin",
-        "password": "Nutanix.123"
+        "username": "",
+        "password": ""
       },
       {
         "cvm_ip": "",
-        "username": "admin",
-        "password": "Nutanix.123"
+        "username": "",
+        "password": ""
       },
       {
         "cvm_ip": "",
-        "username": "admin",
-        "password": "Nutanix.123"
+        "username": "",
+        "password": ""
+      },
+      {
+        "cvm_ip": "",
+        "username": "",
+        "password": ""
       }
     ],
     "config": {
-      "cluster_functions": ["AOS"],
+      "cluster_functions": [""],
       "auth_public_keys": [
         {
-          "name": "test.key",
-          "key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDQ6"
+          "name": "",
+          "key": ""
         }
       ],
       "redundancy_factor": 1,
-      "cluster_arch": "X86_64",
+      "cluster_arch": "",
       "fault_tolerance_state": {
-        "domain_awareness_level": "DISK",
-        "desired_cluster_fault_tolerance": "CFT_1N_OR_1D"
+        "domain_awareness_level": "",
+        "desired_cluster_fault_tolerance": ""
       }
     },
     "network": {
-      "virtual_ip": "10.102.112.167",
-      "iscsi_ip": "10.102.112.61",
-      "iscsi_ip1": "10.102.112.59",
-      "dns_servers": ["10.40.64.15", "10.40.64.16"],
-      "ntp_servers": [
-        "0.centos.pool.ntp.org",
-        "1.centos.pool.ntp.org",
-        "2.centos.pool.ntp.org",
-        "3.centos.pool.ntp.org"
-      ],
+      "virtual_ip": "",
+      "iscsi_ip": "",
+      "iscsi_ip1": "",
+      "dns_servers": ["", ""],
+      "ntp_servers": ["", "", "", ""],
       "smtp_server": {
-        "ip": "10.51.144.57",
+        "ip": "",
         "port": 25,
-        "username": "username",
-        "password": "password",
-        "type": "STARTTLS",
-        "email_address": "haroon.dweikat@nutanix.com"
+        "username": "",
+        "password": "",
+        "type": "",
+        "email_address": ""
       }
     },
-    "pc_ext_id": "63bebabf-744c-48ff-a6d7-cb028707f972",
+    "pc_ext_id": "",
     "remote_cluster": {
       "ext_id": "",
-      "ip": "10.37.177.50",
-      "username": "admin",
-      "password": "Nutanix.123"
+      "ip": "",
+      "username": "",
+      "password": ""
     }
+  },
+  "data_policies": {
+    "domain_manager_ext_id": ""
   },
   "prism": {
     "deploy_pc": {
-      "pe_ip": "10.37.160.65",
-      "version": "pc.2024.3",
-      "network_id": "646c58fc-947e-4851-b116-49da81b8e775",
-      "default_gateway": "10.37.160.1",
-      "subnet_mask": "255.255.224.0",
+      "pe_ip": "",
+      "version": "",
+      "network_id": "",
+      "default_gateway": "",
+      "subnet_mask": "",
       "ip_range": {
-        "begin": "10.37.160.102",
-        "end": "10.37.160.102"
+        "begin": "",
+        "end": ""
       },
-      "name_servers": ["10.40.64.16", "10.40.64.15"],
+      "name_servers": [
+        "",
+        ""
+      ],
       "ntp_servers": [
-        "0.centos.pool.ntp.org",
-        "1.centos.pool.ntp.org",
-        "2.centos.pool.ntp.org",
-        "3.centos.pool.ntp.org"
+        "",
+        "",
+        "",
+        ""
       ]
     },
     "unregister": {
-      "pc_ext_id": "04efb5df-0a4b-45c1-b43d-3238d9b97183"
+      "pc_ext_id": ""
     },
     "bucket": {
-      "name": "nutanix-clusters-test-pcbr-qa",
-      "region": "us-east-1",
-      "access_key": "AKIAZ26UIJS6LFXOPFQG",
-      "secret_key": "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"
+      "name": "",
+      "region": "",
+      "access_key": "",
+      "secret_key": ""
     },
     "restore_source": {
-      "pe_ip": "10.46.136.50",
-      "ssh_user": "nutanix",
-      "ssh_password": "nutanix/4u"
+      "pe_ip": "",
+      "ssh_user": "",
+      "ssh_password": ""
     },
-    "pc_restore": {
-      "username": "admin",
-      "password": "Nutanix.123",
+    "pc_restore":{
+      "username": "",
+      "password": "",
       "skip_pc_restore_test": false
     }
   },
   "data_protection": {
-    "local_cluster_pe": "10.46.136.32",
-    "local_cluster_vip": "10.46.136.38",
-    "remote_cluster_pe": "10.96.96.26",
-    "remote_cluster_vip": "10.96.96.74"
+    "local_cluster_pe": "",
+    "local_cluster_vip": "",
+    "remote_cluster_pe": "",
+    "remote_cluster_vip": ""
   },
   "lcm": {
-    "entity_model": "Calm Policy Engine",
-    "entity_model_version": "4.1.0"
-  },
-  "object_store": {
-    "ssh_pc_username": "nutanix",
-    "ssh_pc_password": "nutanix/4u",
-    "subnet_name": "objects.800",
-	"bucket_name": "objectsbrowser",
-    "deployment_version": "5.1.1",
-    "domain": "msp.pc-idbc.nutanix.com",
-    "public_network_ips":["10.44.77.54"],
-    "storage_network_dns_ip": "10.44.77.55",
-    "storage_network_vip": "10.44.77.57"
+    "entity_model": "",
+    "entity_model_version": ""
   }
 }
