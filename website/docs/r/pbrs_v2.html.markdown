@@ -125,5 +125,11 @@ The following attributes are exported:
 * `metadata`: Metadata associated with this resource.
 * `vpc`: VPC name for projections
 
+## Import
+This helps to manage existing entities which are not created through terraform. Routing Policy can be imported using the `UUID`.  eg,
+
+`
+terraform import nutanix_pbr_v2.pbr_import <UUID>
+`
 
 See detailed information in [Nutanix Routing Policy v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0).
