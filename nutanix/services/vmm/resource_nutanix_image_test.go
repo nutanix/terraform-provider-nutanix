@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -17,6 +18,7 @@ import (
 )
 
 const resourceName = "nutanix_image.acctest-test"
+const datasourceNameWithDataSource = "data.nutanix_image.image-vm-disk"
 
 func TestAccNutanixImage_basic(t *testing.T) {
 	rInt := acctest.RandInt()
@@ -170,6 +172,59 @@ func TestAccNutanixImage_uploadLocal(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixImageExists("nutanix_image.acctest-testLocal"),
 					resource.TestCheckResourceAttr("nutanix_image.acctest-testLocal", "description", "new description"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNutanixImage_WithInvalidConfig(t *testing.T) {
+	r := acctest.RandInt()
+	description := fmt.Sprintf("UbuntuServer-%d", r)
+	name := fmt.Sprintf("UbuntuServer-%d", r)
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() {},
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccNutanixImageNegativeConfig(name, description),
+				ExpectError: regexp.MustCompile("Conflicting configuration arguments"),
+			},
+		},
+	})
+}
+
+func TestAccNutanixImage_WithDataSourceRefInvalidUUID(t *testing.T) {
+	r := acctest.RandInt()
+	description := fmt.Sprintf("UbuntuServer-%d", r)
+	name := fmt.Sprintf("UbuntuServer-%d", r)
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() {},
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccNutanixImageNegativeConfigInvalidUUID(name, description),
+				ExpectError: regexp.MustCompile("Invalid disk data source reference"),
+			},
+		},
+	})
+}
+
+func TestAccNutanixImage_WithDataSourceRef(t *testing.T) {
+	rInt := acctest.RandInt()
+	r := acctest.RandInt()
+	description := fmt.Sprintf("UbuntuServer-%d", r)
+	name := fmt.Sprintf("UbuntuServer-%d", r)
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() {},
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixImageDataSourceRefConfig(name, description, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceNameWithDataSource, "name", name),
+					resource.TestCheckResourceAttr(datasourceNameWithDataSource, "description", description),
+					testAccCheckNutanixImageExists(datasourceNameWithDataSource),
 				),
 			},
 		},
@@ -411,4 +466,96 @@ func testAccNutanixImageConfigWithLargeImageURL(r int) string {
 			source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
 		}
 	`, r)
+}
+
+func testAccNutanixImageNegativeConfig(name string, description string) string {
+	return fmt.Sprintf(`
+		resource "nutanix_image" "negative-test" {
+			name        = "%s"
+			description = "%s"
+			source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
+			image_type = "DISK_IMAGE"
+	    data_source_reference {
+		    kind = "vm_disk"
+		    uuid = "56ae9a88-daec-46a5-964f-e05a13b2cabb"
+			}
+		}
+	`, name, description)
+}
+
+func testAccNutanixImageNegativeConfigInvalidUUID(name string, description string) string {
+	return fmt.Sprintf(`
+		resource "nutanix_image" "negative-test-invalid-uuid" {
+			name        = "%s"
+			description = "%s"
+			image_type = "DISK_IMAGE"
+	    data_source_reference {
+		    kind = "vm_disk"
+		    uuid = "56ae9a88-daec-46a5-964f-e05a13b2cabb"
+			}
+		}
+	`, name, description)
+}
+
+func testAccNutanixImageDataSourceRefConfig(name string, description string, r int) string {
+	return fmt.Sprintf(`
+	  data "nutanix_clusters" "clusters" {}
+
+		locals {
+				cluster_ext_id = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+				? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+		}
+
+	  resource "nutanix_image" "cirros-034-disk" {
+         name = "cirros-034-disk"
+         source_uri  = "http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img"
+         description = "heres a tiny linux image, not an iso, but a real disk!"
+    }
+
+		# create a VM to install NGT
+		resource "nutanix_virtual_machine_v2" "vm-disk" {
+			name                 = "vm-example-%d"
+			description          = "vm to test ngt installation"
+			num_cores_per_socket = 1
+			num_sockets          = 1
+			memory_size_bytes    = 4 * 1024 * 1024 * 1024
+			cluster {
+				ext_id = local.cluster_ext_id
+			}
+
+			disks {
+				disk_address {
+					bus_type = "SCSI"
+					index    = 0
+				}
+				backing_info {
+					vm_disk {
+						data_source {
+							reference {
+								image_reference {
+									image_ext_id = nutanix_image.cirros-034-disk.id
+								}
+							}
+						}
+						disk_size_bytes = 20 * 1024 * 1024 * 1024
+					}
+				}
+			}
+			power_state = "OFF"
+	}
+
+	resource "nutanix_image" "create-image-vm-disk" {
+		name        = "%s"
+		description = "%s"
+		image_type = "DISK_IMAGE"
+		data_source_reference {
+			kind = "vm_disk"
+			uuid = nutanix_virtual_machine_v2.vm-disk.disks[0].ext_id
+		}
+	}
+
+	data "nutanix_image" "image-vm-disk" {
+		image_id = nutanix_image.create-image-vm-disk.id
+	}
+	`, r, name, description)
 }

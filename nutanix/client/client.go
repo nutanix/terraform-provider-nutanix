@@ -546,7 +546,11 @@ func CheckResponse(r *http.Response) error {
 	}
 
 	if c == http.StatusBadRequest {
-		return fmt.Errorf("bad Request")
+		bodyBytes, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			return fmt.Errorf("bad Request: failed to read body: %w", err)
+		}
+		return fmt.Errorf("bad Request: %s", string(bodyBytes))
 	}
 
 	buf, err := ioutil.ReadAll(r.Body)
