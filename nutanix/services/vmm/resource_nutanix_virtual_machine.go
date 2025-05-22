@@ -2,6 +2,7 @@ package vmm
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"reflect"
@@ -311,6 +312,7 @@ func ResourceNutanixVirtualMachine() *schema.Resource {
 			},
 			"power_state": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"nutanix_guest_tools": {
@@ -675,6 +677,9 @@ func resourceNutanixVirtualMachineCreate(ctx context.Context, d *schema.Resource
 	spec.Resources = res
 	request.Metadata = metadata
 	request.Spec = spec
+
+	aJSON, _ := json.MarshalIndent(request, "", "  ")
+	log.Printf("[DEBUG] VM  Spec: %s", string(aJSON))
 
 	// Make request to the API
 	resp, err := conn.V3.CreateVM(request)
@@ -1192,6 +1197,11 @@ func resourceNutanixVirtualMachineUpdate(ctx context.Context, d *schema.Resource
 		res.GuestCustomization = guest
 	}
 
+	if d.HasChange("power_state") {
+		_, powerState := d.GetChange("power_state")
+		res.PowerState = utils.StringPtr(powerState.(string))
+	}
+
 	// If there are non-hotPlug changes, then poweroff is needed
 	if !hotPlugChange {
 		if err := changePowerState(ctx, conn, d.Id(), "OFF"); err != nil {
@@ -1587,6 +1597,10 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	if v, ok := d.GetOk("enable_script_exec"); ok {
 		vm.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec = utils.BoolPtr(v.(bool))
 	}
+	if v, ok := d.GetOk("power_state"); ok {
+		vm.PowerState = utils.StringPtr(v.(string))
+	}
+
 	vm.SerialPortList = expandSerialPortList(d)
 
 	vmDiskList := expandDiskList(d)
