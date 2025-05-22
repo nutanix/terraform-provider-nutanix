@@ -155,13 +155,11 @@ func testAccVolumeGroupsDisksDataSourceWithLimit(filepath, name, desc string, li
 }
 
 func testAccVolumeGroupsDisksDataSourceWithInvalidFilter(name, desc string) string {
-	return testAccVolumeGroupResourceConfig(name, desc) + testAccVolumeGroupDiskResourceConfig(name, desc) +
+	return testAccVolumeGroupResourceConfig(name, desc) +
 		`
-
 		data "nutanix_volume_group_disks_v2" "test" {
 			volume_group_ext_id = resource.nutanix_volume_group_v2.test.id
 			filter = "storageContainerId eq 'invalid'"
-			depends_on          = [resource.nutanix_volume_group_v2.test ,resource.nutanix_volume_group_disk_v2.test]
 		}
 	`
 }

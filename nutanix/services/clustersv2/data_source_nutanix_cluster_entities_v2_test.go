@@ -56,7 +56,7 @@ func TestAccV2NutanixClustersDataSource_limit(t *testing.T) {
 	})
 }
 
-func TestAccV2NutanixClustersDataSource_invalidFilter(t *testing.T) {
+func TestAccV2NutanixClustersDataSource_InvalidFilter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
