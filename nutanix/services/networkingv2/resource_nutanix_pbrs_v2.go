@@ -21,6 +21,9 @@ func ResourceNutanixPbrsV2() *schema.Resource {
 		ReadContext:   ResourceNutanixPbrsV2Read,
 		UpdateContext: ResourceNutanixPbrsV2Update,
 		DeleteContext: ResourceNutanixPbrsV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Optional: true,
