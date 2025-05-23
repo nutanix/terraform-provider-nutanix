@@ -158,6 +158,7 @@ func Provider() *schema.Provider {
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"nutanix_image":                                   vmm.DataSourceNutanixImage(),
+			"nutanix_ova_image":                               vmm.DataSourceNutanixOVAImage(),
 			"nutanix_subnet":                                  networking.DataSourceNutanixSubnet(),
 			"nutanix_subnets":                                 networking.DataSourceNutanixSubnets(),
 			"nutanix_cluster":                                 clusters.DataSourceNutanixCluster(),

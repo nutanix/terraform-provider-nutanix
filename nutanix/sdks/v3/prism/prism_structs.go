@@ -13,6 +13,14 @@ type Reference struct {
 	UUID *string `json:"uuid" mapstructure:"uuid"`
 }
 
+// UrlReference ...
+type UrlReference struct {
+	Kind *string `json:"kind,omitempty" mapstructure:"kind,omitempty"`
+	Name *string `json:"name,omitempty" mapstructure:"name,omitempty"`
+	UUID *string `json:"uuid,omitempty" mapstructure:"uuid,omitempty"`
+	Url  *string `json:"url,omitempty" mapstructure:"url,omitempty"`
+}
+
 // VMVnumaConfig Indicates how VM vNUMA should be configured
 type VMVnumaConfig struct {
 	// Number of vNUMA nodes. 0 means vNUMA is disabled.
@@ -207,7 +215,7 @@ type VMStorageConfig struct {
 
 // VMDisk VirtualMachine Disk (VM Disk).
 type VMDisk struct {
-	DataSourceReference *Reference `json:"data_source_reference,omitempty" mapstructure:"data_source_reference,omitempty"`
+	DataSourceReference *UrlReference `json:"data_source_reference,omitempty" mapstructure:"data_source_reference,omitempty"`
 
 	DeviceProperties *VMDiskDeviceProperties `json:"device_properties,omitempty" mapstructure:"device_properties,omitempty"`
 
@@ -1060,6 +1068,38 @@ type ImageListIntentResponse struct {
 	Entities []*ImageIntentResponse `json:"entities,omitempty" mapstructure:"entities,omitempty"`
 
 	Metadata *ListMetadataOutput `json:"metadata" mapstructure:"metadata"`
+}
+
+// Top-level struct to capture the entire JSON response
+type OVAImageIntentResponse struct {
+	VMSpec   *VMSpecContainer `json:"vm_spec"`  // Matches the "vm_spec" root key
+	Warnings []interface{}    `json:"warnings"` // Can be a slice of any type if warnings vary, or a specific warning struct
+}
+
+// VMSpecContainer holds the main VM specification details
+type VMSpecContainer struct {
+	APIVersion *string   `json:"api_version"`
+	Metadata   *Metadata `json:"metadata"`
+	Spec       *VMSpec   `json:"spec"`
+}
+
+// DataSourceReference points to the source of a disk
+type DataSourceReference struct {
+	URL *string `json:"url"`
+}
+
+// DeviceProperties defines how a device is connected
+type DeviceProperties struct {
+	DeviceType  *string      `json:"device_type"`
+	DiskAddress *DiskAddress `json:"disk_address"`
+}
+
+type VMSpec struct {
+	AvailabilityZoneReference *Reference   `json:"availability_zone_reference,omitempty" mapstructure:"availability_zone_reference,omitempty"`
+	ClusterReference          *Reference   `json:"cluster_reference" mapstructure:"cluster_reference"`
+	Description               *string      `json:"description" mapstructure:"description"`
+	Name                      *string      `json:"name" mapstructure:"name"`
+	Resources                 *VMResources `json:"resources" mapstructure:"resources"`
 }
 
 // ClusterListIntentResponse ...
@@ -2914,4 +2954,39 @@ type ProjectInternalIntentResponse struct {
 	Spec       *ProjectInternalSpec   `json:"spec,omitempty"`
 	APIVersion string                 `json:"api_version,omitempty"`
 	Metadata   *Metadata              `json:"metadata,omitempty"`
+}
+
+// Groups
+type GroupsRequestedAttribute struct {
+	Attribute *string `json:"attribute"`
+}
+
+type GroupsGetEntitiesRequest struct {
+	EntityType            *string                     `json:"entity_type"`
+	FilterCriteria        string                      `json:"filter_criteria,omitempty"`
+	GroupMemberAttributes []*GroupsRequestedAttribute `json:"group_member_attributes"`
+}
+
+type GroupsGetEntitiesResponse struct {
+	FilteredGroupCount int64                `json:"filtered_group_count,omitempty"`
+	GroupResults       []*GroupsGroupResult `json:"group_results"`
+}
+
+type GroupsGroupResult struct {
+	EntityResults []*GroupsEntity `json:"entity_results"`
+}
+
+type GroupsEntity struct {
+	Data     []*GroupsFieldData `json:"data"`
+	EntityID string             `json:"entity_id,omitempty"`
+}
+
+type GroupsFieldData struct {
+	Name   string                 `json:"name,omitempty"`
+	Values []*GroupsTimevaluePair `json:"values"`
+}
+
+type GroupsTimevaluePair struct {
+	Time   int64    `json:"time,omitempty"`
+	Values []string `json:"values"`
 }
