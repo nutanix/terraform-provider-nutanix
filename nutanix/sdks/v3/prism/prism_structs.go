@@ -977,6 +977,9 @@ type ImageResourcesDefStatus struct {
 	// Cluster reference lists
 	InitialPlacementRefList []*ReferenceValues `json:"initial_placement_ref_list,omitempty" mapstructure:"initial_placement_ref_list, omitempty"`
 
+	// Reference to the source image such as 'vm_disk'
+	DataSourceReference *Reference `json:"data_source_reference,omitempty" mapstructure:"data_source_reference,omitempty"`
+
 	// cluster reference list when request was made without refs
 	CurrentClusterReferenceList []*ReferenceValues `json:"current_cluster_reference_list,omitempty" mapstructure:"current_cluster_reference_list, omitempty"`
 
