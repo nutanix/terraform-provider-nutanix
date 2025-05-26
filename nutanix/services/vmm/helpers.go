@@ -76,7 +76,7 @@ func flattenReferenceValues(r *v3.Reference) map[string]interface{} {
 	}
 	return reference
 }
-func flattenUrlReferenceValues(r *v3.UrlReference) map[string]interface{} {
+func flattenURLReferenceValues(r *v3.URLReference) map[string]interface{} {
 	reference := make(map[string]interface{})
 	if r != nil {
 		if r.Kind != nil {
@@ -88,8 +88,8 @@ func flattenUrlReferenceValues(r *v3.UrlReference) map[string]interface{} {
 		if r.Name != nil {
 			reference["name"] = utils.StringValue(r.Name)
 		}
-		if r.Url != nil {
-			reference["url"] = utils.StringValue(r.Url)
+		if r.URL != nil {
+			reference["url"] = utils.StringValue(r.URL)
 		}
 	}
 	return reference
@@ -140,15 +140,15 @@ func buildReference(uuid, kind string) *v3.Reference {
 	}
 }
 
-func validateShortUrlRef(ref map[string]interface{}) *v3.UrlReference {
-	r := &v3.UrlReference{}
+func validateShortURLRef(ref map[string]interface{}) *v3.URLReference {
+	r := &v3.URLReference{}
 	hasValue := false
 	if v, ok := ref["kind"]; ok {
 		r.Kind = utils.StringPtr(v.(string))
 		hasValue = true
 	}
 	if v, ok := ref["url"]; ok {
-		r.Url = utils.StringPtr(v.(string))
+		r.URL = utils.StringPtr(v.(string))
 		hasValue = true
 	}
 	if v, ok := ref["uuid"]; ok {

@@ -312,7 +312,7 @@ func flattenDisk(v *v3.VMDisk) map[string]interface{} {
 		"disk_size_mib":          utils.Int64Value(v.DiskSizeMib),
 		"device_properties":      deviceProps,
 		"storage_config":         storageConfig,
-		"data_source_reference":  flattenUrlReferenceValues(v.DataSourceReference),
+		"data_source_reference":  flattenURLReferenceValues(v.DataSourceReference),
 		"volume_group_reference": flattenReferenceValues(v.VolumeGroupReference),
 	}
 }

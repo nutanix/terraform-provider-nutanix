@@ -13,12 +13,12 @@ type Reference struct {
 	UUID *string `json:"uuid" mapstructure:"uuid"`
 }
 
-// UrlReference ...
-type UrlReference struct {
+// URLReference ...
+type URLReference struct {
 	Kind *string `json:"kind,omitempty" mapstructure:"kind,omitempty"`
 	Name *string `json:"name,omitempty" mapstructure:"name,omitempty"`
 	UUID *string `json:"uuid,omitempty" mapstructure:"uuid,omitempty"`
-	Url  *string `json:"url,omitempty" mapstructure:"url,omitempty"`
+	URL  *string `json:"url,omitempty" mapstructure:"url,omitempty"`
 }
 
 // VMVnumaConfig Indicates how VM vNUMA should be configured
@@ -215,7 +215,7 @@ type VMStorageConfig struct {
 
 // VMDisk VirtualMachine Disk (VM Disk).
 type VMDisk struct {
-	DataSourceReference *UrlReference `json:"data_source_reference,omitempty" mapstructure:"data_source_reference,omitempty"`
+	DataSourceReference *URLReference `json:"data_source_reference,omitempty" mapstructure:"data_source_reference,omitempty"`
 
 	DeviceProperties *VMDiskDeviceProperties `json:"device_properties,omitempty" mapstructure:"device_properties,omitempty"`
 
