@@ -18,6 +18,17 @@ resource "nutanix_image" "test" {
   description = "Ubuntu"
   source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
 }
+
+# Create image with data_source_reference
+resource "nutanix_image" "create_image_with_data_source_reference" {
+  name        = "Sql Server Image"
+  description = "Sql Server"
+  image_type = "DISK_IMAGE"
+  data_source_reference {
+    kind = "vm_disk"
+    uuid = "<uuid of the vm disk>"
+  }
+}
 ```
 
 ## Argument Reference
@@ -44,6 +55,12 @@ The version attribute supports the following:
 
 * `product_name`: - (Optional) Name of the producer/distribution of the image. For example windows or red hat.
 * `product_version`: - (Optional) Version string for the disk image.
+
+### Data Source Reference
+The data_source_reference attribute supports the following:
+* uuid: - UUID of the source
+* kind: - The kind name(Default value: vm_disk)
+
 
 ## Attributes Reference
 
