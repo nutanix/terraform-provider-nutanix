@@ -1070,30 +1070,20 @@ type ImageListIntentResponse struct {
 	Metadata *ListMetadataOutput `json:"metadata" mapstructure:"metadata"`
 }
 
-// Top-level struct to capture the entire JSON response
+// OVAImageIntentResponse represents the response object for intentful operations on an ovaimage
 type OVAImageIntentResponse struct {
-	VMSpec   *VMSpecContainer `json:"vm_spec"`  // Matches the "vm_spec" root key
-	Warnings []interface{}    `json:"warnings"` // Can be a slice of any type if warnings vary, or a specific warning struct
+	VMSpec   *VMSpecContainer `json:"vm_spec"`
+	Warnings []interface{}    `json:"warnings"`
 }
 
-// VMSpecContainer holds the main VM specification details
+// VMSpecContainer holds the main VM specification details including metadata
 type VMSpecContainer struct {
 	APIVersion *string   `json:"api_version"`
 	Metadata   *Metadata `json:"metadata"`
 	Spec       *VMSpec   `json:"spec"`
 }
 
-// DataSourceReference points to the source of a disk
-type DataSourceReference struct {
-	URL *string `json:"url"`
-}
-
-// DeviceProperties defines how a device is connected
-type DeviceProperties struct {
-	DeviceType  *string      `json:"device_type"`
-	DiskAddress *DiskAddress `json:"disk_address"`
-}
-
+// VMSpecContainer holds the main VM specification details
 type VMSpec struct {
 	AvailabilityZoneReference *Reference   `json:"availability_zone_reference,omitempty" mapstructure:"availability_zone_reference,omitempty"`
 	ClusterReference          *Reference   `json:"cluster_reference" mapstructure:"cluster_reference"`
