@@ -414,7 +414,6 @@ func DataSourceNutanixOVAImage() *schema.Resource {
 			},
 		},
 	}
-
 }
 
 func DataSourceNutanixOVAImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
