@@ -1,0 +1,369 @@
+package clusters
+
+import (
+	"context"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clustersv2"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+func ResourceNutanixClusterSNMPTrapV2() *schema.Resource {
+	return &schema.Resource{
+		CreateContext: ResourceNutanixClusterSNMPTrapV2Create,
+		ReadContext:   ResourceNutanixClusterSNMPTrapV2Read,
+		UpdateContext: ResourceNutanixClusterSNMPTrapV2Update,
+		DeleteContext: ResourceNutanixClusterSNMPTrapV2Delete,
+		Schema: map[string]*schema.Schema{
+			"cluster_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"username": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"address": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ipv4": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"value": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"prefix_length": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"ipv6": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"value": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"prefix_length": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"port": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"protocol": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"should_inform": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"engine_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"reciever_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"community_string": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+		},
+	}
+}
+
+func ResourceNutanixClusterSNMPTrapV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).ClusterAPI
+	body := &config.SnmpTrap{}
+	clusterExtID := d.Get("cluster_ext_id")
+
+	if extID, ok := d.GetOk("ext_id"); ok {
+		body.ExtId = utils.StringPtr(extID.(string))
+	}
+	if userName, ok := d.GetOk("username"); ok {
+		body.Username = utils.StringPtr(userName.(string))
+	}
+	if address, ok := d.GetOk("address"); ok {
+		body.Address = clustersv2.expandIPAddress(address)
+	}
+	if port, ok := d.GetOk("port"); ok {
+		body.Port = utils.IntPtr(port.(int))
+	}
+	if protocol, ok := d.GetOk("protocol"); ok {
+		subMap := map[string]interface{}{
+			"UDP":  2,
+			"UDP6": 3,
+			"TCP":  4,
+			"TCP6": 5,
+		}
+		pVal := subMap[protocol.(string)]
+		p := config.SnmpProtocol(pVal.(int))
+		body.Protocol = &p
+	}
+	if shouldInform, ok := d.GetOk("should_inform"); ok {
+		body.ShouldInform = utils.BoolPtr(shouldInform.(bool))
+	}
+	if engineId, ok := d.GetOk("engine_id"); ok {
+		body.EngineId = utils.StringPtr(engineId.(string))
+	}
+	if version, ok := d.GetOk("version"); ok {
+		subMap := map[string]interface{}{
+			"v2": 2,
+			"v3": 3,
+		}
+		pVal := subMap[version.(string)]
+		p := config.SnmpTrapVersion(pVal.(int))
+		body.Version = &p
+	}
+	if recieverName, ok := d.GetOk("reciever_name"); ok {
+		body.RecieverName = utils.StringPtr(recieverName.(string))
+	}
+	if communityString, ok := d.GetOk("community_string"); ok {
+		body.CommunityString = utils.StringPtr(communityString.(string))
+	}
+
+	resp, err := conn.ClusterEntityAPI.CreateSnmpTrap(utils.StringPtr(clusterExtID.(string)), body)
+	if err != nil {
+		return diag.Errorf("error while creating SNMP Traps : %v", err)
+	}
+
+	TaskRef := resp.Data.GetValue().(import1.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the SNMP Trap to be available
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"QUEUED", "RUNNING"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: clustersv2.taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for SNMP Trap (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
+
+	// Get UUID from TASK API
+
+	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching SNMP Trap UUID : %v", err)
+	}
+	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+
+	uuid := rUUID.EntitiesAffected[0].ExtId
+	d.SetId(*uuid)
+	return ResourceNutanixClusterSNMPTrapV2Read(ctx, d, meta)
+}
+
+func ResourceNutanixClusterSNMPTrapV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).ClusterAPI
+	clusterExtID := d.Get("cluster_ext_id")
+
+	resp, err := conn.ClusterEntityAPI.GetSnmpTrapById(utils.StringPtr(clusterExtID.(string)), utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while fetching SNMP Trap : %v", err)
+	}
+
+	getResp := resp.Data.GetValue().(config.SnmpTrap)
+
+	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("links", clustersv2.flattenLinks(getResp.Links)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("username", getResp.Username); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("address", clustersv2.flattenIPAddress(getResp.Address)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("port", getResp.Port); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("protocol", flattenProtocol(getResp.Protocol)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("should_inform", getResp.ShouldInform); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("engine_id", getResp.EngineId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("version", flattenVersion(getResp.Version)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("reciever_name", getResp.RecieverName); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("community_string", getResp.CommunityString); err != nil {
+		return diag.FromErr(err)
+	}
+	return nil
+}
+
+func ResourceNutanixClusterSNMPTrapV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).ClusterAPI
+	clusterExtID := d.Get("cluster_ext_id")
+
+	resp, err := conn.ClusterEntityAPI.GetSnmpTrapById(utils.StringPtr(clusterExtID.(string)), utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while fetching SNMP Trap : %v", err)
+	}
+
+	respSNMPTrap := resp.Data.GetValue().(config.SnmpTrap)
+	updateSpec := respSNMPTrap
+
+	if d.HasChange("username") {
+		updateSpec.Username = utils.StringPtr(d.Get("username").(string))
+	}
+	if d.HasChange("address") {
+		updateSpec.Address = clustersv2.expandIPAddress(d.Get("address"))
+	}
+	if d.HasChange("protocol") {
+		subMap := map[string]interface{}{
+			"UDP":  2,
+			"UDP6": 3,
+			"TCP":  4,
+			"TCP6": 5,
+		}
+		pVal := subMap[d.Get("protocol").(string)]
+		p := config.SnmpProtocol(pVal.(int))
+		updateSpec.Protocol = &p
+	}
+	if d.HasChange("port") {
+		updateSpec.Port = utils.IntPtr(d.Get("port").(int))
+	}
+	if d.HasChange("should_inform") {
+		updateSpec.ShouldInform = utils.BoolPtr(d.Get("should_inform").(bool))
+	}
+	if d.HasChange("engine_id") {
+		updateSpec.EngineId = utils.StringPtr(d.Get("engine_id").(string))
+	}
+	if d.HasChange("version") {
+		subMap := map[string]interface{}{
+			"V2": 2,
+			"V3": 3,
+		}
+		pVal := subMap[d.Get("authType").(string)]
+		p := config.SnmpTrapVersion(pVal.(int))
+		updateSpec.Version = &p
+	}
+	if d.HasChange("reciever_name") {
+		updateSpec.RecieverName = utils.StringPtr(d.Get("reciever_name").(string))
+	}
+	if d.HasChange("community_string") {
+		updateSpec.CommunityString = utils.StringPtr(d.Get("community_string").(string))
+	}
+
+	updateResp, err := conn.ClusterEntityAPI.UpdateSnmpTrapById(utils.StringPtr(clusterExtID.(string)), utils.StringPtr(d.Id()), &updateSpec)
+	if err != nil {
+		return diag.Errorf("error while updating SNMP Traps : %v", err)
+	}
+
+	TaskRef := updateResp.Data.GetValue().(import1.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the SNMP Trap to be available
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"QUEUED", "RUNNING"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: clustersv2.taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for SNMP Trap (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
+
+	return ResourceNutanixClusterSNMPTrapV2Read(ctx, d, meta)
+}
+
+func ResourceNutanixClusterSNMPTrapV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).ClusterAPI
+	clusterExtID := d.Get("cluster_ext_id")
+
+	readResp, err := conn.ClusterEntityAPI.GetSnmpTrapById(utils.StringPtr(clusterExtID.(string)), utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while reading SNMP Trap : %v", err)
+	}
+	// Extract E-Tag Header
+	args := clustersv2.getEtagHeader(readResp, conn)
+
+	const runPrechecksOnly = false
+
+	resp, err := conn.ClusterEntityAPI.DeleteSnmpTrapById(utils.StringPtr(clusterExtID.(string)), utils.StringPtr(d.Id()), args)
+	if err != nil {
+		return diag.Errorf("error while deleting SNMP Trap : %v", err)
+	}
+	TaskRef := resp.Data.GetValue().(import1.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	// calling group API to poll for completion of task
+
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the SNMP Trap to be available
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"QUEUED", "RUNNING"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: clustersv2.taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for SNMP Trap (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
+	return nil
+}
