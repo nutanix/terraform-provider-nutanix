@@ -434,7 +434,7 @@ func DataSourceNutanixOVAImageRead(ctx context.Context, d *schema.ResourceData, 
 	if nok {
 		imageID = findOVAImageByName(ctx, conn, imageName.(string))
 	}
-	resp, reqErr = findOVAImageByUUID(ctx, conn, imageID.(string))
+	resp, reqErr = findOVAImageByUUID(conn, imageID.(string))
 
 	if reqErr != nil {
 		return diag.FromErr(reqErr)
@@ -603,7 +603,7 @@ func DataSourceNutanixOVAImageRead(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func findOVAImageByUUID(ctx context.Context, conn *v3.Client, uuid string) (*v3.OVAImageIntentResponse, error) {
+func findOVAImageByUUID(conn *v3.Client, uuid string) (*v3.OVAImageIntentResponse, error) {
 	return conn.V3.GetOVAImage(uuid)
 }
 
