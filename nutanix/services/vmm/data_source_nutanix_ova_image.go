@@ -436,64 +436,42 @@ func DataSourceNutanixOVAImageRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	resp, reqErr = findOVAImageByUUID(ctx, conn, imageID.(string))
 
-	log.Printf("Response: %+v", resp)
-	log.Printf("Error: %v", reqErr)
 	if reqErr != nil {
 		return diag.FromErr(reqErr)
 	}
 
-	log.Printf("[DEBUG] Using session_auth\n")
-
 	m, c := setRSEntityMetadata(resp.VMSpec.Metadata)
-	log.Printf("[DEBUG] setRSEntityMetadata result: metadata=%+v, categories=%+v", m, c)
-
 	if err := d.Set("metadata", m); err != nil {
-		log.Printf("[ERROR] Failed to set metadata: %v", err)
 		return diag.FromErr(err)
 	}
-	log.Printf("[DEBUG] Successfully set 'metadata' to: %+v", m)
 
 	if err := d.Set("categories", c); err != nil {
-		log.Printf("[ERROR] Failed to set categories: %v", err)
 		return diag.FromErr(err)
 	}
-	log.Printf("[DEBUG] Successfully set 'categories' to: %+v", c)
 
 	if err := d.Set("project_reference", flattenReferenceValues(resp.VMSpec.Metadata.ProjectReference)); err != nil {
-		log.Printf("[ERROR] Failed to set project_reference: %v", err)
 		return diag.FromErr(err)
 	}
-	log.Printf("[DEBUG] Successfully set 'project_reference'")
 
 	if err := d.Set("availability_zone_reference", flattenReferenceValues(resp.VMSpec.Spec.AvailabilityZoneReference)); err != nil {
-		log.Printf("[ERROR] Failed to set availability_zone_reference: %v", err)
 		return diag.FromErr(err)
 	}
-	log.Printf("[DEBUG] Successfully set 'availability_zone_reference'")
 
 	if err := flattenClusterReference(resp.VMSpec.Spec.ClusterReference, d); err != nil {
-		log.Printf("[ERROR] Failed to flatten or set cluster_reference: %v", err)
 		return diag.FromErr(err)
 	}
-	log.Printf("[DEBUG] Successfully flattened and set 'cluster_reference'")
 
 	if err := d.Set("nic_list", flattenNicList(resp.VMSpec.Spec.Resources.NicList)); err != nil {
-		log.Printf("[ERROR] Failed to set nic_list: %v", err)
 		return diag.FromErr(err)
 	}
-	log.Printf("[DEBUG] Successfully set 'nic_list'")
 
 	if err := d.Set("parent_reference", flattenReferenceValues(resp.VMSpec.Spec.Resources.ParentReference)); err != nil {
-		log.Printf("[ERROR] Failed to set parent_reference: %v", err)
 		return diag.FromErr(err)
 	}
-	log.Printf("[DEBUG] Successfully set 'parent_reference'")
 
 	if err := d.Set("disk_list", flattenDiskListHelper(resp.VMSpec.Spec.Resources.DiskList, "", false)); err != nil {
-		log.Printf("[ERROR] Failed to set disk_list: %v", err)
 		return diag.FromErr(err)
 	}
-	log.Printf("[DEBUG] Successfully set 'disk_list'")
 
 	diskAddress := make(map[string]interface{})
 	mac := ""
@@ -501,54 +479,38 @@ func DataSourceNutanixOVAImageRead(ctx context.Context, d *schema.ResourceData, 
 	machineType := ""
 	b := make([]string, 0)
 
-	log.Printf("[DEBUG] Processing BootConfig...")
 	if resp.VMSpec.Spec.Resources.BootConfig != nil {
-		log.Printf("[DEBUG] BootConfig exists.")
 		if resp.VMSpec.Spec.Resources.BootConfig.BootDevice != nil {
-			log.Printf("[DEBUG] BootDevice exists.")
 			if resp.VMSpec.Spec.Resources.BootConfig.BootDevice.DiskAddress != nil {
-				log.Printf("[DEBUG] DiskAddress exists.")
 				i := strconv.Itoa(int(utils.Int64Value(resp.VMSpec.Spec.Resources.BootConfig.BootDevice.DiskAddress.DeviceIndex)))
 				diskAddress["device_index"] = i
 				diskAddress["adapter_type"] = utils.StringValue(resp.VMSpec.Spec.Resources.BootConfig.BootDevice.DiskAddress.AdapterType)
-				log.Printf("[DEBUG] Extracted DiskAddress: %+v", diskAddress)
 			}
 			mac = utils.StringValue(resp.VMSpec.Spec.Resources.BootConfig.BootDevice.MacAddress)
-			log.Printf("[DEBUG] Extracted MacAddress: %s", mac)
 		}
 		if resp.VMSpec.Spec.Resources.BootConfig.BootDeviceOrderList != nil {
 			b = utils.StringValueSlice(resp.VMSpec.Spec.Resources.BootConfig.BootDeviceOrderList)
-			log.Printf("[DEBUG] Extracted BootDeviceOrderList: %+v", b)
 		}
 		if resp.VMSpec.Spec.Resources.BootConfig.BootType != nil {
 			bootType = utils.StringValue(resp.VMSpec.Spec.Resources.BootConfig.BootType)
-			log.Printf("[DEBUG] Extracted BootType: %s", bootType)
 		}
 	} else {
-		log.Printf("[DEBUG] BootConfig is nil.")
 	}
 
 	if resp.VMSpec.Spec.Resources.MachineType != nil {
 		machineType = utils.StringValue(resp.VMSpec.Spec.Resources.MachineType)
-		log.Printf("[DEBUG] Extracted MachineType: %s", machineType)
 	} else {
-		log.Printf("[DEBUG] MachineType is nil.")
 	}
 
 	d.Set("boot_device_order_list", b)
-	log.Printf("[DEBUG] Set 'boot_device_order_list' to: %+v", b)
 
 	d.Set("boot_device_disk_address", diskAddress)
-	log.Printf("[DEBUG] Set 'boot_device_disk_address' to: %+v", diskAddress)
 
 	d.Set("boot_device_mac_address", mac)
-	log.Printf("[DEBUG] Set 'boot_device_mac_address' to: %s", mac)
 
 	d.Set("boot_type", bootType)
-	log.Printf("[DEBUG] Set 'boot_type' to: %s", bootType)
 
 	d.Set("machine_type", machineType)
-	log.Printf("[DEBUG] Set 'machine_type' to: %s", machineType)
 
 	sysprep := make(map[string]interface{})
 	sysrepCV := make(map[string]string)
@@ -557,149 +519,86 @@ func DataSourceNutanixOVAImageRead(ctx context.Context, d *schema.ResourceData, 
 	cloudInitCV := make(map[string]string)
 	isOv := false
 
-	log.Printf("[DEBUG] Processing GuestCustomization...")
 	if resp.VMSpec.Spec.Resources.GuestCustomization != nil {
-		log.Printf("[DEBUG] GuestCustomization exists.")
 		isOv = utils.BoolValue(resp.VMSpec.Spec.Resources.GuestCustomization.IsOverridable)
-		log.Printf("[DEBUG] IsOverridable: %t", isOv)
 
 		if resp.VMSpec.Spec.Resources.GuestCustomization.CloudInit != nil {
-			log.Printf("[DEBUG] CloudInit exists.")
 			cloudInitMeta = utils.StringValue(resp.VMSpec.Spec.Resources.GuestCustomization.CloudInit.MetaData)
 			cloudInitUser = utils.StringValue(resp.VMSpec.Spec.Resources.GuestCustomization.CloudInit.UserData)
-			log.Printf("[DEBUG] CloudInit MetaData: %s, UserData: %s", cloudInitMeta, cloudInitUser)
 
 			if resp.VMSpec.Spec.Resources.GuestCustomization.CloudInit.CustomKeyValues != nil {
-				log.Printf("[DEBUG] CloudInit CustomKeyValues exist.")
 				for k, v := range resp.VMSpec.Spec.Resources.GuestCustomization.CloudInit.CustomKeyValues {
 					cloudInitCV[k] = v
 				}
-				log.Printf("[DEBUG] CloudInit CustomKeyValues: %+v", cloudInitCV)
 			} else {
-				log.Printf("[DEBUG] CloudInit CustomKeyValues are nil.")
 			}
 		} else {
-			log.Printf("[DEBUG] CloudInit is nil.")
 		}
 
 		if resp.VMSpec.Spec.Resources.GuestCustomization.Sysprep != nil {
-			log.Printf("[DEBUG] Sysprep exists.")
 			sysprep["install_type"] = utils.StringValue(resp.VMSpec.Spec.Resources.GuestCustomization.Sysprep.InstallType)
 			sysprep["unattend_xml"] = utils.StringValue(resp.VMSpec.Spec.Resources.GuestCustomization.Sysprep.UnattendXML)
-			log.Printf("[DEBUG] Sysprep InstallType: %s, UnattendXML: %s", sysprep["install_type"], sysprep["unattend_xml"])
 
 			if resp.VMSpec.Spec.Resources.GuestCustomization.Sysprep.CustomKeyValues != nil {
-				log.Printf("[DEBUG] Sysprep CustomKeyValues exist.")
 				for k, v := range resp.VMSpec.Spec.Resources.GuestCustomization.Sysprep.CustomKeyValues {
 					sysrepCV[k] = v
 				}
-				log.Printf("[DEBUG] Sysprep CustomKeyValues: %+v", sysrepCV)
 			} else {
-				log.Printf("[DEBUG] Sysprep CustomKeyValues are nil.")
 			}
 		} else {
-			log.Printf("[DEBUG] Sysprep is nil.")
 		}
 	} else {
-		log.Printf("[DEBUG] GuestCustomization is nil.")
 	}
 
 	if err := d.Set("guest_customization_cloud_init_custom_key_values", cloudInitCV); err != nil {
-		log.Printf("[ERROR] Failed to set guest_customization_cloud_init_custom_key_values: %v", err)
 		return diag.FromErr(err)
 	}
-	log.Printf("[DEBUG] Set 'guest_customization_cloud_init_custom_key_values' to: %+v", cloudInitCV)
 
 	if err := d.Set("guest_customization_sysprep_custom_key_values", sysrepCV); err != nil {
-		log.Printf("[ERROR] Failed to set guest_customization_sysprep_custom_key_values: %v", err)
 		return diag.FromErr(err)
 	}
-	log.Printf("[DEBUG] Set 'guest_customization_sysprep_custom_key_values' to: %+v", sysrepCV)
 
 	if err := d.Set("guest_customization_sysprep", sysprep); err != nil {
-		log.Printf("[ERROR] Failed to set guest_customization_sysprep: %v", err)
 		return diag.FromErr(err)
 	}
-	log.Printf("[DEBUG] Set 'guest_customization_sysprep' to: %+v", sysprep)
-
-	// This call appears twice, consider if it's intentional or a copy-paste error.
-	// Only keeping one for debugging clarity unless there's a reason for both.
-	// If the second one is needed, add its own log.Printf
-	// if err := flattenClusterReference(resp.VMSpec.Spec.ClusterReference, d); err != nil {
-	// 	log.Printf("[ERROR] Failed to flatten or set cluster_reference (second call): %v", err)
-	// 	return diag.FromErr(err)
-	// }
-	// log.Printf("[DEBUG] Successfully flattened and set 'cluster_reference' (second call)")
 
 	if err := d.Set("serial_port_list", resp.VMSpec.Spec.Resources.SerialPortList); err != nil {
-		log.Printf("[ERROR] Failed to set serial_port_list: %v", err)
 		return diag.FromErr(err)
 	}
-	log.Printf("[DEBUG] Set 'serial_port_list' to: %+v", resp.VMSpec.Spec.Resources.SerialPortList)
 
 	d.Set("guest_customization_cloud_init_user_data", cloudInitUser)
-	log.Printf("[DEBUG] Set 'guest_customization_cloud_init_user_data' to: %s", cloudInitUser)
 
 	d.Set("guest_customization_cloud_init_meta_data", cloudInitMeta)
-	log.Printf("[DEBUG] Set 'guest_customization_cloud_init_meta_data' to: %s", cloudInitMeta)
 
 	d.Set("hardware_clock_timezone", utils.StringValue(resp.VMSpec.Spec.Resources.HardwareClockTimezone))
-	log.Printf("[DEBUG] Set 'hardware_clock_timezone' to: %s", utils.StringValue(resp.VMSpec.Spec.Resources.HardwareClockTimezone))
 
 	d.Set("api_version", utils.StringValue(resp.VMSpec.APIVersion))
-	log.Printf("[DEBUG] Set 'api_version' to: %s", utils.StringValue(resp.VMSpec.APIVersion))
 
 	d.Set("name", utils.StringValue(resp.VMSpec.Spec.Name))
-	log.Printf("[DEBUG] Set 'name' to: %s", utils.StringValue(resp.VMSpec.Spec.Name))
 
 	d.Set("description", utils.StringValue(resp.VMSpec.Spec.Description))
-	log.Printf("[DEBUG] Set 'description' to: %s", utils.StringValue(resp.VMSpec.Spec.Description))
 
 	d.Set("state", nil) // Setting nil, consider if this is desired.
-	log.Printf("[DEBUG] Set 'state' to: nil")
 
 	d.Set("enable_cpu_passthrough", utils.BoolValue(resp.VMSpec.Spec.Resources.EnableCPUPassthrough))
-	log.Printf("[DEBUG] Set 'enable_cpu_passthrough' to: %t", utils.BoolValue(resp.VMSpec.Spec.Resources.EnableCPUPassthrough))
 
 	d.Set("is_vcpu_hard_pinned", utils.BoolValue(resp.VMSpec.Spec.Resources.EnableCPUPinning))
-	log.Printf("[DEBUG] Set 'is_vcpu_hard_pinned' to: %t", utils.BoolValue(resp.VMSpec.Spec.Resources.EnableCPUPinning))
-
-	// d.Set("num_vnuma_nodes", utils.Int64Value(resp.VMSpec.Spec.Resources.VMVnumaConfig.NumVnumaNodes))
-	// log.Printf("[DEBUG] Set 'num_vnuma_nodes' to: %d", utils.Int64Value(resp.VMSpec.Spec.Resources.VMVnumaConfig.NumVnumaNodes))
 
 	d.Set("guest_os_id", utils.StringValue(resp.VMSpec.Spec.Resources.GuestOsID))
-	log.Printf("[DEBUG] Set 'guest_os_id' to: %s", utils.StringValue(resp.VMSpec.Spec.Resources.GuestOsID))
 
 	d.Set("power_state", utils.StringValue(resp.VMSpec.Spec.Resources.PowerState))
-	log.Printf("[DEBUG] Set 'power_state' to: %s", utils.StringValue(resp.VMSpec.Spec.Resources.PowerState))
 
 	d.Set("num_vcpus_per_socket", utils.Int64Value(resp.VMSpec.Spec.Resources.NumVcpusPerSocket))
-	log.Printf("[DEBUG] Set 'num_vcpus_per_socket' to: %d", utils.Int64Value(resp.VMSpec.Spec.Resources.NumVcpusPerSocket))
 
 	d.Set("num_sockets", utils.Int64Value(resp.VMSpec.Spec.Resources.NumSockets))
-	log.Printf("[DEBUG] Set 'num_sockets' to: %d", utils.Int64Value(resp.VMSpec.Spec.Resources.NumSockets))
 
 	d.Set("memory_size_mib", utils.Int64Value(resp.VMSpec.Spec.Resources.MemorySizeMib))
-	log.Printf("[DEBUG] Set 'memory_size_mib' to: %d", utils.Int64Value(resp.VMSpec.Spec.Resources.MemorySizeMib))
 
 	d.Set("guest_customization_is_overridable", isOv)
-	log.Printf("[DEBUG] Set 'guest_customization_is_overridable' to: %t", isOv)
-
-	// d.Set("should_fail_on_script_failure", utils.BoolValue(
-	// 	resp.VMSpec.Spec.Resources.PowerStateMechanism.GuestTransitionConfig.ShouldFailOnScriptFailure))
-	// log.Printf("[DEBUG] Set 'should_fail_on_script_failure' to: %t", utils.BoolValue(resp.VMSpec.Spec.Resources.PowerStateMechanism.GuestTransitionConfig.ShouldFailOnScriptFailure))
-
-	// d.Set("enable_script_exec", utils.BoolValue(resp.VMSpec.Spec.Resources.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec))
-	// log.Printf("[DEBUG] Set 'enable_script_exec' to: %t", utils.BoolValue(resp.VMSpec.Spec.Resources.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec))
-
-	// d.Set("power_state_mechanism", utils.StringValue(resp.VMSpec.Spec.Resources.PowerStateMechanism.Mechanism))
-	// log.Printf("[DEBUG] Set 'power_state_mechanism' to: %s", utils.StringValue(resp.VMSpec.Spec.Resources.PowerStateMechanism.Mechanism))
 
 	d.Set("vga_console_enabled", utils.BoolValue(resp.VMSpec.Spec.Resources.VgaConsoleEnabled))
-	log.Printf("[DEBUG] Set 'vga_console_enabled' to: %t", utils.BoolValue(resp.VMSpec.Spec.Resources.VgaConsoleEnabled))
 
 	d.SetId(imageID.(string))
-	log.Printf("[DEBUG] Set resource ID to: %s", imageID.(string))
 
 	return nil
 }
