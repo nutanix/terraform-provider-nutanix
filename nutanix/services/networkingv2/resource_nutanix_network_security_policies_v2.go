@@ -78,16 +78,14 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 													Type:     schema.TypeList,
 													Required: true,
 													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: common.ExtIdValidation,
+														Type: schema.TypeString,
 													},
 												},
 												"second_isolation_group": {
 													Type:     schema.TypeList,
 													Required: true,
 													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: common.ExtIdValidation,
+														Type: schema.TypeString,
 													},
 												},
 											},
@@ -102,8 +100,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 													Type:     schema.TypeList,
 													Required: true,
 													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: common.ExtIdValidation,
+														Type: schema.TypeString,
 													},
 												},
 												"src_allow_spec": {
@@ -131,8 +128,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 													Optional: true,
 													Computed: true,
 													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: common.ExtIdValidation,
+														Type: schema.TypeString,
 													},
 												},
 												"src_subnet": {
@@ -178,8 +174,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 													Optional: true,
 													Computed: true,
 													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: common.ExtIdValidation,
+														Type: schema.TypeString,
 													},
 												},
 												"dest_address_group_references": {
@@ -187,8 +182,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 													Optional: true,
 													Computed: true,
 													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: common.ExtIdValidation,
+														Type: schema.TypeString,
 													},
 												},
 												"service_group_references": {
@@ -196,8 +190,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 													Optional: true,
 													Computed: true,
 													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: common.ExtIdValidation,
+														Type: schema.TypeString,
 													},
 												},
 												"is_all_protocol_allowed": {
@@ -284,8 +277,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 													Computed: true,
 													Optional: true,
 													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: common.ExtIdValidation,
+														Type: schema.TypeString,
 													},
 												},
 											},
@@ -318,8 +310,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 																						Type:     schema.TypeList,
 																						Required: true,
 																						Elem: &schema.Schema{
-																							Type:         schema.TypeString,
-																							ValidateFunc: common.ExtIdValidation,
+																							Type: schema.TypeString,
 																						},
 																					},
 																				},
