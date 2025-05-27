@@ -12,16 +12,21 @@ test: fmtcheck
 	go test --tags=unit $(TEST) -timeout=30s -parallel=4
 
 testacc: fmtcheck
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=count
-
+	@echo "==> Running testcases..."
+	@echo "TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=count"
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=count 
+	
 fmt:
 	@echo "==> Fixing source code with gofmt..."
 	goimports -w ./$(PKG_NAME)
 	goimports -w ./client
 	goimports -w ./utils
 
+
 fmtcheck:
+	@echo "Running fmtcheck"
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
+	@echo "fmtcheck done"
 
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"

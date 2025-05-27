@@ -1,3 +1,156 @@
+## 2.2.0 (April 17, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.1.1...v2.2.0)
+
+**New Feature:**
+- Terraform plugin support for Self Service [\#826](https://github.com/nutanix/terraform-provider-nutanix/issues/826)
+  - Launch a Blueprint (Provision an application)
+    - Launch without runtime editable
+    - Launch with runtime editable on substrate list (change vcpu, numsocket, memory size while launching)
+  - System Actions Execution on Application
+    - Start an application
+    - Stop an application
+    - Soft delete an application
+    - Delete an application
+  - Custom actions execution
+  - Update an application (via patch configs)
+    - Update vCPUs/num_sockets (with runtime editable support)
+    - Update Memory (with runtime editable support)
+    - Update cores-per-vCPU/num_vcpus_per_socket (with runtime editable support)
+    - Update categories (with runtime editable support)
+    - Add a nic (with runtime editable support using nic UUID)
+    - Disk addition (with runtime editable)
+  - Snapshot/Restore actions support
+    - List Snapshot Policies in Blueprints
+    - Create a snapshot by executing snapshot action
+    - List snapshots (recovery points) in application
+    - Restore a snapshot by executing restore action
+
+## 2.1.1 (April 08, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.1.0...v2.1.1)
+
+**Fixed bugs:**
+- Error Creating NoNat Overlay External Network [\#820](https://github.com/nutanix/terraform-provider-nutanix/issues/820)
+
+## 2.1.0 (April 07, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.0.0...v2.1.0)
+
+All new features are v4 SDKs based. 
+
+**New Feature:**
+- Prism [\#815](https://github.com/nutanix/terraform-provider-nutanix/issues/815)
+    - CRUD for Backup Target
+    - CRD for Restore Source
+    - Resource to deploy pc
+    - Resource to restore pc
+    - Restore to unregister pc
+    - Datasource to list pcs
+    - Datasource to fetch pc details
+    - Datasource to list restorable pcs
+    - Datasource to list pc restore points
+    - Datasource to list pc restore points details
+    - Datasource to list backup targets
+    - Datasource to fetch backup target
+    - Datasource to fetch restore source
+
+- Data Protection [\#816](https://github.com/nutanix/terraform-provider-nutanix/issues/816)
+    - CRUD for protection policies
+    - Resource to promote protected resource
+    - Resource to restore protected resource
+    - Datasource to fetch protected resource
+    - Datasource to list protection policies
+    - Datasource to fetch protection policy
+
+- LCM [\#814](https://github.com/nutanix/terraform-provider-nutanix/issues/814)
+   - Resource for Perform Inventory
+   - Resource for Upgrade PreChecks
+   - Resource for Upgrade of entities
+   - Resource for LCM Config
+   - Datasource to fetch LCM status
+   - Datasource to fetch entities
+   - Datasource to fetch specific entity
+   - Datasource to fetch LCM Config
+
+**Fixed bugs:**
+- Fix to add additional disk for virtual machine during update [\#750](https://github.com/nutanix/terraform-provider-nutanix/issues/750)
+- Fix to create a virtual machine with UEFI [\#725](https://github.com/nutanix/terraform-provider-nutanix/issues/725)
+- Fix Nutanix image v2 example in documentation [\#738](https://github.com/nutanix/terraform-provider-nutanix/issues/738)
+- Fix datasource to expand cluster v2 [\#722](https://github.com/nutanix/terraform-provider-nutanix/issues/722)
+- Support import in nutanix_virtual_machine_v2 Resource [\#745](https://github.com/nutanix/terraform-provider-nutanix/issues/745)
+- Fix documentation and examples for existing features [\#755](https://github.com/nutanix/terraform-provider-nutanix/pull/755)
+
+
+## 2.0.0 (January 07, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.9.5...v2.0.0)
+
+All new features are v4 SDKs based. 
+
+**New Feature:**
+- Cluster Management [\#704](https://github.com/nutanix/terraform-provider-nutanix/issues/704)
+    - CRUD for clusters
+    - Resource to discover unconfigured nodes
+    - Resource to fetch network configuration of unconfigured nodes
+    - Resource to add/remove node from cluster
+    - Resource for PC registration
+    - Datasource for Hosts Info
+
+- Storage Containers [\#705](https://github.com/nutanix/terraform-provider-nutanix/issues/705)
+    - CRUD for storage containers
+    - datasource for storage stats info
+
+- Networks [\#706](https://github.com/nutanix/terraform-provider-nutanix/issues/706)
+    - CRUD for Subnets
+    - CRUD for VPCs
+    - CRUD for PBRs
+    - CRUD for Floating IPs
+    - CRUD for Static Routes
+    - CRUD for Services Groups
+    - CRUD for Address Groups
+    - CRUD for Network Security Rules
+
+- IAM [\#707](https://github.com/nutanix/terraform-provider-nutanix/issues/707)
+    - CRUD for Roles
+    - Datasource for Operations( permissions )
+    - CRUD for Users
+    - CRUD for User Groups
+    - CRUD for Authorization Policy ( ACPs )
+    - CRUD for SALM Identity Providers
+    - CRUD for Directory Services
+
+- Prism [\#711](https://github.com/nutanix/terraform-provider-nutanix/issues/711)
+    - CRUD for categories
+
+- VMM [\#708](https://github.com/nutanix/terraform-provider-nutanix/issues/708)
+    - CRUD for Virtual Machine
+    - CRUD for Images
+    - CRUD for Image Placement Policy
+    - Resource to Clone a VM
+    - Resource for NGT Installation / Uninstallation
+    - Resource for NGT upgrade
+    - Resource for Template deploy
+    - Resource for Template Guest OS Actions
+    - CRUD for Template
+    - Resource for CDROM inject/eject
+    - Resource for VM revert from recovery point
+    - Resource for VM guest customisation update
+    - Resource for VM Network Device Assign/Remove IP
+    - Resource for VM Network Device Migrate
+    - Resource for VM Shutdown Actions
+
+- Volumes [\#709](https://github.com/nutanix/terraform-provider-nutanix/issues/709)
+    - CRUD for Volume Groups
+    - Resource to Attach/Deattach VG to VM
+    - Resource to Attach/Deattach VG to ISCSI Client
+    - CRUD for Volume Group vDisks
+    - Resource to attach/deattach categories from VG
+
+- Data Protection [\#710](https://github.com/nutanix/terraform-provider-nutanix/issues/710)
+    - CRUD for Recovery Point
+    - CRUD for Replicate Recovery Point
+    - Resource to Restore VM from Recovery Point
+    - Datasource for VM Recovery Point Info
+
+
+
 ## 1.9.5 (January 16, 2024)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.4...feat/1.9.5)
 
