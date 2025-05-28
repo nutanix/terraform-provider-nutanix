@@ -648,7 +648,7 @@ func TestAccNutanixVirtualMachine_WithNicListIpType(t *testing.T) {
 			},
 			{
 				Config:      testaccnutanixvmconfigwithniclistIPTypeWrongType(r),
-				ExpectError: regexp.MustCompile(`Error: expected nic_list.0.ip_endpoint_list.0.type to be one of ` + `[ASSIGNED], got WRONG`),
+				ExpectError: regexp.MustCompile(`'WRONG' is not one of \['ASSIGNED', 'LEARNED'\]`),
 			},
 		},
 	})
