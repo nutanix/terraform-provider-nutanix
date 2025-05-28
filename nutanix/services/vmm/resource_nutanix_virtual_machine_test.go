@@ -628,8 +628,8 @@ func TestAccNutanixVirtualMachine_WithNicListIpType(t *testing.T) {
 	r := acctest.RandIntRange(101, 110)
 	resourceName := "nutanix_virtual_machine.vm3"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
 		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
