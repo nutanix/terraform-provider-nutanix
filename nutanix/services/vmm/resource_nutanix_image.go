@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -173,14 +175,16 @@ func ResourceNutanixImage() *schema.Resource {
 				},
 			},
 			"source_uri": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"source_path", "data_source_reference"},
 			},
 			"source_path": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"source_uri", "data_source_reference"},
 			},
 			"version": {
 				Type:     schema.TypeMap,
@@ -188,6 +192,27 @@ func ResourceNutanixImage() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
+				},
+			},
+			"data_source_reference": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"source_uri", "source_path"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"uuid": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$`), "must be a valid UUID"),
+						},
+					},
 				},
 			},
 			"architecture": {
@@ -407,12 +432,21 @@ func resourceNutanixImageRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("error setting retrieval_uri_list for image UUID(%s), %s", d.Id(), err)
 	}
 
-	if err := d.Set("cluster_references", flattenArrayOfReferenceValues(resp.Status.Resources.InitialPlacementRefList)); err != nil {
+	if err = d.Set("cluster_references", flattenArrayOfReferenceValues(resp.Status.Resources.InitialPlacementRefList)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("current_cluster_reference_list", flattenArrayOfReferenceValues(resp.Status.Resources.CurrentClusterReferenceList)); err != nil {
+	if err = d.Set("current_cluster_reference_list", flattenArrayOfReferenceValues(resp.Status.Resources.CurrentClusterReferenceList)); err != nil {
 		return diag.FromErr(err)
+	}
+
+	dataSrcRef := make(map[string]string)
+	if ref := resp.Status.Resources.DataSourceReference; ref != nil {
+		dataSrcRef["uuid"] = utils.StringValue(ref.UUID)
+		dataSrcRef["kind"] = utils.StringValue(ref.Kind)
+	}
+	if err = d.Set("data_source_reference", []interface{}{dataSrcRef}); err != nil {
+		return diag.Errorf("error setting data_source_reference for image UUID(%s), %s", d.Id(), err)
 	}
 
 	return nil
@@ -566,6 +600,11 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 			image.ImageType = utils.StringPtr("DISK_IMAGE")
 		}
 		// set source uri
+	}
+
+	if datasourceref, refok := d.GetOk("data_source_reference"); refok && len(datasourceref.([]interface{})) > 0 {
+		datasourceref := datasourceref.([]interface{})[0].(map[string]interface{})
+		image.DataSourceReference = validateRef(datasourceref)
 	}
 
 	if csok {
@@ -741,6 +780,31 @@ func resourceNutanixImageInstanceResourceV0() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
+				},
+			},
+			"data_source_reference": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"kind": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"uuid": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$`), "must be a valid UUID"),
+						},
+					},
 				},
 			},
 			"architecture": {

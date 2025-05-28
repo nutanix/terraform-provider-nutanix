@@ -12,7 +12,7 @@ Describes recovery points (snapshots taken) present in an NCM Self Service Appli
 
 ## Example Usage
 
-``` hcl
+```hcl
 data "nutanix_self_service_app_snapshots" "test" {
     app_name = "NAME OF APPLICATION"
     length = 250
