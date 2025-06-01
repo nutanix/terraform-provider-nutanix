@@ -510,6 +510,28 @@ func resourceNutanixImageUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("Checksum update is not allowed. Previous checksum algorithm is %s and value is %s", *res.Checksum.ChecksumAlgorithm, *res.Checksum.ChecksumValue)
 	}
 
+	if d.HasChange("version") {
+		version := d.Get("version")
+		versionResource := &v3.ImageVersionResources{}
+
+		versionMap := version.(map[string]interface{})
+		productName, productNameOk := versionMap["product_name"]
+		productVersion, productVersionOk := versionMap["product_version"]
+		if productNameOk {
+			if productName.(string) == "" {
+				return diag.Errorf("'product_name' is not given")
+			}
+			versionResource.ProductName = utils.StringPtr(productName.(string))
+		}
+		if productVersionOk {
+			if productVersion.(string) == "" {
+				return diag.Errorf("'product_version' is not given")
+			}
+			versionResource.ProductVersion = utils.StringPtr(productVersion.(string))
+		}
+
+		spec.Resources.Version = versionResource
+	}
 	request.Metadata = metadata
 	request.Spec = spec
 

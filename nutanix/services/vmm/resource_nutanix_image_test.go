@@ -195,6 +195,15 @@ func TestAccNutanixImage_Version(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccNutanixImageVersionUpdateConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixImageExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("Ubuntu-%d", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "version.product_name", fmt.Sprintf("Ubuntu-%d-updated", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "version.product_version", "mini.iso.updated"),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -503,6 +512,21 @@ resource "nutanix_image" "acctest-test" {
   version = {
     product_name    = "Ubuntu-%[1]d"
     product_version = "mini.iso"
+  }
+}
+`, r)
+}
+
+func testAccNutanixImageVersionUpdateConfig(r int) string {
+	return fmt.Sprintf(`
+resource "nutanix_image" "acctest-test" {
+  name        = "Ubuntu-%[1]d"
+  description = "Ubuntu"
+  source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
+  image_type = "ISO_IMAGE"
+  version = {
+    product_name    = "Ubuntu-%[1]d-updated"
+    product_version = "mini.iso.updated"
   }
 }
 `, r)
