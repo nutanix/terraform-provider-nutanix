@@ -641,7 +641,7 @@ func TestAccNutanixVirtualMachine_SecureBootWithNoMachineType(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVirtualMachine_PowerStateTest(t *testing.T) {
+func TestAccNutanixVirtualMachine_PowerStateOFFTest(t *testing.T) {
 	r := acctest.RandIntRange(101, 110)
 	resourceName := "nutanix_virtual_machine.test"
 	resource.Test(t, resource.TestCase{
@@ -663,6 +663,34 @@ func TestAccNutanixVirtualMachine_PowerStateTest(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixVirtualMachineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNutanixVirtualMachine_PowerStateOnTest(t *testing.T) {
+	r := acctest.RandIntRange(101, 110)
+	resourceName := "nutanix_virtual_machine.test"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Create VM with power state ON
+				Config: testAccNutanixVMConfigPowerState(r, "ON"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+				),
+			},
+			{
+				// Update power state to OFF
+				Config: testAccNutanixVMConfigPowerState(r, "OFF"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "OFF"),
 				),
 			},
 		},

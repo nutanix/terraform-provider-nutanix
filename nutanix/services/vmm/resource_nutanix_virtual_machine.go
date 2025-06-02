@@ -1204,6 +1204,7 @@ func resourceNutanixVirtualMachineUpdate(ctx context.Context, d *schema.Resource
 
 	// If there are non-hotPlug changes, then poweroff is needed
 	if !hotPlugChange {
+		log.Printf("[DEBUG] Powering OFF Virtual Machine UUID(%s) before update", d.Id())
 		if err := changePowerState(ctx, conn, d.Id(), "OFF"); err != nil {
 			return diag.Errorf("internal error: cannot shut down the VM with UUID(%s): %s", d.Id(), err)
 		}
@@ -1241,8 +1242,13 @@ func resourceNutanixVirtualMachineUpdate(ctx context.Context, d *schema.Resource
 	}
 
 	// Then, Turn On the VM.
-	if err := changePowerState(ctx, conn, d.Id(), "ON"); err != nil {
-		return diag.Errorf("internal error: cannot turn ON the VM with UUID(%s): %s", d.Id(), err)
+	if !hotPlugChange {
+		// If there are non-hotPlug changes and we powered off the VM, then we need to turn it ON again.
+		// only if there are non-hotPlug changes
+		log.Printf("[DEBUG] Turning ON Virtual Machine UUID(%s) after update", d.Id())
+		if err := changePowerState(ctx, conn, d.Id(), "ON"); err != nil {
+			return diag.Errorf("internal error: cannot turn ON the VM with UUID(%s): %s", d.Id(), err)
+		}
 	}
 
 	return resourceNutanixVirtualMachineRead(ctx, d, meta)
