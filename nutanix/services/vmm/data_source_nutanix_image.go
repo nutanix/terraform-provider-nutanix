@@ -271,6 +271,16 @@ func dataSourceNutanixImageRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(err)
 	}
 
+	version := make(map[string]string)
+	if resp.Status.Resources.Version != nil {
+		version["product_name"] = utils.StringValue(resp.Status.Resources.Version.ProductName)
+		version["product_version"] = utils.StringValue(resp.Status.Resources.Version.ProductVersion)
+	}
+
+	if err := d.Set("version", version); err != nil {
+		return diag.FromErr(err)
+	}
+
 	d.SetId(utils.StringValue(resp.Metadata.UUID))
 
 	return nil

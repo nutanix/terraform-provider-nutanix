@@ -46,6 +46,8 @@ func TestAccNutanixImageDataSource_name(t *testing.T) {
 						"data.nutanix_image.test",
 						"source_uri",
 						"http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"),
+					resource.TestCheckResourceAttr("data.nutanix_image.test", "version.product_name", fmt.Sprintf("Ubuntu-%d", rInt)),
+					resource.TestCheckResourceAttr("data.nutanix_image.test", "version.product_version", "mini.iso"),
 				),
 			},
 		},
@@ -86,6 +88,10 @@ resource "nutanix_image" "test" {
   name        = "Ubuntu-%d"
   description = "Ubuntu mini ISO"
   source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
+  version = {
+    product_name    = "Ubuntu-%[1]d"
+    product_version = "mini.iso"
+  }
 }
 
 
