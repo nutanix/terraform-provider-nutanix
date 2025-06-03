@@ -270,7 +270,7 @@ func ResourceNutanixVirtualMachine() *schema.Resource {
 									"type": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										Default:  "ASSIGNED",
 									},
 								},
 							},
@@ -1683,9 +1683,15 @@ func expandIPAddressList(ipl []interface{}) []*v3.IPAddress {
 			if ipset, ipsetok := v["ip"]; ipsetok {
 				v3ip.IP = utils.StringPtr(ipset.(string))
 			}
-			if iptype, iptypeok := v["type"]; iptypeok {
+			// Check if 'type' is provided
+			if iptype, iptypeok := v["type"]; !iptypeok || iptype == "" {
+				// ip type not provided, set a default value to ASSIGNED
+				log.Printf("[DEBUG] IP type not provided, setting default value to ASSIGNED")
+				v3ip.Type = utils.StringPtr("ASSIGNED")
+			} else {
 				v3ip.Type = utils.StringPtr(iptype.(string))
 			}
+
 			ip[k] = v3ip
 		}
 		return ip
@@ -2300,7 +2306,7 @@ func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {
 									"type": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										Default:  "ASSIGNED",
 									},
 								},
 							},
