@@ -207,10 +207,10 @@ func resourceNutanixUserV2Create(ctx context.Context, d *schema.ResourceData, me
 	if ut, ok := d.GetOk("user_type"); ok {
 		const two, three, four, five, six = 2, 3, 4, 5, 6
 		usertypeMap := map[string]interface{}{
-			"LOCAL":    two,
-			"SAML":     three,
-			"LDAP":     four,
-			"EXTERNAL": five,
+			"LOCAL":           two,
+			"SAML":            three,
+			"LDAP":            four,
+			"EXTERNAL":        five,
 			"SERVICE_ACCOUNT": six,
 		}
 		pInt := usertypeMap[ut.(string)]
@@ -388,10 +388,10 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 	if d.HasChange("user_type") {
 		const two, three, four, five, six = 2, 3, 4, 5, 6
 		usertypeMap := map[string]interface{}{
-			"LOCAL":    two,
-			"SAML":     three,
-			"LDAP":     four,
-			"EXTERNAL": five,
+			"LOCAL":           two,
+			"SAML":            three,
+			"LDAP":            four,
+			"EXTERNAL":        five,
 			"SERVICE_ACCOUNT": six,
 		}
 		pInt := usertypeMap[d.Get("user_type").(string)]
