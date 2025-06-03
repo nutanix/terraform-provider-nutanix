@@ -9,7 +9,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNutanixUserRevokeKeyV2Create = "nutanix_user_revoke_key_v2.revoke_key"
+const resourceNutanixUserRevokeKeyV2Create = "nutanix_user_key_revoke_v2.revoke_key"
 
 func TestAccV2NutanixUsersRevokeKey(t *testing.T) {
 	r := acctest.RandInt()
@@ -45,7 +45,7 @@ func testApiKeyRevokeResourceConfig(filepath, name string, key_name string) stri
 	 expiry_time = "2026-01-01T00:00:00Z"
   }
 
-	resource "nutanix_user_revoke_key_v2" "revoke_key" {
+	resource "nutanix_user_key_revoke_v2" "revoke_key" {
 	 user_ext_id = nutanix_users_v2.service_account.ext_id
 	 ext_id = nutanix_user_key_v2.create_key.ext_id
   }
