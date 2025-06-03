@@ -2,6 +2,7 @@ package networkingv2_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -89,6 +90,24 @@ func TestAccV2NutanixNetworkSecurityResource_WithMultiEnvIsolationRuleSpecRule(t
 					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.type", "MULTI_ENV_ISOLATION"),
 					resource.TestCheckResourceAttrSet(resourceNameNs, "vpc_reference.#"),
 					resource.TestCheckResourceAttr(resourceNameNs, "is_hitlog_enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccV2NutanixNetworkSecurityResource_InvalidExtIDReference(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-nsp-%d", r)
+	desc := "test nsp description"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testNetworkSecurityInvalidConfig(name, desc),
+				ExpectError: regexp.MustCompile(
+					`(?s)must be a valid Ext ID: got "".*must be a valid Ext ID: got "invalid-ext-id"`,
 				),
 			},
 		},
@@ -334,4 +353,29 @@ func testNetworkSecurityConfigWithMultiEnvIsolationRuleSpecRule(name, desc strin
 		depends_on = [nutanix_vpc_v2.test]
 	  }
 	  `, name, desc)
+}
+
+func testNetworkSecurityInvalidConfig(name, desc string) string {
+	return fmt.Sprintf(`
+	resource "nutanix_network_security_policy_v2" "test" {
+		name = "%[1]s"
+		description = "%[2]s"
+		state = "SAVE"
+		type = "ISOLATION"
+		rules{
+		  type = "TWO_ENV_ISOLATION"
+		  spec{
+			two_env_isolation_rule_spec{
+			  first_isolation_group = [
+				"",
+			  ]
+			  second_isolation_group =  [
+				"invalid-ext-id",
+			  ]
+			}
+		  }
+		}
+		is_hitlog_enabled = true
+	  }
+`, name, desc)
 }

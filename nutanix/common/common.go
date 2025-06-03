@@ -10,9 +10,13 @@ import (
 // which is defined in the schema
 // its return a list of string
 func ExpandListOfString(list []interface{}) []string {
-	stringListStr := make([]string, len(list))
+	stringListStr := make([]string, 0)
 	for i, v := range list {
-		stringListStr[i] = v.(string)
+		if v == nil || v == "" {
+			log.Printf("[DEBUG] Skipping nil or empty value at index %d", i)
+			continue // Skip nil or empty values
+		}
+		stringListStr = append(stringListStr, v.(string))
 	}
 	return stringListStr
 }

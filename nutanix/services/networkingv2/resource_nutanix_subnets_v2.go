@@ -846,7 +846,7 @@ func expandDhcpOptions(pr []interface{}) *import1.DhcpOptions {
 			dhcpOps.DomainName = utils.StringPtr(dn.(string))
 		}
 		if searchDomain, ok := val["search_domains"]; ok && len(searchDomain.([]interface{})) > 0 {
-			dhcpOps.SearchDomains = expandStringList(searchDomain.([]interface{}))
+			dhcpOps.SearchDomains = common.ExpandListOfString(searchDomain.([]interface{}))
 		}
 		if tftp, ok := val["tftp_server_name"]; ok && len(tftp.(string)) > 0 {
 			dhcpOps.TftpServerName = utils.StringPtr(tftp.(string))
@@ -1117,7 +1117,7 @@ func expandExternalSubnet(pr []interface{}) []import1.ExternalSubnet {
 				sub.ExternalIps = expandIPAddress(extips.([]interface{}))
 			}
 			if gatewayNodes, ok := val["gateway_nodes"]; ok && len(gatewayNodes.([]interface{})) > 0 {
-				sub.GatewayNodes = expandStringList(gatewayNodes.([]interface{}))
+				sub.GatewayNodes = common.ExpandListOfString(gatewayNodes.([]interface{}))
 			}
 			if activeGatewayNode, ok := val["active_gateway_node"]; ok && len(activeGatewayNode.([]interface{})) > 0 {
 				sub.ActiveGatewayNodes = expandGatewayNodeReference(activeGatewayNode)
@@ -1353,18 +1353,6 @@ func expandIPv6Pool(pr []interface{}) []import1.IPv6Pool {
 			pools[k] = pool
 		}
 		return pools
-	}
-	return nil
-}
-
-func expandStringList(pr []interface{}) []string {
-	if len(pr) > 0 {
-		strList := make([]string, len(pr))
-
-		for k, v := range pr {
-			strList[k] = v.(string)
-		}
-		return strList
 	}
 	return nil
 }
