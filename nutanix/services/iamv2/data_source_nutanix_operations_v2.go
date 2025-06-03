@@ -157,7 +157,7 @@ func DatasourceNutanixOperationsV4Read(ctx context.Context, d *schema.ResourceDa
 			Detail:   "The API returned an empty list of operations.",
 		}}
 	}
-	
+
 	operations := resp.Data.GetValue().([]import1.Operation)
 
 	if err := d.Set("operations", flattenPermissionEntities(operations)); err != nil {

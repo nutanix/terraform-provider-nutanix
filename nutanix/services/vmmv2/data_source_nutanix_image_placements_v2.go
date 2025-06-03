@@ -168,7 +168,7 @@ func DatasourceNutanixImagePlacementsV4Read(ctx context.Context, d *schema.Resou
 			Detail:   "The API returned an empty list of placement policies.",
 		}}
 	}
-	
+
 	policies := resp.Data.GetValue().([]import7.PlacementPolicy)
 
 	if err := d.Set("placement_policies", flattenPlacementPolicyEntities(policies)); err != nil {

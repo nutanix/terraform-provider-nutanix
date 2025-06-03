@@ -203,7 +203,7 @@ func DatasourceNutanixRolesV2Read(ctx context.Context, d *schema.ResourceData, m
 			Detail:   "The API returned an empty list of roles.",
 		}}
 	}
-	
+
 	if err := d.Set("roles", flattenRolesEntities(rolesList)); err != nil {
 		return diag.FromErr(err)
 	}

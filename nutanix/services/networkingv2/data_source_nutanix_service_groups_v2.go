@@ -197,7 +197,7 @@ func DatasourceNutanixServiceGroupsV2Read(ctx context.Context, d *schema.Resourc
 			Detail:   "The API returned an empty list of service groups.",
 		}}
 	}
-	
+
 	getResp := resp.Data.GetValue().([]import1.ServiceGroup)
 	if err := d.Set("service_groups", flattenServiceGroupsEntities(getResp)); err != nil {
 		return diag.FromErr(err)

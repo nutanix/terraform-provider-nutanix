@@ -219,7 +219,7 @@ func DatasourceNutanixVolumeDisksV2Read(ctx context.Context, d *schema.ResourceD
 			Detail:   "The API returned an empty list of volume disks.",
 		}}
 	}
-	
+
 	getResp := resp.Data.GetValue().([]volumesClient.VolumeDisk)
 	// set the volume groups data in the terraform resource
 	if err := d.Set("disks", flattenDisksEntities(getResp)); err != nil {
