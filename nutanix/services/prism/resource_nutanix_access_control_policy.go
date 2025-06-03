@@ -165,7 +165,7 @@ func ResourceNutanixAccessControlPolicy() *schema.Resource {
 									"left_hand_side": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringInSlice([]string{"CATEGORY", "PROJECT"}, false),
+										ValidateFunc: validation.StringInSlice([]string{"CATEGORY", "PROJECT", "CLUSTER", "VPC", "CONNECTIVITY_TYPE"}, false),
 									},
 									"operator": {
 										Type:         schema.TypeString,

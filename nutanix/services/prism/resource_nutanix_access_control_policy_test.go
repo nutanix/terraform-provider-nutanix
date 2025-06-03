@@ -136,6 +136,108 @@ func TestAccNutanixAccessControlPolicy_WithCategory(t *testing.T) {
 	})
 }
 
+func TestAccNutanixAccessControlPolicy_WithCluster(t *testing.T) {
+	name := acctest.RandomWithPrefix("accest-access-policy")
+	roleName := acctest.RandomWithPrefix("test-acc-role-")
+	description := "Description of my access control policy"
+	nameUpdated := acctest.RandomWithPrefix("accest-access-policy")
+	descriptionUpdated := "Description of my access control policy updated"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixAccessControlPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixAccessControlPolicyConfigWithCluster(name, description, roleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixAccessControlPolicyExists(),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "name", name),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "description", description),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "context_filter_list.0.scope_filter_expression_list.0.left_hand_side", "CLUSTER"),
+				),
+			},
+			{
+				Config: testAccNutanixAccessControlPolicyConfigWithCluster(nameUpdated, descriptionUpdated, roleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixAccessControlPolicyExists(),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "name", nameUpdated),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "description", descriptionUpdated),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "context_filter_list.0.scope_filter_expression_list.0.left_hand_side", "CLUSTER"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNutanixAccessControlPolicy_WithVPC(t *testing.T) {
+	name := acctest.RandomWithPrefix("accest-access-policy")
+	roleName := acctest.RandomWithPrefix("test-acc-role-")
+	description := "Description of my access control policy"
+	nameUpdated := acctest.RandomWithPrefix("accest-access-policy")
+	descriptionUpdated := "Description of my access control policy updated"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixAccessControlPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixAccessControlPolicyConfigWithVPC(name, description, roleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixAccessControlPolicyExists(),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "name", name),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "description", description),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "context_filter_list.0.scope_filter_expression_list.0.left_hand_side", "VPC"),
+				),
+			},
+			{
+				Config: testAccNutanixAccessControlPolicyConfigWithVPC(nameUpdated, descriptionUpdated, roleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixAccessControlPolicyExists(),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "name", nameUpdated),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "description", descriptionUpdated),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "context_filter_list.0.scope_filter_expression_list.0.left_hand_side", "VPC"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNutanixAccessControlPolicy_WithConnectivityType(t *testing.T) {
+	name := acctest.RandomWithPrefix("accest-access-policy")
+	roleName := acctest.RandomWithPrefix("test-acc-role-")
+	description := "Description of my access control policy"
+	nameUpdated := acctest.RandomWithPrefix("accest-access-policy")
+	descriptionUpdated := "Description of my access control policy updated"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixAccessControlPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixAccessControlPolicyConfigWithConnectivityType(name, description, roleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixAccessControlPolicyExists(),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "name", name),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "description", description),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "context_filter_list.0.scope_filter_expression_list.0.left_hand_side", "CONNECTIVITY_TYPE"),
+				),
+			},
+			{
+				Config: testAccNutanixAccessControlPolicyConfigWithConnectivityType(nameUpdated, descriptionUpdated, roleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixAccessControlPolicyExists(),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "name", nameUpdated),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "description", descriptionUpdated),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "context_filter_list.0.scope_filter_expression_list.0.left_hand_side", "CONNECTIVITY_TYPE"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixAccessControlPolicyExists() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceAccessPolicy]
@@ -277,6 +379,276 @@ resource "nutanix_access_control_policy" "test" {
 		scope_filter_expression_list{
 			operator = "IN"
 			left_hand_side = "PROJECT"
+			right_hand_side {
+				categories {
+						name = "Environment"
+						value = ["Dev", "Dev1"]
+					}
+			}
+		}
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "all"
+			right_hand_side{
+				collection = "ALL"
+			}
+		}
+	}
+
+	context_filter_list{
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "cluster"
+			right_hand_side{
+				uuid_list = ["00058ef8-c31c-f0bc-0000-000000007b23"]
+			}
+		}
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "image"
+			right_hand_side{
+				collection = "ALL"
+			}
+		}
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "category"
+			right_hand_side{
+				collection = "ALL"
+			}
+		}
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "marketplace_item"
+			right_hand_side{
+				collection = "SELF_OWNED"
+			}
+		}
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "app_task"
+			right_hand_side{
+				collection = "SELF_OWNED"
+			}
+		}
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "app_variable"
+			right_hand_side{
+				collection = "SELF_OWNED"
+			}
+		}
+	}
+}
+`, name, description, roleName, testVars.Permissions[0].UUID)
+}
+
+func testAccNutanixAccessControlPolicyConfigWithCluster(name, description, roleName string) string {
+	return fmt.Sprintf(`
+resource "nutanix_role" "test" {
+	name        = "%[3]s"
+	description = "description role"
+	permission_reference_list {
+		kind = "permission"
+		uuid = "%[4]s"
+	}
+}
+resource "nutanix_access_control_policy" "test" {
+	name        = "%[1]s"
+	description = "%[2]s"
+	role_reference {
+		kind = "role"
+		uuid = nutanix_role.test.id
+	}
+	user_reference_list{
+		uuid = "00000000-0000-0000-0000-000000000000"
+		name = "admin"
+	}
+
+	context_filter_list{
+		scope_filter_expression_list{
+			operator = "IN"
+			left_hand_side = "CLUSTER"
+			right_hand_side {
+				categories {
+						name = "Environment"
+						value = ["Dev", "Dev1"]
+					}
+			}
+		}
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "all"
+			right_hand_side{
+				collection = "ALL"
+			}
+		}
+	}
+
+	context_filter_list{
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "cluster"
+			right_hand_side{
+				uuid_list = ["00058ef8-c31c-f0bc-0000-000000007b23"]
+			}
+		}
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "image"
+			right_hand_side{
+				collection = "ALL"
+			}
+		}
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "category"
+			right_hand_side{
+				collection = "ALL"
+			}
+		}
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "marketplace_item"
+			right_hand_side{
+				collection = "SELF_OWNED"
+			}
+		}
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "app_task"
+			right_hand_side{
+				collection = "SELF_OWNED"
+			}
+		}
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "app_variable"
+			right_hand_side{
+				collection = "SELF_OWNED"
+			}
+		}
+	}
+}
+`, name, description, roleName, testVars.Permissions[0].UUID)
+}
+
+func testAccNutanixAccessControlPolicyConfigWithVPC(name, description, roleName string) string {
+	return fmt.Sprintf(`
+resource "nutanix_role" "test" {
+	name        = "%[3]s"
+	description = "description role"
+	permission_reference_list {
+		kind = "permission"
+		uuid = "%[4]s"
+	}
+}
+resource "nutanix_access_control_policy" "test" {
+	name        = "%[1]s"
+	description = "%[2]s"
+	role_reference {
+		kind = "role"
+		uuid = nutanix_role.test.id
+	}
+	user_reference_list{
+		uuid = "00000000-0000-0000-0000-000000000000"
+		name = "admin"
+	}
+
+	context_filter_list{
+		scope_filter_expression_list{
+			operator = "IN"
+			left_hand_side = "VPC"
+			right_hand_side {
+				categories {
+						name = "Environment"
+						value = ["Dev", "Dev1"]
+					}
+			}
+		}
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "all"
+			right_hand_side{
+				collection = "ALL"
+			}
+		}
+	}
+
+	context_filter_list{
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "cluster"
+			right_hand_side{
+				uuid_list = ["00058ef8-c31c-f0bc-0000-000000007b23"]
+			}
+		}
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "image"
+			right_hand_side{
+				collection = "ALL"
+			}
+		}
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "category"
+			right_hand_side{
+				collection = "ALL"
+			}
+		}
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "marketplace_item"
+			right_hand_side{
+				collection = "SELF_OWNED"
+			}
+		}
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "app_task"
+			right_hand_side{
+				collection = "SELF_OWNED"
+			}
+		}
+		entity_filter_expression_list{
+			operator = "IN"
+			left_hand_side_entity_type = "app_variable"
+			right_hand_side{
+				collection = "SELF_OWNED"
+			}
+		}
+	}
+}
+`, name, description, roleName, testVars.Permissions[0].UUID)
+}
+
+func testAccNutanixAccessControlPolicyConfigWithConnectivityType(name, description, roleName string) string {
+	return fmt.Sprintf(`
+resource "nutanix_role" "test" {
+	name        = "%[3]s"
+	description = "description role"
+	permission_reference_list {
+		kind = "permission"
+		uuid = "%[4]s"
+	}
+}
+resource "nutanix_access_control_policy" "test" {
+	name        = "%[1]s"
+	description = "%[2]s"
+	role_reference {
+		kind = "role"
+		uuid = nutanix_role.test.id
+	}
+	user_reference_list{
+		uuid = "00000000-0000-0000-0000-000000000000"
+		name = "admin"
+	}
+
+	context_filter_list{
+		scope_filter_expression_list{
+			operator = "IN"
+			left_hand_side = "CONNECTIVITY_TYPE"
 			right_hand_side {
 				categories {
 						name = "Environment"
