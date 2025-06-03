@@ -191,11 +191,11 @@ func DatasourceNutanixSamlIDPsV2Read(ctx context.Context, d *schema.ResourceData
 			Summary:  "🫙 No Data found",
 			Detail:   "The API returned an empty list of identity providers.",
 		}}
-	} else {
-		getResp := resp.Data.GetValue().([]import1.SamlIdentityProvider)
-		if err := d.Set("identity_providers", flattenIdentityProvidersEntities(getResp)); err != nil {
-			return diag.FromErr(err)
-		}
+	}
+
+	getResp := resp.Data.GetValue().([]import1.SamlIdentityProvider)
+	if err := d.Set("identity_providers", flattenIdentityProvidersEntities(getResp)); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(resource.UniqueId())

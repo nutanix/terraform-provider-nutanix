@@ -131,6 +131,7 @@ func DatasourceNutanixRouteTablesV2Read(ctx context.Context, d *schema.ResourceD
 			Detail:   "The API returned an empty list of route tables.",
 		}}
 	}
+	
 	getResp := resp.Data.GetValue().([]import1.RouteTable)
 	aJSON, _ := json.Marshal(getResp)
 	log.Printf("[DEBUG] DatasourceNutanixRouteTablesV2Read: %v", string(aJSON))

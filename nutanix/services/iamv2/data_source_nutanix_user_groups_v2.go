@@ -138,11 +138,11 @@ func DatasourceNutanixUserGroupsV4Read(ctx context.Context, d *schema.ResourceDa
 			Summary:  "🫙 No Data found",
 			Detail:   "The API returned an empty list of user groups.",
 		}}
-	} else {
-		getResp := resp.Data.GetValue().([]import1.UserGroup)
-		if err := d.Set("user_groups", flattenUserGroupEntities(getResp)); err != nil {
-			return diag.FromErr(err)
-		}
+	}
+
+	getResp := resp.Data.GetValue().([]import1.UserGroup)
+	if err := d.Set("user_groups", flattenUserGroupEntities(getResp)); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(resource.UniqueId())

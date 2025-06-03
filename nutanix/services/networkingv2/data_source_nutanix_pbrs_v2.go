@@ -403,12 +403,12 @@ func DatasourceNutanixPbrsV2Read(ctx context.Context, d *schema.ResourceData, me
 			Summary:  "🫙 No Data found",
 			Detail:   "The API returned an empty list of routing policies.",
 		}}
-	} else {
-		getResp := resp.Data.GetValue().([]import1.RoutingPolicy)
+	}
 
-		if err := d.Set("routing_policies", flattenRoutingEntities(getResp)); err != nil {
-			return diag.FromErr(err)
-		}
+	getResp := resp.Data.GetValue().([]import1.RoutingPolicy)
+
+	if err := d.Set("routing_policies", flattenRoutingEntities(getResp)); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(resource.UniqueId())

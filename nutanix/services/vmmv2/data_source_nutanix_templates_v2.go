@@ -93,12 +93,11 @@ func DatasourceNutanixTemplatesV2Read(ctx context.Context, d *schema.ResourceDat
 			Summary:  "🫙 No Data found",
 			Detail:   "The API returned an empty list of templates.",
 		}}
-	} else {
-		getResp := resp.Data.GetValue().([]import5.Template)
+	}
+	getResp := resp.Data.GetValue().([]import5.Template)
 
-		if err := d.Set("templates", flattenTemplatesEntities(getResp)); err != nil {
-			return diag.FromErr(err)
-		}
+	if err := d.Set("templates", flattenTemplatesEntities(getResp)); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(resource.UniqueId())

@@ -50,12 +50,12 @@ func DatasourceNutanixBackupTargetsV2Read(ctx context.Context, d *schema.Resourc
 			Summary:  "🫙 No Data found",
 			Detail:   "The API returned an empty list of backup targets.",
 		}}
-	} else {
-		getResp := resp.Data.GetValue().([]management.BackupTarget)
+	}
 
-		if err := d.Set("backup_targets", flattenBackupTargets(getResp)); err != nil {
-			return diag.Errorf("error setting backup_targets: %s", err)
-		}
+	getResp := resp.Data.GetValue().([]management.BackupTarget)
+
+	if err := d.Set("backup_targets", flattenBackupTargets(getResp)); err != nil {
+		return diag.Errorf("error setting backup_targets: %s", err)
 	}
 
 	d.SetId(domainManagerExtID)

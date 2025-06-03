@@ -104,12 +104,12 @@ func DatasourceNutanixRecoveryPointsV2Read(ctx context.Context, d *schema.Resour
 			Summary:  "🫙 No Data found",
 			Detail:   "The API returned an empty list of recovery points.",
 		}}
-	} else {
-		getResp := resp.Data.GetValue().([]config.RecoveryPoint)
+	}
+	
+	getResp := resp.Data.GetValue().([]config.RecoveryPoint)
 
-		if err := d.Set("recovery_points", flattenRecoveryPoints(getResp)); err != nil {
-			return diag.FromErr(err)
-		}
+	if err := d.Set("recovery_points", flattenRecoveryPoints(getResp)); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(resource.UniqueId())

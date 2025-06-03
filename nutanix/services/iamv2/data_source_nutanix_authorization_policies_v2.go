@@ -183,12 +183,12 @@ func DatasourceNutanixAuthorizationPoliciesV2Read(ctx context.Context, d *schema
 			Summary:  "🫙 No Data found",
 			Detail:   "The API returned an empty list of authorization policies.",
 		}}
-	} else {
-		getResp := resp.Data.GetValue().([]import1.AuthorizationPolicyProjection)
+	}
 
-		if err := d.Set("auth_policies", flattenAuthorizationPolicyEntities(getResp)); err != nil {
-			return diag.FromErr(err)
-		}
+	getResp := resp.Data.GetValue().([]import1.AuthorizationPolicyProjection)
+
+	if err := d.Set("auth_policies", flattenAuthorizationPolicyEntities(getResp)); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(resource.UniqueId())

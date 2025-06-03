@@ -157,11 +157,11 @@ func DatasourceNutanixAddressGroupsV2Read(ctx context.Context, d *schema.Resourc
 			Summary:  "🫙 No Data found",
 			Detail:   "The API returned an empty list of address groups.",
 		}}
-	} else {
-		getResp := resp.Data.GetValue().([]import1.AddressGroup)
-		if err := d.Set("address_groups", flattenAddressGroupsEntities(getResp)); err != nil {
-			return diag.FromErr(err)
-		}
+	}
+
+	getResp := resp.Data.GetValue().([]import1.AddressGroup)
+	if err := d.Set("address_groups", flattenAddressGroupsEntities(getResp)); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(resource.UniqueId())

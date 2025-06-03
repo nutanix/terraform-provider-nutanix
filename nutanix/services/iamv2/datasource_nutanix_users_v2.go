@@ -249,12 +249,12 @@ func datasourceNutanixUsersV2Read(ctx context.Context, d *schema.ResourceData, m
 			Summary:  "🫙 No Data found",
 			Detail:   "The API returned an empty list of users.",
 		}}
-	} else {
-		getResp := resp.Data.GetValue().([]iamConfig.User)
+	}
 
-		if err := d.Set("users", flattenUsersEntities(getResp)); err != nil {
-			return diag.FromErr(err)
-		}
+	getResp := resp.Data.GetValue().([]iamConfig.User)
+
+	if err := d.Set("users", flattenUsersEntities(getResp)); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(resource.UniqueId())

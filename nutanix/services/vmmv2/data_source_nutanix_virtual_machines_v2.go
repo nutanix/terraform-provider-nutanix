@@ -1366,12 +1366,12 @@ func DatasourceNutanixVirtualMachinesV4Read(ctx context.Context, d *schema.Resou
 			Summary:  "🫙 No Data found",
 			Detail:   "The API returned an empty list of virtual machines.",
 		}}
-	} else {
-		getResp := resp.Data.GetValue().([]config.Vm)
+	}
 
-		if err := d.Set("vms", flattenVMEntities(getResp)); err != nil {
-			return diag.FromErr(err)
-		}
+	getResp := resp.Data.GetValue().([]config.Vm)
+
+	if err := d.Set("vms", flattenVMEntities(getResp)); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(resource.UniqueId())

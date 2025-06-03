@@ -108,12 +108,12 @@ func DatasourceNutanixRestorePointsV2Read(ctx context.Context, d *schema.Resourc
 			Summary:  "🫙 No Data found",
 			Detail:   "The API returned an empty list of restore points.",
 		}}
-	} else {
-		restorePoints := resp.Data.GetValue().([]management.RestorePoint)
+	}
 
-		if err := d.Set("restore_points", flattenRestorePoints(restorePoints)); err != nil {
-			return diag.Errorf("Error setting restore_points: %v", err)
-		}
+	restorePoints := resp.Data.GetValue().([]management.RestorePoint)
+
+	if err := d.Set("restore_points", flattenRestorePoints(restorePoints)); err != nil {
+		return diag.Errorf("Error setting restore_points: %v", err)
 	}
 
 	d.SetId(utils.GenUUID())

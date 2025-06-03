@@ -226,12 +226,12 @@ func DatasourceNutanixDirectoryServicesV2Read(ctx context.Context, d *schema.Res
 			Summary:  "🫙 No Data found",
 			Detail:   "The API returned an empty list of directory services.",
 		}}
-	} else {
-		getResp := resp.Data.GetValue().([]import1.DirectoryService)
+	}
 
-		if err := d.Set("directory_services", flattenDirectoryServicesEntities(getResp)); err != nil {
-			return diag.FromErr(err)
-		}
+	getResp := resp.Data.GetValue().([]import1.DirectoryService)
+
+	if err := d.Set("directory_services", flattenDirectoryServicesEntities(getResp)); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(resource.UniqueId())

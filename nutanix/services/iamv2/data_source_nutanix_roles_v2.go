@@ -202,10 +202,10 @@ func DatasourceNutanixRolesV2Read(ctx context.Context, d *schema.ResourceData, m
 			Summary:  "🫙 No Data found",
 			Detail:   "The API returned an empty list of roles.",
 		}}
-	} else {
-		if err := d.Set("roles", flattenRolesEntities(rolesList)); err != nil {
-			return diag.FromErr(err)
-		}
+	}
+	
+	if err := d.Set("roles", flattenRolesEntities(rolesList)); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(resource.UniqueId())
