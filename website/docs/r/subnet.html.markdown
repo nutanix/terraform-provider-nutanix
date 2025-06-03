@@ -12,7 +12,7 @@ Provides a resource to create a subnet based on the input parameters. A subnet i
 
 ## Example Usage
 
-``` hcl
+```hcl
 data "nutanix_clusters" "clusters" {
   metadata = {
     length = 2

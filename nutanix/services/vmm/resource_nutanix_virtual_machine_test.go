@@ -641,6 +641,78 @@ func TestAccNutanixVirtualMachine_SecureBootWithNoMachineType(t *testing.T) {
 	})
 }
 
+func TestAccNutanixVirtualMachineNegativeScenario(t *testing.T) {
+	// This test is to check the requested image size less than the disk size
+	// and it should return an error which internally also tests issues/649
+	r := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() {},
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccVMRequestedImageSizeLess(r),
+				ExpectError: regexp.MustCompile("Requested image size 1048576 is less than actual size 41126400"),
+			},
+		},
+	})
+}
+
+func TestAccNutanixVirtualMachine_PowerStateOFFTest(t *testing.T) {
+	r := acctest.RandIntRange(101, 110)
+	resourceName := "nutanix_virtual_machine.test"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Create VM with power state OFF
+				Config: testAccNutanixVMConfigPowerState(r, "OFF"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "OFF"),
+				),
+			},
+			{
+				// Update power state to ON
+				Config: testAccNutanixVMConfigPowerState(r, "ON"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNutanixVirtualMachine_PowerStateOnTest(t *testing.T) {
+	r := acctest.RandIntRange(101, 110)
+	resourceName := "nutanix_virtual_machine.test"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Create VM with power state ON
+				Config: testAccNutanixVMConfigPowerState(r, "ON"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+				),
+			},
+			{
+				// Update power state to OFF
+				Config: testAccNutanixVMConfigPowerState(r, "OFF"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "OFF"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixVirtualMachineExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1542,7 +1614,7 @@ func testAccNutanixVMConfigWithSecureBoot(name, desc, mem string) string {
 			num_vcpus_per_socket = 3
 			num_sockets          = 1
 			memory_size_mib      = %[3]s
-		  
+
 			cluster_uuid = "${local.cluster1}"
 
 			boot_type = "SECURE_BOOT"
@@ -1570,7 +1642,7 @@ func testAccNutanixVMConfigWithSecureBoot(name, desc, mem string) string {
 			  }
 			}
 		}
-		  
+
 	`, name, desc, mem)
 }
 
@@ -1589,7 +1661,7 @@ func testAccNutanixVMConfigWithSecureBootWithNoMachineType(name, desc, mem strin
 			num_vcpus_per_socket = 3
 			num_sockets          = 1
 			memory_size_mib      = %[3]s
-		  
+
 			cluster_uuid = "${local.cluster1}"
 
 			boot_type = "SECURE_BOOT"
@@ -1605,6 +1677,100 @@ func testAccNutanixVMConfigWithSecureBootWithNoMachineType(name, desc, mem strin
 			  }
 			}
 		}
-		  
+
 	`, name, desc, mem)
+}
+
+func testAccVMRequestedImageSizeLess(r int) string {
+	// This test is to check the requested image size less than the disk size
+	return fmt.Sprintf(`
+	data "nutanix_clusters" "clusters" {}
+
+	locals {
+			cluster_ext_id = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+			? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+	}
+
+	resource "nutanix_image" "cirros-034-disk" {
+				name = "cirros-034-disk-%[1]d"
+				source_uri  = "http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img"
+				description = "heres a tiny linux image, not an iso, but a real disk!"
+	}
+
+	resource "nutanix_virtual_machine" "vm1" {
+	name = "test-example-%[1]d"
+	cluster_uuid= data.nutanix_clusters.clusters.entities.0.metadata.uuid
+	num_vcpus_per_socket = 2
+	num_sockets     = 2
+	memory_size_mib   = 1000
+	disk_list {
+			data_source_reference = {
+				kind = "image"
+				uuid = nutanix_image.cirros-034-disk.id
+			}
+			device_properties {
+				disk_address = {
+					device_index = 0
+					adapter_type = "SCSI"
+				}
+
+				device_type = "DISK"
+			}
+			disk_size_mib   = 1
+			disk_size_bytes = 1
+	}
+	}
+	`, r)
+}
+
+func testAccNutanixVMConfigPowerState(r int, powerState string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+			? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+		}
+
+		resource "nutanix_subnet" "sub" {
+			cluster_uuid = "${local.cluster1}"
+
+			# General Information for subnet
+			name        = "terraform-vm-with-subnet-%[1]d"
+			description = "Description of my unit test VLAN"
+			vlan_id     = %[1]d
+			subnet_type = "VLAN"
+
+			# Provision a Managed L3 Network
+			# This bit is only needed if you intend to turn on AHV's IPAM
+			subnet_ip          = "10.250.140.0"
+			default_gateway_ip = "10.250.140.1"
+			prefix_length      = 24
+			dhcp_options = {
+				boot_file_name   = "bootfile"
+				domain_name      = "nutanix"
+				tftp_server_name = "10.250.140.200"
+			}
+			dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+			dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
+			ip_config_pool_list_ranges   = ["10.250.140.20 10.250.140.100"]
+		}
+
+		resource "nutanix_virtual_machine" "test" {
+			name         			= "test-dou-%[1]d"
+			cluster_uuid 			= "${local.cluster1}"
+			memory_size_mib 		= 2048
+			num_sockets     		= 1
+			power_state     		= "%[2]s"
+			num_vcpus_per_socket  	= 1
+			nic_list {
+				subnet_uuid = nutanix_subnet.sub.id
+			}
+			lifecycle {
+				ignore_changes = [
+					nic_list,
+				]
+			}
+		}
+	`, r, powerState)
 }

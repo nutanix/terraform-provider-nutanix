@@ -12,7 +12,7 @@ Triggers custom action execution using it's name in Self Service Application.
 
 ## Example Usage:
 
-``` hcl
+```hcl
 resource "nutanix_self_service_app_provision" "test" {
     bp_name         = "NAME OF BLUEPRINT"
     app_name        = "NAME OF APPLICATION"
