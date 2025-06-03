@@ -1,13 +1,14 @@
 package iamv2
 
 import (
-	"time"
 	"context"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -41,8 +42,8 @@ func ResourceNutanixUserKeyV2() *schema.Resource {
 				Computed: true,
 			},
 			"key_type": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"API_KEY", "OBJECT_KEY"}, false),
 			},
 			"created_time": {
@@ -56,10 +57,10 @@ func ResourceNutanixUserKeyV2() *schema.Resource {
 				Computed: true,
 			},
 			"creation_type": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"PREDEFINED", "SERVICEDEFINED", "USERDEFINED"}, false),
-				Computed: true,
+				Computed:     true,
 			},
 			"expiry_time": {
 				Type:     schema.TypeString,
@@ -67,10 +68,10 @@ func ResourceNutanixUserKeyV2() *schema.Resource {
 				Computed: true,
 			},
 			"status": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"REVOKED", "VALID", "EXPIRED"}, false),
-				Computed: true,
+				Computed:     true,
 			},
 			"created_by": {
 				Type:     schema.TypeString,
@@ -127,7 +128,7 @@ func ResourceNutanixUserKeyV2() *schema.Resource {
 						},
 					},
 				},
-		},
+			},
 		},
 	}
 }
@@ -136,16 +137,15 @@ func resourceNutanixUserKeyV2Create(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.Client).IamAPI
 	spec := &import1.Key{}
 
-	
 	var creationType = map[string]import1.CreationType{
-		"PREDEFINED":        import1.CREATIONTYPE_PREDEFINED,
-		"USERDEFINED":       import1.CREATIONTYPE_USERDEFINED,
-		"SERVICEDEFINED":    import1.CREATIONTYPE_SERVICEDEFINED,
+		"PREDEFINED":     import1.CREATIONTYPE_PREDEFINED,
+		"USERDEFINED":    import1.CREATIONTYPE_USERDEFINED,
+		"SERVICEDEFINED": import1.CREATIONTYPE_SERVICEDEFINED,
 	}
 
 	var KeyType = map[string]import1.KeyKind{
-		"API_KEY": 					import1.KEYKIND_API_KEY,
-		"OBJECT_KEY": 			import1.KEYKIND_OBJECT_KEY,
+		"API_KEY":    import1.KEYKIND_API_KEY,
+		"OBJECT_KEY": import1.KEYKIND_OBJECT_KEY,
 	}
 
 	var KeyStatus = map[string]import1.KeyStatus{
@@ -195,7 +195,7 @@ func resourceNutanixUserKeyV2Create(ctx context.Context, d *schema.ResourceData,
 	if v, ok := d.GetOk("assigned_to"); ok {
 		spec.AssignedTo = utils.StringPtr(v.(string))
 	}
-	
+
 	resp, err := conn.UsersAPIInstance.CreateUserKey(userExtId, spec)
 	if err != nil {
 		return diag.Errorf("error while creating User Key: %v", err)
@@ -206,14 +206,14 @@ func resourceNutanixUserKeyV2Create(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceNutanixUserKeyV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-   // Get client connection
+	// Get client connection
 	conn := meta.(*conns.Client).IamAPI
 
 	var userExtId *string
 	if v, ok := d.GetOk("user_ext_id"); ok {
 		userExtId = utils.StringPtr(v.(string))
 	}
- 
+
 	resp, err := conn.UsersAPIInstance.GetUserKeyById(userExtId, utils.StringPtr(d.Id()))
 	if err != nil {
 		return diag.Errorf("error while fetching the user key: %v", err)
@@ -276,7 +276,7 @@ func resourceNutanixUserKeyV2Update(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func resourceNutanixUserKeyV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {	
+func resourceNutanixUserKeyV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
 	var userExtId *string
@@ -293,7 +293,7 @@ func resourceNutanixUserKeyV2Delete(ctx context.Context, d *schema.ResourceData,
 	args := make(map[string]interface{})
 	etagValue := conn.UsersAPIInstance.ApiClient.GetEtag(resp)
 	args["If-Match"] = utils.StringPtr(etagValue)
-  
+
 	_, del_err := conn.UsersAPIInstance.DeleteUserKeyById(userExtId, utils.StringPtr(d.Id()), args)
 	if del_err != nil {
 		return diag.Errorf("error while deleting the user key: %v", del_err)

@@ -44,103 +44,7 @@ func DatasourceNutanixUserKeysV2() *schema.Resource {
 			"keys": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"tenant_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ext_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"links": SchemaForLinks(),
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"description": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"key_type": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"created_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_updated_by": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"creation_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"expiry_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"created_by": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_updated_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_used_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"assigned_to": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"key_details": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"api_key_details": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"api_key": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"object_key_details": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"secret_key": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"access_key": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
+				Elem:     DatasourceNutanixUserKeyV2(),
 			},
 		},
 	}
@@ -215,7 +119,7 @@ func flattenKeysEntities(data []import3.Key) []map[string]interface{} {
 			"last_updated_time": flattenTime(item.LastUpdatedTime),
 			"assigned_to":       item.AssignedTo,
 			"last_used_time":    flattenTime(item.LastUsedTime),
-			"key_details": 			 item.KeyDetails,
+			"key_details":       item.KeyDetails,
 		}
 		flattened = append(flattened, entry)
 	}

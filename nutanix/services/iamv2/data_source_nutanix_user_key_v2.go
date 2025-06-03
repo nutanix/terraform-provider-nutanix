@@ -81,8 +81,8 @@ func DatasourceNutanixUserKeyV2() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"api_key_details": {
-							Type:          schema.TypeList,
-							Computed:      true,
+							Type:     schema.TypeList,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"api_key": {
@@ -93,8 +93,8 @@ func DatasourceNutanixUserKeyV2() *schema.Resource {
 							},
 						},
 						"object_key_details": {
-							Type:         schema.TypeList,
-							Computed:     true,
+							Type:     schema.TypeList,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"secret_key": {
@@ -114,7 +114,7 @@ func DatasourceNutanixUserKeyV2() *schema.Resource {
 		},
 	}
 }
-		
+
 func dataSourceNutanixUserKeyV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Get client connection
 	conn := meta.(*conns.Client).IamAPI
@@ -123,7 +123,7 @@ func dataSourceNutanixUserKeyV2Create(ctx context.Context, d *schema.ResourceDat
 	if v, ok := d.GetOk("user_ext_id"); ok {
 		userExtId = utils.StringPtr(v.(string))
 	}
-  
+
 	var ExtId *string
 	if v, ok := d.GetOk("ext_id"); ok {
 		ExtId = utils.StringPtr(v.(string))

@@ -2,10 +2,11 @@ package iamv2
 
 import (
 	"context"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/error"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -55,7 +56,7 @@ func ResourceNutanixUserRevokeKeyV2() *schema.Resource {
 						},
 					},
 				},
-			},	
+			},
 		},
 	}
 }
@@ -77,7 +78,7 @@ func resourceNutanixUserRevokeKeyV2Create(ctx context.Context, d *schema.Resourc
 	if err != nil {
 		return diag.Errorf("error while revoking the user key: %v | ExtId: %s | userExtId: %s", err, *ExtId, *userExtId)
 	}
-	
+
 	revokeConfig := resp.Data.GetValue().(import1.AppMessage)
 	if revokeConfig.Message != nil {
 		d.Set("message", revokeConfig.Message)
@@ -123,5 +124,3 @@ func flattenArgumentsMap(argumentsMap map[string]string) []map[string]interface{
 	}
 	return result
 }
-
-
