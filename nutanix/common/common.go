@@ -1,9 +1,7 @@
 package common
 
 import (
-	"fmt"
 	"log"
-	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -38,16 +36,4 @@ func IsExplicitlySet(d *schema.ResourceData, key string) bool {
 		return !val.IsNull() // Ensure key exists and isn't explicitly null
 	}
 	return false
-}
-
-// ExtIdValidation checks if a given string is a valid UUID.
-// It uses a regular expression to validate the UUID format.
-var uuidRegex = regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$`)
-
-func ExtIDValidation(val interface{}, key string) (warns []string, errs []error) {
-	v := val.(string)
-	if !uuidRegex.MatchString(v) {
-		errs = append(errs, fmt.Errorf("%q must be a valid Ext ID: got %q", key, v))
-	}
-	return
 }
