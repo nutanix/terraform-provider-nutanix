@@ -81,8 +81,8 @@ func DatasourceNutanixUserKeyV2() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"api_key_details": {
-							Type:          schema.TypeList,
-							Computed:      true,
+							Type:     schema.TypeList,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"api_key": {
@@ -93,8 +93,8 @@ func DatasourceNutanixUserKeyV2() *schema.Resource {
 							},
 						},
 						"object_key_details": {
-							Type:         schema.TypeList,
-							Computed:     true,
+							Type:     schema.TypeList,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"secret_key": {
@@ -114,22 +114,22 @@ func DatasourceNutanixUserKeyV2() *schema.Resource {
 		},
 	}
 }
-		
+
 func dataSourceNutanixUserKeyV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Get client connection
 	conn := meta.(*conns.Client).IamAPI
 
-	var userExtId *string
+	var userExtID *string
 	if v, ok := d.GetOk("user_ext_id"); ok {
-		userExtId = utils.StringPtr(v.(string))
-	}
-  
-	var ExtId *string
-	if v, ok := d.GetOk("ext_id"); ok {
-		ExtId = utils.StringPtr(v.(string))
+		userExtID = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.UsersAPIInstance.GetUserKeyById(userExtId, ExtId)
+	var ExtID *string
+	if v, ok := d.GetOk("ext_id"); ok {
+		ExtID = utils.StringPtr(v.(string))
+	}
+
+	resp, err := conn.UsersAPIInstance.GetUserKeyById(userExtID, ExtID)
 	if err != nil {
 		return diag.Errorf("error while fetching the user key: %v", err)
 	}

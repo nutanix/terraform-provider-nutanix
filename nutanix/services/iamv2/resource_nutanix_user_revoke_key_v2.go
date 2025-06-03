@@ -2,10 +2,11 @@ package iamv2
 
 import (
 	"context"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/error"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -55,7 +56,7 @@ func ResourceNutanixUserRevokeKeyV2() *schema.Resource {
 						},
 					},
 				},
-			},	
+			},
 		},
 	}
 }
@@ -63,21 +64,21 @@ func ResourceNutanixUserRevokeKeyV2() *schema.Resource {
 func resourceNutanixUserRevokeKeyV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	var userExtId *string
+	var userExtID *string
 	if v, ok := d.GetOk("user_ext_id"); ok {
-		userExtId = utils.StringPtr(v.(string))
+		userExtID = utils.StringPtr(v.(string))
 	}
 
-	var ExtId *string
+	var ExtID *string
 	if v, ok := d.GetOk("ext_id"); ok {
-		ExtId = utils.StringPtr(v.(string))
+		ExtID = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.UsersAPIInstance.RevokeUserKey(userExtId, ExtId)
+	resp, err := conn.UsersAPIInstance.RevokeUserKey(userExtID, ExtID)
 	if err != nil {
-		return diag.Errorf("error while revoking the user key: %v | ExtId: %s | userExtId: %s", err, *ExtId, *userExtId)
+		return diag.Errorf("error while revoking the user key: %v | ExtId: %s | userExtId: %s", err, *ExtID, *userExtID)
 	}
-	
+
 	revokeConfig := resp.Data.GetValue().(import1.AppMessage)
 	if revokeConfig.Message != nil {
 		d.Set("message", revokeConfig.Message)
@@ -97,7 +98,7 @@ func resourceNutanixUserRevokeKeyV2Create(ctx context.Context, d *schema.Resourc
 	if revokeConfig.ArgumentsMap != nil {
 		d.Set("arguments_map", flattenArgumentsMap(revokeConfig.ArgumentsMap))
 	}
-	d.SetId(*ExtId)
+	d.SetId(*ExtID)
 	return nil
 }
 
@@ -123,5 +124,3 @@ func flattenArgumentsMap(argumentsMap map[string]string) []map[string]interface{
 	}
 	return result
 }
-
-
