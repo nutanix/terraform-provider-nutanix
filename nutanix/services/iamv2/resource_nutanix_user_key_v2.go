@@ -273,7 +273,7 @@ func resourceNutanixUserKeyV2Read(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceNutanixUserKeyV2Update(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return nil
+	return resourceNutanixUserKeyV2Create(ctx, d, m)
 }
 
 func resourceNutanixUserKeyV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
