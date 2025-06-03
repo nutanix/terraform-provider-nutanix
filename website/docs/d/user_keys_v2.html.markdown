@@ -105,8 +105,5 @@ The following arguments are supported:
 * `key_details`: - Details specific to type of the key.
 
 
-### Links
-
-The links attribute supports the following:
 
 See detailed information in [Nutanix List keys for the user V4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Users/operation/listUserKeys)

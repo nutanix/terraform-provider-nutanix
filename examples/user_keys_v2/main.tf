@@ -45,3 +45,10 @@ data "nutanix_user_keys_v2" "get_keys_filter" {
   user_ext_id = nutanix_users_v2.service_account.ext_id
   filter = "name eq '${nutanix_user_key_v2.create_key.name}'"
 }
+
+
+// Revoke the key
+resource "nutanix_user_key_revoke_v2" "revoke-key"{
+  user_ext_id = nutanix_users_v2.service_account.ext_id
+  ext_id = nutanix_user_key_v2.create_key.ext_id
+}

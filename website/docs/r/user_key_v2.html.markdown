@@ -53,8 +53,8 @@ The following arguments are supported:
 * `assigned_to`: - ( Optional ) External client to whom the given key is allocated.
 
 ## Attributes Reference
-* `tenant_id` - A globally unique identifier that represents the tenant that owns this entity. The system automatically assigns it, and it and is immutable from an API consumer perspective (some use cases may cause this Id to change - For instance, a use case may require the transfer of ownership of the entity, but these cases are handled automatically on the server).
-* `ext_id` - The External Identifier of the User Group.
+* `tenant_id`: - A globally unique identifier that represents the tenant that owns this entity. The system automatically assigns it, and it and is immutable from an API consumer perspective (some use cases may cause this Id to change - For instance, a use case may require the transfer of ownership of the entity, but these cases are handled automatically on the server).
+* `ext_id`: - The External Identifier of the User Group.
 * `links`: - A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 * `name`: - Identifier for the key in the form of a name.
 * `description`: - Brief description of the key.
@@ -70,9 +70,5 @@ The following arguments are supported:
 * `last_used_time`: - The time when the key was last used.
 * `key_details`: - Details specific to type of the key.
 
-
-### Links
-
-The links attribute supports the following:
 
 See detailed information in [Nutanix Create User Key V4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Users/operation/createUserKey)
