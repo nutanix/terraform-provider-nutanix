@@ -79,6 +79,22 @@ func TestAccV2NutanixUsersDatasource_WithLimit(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixUsersDatasource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testUsersDatasourceV4WithInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceNameUsers, "users.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testUsersDatasourceV4Config(filepath, name string) string {
 	return fmt.Sprintf(`
 		locals{
@@ -166,4 +182,12 @@ func testUsersDatasourceV4WithLimitConfig(filepath, name string) string {
 			depends_on = [nutanix_users_v2.test]
 		}
 	`, filepath, name)
+}
+
+func testUsersDatasourceV4WithInvalidFilterConfig() string {
+	return `
+	data "nutanix_users_v2" "test" {
+		filter = "username eq 'invalid'"
+	}
+	`
 }
