@@ -130,15 +130,13 @@ func DatasourceNutanixRouteTablesV2Read(ctx context.Context, d *schema.ResourceD
 			Summary:  "🫙 No Data found",
 			Detail:   "The API returned an empty list of route tables.",
 		}}
+	}
+	getResp := resp.Data.GetValue().([]import1.RouteTable)
+	aJSON, _ := json.Marshal(getResp)
+	log.Printf("[DEBUG] DatasourceNutanixRouteTablesV2Read: %v", string(aJSON))
 
-	} else {
-		getResp := resp.Data.GetValue().([]import1.RouteTable)
-		aJSON, _ := json.Marshal(getResp)
-		log.Printf("[DEBUG] DatasourceNutanixRouteTablesV2Read: %v", string(aJSON))
-
-		if err := d.Set("route_tables", flattenRouteTableEntities(getResp)); err != nil {
-			return diag.FromErr(err)
-		}
+	if err := d.Set("route_tables", flattenRouteTableEntities(getResp)); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(resource.UniqueId())

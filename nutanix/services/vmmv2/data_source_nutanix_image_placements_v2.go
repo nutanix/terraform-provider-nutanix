@@ -167,12 +167,11 @@ func DatasourceNutanixImagePlacementsV4Read(ctx context.Context, d *schema.Resou
 			Summary:  "🫙 No Data found",
 			Detail:   "The API returned an empty list of placement policies.",
 		}}
-	} else {
-		policies := resp.Data.GetValue().([]import7.PlacementPolicy)
+	}
+	policies := resp.Data.GetValue().([]import7.PlacementPolicy)
 
-		if err := d.Set("placement_policies", flattenPlacementPolicyEntities(policies)); err != nil {
-			return diag.FromErr(err)
-		}
+	if err := d.Set("placement_policies", flattenPlacementPolicyEntities(policies)); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(resource.UniqueId())

@@ -92,12 +92,11 @@ func DatasourceNutanixProtectionPoliciesV2Read(ctx context.Context, d *schema.Re
 			Summary:  "🫙 No Data found",
 			Detail:   "The API returned an empty list of protection policies.",
 		}}
-	} else {
-		getResp := resp.Data.GetValue().([]config.ProtectionPolicy)
+	}
+	getResp := resp.Data.GetValue().([]config.ProtectionPolicy)
 
-		if err := d.Set("protection_policies", flattenProtectionPolicies(getResp)); err != nil {
-			return diag.Errorf("error setting Protection Policies: %s", err)
-		}
+	if err := d.Set("protection_policies", flattenProtectionPolicies(getResp)); err != nil {
+		return diag.Errorf("error setting Protection Policies: %s", err)
 	}
 
 	d.SetId(utils.GenUUID())
