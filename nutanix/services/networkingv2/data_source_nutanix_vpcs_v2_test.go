@@ -73,6 +73,22 @@ func TestAccV2NutanixVpcsDataSource_WithFilter(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixVpcsDataSource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcsDataSourceWithInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameVPCs, "vpcs.#"),
+					resource.TestCheckResourceAttr(datasourceNameVPCs, "vpcs.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccVpcsDataSourceConfig(name, desc string) string {
 	return fmt.Sprintf(`
 
@@ -131,4 +147,12 @@ func testAccVpcsDataSourceConfig(name, desc string) string {
 			]
 		}
 	`, name, desc)
+}
+
+func testAccVpcsDataSourceWithInvalidFilterConfig() string {
+	return `
+		data "nutanix_vpcs_v2" "test" {
+			filter = "name eq 'invalid_name'"
+		}
+	`
 }

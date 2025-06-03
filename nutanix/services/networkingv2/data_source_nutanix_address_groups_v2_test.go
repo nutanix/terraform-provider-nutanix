@@ -54,6 +54,22 @@ func TestAccV2NutanixAddressGroupsDataSource_WithFilter(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixAddressGroupsDataSource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAddGroupsDataSourceWithInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameAddGroups, "address_groups.#"),
+					resource.TestCheckResourceAttr(datasourceNameAddGroups, "address_groups.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAddGroupsDataSourceConfig(name, desc string) string {
 	return fmt.Sprintf(`
 
@@ -93,4 +109,12 @@ func testAccAddGroupsDataSourceWithFilterConfig(name, desc string) string {
 			]
 		}
 	`, name, desc)
+}
+
+func testAccAddGroupsDataSourceWithInvalidFilterConfig() string {
+	return `
+		data "nutanix_address_groups_v2" "test" {
+			filter = "name eq 'invalid_name'"
+		}
+	`
 }

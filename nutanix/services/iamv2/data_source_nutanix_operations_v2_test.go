@@ -43,6 +43,21 @@ func TestAccV2NutanixOperationsDatasource_WithLimit(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixOperationsDatasource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testOperationsV2DatasourceWithInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameOperations, "operations.#"),
+					resource.TestCheckResourceAttr(datasourceNameOperations, "operations.#", "0"),
+				),
+			},
+		},
+	})
+}
 func testOperationsV2DatasourceConfig() string {
 	return `
 		data "nutanix_operations_v2" "test" {}
@@ -56,4 +71,12 @@ func testOperationsV2DatasourceWithLimitConfig(limit int) string {
 		  limit = %d
 		}
 	`, limit)
+}
+
+func testOperationsV2DatasourceWithInvalidFilterConfig() string {
+	return `
+		data "nutanix_operations_v2" "test" {
+			filter = "displayName eq 'invalid_filter'"
+		}
+	`
 }

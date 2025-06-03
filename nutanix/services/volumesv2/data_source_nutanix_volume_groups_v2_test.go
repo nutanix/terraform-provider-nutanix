@@ -79,6 +79,21 @@ func TestAccV2NutanixVolumeGroupsV4DataSource_WithLimit(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixVolumeGroupsV4DataSource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVolumeGroupsDataSourceWithInvalidFilter(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceVolumeGroups, "volumes.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccVolumeGroupsDataSourceConfig(filepath, name, desc string) string {
 	return testAccVolumeGroupResourceConfig(name, desc) + `
 		data "nutanix_volume_groups_v2" "test" {
@@ -134,4 +149,13 @@ func testAccVolumeGroupsDataSourceWithLimit(name, desc string, limit int) string
 				depends_on = [resource.nutanix_volume_group_v2.test3]
 			}
 		`, name, desc, limit)
+}
+
+func testAccVolumeGroupsDataSourceWithInvalidFilter() string {
+	return `
+
+		data "nutanix_volume_groups_v2" "test" {
+			filter     = "name eq 'invalid'"
+		}
+	`
 }

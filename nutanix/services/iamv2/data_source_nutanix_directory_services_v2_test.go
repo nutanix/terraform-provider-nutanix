@@ -67,6 +67,21 @@ func TestAccV2NutanixDirectoryServicesDatasource_WithLimit(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixDirectoryServicesDatasource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testDirectoryServicesDatasourceV2WithInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceNameDirectoryServices, "directory_services.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testDirectoryServicesDatasourceV2Config(filepath string) string {
 	return fmt.Sprintf(`
 		locals{
@@ -76,7 +91,7 @@ func testDirectoryServicesDatasourceV2Config(filepath string) string {
 
 		resource "nutanix_directory_services_v2" "test" {
 			name = local.directory_services.name
-			url = local.directory_services.url  
+			url = local.directory_services.url
 			directory_type = "ACTIVE_DIRECTORY"
 			domain_name = local.directory_services.domain_name
 			service_account {
@@ -106,7 +121,7 @@ func testDirectoryServicesDatasourceV2WithFilterConfig(filepath string) string {
 
 	resource "nutanix_directory_services_v2" "test" {
 		name = local.directory_services.name
-		url = local.directory_services.url  
+		url = local.directory_services.url
 		directory_type = "ACTIVE_DIRECTORY"
 		domain_name = local.directory_services.domain_name
 		service_account {
@@ -120,7 +135,7 @@ func testDirectoryServicesDatasourceV2WithFilterConfig(filepath string) string {
 			]
 		}
 	}
-	  
+
 	data "nutanix_directory_services_v2" "test" {
 		filter     = "name eq '${resource.nutanix_directory_services_v2.test.name}'"
 		depends_on = [resource.nutanix_directory_services_v2.test]
@@ -137,7 +152,7 @@ func testDirectoryServicesDatasourceV2WithLimitConfig(filepath string) string {
 
 		resource "nutanix_directory_services_v2" "test" {
 			name = local.directory_services.name
-			url = local.directory_services.url  
+			url = local.directory_services.url
 			directory_type = "ACTIVE_DIRECTORY"
 			domain_name = local.directory_services.domain_name
 			service_account {
@@ -157,4 +172,12 @@ func testDirectoryServicesDatasourceV2WithLimitConfig(filepath string) string {
 			depends_on = [resource.nutanix_directory_services_v2.test]
 		}
 	`, filepath)
+}
+
+func testDirectoryServicesDatasourceV2WithInvalidFilterConfig() string {
+	return `
+	data "nutanix_directory_services_v2" "test" {
+		filter = "name eq 'invalid_filter'"
+	}
+	`
 }

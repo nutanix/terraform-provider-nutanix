@@ -62,6 +62,26 @@ func TestAccV2NutanixRoutesDataSource_WithFilter(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixRoutesDataSource_WithInvalidFilter(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-route-%d", r)
+	desc := "test terraform route description"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoutesDataSourceWithInvalidFilterConfig(name, desc, r),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameRoutes, "routes.#"),
+					resource.TestCheckResourceAttr(datasourceNameRoutes, "routes.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccRoutesDataSourceConfig(name, desc string, r int) string {
 	return testRoute1Config(name, desc, r) + `
 		data "nutanix_routes_v2" "test"{
@@ -74,7 +94,16 @@ func testAccRoutesDataSourceWithFilterConfig(name, desc string, r int) string {
 	return testRoute1Config(name, desc, r) + `
 		data "nutanix_routes_v2" "test"{
 			filter             = "name eq '${nutanix_routes_v2.test-1.name}'"
-  			route_table_ext_id = data.nutanix_route_tables_v2.rt_vpc1.route_tables[0].ext_id	
+  			route_table_ext_id = data.nutanix_route_tables_v2.rt_vpc1.route_tables[0].ext_id
+			depends_on = [nutanix_routes_v2.test-1]
+		}`
+}
+
+func testAccRoutesDataSourceWithInvalidFilterConfig(name, desc string, r int) string {
+	return testRoute1Config(name, desc, r) + `
+		data "nutanix_routes_v2" "test"{
+			filter             = "name eq 'invalid'"
+  			route_table_ext_id = data.nutanix_route_tables_v2.rt_vpc1.route_tables[0].ext_id
 			depends_on = [nutanix_routes_v2.test-1]
 		}`
 }
