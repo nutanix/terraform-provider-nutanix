@@ -119,17 +119,17 @@ func dataSourceNutanixUserKeyV2Create(ctx context.Context, d *schema.ResourceDat
 	// Get client connection
 	conn := meta.(*conns.Client).IamAPI
 
-	var userExtId *string
+	var userExtID *string
 	if v, ok := d.GetOk("user_ext_id"); ok {
-		userExtId = utils.StringPtr(v.(string))
+		userExtID = utils.StringPtr(v.(string))
 	}
 
-	var ExtId *string
+	var ExtID *string
 	if v, ok := d.GetOk("ext_id"); ok {
-		ExtId = utils.StringPtr(v.(string))
+		ExtID = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.UsersAPIInstance.GetUserKeyById(userExtId, ExtId)
+	resp, err := conn.UsersAPIInstance.GetUserKeyById(userExtID, ExtID)
 	if err != nil {
 		return diag.Errorf("error while fetching the user key: %v", err)
 	}

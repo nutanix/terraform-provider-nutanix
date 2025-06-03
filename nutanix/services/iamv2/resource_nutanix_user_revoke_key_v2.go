@@ -64,19 +64,19 @@ func ResourceNutanixUserRevokeKeyV2() *schema.Resource {
 func resourceNutanixUserRevokeKeyV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	var userExtId *string
+	var userExtID *string
 	if v, ok := d.GetOk("user_ext_id"); ok {
-		userExtId = utils.StringPtr(v.(string))
+		userExtID = utils.StringPtr(v.(string))
 	}
 
-	var ExtId *string
+	var ExtID *string
 	if v, ok := d.GetOk("ext_id"); ok {
-		ExtId = utils.StringPtr(v.(string))
+		ExtID = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.UsersAPIInstance.RevokeUserKey(userExtId, ExtId)
+	resp, err := conn.UsersAPIInstance.RevokeUserKey(userExtID, ExtID)
 	if err != nil {
-		return diag.Errorf("error while revoking the user key: %v | ExtId: %s | userExtId: %s", err, *ExtId, *userExtId)
+		return diag.Errorf("error while revoking the user key: %v | ExtId: %s | userExtId: %s", err, *ExtID, *userExtID)
 	}
 
 	revokeConfig := resp.Data.GetValue().(import1.AppMessage)
@@ -98,7 +98,7 @@ func resourceNutanixUserRevokeKeyV2Create(ctx context.Context, d *schema.Resourc
 	if revokeConfig.ArgumentsMap != nil {
 		d.Set("arguments_map", flattenArgumentsMap(revokeConfig.ArgumentsMap))
 	}
-	d.SetId(*ExtId)
+	d.SetId(*ExtID)
 	return nil
 }
 

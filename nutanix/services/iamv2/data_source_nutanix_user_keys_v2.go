@@ -53,9 +53,9 @@ func DatasourceNutanixUserKeysV2() *schema.Resource {
 func DataSourceNutanixUserKeysV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Get client connection
 	conn := meta.(*conns.Client).IamAPI
-	var userExtId *string
+	var userExtID *string
 	if v, ok := d.GetOk("user_ext_id"); ok {
-		userExtId = utils.StringPtr(v.(string))
+		userExtID = utils.StringPtr(v.(string))
 	}
 
 	// initialize query params
@@ -86,7 +86,7 @@ func DataSourceNutanixUserKeysV2Read(ctx context.Context, d *schema.ResourceData
 	} else {
 		selects = nil
 	}
-	resp, err := conn.UsersAPIInstance.ListUserKeys(userExtId, page, limit, filter, orderBy, selects)
+	resp, err := conn.UsersAPIInstance.ListUserKeys(userExtID, page, limit, filter, orderBy, selects)
 	if err != nil {
 		return diag.Errorf("error while fetching the user keys: %v", err)
 	}

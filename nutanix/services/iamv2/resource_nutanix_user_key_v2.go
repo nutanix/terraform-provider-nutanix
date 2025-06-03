@@ -154,9 +154,9 @@ func resourceNutanixUserKeyV2Create(ctx context.Context, d *schema.ResourceData,
 		"EXPIRED": import1.KEYSTATUS_EXPIRED,
 	}
 
-	var userExtId *string
+	var userExtID *string
 	if v, ok := d.GetOk("user_ext_id"); ok {
-		userExtId = utils.StringPtr(v.(string))
+		userExtID = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("name"); ok {
 		spec.Name = utils.StringPtr(v.(string))
@@ -196,7 +196,7 @@ func resourceNutanixUserKeyV2Create(ctx context.Context, d *schema.ResourceData,
 		spec.AssignedTo = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.UsersAPIInstance.CreateUserKey(userExtId, spec)
+	resp, err := conn.UsersAPIInstance.CreateUserKey(userExtID, spec)
 	if err != nil {
 		return diag.Errorf("error while creating User Key: %v", err)
 	}
@@ -209,12 +209,12 @@ func resourceNutanixUserKeyV2Read(ctx context.Context, d *schema.ResourceData, m
 	// Get client connection
 	conn := meta.(*conns.Client).IamAPI
 
-	var userExtId *string
+	var userExtID *string
 	if v, ok := d.GetOk("user_ext_id"); ok {
-		userExtId = utils.StringPtr(v.(string))
+		userExtID = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.UsersAPIInstance.GetUserKeyById(userExtId, utils.StringPtr(d.Id()))
+	resp, err := conn.UsersAPIInstance.GetUserKeyById(userExtID, utils.StringPtr(d.Id()))
 	if err != nil {
 		return diag.Errorf("error while fetching the user key: %v", err)
 	}
@@ -279,12 +279,12 @@ func resourceNutanixUserKeyV2Update(ctx context.Context, d *schema.ResourceData,
 func resourceNutanixUserKeyV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	var userExtId *string
+	var userExtID *string
 	if v, ok := d.GetOk("user_ext_id"); ok {
-		userExtId = utils.StringPtr(v.(string))
+		userExtID = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.UsersAPIInstance.GetUserKeyById(userExtId, utils.StringPtr(d.Id()))
+	resp, err := conn.UsersAPIInstance.GetUserKeyById(userExtID, utils.StringPtr(d.Id()))
 	if err != nil {
 		return diag.Errorf("error while fetching the user key: %v", err)
 	}
@@ -294,7 +294,7 @@ func resourceNutanixUserKeyV2Delete(ctx context.Context, d *schema.ResourceData,
 	etagValue := conn.UsersAPIInstance.ApiClient.GetEtag(resp)
 	args["If-Match"] = utils.StringPtr(etagValue)
 
-	_, del_err := conn.UsersAPIInstance.DeleteUserKeyById(userExtId, utils.StringPtr(d.Id()), args)
+	_, del_err := conn.UsersAPIInstance.DeleteUserKeyById(userExtID, utils.StringPtr(d.Id()), args)
 	if del_err != nil {
 		return diag.Errorf("error while deleting the user key: %v", del_err)
 	}
