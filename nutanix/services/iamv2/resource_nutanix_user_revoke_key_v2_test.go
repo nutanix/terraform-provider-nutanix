@@ -10,6 +10,7 @@ import (
 )
 
 const resourceNutanixUserRevokeKeyV2Create = "nutanix_user_key_revoke_v2.revoke_key"
+const dataSourceNutanixRevokeKeyV2 = "data.nutanix_user_key_v2.get_revoke_key"
 
 func TestAccV2NutanixUsersRevokeKey(t *testing.T) {
 	r := acctest.RandInt()
@@ -23,6 +24,7 @@ func TestAccV2NutanixUsersRevokeKey(t *testing.T) {
 				Config: testApiKeyRevokeResourceConfig(name, key_name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNutanixUserRevokeKeyV2Create, "message", "Revoke user key successful."),
+					resource.TestCheckResourceAttr(dataSourceNutanixRevokeKeyV2, "status", "REVOKED"),
 				),
 			},
 		},
@@ -39,15 +41,21 @@ func testApiKeyRevokeResourceConfig(name string, key_name string, expirationTime
 	}
 
 	resource "nutanix_user_key_v2" "create_key" {
-   user_ext_id = nutanix_users_v2.service_account.ext_id
-   name = "%[3]s"
-   key_type = "API_KEY"
-	 expiry_time = "%[4]s"
+		user_ext_id = nutanix_users_v2.service_account.ext_id
+		name = "%[3]s"
+		key_type = "API_KEY"
+		expiry_time = "%[4]s"
   }
 
 	resource "nutanix_user_key_revoke_v2" "revoke_key" {
-	 user_ext_id = nutanix_users_v2.service_account.ext_id
-	 ext_id = nutanix_user_key_v2.create_key.ext_id
+		user_ext_id = nutanix_users_v2.service_account.ext_id
+		ext_id = nutanix_user_key_v2.create_key.ext_id
   }
+
+	data "nutanix_user_key_v2" "get_revoke_key" {
+		user_ext_id = nutanix_users_v2.service_account.ext_id
+		ext_id = nutanix_user_key_v2.create_key.ext_id
+		depends_on = [nutanix_user_key_revoke_v2.revoke_key]
+	}
 	`, filepath, name, key_name, expirationTimeFormatted)
 }
