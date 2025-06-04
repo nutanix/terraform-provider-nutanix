@@ -294,9 +294,9 @@ func resourceNutanixUserKeyV2Delete(ctx context.Context, d *schema.ResourceData,
 	etagValue := conn.UsersAPIInstance.ApiClient.GetEtag(resp)
 	args["If-Match"] = utils.StringPtr(etagValue)
 
-	_, del_err := conn.UsersAPIInstance.DeleteUserKeyById(userExtID, utils.StringPtr(d.Id()), args)
-	if del_err != nil {
-		return diag.Errorf("error while deleting the user key: %v", del_err)
+	_, delErr := conn.UsersAPIInstance.DeleteUserKeyById(userExtID, utils.StringPtr(d.Id()), args)
+	if delErr != nil {
+		return diag.Errorf("error while deleting the user key: %v", delErr)
 	}
 	d.SetId("")
 	return nil
