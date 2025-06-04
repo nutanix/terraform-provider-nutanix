@@ -195,7 +195,7 @@ func TestAccV2NutanixUsersDataSourceServiceAccount(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testServiecAccountDataSourceConfig(filepath, name, "userType eq Schema.Enums.UserType'SERVICE_ACCOUNT' and username contains '"+name+"'"),
+				Config: testServiecAccountDataSourceConfig(name, "userType eq Schema.Enums.UserType'SERVICE_ACCOUNT' and username contains '"+name+"'"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceServiceAccount, "users.#"),
 					resource.TestCheckResourceAttr(dataSourceServiceAccount, "users.#", "2"),
@@ -206,7 +206,7 @@ func TestAccV2NutanixUsersDataSourceServiceAccount(t *testing.T) {
 	})
 }
 
-func testServiecAccountDataSourceConfig(filepath, name string, query string) string {
+func testServiecAccountDataSourceConfig(name string, query string) string {
 	return fmt.Sprintf(`
 	// Create service account
 	resource "nutanix_users_v2" "service_account" {

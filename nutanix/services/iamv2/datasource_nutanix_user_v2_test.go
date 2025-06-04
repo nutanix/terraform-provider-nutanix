@@ -50,7 +50,7 @@ func TestAccV2NutanixUserDatasourceServiceAccount(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testServiceAccountDataSourceV4Config(filepath, name),
+				Config: testServiceAccountDataSourceV4Config(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceNameServiceAccount, "username", name),
 					resource.TestCheckResourceAttr(datasourceNameServiceAccount, "description", "test service account tf"),
@@ -93,7 +93,7 @@ func testUserDatasourceV4Config(filepath, name string) string {
 }
 
 
-func testServiceAccountDataSourceV4Config(filepath, name string) string {
+func testServiceAccountDataSourceV4Config(name string) string {
 	return fmt.Sprintf(`
 	resource "nutanix_users_v2" "service_account" {
 		username = "%[2]s"

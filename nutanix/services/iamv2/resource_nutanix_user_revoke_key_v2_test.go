@@ -20,7 +20,7 @@ func TestAccV2NutanixUsersRevokeKey(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testApiKeyRevokeResourceConfig(filepath, name, key_name),
+				Config: testApiKeyRevokeResourceConfig(name, key_name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNutanixUserRevokeKeyV2Create, "message", "Revoke user key successful."),
 				),
@@ -29,7 +29,7 @@ func TestAccV2NutanixUsersRevokeKey(t *testing.T) {
 	})
 }
 
-func testApiKeyRevokeResourceConfig(filepath, name string, key_name string) string {
+func testApiKeyRevokeResourceConfig(name string, key_name string, expirationTimeFormatted string) string {
 	return fmt.Sprintf(`
 	resource "nutanix_users_v2" "service_account" {
 		username = "%[2]s"
@@ -42,12 +42,12 @@ func testApiKeyRevokeResourceConfig(filepath, name string, key_name string) stri
    user_ext_id = nutanix_users_v2.service_account.ext_id
    name = "%[3]s"
    key_type = "API_KEY"
-	 expiry_time = "2026-01-01T00:00:00Z"
+	 expiry_time = "%[4]s"
   }
 
 	resource "nutanix_user_key_revoke_v2" "revoke_key" {
 	 user_ext_id = nutanix_users_v2.service_account.ext_id
 	 ext_id = nutanix_user_key_v2.create_key.ext_id
   }
-	`, filepath, name, key_name)
+	`, filepath, name, key_name, expirationTimeFormatted)
 }

@@ -4,12 +4,17 @@ import (
 	"fmt"
 	"testing"
 	"regexp"
+	"time"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 const dataSourceNutanixUserKeyV2 = "data.nutanix_user_key_v2.get_key"
+
+// Expiry time is two week later
+var expirationTime = time.Now().Add(14 * 24 * time.Hour)
+var expirationTimeFormatted = expirationTime.UTC().Format(time.RFC3339)
 
 func TestAccV2NutanixUsersDataSourceKey(t *testing.T) {
 	r := acctest.RandInt()
@@ -20,11 +25,11 @@ func TestAccV2NutanixUsersDataSourceKey(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testApiKeyDataSourceConfig(filepath, name, key_name),
+				Config: testApiKeyDataSourceConfig(name, key_name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceNutanixUserKeyV2, "name", key_name),
 					resource.TestCheckResourceAttr(dataSourceNutanixUserKeyV2, "key_type", "API_KEY"),
-					resource.TestCheckResourceAttr(dataSourceNutanixUserKeyV2, "expiry_time", "2026-01-01T00:00:00Z"),
+					resource.TestCheckResourceAttr(dataSourceNutanixUserKeyV2, "expiry_time", expirationTimeFormatted),
 					resource.TestCheckResourceAttr(dataSourceNutanixUserKeyV2, "assigned_to", "user1"),
 					resource.TestCheckResourceAttr(dataSourceNutanixUserKeyV2, "status", "VALID"),
 				),
@@ -42,14 +47,14 @@ func TestAccV2NutanixUsersDataSourceKeyInvalid(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testApiKeyDataSourceConfigInvalid(filepath, name, key_name),
+				Config: testApiKeyDataSourceConfigInvalid(name, key_name, expirationTimeFormatted),
 				ExpectError: regexp.MustCompile("error while fetching the user key"),
 			},
 		},
 	})
 }
 
-func testApiKeyDataSourceConfig(filepath, name string, key_name string) string {
+func testApiKeyDataSourceConfig(name string, key_name string, expirationTimeFormatted string) string {
 	return fmt.Sprintf(`
 	// Create service account
 	resource "nutanix_users_v2" "service_account" {
@@ -61,11 +66,11 @@ func testApiKeyDataSourceConfig(filepath, name string, key_name string) string {
 
 	// Create key
 	resource "nutanix_user_key_v2" "create_key" {
-   user_ext_id = nutanix_users_v2.service_account.ext_id
-   name = "%[3]s"
-   key_type = "API_KEY"
-	 expiry_time = "2026-01-01T00:00:00Z"
-	 assigned_to = "user1"
+    user_ext_id = nutanix_users_v2.service_account.ext_id
+    name = "%[3]s"
+    key_type = "API_KEY"
+	  expiry_time = "%[4]s"
+	  assigned_to = "user1"
   }
 	
 	// Get key
@@ -73,10 +78,10 @@ func testApiKeyDataSourceConfig(filepath, name string, key_name string) string {
   	user_ext_id = nutanix_users_v2.service_account.ext_id
   	ext_id = nutanix_user_key_v2.create_key.ext_id
 	}
-	`, filepath, name, key_name)
+	`, filepath, name, key_name, expirationTimeFormatted)
 }
 
-func testApiKeyDataSourceConfigInvalid(filepath, name string, key_name string) string {
+func testApiKeyDataSourceConfigInvalid(name string, key_name string, expirationTimeFormatted string) string {
 	return fmt.Sprintf(`
 	// Create service account
 	resource "nutanix_users_v2" "service_account" {
@@ -91,7 +96,7 @@ func testApiKeyDataSourceConfigInvalid(filepath, name string, key_name string) s
    user_ext_id = nutanix_users_v2.service_account.ext_id
    name = "%[3]s"
    key_type = "API_KEY"
-	 expiry_time = "2026-01-01T00:00:00Z"
+	 expiry_time = "%[4]s"
 	 assigned_to = "user1"
   }
 	
@@ -100,6 +105,6 @@ func testApiKeyDataSourceConfigInvalid(filepath, name string, key_name string) s
   	user_ext_id = nutanix_users_v2.service_account.ext_id
   	ext_id = "1234"
 	}
-	`, filepath, name, key_name)
+	`, filepath, name, key_name, expirationTimeFormatted)
 }
 

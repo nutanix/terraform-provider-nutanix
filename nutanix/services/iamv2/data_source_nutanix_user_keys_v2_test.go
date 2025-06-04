@@ -19,17 +19,17 @@ func TestAccV2NutanixUsersDataSourceKeys(t *testing.T) {
 	key_name := fmt.Sprintf("tf-revoke-api-key-%d", r)
 	expectedKeys := []map[string]string{
 		{
-			"name":        key_name,
+			"name":         key_name,
 			"key_type":    "API_KEY",
 			"status":      "VALID",
-			"expiry_time": "2026-01-01T00:00:00Z",
+			"expiry_time":  expirationTimeFormatted,
 			"assigned_to": "user1",
 		},
 		{
-			"name":        key_name + "_another",
+			"name":         key_name + "_another",
 			"key_type":    "API_KEY",
 			"status":      "VALID",
-			"expiry_time": "2026-01-01T00:00:00Z",
+			"expiry_time":  expirationTimeFormatted,
 			"assigned_to": "user1_another",
 		},
 	}
@@ -38,7 +38,7 @@ func TestAccV2NutanixUsersDataSourceKeys(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testApiKeysDataSourceConfig(filepath, name, key_name),
+				Config: testApiKeysDataSourceConfig(name, key_name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceNutanixUserKeysV2, "keys.#"),
 					resource.TestCheckResourceAttr(dataSourceNutanixUserKeysV2, "keys.#", "2"),
@@ -47,7 +47,7 @@ func TestAccV2NutanixUsersDataSourceKeys(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceNutanixUserKeysFilterV2, "keys.0.name", key_name),
 					resource.TestCheckResourceAttr(dataSourceNutanixUserKeysFilterV2, "keys.0.key_type", "API_KEY"),
 					resource.TestCheckResourceAttr(dataSourceNutanixUserKeysFilterV2, "keys.0.status", "VALID"),
-					resource.TestCheckResourceAttr(dataSourceNutanixUserKeysFilterV2, "keys.0.expiry_time", "2026-01-01T00:00:00Z"),
+					resource.TestCheckResourceAttr(dataSourceNutanixUserKeysFilterV2, "keys.0.expiry_time", expirationTimeFormatted),
 					resource.TestCheckResourceAttr(dataSourceNutanixUserKeysFilterV2, "keys.0.assigned_to", "user1"),
 				),
 			},
@@ -56,7 +56,7 @@ func TestAccV2NutanixUsersDataSourceKeys(t *testing.T) {
 }
 
 
-func testApiKeysDataSourceConfig(filepath, name string, key_name string) string {
+func testApiKeysDataSourceConfig(name string, key_name string, expirationTimeFormatted string) string {
 	return fmt.Sprintf(`
 	// Create service account
 	resource "nutanix_users_v2" "service_account" {
@@ -71,7 +71,7 @@ func testApiKeysDataSourceConfig(filepath, name string, key_name string) string 
    user_ext_id = nutanix_users_v2.service_account.ext_id
    name = "%[3]s"
    key_type = "API_KEY"
-	 expiry_time = "2026-01-01T00:00:00Z"
+	 expiry_time = "%[4]s"
 	 assigned_to = "user1"
   }
 
@@ -80,7 +80,7 @@ func testApiKeysDataSourceConfig(filepath, name string, key_name string) string 
    user_ext_id = nutanix_users_v2.service_account.ext_id
    name = "%[3]s_another"
    key_type = "API_KEY"
-	 expiry_time = "2026-01-01T00:00:00Z"
+	 expiry_time = "%[4]s"
 	 assigned_to = "user1_another"
   }
 
@@ -96,7 +96,7 @@ func testApiKeysDataSourceConfig(filepath, name string, key_name string) string 
 		filter = "name eq '%[3]s'"
 		depends_on = [nutanix_user_key_v2.create_key, nutanix_user_key_v2.create_another_key]
 	}
-	`, filepath, name, key_name)
+	`, filepath, name, key_name, expirationTimeFormatted)
 }
 
 

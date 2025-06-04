@@ -21,11 +21,11 @@ func TestAccV2NutanixUsers_CreateKey(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testApiKeyCreateResourceConfig(filepath, name, key_name),
+				Config: testApiKeyCreateResourceConfig(name, key_name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNutanixUserKeyV2Create, "name", key_name),
 					resource.TestCheckResourceAttr(resourceNutanixUserKeyV2Create, "key_type", "API_KEY"),
-					resource.TestCheckResourceAttr(resourceNutanixUserKeyV2Create, "expiry_time", "2026-01-01T00:00:00Z"),
+					resource.TestCheckResourceAttr(resourceNutanixUserKeyV2Create, "expiry_time", expirationTimeFormatted),
 					resource.TestCheckResourceAttr(resourceNutanixUserKeyV2Create, "assigned_to", "user1"),
 					resource.TestCheckResourceAttr(resourceNutanixUserKeyV2Create, "status", "VALID"),
 				),
@@ -43,14 +43,14 @@ func TestAccV2NutanixUsers_CreateKey_DuplicateName(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testApiKeyCreateResourceConfigDuplicateName(filepath, name, key_name),
+				Config: testApiKeyCreateResourceConfigDuplicateName(name, key_name, expirationTimeFormatted),
 				ExpectError: regexp.MustCompile("Failed to create key as there is a key with the same name."),
 			},
 		},
 	})
 }
 
-func testApiKeyCreateResourceConfig(filepath, name string, key_name string) string {
+func testApiKeyCreateResourceConfig(name string, key_name string, expirationTimeFormatted string) string {
 	return fmt.Sprintf(`
 	resource "nutanix_users_v2" "service_account" {
 		username = "%[2]s"
@@ -63,13 +63,13 @@ func testApiKeyCreateResourceConfig(filepath, name string, key_name string) stri
    user_ext_id = nutanix_users_v2.service_account.ext_id
    name = "%[3]s"
    key_type = "API_KEY"
-	 expiry_time = "2026-01-01T00:00:00Z"
+	 expiry_time = "%[4]s"
 	 assigned_to = "user1"
   }
-	`, filepath, name, key_name)
+	`, filepath, name, key_name, expirationTimeFormatted)
 }
 
-func testApiKeyCreateResourceConfigDuplicateName(filepath, name string, key_name string) string {
+func testApiKeyCreateResourceConfigDuplicateName(name string, key_name string, expirationTimeFormatted string) string {
 	return fmt.Sprintf(`
 	resource "nutanix_users_v2" "service_account" {
 		username = "%[2]s"
@@ -82,7 +82,7 @@ func testApiKeyCreateResourceConfigDuplicateName(filepath, name string, key_name
    user_ext_id = nutanix_users_v2.service_account.ext_id
    name = "%[3]s"
    key_type = "API_KEY"
-	 expiry_time = "2026-01-01T00:00:00Z"
+	 expiry_time = "%[4]s"
 	 assigned_to = "user1"
   }
 
@@ -90,8 +90,8 @@ func testApiKeyCreateResourceConfigDuplicateName(filepath, name string, key_name
    user_ext_id = nutanix_users_v2.service_account.ext_id
    name = "%[3]s"
    key_type = "API_KEY"
-	 expiry_time = "2026-01-01T00:00:00Z"
+	 expiry_time = 	"%[4]s"
 	 assigned_to = "user1"
   }
-	`, filepath, name, key_name)
+	`, filepath, name, key_name, expirationTimeFormatted)
 }
