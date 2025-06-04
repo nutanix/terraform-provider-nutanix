@@ -235,7 +235,7 @@ func checkServiceAccountValues(expectedKeys []map[string]string, resourceName st
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Resource Not found")
+			return fmt.Errorf("resource Not found")
 		}
 
 		keys := rs.Primary.Attributes
@@ -249,7 +249,7 @@ func checkServiceAccountValues(expectedKeys []map[string]string, resourceName st
 		}
 
 		if keyCount != len(expectedKeys) {
-			return fmt.Errorf("Expected %d keys, found %d", len(expectedKeys), keyCount)
+			return fmt.Errorf("expected %d keys, found %d", len(expectedKeys), keyCount)
 		}
 		log.Printf("Akhil Found %d keys\n", keyCount)
 

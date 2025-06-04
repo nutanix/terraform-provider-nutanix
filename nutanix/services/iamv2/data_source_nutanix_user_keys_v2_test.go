@@ -17,17 +17,17 @@ const dataSourceNutanixUserKeysFilterV2 = "data.nutanix_user_keys_v2.get_keys_fi
 func TestAccV2NutanixUsersDataSourceKeys(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-revoke-api-%d", r)
-	key_name := fmt.Sprintf("tf-revoke-api-key-%d", r)
+	keyName := fmt.Sprintf("tf-revoke-api-key-%d", r)
 	expectedKeys := []map[string]string{
 		{
-			"name":        key_name,
+			"name":        keyName,
 			"key_type":    "API_KEY",
 			"status":      "VALID",
 			"expiry_time": expirationTimeFormatted,
 			"assigned_to": "user1",
 		},
 		{
-			"name":        key_name + "_another",
+			"name":        keyName + "_another",
 			"key_type":    "API_KEY",
 			"status":      "VALID",
 			"expiry_time": expirationTimeFormatted,
@@ -39,13 +39,13 @@ func TestAccV2NutanixUsersDataSourceKeys(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testApiKeysDataSourceConfig(name, key_name, expirationTimeFormatted),
+				Config: testAPIKeysDataSourceConfig(name, keyName, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceNutanixUserKeysV2, "keys.#"),
 					resource.TestCheckResourceAttr(dataSourceNutanixUserKeysV2, "keys.#", "2"),
 					checkNutanixKeys(expectedKeys, dataSourceNutanixUserKeysV2),
 					resource.TestCheckResourceAttrSet(dataSourceNutanixUserKeysFilterV2, "keys.#"),
-					resource.TestCheckResourceAttr(dataSourceNutanixUserKeysFilterV2, "keys.0.name", key_name),
+					resource.TestCheckResourceAttr(dataSourceNutanixUserKeysFilterV2, "keys.0.name", keyName),
 					resource.TestCheckResourceAttr(dataSourceNutanixUserKeysFilterV2, "keys.0.key_type", "API_KEY"),
 					resource.TestCheckResourceAttr(dataSourceNutanixUserKeysFilterV2, "keys.0.status", "VALID"),
 					resource.TestCheckResourceAttr(dataSourceNutanixUserKeysFilterV2, "keys.0.expiry_time", expirationTimeFormatted),
@@ -56,7 +56,7 @@ func TestAccV2NutanixUsersDataSourceKeys(t *testing.T) {
 	})
 }
 
-func testApiKeysDataSourceConfig(name string, key_name string, expirationTimeFormatted string) string {
+func testAPIKeysDataSourceConfig(name string, keyName string, expirationTimeFormatted string) string {
 	return fmt.Sprintf(`
 	// Create service account
 	resource "nutanix_users_v2" "service_account" {
@@ -96,14 +96,14 @@ func testApiKeysDataSourceConfig(name string, key_name string, expirationTimeFor
 		filter = "name eq '%[3]s'"
 		depends_on = [nutanix_user_key_v2.create_key, nutanix_user_key_v2.create_another_key]
 	}
-	`, filepath, name, key_name, expirationTimeFormatted)
+	`, filepath, name, keyName, expirationTimeFormatted)
 }
 
 func checkNutanixKeys(expectedKeys []map[string]string, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Not found: " + resourceName)
+			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
 		keys := rs.Primary.Attributes
@@ -117,7 +117,7 @@ func checkNutanixKeys(expectedKeys []map[string]string, resourceName string) res
 		}
 
 		if keyCount != len(expectedKeys) {
-			return fmt.Errorf("Expected %d keys, found %d", len(expectedKeys), keyCount)
+			return fmt.Errorf("expected %d keys, found %d", len(expectedKeys), keyCount)
 		}
 
 		// Match each expected key
@@ -134,7 +134,7 @@ func checkNutanixKeys(expectedKeys []map[string]string, resourceName string) res
 				}
 			}
 			if !found {
-				return fmt.Errorf("Expected key not found: %+v", expected)
+				return fmt.Errorf("expected key not found: %+v", expected)
 			}
 		}
 		return nil
