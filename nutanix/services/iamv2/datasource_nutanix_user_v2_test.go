@@ -46,7 +46,7 @@ func TestAccV2NutanixUserDatasourceServiceAccount(t *testing.T) {
 	name := fmt.Sprintf("test-service-account-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { },
+		PreCheck:  func() {},
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -91,7 +91,6 @@ func testUserDatasourceV4Config(filepath, name string) string {
 		}
 	`, filepath, name)
 }
-
 
 func testServiceAccountDataSourceV4Config(name string) string {
 	return fmt.Sprintf(`

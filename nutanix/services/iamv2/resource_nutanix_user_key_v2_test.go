@@ -2,8 +2,8 @@ package iamv2_test
 
 import (
 	"fmt"
-	"testing"
 	"regexp"
+	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -43,7 +43,7 @@ func TestAccV2NutanixUsers_CreateKey_DuplicateName(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testApiKeyCreateResourceConfigDuplicateName(name, key_name, expirationTimeFormatted),
+				Config:      testApiKeyCreateResourceConfigDuplicateName(name, key_name, expirationTimeFormatted),
 				ExpectError: regexp.MustCompile("Failed to create key as there is a key with the same name."),
 			},
 		},

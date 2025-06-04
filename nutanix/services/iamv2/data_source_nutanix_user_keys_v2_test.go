@@ -2,11 +2,12 @@ package iamv2_test
 
 import (
 	"fmt"
-	"testing"
 	"strings"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -19,17 +20,17 @@ func TestAccV2NutanixUsersDataSourceKeys(t *testing.T) {
 	key_name := fmt.Sprintf("tf-revoke-api-key-%d", r)
 	expectedKeys := []map[string]string{
 		{
-			"name":         key_name,
+			"name":        key_name,
 			"key_type":    "API_KEY",
 			"status":      "VALID",
-			"expiry_time":  expirationTimeFormatted,
+			"expiry_time": expirationTimeFormatted,
 			"assigned_to": "user1",
 		},
 		{
-			"name":         key_name + "_another",
+			"name":        key_name + "_another",
 			"key_type":    "API_KEY",
 			"status":      "VALID",
-			"expiry_time":  expirationTimeFormatted,
+			"expiry_time": expirationTimeFormatted,
 			"assigned_to": "user1_another",
 		},
 	}
@@ -54,7 +55,6 @@ func TestAccV2NutanixUsersDataSourceKeys(t *testing.T) {
 		},
 	})
 }
-
 
 func testApiKeysDataSourceConfig(name string, key_name string, expirationTimeFormatted string) string {
 	return fmt.Sprintf(`
@@ -98,7 +98,6 @@ func testApiKeysDataSourceConfig(name string, key_name string, expirationTimeFor
 	}
 	`, filepath, name, key_name, expirationTimeFormatted)
 }
-
 
 func checkNutanixKeys(expectedKeys []map[string]string, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {

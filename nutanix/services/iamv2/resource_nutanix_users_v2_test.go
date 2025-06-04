@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
@@ -237,7 +238,7 @@ func TestAccv2NutanixUsersResource_ServiceAccountDuplicateName(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testServiceAccountResourceConfigDuplicateName(name),
+				Config:      testServiceAccountResourceConfigDuplicateName(name),
 				ExpectError: regexp.MustCompile("Failed to create user as a user already exists with given username."),
 			},
 		},
@@ -256,22 +257,22 @@ func TestAccv2NutanixUsersResource_ServiceAccountCreate(t *testing.T) {
 				// create service account
 				Config: testServiceAccountCreateResourceConfig(name, description),
 				Check: resource.ComposeTestCheckFunc(
-          resource.TestCheckResourceAttrSet(resourceNameServiceAccount, "ext_id"),
-          resource.TestCheckResourceAttr(resourceNameServiceAccount, "username", name),
-          resource.TestCheckResourceAttr(resourceNameServiceAccount, "description", description),
-          resource.TestCheckResourceAttr(resourceNameServiceAccount, "user_type", "SERVICE_ACCOUNT"),
-          resource.TestCheckResourceAttr(resourceNameServiceAccount, "email_id", "terraform_plugin@domain.com"),
-        ),
+					resource.TestCheckResourceAttrSet(resourceNameServiceAccount, "ext_id"),
+					resource.TestCheckResourceAttr(resourceNameServiceAccount, "username", name),
+					resource.TestCheckResourceAttr(resourceNameServiceAccount, "description", description),
+					resource.TestCheckResourceAttr(resourceNameServiceAccount, "user_type", "SERVICE_ACCOUNT"),
+					resource.TestCheckResourceAttr(resourceNameServiceAccount, "email_id", "terraform_plugin@domain.com"),
+				),
 			},
 			{
 				// update service account
-				Config: testServiceAccountCreateResourceConfig(name, description + " update"),
+				Config: testServiceAccountCreateResourceConfig(name, description+" update"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameServiceAccount, "ext_id"),
-          resource.TestCheckResourceAttr(resourceNameServiceAccount, "username", name),
-          resource.TestCheckResourceAttr(resourceNameServiceAccount, "description", description + " update"),
-          resource.TestCheckResourceAttr(resourceNameServiceAccount, "user_type", "SERVICE_ACCOUNT"),
-          resource.TestCheckResourceAttr(resourceNameServiceAccount, "email_id", "terraform_plugin@domain.com"),
+					resource.TestCheckResourceAttr(resourceNameServiceAccount, "username", name),
+					resource.TestCheckResourceAttr(resourceNameServiceAccount, "description", description+" update"),
+					resource.TestCheckResourceAttr(resourceNameServiceAccount, "user_type", "SERVICE_ACCOUNT"),
+					resource.TestCheckResourceAttr(resourceNameServiceAccount, "email_id", "terraform_plugin@domain.com"),
 				),
 			},
 		},

@@ -2,9 +2,10 @@ package iamv2_test
 
 import (
 	"fmt"
-	"testing"
 	"regexp"
+	"testing"
 	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
@@ -47,7 +48,7 @@ func TestAccV2NutanixUsersDataSourceKeyInvalid(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testApiKeyDataSourceConfigInvalid(name, key_name, expirationTimeFormatted),
+				Config:      testApiKeyDataSourceConfigInvalid(name, key_name, expirationTimeFormatted),
 				ExpectError: regexp.MustCompile("error while fetching the user key"),
 			},
 		},
@@ -107,4 +108,3 @@ func testApiKeyDataSourceConfigInvalid(name string, key_name string, expirationT
 	}
 	`, filepath, name, key_name, expirationTimeFormatted)
 }
-

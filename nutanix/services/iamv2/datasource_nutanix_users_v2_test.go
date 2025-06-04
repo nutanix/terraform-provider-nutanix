@@ -1,7 +1,6 @@
 package iamv2_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -178,16 +177,16 @@ func TestAccV2NutanixUsersDataSourceServiceAccount(t *testing.T) {
 	name := fmt.Sprintf("service-account-unique%d", r)
 	expectedKeys := []map[string]string{
 		{
-			"username":        name,
+			"username":    name,
 			"description": "test service account tf",
-		  "email_id": "terraform_plugin@domain.com",
-		  "user_type": "SERVICE_ACCOUNT",
+			"email_id":    "terraform_plugin@domain.com",
+			"user_type":   "SERVICE_ACCOUNT",
 		},
 		{
-			"username":        name + "_another",
-		  "description":  "test service account tf another",
-		  "email_id": "terraform_plugin_another@domain.com",
-		  "user_type": "SERVICE_ACCOUNT",
+			"username":    name + "_another",
+			"description": "test service account tf another",
+			"email_id":    "terraform_plugin_another@domain.com",
+			"user_type":   "SERVICE_ACCOUNT",
 		},
 	}
 	resource.Test(t, resource.TestCase{
@@ -232,7 +231,6 @@ func testServiecAccountDataSourceConfig(name string, query string) string {
 	`, filepath, name, query)
 }
 
-
 func checkServiceAccountValues(expectedKeys []map[string]string, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -262,7 +260,7 @@ func checkServiceAccountValues(expectedKeys []map[string]string, resourceName st
 				if keys[fmt.Sprintf("users.%d.username", i)] == expected["username"] &&
 					keys[fmt.Sprintf("users.%d.description", i)] == expected["description"] &&
 					keys[fmt.Sprintf("users.%d.email_id", i)] == expected["email_id"] &&
-					keys[fmt.Sprintf("users.%d.user_type", i)] == expected["user_type"]{
+					keys[fmt.Sprintf("users.%d.user_type", i)] == expected["user_type"] {
 					found = true
 					break
 				}
