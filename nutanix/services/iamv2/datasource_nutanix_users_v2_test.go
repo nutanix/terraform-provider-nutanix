@@ -3,7 +3,7 @@ package iamv2_test
 import (
 	"fmt"
 	"log"
-	"strings"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -239,19 +239,15 @@ func checkServiceAccountValues(expectedKeys []map[string]string, resourceName st
 		}
 
 		keys := rs.Primary.Attributes
-		keyCount := 0
-
-		// Count keys dynamically
-		for k := range keys {
-			if strings.HasPrefix(k, "users.") && strings.HasSuffix(k, ".username") {
-				keyCount++
-			}
+		keyCount, err := strconv.Atoi(rs.Primary.Attributes["users.#"])
+		if err != nil {
+			return fmt.Errorf("error converting users count: %v", err)
 		}
 
 		if keyCount != len(expectedKeys) {
 			return fmt.Errorf("expected %d keys, found %d", len(expectedKeys), keyCount)
 		}
-		log.Printf("Akhil Found %d keys\n", keyCount)
+		log.Printf("found %d keys\n", keyCount)
 
 		// Match each expected key
 		for _, expected := range expectedKeys {

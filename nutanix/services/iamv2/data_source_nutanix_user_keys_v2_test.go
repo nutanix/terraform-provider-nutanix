@@ -2,7 +2,7 @@ package iamv2_test
 
 import (
 	"fmt"
-	"strings"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -105,15 +105,10 @@ func checkNutanixKeys(expectedKeys []map[string]string, resourceName string) res
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
-
 		keys := rs.Primary.Attributes
-		keyCount := 0
-
-		// Count keys dynamically
-		for k := range keys {
-			if strings.HasPrefix(k, "keys.") && strings.HasSuffix(k, ".name") {
-				keyCount++
-			}
+		keyCount, err := strconv.Atoi(rs.Primary.Attributes["keys.#"])
+		if err != nil {
+			return fmt.Errorf("error parsing keys count: %s", err)
 		}
 
 		if keyCount != len(expectedKeys) {
