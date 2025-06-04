@@ -12,33 +12,16 @@ List all keys identified by the external identifier of a user.
 
 ## Example Usage
 
-``` hcl
-# Create service account
-resource "nutanix_users_v2" "service_account" {
-  username = "service_acount_tf"
-  description = "test service account tf"
-  email_id = "terraform_plugin@domain.com"
-  user_type = "SERVICE_ACCOUNT"
-}
-
-# Create key
-resource "nutanix_user_key_v2" "create_key" {
-  user_ext_id = nutanix_users_v2.service_account.ext_id
-  name = "tf_user_api_key"
-  key_type = "API_KEY"
-  expiry_time = "2026-01-01T00:00:00Z"
-  assigned_to = "user1"
-}
-
+```hcl
 # Data source to fetch the list of keys
 data "nutanix_user_keys_v2" "get_keys" {
-  user_ext_id = nutanix_users_v2.service_account.ext_id
+  user_ext_id = "<SERVICE_ACCOUNT_UUID>"
 }
 
 # Data source to fetch the key by name
 data "nutanix_user_keys_v2" "get_keys_filter" {
-  user_ext_id = nutanix_users_v2.service_account.ext_id
-  filter = "name eq '${nutanix_user_key_v2.create_key.name}'"
+  user_ext_id = "<SERVICE_ACCOUNT_UUID>"
+  filter = "name eq '<NAME_OF_API_KEY>'"
 }
 ```
 
@@ -47,9 +30,9 @@ data "nutanix_user_keys_v2" "get_keys_filter" {
 The following arguments are supported:
 
 * `user_ext_id`: - ( Required ) External Identifier of the User.
-* `page`: - A URL query parameter that specifies the page number of the result set. It must be a positive integer between 0 and the maximum number of pages that are available for that resource. Any number out of this range might lead to no results.
-* `limit` : A URL query parameter that specifies the total number of records returned in the result set. Must be a positive integer between 1 and 100. Any number out of this range will lead to a validation error. If the limit is not provided, a default value of 50 records will be returned in the result set.
-* `filter` :A URL query parameter that allows clients to filter a collection of resources. The expression specified with \$filter is evaluated for each resource in the collection, and only items where the expression evaluates to true are included in the response. Expression specified with the \$filter must conform to the OData V4.01 URL conventions. For example, filter '\$filter=name eq 'karbon-ntnx-1.0' would filter the result on cluster name 'karbon-ntnx1.0', filter '\$filter=startswith(name, 'C')' would filter on cluster name starting with 'C'. The filter can be applied to the following fields:
+* `page`:- (Optional)A URL query parameter that specifies the page number of the result set. It must be a positive integer between 0 and the maximum number of pages that are available for that resource. Any number out of this range might lead to no results.
+* `limit`:- (Optional) A URL query parameter that specifies the total number of records returned in the result set. Must be a positive integer between 1 and 100. Any number out of this range will lead to a validation error. If the limit is not provided, a default value of 50 records will be returned in the result set.
+* `filter` :- (Optional) A URL query parameter that allows clients to filter a collection of resources. The expression specified with \$filter is evaluated for each resource in the collection, and only items where the expression evaluates to true are included in the response. Expression specified with the \$filter must conform to the OData V4.01 URL conventions. For example, filter '\$filter=name eq 'karbon-ntnx-1.0' would filter the result on cluster name 'karbon-ntnx1.0', filter '\$filter=startswith(name, 'C')' would filter on cluster name starting with 'C'. The filter can be applied to the following fields:
     * assignedTo
     * creationType
     * extId
@@ -58,7 +41,7 @@ The following arguments are supported:
     * name
     * status
     * tenantId  
-* `orderby` : A URL query parameter that allows clients to specify the sort criteria for the returned list of objects. Resources can be sorted in ascending order using asc or descending order using desc. If asc or desc are not specified, the resources will be sorted in ascending order by default. For example, '\$orderby=templateName desc' would get all templates sorted by templateName in descending order. The orderby can be applied to the following fields:     * createdBy
+* `orderby` :- (Optional) A URL query parameter that allows clients to specify the sort criteria for the returned list of objects. Resources can be sorted in ascending order using asc or descending order using desc. If asc or desc are not specified, the resources will be sorted in ascending order by default. For example, '\$orderby=templateName desc' would get all templates sorted by templateName in descending order. The orderby can be applied to the following fields:     * createdBy
     * assignedTo
     * createdBy
     * createdTime
@@ -69,7 +52,7 @@ The following arguments are supported:
     * name
     * status
     * tenantId
-* `select` : A URL query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the \$select must conform to the OData V4.01 URL conventions. If a \$select expression consists of a single select item that is an asterisk (i.e., *), then all properties on the matching resource will be returned. following fields:
+* `select` :- (Optional) A URL query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the \$select must conform to the OData V4.01 URL conventions. If a \$select expression consists of a single select item that is an asterisk (i.e., *), then all properties on the matching resource will be returned. following fields:
     * assignedTo
     * createdBy
     * createdTime
@@ -86,6 +69,9 @@ The following arguments are supported:
     * tenantId
 
 ## Attributes Reference
+
+The following attributes are exported:
+
 
 * `tenant_id` - A globally unique identifier that represents the tenant that owns this entity. The system automatically assigns it, and it and is immutable from an API consumer perspective (some use cases may cause this Id to change - For instance, a use case may require the transfer of ownership of the entity, but these cases are handled automatically on the server).
 * `ext_id` - The External Identifier of the User Group.

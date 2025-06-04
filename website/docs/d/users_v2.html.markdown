@@ -12,7 +12,7 @@ Provides a datasource to retrieve all User(s).
 
 ## Example Usage
 
-``` hcl
+```hcl
 # list all users
 data "nutanix_users_v2" "list-users"{}
 
@@ -23,7 +23,7 @@ data "nutanix_users_v2" "filtered-users" {
 
 # list users of user_type SERVICE_ACCOUNT
 data "nutanix_users_v2" "list_service_account" {
-		filter = "userType eq Schema.Enums.UserType'SERVICE_ACCOUNT'"
+	filter = "userType eq Schema.Enums.UserType'SERVICE_ACCOUNT'"
 }
 ```
 

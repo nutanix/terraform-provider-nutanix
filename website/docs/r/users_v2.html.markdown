@@ -25,10 +25,10 @@ resource "nutanix_users_v2" "user"{
 
 # user_type of SERVICE_ACCOUNT
 resource "nutanix_users_v2" "service_account" {
-		username = "service_account_terraform_example"
-		description = "service account tf"
-		email_id = "example_terraform_plugin@domain.com"
-		user_type = "SERVICE_ACCOUNT"
+	username = "service_account_terraform_example"
+	description = "service account tf"
+	email_id = "example_terraform_plugin@domain.com"
+	user_type = "SERVICE_ACCOUNT"
 }
 ```
 

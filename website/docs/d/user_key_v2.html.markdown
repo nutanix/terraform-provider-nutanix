@@ -11,28 +11,11 @@ Fetches the requested key through the provided external identifier for the user 
 
 ## Example Usage
 
-``` hcl
-# Create service account
-resource "nutanix_users_v2" "service_account" {
-  username = "service_account_tf"
-  description = "test service account tf"
-  email_id = "terraform_plugin@domain.com"
-  user_type = "SERVICE_ACCOUNT"
-}
-
-# Create key
-resource "nutanix_user_key_v2" "create_key" {
-  user_ext_id = nutanix_users_v2.service_account.ext_id
-  name = "tf_user_api_key"
-  key_type = "API_KEY"
-  expiry_time = "2026-01-01T00:00:00Z"
-  assigned_to = "user1"
-}
-	
+```hcl
 # Get key
 data "nutanix_user_key_v2" "get_key"{
-  user_ext_id = nutanix_users_v2.service_account.ext_id
-  ext_id = nutanix_user_key_v2.create_key.ext_id
+  user_ext_id = "<SERVICE_ACCOUNT_UUID>"
+  ext_id = "<USER_KEY_UUID>"
 }
 ```
 
@@ -44,6 +27,9 @@ The following arguments are supported:
 
 
 ## Attributes Reference
+
+The following attributes are exported:
+
 * `tenant_id` - A globally unique identifier that represents the tenant that owns this entity. The system automatically assigns it, and it and is immutable from an API consumer perspective (some use cases may cause this Id to change - For instance, a use case may require the transfer of ownership of the entity, but these cases are handled automatically on the server).
 * `ext_id` - The External Identifier of the User Group.
 * `links`: - A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.

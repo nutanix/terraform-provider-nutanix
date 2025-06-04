@@ -13,18 +13,10 @@ Provides Nutanix resource to Create key of a requested type for a user.
 
 ## Example Usage
 
-``` hcl
-# Create Service Account
-resource "nutanix_users_v2" "service_account" {
-      username = "service_account_terraform_example"
-      description = "service account tf"
-      email_id = "terraform_plugin@domain.com"
-      user_type = "SERVICE_ACCOUNT"
-}
-
+```hcl
 # Create key under service account, never expires
 resource "nutanix_user_key_v2" "create_key" {
-   user_ext_id = nutanix_users_v2.service_account.ext_id
+   user_ext_id = "<SERVICE_ACCOUNT_UUID>"
    name = "api_key_developers"
    key_type = "API_KEY"
    expiry_time = "2125-01-01T00:00:00Z"
@@ -53,6 +45,9 @@ The following arguments are supported:
 * `assigned_to`: - ( Optional ) External client to whom the given key is allocated.
 
 ## Attributes Reference
+
+The following attributes are exported:
+
 * `tenant_id`: - A globally unique identifier that represents the tenant that owns this entity. The system automatically assigns it, and it and is immutable from an API consumer perspective (some use cases may cause this Id to change - For instance, a use case may require the transfer of ownership of the entity, but these cases are handled automatically on the server).
 * `ext_id`: - The External Identifier of the User Group.
 * `links`: - A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
