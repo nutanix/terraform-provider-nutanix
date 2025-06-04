@@ -103,7 +103,7 @@ func checkNutanixKeys(expectedKeys []map[string]string, resourceName string) res
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("not found: %s", resourceName)
 		}
 
 		keys := rs.Primary.Attributes

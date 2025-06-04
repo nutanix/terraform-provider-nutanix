@@ -266,7 +266,7 @@ func checkServiceAccountValues(expectedKeys []map[string]string, resourceName st
 				}
 			}
 			if !found {
-				return fmt.Errorf("Expected key not found: %+v", expected)
+				return fmt.Errorf("expected key not found: %+v", expected)
 			}
 		}
 		return nil
