@@ -61,6 +61,21 @@ func TestAccV2NutanixTemplateDatasource_ListAllTemplatesWithFilter(t *testing.T)
 	})
 }
 
+func TestAccV2NutanixTemplateDatasource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testTemplatesDatasourceInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceNameTemplates, "filter", "templateName eq 'invalid'"),
+				),
+			},
+		},
+	})
+}
+
 func testTemplatesDatasourceConfig(name, desc, tempName, tempDesc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
@@ -71,7 +86,7 @@ func testTemplatesDatasourceConfig(name, desc, tempName, tempDesc string) string
 			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 		}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "%[1]s"
 			description =  "%[2]s"
@@ -86,7 +101,7 @@ func testTemplatesDatasourceConfig(name, desc, tempName, tempDesc string) string
 			template_description = "%[4]s"
 			template_version_spec{
 				version_description = "Created from VM: %[1]s"
-				version_source{				
+				version_source{
 					template_vm_reference{
 						ext_id = nutanix_virtual_machine_v2.test.id
 					}
@@ -111,7 +126,7 @@ func testTemplatesDatasourceFilterConfig(name, desc, tempName, tempDesc string) 
 			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 		}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "%[1]s"
 			description =  "%[2]s"
@@ -126,7 +141,7 @@ func testTemplatesDatasourceFilterConfig(name, desc, tempName, tempDesc string) 
 			template_description = "%[4]s"
 			template_version_spec{
 				version_description = "Created from VM: %[1]s"
-				version_source{				
+				version_source{
 					template_vm_reference{
 						ext_id = nutanix_virtual_machine_v2.test.id
 					}
@@ -140,4 +155,12 @@ func testTemplatesDatasourceFilterConfig(name, desc, tempName, tempDesc string) 
 		}
 
 `, name, desc, tempName, tempDesc)
+}
+
+func testTemplatesDatasourceInvalidFilterConfig() string {
+	return `
+		data "nutanix_templates_v2" "test" {
+			filter = "templateName eq 'invalid'"
+		}
+	`
 }

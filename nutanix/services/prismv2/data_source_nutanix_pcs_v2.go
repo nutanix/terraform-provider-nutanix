@@ -46,14 +46,23 @@ func DatasourceNutanixListPcsV2Read(ctx context.Context, d *schema.ResourceData,
 		if err := d.Set("pcs", []map[string]interface{}{}); err != nil {
 			return diag.Errorf("Error setting pcs: %v", err)
 		}
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No Data found",
+			Detail:   "The API returned an empty list of PCs.",
+		}}
 	}
+
 	pcs := resp.Data.GetValue().([]config.DomainManager)
+
 	if err := d.Set("pcs", flattenPcs(pcs)); err != nil {
 		return diag.Errorf("Error setting pcs: %v", err)
 	}
 
 	d.SetId(utils.GenUUID())
-
 	return nil
 }
 
