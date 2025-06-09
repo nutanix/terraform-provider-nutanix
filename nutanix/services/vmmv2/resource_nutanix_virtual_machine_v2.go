@@ -1575,7 +1575,7 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 		body.Categories = expandCategoryReference(categories.([]interface{}))
 	}
 	if project, ok := d.GetOk("project"); ok {
-		body.Project = expandProjectReference(project)
+		body.Project = expandProjectReference(project.([]interface{}))
 	}
 	if ownerRef, ok := d.GetOk("ownership_info"); ok {
 		body.OwnershipInfo = expandOwnershipInfo(ownerRef)
@@ -1848,6 +1848,9 @@ func ResourceNutanixVirtualMachineV2Read(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 	if err := d.Set("categories", flattenCategoryReference(getResp.Categories)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project", flattenProjectReference(getResp.Project)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("ownership_info", flattenOwnershipInfo(getResp.OwnershipInfo)); err != nil {
@@ -3821,16 +3824,20 @@ func waitForIPRefreshFunc(client *vmm.Client, vmUUID string) resource.StateRefre
 	}
 }
 
-func expandProjectReference(pr interface{}) *config.Project {
-	if pr != nil && len(pr.([]interface{})) > 0 {
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
-		projectRef := &config.ProjectReference{}
+func expandProjectReference(pr []interface{}) []config.ProjectReference {
+	if len(pr) > 0 {
+		prjRef := make([]config.ProjectReference, len(pr))
 
-		if extID, ok := val["ext_id"]; ok && len(extID.(string)) > 0 {
-			projectRef.ExtId = utils.StringPtr(extID.(string))
+		for k, v := range pr {
+			projects := config.ProjectReference{}
+			val := v.(map[string]interface{})
+
+			if extID, ok := val["ext_id"]; ok && len(extID.(string)) > 0 {
+				projects.ExtId = utils.StringPtr(extID.(string))
+			}
+			prjRef[k] = projects
 		}
-		return projectRef
-	} 
+		return prjRef
+	}
 	return nil
 }

@@ -1389,6 +1389,9 @@ func DatasourceNutanixVirtualMachineV4Read(ctx context.Context, d *schema.Resour
 	if err := d.Set("categories", flattenCategoryReference(getResp.Categories)); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project", flattenProjectReference(getResp.Project)); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("ownership_info", flattenOwnershipInfo(getResp.OwnershipInfo)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -2885,6 +2888,23 @@ func flattenAPILink(pr []response.ApiLink) []interface{} {
 			links[k] = link
 		}
 		return links
+	}
+	return nil
+}
+
+func flattenProjectReference(project []config.ProjectReference) []interface{} {
+	if len(project) > 0 {
+		prjList := make([]interface{}, len(ctg))
+
+		for k, v := range project {
+			projects := make(map[string]interface{})
+
+			if v.ExtId != nil {
+				projects["ext_id"] = v.ExtId
+			}
+			prjList[k] = projects
+		}
+		return prjList
 	}
 	return nil
 }
