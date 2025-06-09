@@ -125,6 +125,18 @@ func DatasourceNutanixVirtualMachineV4() *schema.Resource {
 					},
 				},
 			},
+			"project": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"ownership_info": {
 				Type:     schema.TypeList,
 				Computed: true,
