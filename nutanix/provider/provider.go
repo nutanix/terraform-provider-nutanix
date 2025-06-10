@@ -237,6 +237,7 @@ func Provider() *schema.Provider {
 			"nutanix_self_service_app":                        selfservice.DatsourceNutanixCalmApp(),
 			"nutanix_blueprint_runtime_editables":             selfservice.DatsourceNutanixCalmRuntimeEditables(),
 			"nutanix_self_service_app_snapshots":              selfservice.DataSourceNutanixCalmSnapshots(),
+			"nutanix_self_service_accounts":                   selfservice.DatsourceNutanixSelfServiceAccount(),
 			"nutanix_subnet_v2":                               networkingv2.DataSourceNutanixSubnetV2(),
 			"nutanix_subnets_v2":                              networkingv2.DataSourceNutanixSubnetsV2(),
 			"nutanix_vpc_v2":                                  networkingv2.DataSourceNutanixVPCv2(),

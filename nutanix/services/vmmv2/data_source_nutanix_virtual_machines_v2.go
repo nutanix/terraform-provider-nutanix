@@ -177,9 +177,9 @@ func flattenVMEntities(vms []config.Vm) []interface{} {
 			if v.Categories != nil {
 				vm["categories"] = flattenCategoryReference(v.Categories)
 			}
-			if v.Project != nil {
-				vm["project"] = flattenProjectReference(v.Project)
-			}
+			// if v.Project != nil {
+			// 	vm["project"] = flattenProjectReference(v.Project)
+			// }
 			if v.OwnershipInfo != nil {
 				vm["ownership_info"] = flattenOwnershipInfo(v.OwnershipInfo)
 			}
