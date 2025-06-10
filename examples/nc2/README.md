@@ -1,10 +1,10 @@
 # Nutanix Cloud Clusters (NC2) Flow Virtual Networking (FVN) Terraform Samples
 
-This repository contains a collection of Terraform samples demonstrating different Flow Networking configurations in Nutanix Cloud Infrastructure (NCI). These samples show how to set up various networking scenarios using Terraform. Also included are VM image downloads from public repositories and VM creation. 
+This folder contains a collection of Terraform samples demonstrating different Flow Networking configurations in Nutanix Cloud Clusters (NC2). These samples show how to set up various networking scenarios using Terraform. Also included are VM image downloads from public repositories and VM creation. 
 
 ## Prerequisites
 
-- Nutanix Cloud Infrastructure (NCI) cluster
+- Nutanix Cloud Clusters (NC2) on AWS cluster
 - Prism Central instance
 - Terraform installed (version 1.0.0 or later)
 - Nutanix Terraform provider (version 2.2.0 or later)
