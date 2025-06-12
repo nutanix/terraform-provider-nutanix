@@ -11,7 +11,7 @@ Attaches iSCSI initiator to a Volume Group identified by {extId}.
 
 ## Example Usage
 
-``` hcl
+```hcl
 
 #list iscsi clients
 data "nutanix_volume_iscsi_clients_v2" "list-iscsi-clients"{}

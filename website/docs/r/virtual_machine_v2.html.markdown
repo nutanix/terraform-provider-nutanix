@@ -46,40 +46,102 @@ resource "nutanix_virtual_machine_v2" "vm-2"{
             }
         }
     }
+    boot_config {
+        uefi_boot {
+            boot_order = ["NETWORK", "DISK", "CDROM", ]
+        }
+    }
 }
 
-resource "nutanix_virtual_machine_v2" "vm-3"{
-    name= "example-vm-3"
-    description =  "vm desc"
-    num_cores_per_socket = 1
-    num_sockets = 1
-    cluster {
-        ext_id = "1cefd0f5-6d38-4c9b-a07c-bdd2db004224"
+resource "nutanix_virtual_machine_v2" "vm-3" {
+  name                 = "terraform-example-vm-4-disks"
+  num_cores_per_socket = 1
+  num_sockets          = 1
+  cluster {
+    ext_id = "1cefd0f5-6d38-4c9b-a07c-bdd2db004224"
+  }
+
+  disks {
+    disk_address {
+      bus_type = "SCSI"
+      index    = 0
     }
-    disks{
-        disk_address{
-            bus_type = "SCSI"
-            index = 0
-        }
-        backing_info{
-            vm_disk{
-                disk_size_bytes = "1073741824"
-                storage_container{
-                    ext_id = "1cefd0f5-6d38-4c9b-a07c-bdd2db004224"
-                }
+    backing_info {
+      vm_disk {
+        data_source {
+          reference {
+            image_reference {
+              image_ext_id = "59ec786c-4311-4225-affe-68b65c5ebf10"
             }
+          }
         }
+        disk_size_bytes = 20 * pow(1024, 3) # 20 GB
+      }
     }
-    nics{
-        network_info{
-            nic_type = "NORMAL_NIC"
-            subnet{
-                ext_id = "7f66e20f-67f4-473f-96bb-c4fcfd487f16"
-            }
-            vlan_mode = "ACCESS"
+  }
+  disks {
+    disk_address {
+      bus_type = "SCSI"
+      index    = 1
+    }
+     backing_info {
+      vm_disk {
+        disk_size_bytes = 10 * pow(1024, 3) # 10 GB
+        storage_container {
+          ext_id = "5d9b5941-fec3-4996-9d31-f31bed1c7735"
         }
+      }
     }
+  }
+
+  disks {
+    disk_address {
+      bus_type = "SCSI"
+      index    = 2
+    }
+    backing_info {
+      vm_disk {
+        disk_size_bytes = 15 * pow(1024, 3) # 15 GB
+        storage_container {
+          ext_id = "5d9b5941-fec3-4996-9d31-f31bed1c7735"
+        }
+      }
+    }
+  }
+
+  disks {
+    disk_address {
+      bus_type = "SCSI"
+      index    = 3
+    }
+    backing_info {
+      vm_disk {
+        disk_size_bytes = 20 * pow(1024, 3) # 20 GB
+        storage_container {
+          ext_id = "5d9b5941-fec3-4996-9d31-f31bed1c7735"
+        }
+      }
+    }
+  }
+
+  nics {
+    network_info {
+      nic_type = "NORMAL_NIC"
+      subnet {
+        ext_id = "7f66e20f-67f4-473f-96bb-c4fcfd487f16"
+      }
+      vlan_mode = "ACCESS"
+    }
+  }
+
+  boot_config {
+    legacy_boot {
+      boot_order = ["CDROM", "DISK", "NETWORK"]
+    }
+  }
+  power_state = "ON"
 }
+
 ```
 
 ## Argument Reference
@@ -181,6 +243,7 @@ The `guest_customization` attribute supports the following:
 * `install_type`: (Optional) Indicates whether the guest will be freshly installed using this unattend configuration, or this unattend configuration will be applied to a pre-prepared image. Values allowed is 'PREPARED', 'FRESH'.
 * `sysprep_script`: (Optional) Object either UnattendXml or CustomKeyValues
 * `sysprep_script.unattend_xml`: (Optional) xml object
+* `sysprep_script.unattend_xml.value`: (Optional) base64 encoded sysprep unattended xml
 * `sysprep_script.custom_key_values`: (Optional) The list of the individual KeyValuePair elements.
 
 
@@ -189,6 +252,7 @@ The `guest_customization` attribute supports the following:
 * `metadata`: The contents of the meta_data configuration for cloud-init. This can be formatted as YAML or JSON. The value must be base64 encoded. Default value is 'CONFIG_DRIVE_V2'.
 * `cloud_init_script`: (Optional) The script to use for cloud-init.
 * `cloud_init_script.user_data`: (Optional) user data object
+* `cloud_init_script.user_data.value`: (Optional) base64 encoded cloud init script as string
 * `cloud_init_script.custom_keys`: (Optional) The list of the individual KeyValuePair elements.
 
 #### custom_keys

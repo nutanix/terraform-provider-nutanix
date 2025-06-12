@@ -55,6 +55,22 @@ func TestAccV2NutanixFloatingIPsDataSource_WithFilter(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixFloatingIPsDataSource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFipsDataSourceWithInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameFIPps, "floating_ips.#"),
+					resource.TestCheckResourceAttr(datasourceNameFIPps, "floating_ips.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccFipsDataSourceConfig(name, desc string) string {
 	return fmt.Sprintf(`
 
@@ -164,4 +180,12 @@ func testAccFipsDataSourceWithFilterConfig(name, desc string) string {
 			]
 		}
 	`, name, desc)
+}
+
+func testAccFipsDataSourceWithInvalidFilterConfig() string {
+	return `
+		data "nutanix_floating_ips_v2" "test" {
+			filter = "name eq 'invalid_name'"
+		}
+	`
 }

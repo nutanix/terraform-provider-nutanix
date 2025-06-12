@@ -367,6 +367,74 @@ resource "nutanix_virtual_machine_v2" "example-11" {
 }
 
 
+# create virtual machine with gest customization sysprep script
+resource "nutanix_virtual_machine_v2" "example-12" {
+  name                 = "example-vm-12"
+  num_cores_per_socket = 1
+  num_sockets          = 1
+  cluster {
+    ext_id = local.cluster_ext_id
+  }
+  disks {
+    disk_address {
+      bus_type = "SCSI"
+      index    = 0
+    }
+    backing_info {
+      vm_disk {
+        disk_size_bytes = "1073741824"
+        storage_container {
+          ext_id = data.nutanix_storage_containers_v2.sc.storage_containers[0].ext_id
+        }
+      }
+    }
+  }
+  nics {
+    network_info {
+      nic_type = "NORMAL_NIC"
+      subnet {
+        ext_id = data.nutanix_subnets_v2.vm-subnet.subnets[0].ext_id
+      }
+      vlan_mode = "ACCESS"
+    }
+  }
+  guest_customization {
+    config {
+      sysprep {
+        install_type = "PREPARED"
+        sysprep_script {
+          unattend_xml {
+            value = base64encode(file(var.unattend_xml_path)) # encoded unattend_xml file value or base64 encoded string value
+          }
+        }
+      }
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      guest_customization, cd_roms
+    ]
+  }
+}
+
+resource "nutanix_virtual_machine_v2" "example-13" {
+  name                 = "example-13"
+  description          = "vm example with uefi boot"
+  num_cores_per_socket = 1
+  num_sockets          = 1
+  cluster {
+    ext_id = local.cluster_ext_id
+  }
+  boot_config {
+    uefi_boot {
+      boot_order = ["NETWORK", "DISK", "CDROM", ]
+    }
+  }
+  power_state = "OFF"
+}
+
+
 # list all virtual machines
 data "nutanix_virtual_machines_v2" "vms" {}
 

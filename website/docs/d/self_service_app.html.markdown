@@ -12,7 +12,7 @@ Describes an Application (app) in NCM Self Service.
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_self_service_app_provision" "test" {
 	bp_name         = "NAME OF BLUEPRINT IN SERVER"
 	app_name        = "NAME OF APP YOU WANT TO SET"

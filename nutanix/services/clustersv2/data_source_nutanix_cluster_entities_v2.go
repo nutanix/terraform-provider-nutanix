@@ -100,6 +100,19 @@ func DatasourceNutanixClusterEntitiesV2Read(ctx context.Context, d *schema.Resou
 		return diag.Errorf("error while fetching cluster entities : %v", err)
 	}
 
+	if resp.Data == nil {
+		if err := d.Set("cluster_entities", []map[string]interface{}{}); err != nil {
+			return diag.FromErr(err)
+		}
+
+		d.SetId(resource.UniqueId())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No Clusters found",
+			Detail:   "The API returned an empty list of clusters.",
+		}}
+	}
 	getResp := resp.Data.GetValue().([]import1.Cluster)
 
 	if err := d.Set("cluster_entities", flattenClusterEntities(getResp)); err != nil {
