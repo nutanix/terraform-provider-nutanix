@@ -12,7 +12,7 @@ Create an Address Group
 
 ## Example Usage
 
-``` hcl
+```hcl
 # Create Address group with ipv4 addresses
 resource "nutanix_address_groups_v2" "ipv4-address" {
   name        = "address_group_ipv4_address"

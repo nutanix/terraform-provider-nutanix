@@ -97,6 +97,8 @@ func resourceNutanixUserRevokeKeyV2Create(ctx context.Context, d *schema.Resourc
 	}
 	if revokeConfig.ArgumentsMap != nil {
 		d.Set("arguments_map", flattenArgumentsMap(revokeConfig.ArgumentsMap))
+	} else {
+		d.Set("arguments_map", []map[string]interface{}{})
 	}
 	d.SetId(*ExtID)
 	return nil
@@ -107,7 +109,7 @@ func resourceNutanixUserRevokeKeyV2Read(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceNutanixUserRevokeKeyV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	return resourceNutanixUserRevokeKeyV2Create(ctx, d, meta)
 }
 
 func resourceNutanixUserRevokeKeyV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

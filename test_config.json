@@ -74,6 +74,11 @@
             "subnet_mask":"" 
         },
         "test_static_network":""
+    },
+    "self_service": {
+        "bp_name_with_snapshot_config": "",
+        "bp_name": "",
+        "app_name_with_snapshot_config": ""
     }
 }
 

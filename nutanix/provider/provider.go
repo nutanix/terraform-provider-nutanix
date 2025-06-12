@@ -25,6 +25,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/nke"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prismv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/selfservice"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/storagecontainersv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/vmmv2"
@@ -232,6 +233,10 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_dbserver":                            ndb.DataSourceNutanixNDBDBServer(),
 			"nutanix_ndb_dbservers":                           ndb.DataSourceNutanixNDBDBServers(),
 			"nutanix_ndb_network_available_ips":               ndb.DataSourceNutanixNDBProfileAvailableIPs(),
+			"nutanix_self_service_snapshot_policy_list":       selfservice.DataSourceNutanixSnapshotPolicy(),
+			"nutanix_self_service_app":                        selfservice.DatsourceNutanixCalmApp(),
+			"nutanix_blueprint_runtime_editables":             selfservice.DatsourceNutanixCalmRuntimeEditables(),
+			"nutanix_self_service_app_snapshots":              selfservice.DataSourceNutanixCalmSnapshots(),
 			"nutanix_subnet_v2":                               networkingv2.DataSourceNutanixSubnetV2(),
 			"nutanix_subnets_v2":                              networkingv2.DataSourceNutanixSubnetsV2(),
 			"nutanix_vpc_v2":                                  networkingv2.DataSourceNutanixVPCv2(),
@@ -360,6 +365,11 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_stretched_vlan":                      ndb.ResourceNutanixNDBStretchedVlan(),
 			"nutanix_ndb_clone_refresh":                       ndb.ResourceNutanixNDBCloneRefresh(),
 			"nutanix_ndb_cluster":                             ndb.ResourceNutanixNDBCluster(),
+			"nutanix_self_service_app_provision":              selfservice.ResourceNutanixCalmAppProvision(),
+			"nutanix_self_service_app_patch":                  selfservice.ResourceNutanixCalmAppPatch(),
+			"nutanix_self_service_app_recovery_point":         selfservice.ResourceNutanixCalmAppRecoveryPoint(),
+			"nutanix_self_service_app_custom_action":          selfservice.ResourceNutanixCalmAppCustomAction(),
+			"nutanix_self_service_app_restore":                selfservice.ResourceNutanixCalmAppRestore(),
 			"nutanix_subnet_v2":                               networkingv2.ResourceNutanixSubnetV2(),
 			"nutanix_floating_ip_v2":                          networkingv2.ResourceNutanixFloatingIPv2(),
 			"nutanix_vpc_v2":                                  networkingv2.ResourceNutanixVPCsV2(),
@@ -375,7 +385,7 @@ func Provider() *schema.Provider {
 			"nutanix_authorization_policy_v2":                 iamv2.ResourceNutanixAuthPoliciesV2(),
 			"nutanix_saml_identity_providers_v2":              iamv2.ResourceNutanixSamlIdpV2(),
 			"nutanix_user_key_v2":                             iamv2.ResourceNutanixUserKeyV2(),
-			"nutanix_user_revoke_key_v2":                      iamv2.ResourceNutanixUserRevokeKeyV2(),
+			"nutanix_user_key_revoke_v2":                      iamv2.ResourceNutanixUserRevokeKeyV2(),
 			"nutanix_storage_containers_v2":                   storagecontainersv2.ResourceNutanixStorageContainersV2(),
 			"nutanix_category_v2":                             prismv2.ResourceNutanixCategoriesV2(),
 			"nutanix_pc_deploy_v2":                            prismv2.ResourceNutanixDeployPcV2(),
