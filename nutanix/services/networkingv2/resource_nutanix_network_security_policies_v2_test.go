@@ -105,9 +105,8 @@ func TestAccV2NutanixNetworkSecurityResource_InvalidExtIDReference(t *testing.T)
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testNetworkSecurityInvalidConfig(name, desc),
+				Config:      testNetworkSecurityInvalidConfig(name, desc),
 				ExpectError: regexp.MustCompile(`(?s)Failed validation.*firstIsolationGroup.*regex.*invalid-ext-id`),
-
 			},
 		},
 	})
