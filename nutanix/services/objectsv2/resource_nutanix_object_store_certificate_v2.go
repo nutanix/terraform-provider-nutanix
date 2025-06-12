@@ -89,42 +89,7 @@ func ResourceNutanixObjectStoreCertificateV2Create(ctx context.Context, d *schem
 	etagValue := conn.ObjectStoresAPIInstance.ApiClient.GetEtag(readResp)
 	args["If-Match"] = utils.StringPtr(etagValue)
 
-	// certificate := config.NewCertificate()
-
-	// if alternateFqdn, ok := d.GetOk("alternate_fqdns"); ok {
-	// 	certificate.AlternateFqdns = expandFqdn(alternateFqdn)
-	// }
-	// if alternateIps, ok := d.GetOk("alternate_ips"); ok {
-	// 	certificate.AlternateIps = expandIPAddress(alternateIps)
-	// }
-	// if ca, ok := d.GetOk("ca"); ok {
-	// 	certificate.Ca = utils.StringPtr(ca.(string))
-	// }
-	// if publicCert, ok := d.GetOk("public_cert"); ok {
-	// 	certificate.PublicCert = utils.StringPtr(publicCert.(string))
-	// }
-	// if privateKey, ok := d.GetOk("private_key"); ok {
-	// 	certificate.PrivateKey = utils.StringPtr(privateKey.(string))
-	// }
-	// if common.IsExplicitlySet(d, "should_generate") {
-	// 	shouldGenerate := d.Get("should_generate").(bool)
-	// 	certificate.ShouldGenerate = utils.BoolPtr(shouldGenerate)
-	// }
-
-	// aJSON, _ := json.MarshalIndent(certificate, "", "  ")
-	// log.Printf("[DEBUG] Object store certificate payload: %s", string(aJSON))
-
-	// // Create a temp directory (if you want a specific one, you can customize)
-	// tempDir := os.TempDir()
-
-	// // Define the file path
-	// filePath := filepath.Join(tempDir, "certificate.json")
-
-	// // Write the JSON data to the file
-	// if writeErr := os.WriteFile(filePath, aJSON, 0600); err != nil {
-	// 	return diag.FromErr(fmt.Errorf("failed to write certificate file: %w", writeErr))
-	// }
-
+	
 	filePath := d.Get("path").(string)
 
 	resp, err := conn.ObjectStoresAPIInstance.CreateCertificate(utils.StringPtr(objectStoreExtID), utils.StringPtr(filePath), args)
