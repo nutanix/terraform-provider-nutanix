@@ -89,7 +89,6 @@ func ResourceNutanixObjectStoreCertificateV2Create(ctx context.Context, d *schem
 	etagValue := conn.ObjectStoresAPIInstance.ApiClient.GetEtag(readResp)
 	args["If-Match"] = utils.StringPtr(etagValue)
 
-	
 	filePath := d.Get("path").(string)
 
 	resp, err := conn.ObjectStoresAPIInstance.CreateCertificate(utils.StringPtr(objectStoreExtID), utils.StringPtr(filePath), args)
