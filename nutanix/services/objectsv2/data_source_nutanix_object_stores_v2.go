@@ -96,6 +96,20 @@ func DatasourceNutanixObjectStoresV2Read(ctx context.Context, d *schema.Resource
 		if err := d.Set("object_stores", []map[string]interface{}{}); err != nil {
 			return diag.FromErr(err)
 		}
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No Objects store found",
+			Detail:   "The API returned an empty list of Objects stores.",
+		}}
+	}
+
+	if resp.Data == nil {
+		if err := d.Set("object_stores", []map[string]interface{}{}); err != nil {
+			return diag.FromErr(err)
+		}
 	} else {
 		objectStoreList := resp.Data.GetValue().([]config.ObjectStore)
 
