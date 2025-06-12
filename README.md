@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Cloud Platform.
 
-NOTE: The latest version of the Nutanix provider is [v2.1.1](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.1.1).
+NOTE: The latest version of the Nutanix provider is [v2.2.0](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.2.0).
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 
@@ -23,23 +23,30 @@ Modules based on Terraform Nutanix Provider can be found here : [Modules](https:
 * This provider uses [SDKv2](https://www.terraform.io/plugin/sdkv2/sdkv2-intro) from release 1.3.0
 
 
+### Introducing Nutanix Terraform Provider Version 2.2.0
+We're excited to announce the release of Nutanix Terraform Provider Version 2.2.0! This major update brings significant improvements to your infrastructure management experience:
+ 
+- It will allow you to interact with Self Service API. With this new plugin support you will be able to launch a Single VM Blueprint to create an Application in Self Service and perform some Day 2 actions like updating application, creating snapshot/restore etc.
+
 ### Introducing Nutanix Terraform Provider Version 2.1.0
 We're excited to announce the release of Nutanix Terraform Provider Version 2.1.0! This major update brings significant improvements to your infrastructure management experience:
  
 - Built on the latest v4 APIs/SDKs: Leveraging the power of Nutanix v4 APIs/SDKs, this version offers enhanced functionality and better integration with the latest Nutanix features.
 - Expanded Resource Coverage:  Discover new resources and data sources, enabling you to model and manage a broader spectrum of Nutanix infrastructure components within your Terraform configurations.
-- Version Suffix: To easily distinguish resources and data sources specific to version 2.0.0 and later, they are marked with the *_v2 suffix.
-
+- <b>Version Suffix: Modules built based on v4 PC/PE GA sdks are marked with the *_v2 suffix.</b>
 
 ### Software Requirements
-The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.1.0, ensure your Nutanix environment meets the following software requirements:
+The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.2.0, ensure your Nutanix environment meets the following software requirements:
+- Self Service version: 4.1.0 (Required only for running Self Service based resource and data source)
 - AOS Version: 7.0.1, 7.0 or later
 - Prism Central Version: pc2024.3, pc2024.3.1 or later
+- Nutanix Terraform Provider Version: 2.2.0
 
 
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
+| 2.2.0 | | | Self Service v4.1.0 | yes | 
 | 2.1.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.1.0 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.0.0 | 7.0 | pc2024.3 or later  | ndb v2.7, nke v2.8, foundation v5.7 | Yes |
@@ -231,6 +238,11 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | - | nutanix_lcm_prechecks_v2 |
 | - | nutanix_lcm_upgrade_v2 |
 | - | nutanix_lcm_config_v2 |
+| nutanix_self_service_app_provision | - |
+| nutanix_self_service_app_patch | - |
+| nutanix_self_service_app_recovery_point | - |
+| nutanix_self_service_app_custom_action | - |
+| nutanix_self_service_app_restore | - |
 
 
 ## Data Sources
@@ -356,6 +368,10 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | - | nutanix_lcm_entities_v2 |
 | - | nutanix_lcm_entity_v2 |
 | - | nutanix_lcm_config_v2 |
+| nutanix_self_service_app | - |
+| nutanix_blueprint_runtime_editables | - |
+| nutanix_self_service_snapshot_policy_list | - |
+| nutanix_self_service_app_snapshots | - |
 
 
 

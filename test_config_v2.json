@@ -131,6 +131,7 @@
     "image_url": "",
     "subnet_name": "",
     "assigned_ip": "",
+    "unattend_xml": "",
     "subnet": {
       "network_id": 534,
       "ip": "",

@@ -25,3 +25,6 @@ variable "disk_sizes" {
 variable "image_name" {
   type = string
 }
+variable "unattend_xml_path" {
+  type = string
+}
