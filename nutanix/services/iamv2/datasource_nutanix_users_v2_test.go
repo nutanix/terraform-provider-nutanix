@@ -284,6 +284,7 @@ func checkServiceAccountValues(expectedKeys []map[string]string, resourceName st
 		}
 		return nil
 	}
+}
 
 func testUsersDatasourceV4WithInvalidFilterConfig() string {
 	return `
