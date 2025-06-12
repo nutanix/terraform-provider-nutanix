@@ -188,7 +188,6 @@ func testUsersDatasourceV4WithLimitConfig(filepath, name string) string {
 	`, filepath, name)
 }
 
-
 func TestAccV2NutanixUsersDataSourceServiceAccount(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("service-account-unique%d", r)
