@@ -109,7 +109,6 @@ type ListResponse struct {
 type BlueprintListResponse = ListResponse
 type ApplicationListResponse = ListResponse
 
-
 type RuntimeEditablesResponse struct {
 	Resources []*Resources `json:"resources"`
 }

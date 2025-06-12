@@ -21,5 +21,5 @@ const (
 	deleteRecoveryPointsAPI       = "/apps/%s/recovery_group_delete"                                            // uses App UUID
 
 	// Accounts API
-	listAccountsAPI              = "/accounts/list"
+	listAccountsAPI = "/accounts/list"
 )
