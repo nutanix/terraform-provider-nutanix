@@ -2,6 +2,7 @@ package selfservice
 
 import (
 	"context"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -103,7 +104,7 @@ func DatsourceNutanixSelfServiceAccount() *schema.Resource {
 										Computed: true,
 									},
 									"spec_version": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 								},
@@ -193,6 +194,10 @@ func buildResourcesSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"sync_error": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				"state": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -247,6 +252,10 @@ func buildPriceItemsSchema() *schema.Schema {
 											Type:     schema.TypeFloat,
 											Computed: true,
 										},
+										"type": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
@@ -281,7 +290,7 @@ func buildPriceItemsSchema() *schema.Schema {
 						},
 					},
 				},
-				"messages_list": buildMessageListSchema(),
+				"message_list": buildMessageListSchema(),
 				"description": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -312,6 +321,7 @@ func buildAWSProviderSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Computed: true,
+		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"access_key_id": {
@@ -339,6 +349,7 @@ func buildNutanixProviderSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Computed: true,
+		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"server": {
@@ -353,6 +364,68 @@ func buildNutanixProviderSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"cluster_account_reference_list": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"description": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"message_list": buildMessageListSchema(),
+							"resources": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"price_items": buildPriceItemsSchema(),
+										"data": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"cluster_name": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													"cluster_uuid": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													"pc_account_uuid": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+												},
+											},
+										},
+										"type": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"state": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"sync_interval_secs": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"uuid": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -362,6 +435,7 @@ func buildAzureProviderSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Computed: true,
+		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"tenant_id": {
@@ -389,6 +463,7 @@ func buildVMwareProviderSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Computed: true,
+		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"server": {
@@ -416,6 +491,7 @@ func buildGCPProviderSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Computed: true,
+		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"account_type": {
@@ -447,6 +523,7 @@ func buildk8sProviderSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Computed: true,
+		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"type": {
@@ -546,7 +623,19 @@ func flattenAccountEntities(entities []map[string]interface{}) []map[string]inte
 			if lastUpdateTime, ok := metadata["last_update_time"].(string); ok {
 				metadataMap["last_update_time"] = lastUpdateTime
 			}
-			if specVersion, ok := metadata["spec_version"].(string); ok {
+			if specVersionRaw, ok := metadata["spec_version"]; ok {
+				switch v := specVersionRaw.(type) {
+				case float64:
+					if v != 0 {
+						metadataMap["spec_version"] = int(v)
+					}
+				case int:
+					if v != 0 {
+						metadataMap["spec_version"] = v
+					}
+				}
+			}
+			if specVersion, ok := metadata["spec_version"].(int); ok {
 				metadataMap["spec_version"] = specVersion
 			}
 			entityMap["metadata"] = []interface{}{metadataMap}
@@ -625,7 +714,7 @@ func flattenAccountEntities(entities []map[string]interface{}) []map[string]inte
 			if resources, ok := status["resources"].(map[string]interface{}); ok {
 
 				if typeName, ok := resources["type"].(string); ok {
-					if typeName == "custom_provider" {
+					if typeName == "custom_provider" || typeName == "nutanix" {
 						continue // Skip
 					}
 					resouceMap["type"] = typeName
@@ -645,6 +734,11 @@ func flattenAccountEntities(entities []map[string]interface{}) []map[string]inte
 				// Handle sync_status
 				if syncStatus, ok := resources["sync_status"].(string); ok {
 					resouceMap["sync_status"] = syncStatus
+				}
+
+				// Handle sync_error
+				if syncError, ok := resources["sync_error"].(string); ok {
+					resouceMap["sync_error"] = syncError
 				}
 
 				// Handle state
@@ -682,203 +776,150 @@ func flattenAccountEntities(entities []map[string]interface{}) []map[string]inte
 				}
 
 				// Handle price_items
-				if priceItems, ok := resources["price_items"].([]interface{}); ok && len(priceItems) > 0 {
-					priceItemList := make([]map[string]interface{}, 0)
-
-					for _, item := range priceItems {
-						if itemMap, ok := item.(map[string]interface{}); ok {
-							priceItem := make(map[string]interface{})
-
-							if uuid, ok := itemMap["uuid"].(string); ok {
-								priceItem["uuid"] = uuid
-							}
-							if name, ok := itemMap["name"].(string); ok {
-								priceItem["name"] = name
-							}
-							if state, ok := itemMap["state"].(string); ok {
-								priceItem["state"] = state
-							}
-							if description, ok := itemMap["description"].(string); ok {
-								priceItem["description"] = description
-							}
-
-							// Handle state_cost_list
-							if stateCostList, ok := itemMap["state_cost_list"].([]interface{}); ok && len(stateCostList) > 0 {
-								costList := make([]map[string]interface{}, 0)
-								for _, costItem := range stateCostList {
-									if costMap, ok := costItem.(map[string]interface{}); ok {
-										cost := make(map[string]interface{})
-										if state, ok := costMap["state"].(string); ok {
-											cost["state"] = state
-										}
-
-										if costListItems, ok := costMap["cost_list"].([]interface{}); ok && len(costListItems) > 0 {
-											costs := make([]map[string]interface{}, 0)
-											for _, costItem := range costListItems {
-												if costItemMap, ok := costItem.(map[string]interface{}); ok {
-													costDetail := make(map[string]interface{})
-													if interval, ok := costItemMap["interval"].(string); ok {
-														costDetail["interval"] = interval
-													}
-													if name, ok := costItemMap["name"].(string); ok {
-														costDetail["name"] = name
-													}
-													if value, ok := costItemMap["value"].(float64); ok {
-														costDetail["value"] = value
-													}
-													costs = append(costs, costDetail)
-												}
-											}
-											cost["cost_list"] = costs
-										}
-										costList = append(costList, cost)
-									}
-								}
-								priceItem["state_cost_list"] = costList
-							}
-
-							// Handle details
-							if details, ok := itemMap["details"].([]interface{}); ok && len(details) > 0 {
-								// Using only the first item assuming one object
-								if detailMapItem, ok := details[0].(map[string]interface{}); ok {
-									detailMap := make(map[string]interface{})
-									if associationType, ok := detailMapItem["association_type"].(string); ok {
-										detailMap["association_type"] = associationType
-									}
-									if occurrence, ok := detailMapItem["occurrence"].(string); ok {
-										detailMap["occurrence"] = occurrence
-									}
-									if providerType, ok := detailMapItem["provider_type"].(string); ok {
-										detailMap["provider_type"] = providerType
-									}
-									priceItem["details"] = detailMap
-								}
-							}
-
-							// Handle messages_list
-							if messagesList, ok := itemMap["messages_list"].([]interface{}); ok && len(messagesList) > 0 {
-								messages := make([]map[string]interface{}, 0)
-								for _, msg := range messagesList {
-									if msgMap, ok := msg.(map[string]interface{}); ok {
-										messageMap := make(map[string]interface{})
-										if message, ok := msgMap["message"].(string); ok {
-											messageMap["message"] = message
-										}
-										if reason, ok := msgMap["reason"].(string); ok {
-											messageMap["reason"] = reason
-										}
-										if details, ok := msgMap["details"].(string); ok {
-											messageMap["details"] = details
-										}
-										messages = append(messages, messageMap)
-									}
-								}
-								priceItem["messages_list"] = messages
-							}
-
-							priceItemList = append(priceItemList, priceItem)
-						}
-					}
-					resouceMap["price_items"] = priceItemList
-				}
+				resouceMap["price_items"] = flattenPriceItems(resources["price_items"])
 
 				// Handle data as a map (provider-specific)
 				if data, ok := resources["data"].(map[string]interface{}); ok {
 					// Initialize provider_type
 					dataMap := make(map[string]interface{})
 					provider := resources["type"].(string)
+					log.Printf("[DEBUG] Akhilan Provider type: %s", provider)
 					switch provider {
 					case "aws":
+						awsData := make(map[string]interface{})
 						if accessKeyID, ok := data["access_key_id"].(string); ok {
-							dataMap["access_key_id"] = accessKeyID
+							awsData["access_key_id"] = accessKeyID
 						}
 						if regions, ok := data["regions"].([]interface{}); ok {
-							regionNames := []string{}
+							regionList := []map[string]interface{}{}
 							for _, region := range regions {
 								if r, ok := region.(map[string]interface{}); ok {
+									regionMap := make(map[string]interface{})
 									if name, ok := r["name"].(string); ok {
-										regionNames = append(regionNames, name)
+										regionMap["name"] = name
 									}
+									regionList = append(regionList, regionMap)
 								}
 							}
-							dataMap["regions"] = regionNames
+							awsData["regions"] = regionList
 						}
+						dataMap["aws"] = []interface{}{awsData}
 
 					case "nutanix_pc":
+						nutanixData := make(map[string]interface{})
 						if server, ok := data["server"].(string); ok {
-							dataMap["server"] = server
+							nutanixData["server"] = server
 						}
-						if port, ok := data["port"].(int); ok {
-							dataMap["port"] = port
+						if portRaw, ok := data["port"]; ok {
+							switch v := portRaw.(type) {
+							case float64:
+								if v != 0 {
+									nutanixData["port"] = int(v)
+								}
+							case int:
+								if v != 0 {
+									nutanixData["port"] = v
+								}
+							}
 						}
 						if username, ok := data["username"].(string); ok {
-							dataMap["username"] = username
+							nutanixData["username"] = username
 						}
+						nutanixData["cluster_account_reference_list"] = flattenClusterAccountReferenceList(data["cluster_account_reference_list"])
+						dataMap["nutanix"] = []interface{}{nutanixData}
 
 					case "azure":
+						azureData := make(map[string]interface{})
 						if tenantID, ok := data["tenant_id"].(string); ok {
-							dataMap["tenant_id"] = tenantID
+							azureData["tenant_id"] = tenantID
 						}
 						if clientID, ok := data["client_id"].(string); ok {
-							dataMap["client_id"] = clientID
+							azureData["client_id"] = clientID
 						}
 						if subscriptionID, ok := data["subscription_id"].(string); ok {
-							dataMap["subscription_id"] = subscriptionID
+							azureData["subscription_id"] = subscriptionID
 						}
 						if cloudEnv, ok := data["cloud_environment"].(string); ok {
-							dataMap["cloud_environment"] = cloudEnv
+							azureData["cloud_environment"] = cloudEnv
 						}
+						dataMap["azure"] = []interface{}{azureData}
 
 					case "vmware":
+						vmwData := make(map[string]interface{})
 						if server, ok := data["server"].(string); ok {
-							dataMap["server"] = server
+							vmwData["server"] = server
 						}
-						if port, ok := data["port"].(int); ok {
-							dataMap["port"] = port
+						if portRaw, ok := data["port"]; ok {
+							switch v := portRaw.(type) {
+							case float64:
+								if v != 0 {
+									vmwData["port"] = int(v)
+								}
+							case int:
+								if v != 0 {
+									vmwData["port"] = v
+								}
+							}
 						}
 						if datacenter, ok := data["datacenter"].(string); ok {
-							dataMap["datacenter"] = datacenter
+							vmwData["datacenter"] = datacenter
 						}
 						if username, ok := data["username"].(string); ok {
-							dataMap["username"] = username
+							vmwData["username"] = username
 						}
+						dataMap["vmware"] = []interface{}{vmwData}
 
 					case "gcp":
+						gcpData := make(map[string]interface{})
 						if accountType, ok := data["account_type"].(string); ok {
-							dataMap["account_type"] = accountType
+							gcpData["account_type"] = accountType
 						}
 						if projectID, ok := data["project_id"].(string); ok {
-							dataMap["project_id"] = projectID
+							gcpData["project_id"] = projectID
 						}
 						if privateKeyID, ok := data["private_key_id"].(string); ok {
-							dataMap["private_key_id"] = privateKeyID
+							gcpData["private_key_id"] = privateKeyID
 						}
 						if clientEmail, ok := data["client_email"].(string); ok {
-							dataMap["client_email"] = clientEmail
+							gcpData["client_email"] = clientEmail
 						}
 						if clientID, ok := data["client_id"].(string); ok {
-							dataMap["client_id"] = clientID
+							gcpData["client_id"] = clientID
 						}
+						dataMap["gcp"] = []interface{}{gcpData}
 
 					case "k8s":
+						k8sData := make(map[string]interface{})
 						if k8sType, ok := data["type"].(string); ok {
-							dataMap["type"] = k8sType
+							k8sData["type"] = k8sType
 						}
 						if server, ok := data["server"].(string); ok {
-							dataMap["server"] = server
+							k8sData["server"] = server
 						}
-						if port, ok := data["port"].(int); ok {
-							dataMap["port"] = port
+						if portRaw, ok := data["port"]; ok {
+							switch v := portRaw.(type) {
+							case float64:
+								if v != 0 {
+									k8sData["port"] = int(v)
+								}
+							case int:
+								if v != 0 {
+									k8sData["port"] = v
+								}
+							}
 						}
-						if auth, ok := data["authentication"].([]interface{}); ok && len(auth) > 0 {
-							authMap, _ := auth[0].(map[string]interface{})
+
+						if authMap, ok := data["authentication"].(map[string]interface{}); ok {
+							authData := make(map[string]interface{})
 							if authType, ok := authMap["type"].(string); ok {
-								dataMap["auth_type"] = authType
+								authData["type"] = authType
 							}
 							if username, ok := authMap["username"].(string); ok {
-								dataMap["username"] = username
+								authData["username"] = username
 							}
+							k8sData["authentication"] = []interface{}{authData}
 						}
+						dataMap["k8s"] = []interface{}{k8sData}
 					}
 					resouceMap["data"] = []interface{}{dataMap}
 				}
@@ -889,4 +930,177 @@ func flattenAccountEntities(entities []map[string]interface{}) []map[string]inte
 		entityList = append(entityList, entityMap)
 	}
 	return entityList
+}
+
+func flattenPriceItems(priceItemsRaw interface{}) []map[string]interface{} {
+	priceItemList := make([]map[string]interface{}, 0)
+
+	priceItems, ok := priceItemsRaw.([]interface{})
+	if !ok || len(priceItems) == 0 {
+		return priceItemList
+	}
+
+	for _, item := range priceItems {
+		if itemMap, ok := item.(map[string]interface{}); ok {
+			priceItem := make(map[string]interface{})
+
+			if uuid, ok := itemMap["uuid"].(string); ok {
+				priceItem["uuid"] = uuid
+			}
+			if name, ok := itemMap["name"].(string); ok {
+				priceItem["name"] = name
+			}
+			if state, ok := itemMap["state"].(string); ok {
+				priceItem["state"] = state
+			}
+			if description, ok := itemMap["description"].(string); ok {
+				priceItem["description"] = description
+			}
+
+			// Handle state_cost_list
+			if stateCostList, ok := itemMap["state_cost_list"].([]interface{}); ok && len(stateCostList) > 0 {
+				costList := make([]map[string]interface{}, 0)
+				for _, costItem := range stateCostList {
+					if costMap, ok := costItem.(map[string]interface{}); ok {
+						cost := make(map[string]interface{})
+						if state, ok := costMap["state"].(string); ok {
+							cost["state"] = state
+						}
+
+						if costListItems, ok := costMap["cost_list"].([]interface{}); ok && len(costListItems) > 0 {
+							costs := make([]map[string]interface{}, 0)
+							for _, costItem := range costListItems {
+								if costItemMap, ok := costItem.(map[string]interface{}); ok {
+									costDetail := make(map[string]interface{})
+									if interval, ok := costItemMap["interval"].(string); ok {
+										costDetail["interval"] = interval
+									}
+									if name, ok := costItemMap["name"].(string); ok {
+										costDetail["name"] = name
+									}
+									if value, ok := costItemMap["value"].(float64); ok {
+										costDetail["value"] = value
+									}
+									if costType, ok := costItemMap["type"].(string); ok {
+										costDetail["type"] = costType
+									}
+									costs = append(costs, costDetail)
+								}
+							}
+							cost["cost_list"] = costs
+						}
+						costList = append(costList, cost)
+					}
+				}
+				priceItem["state_cost_list"] = costList
+			}
+
+			// Handle details
+			if details, ok := itemMap["details"].([]interface{}); ok && len(details) > 0 {
+				if detailMapItem, ok := details[0].(map[string]interface{}); ok {
+					detailMap := make(map[string]interface{})
+					if associationType, ok := detailMapItem["association_type"].(string); ok {
+						detailMap["association_type"] = associationType
+					}
+					if occurrence, ok := detailMapItem["occurrence"].(string); ok {
+						detailMap["occurrence"] = occurrence
+					}
+					if providerType, ok := detailMapItem["provider_type"].(string); ok {
+						detailMap["provider_type"] = providerType
+					}
+					priceItem["details"] = detailMap
+				}
+			}
+			// Handle messages_list
+			priceItem["message_list"] = flattenMessageList(itemMap["message_list"])
+			priceItemList = append(priceItemList, priceItem)
+		}
+	}
+	return priceItemList
+}
+
+func flattenMessageList(messageListRaw interface{}) []map[string]interface{} {
+	messages := make([]map[string]interface{}, 0)
+
+	messageList, ok := messageListRaw.([]interface{})
+	if !ok || len(messageList) == 0 {
+		return messages
+	}
+
+	for _, msg := range messageList {
+		if msgMap, ok := msg.(map[string]interface{}); ok {
+			messageMap := make(map[string]interface{})
+			if message, ok := msgMap["message"].(string); ok {
+				messageMap["message"] = message
+			}
+			if reason, ok := msgMap["reason"].(string); ok {
+				messageMap["reason"] = reason
+			}
+			if details, ok := msgMap["details"].(string); ok {
+				messageMap["details"] = details
+			}
+			messages = append(messages, messageMap)
+		}
+	}
+	return messages
+}
+
+func flattenClusterAccountReferenceList(refListRaw interface{}) []map[string]interface{} {
+	referenceList := make([]map[string]interface{}, 0)
+
+	refList, ok := refListRaw.([]interface{})
+	if !ok || len(refList) == 0 {
+		return referenceList
+	}
+
+	for _, ref := range refList {
+		if refMap, ok := ref.(map[string]interface{}); ok {
+			clusterRef := make(map[string]interface{})
+
+			if name, ok := refMap["name"].(string); ok {
+				clusterRef["name"] = name
+			}
+			if description, ok := refMap["description"].(string); ok {
+				clusterRef["description"] = description
+			}
+			clusterRef["message_list"] = flattenMessageList(refMap["message_list"])
+
+			// Handle resources
+			if resources, ok := refMap["resources"].(map[string]interface{}); ok {
+				clusterRefResources := make(map[string]interface{})
+				clusterRefResources["price_items"] = flattenPriceItems(resources["price_items"])
+				// Handle data
+				if clusterRefResdata, ok := resources["data"].(map[string]interface{}); ok {
+					clusterRefResourceDataMap := make(map[string]interface{})
+					if clusterName, ok := clusterRefResdata["cluster_name"].(string); ok {
+						clusterRefResourceDataMap["cluster_name"] = clusterName
+					}
+					if clusterUUID, ok := clusterRefResdata["cluster_uuid"].(string); ok {
+						clusterRefResourceDataMap["cluster_uuid"] = clusterUUID
+					}
+					if pcAccountUUID, ok := clusterRefResdata["pc_account_uuid"].(string); ok {
+						clusterRefResourceDataMap["pc_account_uuid"] = pcAccountUUID
+					}
+					clusterRefResources["data"] = []interface{}{clusterRefResourceDataMap}
+				}
+				if typ, ok := resources["type"].(string); ok {
+					clusterRefResources["type"] = typ
+				}
+				if state, ok := resources["state"].(string); ok {
+					clusterRefResources["state"] = state
+				}
+				if syncInterval, ok := resources["sync_interval_secs"].(float64); ok {
+					clusterRefResources["sync_interval_secs"] = int(syncInterval)
+				}
+				clusterRef["resources"] = []interface{}{clusterRefResources}
+			}
+
+			if uuid, ok := refMap["uuid"].(string); ok {
+				clusterRef["uuid"] = uuid
+			}
+
+			referenceList = append(referenceList, clusterRef)
+		}
+	}
+	return referenceList
 }
