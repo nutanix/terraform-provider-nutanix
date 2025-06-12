@@ -241,7 +241,6 @@ func (op Operations) RecoveryPointsDelete(ctx context.Context, appUUID string, i
 	return appResponse, op.client.Do(ctx, req, appResponse)
 }
 
-
 // ListAccounts lists the accounts available in the Nutanix environment.
 func (op Operations) ListAccounts(ctx context.Context, filter *AccountsListInput) (*AccountsListResponse, error) {
 	path := listAccountsAPI
