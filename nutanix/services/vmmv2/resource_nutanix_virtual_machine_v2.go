@@ -1574,9 +1574,9 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	if categories, ok := d.GetOk("categories"); ok {
 		body.Categories = expandCategoryReference(categories.([]interface{}))
 	}
-	// if project, ok := d.GetOk("project"); ok {
-	// 	body.Project = expandProjectReference(project.([]interface{}))
-	// }
+	if project, ok := d.GetOk("project"); ok {
+		body.Project = expandProjectReference(project.([]interface{}))
+	}
 	if ownerRef, ok := d.GetOk("ownership_info"); ok {
 		body.OwnershipInfo = expandOwnershipInfo(ownerRef)
 	}
@@ -1850,9 +1850,9 @@ func ResourceNutanixVirtualMachineV2Read(ctx context.Context, d *schema.Resource
 	if err := d.Set("categories", flattenCategoryReference(getResp.Categories)); err != nil {
 		return diag.FromErr(err)
 	}
-	// if err := d.Set("project", flattenProjectReference(getResp.Project)); err != nil {
-	// 	return diag.FromErr(err)
-	// }
+	if err := d.Set("project", flattenProjectReference(getResp.Project)); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("ownership_info", flattenOwnershipInfo(getResp.OwnershipInfo)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -3824,20 +3824,20 @@ func waitForIPRefreshFunc(client *vmm.Client, vmUUID string) resource.StateRefre
 	}
 }
 
-// func expandProjectReference(pr []interface{}) []config.ProjectReference {
-// 	if len(pr) > 0 {
-// 		prjRef := make([]config.ProjectReference, len(pr))
+func expandProjectReference(pr []interface{}) []config.ProjectReference {
+	if len(pr) > 0 {
+		prjRef := make([]config.ProjectReference, len(pr))
 
-// 		for k, v := range pr {
-// 			projects := config.ProjectReference{}
-// 			val := v.(map[string]interface{})
+		for k, v := range pr {
+			projects := config.ProjectReference{}
+			val := v.(map[string]interface{})
 
-// 			if extID, ok := val["ext_id"]; ok && len(extID.(string)) > 0 {
-// 				projects.ExtId = utils.StringPtr(extID.(string))
-// 			}
-// 			prjRef[k] = projects
-// 		}
-// 		return prjRef
-// 	}
-// 	return nil
-// }
+			if extID, ok := val["ext_id"]; ok && len(extID.(string)) > 0 {
+				projects.ExtId = utils.StringPtr(extID.(string))
+			}
+			prjRef[k] = projects
+		}
+		return prjRef
+	}
+	return nil
+}
