@@ -35,7 +35,7 @@ func DatsourceNutanixSelfServiceAccount() *schema.Resource {
 			"sort_order": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "ASC",
+				Default:  "ASCENDING",
 			},
 			"sort_attribute": {
 				Type:     schema.TypeString,
@@ -117,6 +117,10 @@ func DatsourceNutanixSelfServiceAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"total_matches": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -187,7 +191,7 @@ func buildResourcesSchema() *schema.Schema {
 					Computed: true,
 				},
 				"last_sync_time": {
-					Type:     schema.TypeString,
+					Type:     schema.TypeInt,
 					Computed: true,
 				},
 				"sync_status": {
@@ -564,7 +568,9 @@ func datsourceNutanixSelfServiceAccountRead(ctx context.Context, d *schema.Resou
 
 	acFilter := &selfservice.AccountsListInput{}
 	if filter, ok := d.GetOk("filter"); ok {
-		acFilter.Filter = filter.(string)
+		acFilter.Filter = filter.(string) + ";(type!=nutanix;type!=custom_provider)"
+	} else {
+		acFilter.Filter = "(type!=nutanix;type!=custom_provider)"
 	}
 
 	accountResp, err := conn.Service.ListAccounts(ctx, acFilter)
@@ -581,12 +587,16 @@ func datsourceNutanixSelfServiceAccountRead(ctx context.Context, d *schema.Resou
 
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
-			Summary:  "🫙 No Data found",
+			Summary:  "🫙 No data found.",
 			Detail:   "The API returned an empty list of Accounts.",
 		}}
 	}
 
 	if err := d.Set("api_version", accountResp.APIVersion); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("total_matches", accountResp.Metadata["total_matches"]); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -727,7 +737,7 @@ func flattenAccountEntities(entities []map[string]interface{}) []map[string]inte
 				}
 
 				// Handle last_sync_time
-				if lastSyncTime, ok := resources["last_sync_time"].(string); ok {
+				if lastSyncTime, ok := resources["last_sync_time"].(float64); ok {
 					resouceMap["last_sync_time"] = lastSyncTime
 				}
 
