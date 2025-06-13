@@ -19,6 +19,10 @@ func ResourceNutanixUserV2() *schema.Resource {
 		ReadContext:   resourceNutanixUserV2Read,
 		UpdateContext: resourceNutanixUserV2Update,
 		DeleteContext: resourceNutanixUserV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
