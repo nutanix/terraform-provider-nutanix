@@ -28,8 +28,8 @@ For ubuntu: sudo apt-get install jq. For detail installation [Read here](https:/
 
 Runtime editable is currently supported for updating `num_sockets, num_vcpus_per_socket, memory_size_mib` Follow below steps:
 
-- Step 1: Extract runtime editable from data source nutanix_blueprint_runtime_editables [Read here](../d/blueprint_runtime_editables.html.markdown)
-- Step 2: Dump extracted value in a json [Read here](../d/blueprint_runtime_editables.html.markdown)
+- Step 1: Extract runtime editable from data source nutanix_blueprint_runtime_editables
+- Step 2: Dump extracted value in a json
 - Step 3: Open extracted json file and copy exact value string from substrate_list["value"] 
 - Step 4: In terminal. Use jq to format the string using `echo '<copied-value>' | jq -r | jq` and copy the content from terminal.
 - Step 5: Make `variables.tf` similar to the one mentioned below and put this jq formatted value in place of `<updated-value>` show below.

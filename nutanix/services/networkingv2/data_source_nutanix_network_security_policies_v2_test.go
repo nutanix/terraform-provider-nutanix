@@ -54,6 +54,22 @@ func TestAccV2NutanixNSPsDataSource_WithFilter(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixNSPsDataSource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNSPsDataSourceWithInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameNSPS, "network_policies.#"),
+					resource.TestCheckResourceAttr(datasourceNameNSPS, "network_policies.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccNSPsDataSourceConfig(name string) string {
 	return fmt.Sprintf(`
 	data "nutanix_categories_v2" "test" {}
@@ -118,4 +134,12 @@ func testAccNSPsDataSourceConfigWithFilter(name string) string {
 		filter = "name eq '${nutanix_network_security_policy_v2.test.name}'"
 	}
 	`, name)
+}
+
+func testAccNSPsDataSourceWithInvalidFilterConfig() string {
+	return `
+	data "nutanix_network_security_policies_v2" "test" {
+		filter = "name eq 'invalid_name'"
+	}
+	`
 }

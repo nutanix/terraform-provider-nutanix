@@ -61,6 +61,22 @@ func TestAccV2NutanixRolesDatasource_WithLimit(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixRolesDatasource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testRolesDatasourceV4WithInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameRoles, "roles.#"),
+					resource.TestCheckResourceAttr(datasourceNameRoles, "roles.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testRolesDatasourceV4Config() string {
 	return `
 	data "nutanix_roles_v2" "test"{}
@@ -78,7 +94,7 @@ func testRolesDatasourceV4WithFilterConfig(filepath string) string {
 	data "nutanix_operations_v2" "test" {
 	  filter = "startswith(displayName, 'Create_')"
 	}
-	
+
 	resource "nutanix_roles_v2" "test" {
 		display_name = local.roles.display_name
 		description  = local.roles.description
@@ -90,7 +106,7 @@ func testRolesDatasourceV4WithFilterConfig(filepath string) string {
 	  	]
 		depends_on = [data.nutanix_operations_v2.test]
   	}
-	  
+
 	  data "nutanix_roles_v2" "test" {
 		filter     = "displayName eq '${local.roles.display_name}'"
 		depends_on = [resource.nutanix_roles_v2.test]
@@ -125,4 +141,12 @@ func testRolesDatasourceV4WithLimitConfig(filepath string) string {
 			depends_on = [resource.nutanix_roles_v2.test]
 		}
 	`, filepath)
+}
+
+func testRolesDatasourceV4WithInvalidFilterConfig() string {
+	return `
+		data "nutanix_roles_v2" "test" {
+			filter = "displayName eq 'invalid_filter'"
+		}
+	`
 }
