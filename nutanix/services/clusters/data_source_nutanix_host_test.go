@@ -70,10 +70,10 @@ func testAccHostDataSourceConfig(imgName, vmName string) string {
 			num_sockets          = 1
 			memory_size_mib      = 186
 
-			serial_port_list {
-				index = 1
-				is_connected = true
-			}
+			#serial_port_list {
+			#	index = 1
+			#	is_connected = true
+			#}
 
 			disk_list {
 				data_source_reference = {
