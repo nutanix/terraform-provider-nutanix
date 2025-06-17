@@ -9,16 +9,17 @@ jobs:
     if: github.event_name == 'repository_dispatch'
     steps:
       - name: Trigger Event
-        run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+        run: |
+          echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
 
       - name: Runner Info
-        run: echo "🐧 This job is now running on runner: $RUNNER_NAME (OS: ${{ runner.os }})"
+        run: |
+          echo "🐧 This job is now running on runner: $RUNNER_NAME (OS: ${{ runner.os }})"
 
       - name: Pull Request Info
         run: |
           echo "your repository is ${{ github.repository }}."
           echo "PR Number: ${{ github.event.client_payload.pull_request.number }}"
-          echo "PR Title: ${{ github.event.client_payload.pull_request.title }}"
           echo "Branch Name: ${{ github.event.client_payload.pull_request.head.ref }}"
 
       - name: Check out repository code
