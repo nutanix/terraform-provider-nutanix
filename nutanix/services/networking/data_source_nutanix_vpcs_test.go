@@ -42,6 +42,8 @@ func TestAccNutanixVPCsDataSource_UUID(t *testing.T) {
 					// 		"data.nutanix_vpcs.test", "entities.0.spec.0.resources.0.externally_routable_prefix_list.0.ip", "172.36.0.0"),
 					// 	resource.TestCheckResourceAttr(
 					// 		"data.nutanix_vpcs.test", "entities.0.spec.0.resources.0.common_domain_name_server_ip_list.0.ip", "8.8.8.9"),
+					// extract the index of the VPC with the name "acctest-managed-<r>"
+					// and check the attributes of that VPC
 					func(s *terraform.State) error {
 						res := s.RootModule().Resources["data.nutanix_vpcs.test"]
 						if res == nil {
