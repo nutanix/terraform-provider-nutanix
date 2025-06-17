@@ -37,7 +37,7 @@ func TestAccNutanixVPCsDataSource_UUID(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"data.nutanix_vpcs.test", "entities.0.spec.0.resources.0.externally_routable_prefix_list.0.prefix_length", "16"),
 					resource.TestCheckResourceAttr(
-						"data.nutanix_vpcs.test", "entities.0.spec.0.resources.0.externally_routable_prefix_list.0.ip", "172.31.0.0"),
+						"data.nutanix_vpcs.test", "entities.0.spec.0.resources.0.externally_routable_prefix_list.0.ip", "172.36.0.0"),
 					resource.TestCheckResourceAttr(
 						"data.nutanix_vpcs.test", "entities.0.spec.0.resources.0.common_domain_name_server_ip_list.0.ip", "8.8.8.9"),
 				),
@@ -79,18 +79,18 @@ resource "nutanix_subnet" "acctest-managed" {
 
 resource "nutanix_vpc" "test" {
 	name = "acctest-managed-%[1]d"
-  
-  
+
+
 	external_subnet_reference_uuid = [
 	  resource.nutanix_subnet.acctest-managed.id
 	]
-  
+
 	common_domain_name_server_ip_list{
 			ip = "8.8.8.9"
 	}
-  
+
 	externally_routable_prefix_list{
-	  ip=  "172.31.0.0"
+	  ip=  "172.36.0.0"
 	  prefix_length= 16
 	}
   }
