@@ -1,6 +1,12 @@
 name: Acceptance Test cases
 on:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to run against"
+        required: true
+        default: "master"
   repository_dispatch:
     types: [ok-to-test-command]
 jobs:
@@ -8,6 +14,10 @@ jobs:
     runs-on: self-hosted
     if: github.event_name == 'repository_dispatch'
     steps:
+     - name: Check if event is ok-to-test-command
+        run: |
+          echo "akhil"
+
       - name: Trigger Event
         run: |
           echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
@@ -25,7 +35,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
         with:
-          ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
+          ref: ${{ github.event.inputs.branch }}
 
       - name: Remove Cached Go Versions
         run: |
