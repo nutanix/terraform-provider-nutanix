@@ -12,7 +12,6 @@ on:
 jobs:
   Acceptance-Tests:
     runs-on: self-hosted
-    if: github.event_name == 'repository_dispatch'
     steps:
       - name: Check if event is ok-to-test-command
         run: |
