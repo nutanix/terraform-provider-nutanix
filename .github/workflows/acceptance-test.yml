@@ -124,7 +124,9 @@ jobs:
         continue-on-error: true
 
       - name: Acceptance test cases
+        id: test-execution
         run: |
+              echo "tests_executed=true" >> "$GITHUB_OUTPUT"
               args="${{ github.event.client_payload.slash_command.args }}"
               providers=(${args})
               index=0
@@ -198,35 +200,42 @@ jobs:
                   FAIL_PERCENT=0
                   SKIP_PERCENT=0
               fi
+              {
+                echo "==================================================🧪 TEST SUMMARY 🧪================================================================================="
+                echo "Total Test Cases Run 🐹🚀: $TOTAL_RUN"
+                echo "Total Test Cases Passed 🐹✅: $TOTAL_PASSED ($PASS_PERCENT %)" 
+                echo "Total Test Cases Failed 🐹❌: $TOTAL_FAILED ($FAIL_PERCENT %)"
+                echo "Total Test Cases Skipped 🐹⚠️: $TOTAL_SKIPPED ($SKIP_PERCENT %)"
+                echo "=================================================================================================================================================="
 
-              echo "==================================================🧪 TEST SUMMARY 🧪================================================================================="
-              echo "Total Test Cases Run 🐹🚀: $TOTAL_RUN"
-              echo "Total Test Cases Passed 🐹✅: $TOTAL_PASSED ($PASS_PERCENT %)" 
-              echo "Total Test Cases Failed 🐹❌: $TOTAL_FAILED ($FAIL_PERCENT %)"
-              echo "Total Test Cases Skipped 🐹⚠️: $TOTAL_SKIPPED ($SKIP_PERCENT %)"
-              echo "=================================================================================================================================================="
+                echo "================================================== TESTS SUCCEEDED ✅ ============================================================================="
+                if [ "$TOTAL_PASSED" -gt 0 ]; then
+                    echo ""
+                    grep '^--- PASS' test_output.log | awk '{print "✅ " $3}' || true
+                fi
 
-              echo "================================================== TESTS SUCCEEDED ✅ ============================================================================="
-              if [ "$TOTAL_PASSED" -gt 0 ]; then
-                  echo ""
-                  grep '^--- PASS' test_output.log | awk '{print "✅ " $3}' || true
-              fi
+                echo "==================================================================================================================================================="
+                echo "================================================== TESTS FAILED ❌ ================================================================================"
+                if [ "$TOTAL_FAILED" -gt 0 ]; then
+                    echo ""
+                    grep '^--- FAIL' test_output.log | awk '{print "❌ " $3}' || true
+                fi
 
-              echo "==================================================================================================================================================="
-              echo "================================================== TESTS FAILED ❌ ================================================================================"
-              if [ "$TOTAL_FAILED" -gt 0 ]; then
-                  echo ""
-                  grep '^--- FAIL' test_output.log | awk '{print "❌ " $3}' || true
-              fi
+                echo "==================================================================================================================================================="
+                echo "================================================== TESTS SKIPPED ⚠️ =============================================================================="
+                if [ "$TOTAL_SKIPPED" -gt 0 ]; then
+                    awk '
+                      /^=== RUN/ { testname=$3; reason="No reason provided" }
+                      /--- SKIP/ { print "⚠️ " testname "   : Reason: ➡️ :  " reason }
+                      /^[[:space:]]+/ { reason=$0 }' test_output.log || true
+                fi
+              } > test_summary.txt
+              echo "TEST_SUMMARY_FILE=test_summary.txt" >> $GITHUB_ENV
 
-              echo "==================================================================================================================================================="
-              echo "================================================== TESTS SKIPPED ⚠️ =============================================================================="
-              if [ "$TOTAL_SKIPPED" -gt 0 ]; then
-                  awk '
-                    /^=== RUN/ { testname=$3; reason="No reason provided" }
-                    /--- SKIP/ { print "⚠️ " testname "   : Reason: ➡️ :  " reason }
-                    /^[[:space:]]+/ { reason=$0 }' test_output.log || true
-              fi
+              # Write to GitHub output for PR comment
+              echo "summary_content<<EOF" >> "$GITHUB_OUTPUT"
+              cat test_summary.txt >> "$GITHUB_OUTPUT"
+              echo "EOF" >> "$GITHUB_OUTPUT"
 
               echo "==================================================================================================================================================="
               if [ "$TOTAL_FAILED" -gt 0 ]; then
@@ -252,7 +261,7 @@ jobs:
               fi
 
       - name: Code Coverage Check
-        if: ${{ always() }}
+        if: ${{ steps.test-execution.outputs.tests_executed == 'true' }}
         run:  |
               echo "Code coverage: Checking if code coverage is above threshold..."
               export TESTCOV_THRESHOLD=50
@@ -284,17 +293,17 @@ jobs:
       #   continue-on-error: true
 
       - name: Post build status as comment
-        if: ${{ always() }}
+        if: ${{ steps.test-execution.outputs.tests_executed == 'true' }}
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: 877
           body: |
-            🧪 **Acceptance test run status:** `${{ job.status }}`
-
-            **📌 [View Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**
-
+            > 🧪 **Build status:** `${{ job.status }}`
+            > 📌 **[View Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**
+            > 📊 **Code Coverage:** `${{ env.CODE_COVERAGE_OUTPUT }}`
+            > 📝 **Test Summary:**
             ```txt
-            akhil gullapalli
+            ${{ steps.test-execution.outputs.summary_content }}
             ```
           reaction-type: hooray
 
