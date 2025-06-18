@@ -14,9 +14,9 @@ jobs:
     runs-on: self-hosted
     if: github.event_name == 'repository_dispatch'
     steps:
-     - name: Check if event is ok-to-test-command
+      - name: Check if event is ok-to-test-command
         run: |
-          echo "akhil"
+         echo "akhil"
 
       - name: Trigger Event
         run: |
