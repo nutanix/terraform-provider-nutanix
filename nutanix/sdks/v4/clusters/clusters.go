@@ -30,6 +30,7 @@ func NewClustersClient(credentials client.Credentials) (*Client, error) {
 	f := &Client{
 		ClusterEntityAPI:     api.NewClustersApi(baseClient),
 		StorageContainersAPI: api.NewStorageContainersApi(baseClient),
+		PasswordManagerAPI:   api.NewPasswordManagerApi(baseClient),
 	}
 
 	return f, nil

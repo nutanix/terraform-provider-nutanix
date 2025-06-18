@@ -3,12 +3,11 @@ package passwordmanagerv2
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	taskRef "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/prism/v4/config"
+	clusterConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
@@ -25,7 +24,6 @@ func ResourceNutanixPasswordManagerV2() *schema.Resource {
 			"ext_id": {
 				Type:     schema.TypeString,
 				Required: true,
-				Computed: true,
 			},
 			"current_password": {
 				Type:     schema.TypeString,
@@ -41,14 +39,16 @@ func ResourceNutanixPasswordManagerV2() *schema.Resource {
 
 func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	fmt.Printf("[DEBUG] Creating Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))
-
-	resp, err := meta.(*conns.Client).PasswordManagerAPI.PerformPasswordChange(
-		utils.StringPtr(d.Get("ext_id").(string)),
-		&prismConfig.PasswordChangeRequest{
-			CurrentPassword: utils.StringPtr(d.Get("current_password").(string)),
-			NewPassword:     utils.StringPtr(d.Get("new_password").(string)),
-		},
-	)
+	conn := meta.(*conns.Client).ClusterAPI
+	extId := d.Get("ext_id").(string)
+	body := &clusterConfig.ChangePasswordSpec{}
+	if currPassword, ok := d.GetOk("current_password"); ok {
+		body.CurrentPassword = utils.StringPtr(currPassword.(string))
+	}
+	if newPassword, ok := d.GetOk("new_password"); ok {
+		body.NewPassword = utils.StringPtr(newPassword.(string))
+	}
+	resp, err := conn.PasswordManagerAPI.ChangeSystemUserPasswordById(extId, body)
 	if err != nil {
 		return diag.Errorf("error while performing password change: %v", err)
 	}
@@ -68,36 +68,31 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("Prechecks task failed: %s", errWaitTask)
+		return diag.Errorf("Change Password Request failed for ext_id %s with error %s", extId, errWaitTask)
 	}
 
 	// set the resource id to random uuid
 	d.SetId(utils.GenUUID())
-	return nil
+	return resourceNutanixPasswordManagerV2Read(ctx, d, meta)
 }
 
 func resourceNutanixPasswordManagerV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[DEBUG] Reading Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))
-	// Implement the logic to read the password manager details
+	fmt.Printf("[DEBUG] Reading Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))
 	return nil
 }
 
 func resourceNutanixPasswordManagerV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	fmt.Printf("[DEBUG] Updating Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))
-	// Implement the logic to update the password manager details
 	return nil
 }
 
 func resourceNutanixPasswordManagerV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	fmt.Printf("[DEBUG] Deleting Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))
-	// Implement the logic to delete the password manager details
 	return nil
 }
 
 func taskStateRefreshPrismTaskGroup(client *prism.Client, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
-		// encodeUUID := data + ":" + taskUUID
 		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
 		if err != nil {
 			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
