@@ -261,8 +261,10 @@ jobs:
               fi
 
       - name: Code Coverage Check
-        if: ${{ env.tests_executed == 'true' }}
         run:  |
+              echo "Checking code coverage..."
+              echo ${{ env.tests_executed }}
+              echo "-===="
               echo "Code coverage: Checking if code coverage is above threshold..."
               export TESTCOV_THRESHOLD=50
               echo "Threshold: $TESTCOV_THRESHOLD %"
