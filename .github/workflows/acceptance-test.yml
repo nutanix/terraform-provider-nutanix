@@ -9,14 +9,12 @@ on:
         default: "master"
   repository_dispatch:
     types: [ok-to-test-command]
+  
 jobs:
-  Acceptance-Tests:
+  setup:
+    name: 🌱 Environment Setup
     runs-on: self-hosted
     steps:
-      - name: Check if event is ok-to-test-command
-        run: |
-         echo "akhil"
-
       - name: Trigger Event
         run: |
           echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
@@ -127,6 +125,11 @@ jobs:
             fi
         continue-on-error: true
 
+  tests:
+    name: 🏃🛠️ Tests Execution
+    runs-on: self-hosted
+    needs: setup
+    steps:
       - name: Acceptance test cases
         run: |
               args="${{ github.event.client_payload.slash_command.args }}"
@@ -254,23 +257,62 @@ jobs:
               else
                   exit 0
               fi
-        continue-on-error: true
 
-      - name: Code Coverage Check
+  coverage:
+    name: 📊 Code Coverage Check
+    needs: tests
+    runs-on: self-hosted
+    steps:
+      -name: Code Coverage
+      if: ${{ always() }}
+      run:  |
+            echo "Code coverage: Checking if code coverage is above threshold..."
+            export TESTCOV_THRESHOLD=50
+            echo "Threshold: $TESTCOV_THRESHOLD %"
+            totalCoverage=`go tool cover -func=c.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
+            echo "Current test coverage : $totalCoverage %"
+            if (( $(echo "$totalCoverage $TESTCOV_THRESHOLD" | awk '{print ($1 > $2)}') )); then
+                echo "CODE_COVERAGE_OUTPUT=Line code coverage is $totalCoverage" >> $GITHUB_ENV
+                echo "Line coverage is $totalCoverage"
+            else
+                echo "CODE_COVERAGE_OUTPUT=Current line coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD). Kindly add more acceptance tests." >> $GITHUB_ENV
+                echo "Current coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD)."
+            fi
+  
+  report:
+    name: 📢 Report Generation
+    needs: coverage
+    runs-on: self-hosted
+    steps:
+      - name: Generate Report
+        uses: peter-evans/create-or-update-comment@v4
         if: ${{ always() }}
-        run:  |
-              echo "Code coverage: Checking if code coverage is above threshold..."
-              export TESTCOV_THRESHOLD=50
-              echo "Threshold: $TESTCOV_THRESHOLD %"
-              totalCoverage=`go tool cover -func=c.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
-              echo "Current test coverage : $totalCoverage %"
-              if (( $(echo "$totalCoverage $TESTCOV_THRESHOLD" | awk '{print ($1 > $2)}') )); then
-                  echo "CODE_COVERAGE_OUTPUT=Line code coverage is $totalCoverage" >> $GITHUB_ENV
-                  echo "Line coverage is $totalCoverage"
-              else
-                  echo "CODE_COVERAGE_OUTPUT=Current line coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD). Kindly add more acceptance tests." >> $GITHUB_ENV
-                  echo "Current coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD)."
-              fi
+        with:
+          issue-number: 877
+          body: |
+            🧪 **Acceptance test run status:** `${{ job.status }}`
+
+            **📌 [View Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**
+
+            ```txt
+            akhil gullapalli
+            ```
+          reaction-type: hooray
+  
+  status:
+    name: 🚦 Workflow Status
+    if: ${{ always() }}
+    runs-on: self-hosted
+    steps:
+    - name: Show job status
+      run: |
+        STATUS="${{ job.status }}"
+        if [ "$STATUS" == "failure" ]; then
+          echo "Job Status: $STATUS 😢"
+        else
+          echo "Job Status: $STATUS ✅"
+        fi
+        
 
       # # Update the comment back
       # - name: Update comment
@@ -288,27 +330,4 @@ jobs:
       #     reaction-type: hooray
       #   continue-on-error: true
 
-      - name: Post build status as comment
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: 877
-          body: |
-            🧪 **Acceptance test run status:** `${{ job.status }}`
-
-            **📌 [View Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**
-
-            ```txt
-            akhil gullapalli
-            ```
-          reaction-type: hooray
-
       # Print job status
-      - name: Print job status
-        if: ${{ always() }}
-        run: |
-          STATUS="${{ job.status }}"
-          if [ "$STATUS" == "failure" ]; then
-            echo "Job Status: $STATUS 😢"
-          else
-            echo "Job Status: $STATUS ✅"
-          fi
