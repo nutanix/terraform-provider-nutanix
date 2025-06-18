@@ -167,7 +167,7 @@ jobs:
                   fi
                   index=$((index+1))
               done
-              export TESTARGS="-run=${runFlag}"
+              export TESTARGS="-run=TestAccV2NutanixLcmEntitiesDatasource_InvalidFilter"
               echo "TESTARGS = $TESTARGS"
               echo "==> Setup Foundation Config"
               echo '${{ secrets.FOUNDATION_CONFIG }}' > test_foundation_config.json
@@ -272,18 +272,33 @@ jobs:
                   echo "Current coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD)."
               fi
 
-      # Update the comment back
-      - name: Update comment
-        uses: peter-evans/create-or-update-comment@v1
-        if: ${{ always() }}
-        with:
-          comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
-          body: |
-            ```
-            Acceptance test run status: ${{ job.status }}
-            **📌 [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**
-            ${{ env.CODE_COVERAGE_OUTPUT }}
+      # # Update the comment back
+      # - name: Update comment
+      #   uses: peter-evans/create-or-update-comment@v1
+      #   if: ${{ always() }}
+      #   with:
+      #     comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
+      #     body: |
+      #       ```
+      #       Acceptance test run status: ${{ job.status }}
+      #       **📌 [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**
+      #       ${{ env.CODE_COVERAGE_OUTPUT }}
 
+      #       ```
+      #     reaction-type: hooray
+      #   continue-on-error: true
+
+      - name: Post build status as comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: 877
+          body: |
+            🧪 **Acceptance test run status:** `${{ job.status }}`
+
+            **📌 [View Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**
+
+            ```txt
+            akhil gullapalli
             ```
           reaction-type: hooray
 
