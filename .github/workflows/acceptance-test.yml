@@ -223,16 +223,16 @@ jobs:
                 echo "Total Test Cases Failed ❌: $TOTAL_FAILED ($FAIL_PERCENT %)"
                 echo "Total Test Cases Skipped ⚠️: $TOTAL_SKIPPED ($SKIP_PERCENT %)"
                 echo "=================================================================================================================================================="
-
+                echo ""
                 echo "================================================== TESTS SUCCEEDED ✅ ============================================================================="
                 if [ "$TOTAL_PASSED" -gt 0 ]; then
                     echo ""
                     grep '^--- PASS' test_output.log | awk '{print "✅ " $3}' || true
                 else
+                    echo ""
                     echo "No tests passed 😞❗"
                 fi
-                echo ""
-                echo "===========================================================oooo========================================================================================"
+                echo "==================================================================================================================================================="
                 echo ""
                 echo "================================================== TESTS FAILED ❌ ================================================================================"
                 if [ "$TOTAL_FAILED" -gt 0 ]; then
@@ -241,8 +241,7 @@ jobs:
                 else
                     echo "🎉💃 No tests failed 🕺🎉"
                 fi
-                echo ""
-                echo "===========================================================oooo========================================================================================"
+                echo "==================================================================================================================================================="
                 echo ""
                 echo "================================================== TESTS SKIPPED ⚠️ =============================================================================="
                 if [ "$TOTAL_SKIPPED" -gt 0 ]; then
@@ -253,9 +252,9 @@ jobs:
                 else
                     echo "🎉💃 No tests skipped 🕺🎉"
                 fi
+                echo "==================================================================================================================================================="
                 echo ""
-                echo "===========================================================oooo========================================================================================"
-                echo ""
+
               } > test_summary.txt
               echo "TEST_SUMMARY_FILE=test_summary.txt" >> $GITHUB_ENV
 
@@ -276,6 +275,7 @@ jobs:
                           echo "========================================🔥🔥🔥🔥📝 TRACEBACK 📝🔥🔥🔥🔥 ======================================================================================="
                           awk "/=== RUN   $test/,/--- FAIL: $test/" test_output.log | sed 's/^/    /' || true
                           echo "==========================================================================================================================================================="
+                          echo ""
                       fi
                   done
               fi
@@ -323,30 +323,30 @@ jobs:
       #   continue-on-error: true
       
       # Post build status along with test summary as a comment only if tests executed successfully
-      - name: Post build status as comment
+      - name: Post build status and test summary
         if: ${{ steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: 877
           body: |
-            - 🧪 `**Build Status: **` `${{ job.status }}`
-            - 📌 `**GitHub Action: **` [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            - 📊 `**Code Coverage: **` `${{ env.CODE_COVERAGE_OUTPUT }}`
-            - 📝 `**Test Summary: **`
+            - 🧪 **`Build Status: `** `${{ job.status }}`
+            - 📌 **`GitHub Action: `** [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - 📊 **`Code Coverage: `** `${{ env.CODE_COVERAGE_OUTPUT }}`
+            - 📝 **`Test Summary: `**
             ```txt
             ${{ steps.test-execution.outputs.summary_content }}
             ```
       
       # Post only Build Status and workflow info as Comment if tests execution is not successful
-      - name: Post build status
+      - name: Post build status and workflow info
         if: ${{ steps.test-execution.outputs.tests_executed == 'tests_execution_not_successful' || !steps.test-execution.outputs.tests_executed }}
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: 877
           body: |
-            - 🧪 `**Build status:**` `${{ job.status }}`
-            - 📌 `** [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**`
-            - ℹ️ `**Tests were not successfully executed, so no summary is available.**`
+            - 🧪 **`Build Status: `** `${{ job.status }}`
+            - 📌 **`GitHub Action: `** [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - ℹ️ **`Tests were not successfully executed, so no summary is available.`**
 
       
       # 🎉 If build succeeded
