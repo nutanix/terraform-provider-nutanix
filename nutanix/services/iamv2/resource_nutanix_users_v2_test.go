@@ -478,29 +478,29 @@ func testUsersResourceWithoutUserTypeConfig(filepath, name string) string {
 func testServiceAccountResourceConfigDuplicateName(name string) string {
 	return fmt.Sprintf(`
 	resource "nutanix_users_v2" "service_account_create" {
-		username = "%[2]s"
+		username = "%[1]s"
 		description = "test service account tf"
 		email_id = "terraform_plugin@domain.com"
 		user_type = "SERVICE_ACCOUNT"
 	}
 
 	resource "nutanix_users_v2" "service_account_create_duplicate_name" {
-		username = "%[2]s"
+		username = "%[1]s"
 		description = "test service account tf updated"
 		email_id = "terraform_plugin_updated@domain.com"
 		user_type = "SERVICE_ACCOUNT"
-		depends_on = [nutanix_users_v2.service_account]
+		depends_on = [nutanix_users_v2.service_account_create]
 	}
-	`, filepath, name)
+	`, name)
 }
 
 func testServiceAccountCreateResourceConfig(name string, description string) string {
 	return fmt.Sprintf(`
 	resource "nutanix_users_v2" "service_account" {
-		username = "%[2]s"
-		description = "%[3]s"
+		username = "%[1]s"
+		description = "%[2]s"
 		email_id = "terraform_plugin@domain.com"
 		user_type = "SERVICE_ACCOUNT"
 	}
-	`, filepath, name, description)
+	`, name, description)
 }

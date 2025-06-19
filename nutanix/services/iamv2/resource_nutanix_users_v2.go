@@ -2,6 +2,8 @@ package iamv2
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -284,6 +286,9 @@ func resourceNutanixUserV2Create(ctx context.Context, d *schema.ResourceData, me
 		spec.AdditionalAttributes = expandKVPair(addAttr.([]interface{}))
 	}
 
+	aJSON, _ := json.MarshalIndent(spec, "", "  ")
+	log.Printf("[DEBUG] nutanix create user payload: %s", aJSON)
+
 	resp, err := conn.UsersAPIInstance.CreateUser(spec)
 	if err != nil {
 		return diag.Errorf("error while creating User : %v", err)
@@ -387,8 +392,6 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 
 	updateSpec = &getUserResp
 
-	// checking if attribute is updated or not
-
 	if d.HasChange("user_type") {
 		const two, three, four, five, six = 2, 3, 4, 5, 6
 		usertypeMap := map[string]interface{}{
@@ -410,15 +413,37 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("display_name") {
 		updateSpec.DisplayName = utils.StringPtr(d.Get("display_name").(string))
+	} else {
+		// If display_name is empty value (""), we should not send it in the update request
+		if utils.StringValue(updateSpec.DisplayName) == "" {
+			updateSpec.DisplayName = nil
+		}
 	}
 	if d.HasChange("first_name") {
 		updateSpec.FirstName = utils.StringPtr(d.Get("first_name").(string))
+	} else {
+		// If first_name is empty value (""), we should not send it in the update request
+		if utils.StringValue(updateSpec.FirstName) == "" {
+			updateSpec.FirstName = nil
+		}
 	}
 	if d.HasChange("middle_initial") {
 		updateSpec.MiddleInitial = utils.StringPtr(d.Get("middle_initial").(string))
+	} else {
+		// If middle_initial is empty value (""), we should not send it in the
+		// update request
+		if utils.StringValue(updateSpec.MiddleInitial) == "" {
+			updateSpec.MiddleInitial = nil
+		}
 	}
 	if d.HasChange("last_name") {
 		updateSpec.LastName = utils.StringPtr(d.Get("last_name").(string))
+	} else {
+		// If last_name is empty value (""), we should not send it in the
+		// update request
+		if utils.StringValue(updateSpec.LastName) == "" {
+			updateSpec.LastName = nil
+		}
 	}
 	if d.HasChange("email_id") {
 		updateSpec.EmailId = utils.StringPtr(d.Get("email_id").(string))
@@ -454,6 +479,9 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 
 	args := make(map[string]interface{})
 	args["If-Match"] = utils.StringPtr(etagValue)
+
+	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
+	log.Printf("[DEBUG] nutanix update user payload: %s", aJSON)
 
 	updateresp, err := conn.UsersAPIInstance.UpdateUserById(utils.StringPtr(d.Id()), updateSpec, args)
 	if err != nil {
