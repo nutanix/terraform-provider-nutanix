@@ -126,7 +126,7 @@ jobs:
       - name: Acceptance test cases
         id: test-execution
         run: |
-              echo "tests_executed=tests_execution_initiated" >> >> $GITHUB_OUTPUT
+              echo "tests_executed=tests_execution_initiated" >> $GITHUB_OUTPUT
               args="${{ github.event.client_payload.slash_command.args }}"
               providers=(${args})
               index=0
