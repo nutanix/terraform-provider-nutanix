@@ -1,17 +1,12 @@
 name: Acceptance Test cases
 on:
   pull_request:
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: "Branch to run against"
-        required: true
-        default: "master"
   repository_dispatch:
     types: [ok-to-test-command]
 jobs:
   Acceptance-Tests:
     runs-on: self-hosted
+    if: github.event_name == 'repository_dispatch'
     steps:
       - name: Trigger Event
         run: |
@@ -305,29 +300,13 @@ jobs:
                   echo "CODE_COVERAGE_OUTPUT=Current line coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD). Kindly add more acceptance tests." >> $GITHUB_ENV
                   echo "Current coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD)."
               fi
-
-      # # Update the comment back
-      # - name: Update comment
-      #   uses: peter-evans/create-or-update-comment@v1
-      #   if: ${{ always() }}
-      #   with:
-      #     comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
-      #     body: |
-      #       ```
-      #       Acceptance test run status: ${{ job.status }}
-      #       **📌 [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**
-      #       ${{ env.CODE_COVERAGE_OUTPUT }}
-
-      #       ```
-      #     reaction-type: hooray
-      #   continue-on-error: true
       
       # Post build status along with test summary as a comment only if tests executed successfully
       - name: Post build status and test summary
         if: ${{ steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
         uses: peter-evans/create-or-update-comment@v4
         with:
-          issue-number: 877
+          comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           body: |
             - 🧪 **`Build Status: `** `${{ job.status }}`
             - 📌 **`GitHub Action: `[View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`
@@ -343,7 +322,7 @@ jobs:
         if: ${{ steps.test-execution.outputs.tests_executed == 'tests_execution_not_successful' || !steps.test-execution.outputs.tests_executed }}
         uses: peter-evans/create-or-update-comment@v4
         with:
-          issue-number: 877
+          comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           body: |
             - 🧪 **`Build Status: `** `${{ job.status }}`
             - 📌 **`GitHub Action: `** [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
