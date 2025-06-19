@@ -233,9 +233,11 @@ jobs:
               echo "TEST_SUMMARY_FILE=test_summary.txt" >> $GITHUB_ENV
 
               # Write to GitHub output for PR comment
-              echo "summary_content<<EOF" >> "$GITHUB_OUTPUT"
-              cat test_summary.txt >> "$GITHUB_OUTPUT"
-              echo "EOF" >> "$GITHUB_OUTPUT"
+              {
+                echo "summary_content<<EOF"
+                cat test_summary.txt
+                echo "EOF"
+              } >> "$GITHUB_OUTPUT"
 
               echo "==================================================================================================================================================="
               if [ "$TOTAL_FAILED" -gt 0 ]; then
