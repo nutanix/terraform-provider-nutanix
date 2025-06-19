@@ -215,7 +215,7 @@ func DatasourceNutanixVolumeDisksV2Read(ctx context.Context, d *schema.ResourceD
 
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
-			Summary:  "🫙 No Data found",
+			Summary:  "🫙 No data found.",
 			Detail:   "The API returned an empty list of volume disks.",
 		}}
 	}

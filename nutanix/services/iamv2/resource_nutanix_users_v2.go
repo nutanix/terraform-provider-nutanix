@@ -2,6 +2,8 @@ package iamv2
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -51,7 +53,12 @@ func ResourceNutanixUserV2() *schema.Resource {
 			"user_type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"LOCAL", "SAML", "LDAP", "EXTERNAL"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"LOCAL", "SAML", "LDAP", "EXTERNAL", "SERVICE_ACCOUNT"}, false),
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"idp_id": {
 				Type:     schema.TypeString,
@@ -204,18 +211,21 @@ func resourceNutanixUserV2Create(ctx context.Context, d *schema.ResourceData, me
 		spec.Username = utils.StringPtr(un.(string))
 	}
 	if ut, ok := d.GetOk("user_type"); ok {
-		const two, three, four, five = 2, 3, 4, 5
+		const two, three, four, five, six = 2, 3, 4, 5, 6
 		usertypeMap := map[string]interface{}{
-			"LOCAL":    two,
-			"SAML":     three,
-			"LDAP":     four,
-			"EXTERNAL": five,
+			"LOCAL":           two,
+			"SAML":            three,
+			"LDAP":            four,
+			"EXTERNAL":        five,
+			"SERVICE_ACCOUNT": six,
 		}
 		pInt := usertypeMap[ut.(string)]
 		p := import1.UserType(pInt.(int))
 		spec.UserType = &p
 	}
-
+	if description, ok := d.GetOk("description"); ok {
+		spec.Description = utils.StringPtr(description.(string))
+	}
 	if idp, ok := d.GetOk("idp_id"); ok {
 		spec.IdpId = utils.StringPtr(idp.(string))
 	}
@@ -276,6 +286,9 @@ func resourceNutanixUserV2Create(ctx context.Context, d *schema.ResourceData, me
 		spec.AdditionalAttributes = expandKVPair(addAttr.([]interface{}))
 	}
 
+	aJSON, _ := json.MarshalIndent(spec, "", "  ")
+	log.Printf("[DEBUG] nutanix create user payload: %s", aJSON)
+
 	resp, err := conn.UsersAPIInstance.CreateUser(spec)
 	if err != nil {
 		return diag.Errorf("error while creating User : %v", err)
@@ -304,10 +317,13 @@ func resourceNutanixUserV2Read(ctx context.Context, d *schema.ResourceData, meta
 		return diag.FromErr(err)
 	}
 	if err = d.Set("username", getResp.Username); err != nil {
-		return diag.Errorf("error setting username for user %s: %s", d.Id(), err)
+		return diag.Errorf("error setting username for user/service account %s: %s", d.Id(), err)
 	}
 	if err = d.Set("user_type", flattenUserType(getResp.UserType)); err != nil {
 		return diag.Errorf("error setting user_type for user %s: %s", d.Id(), err)
+	}
+	if err = d.Set("description", getResp.Description); err != nil {
+		return diag.Errorf("error setting description for user/service account %s: %s", d.Id(), err)
 	}
 	if err = d.Set("idp_id", getResp.IdpId); err != nil {
 		return diag.Errorf("error setting idp_id for user %s: %s", d.Id(), err)
@@ -325,7 +341,7 @@ func resourceNutanixUserV2Read(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("error setting last_name for user %s: %s", d.Id(), err)
 	}
 	if err = d.Set("email_id", getResp.EmailId); err != nil {
-		return diag.Errorf("error setting email_id for user %s: %s", d.Id(), err)
+		return diag.Errorf("error setting email_id for user/service account %s: %s", d.Id(), err)
 	}
 	if err = d.Set("locale", getResp.Locale); err != nil {
 		return diag.Errorf("error setting username for user %s: %s", d.Id(), err)
@@ -376,35 +392,52 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 
 	updateSpec = &getUserResp
 
-	// checking if attribute is updated or not
-
 	if d.HasChange("user_type") {
-		const two, three, four, five = 2, 3, 4, 5
+		const two, three, four, five, six = 2, 3, 4, 5, 6
 		usertypeMap := map[string]interface{}{
-			"LOCAL":    two,
-			"SAML":     three,
-			"LDAP":     four,
-			"EXTERNAL": five,
+			"LOCAL":           two,
+			"SAML":            three,
+			"LDAP":            four,
+			"EXTERNAL":        five,
+			"SERVICE_ACCOUNT": six,
 		}
 		pInt := usertypeMap[d.Get("user_type").(string)]
 		p := import1.UserType(pInt.(int))
 		updateSpec.UserType = &p
+	}
+	if d.HasChange("description") {
+		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
 	}
 	if d.HasChange("idp_id") {
 		updateSpec.IdpId = utils.StringPtr(d.Get("idp_id").(string))
 	}
 	if d.HasChange("display_name") {
 		updateSpec.DisplayName = utils.StringPtr(d.Get("display_name").(string))
+	} else if utils.StringValue(updateSpec.DisplayName) == "" {
+		// If display_name is empty value (""), we should not send it in the update request
+		updateSpec.DisplayName = nil
 	}
 	if d.HasChange("first_name") {
 		updateSpec.FirstName = utils.StringPtr(d.Get("first_name").(string))
+	} else if utils.StringValue(updateSpec.FirstName) == "" {
+		// If first_name is empty value (""), we should not send it in the update request
+		updateSpec.FirstName = nil
 	}
 	if d.HasChange("middle_initial") {
 		updateSpec.MiddleInitial = utils.StringPtr(d.Get("middle_initial").(string))
+	} else if utils.StringValue(updateSpec.MiddleInitial) == "" {
+		// If middle_initial is empty value (""), we should not send it in the
+		// update request
+		updateSpec.MiddleInitial = nil
 	}
 	if d.HasChange("last_name") {
 		updateSpec.LastName = utils.StringPtr(d.Get("last_name").(string))
+	} else if utils.StringValue(updateSpec.LastName) == "" {
+		// If last_name is empty value (""), we should not send it in the
+		// update request
+		updateSpec.LastName = nil
 	}
+
 	if d.HasChange("email_id") {
 		updateSpec.EmailId = utils.StringPtr(d.Get("email_id").(string))
 	}
@@ -439,6 +472,9 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 
 	args := make(map[string]interface{})
 	args["If-Match"] = utils.StringPtr(etagValue)
+
+	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
+	log.Printf("[DEBUG] nutanix update user payload: %s", aJSON)
 
 	updateresp, err := conn.UsersAPIInstance.UpdateUserById(utils.StringPtr(d.Id()), updateSpec, args)
 	if err != nil {
@@ -479,7 +515,7 @@ func expandKVPair(pr []interface{}) []config.KVPair {
 
 func flattenUserType(pr *import1.UserType) string {
 	if pr != nil {
-		const two, three, four, five = 2, 3, 4, 5
+		const two, three, four, five, six = 2, 3, 4, 5, 6
 		if *pr == import1.UserType(two) {
 			return "LOCAL"
 		}
@@ -491,6 +527,9 @@ func flattenUserType(pr *import1.UserType) string {
 		}
 		if *pr == import1.UserType(five) {
 			return "EXTERNAL"
+		}
+		if *pr == import1.UserType(six) {
+			return "SERVICE_ACCOUNT"
 		}
 	}
 	return "UNKNOWN"

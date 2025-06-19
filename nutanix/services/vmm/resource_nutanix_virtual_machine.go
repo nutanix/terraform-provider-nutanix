@@ -1386,7 +1386,7 @@ func changePowerState(ctx context.Context, conn *v3.Client, id string, powerStat
 
 	// Check Power State
 	stateConfVM := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
+		Pending:    []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:     []string{"COMPLETE"},
 		Refresh:    taskVMStateRefreshFunc(conn, id, powerState),
 		Timeout:    vmTimeout,

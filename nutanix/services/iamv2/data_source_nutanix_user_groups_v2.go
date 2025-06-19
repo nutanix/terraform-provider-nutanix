@@ -135,7 +135,7 @@ func DatasourceNutanixUserGroupsV4Read(ctx context.Context, d *schema.ResourceDa
 
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
-			Summary:  "🫙 No Data found",
+			Summary:  "🫙 No data found.",
 			Detail:   "The API returned an empty list of user groups.",
 		}}
 	}
