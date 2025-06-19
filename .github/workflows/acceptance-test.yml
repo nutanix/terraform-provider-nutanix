@@ -202,32 +202,44 @@ jobs:
               fi
               {
                 echo "==================================================🧪 TEST SUMMARY 🧪================================================================================="
-                echo "Total Test Cases Run 🐹🚀: $TOTAL_RUN"
-                echo "Total Test Cases Passed 🐹✅: $TOTAL_PASSED ($PASS_PERCENT %)" 
-                echo "Total Test Cases Failed 🐹❌: $TOTAL_FAILED ($FAIL_PERCENT %)"
-                echo "Total Test Cases Skipped 🐹⚠️: $TOTAL_SKIPPED ($SKIP_PERCENT %)"
+                echo "Total Test Cases Run 🚀: $TOTAL_RUN"
+                echo "Total Test Cases Passed ✅: $TOTAL_PASSED ($PASS_PERCENT %)" 
+                echo "Total Test Cases Failed ❌: $TOTAL_FAILED ($FAIL_PERCENT %)"
+                echo "Total Test Cases Skipped ⚠️: $TOTAL_SKIPPED ($SKIP_PERCENT %)"
                 echo "=================================================================================================================================================="
 
                 echo "================================================== TESTS SUCCEEDED ✅ ============================================================================="
                 if [ "$TOTAL_PASSED" -gt 0 ]; then
                     echo ""
                     grep '^--- PASS' test_output.log | awk '{print "✅ " $3}' || true
+                else
+                    echo "No tests passed 😞❗"
                 fi
 
-                echo "==================================================================================================================================================="
-                echo "================================================== TESTS FAILED ❌ ================================================================================"
-                if [ "$TOTAL_FAILED" -gt 0 ]; then
+                # 🎉💃 If all passed and none skipped or failed
+                if [ "$TOTAL_FAILED" -eq 0 ] && [ "$TOTAL_SKIPPED" -eq 0 ]; then
                     echo ""
-                    grep '^--- FAIL' test_output.log | awk '{print "❌ " $3}' || true
-                fi
+                    echo "🎉💃 All tests passed with flying colors! 🕺🎉"
+                else:
+                  echo "==================================================================================================================================================="
+                  echo "================================================== TESTS FAILED ❌ ================================================================================"
+                  if [ "$TOTAL_FAILED" -gt 0 ]; then
+                      echo ""
+                      grep '^--- FAIL' test_output.log | awk '{print "❌ " $3}' || true
+                  else
+                      echo "No tests failed 🎉"
+                  fi
 
-                echo "==================================================================================================================================================="
-                echo "================================================== TESTS SKIPPED ⚠️ =============================================================================="
-                if [ "$TOTAL_SKIPPED" -gt 0 ]; then
-                    awk '
-                      /^=== RUN/ { testname=$3; reason="No reason provided" }
-                      /--- SKIP/ { print "⚠️ " testname "   : Reason: ➡️ :  " reason }
-                      /^[[:space:]]+/ { reason=$0 }' test_output.log || true
+                  echo "==================================================================================================================================================="
+                  echo "================================================== TESTS SKIPPED ⚠️ =============================================================================="
+                  if [ "$TOTAL_SKIPPED" -gt 0 ]; then
+                      awk '
+                        /^=== RUN/ { testname=$3; reason="No reason provided" }
+                        /--- SKIP/ { print "⚠️ " testname "   : Reason: ➡️ :  " reason }
+                        /^[[:space:]]+/ { reason=$0 }' test_output.log || true
+                  else
+                      echo "No tests skipped 🎉"
+                  fi
                 fi
               } > test_summary.txt
               echo "TEST_SUMMARY_FILE=test_summary.txt" >> $GITHUB_ENV
