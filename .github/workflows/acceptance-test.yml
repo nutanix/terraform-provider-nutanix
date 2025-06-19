@@ -126,7 +126,7 @@ jobs:
       - name: Acceptance test cases
         id: test-execution
         run: |
-              echo "tests_executed=true" >> $GITHUB_ENV
+              echo "tests_executed=tests_execution_initiated" >> >> $GITHUB_OUTPUT
               args="${{ github.event.client_payload.slash_command.args }}"
               providers=(${args})
               index=0
@@ -261,10 +261,8 @@ jobs:
               fi
 
       - name: Code Coverage Check
+        if: ${{ steps.test-execution.outputs.tests_executed == 'tests_execution_initiated' }}
         run:  |
-              echo "Checking code coverage..."
-              echo ${{ env.tests_executed }}
-              echo "-===="
               echo "Code coverage: Checking if code coverage is above threshold..."
               export TESTCOV_THRESHOLD=50
               echo "Threshold: $TESTCOV_THRESHOLD %"
@@ -295,7 +293,7 @@ jobs:
       #   continue-on-error: true
 
       - name: Post build status as comment
-        if: ${{ env.tests_executed == 'true' }}
+        if: ${{ steps.test-execution.outputs.tests_executed == 'tests_execution_initiated' }}
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: 877
