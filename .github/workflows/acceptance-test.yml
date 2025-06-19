@@ -279,6 +279,7 @@ jobs:
 
               # 🔁 This now ensures the stage fails if tests fail
               if [ "$TOTAL_FAILED" -gt 0 ]; then
+                  echo "Making the stage fail due to test failures."
                   exit 1
               else
                   exit 0
@@ -286,7 +287,7 @@ jobs:
 
       # Code Coverage Check only if tests executed successfully
       - name: Code Coverage Check
-        if: ${{ steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
+        if: ${{ always() && steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
         run:  |
               echo "Code coverage: Checking if code coverage is above threshold..."
               export TESTCOV_THRESHOLD=50
@@ -303,7 +304,7 @@ jobs:
       
       # Post build status along with test summary as a comment only if tests executed successfully
       - name: Post build status and test summary
-        if: ${{ steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
+        if: ${{ always() && steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
         uses: peter-evans/create-or-update-comment@v4
         with:
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
@@ -319,7 +320,7 @@ jobs:
       
       # Post only Build Status and workflow info as Comment if tests execution is not successful
       - name: Post build status and workflow info
-        if: ${{ steps.test-execution.outputs.tests_executed == 'tests_execution_not_successful' || !steps.test-execution.outputs.tests_executed }}
+        if: ${{ always() && (steps.test-execution.outputs.tests_executed == 'tests_execution_not_successful' || !steps.test-execution.outputs.tests_executed) }}
         uses: peter-evans/create-or-update-comment@v4
         with:
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
@@ -340,3 +341,20 @@ jobs:
           else
             echo "Job Status: $STATUS ✅"
           fi
+
+      - name: Debugging Information
+        if: always()
+        env:
+          TESTS_EXECUTED: ${{ steps.test-execution.outputs.tests_executed }}
+        run: |
+          echo "Debugging information:"
+          echo "tests_executed: $TESTS_EXECUTED"
+
+          echo "GITHUB_ENV content:"
+          cat "$GITHUB_ENV"
+
+          echo "GITHUB_OUTPUT content:"
+          cat "$GITHUB_OUTPUT" || echo "GITHUB_OUTPUT not found"
+
+          echo "Test summary file content:"
+          cat test_summary.txt || echo "No test summary file found."
