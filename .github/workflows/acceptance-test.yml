@@ -165,7 +165,6 @@ jobs:
                   fi
                   index=$((index+1))
               done
-              export TESTARGS="-run=TestAccV2NutanixLcmEntitiesDatasource_InvalidFilter"
               echo "TESTARGS = $TESTARGS"
               echo "==> Setup Foundation Config"
               echo '${{ secrets.FOUNDATION_CONFIG }}' > test_foundation_config.json
@@ -330,12 +329,13 @@ jobs:
           issue-number: 877
           body: |
             - 🧪 **`Build Status: `** `${{ job.status }}`
-            - 📌 **`GitHub Action: `** [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - 📌 **`GitHub Action: `[View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`
             - 📊 **`Code Coverage: `** `${{ env.CODE_COVERAGE_OUTPUT }}`
             - 📝 **`Test Summary: `**
             ```txt
             ${{ steps.test-execution.outputs.summary_content }}
             ```
+          reaction-type: hooray
       
       # Post only Build Status and workflow info as Comment if tests execution is not successful
       - name: Post build status and workflow info
@@ -348,21 +348,6 @@ jobs:
             - 📌 **`GitHub Action: `** [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
             - ℹ️ **`Tests were not successfully executed, so no summary is available.`**
 
-      
-      # 🎉 If build succeeded
-      - name: Add hooray reaction on success
-        if: ${{ success() }}
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: 877
-          reaction-type: hooray
-
-      # ❌ If build failed
-      - name: Add confused reaction on failure
-        if: ${{ failure() }}
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: 877
           reaction-type: confused
 
       # Print job status
