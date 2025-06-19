@@ -126,7 +126,6 @@ jobs:
       - name: Acceptance test cases
         id: test-execution
         run: |
-              echo "tests_executed=tests_execution_initiated" >> $GITHUB_OUTPUT
               args="${{ github.event.client_payload.slash_command.args }}"
               providers=(${args})
               index=0
@@ -181,25 +180,41 @@ jobs:
               # Ensure log file exists
               if [ ! -f test_output.log ]; then
                   echo "Error: test_output.log not found!"
-                  exit 0  # Ignore missing file instead of failing
+                  exit 1  # Ignore missing file instead of failing
               fi
 
               # Extract total test cases executed safely
-              TOTAL_RUN=$(grep -c '^=== RUN' test_output.log || echo 0)
-              TOTAL_PASSED=$(grep -c '^--- PASS' test_output.log || echo 0)
-              TOTAL_FAILED=$(grep -c '^--- FAIL' test_output.log || echo 0)
-              TOTAL_SKIPPED=$(grep -c '^--- SKIP' test_output.log || echo 0)
+              TOTAL_RUN=$(grep -c '^=== RUN' test_output.log)
+              if [ "$TOTAL_RUN" -eq 0 ]; then
+                  echo "No test cases executed. Exiting..."
+                  exit 0
+              fi
+
+              # Extract counts of passed, failed, and skipped tests
+              TOTAL_PASSED=$(grep -c '^--- PASS' test_output.log)
+              TOTAL_FAILED=$(grep -c '^--- FAIL' test_output.log)
+              TOTAL_SKIPPED=$(grep -c '^--- SKIP' test_output.log)
+
+              # Set output for GitHub Actions which will be used in subsequent steps, Set only if tests were executed
+              echo "tests_executed=tests_execution_initiated" >> $GITHUB_OUTPUT
 
               # Calculate percentages safely
+              PASS_PERCENT=0
+              FAIL_PERCENT=0
+              SKIP_PERCENT=0
               if [ "$TOTAL_RUN" -gt 0 ]; then
-                  PASS_PERCENT=$((TOTAL_PASSED * 100 / TOTAL_RUN))
-                  FAIL_PERCENT=$((TOTAL_FAILED * 100 / TOTAL_RUN))
-                  SKIP_PERCENT=$((TOTAL_SKIPPED * 100 / TOTAL_RUN))
-              else
-                  PASS_PERCENT=0
-                  FAIL_PERCENT=0
-                  SKIP_PERCENT=0
+                  if [ "$TOTAL_PASSED" -gt 0 ]; then
+                      PASS_PERCENT=$((TOTAL_PASSED * 100 / TOTAL_RUN))
+                  fi
+                  if [ "$TOTAL_FAILED" -gt 0 ]; then
+                      FAIL_PERCENT=$((TOTAL_FAILED * 100 / TOTAL_RUN))
+                  fi
+                  if [ "$TOTAL_SKIPPED" -gt 0 ]; then
+                      SKIP_PERCENT=$((TOTAL_SKIPPED * 100 / TOTAL_RUN))
+                  fi
               fi
+
+              # Write summary to a file
               {
                 echo "==================================================🧪 TEST SUMMARY 🧪================================================================================="
                 echo "Total Test Cases Run 🚀: $TOTAL_RUN"
@@ -215,13 +230,13 @@ jobs:
                 else
                     echo "No tests passed 😞❗"
                 fi
+                echo "==================================================================================================================================================="
 
                 # 🎉💃 If all passed and none skipped or failed
                 if [ "$TOTAL_FAILED" -eq 0 ] && [ "$TOTAL_SKIPPED" -eq 0 ]; then
                     echo ""
                     echo "🎉💃 All tests passed with flying colors! 🕺🎉"
                 else:
-                  echo "==================================================================================================================================================="
                   echo "================================================== TESTS FAILED ❌ ================================================================================"
                   if [ "$TOTAL_FAILED" -gt 0 ]; then
                       echo ""
@@ -229,7 +244,6 @@ jobs:
                   else
                       echo "No tests failed 🎉"
                   fi
-
                   echo "==================================================================================================================================================="
                   echo "================================================== TESTS SKIPPED ⚠️ =============================================================================="
                   if [ "$TOTAL_SKIPPED" -gt 0 ]; then
@@ -240,6 +254,7 @@ jobs:
                   else
                       echo "No tests skipped 🎉"
                   fi
+                  echo "==================================================================================================================================================="
                 fi
               } > test_summary.txt
               echo "TEST_SUMMARY_FILE=test_summary.txt" >> $GITHUB_ENV
@@ -251,7 +266,7 @@ jobs:
                 echo "EOF"
               } >> "$GITHUB_OUTPUT"
 
-              echo "==================================================================================================================================================="
+
               if [ "$TOTAL_FAILED" -gt 0 ]; then
                   echo ""
                   echo "================== FAILURE DETAILS OF TESTCASES EXECUTED ==============================================================================================="
