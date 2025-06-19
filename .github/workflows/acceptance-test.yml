@@ -310,7 +310,7 @@ jobs:
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           body: |
             - 🧪 **`Build Status: `** `${{ job.status }}`
-            - 📌 **`GitHub Action: `[View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`
+            - 📌 **`GitHub Action: `** [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
             - 📊 **`Code Coverage: `** `${{ env.CODE_COVERAGE_OUTPUT }}`
             - 📝 **`Test Summary: `**
             ```txt
