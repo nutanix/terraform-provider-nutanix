@@ -126,6 +126,7 @@ jobs:
       - name: Acceptance test cases
         id: test-execution
         run: |
+              echo "tests_executed=tests_execution_not_successful" >> $GITHUB_OUTPUT
               args="${{ github.event.client_payload.slash_command.args }}"
               providers=(${args})
               index=0
@@ -187,7 +188,7 @@ jobs:
               TOTAL_RUN=$(grep -c '^=== RUN' test_output.log)
               if [ "$TOTAL_RUN" -eq 0 ]; then
                   echo "No test cases executed. Exiting..."
-                  exit 0
+                  exit 1
               fi
 
               # Extract counts of passed, failed, and skipped tests
@@ -195,8 +196,8 @@ jobs:
               TOTAL_FAILED=$(grep -c '^--- FAIL' test_output.log)
               TOTAL_SKIPPED=$(grep -c '^--- SKIP' test_output.log)
 
-              # Set output for GitHub Actions which will be used in subsequent steps, Set only if tests were executed
-              echo "tests_executed=tests_execution_initiated" >> $GITHUB_OUTPUT
+              # Set output as successful for GitHub Actions which will be used in subsequent steps, Set only if tests were executed
+              echo "tests_executed=tests_execution_successful" >> $GITHUB_OUTPUT
 
               # Calculate percentages safely
               PASS_PERCENT=0
@@ -230,32 +231,31 @@ jobs:
                 else
                     echo "No tests passed 😞❗"
                 fi
-                echo "==================================================================================================================================================="
-
-                # 🎉💃 If all passed and none skipped or failed
-                if [ "$TOTAL_FAILED" -eq 0 ] && [ "$TOTAL_SKIPPED" -eq 0 ]; then
+                echo ""
+                echo "===========================================================oooo========================================================================================"
+                echo ""
+                echo "================================================== TESTS FAILED ❌ ================================================================================"
+                if [ "$TOTAL_FAILED" -gt 0 ]; then
                     echo ""
-                    echo "🎉💃 All tests passed with flying colors! 🕺🎉"
-                else:
-                  echo "================================================== TESTS FAILED ❌ ================================================================================"
-                  if [ "$TOTAL_FAILED" -gt 0 ]; then
-                      echo ""
-                      grep '^--- FAIL' test_output.log | awk '{print "❌ " $3}' || true
-                  else
-                      echo "No tests failed 🎉"
-                  fi
-                  echo "==================================================================================================================================================="
-                  echo "================================================== TESTS SKIPPED ⚠️ =============================================================================="
-                  if [ "$TOTAL_SKIPPED" -gt 0 ]; then
-                      awk '
-                        /^=== RUN/ { testname=$3; reason="No reason provided" }
-                        /--- SKIP/ { print "⚠️ " testname "   : Reason: ➡️ :  " reason }
-                        /^[[:space:]]+/ { reason=$0 }' test_output.log || true
-                  else
-                      echo "No tests skipped 🎉"
-                  fi
-                  echo "==================================================================================================================================================="
+                    grep '^--- FAIL' test_output.log | awk '{print "❌ " $3}' || true
+                else
+                    echo "🎉💃 No tests failed 🕺🎉"
                 fi
+                echo ""
+                echo "===========================================================oooo========================================================================================"
+                echo ""
+                echo "================================================== TESTS SKIPPED ⚠️ =============================================================================="
+                if [ "$TOTAL_SKIPPED" -gt 0 ]; then
+                    awk '
+                      /^=== RUN/ { testname=$3; reason="No reason provided" }
+                      /--- SKIP/ { print "⚠️ " testname "   : Reason: ➡️ :  " reason }
+                      /^[[:space:]]+/ { reason=$0 }' test_output.log || true
+                else
+                    echo "🎉💃 No tests skipped 🕺🎉"
+                fi
+                echo ""
+                echo "===========================================================oooo========================================================================================"
+                echo ""
               } > test_summary.txt
               echo "TEST_SUMMARY_FILE=test_summary.txt" >> $GITHUB_ENV
 
@@ -289,8 +289,9 @@ jobs:
                   exit 0
               fi
 
+      # Code Coverage Check only if tests executed successfully
       - name: Code Coverage Check
-        if: ${{ steps.test-execution.outputs.tests_executed == 'tests_execution_initiated' }}
+        if: ${{ steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
         run:  |
               echo "Code coverage: Checking if code coverage is above threshold..."
               export TESTCOV_THRESHOLD=50
@@ -320,21 +321,49 @@ jobs:
       #       ```
       #     reaction-type: hooray
       #   continue-on-error: true
-
+      
+      # Post build status along with test summary as a comment only if tests executed successfully
       - name: Post build status as comment
-        if: ${{ steps.test-execution.outputs.tests_executed == 'tests_execution_initiated' }}
+        if: ${{ steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: 877
           body: |
-            > 🧪 **Build status:** `${{ job.status }}`
-            > 📌 **[View Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**
-            > 📊 **Code Coverage:** `${{ env.CODE_COVERAGE_OUTPUT }}`
-            > 📝 **Test Summary:**
+            - 🧪 `**Build Status: **` `${{ job.status }}`
+            - 📌 `**GitHub Action: **` [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - 📊 `**Code Coverage: **` `${{ env.CODE_COVERAGE_OUTPUT }}`
+            - 📝 `**Test Summary: **`
             ```txt
             ${{ steps.test-execution.outputs.summary_content }}
             ```
+      
+      # Post only Build Status and workflow info as Comment if tests execution is not successful
+      - name: Post build status
+        if: ${{ steps.test-execution.outputs.tests_executed == 'tests_execution_not_successful' || !steps.test-execution.outputs.tests_executed }}
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: 877
+          body: |
+            - 🧪 `**Build status:**` `${{ job.status }}`
+            - 📌 `** [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**`
+            - ℹ️ `**Tests were not successfully executed, so no summary is available.**`
+
+      
+      # 🎉 If build succeeded
+      - name: Add hooray reaction on success
+        if: ${{ success() }}
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: 877
           reaction-type: hooray
+
+      # ❌ If build failed
+      - name: Add confused reaction on failure
+        if: ${{ failure() }}
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: 877
+          reaction-type: confused
 
       # Print job status
       - name: Workflow Status
