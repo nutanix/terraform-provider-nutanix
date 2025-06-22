@@ -295,7 +295,6 @@
     "ssh_pc_password": "",
     "subnet_name": "",
     "bucket_name": "",
-    "deployment_version": "",
     "domain": "",
     "public_network_ips":[""],
     "storage_network_dns_ip": "",

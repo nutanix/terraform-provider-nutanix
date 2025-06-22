@@ -17,7 +17,6 @@ type TestConfig struct {
 	ObjectStore struct {
 		SubnetName          string   `json:"subnet_name"`
 		BucketName          string   `json:"bucket_name"`
-		DeploymentVersion   string   `json:"deployment_version"`
 		Domain              string   `json:"domain"`
 		PublicNetworkIPs    []string `json:"public_network_ips"`
 		StorageNetworkDNSIP string   `json:"storage_network_dns_ip"`

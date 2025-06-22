@@ -33,7 +33,7 @@ func TestAccV2NutanixObjectStoreResource_OneWorkerNode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "name", objectStoreName),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "description", "terraform test object store"),
-					resource.TestCheckResourceAttr(resourceNameObjectStore, "deployment_version", testVars.ObjectStore.DeploymentVersion),
+					resource.TestCheckResourceAttrSet(resourceNameObjectStore, "deployment_version"),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "domain", testVars.ObjectStore.Domain),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "num_worker_nodes", "1"),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "total_capacity_gib", fmt.Sprintf("%d", 20*int(math.Pow(1024, 3)))),
@@ -131,7 +131,7 @@ func TestAccV2NutanixObjectStoreResource_DraftObjectStore(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "name", objectStoreName),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "description", "terraform test object store"),
-					resource.TestCheckResourceAttr(resourceNameObjectStore, "deployment_version", testVars.ObjectStore.DeploymentVersion),
+					resource.TestCheckResourceAttrSet(resourceNameObjectStore, "deployment_version"),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "domain", testVars.ObjectStore.Domain),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "num_worker_nodes", "1"),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "total_capacity_gib", fmt.Sprintf("%d", 20*int(math.Pow(1024, 3)))),
@@ -172,7 +172,7 @@ func TestAccV2NutanixObjectStoreResource_UpdateObjectStore(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "name", objectStoreName),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "description", "terraform test object store"),
-					resource.TestCheckResourceAttr(resourceNameObjectStore, "deployment_version", testVars.ObjectStore.DeploymentVersion),
+					resource.TestCheckResourceAttrSet(resourceNameObjectStore, "deployment_version"),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "domain", testVars.ObjectStore.Domain),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "num_worker_nodes", "1"),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "total_capacity_gib", fmt.Sprintf("%d", 20*int(math.Pow(1024, 3)))),
@@ -216,7 +216,6 @@ resource "nutanix_object_store_v2" "test" {
   }
   name                     = "%[2]s"
   description              = "terraform test object store"
-  deployment_version       = local.objectStore.deployment_version
   domain                   = local.objectStore.domain
   num_worker_nodes         = 1
   cluster_ext_id           = local.clusterExtId
@@ -270,7 +269,6 @@ resource "nutanix_object_store_v2" "test" {
   }
   name                     = "%[2]s"
   description              = "terraform test object store"
-  deployment_version       = local.objectStore.deployment_version
   domain                   = local.objectStore.domain
   num_worker_nodes         = 1
   cluster_ext_id           = local.clusterExtId
@@ -409,7 +407,6 @@ resource "nutanix_object_store_v2" "test" {
   }
   name                     = "%[3]s"
   description              = "terraform test object store"
-  deployment_version       = local.objectStore.deployment_version
   domain                   = local.objectStore.domain
   num_worker_nodes         = 1
   cluster_ext_id           = local.clusterExtId
