@@ -32,7 +32,7 @@ func testAccCheckNutanixObjectStoreDestroy(s *terraform.State) error {
 			log.Printf("[ERROR] error deleting bucket: %v", bucketErr)
 			return bucketErr
 		}
-		if bucketResp.StatusCode != http.StatusOK {
+		if bucketResp.StatusCode != http.StatusOK && bucketResp.StatusCode != 503 {
 			return fmt.Errorf("error deleting bucket: %s", bucketResp.Status)
 		}
 

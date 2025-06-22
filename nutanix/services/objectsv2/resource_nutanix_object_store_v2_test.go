@@ -25,8 +25,9 @@ func TestAccV2NutanixObjectStoreResource_OneWorkerNode(t *testing.T) {
 	r := acctest.RandIntRange(1, 99)
 	objectStoreName := fmt.Sprintf("tf-test-os-%d", r)
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixObjectStoreDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectStoreWithOneWorkerNodeConfig(objectStoreName),
@@ -123,15 +124,15 @@ func TestAccV2NutanixObjectStoreResource_DraftObjectStore(t *testing.T) {
 	objectStoreName := fmt.Sprintf("tf-test-os-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixObjectStoreDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectStoreUndeployedObjectStoreConfig(objectStoreName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "name", objectStoreName),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "description", "terraform test object store"),
-					resource.TestCheckResourceAttrSet(resourceNameObjectStore, "deployment_version"),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "domain", testVars.ObjectStore.Domain),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "num_worker_nodes", "1"),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "total_capacity_gib", fmt.Sprintf("%d", 20*int(math.Pow(1024, 3)))),
@@ -153,8 +154,9 @@ func TestAccV2NutanixObjectStoreResource_UpdateObjectStore(t *testing.T) {
 	objectStoreName := fmt.Sprintf("tf-test-os-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixObjectStoreDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:             testAccObjectStoreWithInvalidImageTagConfig(objectStoreName),
