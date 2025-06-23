@@ -65,13 +65,6 @@ func createCertificateJSONFile() error {
 				Value: utils.StringPtr(alternateIps[0]),
 			},
 		}
-		// for i, ip := range alternateIps {
-		// 	certificate.AlternateIps[i] = import1.IPAddress{
-		// 		Ipv4: &import1.IPv4Address{
-		// 			Value: utils.StringPtr(ip),
-		// 		},
-		// 	}
-		// }
 	}
 
 	// Marshal the certificate data to JSON
