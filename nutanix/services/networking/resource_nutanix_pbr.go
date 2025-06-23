@@ -234,7 +234,7 @@ func resourceNutanixPbrCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	// Wait for the PBR to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
+		Pending:    []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
@@ -411,7 +411,7 @@ func resourceNutanixPbrUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	// Wait for the PBR to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
+		Pending:    []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),

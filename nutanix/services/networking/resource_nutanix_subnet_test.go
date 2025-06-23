@@ -125,7 +125,7 @@ func TestAccNutanixSubnet_WithCategory(t *testing.T) {
 }
 
 func TestAccNutanixSubnet_ExternalSubnet(t *testing.T) {
-	r := randIntBetween(31, 40)
+	r := randIntBetween(331, 340)
 	subnetName := fmt.Sprintf("acctest-managed-%d", r)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
@@ -156,7 +156,7 @@ func TestAccNutanixSubnet_ExternalSubnet(t *testing.T) {
 }
 
 func TestAccNutanixSubnet_ExternalSubnetWithNoNAT(t *testing.T) {
-	r := randIntBetween(31, 40)
+	r := randIntBetween(41, 50)
 	subnetName := fmt.Sprintf("acctest-managed-%d", r)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
@@ -187,7 +187,7 @@ func TestAccNutanixSubnet_ExternalSubnetWithNoNAT(t *testing.T) {
 }
 
 func TestAccNutanixSubnet_OverlaySubnet(t *testing.T) {
-	r := randIntBetween(31, 40)
+	r := randIntBetween(51, 60)
 	subnetName := fmt.Sprintf("acctest-managed-%d", r)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
@@ -726,7 +726,7 @@ resource "nutanix_vpc" "acctest-managed-vpc" {
 		ip = "8.8.8.9"
 	}
 	externally_routable_prefix_list{
-	  ip=  "172.31.0.0"
+	  ip=  "172.50.0.0"
 	  prefix_length= 16
 	}
   }
