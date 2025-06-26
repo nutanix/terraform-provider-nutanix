@@ -22,6 +22,10 @@ Modules based on Terraform Nutanix Provider can be found here : [Modules](https:
 * [Go](https://golang.org/doc/install) 1.17+ (to build the provider plugin)
 * This provider uses [SDKv2](https://www.terraform.io/plugin/sdkv2/sdkv2-intro) from release 1.3.0
 
+### Introducing Nutanix Terraform Provider Version 2.2.1
+We're excited to announce the release of Nutanix Terraform Provider Version 2.2.1! This update brings significant enhancements and bug fixes to your infrastructure management experience:
+ 
+- This is a minor release that includes enhancements and bug fixes, aimed at improving stability and reliability.
 
 ### Introducing Nutanix Terraform Provider Version 2.2.0
 We're excited to announce the release of Nutanix Terraform Provider Version 2.2.0! This major update brings significant improvements to your infrastructure management experience:
@@ -46,6 +50,7 @@ The provider is used to interact with the many resources and data sources suppor
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
+| 2.2.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.0 | | | Self Service v4.1.0 | yes | 
 | 2.1.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.1.0 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
