@@ -9,8 +9,6 @@
 **Fixed bugs:**
 - nutanix_virtual_machine_v2 cannot read guest customization config for windows [\#791](https://github.com/nutanix/terraform-provider-nutanix/issues/791)
 - nutanix_self_service_app_provision destroy operation returns before resource is fully destroyed [\#831](https://github.com/nutanix/terraform-provider-nutanix/issues/831)
-- Add nutanix_images data source [\#584](https://github.com/nutanix/terraform-provider-nutanix/issues/584)
-- data nutanix_virtual_machine doesn't return ip_address attribute [\#306](https://github.com/nutanix/terraform-provider-nutanix/issues/306)
 - ip_endpoint_list type is mandatory even if documentation says the opposite [\#669](https://github.com/nutanix/terraform-provider-nutanix/issues/669)
 - nutanix_image version always shows changes [\#682](https://github.com/nutanix/terraform-provider-nutanix/issues/682)
 - provider plugin panic when trying to add multiple security policies [\#835](https://github.com/nutanix/terraform-provider-nutanix/issues/835)
@@ -25,6 +23,7 @@
 - Doc error for resource nutanix_user [\#674](https://github.com/nutanix/terraform-provider-nutanix/issues/674)
 - Markdown for certain docs pages isn't valid [\#680](https://github.com/nutanix/terraform-provider-nutanix/issues/680)
 - How to use boot_config under nutanix_virtual_machine_v2 [\#857](https://github.com/nutanix/terraform-provider-nutanix/issues/857)
+- data nutanix_virtual_machine doesn't return ip_address attribute [\#306](https://github.com/nutanix/terraform-provider-nutanix/issues/306)
 
 ## 2.2.0 (April 17, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.1.1...v2.2.0)
