@@ -108,5 +108,15 @@ The buckets_access_keys attribute supports the following:
 * `user_id`: - User Identifier who owns the Bucket Access Key.
 * `created_time`: - Creation time for the Bucket Access Key.
 
+## Import
+
+This helps to manage existing entities which are not created through terraform. Users can be imported using the `UUID`.  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_users_v2" "import_user" {}
+
+// execute this command
+terraform import nutanix_users_v2.import_user <UUID>
+```
 
 See detailed information in [Nutanix Users v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Users/operation/createUser).
