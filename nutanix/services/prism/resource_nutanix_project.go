@@ -201,7 +201,7 @@ func ResourceNutanixProject() *schema.Resource {
 				},
 			},
 			"subnet_reference_list": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -221,6 +221,10 @@ func ResourceNutanixProject() *schema.Resource {
 							Computed: true,
 						},
 					},
+				},
+				Set: func(v interface{}) int {
+					m := v.(map[string]interface{})
+					return schema.HashString(m["uuid"].(string))
 				},
 			},
 			"external_network_list": {
@@ -1112,7 +1116,7 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 			projDetails.Resources.ExternalUserGroupReferenceList = expandReferenceSet(d, "external_user_group_reference_list")
 		}
 		if d.HasChange("subnet_reference_list") {
-			projDetails.Resources.SubnetReferenceList = expandReferenceList(d, "subnet_reference_list")
+			projDetails.Resources.SubnetReferenceList = expandReferenceSet(d, "subnet_reference_list")
 		}
 		if d.HasChange("external_network_list") {
 			projDetails.Resources.ExternalNetworkList = expandReferenceList(d, "external_network_list")
@@ -1196,7 +1200,7 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 			project.Spec.Resources.ExternalUserGroupReferenceList = expandReferenceSet(d, "external_user_group_reference_list")
 		}
 		if d.HasChange("subnet_reference_list") {
-			project.Spec.Resources.SubnetReferenceList = expandReferenceList(d, "subnet_reference_list")
+			project.Spec.Resources.SubnetReferenceList = expandReferenceSet(d, "subnet_reference_list")
 		}
 		if d.HasChange("external_network_list") {
 			project.Spec.Resources.ExternalNetworkList = expandReferenceList(d, "external_network_list")
@@ -1277,7 +1281,7 @@ func expandProjectSpec(d *schema.ResourceData) *v3.ProjectSpec {
 			DefaultSubnetReference:         expandReferenceList(d, "default_subnet_reference")[0],
 			UserReferenceList:              expandReferenceSet(d, "user_reference_list"),
 			ExternalUserGroupReferenceList: expandReferenceSet(d, "external_user_group_reference_list"),
-			SubnetReferenceList:            expandReferenceList(d, "subnet_reference_list"),
+			SubnetReferenceList:            expandReferenceSet(d, "subnet_reference_list"),
 			ExternalNetworkList:            expandReferenceList(d, "external_network_list"),
 		},
 	}
@@ -1368,7 +1372,7 @@ func expandProjectDetails(d *schema.ResourceData) *v3.ProjectDetails {
 			DefaultSubnetReference:         expandReferenceList(d, "default_subnet_reference")[0],
 			UserReferenceList:              expandReferenceSet(d, "user_reference_list"),
 			ExternalUserGroupReferenceList: expandReferenceSet(d, "external_user_group_reference_list"),
-			SubnetReferenceList:            expandReferenceList(d, "subnet_reference_list"),
+			SubnetReferenceList:            expandReferenceSet(d, "subnet_reference_list"),
 			ExternalNetworkList:            expandReferenceList(d, "external_network_list"),
 			TunnelReferenceList:            expandReferenceList(d, "tunnel_reference_list"),
 			ClusterReferenceList:           expandReferenceList(d, "cluster_reference_list"),
