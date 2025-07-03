@@ -24,7 +24,6 @@ import (
 const timeout = 3 * time.Minute
 const (
 	awsS3ConfigObjectType          = "prism.v4.management.AWSS3Config"
-	nutanixObjectsConfigObjectType = "prism.v4.management.NutanixObjectsConfig"
 )
 
 // checkAttributeLength checks the length of an attribute and make sure it is greater than or equal to minLength

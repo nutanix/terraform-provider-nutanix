@@ -24,7 +24,6 @@ const (
 	clustersLocationObjectType     = "prism.v4.management.ClusterLocation"
 	objectStoreLocationObjectType  = "prism.v4.management.ObjectStoreLocation"
 	awsS3ConfigObjectType          = "prism.v4.management.AWSS3Config"
-	nutanixObjectsConfigObjectType = "prism.v4.management.NutanixObjectsConfig"
 )
 
 func ResourceNutanixBackupTargetV2() *schema.Resource {
