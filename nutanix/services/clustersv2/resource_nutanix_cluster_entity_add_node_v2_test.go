@@ -62,8 +62,8 @@ func TestAccV2NutanixClusterAddNodeResource_Basic(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					t.Log("Sleeping for 5 Minute before removing the node")
-					time.Sleep(5 * time.Minute)
+					t.Log("Sleeping for 10 Minute before removing the node")
+					time.Sleep(10 * time.Minute)
 				},
 				Config: testAccClustersConfig(clusterName) + testAccAddNodeToClusterConfig(),
 				Check: resource.ComposeTestCheckFunc(
