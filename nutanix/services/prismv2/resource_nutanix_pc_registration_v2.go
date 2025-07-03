@@ -35,6 +35,10 @@ func ResourceNutanixClusterPCRegistrationV2() *schema.Resource {
 		UpdateContext: ResourceNutanixClusterPCRegistrationV2Update,
 		DeleteContext: ResourceNutanixClusterPCRegistrationV2Delete,
 		Schema: map[string]*schema.Schema{
+			"dryrun": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"pc_ext_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -215,6 +219,14 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 
 	conn := meta.(*conns.Client).PrismAPI
 
+	var dryRun *bool
+
+	if dryRunVar, ok := d.GetOk("dryrun"); ok {
+		dryRun = utils.BoolPtr(dryRunVar.(bool))
+	} else {
+		dryRun = utils.BoolPtr(false)
+	}
+
 	pcExtID := d.Get("pc_ext_id").(string)
 
 	readResp, err := conn.DomainManagerAPIInstance.GetDomainManagerById(&pcExtID)
@@ -297,7 +309,7 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 	aJSON, _ := json.Marshal(body)
 	log.Printf("[DEBUG] PC Registration Request Body: %s", string(aJSON))
 
-	resp, err := conn.DomainManagerAPIInstance.Register(&pcExtID, body, args)
+	resp, err := conn.DomainManagerAPIInstance.Register(&pcExtID, body, dryRun, args)
 	if err != nil {
 		return diag.Errorf("error while registering remote cluster with id %s : %v", pcExtID, err)
 	}

@@ -22,6 +22,10 @@ func ResourceNutanixPreChecksV2() *schema.Resource {
 		UpdateContext: ResourceNutanixLcmPreChecksV2Update,
 		DeleteContext: ResourceNutanixLcmPreChecksV2Delete,
 		Schema: map[string]*schema.Schema{
+			"dryrun": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"x_cluster_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -88,6 +92,13 @@ func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.Resource
 	clusterExtID := d.Get("x_cluster_id").(string)
 	body := preCheckConfig.NewPrechecksSpec()
 
+	var dryRun *bool
+	if dryRunValue, ok := d.GetOk("dryrun"); ok {
+		dryRun = utils.BoolPtr(dryRunValue.(bool))
+	} else {
+		dryRun = utils.BoolPtr(false)
+	}
+
 	if managementServer, ok := d.GetOk("management_server"); ok {
 		body.ManagementServer = expandManagementServer(managementServer.([]interface{}))
 	}
@@ -98,7 +109,7 @@ func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.Resource
 		body.SkippedPrecheckFlags = expandSystemAutoMgmtFlag(skippedPrecheckFlags.([]interface{}))
 	}
 
-	resp, err := conn.LcmPreChecksAPIInstance.PerformPrechecks(body, utils.StringPtr(clusterExtID))
+	resp, err := conn.LcmPreChecksAPIInstance.PerformPrechecks(body, utils.StringPtr(clusterExtID), dryRun)
 	if err != nil {
 		return diag.Errorf("error while performing the prechecks: %v", err)
 	}

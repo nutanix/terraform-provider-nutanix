@@ -23,6 +23,10 @@ func ResourceLcmUpgradeV2() *schema.Resource {
 		UpdateContext: ResourceLcmUpgradeV2Update,
 		DeleteContext: ResourceLcmUpgradeV2Delete,
 		Schema: map[string]*schema.Schema{
+			"dryrun": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"x_cluster_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -96,6 +100,12 @@ func ResourceLcmUpgradeV2() *schema.Resource {
 
 func ResourceLcmUpgradeV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
+	var dryRun *bool
+	if v, ok := d.GetOk("dryrun"); ok {
+		if dryRunValue, ok := v.(bool); ok {
+			dryRun = &dryRunValue
+		}
+	}
 	var clusterID *string
 	if id := d.Get("x_cluster_id").(string); id != "" {
 		clusterID = &id
@@ -122,7 +132,7 @@ func ResourceLcmUpgradeV2Create(ctx context.Context, d *schema.ResourceData, met
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] LCM Upgrade Request Spec: %s", string(aJSON))
 
-	resp, err := conn.LcmUpgradeAPIInstance.PerformUpgrade(body, clusterID)
+	resp, err := conn.LcmUpgradeAPIInstance.PerformUpgrade(body, clusterID, dryRun)
 	if err != nil {
 		return diag.Errorf("error while Perform Upgrade the LCM config: %v", err)
 	}
