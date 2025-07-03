@@ -728,7 +728,7 @@ func checkObjectRestoreLocationBackupTargetExistAndCreateIfNot(backupTargetExtID
 					awsS3Config := objectStoreLocation.ProviderConfig.GetValue().(management.AWSS3Config)
 					if utils.StringValue(awsS3Config.BucketName) == bucket.Name {
 						*backupTargetExtID = utils.StringValue(backupTarget.ExtId)
-						log.Printf("[DEBUG] Awss3 Object store location backup target Ext ID: %s", *backupTargetExtID)
+						log.Printf("[DEBUG] AWS S3Object store location backup target Ext ID: %s", *backupTargetExtID)
 						break
 					}
 				}

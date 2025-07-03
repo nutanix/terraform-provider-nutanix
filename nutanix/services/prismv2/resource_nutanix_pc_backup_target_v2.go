@@ -543,7 +543,6 @@ func expandProviderConfig(providerConfig interface{}) *management.OneOfObjectSto
 
 	if err := providerConfigObj.SetValue(*awsS3Config); err != nil {
 		log.Printf("[ERROR] Error while setting AWS S3 config: %v", err)
-		// return nil
 	}
 
 	return providerConfigObj
