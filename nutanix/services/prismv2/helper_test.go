@@ -22,6 +22,10 @@ import (
 )
 
 const timeout = 3 * time.Minute
+const (
+	awsS3ConfigObjectType          = "prism.v4.management.AWSS3Config"
+	nutanixObjectsConfigObjectType = "prism.v4.management.NutanixObjectsConfig"
+)
 
 // checkAttributeLength checks the length of an attribute and make sure it is greater than or equal to minLength
 // simply used to check the length of a list returned by List data sources
@@ -325,14 +329,22 @@ func checkObjectStoreLocationBackupTargetExistAndCreateIfNotExists() resource.Te
 
 		objectStoreLocationBody := management.NewObjectStoreLocation()
 
-		objectStoreLocationBody.ProviderConfig = &management.AWSS3Config{
-			BucketName: utils.StringPtr(bucket.Name),
-			Region:     utils.StringPtr(bucket.Region),
-			Credentials: &management.AccessKeyCredentials{
-				AccessKeyId:     utils.StringPtr(bucket.AccessKey),
-				SecretAccessKey: utils.StringPtr(bucket.SecretKey),
-			},
+		// Set the provider config for AWS S3
+		providerConfig := management.NewOneOfObjectStoreLocationProviderConfig()
+
+		awsS3Config := management.NewAWSS3Config()
+		awsS3Config.BucketName = utils.StringPtr(bucket.Name)
+		awsS3Config.Region = utils.StringPtr(bucket.Region)
+		awsS3Config.Credentials = &management.AccessKeyCredentials{
+			AccessKeyId:     utils.StringPtr(bucket.AccessKey),
+			SecretAccessKey: utils.StringPtr(bucket.SecretKey),
 		}
+
+		if err := providerConfig.SetValue(*awsS3Config); err != nil {
+			return fmt.Errorf("error while setting provider config for AWS S3: %v", err)
+		}
+
+		objectStoreLocationBody.ProviderConfig = providerConfig
 
 		objectStoreLocationBody.BackupPolicy = &management.BackupPolicy{
 			RpoInMinutes: utils.IntPtr(60),
@@ -637,7 +649,7 @@ func checkObjectRestoreLocationBackupTargetExistAndCreateIfNot(backupTargetExtID
 			}
 		}
 
-		// Create Backup Target
+		// Create Backup Target Aws S3
 		body := management.BackupTarget{}
 
 		bucket := testVars.Prism.Bucket
@@ -646,14 +658,22 @@ func checkObjectRestoreLocationBackupTargetExistAndCreateIfNot(backupTargetExtID
 
 		objectStoreLocationBody := management.NewObjectStoreLocation()
 
-		objectStoreLocationBody.ProviderConfig = &management.AWSS3Config{
-			BucketName: utils.StringPtr(bucket.Name),
-			Region:     utils.StringPtr(bucket.Region),
-			Credentials: &management.AccessKeyCredentials{
-				AccessKeyId:     utils.StringPtr(bucket.AccessKey),
-				SecretAccessKey: utils.StringPtr(bucket.SecretKey),
-			},
+		// Set the provider config for AWS S3
+		providerConfig := management.NewOneOfObjectStoreLocationProviderConfig()
+
+		awsS3Config := management.NewAWSS3Config()
+		awsS3Config.BucketName = utils.StringPtr(bucket.Name)
+		awsS3Config.Region = utils.StringPtr(bucket.Region)
+		awsS3Config.Credentials = &management.AccessKeyCredentials{
+			AccessKeyId:     utils.StringPtr(bucket.AccessKey),
+			SecretAccessKey: utils.StringPtr(bucket.SecretKey),
 		}
+
+		if err := providerConfig.SetValue(*awsS3Config); err != nil {
+			return fmt.Errorf("error while setting provider config for AWS S3: %v", err)
+		}
+
+		objectStoreLocationBody.ProviderConfig = providerConfig
 
 		objectStoreLocationBody.BackupPolicy = &management.BackupPolicy{
 			RpoInMinutes: utils.IntPtr(60),
@@ -705,10 +725,13 @@ func checkObjectRestoreLocationBackupTargetExistAndCreateIfNot(backupTargetExtID
 			backupTargetLocation := backupTarget.Location
 			if utils.StringValue(backupTargetLocation.ObjectType_) == "prism.v4.management.ObjectStoreLocation" {
 				objectStoreLocation := backupTarget.Location.GetValue().(management.ObjectStoreLocation)
-				if utils.StringValue(objectStoreLocation.ProviderConfig.BucketName) == bucket.Name {
-					*backupTargetExtID = utils.StringValue(backupTarget.ExtId)
-					log.Printf("[DEBUG] Object store location backup target Ext ID: %s", *backupTargetExtID)
-					break
+				if *objectStoreLocation.ProviderConfig.ObjectType_ == awsS3ConfigObjectType {
+					awsS3Config := objectStoreLocation.ProviderConfig.GetValue().(management.AWSS3Config)
+					if utils.StringValue(awsS3Config.BucketName) == bucket.Name {
+						*backupTargetExtID = utils.StringValue(backupTarget.ExtId)
+						log.Printf("[DEBUG] Awss3 Object store location backup target Ext ID: %s", *backupTargetExtID)
+						break
+					}
 				}
 			}
 		}
@@ -818,14 +841,22 @@ func createObjectStoreLocationLocationRestoreSource(restoreSourceExtID *string) 
 
 		objectStoreLocationBody := management.NewObjectStoreLocation()
 
-		objectStoreLocationBody.ProviderConfig = &management.AWSS3Config{
-			BucketName: utils.StringPtr(bucket.Name),
-			Region:     utils.StringPtr(bucket.Region),
-			Credentials: &management.AccessKeyCredentials{
-				AccessKeyId:     utils.StringPtr(bucket.AccessKey),
-				SecretAccessKey: utils.StringPtr(bucket.SecretKey),
-			},
+		// Set the provider config for AWS S3
+		providerConfig := management.NewOneOfObjectStoreLocationProviderConfig()
+
+		awsS3Config := management.NewAWSS3Config()
+		awsS3Config.BucketName = utils.StringPtr(bucket.Name)
+		awsS3Config.Region = utils.StringPtr(bucket.Region)
+		awsS3Config.Credentials = &management.AccessKeyCredentials{
+			AccessKeyId:     utils.StringPtr(bucket.AccessKey),
+			SecretAccessKey: utils.StringPtr(bucket.SecretKey),
 		}
+
+		if err := providerConfig.SetValue(*awsS3Config); err != nil {
+			return fmt.Errorf("error while setting provider config for AWS S3: %v", err)
+		}
+
+		objectStoreLocationBody.ProviderConfig = providerConfig
 
 		err := oneOfRestoreSourceLocation.SetValue(*objectStoreLocationBody)
 		if err != nil {

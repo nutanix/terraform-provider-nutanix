@@ -21,8 +21,10 @@ var exactlyOneOfLocation = []string{
 }
 
 const (
-	clustersLocationObjectType    = "prism.v4.management.ClusterLocation"
-	objectStoreLocationObjectType = "prism.v4.management.ObjectStoreLocation"
+	clustersLocationObjectType     = "prism.v4.management.ClusterLocation"
+	objectStoreLocationObjectType  = "prism.v4.management.ObjectStoreLocation"
+	awsS3ConfigObjectType          = "prism.v4.management.AWSS3Config"
+	nutanixObjectsConfigObjectType = "prism.v4.management.NutanixObjectsConfig"
 )
 
 func ResourceNutanixBackupTargetV2() *schema.Resource {
@@ -199,7 +201,14 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 		if err != nil {
 			return diag.Errorf("error while setting object store location : %v", err)
 		}
-		bucketName = utils.StringValue(objectStoreLocationBody.ProviderConfig.BucketName)
+		if utils.StringValue(objectStoreLocationBody.ProviderConfig.ObjectType_) == awsS3ConfigObjectType {
+			// Since the backup target ext ID is not returned in the task details response
+			// we need to find the backup target by bucket name
+			bucketName = utils.StringValue(objectStoreLocationBody.ProviderConfig.GetValue().(management.AWSS3Config).BucketName)
+		} else {
+			return diag.Errorf("unsupported object store provider config type: %s", utils.StringValue(objectStoreLocationBody.ProviderConfig.ObjectType_))
+		}
+
 		isObjectStoreLocation = true
 	}
 
@@ -245,10 +254,11 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 	}
 	backupTargets := listBackupTargets.Data.GetValue().([]management.BackupTarget)
 
-	// Find the new backup target ext id
+	// Find the new backup target ext id since the response does not contain the ext id
 	for _, backupTarget := range backupTargets {
 		backupTargetLocation := backupTarget.Location
 		if isClusterLocation && utils.StringValue(backupTargetLocation.ObjectType_) == clustersLocationObjectType {
+			log.Printf("[DEBUG] Cluster Backup Target with Ext ID: %s", utils.StringValue(backupTarget.ExtId))
 			clusterLocation := backupTarget.Location.GetValue().(management.ClusterLocation)
 			if utils.StringValue(clusterLocation.Config.ExtId) == clusterExtID {
 				d.SetId(utils.StringValue(backupTarget.ExtId))
@@ -256,10 +266,15 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 			}
 		} else if isObjectStoreLocation && utils.StringValue(backupTargetLocation.ObjectType_) == objectStoreLocationObjectType {
 			objectStoreLocation := backupTarget.Location.GetValue().(management.ObjectStoreLocation)
+			// Since the backup target ext ID is not returned in the task details response
+			// we need to find the backup target by bucket name
 
-			if utils.StringValue(objectStoreLocation.ProviderConfig.BucketName) == bucketName {
-				d.SetId(utils.StringValue(backupTarget.ExtId))
-				break
+			if *objectStoreLocation.ProviderConfig.ObjectType_ == awsS3ConfigObjectType {
+				awsS3Config := objectStoreLocation.ProviderConfig.GetValue().(management.AWSS3Config)
+				if utils.StringValue(awsS3Config.BucketName) == bucketName {
+					d.SetId(utils.StringValue(backupTarget.ExtId))
+					break
+				}
 			}
 		}
 	}
@@ -508,7 +523,7 @@ func ResourceNutanixBackupTargetV2Delete(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func expandProviderConfig(providerConfig interface{}) *management.AWSS3Config {
+func expandProviderConfig(providerConfig interface{}) *management.OneOfObjectStoreLocationProviderConfig {
 	if len(providerConfig.([]interface{})) == 0 {
 		return nil
 	}
@@ -520,13 +535,19 @@ func expandProviderConfig(providerConfig interface{}) *management.AWSS3Config {
 
 	providerConfigMap := providerConfigI[0].(map[string]interface{})
 
-	awsS3Config := management.AWSS3Config{
-		BucketName:  utils.StringPtr(providerConfigMap["bucket_name"].(string)),
-		Region:      utils.StringPtr(providerConfigMap["region"].(string)),
-		Credentials: expandAccessKeyCredentials(providerConfigMap["credentials"]),
+	providerConfigObj := management.NewOneOfObjectStoreLocationProviderConfig()
+
+	awsS3Config := management.NewAWSS3Config()
+	awsS3Config.BucketName = utils.StringPtr(providerConfigMap["bucket_name"].(string))
+	awsS3Config.Region = utils.StringPtr(providerConfigMap["region"].(string))
+	awsS3Config.Credentials = expandAccessKeyCredentials(providerConfigMap["credentials"])
+
+	if err := providerConfigObj.SetValue(*awsS3Config); err != nil {
+		log.Printf("[ERROR] Error while setting AWS S3 config: %v", err)
+		// return nil
 	}
 
-	return &awsS3Config
+	return providerConfigObj
 }
 
 func expandAccessKeyCredentials(credentials interface{}) *management.AccessKeyCredentials {
