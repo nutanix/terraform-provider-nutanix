@@ -21,9 +21,9 @@ var exactlyOneOfLocation = []string{
 }
 
 const (
-	clustersLocationObjectType     = "prism.v4.management.ClusterLocation"
-	objectStoreLocationObjectType  = "prism.v4.management.ObjectStoreLocation"
-	awsS3ConfigObjectType          = "prism.v4.management.AWSS3Config"
+	clustersLocationObjectType    = "prism.v4.management.ClusterLocation"
+	objectStoreLocationObjectType = "prism.v4.management.ObjectStoreLocation"
+	awsS3ConfigObjectType         = "prism.v4.management.AWSS3Config"
 )
 
 func ResourceNutanixBackupTargetV2() *schema.Resource {
