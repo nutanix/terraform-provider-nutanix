@@ -172,7 +172,7 @@ func ResourceNutanixRestoreSourceV2Create(ctx context.Context, d *schema.Resourc
 
 		objectStoreLocationBody := management.NewObjectStoreLocation()
 
-		objectStoreLocationBody.ProviderConfig = expandProviderConfig(providerConfig)
+		objectStoreLocationBody.ProviderConfig = expandProviderConfig(providerConfig,nil)
 		objectStoreLocationBody.BackupPolicy = expandBackupPolicy(backupPolicy)
 
 		err := oneOfRestoreSourceLocation.SetValue(*objectStoreLocationBody)

@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	commonConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/common/v1/config"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -66,26 +67,71 @@ func DatasourceNutanixBackupTargetV2() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_name": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"region": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"credentials": {
+												"aws3_config": {
 													Type:     schema.TypeList,
 													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"access_key_id": {
+															"bucket_name": {
 																Type:     schema.TypeString,
 																Computed: true,
 															},
-															"secret_access_key": {
+															"region": {
 																Type:     schema.TypeString,
 																Computed: true,
+															},
+															"credentials": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"access_key_id": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"secret_access_key": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"nutanix_objects_config": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bucket_name": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+															"region": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+															"connection_config": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"ip_address_or_hostname": {
+																			Type:     schema.TypeList,
+																			Computed: true,
+																			Elem: schemaForIPAddressOrFqdn(),
+																		},
+																		"should_skip_certificate_validation": {
+																			Type:     schema.TypeBool,
+																			Computed: true,
+																		},
+																		"certificate": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																	},
+																},
 															},
 														},
 													},
@@ -240,15 +286,32 @@ func flattenObjectStoreLocation(objectStoreLocation management.ObjectStoreLocati
 	return objectStoreLocationList
 }
 
-func flattenProviderConfig(providerConfig *management.AWSS3Config) []map[string]interface{} {
+func flattenProviderConfig(providerConfig *management.OneOfObjectStoreLocationProviderConfig) []map[string]interface{} {
 	if providerConfig == nil {
 		return nil
 	}
 
 	providerConfigMap := make(map[string]interface{})
-	providerConfigMap["bucket_name"] = providerConfig.BucketName
-	providerConfigMap["region"] = providerConfig.Region
-	providerConfigMap["credentials"] = flattenAccessKeyCredentials(providerConfig.Credentials)
+
+	if utils.StringValue(providerConfig.ObjectType_) == "prism.v4.management.AWSS3Config" {
+		awsConfig := providerConfig.GetValue().(management.AWSS3Config)
+		providerConfigMap["aws3_config"] = []map[string]interface{}{
+			{
+				"bucket_name": awsConfig.BucketName,
+				"region":      awsConfig.Region,
+				"credentials": flattenAccessKeyCredentials(awsConfig.Credentials),
+			},
+		}
+	} else if utils.StringValue(providerConfig.ObjectType_) == "prism.v4.management.NutanixObjectsConfig" {
+		nutanixConfig := providerConfig.GetValue().(management.NutanixObjectsConfig)
+		providerConfigMap["nutanix_objects_config"] = []map[string]interface{}{
+			{
+				"bucket_name":       nutanixConfig.BucketName,
+				"region":            nutanixConfig.Region,
+				"connection_config": flattenConnectionConfig(nutanixConfig.ConnectionConfig),
+			},
+		}
+	}
 
 	providerConfigList := make([]map[string]interface{}, 0)
 	providerConfigList = append(providerConfigList, providerConfigMap)
@@ -269,6 +332,23 @@ func flattenAccessKeyCredentials(credentials *management.AccessKeyCredentials) [
 	credentialsList = append(credentialsList, credentialsMap)
 
 	return credentialsList
+}
+
+func flattenConnectionConfig(connectionConfig *management.ConnectionConfig) []map[string]interface{} {
+	if connectionConfig == nil {
+		return nil
+	}
+
+	connectionConfigMap := make(map[string]interface{})
+
+	connectionConfigMap["ip_address_or_hostname"] = flattenIPAddressOrFQDN([]commonConfig.IPAddressOrFQDN{*connectionConfig.IpAddressOrHostname})
+	connectionConfigMap["should_skip_certificate_validation"] = connectionConfig.ShouldSkipCertificateValidation
+	connectionConfigMap["certificate"] = connectionConfig.Certificate
+
+	connectionConfigList := make([]map[string]interface{}, 0)
+	connectionConfigList = append(connectionConfigList, connectionConfigMap)
+
+	return connectionConfigList
 }
 
 func flattenBackupPolicy(policy *management.BackupPolicy) []map[string]interface{} {

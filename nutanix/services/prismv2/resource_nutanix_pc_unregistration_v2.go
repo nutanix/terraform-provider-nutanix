@@ -21,6 +21,10 @@ func ResourceNutanixUnregisterClusterV2() *schema.Resource {
 		UpdateContext: ResourceNutanixUnregisterClusterV2Update,
 		DeleteContext: ResourceNutanixUnregisterClusterV2Delete,
 		Schema: map[string]*schema.Schema{
+			"dryrun": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"pc_ext_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -37,6 +41,14 @@ func ResourceNutanixUnregisterClusterV2Create(ctx context.Context, d *schema.Res
 	clsConn := meta.(*conns.Client).ClusterAPI
 	conn := meta.(*conns.Client).PrismAPI
 	pcExtID := d.Get("pc_ext_id")
+
+	var dryRun *bool
+
+	if dryRunVar, ok := d.GetOk("dryrun"); ok {
+		dryRun = utils.BoolPtr(dryRunVar.(bool))
+	} else {
+		dryRun = utils.BoolPtr(false)
+	}
 
 	readClsResp, readErr := conn.DomainManagerAPIInstance.GetDomainManagerById(utils.StringPtr(pcExtID.(string)))
 	if readErr != nil {
@@ -55,7 +67,7 @@ func ResourceNutanixUnregisterClusterV2Create(ctx context.Context, d *schema.Res
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Unregister Cluster Request payload: %s", string(aJSON))
 
-	resp, err := conn.DomainManagerAPIInstance.Unregister(utils.StringPtr(pcExtID.(string)), &body, args)
+	resp, err := conn.DomainManagerAPIInstance.Unregister(utils.StringPtr(pcExtID.(string)), &body, dryRun, args)
 
 	if err != nil {
 		return diag.Errorf("error while unregistering cluster : %v", err)

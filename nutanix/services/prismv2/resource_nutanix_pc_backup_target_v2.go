@@ -21,8 +21,10 @@ var exactlyOneOfLocation = []string{
 }
 
 const (
-	clustersLocationObjectType    = "prism.v4.management.ClusterLocation"
-	objectStoreLocationObjectType = "prism.v4.management.ObjectStoreLocation"
+	clustersLocationObjectType     = "prism.v4.management.ClusterLocation"
+	objectStoreLocationObjectType  = "prism.v4.management.ObjectStoreLocation"
+	awsS3ConfigObjectType          = "prism.v4.management.AWSS3Config"
+	nutanixObjectsConfigObjectType = "prism.v4.management.NutanixObjectsConfig"
 )
 
 func ResourceNutanixBackupTargetV2() *schema.Resource {
@@ -76,33 +78,111 @@ func ResourceNutanixBackupTargetV2() *schema.Resource {
 									"provider_config": {
 										Type:     schema.TypeList,
 										Required: true,
+										MaxItems: 1, //nolint:gomnd
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_name": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringIsNotEmpty,
-												},
-												"region": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Default:  "us-east-1",
-												},
-												"credentials": {
+												"aws3_config": {
 													Type:     schema.TypeList,
 													Optional: true,
-													MaxItems: 1,
+													MaxItems: 1, //nolint:gomnd
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"access_key_id": {
+															"bucket_name": {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: validation.StringIsNotEmpty,
 															},
-															"secret_access_key": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringIsNotEmpty,
+															"region": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Default:  "us-east-1",
+															},
+															"credentials": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1, //nolint:gomnd
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"access_key_id": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringIsNotEmpty,
+																		},
+																		"secret_access_key": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringIsNotEmpty,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"nutanix_objects_config": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bucket_name": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															"region": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Default:  "us-east-1",
+															},
+															"connection_config": {
+																Type:     schema.TypeList,
+																Required: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"ip_address_or_hostname": {
+																			Type:     schema.TypeList,
+																			Required: true,
+																			Elem:     schemaForIPAddressOrFqdn(),
+																		},
+																		"should_skip_certificate_validation": {
+																			Type:     schema.TypeBool,
+																			Optional: true,
+																			Default:  false,
+																		},
+																		"certificate": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"credentials": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"access_key_credentials": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"access_key_id": {
+																						Type:         schema.TypeString,
+																						Required:     true,
+																						ValidateFunc: validation.StringIsNotEmpty,
+																					},
+																					"secret_access_key": {
+																						Type:         schema.TypeString,
+																						Required:     true,
+																						ValidateFunc: validation.StringIsNotEmpty,
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
 															},
 														},
 													},
@@ -167,7 +247,7 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 
 	clusterExtID := ""
 	isClusterLocation := false
-	bucketName := ""
+	var bucketName = utils.StringPtr("")
 	isObjectStoreLocation := false
 	if location["cluster_location"] != nil && len(location["cluster_location"].([]interface{})) > 0 {
 		clusterLocation := location["cluster_location"].([]interface{})[0].(map[string]interface{})
@@ -192,14 +272,13 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 
 		objectStoreLocationBody := management.NewObjectStoreLocation()
 
-		objectStoreLocationBody.ProviderConfig = expandProviderConfig(providerConfig)
+		objectStoreLocationBody.ProviderConfig = expandProviderConfig(providerConfig, bucketName)
 		objectStoreLocationBody.BackupPolicy = expandBackupPolicy(backupPolicy)
 
 		err := OneOfBackupTargetLocation.SetValue(*objectStoreLocationBody)
 		if err != nil {
 			return diag.Errorf("error while setting object store location : %v", err)
 		}
-		bucketName = utils.StringValue(objectStoreLocationBody.ProviderConfig.BucketName)
 		isObjectStoreLocation = true
 	}
 
@@ -249,6 +328,7 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 	for _, backupTarget := range backupTargets {
 		backupTargetLocation := backupTarget.Location
 		if isClusterLocation && utils.StringValue(backupTargetLocation.ObjectType_) == clustersLocationObjectType {
+			log.Printf("[DEBUG] Cluster Backup Target with Ext ID: %s", utils.StringValue(backupTarget.ExtId))
 			clusterLocation := backupTarget.Location.GetValue().(management.ClusterLocation)
 			if utils.StringValue(clusterLocation.Config.ExtId) == clusterExtID {
 				d.SetId(utils.StringValue(backupTarget.ExtId))
@@ -257,9 +337,22 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 		} else if isObjectStoreLocation && utils.StringValue(backupTargetLocation.ObjectType_) == objectStoreLocationObjectType {
 			objectStoreLocation := backupTarget.Location.GetValue().(management.ObjectStoreLocation)
 
-			if utils.StringValue(objectStoreLocation.ProviderConfig.BucketName) == bucketName {
-				d.SetId(utils.StringValue(backupTarget.ExtId))
-				break
+			if *objectStoreLocation.ProviderConfig.ObjectType_ == awsS3ConfigObjectType {
+				log.Printf("[DEBUG] AWS S3 Backup Target with Bucket Name: %s", utils.StringValue(bucketName))
+				awsS3Config := objectStoreLocation.ProviderConfig.GetValue().(management.AWSS3Config)
+				if utils.StringValue(awsS3Config.BucketName) == utils.StringValue(bucketName) {
+					log.Printf("[DEBUG] AWS S3 Backup Target with Bucket Name: %s", utils.StringValue(awsS3Config.BucketName))
+					d.SetId(utils.StringValue(backupTarget.ExtId))
+					break
+				}
+			} else if *objectStoreLocation.ProviderConfig.ObjectType_ == nutanixObjectsConfigObjectType {
+				log.Printf("[DEBUG] Nutanix Objects Backup Target with Bucket Name: %s", utils.StringValue(bucketName))
+				nutanixObjectsConfig := objectStoreLocation.ProviderConfig.GetValue().(management.NutanixObjectsConfig)
+				if utils.StringValue(nutanixObjectsConfig.BucketName) == utils.StringValue(bucketName) {
+					log.Printf("[DEBUG] Nutanix Objects Backup Target with Bucket Name: %s", utils.StringValue(nutanixObjectsConfig.BucketName))
+					d.SetId(utils.StringValue(backupTarget.ExtId))
+					break
+				}
 			}
 		}
 	}
@@ -346,13 +439,13 @@ func flattenResourceObjectStoreLocation(objectStoreLocation *management.ObjectSt
 	objectStoreLocationMap["provider_config"] = flattenProviderConfig(objectStoreLocation.ProviderConfig)
 	objectStoreLocationMap["backup_policy"] = flattenBackupPolicy(objectStoreLocation.BackupPolicy)
 
-	// extract the credentials from the state file since they are not returned in the response
-	locationI := d.([]interface{})
-	location := locationI[0].(map[string]interface{})
-	objectStoreLocationI := location["object_store_location"].([]interface{})[0].(map[string]interface{})
-	providerConfig := objectStoreLocationI["provider_config"].([]interface{})[0].(map[string]interface{})
-	credentials := providerConfig["credentials"].([]interface{})
-	objectStoreLocationMap["provider_config"].([]map[string]interface{})[0]["credentials"] = credentials
+	// // extract the credentials from the state file since they are not returned in the response
+	// locationI := d.([]interface{})
+	// location := locationI[0].(map[string]interface{})
+	// objectStoreLocationI := location["object_store_location"].([]interface{})[0].(map[string]interface{})
+	// providerConfig := objectStoreLocationI["provider_config"].([]interface{})[0].(map[string]interface{})
+	// credentials := providerConfig["credentials"].([]interface{})
+	// objectStoreLocationMap["provider_config"].([]map[string]interface{})[0]["credentials"] = credentials
 
 	objectStoreLocationList := make([]map[string]interface{}, 0)
 	objectStoreLocationList = append(objectStoreLocationList, objectStoreLocationMap)
@@ -406,7 +499,7 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 
 			objectStoreLocationBody := management.NewObjectStoreLocation()
 
-			objectStoreLocationBody.ProviderConfig = expandProviderConfig(providerConfig)
+			objectStoreLocationBody.ProviderConfig = expandProviderConfig(providerConfig, nil)
 			objectStoreLocationBody.BackupPolicy = expandBackupPolicy(backupPolicy)
 
 			err = oneOfBackupTargetLocation.SetValue(*objectStoreLocationBody)
@@ -508,7 +601,7 @@ func ResourceNutanixBackupTargetV2Delete(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func expandProviderConfig(providerConfig interface{}) *management.AWSS3Config {
+func expandProviderConfig(providerConfig interface{}, bucketName *string) *management.OneOfObjectStoreLocationProviderConfig {
 	if len(providerConfig.([]interface{})) == 0 {
 		return nil
 	}
@@ -520,13 +613,56 @@ func expandProviderConfig(providerConfig interface{}) *management.AWSS3Config {
 
 	providerConfigMap := providerConfigI[0].(map[string]interface{})
 
-	awsS3Config := management.AWSS3Config{
-		BucketName:  utils.StringPtr(providerConfigMap["bucket_name"].(string)),
-		Region:      utils.StringPtr(providerConfigMap["region"].(string)),
-		Credentials: expandAccessKeyCredentials(providerConfigMap["credentials"]),
+	providerConfigObj := management.NewOneOfObjectStoreLocationProviderConfig()
+
+	if providerConfigMap["aws3_config"] != nil && len(providerConfigMap["aws3_config"].([]interface{})) > 0 {
+		awsS3ConfigMap := providerConfigMap["aws3_config"].([]interface{})[0].(map[string]interface{})
+		awsS3Config := management.NewAWSS3Config()
+		awsS3Config.BucketName = utils.StringPtr(awsS3ConfigMap["bucket_name"].(string))
+		awsS3Config.Region = utils.StringPtr(awsS3ConfigMap["region"].(string))
+		awsS3Config.Credentials = expandAccessKeyCredentials(awsS3ConfigMap["credentials"])
+
+		log.Printf("[DEBUG] setting bucket name: %s", awsS3ConfigMap["bucket_name"].(string))
+		if bucketName != nil {
+			*bucketName = awsS3ConfigMap["bucket_name"].(string)
+			log.Printf("[DEBUG] bucket name set to: %s", *bucketName)
+		}
+		log.Printf("[DEBUG]  Before setting AWS S3 config")
+		if err := providerConfigObj.SetValue(*awsS3Config); err != nil {
+			log.Printf("[ERROR] Error while setting AWS S3 config: %v", err)
+			// return nil
+		}
+		log.Printf("[DEBUG]  After setting AWS S3 config")
+		aJSON, _ := json.MarshalIndent(providerConfigObj, "", "  ")
+		log.Printf("[DEBUG] AWS S3 Config : %s", string(aJSON))
+
+
+	} else if providerConfigMap["nutanix_objects_config"] != nil && len(providerConfigMap["nutanix_objects_config"].([]interface{})) > 0 {
+		nutanixObjectsConfigMap := providerConfigMap["nutanix_objects_config"].([]interface{})[0].(map[string]interface{})
+		connectionConfigMap := nutanixObjectsConfigMap["connection_config"].([]interface{})[0].(map[string]interface{})
+		ipAddressOrHostname := connectionConfigMap["ip_address_or_hostname"].([]interface{})[0].(map[string]interface{})
+
+		ipAddressOrHostnameObj := expandIPAddressOrFqdn(ipAddressOrHostname)
+		nutanixObjectsConfig := management.NewNutanixObjectsConfig()
+		nutanixObjectsConfig.BucketName = utils.StringPtr(nutanixObjectsConfigMap["bucket_name"].(string))
+		nutanixObjectsConfig.Region = utils.StringPtr(nutanixObjectsConfigMap["region"].(string))
+		nutanixObjectsConfig.ConnectionConfig = &management.ConnectionConfig{
+			IpAddressOrHostname:             &ipAddressOrHostnameObj,
+			ShouldSkipCertificateValidation: utils.BoolPtr(connectionConfigMap["should_skip_certificate_validation"].(bool)),
+			Certificate:                     utils.StringPtr(connectionConfigMap["certificate"].(string)),
+		}
+		nutanixObjectsConfig.Credentials = expandNutanixAccessKeyCredentials(nutanixObjectsConfigMap["credentials"])
+
+		if bucketName != nil {
+			*bucketName = nutanixObjectsConfigMap["bucket_name"].(string)
+		}
+		if err := providerConfigObj.SetValue(*nutanixObjectsConfig); err != nil {
+			log.Printf("[ERROR] Error while setting Nutanix Objects config: %v", err)
+			// return nil
+		}
 	}
 
-	return &awsS3Config
+	return providerConfigObj
 }
 
 func expandAccessKeyCredentials(credentials interface{}) *management.AccessKeyCredentials {
@@ -540,6 +676,29 @@ func expandAccessKeyCredentials(credentials interface{}) *management.AccessKeyCr
 		SecretAccessKey: utils.StringPtr(credentialsMap["secret_access_key"].(string)),
 	}
 	return &accessKeyCredentials
+}
+
+func expandNutanixAccessKeyCredentials(credentials interface{}) *management.OneOfNutanixObjectsConfigCredentials {
+	if len(credentials.([]interface{})) == 0 {
+		return nil
+	}
+
+	credentialsMap := credentials.([]interface{})[0].(map[string]interface{})
+	accessKeyCredentials := management.NewOneOfNutanixObjectsConfigCredentials()
+
+	if credentialsMap["access_key_credentials"] != nil && len(credentialsMap["access_key_credentials"].([]interface{})) > 0 {
+		accessKeyCredentialsMap := credentialsMap["access_key_credentials"].([]interface{})[0].(map[string]interface{})
+		accessKeyCredentialsObj := management.AccessKeyCredentials{
+			AccessKeyId:     utils.StringPtr(accessKeyCredentialsMap["access_key_id"].(string)),
+			SecretAccessKey: utils.StringPtr(accessKeyCredentialsMap["secret_access_key"].(string)),
+		}
+
+		if err := accessKeyCredentials.SetValue(accessKeyCredentialsObj); err != nil {
+			log.Printf("[ERROR] Error while setting nutanix Access Key Credentials: %v", err)
+		}
+	}
+
+	return accessKeyCredentials
 }
 
 func expandBackupPolicy(policy interface{}) *management.BackupPolicy {

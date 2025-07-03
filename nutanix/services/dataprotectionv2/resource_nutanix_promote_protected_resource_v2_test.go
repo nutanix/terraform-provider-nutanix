@@ -476,8 +476,8 @@ resource "nutanix_associate_category_to_volume_group_v2" "test" {
     ext_id = nutanix_category_v2.test.id
   }
   provisioner "local-exec" {
-    # sleep 7 min to wait for the vg to be protected
-    command    = "sleep 420"
+    # sleep 9 min to wait for the vg to be protected
+    command    = "sleep 540"
   }
 }
 
