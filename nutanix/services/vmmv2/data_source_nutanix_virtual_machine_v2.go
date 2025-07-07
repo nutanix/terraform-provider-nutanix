@@ -2892,18 +2892,14 @@ func flattenAPILink(pr []response.ApiLink) []interface{} {
 	return nil
 }
 
-func flattenProjectReference(project []config.ProjectReference) []interface{} {
-	if len(project) > 0 {
-		prjList := make([]interface{}, len(project))
-
-		for k, v := range project {
-			projects := make(map[string]interface{})
-
-			if v.ExtId != nil {
-				projects["ext_id"] = v.ExtId
-			}
-			prjList[k] = projects
+func flattenProjectReference(project *config.ProjectReference) []map[string]interface{} {
+	if project != nil {
+		prjList := make([]map[string]interface{}, 0)
+		prj := make(map[string]interface{})
+		if project.ExtId != nil {
+			prj["ext_id"] = project.ExtId
 		}
+		prjList = append(prjList, prj)
 		return prjList
 	}
 	return nil

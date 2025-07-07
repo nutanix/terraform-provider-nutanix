@@ -3824,20 +3824,14 @@ func waitForIPRefreshFunc(client *vmm.Client, vmUUID string) resource.StateRefre
 	}
 }
 
-func expandProjectReference(pr []interface{}) []config.ProjectReference {
+func expandProjectReference(pr []interface{}) *config.ProjectReference {
 	if len(pr) > 0 {
-		prjRef := make([]config.ProjectReference, len(pr))
-
-		for k, v := range pr {
-			projects := config.ProjectReference{}
-			val := v.(map[string]interface{})
-
-			if extID, ok := val["ext_id"]; ok && len(extID.(string)) > 0 {
-				projects.ExtId = utils.StringPtr(extID.(string))
-			}
-			prjRef[k] = projects
+		val := pr[0].(map[string]interface{})
+		project := config.ProjectReference{}
+		if extID, ok := val["ext_id"]; ok && len(extID.(string)) > 0 {
+			project.ExtId = utils.StringPtr(extID.(string))
 		}
-		return prjRef
+		return &project
 	}
 	return nil
 }

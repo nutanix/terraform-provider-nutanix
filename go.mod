@@ -18,7 +18,7 @@ require (
 	github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.0.1
 	github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.0.1
 	github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.0.1
-	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.0.1
+	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.1.1
 	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.0.1
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cast v1.3.1
