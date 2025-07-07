@@ -9,6 +9,7 @@ import (
 type Client struct {
 	ClusterEntityAPI     *api.ClustersApi
 	StorageContainersAPI *api.StorageContainersApi
+	PasswordManagerAPI   *api.PasswordManagerApi
 }
 
 func NewClustersClient(credentials client.Credentials) (*Client, error) {

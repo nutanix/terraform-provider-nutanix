@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	clusterConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/common/v1/response"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/response"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -127,7 +127,8 @@ func dataSourceNutanixPasswordManagerV2Read(ctx context.Context, d *schema.Resou
 		selects = utils.StringPtr(selectf.(string))
 	}
 
-	resp, err := conn.PasswordManagerAPI.ListSystemUserPasswords(page, limit, filter, orderBy, selects)
+	var extraParam *string = nil
+	resp, err := conn.PasswordManagerAPI.ListSystemUserPasswords(page, limit, filter, orderBy, selects, extraParam)
 	if err != nil {
 		return diag.Errorf("error while fetching system user passwords: %v", err)
 	}
@@ -146,7 +147,7 @@ func dataSourceNutanixPasswordManagerV2Read(ctx context.Context, d *schema.Resou
 		}}
 	}
 
-	getResp := resp.Data.GetValue().([]clusterConfig.ListSystemUserPasswordsApiResponse)
+	getResp := resp.Data.GetValue().([]clusterConfig.SystemUserPassword)
 	if err := d.Set("passwords", flattenPasswordEntities(getResp)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -157,7 +158,7 @@ func dataSourceNutanixPasswordManagerV2Read(ctx context.Context, d *schema.Resou
 }
 
 // flatten funcs
-func flattenPasswordEntities(passwords []clusterConfig.ListSystemUserPasswordsApiResponse) []map[string]interface{} {
+func flattenPasswordEntities(passwords []clusterConfig.SystemUserPassword) []map[string]interface{} {
 	passwordList := make([]map[string]interface{}, 0)
 	for _, password := range passwords {
 		passwordMap := make(map[string]interface{})
@@ -168,35 +169,32 @@ func flattenPasswordEntities(passwords []clusterConfig.ListSystemUserPasswordsAp
 			passwordMap["tenant_id"] = utils.StringValue(password.TenantId)
 		}
 		if password.Links != nil {
-			passwordMap["links"] = flattenLinks(password.Links)
+			convertedLinks := flattenLinks(password.Links)
+			passwordMap["links"] = convertedLinks
 		}
 		if password.Username != nil {
 			passwordMap["username"] = utils.StringValue(password.Username)
 		}
 		if password.HostIp != nil {
-			hostIpList := make([]map[string]interface{}, 0)
-			for _, hostIp := range password.HostIp {
-				hostIpMap := make(map[string]interface{})
-				hostIpMap["value"] = utils.StringValue(hostIp.Value)
-				hostIpMap["prefix_length"] = utils.IntValue(hostIp.PrefixLength)
-				hostIpList = append(hostIpList, hostIpMap)
-			}
-			passwordMap["host_ip"] = hostIpList
+			hostIpMap := make(map[string]interface{})
+			hostIpMap["value"] = utils.StringValue(password.HostIp.Value)
+			hostIpMap["prefix_length"] = utils.IntValue(password.HostIp.PrefixLength)
+			passwordMap["host_ip"] = []map[string]interface{}{hostIpMap}
 		}
 		if password.ClusterExtId != nil {
 			passwordMap["cluster_ext_id"] = utils.StringValue(password.ClusterExtId)
 		}
 		if password.LastUpdateTime != nil {
-			passwordMap["last_update_time"] = utils.StringValue(password.LastUpdateTime)
+			passwordMap["last_update_time"] = password.LastUpdateTime.Format("2006-01-02T15:04:05Z07:00")
 		}
 		if password.ExpiryTime != nil {
-			passwordMap["expiry_time"] = utils.StringValue(password.ExpiryTime)
+			passwordMap["expiry_time"] = password.ExpiryTime.Format("2006-01-02T15:04:05Z07:00")
 		}
 		if password.Status != nil {
-			passwordMap["status"] = utils.StringValue(password.Status)
+			passwordMap["status"] = flattenPasswordStatus(password.Status)
 		}
 		if password.SystemType != nil {
-			passwordMap["system_type"] = utils.StringValue(password.SystemType)
+			passwordMap["system_type"] = flattenPasswordSystemType(password.SystemType)
 		}
 		if password.HasHspInUse != nil {
 			passwordMap["has_hsp_in_use"] = utils.BoolValue(password.HasHspInUse)
@@ -227,7 +225,7 @@ func schemaForLinks() *schema.Schema {
 }
 
 // flatten funcs
-func flattenLinks(links []response.ApiLink) []map[string]interface{} {
+func flattenLinks(links []import1.ApiLink) []map[string]interface{} {
 	if len(links) > 0 {
 		linkList := make([]map[string]interface{}, 0)
 		for _, link := range links {
@@ -244,4 +242,48 @@ func flattenLinks(links []response.ApiLink) []map[string]interface{} {
 		return linkList
 	}
 	return nil
+}
+
+func flattenPasswordStatus(pr *clusterConfig.PasswordStatus) string {
+	if pr != nil {
+		switch *pr {
+			case clusterConfig.PasswordStatus(0):
+				return "UNKNOWN"
+			case clusterConfig.PasswordStatus(1):
+				return "REDACTED"
+			case clusterConfig.PasswordStatus(2):
+				return "DEFAULT"
+			case clusterConfig.PasswordStatus(3):
+				return "SECURE"
+			case clusterConfig.PasswordStatus(4):
+				return "NOPASSWD"
+			case clusterConfig.PasswordStatus(5):
+				return "MULTIPLE_ISSUES"
+			default:
+				return "UNKNOWN"
+		}
+	}
+	return "UNKNOWN"
+}
+
+func flattenPasswordSystemType(pr *clusterConfig.SystemType) string {
+	if pr != nil {
+		switch *pr {
+			case clusterConfig.SystemType(0):
+				return "UNKNOWN"
+			case clusterConfig.SystemType(1):
+				return "REDACTED"
+			case clusterConfig.SystemType(2):
+				return "PC"
+			case clusterConfig.SystemType(3):
+				return "AOS"
+			case clusterConfig.SystemType(4):
+				return "AHV"
+			case clusterConfig.SystemType(5):
+				return "IPMI"
+			default:
+				return "UNKNOWN"
+		}
+	}
+	return "UNKNOWN"
 }

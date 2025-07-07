@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	clusterConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -40,7 +41,7 @@ func ResourceNutanixPasswordManagerV2() *schema.Resource {
 func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	fmt.Printf("[DEBUG] Creating Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))
 	conn := meta.(*conns.Client).ClusterAPI
-	extId := d.Get("ext_id").(string)
+	extId := utils.StringPtr(d.Get("ext_id").(string))
 	body := &clusterConfig.ChangePasswordSpec{}
 	if currPassword, ok := d.GetOk("current_password"); ok {
 		body.CurrentPassword = utils.StringPtr(currPassword.(string))
@@ -53,7 +54,7 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 		return diag.Errorf("error while performing password change: %v", err)
 	}
 
-	TaskRef := resp.Data.GetValue().(taskRef.TaskReference)
+	TaskRef := resp.Data.GetValue().(import1.TaskReference)
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
@@ -68,7 +69,7 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("Change Password Request failed for ext_id %s with error %s", extId, errWaitTask)
+		return diag.Errorf("Change Password Request failed for ext_id %s with error %s", utils.StringValue(extId), errWaitTask)
 	}
 
 	// set the resource id to random uuid
@@ -82,8 +83,9 @@ func resourceNutanixPasswordManagerV2Read(ctx context.Context, d *schema.Resourc
 }
 
 func resourceNutanixPasswordManagerV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	fmt.Printf("[DEBUG] Updating Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))
-	return nil
+	fmt.Printf("[DEBUG] Updating Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))	
+	return resourceNutanixPasswordManagerV2Create(ctx, d, meta)
+	// Note: The update operation is the same as create in this case.
 }
 
 func resourceNutanixPasswordManagerV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
