@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # Prism Central credentials
-export TF_VAR_NUTANIX_USERNAME="admin"
-export TF_VAR_NUTANIX_PASSWORD="Nutanix.123"
+export TF_VAR_NUTANIX_USERNAME="<username>"
+export TF_VAR_NUTANIX_PASSWORD="<password>"
 export TF_VAR_NUTANIX_ENDPOINT="<your-prism-central-ip>"
+# If you are using a self-signed certificate, set this to true
 export TF_VAR_NUTANIX_INSECURE="true"
 export TF_VAR_NUTANIX_PORT="9440"
 
