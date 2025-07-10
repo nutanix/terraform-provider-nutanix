@@ -247,20 +247,20 @@ func flattenLinks(links []import1.ApiLink) []map[string]interface{} {
 func flattenPasswordStatus(pr *clusterConfig.PasswordStatus) string {
 	if pr != nil {
 		switch *pr {
-			case clusterConfig.PasswordStatus(0):
-				return "UNKNOWN"
-			case clusterConfig.PasswordStatus(1):
-				return "REDACTED"
-			case clusterConfig.PasswordStatus(2):
-				return "DEFAULT"
-			case clusterConfig.PasswordStatus(3):
-				return "SECURE"
-			case clusterConfig.PasswordStatus(4):
-				return "NOPASSWD"
-			case clusterConfig.PasswordStatus(5):
-				return "MULTIPLE_ISSUES"
-			default:
-				return "UNKNOWN"
+		case clusterConfig.PasswordStatus(0):
+			return "UNKNOWN"
+		case clusterConfig.PasswordStatus(1):
+			return "REDACTED"
+		case clusterConfig.PasswordStatus(2):
+			return "DEFAULT"
+		case clusterConfig.PasswordStatus(3):
+			return "SECURE"
+		case clusterConfig.PasswordStatus(4):
+			return "NOPASSWD"
+		case clusterConfig.PasswordStatus(5):
+			return "MULTIPLE_ISSUES"
+		default:
+			return "UNKNOWN"
 		}
 	}
 	return "UNKNOWN"
@@ -269,20 +269,20 @@ func flattenPasswordStatus(pr *clusterConfig.PasswordStatus) string {
 func flattenPasswordSystemType(pr *clusterConfig.SystemType) string {
 	if pr != nil {
 		switch *pr {
-			case clusterConfig.SystemType(0):
-				return "UNKNOWN"
-			case clusterConfig.SystemType(1):
-				return "REDACTED"
-			case clusterConfig.SystemType(2):
-				return "PC"
-			case clusterConfig.SystemType(3):
-				return "AOS"
-			case clusterConfig.SystemType(4):
-				return "AHV"
-			case clusterConfig.SystemType(5):
-				return "IPMI"
-			default:
-				return "UNKNOWN"
+		case clusterConfig.SystemType(0):
+			return "UNKNOWN"
+		case clusterConfig.SystemType(1):
+			return "REDACTED"
+		case clusterConfig.SystemType(2):
+			return "PC"
+		case clusterConfig.SystemType(3):
+			return "AOS"
+		case clusterConfig.SystemType(4):
+			return "AHV"
+		case clusterConfig.SystemType(5):
+			return "IPMI"
+		default:
+			return "UNKNOWN"
 		}
 	}
 	return "UNKNOWN"
