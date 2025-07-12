@@ -533,23 +533,18 @@ func ResourceNutanixClusterAddNodeV2Create(ctx context.Context, d *schema.Resour
 
 	// Get UUID from TASK API
 
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while fetching  node UUID : %v", err)
 	}
 
-	aJSON, _ = json.MarshalIndent(taskResp, "", " ")
-	log.Printf("[DEBUG] Add Node Task Response: %s", string(aJSON))
+	aJSON, _ = json.Marshal(resourceUUID)
+	log.Printf("[DEBUG] Add Node Response: %s", string(aJSON))
 
-	task := taskResp.Data.GetValue().(import2.Task)
+	rUUID := resourceUUID.Data.GetValue().(import2.Task)
 
-	if utils.IntValue(task.NumberOfEntitiesAffected) > 0 {
-		uuid := task.EntitiesAffected[0].ExtId
-		d.SetId(*uuid)
-		return nil
-	}
-
-	d.SetId(utils.GenUUID())
+	uuid := rUUID.EntitiesAffected[0].ExtId
+	d.SetId(*uuid)
 	return nil
 }
 
