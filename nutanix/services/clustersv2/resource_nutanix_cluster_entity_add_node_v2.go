@@ -541,10 +541,11 @@ func ResourceNutanixClusterAddNodeV2Create(ctx context.Context, d *schema.Resour
 	aJSON, _ = json.Marshal(resourceUUID)
 	log.Printf("[DEBUG] Add Node Response: %s", string(aJSON))
 
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
-
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
+	// rUUID := resourceUUID.Data.GetValue().(import2.Task)
+	// Entities affected is always the cluster uuid
+	//uuid := rUUID.EntitiesAffected[0].ExtId
+	uuid := clusterExtID.(string)
+	d.SetId(uuid)
 	return nil
 }
 
