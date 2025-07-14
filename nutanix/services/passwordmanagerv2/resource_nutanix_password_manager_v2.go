@@ -41,7 +41,7 @@ func ResourceNutanixPasswordManagerV2() *schema.Resource {
 func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	fmt.Printf("[DEBUG] Creating Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))
 	conn := meta.(*conns.Client).ClusterAPI
-	extId := utils.StringPtr(d.Get("ext_id").(string))
+	extID := utils.StringPtr(d.Get("ext_id").(string))
 	body := &clusterConfig.ChangePasswordSpec{}
 	if currPassword, ok := d.GetOk("current_password"); ok {
 		body.CurrentPassword = utils.StringPtr(currPassword.(string))
@@ -49,7 +49,7 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 	if newPassword, ok := d.GetOk("new_password"); ok {
 		body.NewPassword = utils.StringPtr(newPassword.(string))
 	}
-	resp, err := conn.PasswordManagerAPI.ChangeSystemUserPasswordById(extId, body)
+	resp, err := conn.PasswordManagerAPI.ChangeSystemUserPasswordById(extID, body)
 	if err != nil {
 		return diag.Errorf("error while performing password change: %v", err)
 	}
@@ -69,7 +69,7 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("Change Password Request failed for ext_id %s with error %s", utils.StringValue(extId), errWaitTask)
+		return diag.Errorf("Change Password Request failed for ext_id %s with error %s", utils.StringValue(extID), errWaitTask)
 	}
 
 	// set the resource id to random uuid

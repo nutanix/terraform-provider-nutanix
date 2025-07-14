@@ -176,10 +176,10 @@ func flattenPasswordEntities(passwords []clusterConfig.SystemUserPassword) []map
 			passwordMap["username"] = utils.StringValue(password.Username)
 		}
 		if password.HostIp != nil {
-			hostIpMap := make(map[string]interface{})
-			hostIpMap["value"] = utils.StringValue(password.HostIp.Value)
-			hostIpMap["prefix_length"] = utils.IntValue(password.HostIp.PrefixLength)
-			passwordMap["host_ip"] = []map[string]interface{}{hostIpMap}
+			hostIPMap := make(map[string]interface{})
+			hostIPMap["value"] = utils.StringValue(password.HostIp.Value)
+			hostIPMap["prefix_length"] = utils.IntValue(password.HostIp.PrefixLength)
+			passwordMap["host_ip"] = []map[string]interface{}{hostIPMap}
 		}
 		if password.ClusterExtId != nil {
 			passwordMap["cluster_ext_id"] = utils.StringValue(password.ClusterExtId)
@@ -245,19 +245,25 @@ func flattenLinks(links []import1.ApiLink) []map[string]interface{} {
 }
 
 func flattenPasswordStatus(pr *clusterConfig.PasswordStatus) string {
+	const UNKNOWN = 0
+	const REDACTED = 1
+	const DEFAULT = 2
+	const SECURE = 3
+	const NOPASSWD = 4
+	const MULTIPLE_ISSUES = 5
 	if pr != nil {
 		switch *pr {
-		case clusterConfig.PasswordStatus(0):
+		case clusterConfig.PasswordStatus(UNKNOWN):
 			return "UNKNOWN"
-		case clusterConfig.PasswordStatus(1):
+		case clusterConfig.PasswordStatus(REDACTED):
 			return "REDACTED"
-		case clusterConfig.PasswordStatus(2):
+		case clusterConfig.PasswordStatus(DEFAULT):
 			return "DEFAULT"
-		case clusterConfig.PasswordStatus(3):
+		case clusterConfig.PasswordStatus(SECURE):
 			return "SECURE"
-		case clusterConfig.PasswordStatus(4):
+		case clusterConfig.PasswordStatus(NOPASSWD):
 			return "NOPASSWD"
-		case clusterConfig.PasswordStatus(5):
+		case clusterConfig.PasswordStatus(MULTIPLE_ISSUES):
 			return "MULTIPLE_ISSUES"
 		default:
 			return "UNKNOWN"
@@ -267,19 +273,25 @@ func flattenPasswordStatus(pr *clusterConfig.PasswordStatus) string {
 }
 
 func flattenPasswordSystemType(pr *clusterConfig.SystemType) string {
+	const UNKNOWN = 0
+	const REDACTED = 1
+	const PC = 2
+	const AOS = 3
+	const AHV = 4
+	const IPMI = 5
 	if pr != nil {
 		switch *pr {
-		case clusterConfig.SystemType(0):
+		case clusterConfig.SystemType(UNKNOWN):
 			return "UNKNOWN"
-		case clusterConfig.SystemType(1):
+		case clusterConfig.SystemType(REDACTED):
 			return "REDACTED"
-		case clusterConfig.SystemType(2):
+		case clusterConfig.SystemType(PC):
 			return "PC"
-		case clusterConfig.SystemType(3):
+		case clusterConfig.SystemType(AOS):
 			return "AOS"
-		case clusterConfig.SystemType(4):
+		case clusterConfig.SystemType(AHV):
 			return "AHV"
-		case clusterConfig.SystemType(5):
+		case clusterConfig.SystemType(IPMI):
 			return "IPMI"
 		default:
 			return "UNKNOWN"
