@@ -722,7 +722,6 @@ func flattenAccountEntities(entities []map[string]interface{}) []map[string]inte
 			// Skip custom_provider type
 			resouceMap := make(map[string]interface{})
 			if resources, ok := status["resources"].(map[string]interface{}); ok {
-
 				if typeName, ok := resources["type"].(string); ok {
 					if typeName == "custom_provider" || typeName == "nutanix" {
 						continue // Skip
