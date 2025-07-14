@@ -439,7 +439,7 @@ func ResourceNutanixOvaV2Update(ctx context.Context, d *schema.ResourceData, met
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for Ova (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-	return nil
+	return ResourceNutanixOvaV2Read(ctx, d, meta)
 }
 
 func ResourceNutanixOvaV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
