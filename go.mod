@@ -10,7 +10,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.8.2 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
 	github.com/mitchellh/gox v1.0.1
-	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.0.1
+	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.1.1
 	github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4 v4.0.1
 	github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4 v4.0.1
 	github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4 v4.0.1
