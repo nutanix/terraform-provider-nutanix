@@ -245,12 +245,14 @@ func flattenLinks(links []import1.ApiLink) []map[string]interface{} {
 }
 
 func flattenPasswordStatus(pr *clusterConfig.PasswordStatus) string {
-	const UNKNOWN = 0
-	const REDACTED = 1
-	const DEFAULT = 2
-	const SECURE = 3
-	const NOPASSWD = 4
-	const MULTIPLE_ISSUES = 5
+	const (
+		UNKNOWN         = 0
+		REDACTED        = 1
+		DEFAULT         = 2
+		SECURE          = 3
+		NOPASSWD        = 4
+		MULTIPLE_ISSUES = 5
+	)
 	if pr != nil {
 		switch *pr {
 		case clusterConfig.PasswordStatus(UNKNOWN):
@@ -273,12 +275,14 @@ func flattenPasswordStatus(pr *clusterConfig.PasswordStatus) string {
 }
 
 func flattenPasswordSystemType(pr *clusterConfig.SystemType) string {
-	const UNKNOWN = 0
-	const REDACTED = 1
-	const PC = 2
-	const AOS = 3
-	const AHV = 4
-	const IPMI = 5
+	const (
+		UNKNOWN  = 0
+		REDACTED = 1
+		PC       = 2
+		AOS      = 3
+		AHV      = 4
+		IPMI     = 5
+	)
 	if pr != nil {
 		switch *pr {
 		case clusterConfig.SystemType(UNKNOWN):
