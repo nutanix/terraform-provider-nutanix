@@ -43,6 +43,10 @@ func DatasourceNutanixUserV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"idp_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -191,6 +195,9 @@ func datasourceNutanixUserV2Read(ctx context.Context, d *schema.ResourceData, me
 	}
 	if err := d.Set("user_type", flattenUserType(getResp.UserType)); err != nil {
 		return diag.Errorf("error setting user_type: %v", err)
+	}
+	if err := d.Set("description", getResp.Description); err != nil {
+		return diag.Errorf("error setting description: %v", err)
 	}
 	if err := d.Set("idp_id", getResp.IdpId); err != nil {
 		return diag.Errorf("error setting idp_id: %v", err)

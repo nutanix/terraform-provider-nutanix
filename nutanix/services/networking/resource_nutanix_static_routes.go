@@ -151,7 +151,7 @@ func resourceNutanixStaticRouteCreate(ctx context.Context, d *schema.ResourceDat
 
 	// Wait for the Static Route to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
+		Pending:    []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
@@ -242,7 +242,7 @@ func resourceNutanixStaticRouteUpdate(ctx context.Context, d *schema.ResourceDat
 
 	// Wait for the Static Route to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
+		Pending:    []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),

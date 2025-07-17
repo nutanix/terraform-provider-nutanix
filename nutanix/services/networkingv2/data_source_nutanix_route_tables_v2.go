@@ -118,7 +118,7 @@ func DatasourceNutanixRouteTablesV2Read(ctx context.Context, d *schema.ResourceD
 	}
 
 	if resp.Data == nil {
-		log.Printf("[DEBUG] DatasourceNutanixRouteTablesV2Read: no data found")
+		log.Printf("[DEBUG] DatasourceNutanixRouteTablesV2Read: No data found.")
 		if err := d.Set("route_tables", make([]interface{}, 0)); err != nil {
 			return diag.FromErr(err)
 		}
@@ -127,7 +127,7 @@ func DatasourceNutanixRouteTablesV2Read(ctx context.Context, d *schema.ResourceD
 
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
-			Summary:  "🫙 No Data found",
+			Summary:  "🫙 No data found.",
 			Detail:   "The API returned an empty list of route tables.",
 		}}
 	}

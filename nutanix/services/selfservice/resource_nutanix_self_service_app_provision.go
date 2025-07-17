@@ -595,7 +595,7 @@ func resourceNutanixCalmAppProvisionUpdate(ctx context.Context, d *schema.Resour
 	// poll till action is completed
 	const delayDuration = 5 * time.Second
 	appStateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCESS"},
 		Refresh: RunlogStateRefreshFunc(ctx, conn, d.Id(), resp.RunlogUUID),
 		Timeout: d.Timeout(schema.TimeoutUpdate),

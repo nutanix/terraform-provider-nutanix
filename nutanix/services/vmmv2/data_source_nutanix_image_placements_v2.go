@@ -164,7 +164,7 @@ func DatasourceNutanixImagePlacementsV4Read(ctx context.Context, d *schema.Resou
 
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
-			Summary:  "🫙 No Data found",
+			Summary:  "🫙 No data found.",
 			Detail:   "The API returned an empty list of placement policies.",
 		}}
 	}

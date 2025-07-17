@@ -51,7 +51,7 @@ func DatasourceNutanixListPcsV2Read(ctx context.Context, d *schema.ResourceData,
 
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
-			Summary:  "🫙 No Data found",
+			Summary:  "🫙 No data found.",
 			Detail:   "The API returned an empty list of PCs.",
 		}}
 	}

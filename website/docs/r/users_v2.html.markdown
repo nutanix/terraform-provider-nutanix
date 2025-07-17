@@ -22,6 +22,14 @@ resource "nutanix_users_v2" "user"{
   force_reset_password = <force_reset_password>
   status = "<status>"  
 }
+
+# user_type of SERVICE_ACCOUNT
+resource "nutanix_users_v2" "service_account" {
+	username = "service_account_terraform_example"
+	description = "service account tf"
+	email_id = "example_terraform_plugin@domain.com"
+	user_type = "SERVICE_ACCOUNT"
+}
 ```
 
 ##  Argument Reference
@@ -30,7 +38,7 @@ The following arguments are supported:
 
 * `ext_id`: -(Optional) External Identifier of the User.
 * `username`: -(Required) Identifier for the User in the form an email address.
-* `user_type`: -(Required) Enum: `$UNKNOWN` `$REDACTED` `LOCAL` `SAML` `LDAP` `EXTERNAL`
+* `user_type`: -(Required) Enum: `$UNKNOWN` `$REDACTED` `LOCAL` `SAML` `LDAP` `EXTERNAL` `SERVICE_ACCOUNT`
 Type of the User.
 * `idp_id`: -(Optional) Identifier of the IDP for the User.
 * `display_name`: -(Optional) Display name for the User.
@@ -44,6 +52,7 @@ Type of the User.
 * `is_force_reset_password`: -(Optional) Flag to force the User to reset password.
 * `additional_attributes`: -(Optional)  Any additional attribute for the User.
 * `status`: -(Optional) Status of the User. `ACTIVE`: Denotes that the local User is active. `INACTIVE`: Denotes that the local User is inactive and needs to be reactivated.
+* `description`: -( Optional ) Description of the user.
 
 ### Additional Attributes
 
@@ -73,6 +82,7 @@ Type of the User.
 * `is_force_reset_password`: - Flag to force the User to reset password.
 * `additional_attributes`: -  Any additional attribute for the User.
 * `status`: - Status of the User. `ACTIVE`: Denotes that the local User is active. `INACTIVE`: Denotes that the local User is inactive and needs to be reactivated.
+* `description`: - Description of the user.
 * `buckets_access_keys`: - Bucket Access Keys for the User.
 * `last_login_time`: - Last successful logged in time for the User.
 * `created_time`: - Creation time of the User.

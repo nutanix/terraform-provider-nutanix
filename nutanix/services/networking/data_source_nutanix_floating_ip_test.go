@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccNutanixFloatingIPDataSource_basic(t *testing.T) {
-	r := randIntBetween(31, 40)
+	r := randIntBetween(131, 140)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -37,14 +37,14 @@ func testAccFloatingIPDataSourceConfig(r int) string {
 	return fmt.Sprintf(`
 
 	data "nutanix_clusters" "clusters" {}
-	
+
 	locals {
 		cluster1 = [
 		for cluster in data.nutanix_clusters.clusters.entities :
 		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 		][0]
 	}
-	
+
 	resource "nutanix_subnet" "sub-test" {
 		cluster_uuid = local.cluster1
 		name        = "acctest-managed-%[1]d"
@@ -60,18 +60,18 @@ func testAccFloatingIPDataSourceConfig(r int) string {
 
 	resource "nutanix_vpc" "test-vpc" {
 		name = "acctest-vpc-%[1]d"
-	  
-	  
+
+
 		external_subnet_reference_uuid = [
 		  resource.nutanix_subnet.sub-test.id
 		]
-	  
+
 		common_domain_name_server_ip_list{
 				ip = "8.8.8.9"
 		}
-	  
+
 		externally_routable_prefix_list{
-		  ip=  "172.31.0.0"
+		  ip=  "172.32.0.0"
 		  prefix_length= 16
 		}
 	  }

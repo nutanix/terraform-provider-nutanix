@@ -297,7 +297,8 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 	aJSON, _ := json.Marshal(body)
 	log.Printf("[DEBUG] PC Registration Request Body: %s", string(aJSON))
 
-	resp, err := conn.DomainManagerAPIInstance.Register(&pcExtID, body, args)
+	// pass nil for the new dyRun flag
+	resp, err := conn.DomainManagerAPIInstance.Register(&pcExtID, body, nil, args)
 	if err != nil {
 		return diag.Errorf("error while registering remote cluster with id %s : %v", pcExtID, err)
 	}
