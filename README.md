@@ -32,8 +32,8 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.3.
   This release is built on the latest Nutanix v4 APIs and SDKs, providing improved performance, stability, and alignment with the newest platform capabilities.
 
 - **New Resource Support**
-  - **Service Accounts**: Manage service accounts directly through Terraform.
   - **Objects**: Automate Nutanix Objects (S3-compatible storage) management for scalable storage use cases.
+  - **Service Accounts**: Manage service accounts directly through Terraform.
 
 ---
 
