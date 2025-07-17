@@ -718,6 +718,44 @@ func TestAccV2NutanixVmsResource_WithGpus(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixVmsResource_ClusterAutomaticSelection(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-vm-%d", r)
+	desc := "test vm description"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testVmsClusterAutomaticSelectionConfig(name, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", name),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_cores_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_sockets", "1"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "create_time"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "update_time"),
+					resource.TestCheckResourceAttr(resourceNameVms, "protection_type", "UNPROTECTED"),
+					resource.TestCheckResourceAttr(resourceNameVms, "is_agent_vm", "false"),
+					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "cluster.0.ext_id"),
+
+					// list vms checks
+					resource.TestCheckResourceAttrSet(datasourceNameVM, "vms.#"),
+					resource.TestCheckResourceAttr(datasourceNameVM, "vms.0.name", name),
+					resource.TestCheckResourceAttrSet(datasourceNameVM, "vms.0.ext_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameVM, "vms.0.cluster.0.ext_id"),
+
+					// get vm checks
+					resource.TestCheckResourceAttr(datasourceNameVMs, "name", name),
+					resource.TestCheckResourceAttrSet(datasourceNameVMs, "ext_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameVMs, "cluster.0.ext_id"),
+				),
+			},
+		},
+	})
+}
+
 func testVmsV4Config(name, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
@@ -1903,4 +1941,24 @@ func testVmsConfigWithSerialPorts(name, desc string, isconn bool) string {
 			power_state = "ON"
 		}
 	`, name, desc, isconn, filepath)
+}
+
+func testVmsClusterAutomaticSelectionConfig(name, desc string) string {
+	return fmt.Sprintf(`
+
+		resource "nutanix_virtual_machine_v2" "test"{
+			name= "%[1]s"
+			description =  "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets = 1
+		}
+
+		data "nutanix_virtual_machine_v2" "test" {
+			ext_id = nutanix_virtual_machine_v2.test.id
+		}
+
+		data "nutanix_virtual_machines_v2" "test" {
+			filter = "name eq '${nutanix_virtual_machine_v2.test.name}'"
+		}
+`, name, desc)
 }

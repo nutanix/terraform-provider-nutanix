@@ -34,7 +34,7 @@ func TestAccEra_DBServerVMbasic(t *testing.T) {
 }
 
 func TestAccEra_DBServerVMbasicWithTimeMachine(t *testing.T) {
-	r := acc.RandIntBetween(31, 40)
+	r := acc.RandIntBetween(161, 170)
 	name := fmt.Sprintf("test-dbserver-%d", r)
 	desc := "this is desc"
 	sshKey := testVars.SSHKey

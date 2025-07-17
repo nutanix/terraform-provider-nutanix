@@ -139,7 +139,7 @@ func resourceNutanixUserGroupsCreate(ctx context.Context, d *schema.ResourceData
 
 	// Wait for the UserGroup to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
+		Pending:    []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
@@ -264,7 +264,7 @@ func resourceNutanixUserGroupsUpdate(ctx context.Context, d *schema.ResourceData
 
 	// Wait for the User Group to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
+		Pending:    []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
