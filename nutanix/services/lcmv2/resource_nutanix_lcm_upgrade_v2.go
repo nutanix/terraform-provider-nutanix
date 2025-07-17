@@ -121,8 +121,8 @@ func ResourceLcmUpgradeV2Create(ctx context.Context, d *schema.ResourceData, met
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] LCM Upgrade Request Spec: %s", string(aJSON))
-
-	resp, err := conn.LcmUpgradeAPIInstance.PerformUpgrade(body, clusterID)
+	// pass nil for the new dyRun flag
+	resp, err := conn.LcmUpgradeAPIInstance.PerformUpgrade(body, clusterID, nil)
 	if err != nil {
 		return diag.Errorf("error while Perform Upgrade the LCM config: %v", err)
 	}
