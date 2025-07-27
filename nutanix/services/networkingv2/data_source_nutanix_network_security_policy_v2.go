@@ -461,10 +461,10 @@ func flattenNetworkSecurityPolicyRule(pr []import1.NetworkSecurityPolicyRule) []
 			net := make(map[string]interface{})
 
 			if v.ExtId != nil {
-				net["ext_id"] = v.ExtId
+				net["ext_id"] = utils.StringValue(v.ExtId)
 			}
 			if v.Description != nil {
-				net["description"] = v.Description
+				net["description"] = utils.StringValue(v.Description)
 			}
 			if v.Type != nil {
 				net["type"] = flattenRuleType(v.Type)
@@ -547,7 +547,7 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 				app["service_group_references"] = appRuleValue.ServiceGroupReferences
 			}
 			if appRuleValue.IsAllProtocolAllowed != nil {
-				app["is_all_protocol_allowed"] = appRuleValue.IsAllProtocolAllowed
+				app["is_all_protocol_allowed"] = utils.BoolValue(appRuleValue.IsAllProtocolAllowed)
 			}
 			if appRuleValue.TcpServices != nil {
 				app["tcp_services"] = flattenTCPPortRangeSpec(appRuleValue.TcpServices)
@@ -590,33 +590,41 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 			return intraRuleSpecList
 		}
 		if *pr.ObjectType_ == "microseg.v4.config.MultiEnvIsolationRuleSpec" {
-			multiEenv := make(map[string]interface{})
-			multiEnvList := make([]map[string]interface{}, 0)
 
-			specMap := make([]map[string]interface{}, 0)
-			allToAllIsolationGroup := make([]map[string]interface{}, 0)
-			isolationGroups := make([]map[string]interface{}, 0)
-			groupCategoryRef := make(map[string]interface{})
-
+			// Extract input value
 			multiEnvIsolationValue := pr.GetValue().(import1.MultiEnvIsolationRuleSpec)
-
 			allIsolationGroupValue := multiEnvIsolationValue.Spec.GetValue().(import1.AllToAllIsolationGroup)
 
+			isolationGroups := make([]interface{}, 0)
 			for _, group := range allIsolationGroupValue.IsolationGroups {
-				groupCategoryRef["group_category_reference"] = group.GroupCategoryReferences
-				isolationGroups = append(isolationGroups, groupCategoryRef)
+				groupMap := make(map[string]interface{})
+				groupMap["group_category_references"] = group.GroupCategoryReferences
+				isolationGroups = append(isolationGroups, groupMap)
 			}
 
-			allToAllIsolationGroup = append(allToAllIsolationGroup, isolationGroups...)
+			// Wrap isolation_group inside all_to_all_isolation_group
+			allToAllGroup := make(map[string]interface{})
+			allToAllGroup["isolation_group"] = isolationGroups
 
-			specMap = append(specMap, allToAllIsolationGroup...)
+			allToAllGroupList := make([]interface{}, 0)
+			allToAllGroupList = append(allToAllGroupList, allToAllGroup)
 
-			multiEenv["multi_env_isolation_rule_spec"] = specMap
+			// Wrap all_to_all_isolation_group in spec
+			specMap := make(map[string]interface{})
+			specMap["all_to_all_isolation_group"] = allToAllGroupList
 
-			multiEnvList = append(multiEnvList, multiEenv)
+			specList := make([]interface{}, 0)
+			specList = append(specList, specMap)
 
+			// Wrap spec in multi_env_isolation_rule_spec
+			multiEnv := make(map[string]interface{})
+			multiEnv["spec"] = specList
+
+			multiEnvList := make([]interface{}, 0)
+			multiEnvList = append(multiEnvList, multiEnv)
+
+			// Wrap into top-level return object
 			multiEnvIsolationRuleSpec["multi_env_isolation_rule_spec"] = multiEnvList
-
 			multiEnvIsolationRuleSpecList = append(multiEnvIsolationRuleSpecList, multiEnvIsolationRuleSpec)
 
 			aJSON, _ := json.Marshal(multiEnvIsolationRuleSpecList)
@@ -633,8 +641,8 @@ func flattenIPv4AddressMicroSegList(pr *config.IPv4Address) []interface{} {
 
 		ip := make(map[string]interface{})
 
-		ip["value"] = pr.Value
-		ip["prefix_length"] = pr.PrefixLength
+		ip["value"] = utils.StringValue(pr.Value)
+		ip["prefix_length"] = utils.IntValue(pr.PrefixLength)
 
 		ipv4 = append(ipv4, ip)
 
@@ -685,7 +693,7 @@ func flattenRuleType(pr *import1.RuleType) string {
 			return "APPLICATION"
 		}
 		if *pr == import1.RuleType(five) {
-			return "ENFORCE"
+			return "INTRA_GROUP"
 		}
 		if *pr == import1.RuleType(six) {
 			return "MULTI_ENV_ISOLATION"
