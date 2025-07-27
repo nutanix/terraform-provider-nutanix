@@ -590,7 +590,6 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 			return intraRuleSpecList
 		}
 		if *pr.ObjectType_ == "microseg.v4.config.MultiEnvIsolationRuleSpec" {
-
 			// Extract input value
 			multiEnvIsolationValue := pr.GetValue().(import1.MultiEnvIsolationRuleSpec)
 			allIsolationGroupValue := multiEnvIsolationValue.Spec.GetValue().(import1.AllToAllIsolationGroup)
