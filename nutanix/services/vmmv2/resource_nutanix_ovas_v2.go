@@ -123,85 +123,84 @@ func ResourceNutanixOvaV2() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"username": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 						"user_type": {
 							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice(
-								[]string{"SERVICE_ACCOUNT", "LDAP", "EXTERNAL", "LOCAL", "SAML"},
-								false,
-							),
+							Computed: true,
 						},
 						"idp_id": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"display_name": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"first_name": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"middle_initial": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"last_name": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"email_id": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"locale": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"region": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"password": {
 							Type:      schema.TypeString,
-							Optional:  true,
+							Computed:  true,
 							Sensitive: true,
 						},
 						"is_force_reset_password_enabled": {
 							Type:     schema.TypeBool,
-							Optional: true,
+							Computed: true,
 						},
 						"additional_attributes": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Computed: true,
 									},
 									"value": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Computed: true,
 									},
 								},
 							},
 						},
 						"status": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"description": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"creation_type": {
 							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"PREDEFINED", "SERVICEDEFINED", "USERDEFINED"}, false),
+							Computed:     true,
+						},
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -700,57 +699,56 @@ func flattenCreatedBy(createdBy *import4.User) []map[string]interface{} {
 	if createdBy != nil {
 		resList := make([]map[string]interface{}, 0)
 		createdByMap := make(map[string]interface{})
-		if createdBy.Username != nil {
-			createdByMap["username"] = utils.StringValue(createdBy.Username)
+		if v := utils.StringValue(createdBy.Username); v != "" {
+			createdByMap["username"] = v
 		}
-		if createdBy.UserType != nil {
-			// Convert UserType enum to string
-			createdByMap["user_type"] = flattenUserType(createdBy.UserType)
+		if v := flattenUserType(createdBy.UserType); v != "" {
+			createdByMap["user_type"] = v
 		}
-		if createdBy.IdpId != nil {
-			createdByMap["idp_id"] = utils.StringValue(createdBy.IdpId)
+		if v := utils.StringValue(createdBy.IdpId); v != "" {
+			createdByMap["idp_id"] = v
 		}
-		if createdBy.DisplayName != nil {
-			createdByMap["display_name"] = utils.StringValue(createdBy.DisplayName)
+		if v := utils.StringValue(createdBy.DisplayName); v != "" {
+			createdByMap["display_name"] = v
 		}
-		if createdBy.FirstName != nil {
-			createdByMap["first_name"] = utils.StringValue(createdBy.FirstName)
+		if v := utils.StringValue(createdBy.FirstName); v != "" {
+			createdByMap["first_name"] = v
 		}
-		if createdBy.MiddleInitial != nil {
-			createdByMap["middle_initial"] = utils.StringValue(createdBy.MiddleInitial)
+		if v := utils.StringValue(createdBy.MiddleInitial); v != "" {
+			createdByMap["middle_initial"] = v
 		}
-		if createdBy.LastName != nil {
-			createdByMap["last_name"] = utils.StringValue(createdBy.LastName)
+		if v := utils.StringValue(createdBy.LastName); v != "" {
+			createdByMap["last_name"] = v
 		}
-		if createdBy.EmailId != nil {
-			createdByMap["email_id"] = utils.StringValue(createdBy.EmailId)
+		if v := utils.StringValue(createdBy.EmailId); v != "" {
+			createdByMap["email_id"] = v
 		}
-		if createdBy.Locale != nil {
-			createdByMap["locale"] = utils.StringValue(createdBy.Locale)
+		if v := utils.StringValue(createdBy.Locale); v != "" {
+			createdByMap["locale"] = v
 		}
-		if createdBy.Region != nil {
-			createdByMap["region"] = utils.StringValue(createdBy.Region)
+		if v := utils.StringValue(createdBy.Region); v != "" {
+			createdByMap["region"] = v
 		}
-		if createdBy.ExtId != nil {
-			createdByMap["ext_id"] = utils.StringValue(createdBy.ExtId)
+		if v := utils.StringValue(createdBy.ExtId); v != "" {
+			createdByMap["ext_id"] = v
 		}
-		if createdBy.Password != nil {
-			createdByMap["password"] = utils.StringValue(createdBy.Password)
+		if v := utils.StringValue(createdBy.Password); v != "" {
+			createdByMap["password"] = v
 		}
 		if createdBy.IsForceResetPasswordEnabled != nil {
 			createdByMap["is_force_reset_password_enabled"] = *createdBy.IsForceResetPasswordEnabled
 		}
-		if createdBy.AdditionalAttributes != nil {
+		if len(createdBy.AdditionalAttributes) > 0 {
 			createdByMap["additional_attributes"] = flattenCustomKVPair(createdBy.AdditionalAttributes)
 		}
-		if createdBy.Status != nil {
-			createdByMap["status"] = flattenUserStatusType(createdBy.Status)
+		if v := flattenUserStatusType(createdBy.Status); v != "" {
+			createdByMap["status"] = v
 		}
-		if createdBy.Description != nil {
-			createdByMap["description"] = utils.StringValue(createdBy.Description)
+		if v := utils.StringValue(createdBy.Description); v != "" {
+			createdByMap["description"] = v
 		}
-		if createdBy.CreationType != nil {
-				createdByMap["creation_type"] = flattenCreationType(createdBy.CreationType)
+		if v := flattenCreationType(createdBy.CreationType); v != "" {
+			createdByMap["creation_type"] = v
 		}
 		resList = append(resList, createdByMap)
 		return resList
