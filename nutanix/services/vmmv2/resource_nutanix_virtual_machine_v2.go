@@ -3,6 +3,7 @@ package vmmv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"reflect"
 	"time"
@@ -33,7 +34,6 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -1625,9 +1625,9 @@ func ResourceNutanixVirtualMachineV2Read(ctx context.Context, d *schema.Resource
 		return diag.Errorf("error while fetching vm : %v", err)
 	}
 
-	getResp := resp.Data.GetValue().(*config.Vm)
+	getResp := resp.Data.GetValue().(config.Vm)
 	setVMConfig(d, getResp)
-	
+
 	return nil
 }
 
@@ -2475,7 +2475,16 @@ func ResourceNutanixVirtualMachineV2Delete(ctx context.Context, d *schema.Resour
 }
 
 func expandAvailabilityZoneReference(zone interface{}) *config.AvailabilityZoneReference {
-	zoneRef := zone.(map[string]interface{})
+	zoneList, ok := zone.([]interface{})
+	if !ok || len(zoneList) == 0 {
+		return nil // or handle error accordingly
+	}
+
+	zoneRef, ok := zoneList[0].(map[string]interface{})
+	if !ok {
+		return nil // or handle error accordingly
+	}
+
 	return &config.AvailabilityZoneReference{
 		ExtId: utils.StringPtr(zoneRef["ext_id"].(string)),
 	}
@@ -3530,8 +3539,7 @@ func waitForIPRefreshFunc(client *vmm.Client, vmUUID string) resource.StateRefre
 	}
 }
 
-
-func prepareVmConfigFromMap(m map[string]interface{}) *config.Vm{
+func prepareVmConfigFromMap(m map[string]interface{}) *config.Vm {
 	body := &config.Vm{}
 	if extID, ok := m["ext_id"]; ok {
 		body.ExtId = utils.StringPtr(extID.(string))
@@ -3627,9 +3635,12 @@ func prepareVmConfigFromMap(m map[string]interface{}) *config.Vm{
 			"PSERIES": three,
 			"Q35":     four,
 		}
-		pVal := subMap[machineType.(string)]
-		p := config.MachineType(pVal.(int))
-		body.MachineType = &p
+		if val, ok := machineType.(string); ok {
+			if pVal, exists := subMap[val]; exists {
+				p := config.MachineType(pVal.(int))
+				body.MachineType = &p
+			}
+		}
 	}
 	if vtpmConfig, ok := m["vtpm_config"]; ok {
 		body.VtpmConfig = expandVtpmConfig(vtpmConfig)
@@ -3665,9 +3676,12 @@ func prepareVmConfigFromMap(m map[string]interface{}) *config.Vm{
 			"PD_PROTECTED":   three,
 			"RULE_PROTECTED": four,
 		}
-		pVal := subMap[protectionType.(string)]
-		p := config.ProtectionType(pVal.(int))
-		body.ProtectionType = &p
+		if val, ok := protectionType.(string); ok {
+			if pVal, exists := subMap[val]; exists {
+				p := config.ProtectionType(pVal.(int))
+				body.ProtectionType = &p
+			}
+		}
 	}
 	if protectionPolicyState, ok := m["protection_policy_state"]; ok {
 		body.ProtectionPolicyState = expandProtectionPolicyState(protectionPolicyState)
@@ -3685,141 +3699,210 @@ func resourceDataToMap(d *schema.ResourceData, schemaMap map[string]*schema.Sche
 	return result
 }
 
-func setVMConfig(d *schema.ResourceData, getResp *config.Vm) diag.Diagnostics {
-	if err := d.Set("name", getResp.Name); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("description", getResp.Description); err != nil {
-		return diag.FromErr(err)
-	}
+// func  setVMConfig(d *schema.ResourceData, getResp config.Vm) diag.Diagnostics {
+// 	if err := d.Set("name", getResp.Name); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("description", getResp.Description); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if getResp.CreateTime != nil {
+// 		t := getResp.CreateTime
+// 		if err := d.Set("create_time", t.String()); err != nil {
+// 			return diag.FromErr(err)
+// 		}
+// 	}
+// 	if getResp.UpdateTime != nil {
+// 		t := getResp.UpdateTime
+// 		if err := d.Set("update_time", t.String()); err != nil {
+// 			return diag.FromErr(err)
+// 		}
+// 	}
+// 	if err := d.Set("source", flattenVMSourceReference(getResp.Source)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("num_sockets", getResp.NumSockets); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("num_cores_per_socket", getResp.NumCoresPerSocket); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("num_threads_per_core", getResp.NumThreadsPerCore); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("num_numa_nodes", getResp.NumNumaNodes); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("memory_size_bytes", getResp.MemorySizeBytes); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("is_vcpu_hard_pinning_enabled", getResp.IsVcpuHardPinningEnabled); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("is_cpu_passthrough_enabled", getResp.IsCpuPassthroughEnabled); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("enabled_cpu_features", flattenCPUFeature(getResp.EnabledCpuFeatures)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("is_memory_overcommit_enabled", getResp.IsMemoryOvercommitEnabled); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("is_gpu_console_enabled", getResp.IsGpuConsoleEnabled); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("is_cpu_hotplug_enabled", getResp.IsCpuHotplugEnabled); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("is_scsi_controller_enabled", getResp.IsScsiControllerEnabled); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("generation_uuid", getResp.GenerationUuid); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("bios_uuid", getResp.BiosUuid); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("categories", flattenCategoryReference(getResp.Categories)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("ownership_info", flattenOwnershipInfo(getResp.OwnershipInfo)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("host", flattenHostReference(getResp.Host)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("cluster", flattenClusterReference(getResp.Cluster)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("availability_zone", flattenAvailabilityZoneReference(getResp.AvailabilityZone)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("guest_customization", flattenGuestCustomizationParams(getResp.GuestCustomization)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("guest_tools", flattenGuestTools(getResp.GuestTools)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("hardware_clock_timezone", getResp.HardwareClockTimezone); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("is_branding_enabled", getResp.IsBrandingEnabled); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("boot_config", flattenOneOfVMBootConfig(getResp.BootConfig)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("is_vga_console_enabled", getResp.IsVgaConsoleEnabled); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("machine_type", flattenMachineType(getResp.MachineType)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("power_state", flattenPowerState(getResp.PowerState)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("vtpm_config", flattenVtpmConfig(getResp.VtpmConfig)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("is_agent_vm", getResp.IsAgentVm); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("apc_config", flattenApcConfig(getResp.ApcConfig)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("storage_config", flattenADSFVmStorageConfig(getResp.StorageConfig)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("disks", flattenDisk(getResp.Disks)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("cd_roms", flattenCdRom(getResp.CdRoms)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("nics", flattenNic(getResp.Nics)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("gpus", flattenGpu(getResp.Gpus)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("serial_ports", flattenSerialPort(getResp.SerialPorts)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("protection_type", flattenProtectionType(getResp.ProtectionType)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	if err := d.Set("protection_policy_state", flattenProtectionPolicyState(getResp.ProtectionPolicyState)); err != nil {
+// 		return diag.FromErr(err)
+// 	}
+// 	return nil
+// }
+
+func extractVMConfigFields(getResp config.Vm) (map[string]interface{}, diag.Diagnostics) {
+	fields := make(map[string]interface{})
+	var diags diag.Diagnostics
+
+	fields["name"] = getResp.Name
+	fields["description"] = getResp.Description
+
 	if getResp.CreateTime != nil {
-		t := getResp.CreateTime
-		if err := d.Set("create_time", t.String()); err != nil {
-			return diag.FromErr(err)
-		}
+		fields["create_time"] = getResp.CreateTime.String()
 	}
 	if getResp.UpdateTime != nil {
-		t := getResp.UpdateTime
-		if err := d.Set("update_time", t.String()); err != nil {
-			return diag.FromErr(err)
+		fields["update_time"] = getResp.UpdateTime.String()
+	}
+	fields["source"] = flattenVMSourceReference(getResp.Source)
+	fields["num_sockets"] = getResp.NumSockets
+	fields["num_cores_per_socket"] = getResp.NumCoresPerSocket
+	fields["num_threads_per_core"] = getResp.NumThreadsPerCore
+	fields["num_numa_nodes"] = getResp.NumNumaNodes
+	fields["memory_size_bytes"] = getResp.MemorySizeBytes
+	fields["is_vcpu_hard_pinning_enabled"] = getResp.IsVcpuHardPinningEnabled
+	fields["is_cpu_passthrough_enabled"] = getResp.IsCpuPassthroughEnabled
+	fields["enabled_cpu_features"] = flattenCPUFeature(getResp.EnabledCpuFeatures)
+	fields["is_memory_overcommit_enabled"] = getResp.IsMemoryOvercommitEnabled
+	fields["is_gpu_console_enabled"] = getResp.IsGpuConsoleEnabled
+	fields["is_cpu_hotplug_enabled"] = getResp.IsCpuHotplugEnabled
+	fields["is_scsi_controller_enabled"] = getResp.IsScsiControllerEnabled
+	fields["generation_uuid"] = getResp.GenerationUuid
+	fields["bios_uuid"] = getResp.BiosUuid
+	fields["categories"] = flattenCategoryReference(getResp.Categories)
+	fields["ownership_info"] = flattenOwnershipInfo(getResp.OwnershipInfo)
+	fields["host"] = flattenHostReference(getResp.Host)
+	fields["cluster"] = flattenClusterReference(getResp.Cluster)
+	fields["availability_zone"] = flattenAvailabilityZoneReference(getResp.AvailabilityZone)
+	fields["guest_customization"] = flattenGuestCustomizationParams(getResp.GuestCustomization)
+	fields["guest_tools"] = flattenGuestTools(getResp.GuestTools)
+	fields["hardware_clock_timezone"] = getResp.HardwareClockTimezone
+	fields["is_branding_enabled"] = getResp.IsBrandingEnabled
+	fields["boot_config"] = flattenOneOfVMBootConfig(getResp.BootConfig)
+	fields["is_vga_console_enabled"] = getResp.IsVgaConsoleEnabled
+	fields["machine_type"] = flattenMachineType(getResp.MachineType)
+	fields["power_state"] = flattenPowerState(getResp.PowerState)
+	fields["vtpm_config"] = flattenVtpmConfig(getResp.VtpmConfig)
+	fields["is_agent_vm"] = getResp.IsAgentVm
+	fields["apc_config"] = flattenApcConfig(getResp.ApcConfig)
+	fields["storage_config"] = flattenADSFVmStorageConfig(getResp.StorageConfig)
+	fields["disks"] = flattenDisk(getResp.Disks)
+	fields["cd_roms"] = flattenCdRom(getResp.CdRoms)
+	fields["nics"] = flattenNic(getResp.Nics)
+	fields["gpus"] = flattenGpu(getResp.Gpus)
+	fields["serial_ports"] = flattenSerialPort(getResp.SerialPorts)
+	fields["protection_type"] = flattenProtectionType(getResp.ProtectionType)
+	fields["protection_policy_state"] = flattenProtectionPolicyState(getResp.ProtectionPolicyState)
+
+	return fields, diags
+}
+
+func setVMConfig(d *schema.ResourceData, getResp config.Vm) diag.Diagnostics {
+	fields, diags := extractVMConfigFields(getResp)
+	if diags.HasError() {
+		return diags
+	}
+	for k, v := range fields {
+		if err := d.Set(k, v); err != nil {
+			return diag.FromErr(fmt.Errorf("failed setting %q: %w", k, err))
 		}
-	}
-	if err := d.Set("source", flattenVMSourceReference(getResp.Source)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("num_sockets", getResp.NumSockets); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("num_cores_per_socket", getResp.NumCoresPerSocket); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("num_threads_per_core", getResp.NumThreadsPerCore); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("num_numa_nodes", getResp.NumNumaNodes); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("memory_size_bytes", getResp.MemorySizeBytes); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("is_vcpu_hard_pinning_enabled", getResp.IsVcpuHardPinningEnabled); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("is_cpu_passthrough_enabled", getResp.IsCpuPassthroughEnabled); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("enabled_cpu_features", flattenCPUFeature(getResp.EnabledCpuFeatures)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("is_memory_overcommit_enabled", getResp.IsMemoryOvercommitEnabled); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("is_gpu_console_enabled", getResp.IsGpuConsoleEnabled); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("is_cpu_hotplug_enabled", getResp.IsCpuHotplugEnabled); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("is_scsi_controller_enabled", getResp.IsScsiControllerEnabled); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("generation_uuid", getResp.GenerationUuid); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("bios_uuid", getResp.BiosUuid); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("categories", flattenCategoryReference(getResp.Categories)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("ownership_info", flattenOwnershipInfo(getResp.OwnershipInfo)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("host", flattenHostReference(getResp.Host)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("cluster", flattenClusterReference(getResp.Cluster)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("availability_zone", flattenAvailabilityZoneReference(getResp.AvailabilityZone)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("guest_customization", flattenGuestCustomizationParams(getResp.GuestCustomization)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("guest_tools", flattenGuestTools(getResp.GuestTools)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("hardware_clock_timezone", getResp.HardwareClockTimezone); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("is_branding_enabled", getResp.IsBrandingEnabled); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("boot_config", flattenOneOfVMBootConfig(getResp.BootConfig)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("is_vga_console_enabled", getResp.IsVgaConsoleEnabled); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("machine_type", flattenMachineType(getResp.MachineType)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("power_state", flattenPowerState(getResp.PowerState)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("vtpm_config", flattenVtpmConfig(getResp.VtpmConfig)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("is_agent_vm", getResp.IsAgentVm); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("apc_config", flattenApcConfig(getResp.ApcConfig)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("storage_config", flattenADSFVmStorageConfig(getResp.StorageConfig)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("disks", flattenDisk(getResp.Disks)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("cd_roms", flattenCdRom(getResp.CdRoms)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("nics", flattenNic(getResp.Nics)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("gpus", flattenGpu(getResp.Gpus)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("serial_ports", flattenSerialPort(getResp.SerialPorts)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("protection_type", flattenProtectionType(getResp.ProtectionType)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("protection_policy_state", flattenProtectionPolicyState(getResp.ProtectionPolicyState)); err != nil {
-		return diag.FromErr(err)
 	}
 	return nil
 }
