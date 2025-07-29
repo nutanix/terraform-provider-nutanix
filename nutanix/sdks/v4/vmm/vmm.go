@@ -11,7 +11,7 @@ type Client struct {
 	TemplatesAPIInstance       *api.TemplatesApi
 	VMAPIInstance              *api.VmApi
 	ImagesPlacementAPIInstance *api.ImagePlacementPoliciesApi
-	OvasAPIInstance           *api.OvasApi
+	OvasAPIInstance            *api.OvasApi
 }
 
 func NewVmmClient(credentials client.Credentials) (*Client, error) {
@@ -35,7 +35,7 @@ func NewVmmClient(credentials client.Credentials) (*Client, error) {
 		TemplatesAPIInstance:       api.NewTemplatesApi(baseClient),
 		VMAPIInstance:              api.NewVmApi(baseClient),
 		ImagesPlacementAPIInstance: api.NewImagePlacementPoliciesApi(baseClient),
-		OvasAPIInstance:             api.NewOvasApi(baseClient),
+		OvasAPIInstance:            api.NewOvasApi(baseClient),
 	}
 
 	return f, nil

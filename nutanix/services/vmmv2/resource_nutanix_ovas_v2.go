@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import3 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import4 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/iam/v4/authn"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -45,9 +47,13 @@ func ResourceNutanixOvaV2() *schema.Resource {
 					},
 				},
 			},
+			"size_bytes": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"source": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ova_url_source": {
@@ -112,7 +118,7 @@ func ResourceNutanixOvaV2() *schema.Resource {
 			},
 			"created_by": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"username": {
@@ -169,7 +175,7 @@ func ResourceNutanixOvaV2() *schema.Resource {
 							Optional: true,
 						},
 						"additional_attributes": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -250,13 +256,43 @@ func ResourceNutanixOvaV2Create(ctx context.Context, d *schema.ResourceData, met
 	if clsExts, ok := d.GetOk("cluster_location_ext_ids"); ok {
 		body.ClusterLocationExtIds = flattenStringValue(clsExts.([]interface{}))
 	}
-	if raw, ok := d.GetOk("vm_config"); ok {
-		vmList := raw.([]interface{})
+
+	rawConfig := d.GetRawConfig()
+	if attrVal := rawConfig.GetAttr("vm_config"); attrVal.IsKnown() && !attrVal.IsNull() {
+		vmList := attrVal.AsValueSlice()
 		if len(vmList) > 0 {
-			vmMap := vmList[0].(map[string]interface{})
-			body.VmConfig = prepareVmConfigFromMap(vmMap)
+			vmObject := vmList[0]
+
+			// Build a map of explicitly set fields manually
+			explicitFields := make(map[string]interface{})
+			for key, val := range vmObject.AsValueMap() {
+				if val.IsKnown() && !val.IsNull() {
+					switch val.Type().FriendlyName() {
+					case "string":
+						explicitFields[key] = val.AsString()
+					case "number":
+						bf := val.AsBigFloat()
+						if intVal, acc := bf.Int64(); acc == 0 {
+							explicitFields[key] = int(intVal)
+						} else {
+							floatVal, _ := bf.Float64()
+							explicitFields[key] = floatVal // fallback if needed
+						}
+					case "bool":
+						explicitFields[key] = val.True()
+					default:
+						// You can log or skip complex types
+						log.Printf("[DEBUG] Skipping unsupported type for key: %s", key)
+					}
+				}
+			}
+
+			log.Printf("[DEBUG] Explicit fields in vm_config: %+v", explicitFields)
+
+			body.VmConfig = prepareVmConfigFromMap(explicitFields)
 		}
 	}
+
 	var diskFormatMap = map[string]import1.OvaDiskFormat{
 		"$UNKNOWN":  import1.OVADISKFORMAT_UNKNOWN,
 		"$REDACTED": import1.OVADISKFORMAT_REDACTED,
@@ -270,7 +306,9 @@ func ResourceNutanixOvaV2Create(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 	}
-
+	log.Printf("[DEBUG] OVA body: %+v", body)
+	aJSON, _ := json.MarshalIndent(body, "", "  ")
+	log.Printf("[DEBUG] Akhil Create call: %s", string(aJSON))
 	resp, err := conn.OvasAPIInstance.CreateOva(body)
 	if err != nil {
 		return diag.Errorf("error creating OVA: %v", err)
@@ -316,16 +354,16 @@ func ResourceNutanixOvaV2Read(ctx context.Context, d *schema.ResourceData, meta 
 	if err != nil {
 		return diag.Errorf("error reading OVA (%s): %v", d.Id(), err)
 	}
-
 	ova := getResp.Data.GetValue().(import1.Ova)
-
+	aJSON, _ := json.MarshalIndent(ova, "", "  ")
+	log.Printf("[DEBUG] Get Network call: %s", string(aJSON))
 	if err := d.Set("name", utils.StringValue(ova.Name)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("checksum", flattenOneOfOvaChecksum(ova.Checksum)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("source", flattenOneOfOvaSource(ova.Source)); err != nil {
+	if err := d.Set("size_bytes", int(*ova.SizeBytes)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("created_by", flattenCreatedBy(ova.CreatedBy)); err != nil {
@@ -337,9 +375,16 @@ func ResourceNutanixOvaV2Read(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("parent_vm", utils.StringValue(ova.ParentVm)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("vm_config", setVMConfig(d, ova.VmConfig)); err != nil {
-		return diag.FromErr(err)
+
+	// Set the VM config
+	fields, diags := extractVMConfigFields(*ova.VmConfig)
+	if diags.HasError() {
+		return diags
 	}
+	if err := d.Set("vm_config", []interface{}{fields}); err != nil {
+		return diag.FromErr(fmt.Errorf("failed setting vm_config: %w", err))
+	}
+
 	if err := d.Set("disk_format", flattenOvaDiskFormat(ova.DiskFormat)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -372,49 +417,10 @@ func ResourceNutanixOvaV2Update(ctx context.Context, d *schema.ResourceData, met
 	respOvas := getResp.Data.GetValue().(import1.Ova)
 	updateSpec := respOvas
 
+	// Only update of name is allowed
 	if d.HasChange("name") {
 		if v, ok := d.GetOk("name"); ok {
 			updateSpec.Name = utils.StringPtr(v.(string))
-		}
-	}
-	if d.HasChange("checksum") {
-		if checksum, ok := d.GetOk("checksum"); ok {
-			updateSpec.Checksum = expandOneOfOvaChecksum(checksum)
-		}
-	}
-	if d.HasChange("source") {
-		if source, ok := d.GetOk("source"); ok {
-			updateSpec.Source = expandOneOfOvaSource(source)
-		}
-	}
-	if d.HasChange("cluster_location_ext_ids") {
-		if clsExts, ok := d.GetOk("cluster_location_ext_ids"); ok {
-			updateSpec.ClusterLocationExtIds = flattenStringValue(clsExts.([]interface{}))
-		}
-	}
-	if d.HasChange("vm_config") {
-		raw, ok := d.GetOk("vm_config")
-		if ok {
-			vmList := raw.([]interface{})
-			if len(vmList) > 0 {
-				vmMap := vmList[0].(map[string]interface{})
-				updateSpec.VmConfig = prepareVmConfigFromMap(vmMap)
-			}
-		}
-	}
-	var diskFormatMap = map[string]import1.OvaDiskFormat{
-		"$UNKNOWN":  import1.OVADISKFORMAT_UNKNOWN,
-		"$REDACTED": import1.OVADISKFORMAT_REDACTED,
-		"QCOW2":     import1.OVADISKFORMAT_QCOW2,
-		"VMDK":      import1.OVADISKFORMAT_VMDK,
-	}
-	if d.HasChange("disk_format") {
-		if diskFormat, ok := d.GetOk("disk_format"); ok {
-			if strValue, isString := diskFormat.(string); isString {
-				if enumValue, exists := diskFormatMap[strValue]; exists {
-					updateSpec.DiskFormat = &enumValue
-				}
-			}
 		}
 	}
 
@@ -521,11 +527,9 @@ func flattenOneOfOvaChecksum(checksum *import1.OneOfOvaChecksum) []map[string]in
 
 func expandOneOfOvaSource(pr interface{}) *import1.OneOfOvaSource {
 	if pr != nil && len(pr.([]interface{})) > 0 {
+		imgSrc := &import1.OneOfOvaSource{}
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
-
-		imgSrc := &import1.OneOfOvaSource{}
-
 		if urlSrc, ok := val["ova_url_source"]; ok && len(urlSrc.([]interface{})) > 0 {
 			urlSrcInput := import1.OvaUrlSource{}
 
@@ -538,7 +542,11 @@ func expandOneOfOvaSource(pr interface{}) *import1.OneOfOvaSource {
 			if basicAuth, ok := urlMap["basic_auth"]; ok && len(basicAuth.([]interface{})) > 0 {
 				urlSrcInput.BasicAuth = expandOvaURLBasicAuth(basicAuth)
 			}
-			imgSrc.SetValue(urlSrcInput)
+			urlSrcInput.ObjectType_ = utils.StringPtr("vmm.v4.content.OvaUrlSource")
+			err := imgSrc.SetValue(urlSrcInput)
+			if err != nil {
+				log.Fatalf("SetValue failed: %v", err)
+			}
 		}
 
 		if vmDisk, ok := val["ova_vm_source"]; ok && len(vmDisk.([]interface{})) > 0 {
@@ -548,15 +556,35 @@ func expandOneOfOvaSource(pr interface{}) *import1.OneOfOvaSource {
 			vmDiskMap := vmDiskIn[0].(map[string]interface{})
 
 			OvavmDiskSrc.VmExtId = utils.StringPtr(vmDiskMap["vm_ext_id"].(string))
-			imgSrc.SetValue(OvavmDiskSrc)
+			OvavmDiskSrc.ObjectType_ = utils.StringPtr("vmm.v4.content.OvaVmSource")
+			if diskFormat, ok := vmDiskMap["disk_file_format"]; ok && len(diskFormat.(string)) > 0 {
+				var diskFormatMap = map[string]import1.OvaDiskFormat{
+					"$UNKNOWN":  import1.OVADISKFORMAT_UNKNOWN,
+					"$REDACTED": import1.OVADISKFORMAT_REDACTED,
+					"QCOW2":     import1.OVADISKFORMAT_QCOW2,
+					"VMDK":      import1.OVADISKFORMAT_VMDK,
+				}
+				if enumValue, exists := diskFormatMap[diskFormat.(string)]; exists {
+					OvavmDiskSrc.DiskFileFormat = &enumValue
+				}
+			}
+			log.Printf("[DEBUG] Akhil OvaVmSource: %+v", OvavmDiskSrc)
+			err := imgSrc.SetValue(OvavmDiskSrc)
+			if err != nil {
+				log.Fatalf("SetValue failed: %v", err)
+			}
 		}
 
 		if objLite, ok := val["object_lite_source"]; ok && len(objLite.([]interface{})) > 0 {
 			objLiteIn := objLite.([]interface{})
 			objLiteMap := objLiteIn[0].(map[string]interface{})
 			objLiteSrc := import1.ObjectsLiteSource{}
+			objLiteSrc.ObjectType_ = utils.StringPtr("vmm.v4.content.ObjectsLiteSource")
 			objLiteSrc.Key = utils.StringPtr(objLiteMap["key"].(string))
-			imgSrc.SetValue(objLiteSrc)
+			err := imgSrc.SetValue(objLiteSrc)
+			if err != nil {
+				log.Fatalf("SetValue failed: %v", err)
+			}
 		}
 		return imgSrc
 	}
@@ -654,34 +682,6 @@ func expandOvaURLBasicAuth(pr interface{}) *import1.UrlBasicAuth {
 	return nil
 }
 
-func flattenCreatedBy(pr interface{}) []map[string]interface{} {
-	if pr != nil {
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
-
-		user := make(map[string]interface{})
-		user["username"] = val["username"]
-		user["user_type"] = val["user_type"]
-		user["idp_id"] = val["idp_id"]
-		user["display_name"] = val["display_name"]
-		user["first_name"] = val["first_name"]
-		user["middle_initial"] = val["middle_initial"]
-		user["last_name"] = val["last_name"]
-		user["email_id"] = val["email_id"]
-		user["locale"] = val["locale"]
-		user["region"] = val["region"]
-		user["password"] = val["password"]
-		user["is_force_reset_password_enabled"] = val["is_force_reset_password_enabled"]
-		user["additional_attributes"] = val["additional_attributes"]
-		user["status"] = val["status"]
-		user["description"] = val["description"]
-		user["creation_type"] = val["creation_type"]
-
-		return []map[string]interface{}{user}
-	}
-	return nil
-}
-
 func flattenOvaDiskFormat(diskFormat *import1.OvaDiskFormat) string {
 	if diskFormat != nil {
 		switch *diskFormat {
@@ -694,4 +694,82 @@ func flattenOvaDiskFormat(diskFormat *import1.OvaDiskFormat) string {
 		}
 	}
 	return ""
+}
+
+func flattenCreatedBy(createdBy *import4.User) []map[string]interface{} {
+	if createdBy != nil {
+		resList := make([]map[string]interface{}, 0)
+		createdByMap := make(map[string]interface{})
+		if createdBy.Username != nil {
+			createdByMap["username"] = utils.StringValue(createdBy.Username)
+		}
+		if createdBy.UserType != nil {
+			// Convert UserType enum to string
+			createdByMap["user_type"] = flattenUserType(createdBy.UserType)
+		}
+		if createdBy.IdpId != nil {
+			createdByMap["idp_id"] = utils.StringValue(createdBy.IdpId)
+		}
+		if createdBy.DisplayName != nil {
+			createdByMap["display_name"] = utils.StringValue(createdBy.DisplayName)
+		}
+		if createdBy.FirstName != nil {
+			createdByMap["first_name"] = utils.StringValue(createdBy.FirstName)
+		}
+		if createdBy.MiddleInitial != nil {
+			createdByMap["middle_initial"] = utils.StringValue(createdBy.MiddleInitial)
+		}
+		if createdBy.LastName != nil {
+			createdByMap["last_name"] = utils.StringValue(createdBy.LastName)
+		}
+		if createdBy.EmailId != nil {
+			createdByMap["email_id"] = utils.StringValue(createdBy.EmailId)
+		}
+		if createdBy.Locale != nil {
+			createdByMap["locale"] = utils.StringValue(createdBy.Locale)
+		}
+		if createdBy.Region != nil {
+			createdByMap["region"] = utils.StringValue(createdBy.Region)
+		}
+		if createdBy.ExtId != nil {
+			createdByMap["ext_id"] = utils.StringValue(createdBy.ExtId)
+		}
+		if createdBy.Password != nil {
+			createdByMap["password"] = utils.StringValue(createdBy.Password)
+		}
+		if createdBy.IsForceResetPasswordEnabled != nil {
+			createdByMap["is_force_reset_password_enabled"] = *createdBy.IsForceResetPasswordEnabled
+		}
+		if createdBy.AdditionalAttributes != nil {
+			createdByMap["additional_attributes"] = flattenCustomKVPair(createdBy.AdditionalAttributes)
+		}
+		if createdBy.Status != nil {
+			createdByMap["status"] = flattenUserStatusType(createdBy.Status)
+		}
+		if createdBy.Description != nil {
+			createdByMap["description"] = utils.StringValue(createdBy.Description)
+		}
+		if createdBy.CreationType != nil {
+				createdByMap["creation_type"] = flattenCreationType(createdBy.CreationType)
+		}
+		resList = append(resList, createdByMap)
+		return resList
+	}
+	return nil
+}
+
+func flattenCreationType(pr *import4.CreationType) string {
+	if pr != nil {
+		const two, three, four = 2, 3, 4
+		if *pr == import4.CreationType(two) {
+			return "PREDEFINED"
+		}
+		if *pr == import4.CreationType(three) {
+			return "USERDEFINED"
+		}
+		if *pr == import4.CreationType(four) {
+			return "SERVICEDEFINED"
+		}
+	}
+	return "UNKNOWN"
 }
