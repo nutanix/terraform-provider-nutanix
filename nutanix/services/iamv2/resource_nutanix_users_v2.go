@@ -99,8 +99,8 @@ func ResourceNutanixUserV2() *schema.Resource {
 				Computed: true,
 			},
 			"password": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:      schema.TypeString,
+				Required:  true,
 				Sensitive: true,
 			},
 			"force_reset_password": {
@@ -128,9 +128,9 @@ func ResourceNutanixUserV2() *schema.Resource {
 				},
 			},
 			"status": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice([]string{"ACTIVE", "INACTIVE"}, false),
 			},
 			"buckets_access_keys": {
