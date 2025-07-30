@@ -72,8 +72,7 @@ func ResourceNutanixUserV2() *schema.Resource {
 			},
 			"first_name": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 			},
 			"middle_initial": {
 				Type:     schema.TypeString,
@@ -82,8 +81,7 @@ func ResourceNutanixUserV2() *schema.Resource {
 			},
 			"last_name": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 			},
 			"email_id": {
 				Type:     schema.TypeString,
@@ -102,8 +100,8 @@ func ResourceNutanixUserV2() *schema.Resource {
 			},
 			"password": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
+				Sensitive: true,
 			},
 			"force_reset_password": {
 				Type:     schema.TypeBool,
@@ -133,6 +131,7 @@ func ResourceNutanixUserV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{"ACTIVE", "INACTIVE"}, false),
 			},
 			"buckets_access_keys": {
 				Type:     schema.TypeList,
@@ -287,7 +286,7 @@ func resourceNutanixUserV2Create(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	aJSON, _ := json.MarshalIndent(spec, "", "  ")
-	log.Printf("[DEBUG] nutanix create user payload: %s", aJSON)
+	log.Printf("[DEBUG] create user spec: %s", aJSON)
 
 	resp, err := conn.UsersAPIInstance.CreateUser(spec)
 	if err != nil {
@@ -309,6 +308,9 @@ func resourceNutanixUserV2Read(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	getResp := resp.Data.GetValue().(import1.User)
+
+	aJSON, _ := json.MarshalIndent(getResp, "", "  ")
+	log.Printf("[DEBUG] resourceNutanixUserV2Read: get user response: %s", aJSON)
 
 	if err = d.Set("ext_id", getResp.ExtId); err != nil {
 		return diag.Errorf("error setting ext_id for user %s: %s", d.Id(), err)
@@ -392,6 +394,20 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 
 	updateSpec = &getUserResp
 
+	// validation on update spec
+	// Note: user read response has "" as default value for  middleInitial, emailId,
+	if updateSpec.MiddleInitial != nil && utils.StringValue(updateSpec.MiddleInitial) == "" {
+		updateSpec.MiddleInitial = nil
+	}
+	if updateSpec.EmailId != nil && utils.StringValue(updateSpec.EmailId) == "" {
+		updateSpec.EmailId = nil
+	}
+	if updateSpec.DisplayName != nil && utils.StringValue(updateSpec.DisplayName) == "" {
+		updateSpec.DisplayName = nil
+	}
+
+	// checking if attribute is updated or not
+
 	if d.HasChange("user_type") {
 		const two, three, four, five, six = 2, 3, 4, 5, 6
 		usertypeMap := map[string]interface{}{
@@ -474,9 +490,13 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 	args["If-Match"] = utils.StringPtr(etagValue)
 
 	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
-	log.Printf("[DEBUG] nutanix update user payload: %s", aJSON)
+	log.Printf("[DEBUG] update user spec: %s", aJSON)
 
 	updateresp, err := conn.UsersAPIInstance.UpdateUserById(utils.StringPtr(d.Id()), updateSpec, args)
+
+	aJSON, _ = json.MarshalIndent(err, "", "  ")
+	log.Printf("[DEBUG] update user err response: %s", aJSON)
+
 	if err != nil {
 		return diag.FromErr(err)
 	}
