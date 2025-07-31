@@ -39,42 +39,7 @@ func DatasourceNutanixUserGroupsV2() *schema.Resource {
 			"user_groups": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ext_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"group_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"idp_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"distinguished_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"created_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_updated_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"created_by": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
+				Elem:     DatasourceNutanixUserGroupV2(),
 			},
 		},
 	}
