@@ -149,34 +149,43 @@ func DatasourceNutanixUserGroupsV4Read(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func flattenUserGroupEntities(pr []import1.UserGroup) []interface{} {
-	if len(pr) > 0 {
-		ugs := make([]interface{}, len(pr))
+func flattenUserGroupEntities(userGroups []import1.UserGroup) []interface{} {
+	if len(userGroups) > 0 {
+		ugs := make([]interface{}, len(userGroups))
 
-		for k, v := range pr {
+		for k, userGroup := range userGroups {
 			ug := make(map[string]interface{})
 
-			if v.Name != nil {
-				ug["name"] = v.Name
+			if userGroup.TenantId != nil {
+				ug["tenant_id"] = userGroup.TenantId
 			}
-			if v.DistinguishedName != nil {
-				ug["distinguished_name"] = v.DistinguishedName
+			if userGroup.ExtId != nil {
+				ug["ext_id"] = userGroup.ExtId
 			}
-			if v.IdpId != nil {
-				ug["idp_id"] = v.IdpId
+			if userGroup.Links != nil {
+				ug["links"] = flattenLinks(userGroup.Links)
 			}
-			if v.GroupType != nil {
-				ug["group_type"] = flattenGroupType(v.GroupType)
+			if userGroup.GroupType != nil {
+				ug["group_type"] = flattenGroupType(userGroup.GroupType)
 			}
-
-			ug["created_by"] = v.CreatedBy
-
-			if v.CreatedTime != nil {
-				t := v.CreatedTime
+			if userGroup.IdpId != nil {
+				ug["idp_id"] = userGroup.IdpId
+			}
+			if userGroup.Name != nil {
+				ug["name"] = userGroup.Name
+			}
+			if userGroup.DistinguishedName != nil {
+				ug["distinguished_name"] = userGroup.DistinguishedName
+			}
+			if userGroup.CreatedBy != nil {
+				ug["created_by"] = userGroup.CreatedBy
+			}
+			if userGroup.CreatedTime != nil {
+				t := userGroup.CreatedTime
 				ug["created_time"] = t.String()
 			}
-			if v.LastUpdatedTime != nil {
-				t := v.LastUpdatedTime
+			if userGroup.LastUpdatedTime != nil {
+				t := userGroup.LastUpdatedTime
 				ug["last_updated_time"] = t.String()
 			}
 
