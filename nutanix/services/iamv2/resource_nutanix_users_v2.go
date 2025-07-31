@@ -72,7 +72,8 @@ func ResourceNutanixUserV2() *schema.Resource {
 			},
 			"first_name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 			},
 			"middle_initial": {
 				Type:     schema.TypeString,
@@ -81,7 +82,8 @@ func ResourceNutanixUserV2() *schema.Resource {
 			},
 			"last_name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 			},
 			"email_id": {
 				Type:     schema.TypeString,
@@ -100,8 +102,8 @@ func ResourceNutanixUserV2() *schema.Resource {
 			},
 			"password": {
 				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
+				Optional: true,
+				Computed: true,
 			},
 			"force_reset_password": {
 				Type:     schema.TypeBool,
