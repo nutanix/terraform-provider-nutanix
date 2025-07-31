@@ -195,8 +195,8 @@ func ResourceNutanixOvaV2() *schema.Resource {
 							Computed: true,
 						},
 						"creation_type": {
-							Type:         schema.TypeString,
-							Computed:     true,
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"ext_id": {
 							Type:     schema.TypeString,
@@ -219,7 +219,7 @@ func ResourceNutanixOvaV2() *schema.Resource {
 			},
 			"vm_config": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem:     ResourceNutanixVirtualMachineV2(),
 			},
 			"disk_format": {
@@ -254,42 +254,6 @@ func ResourceNutanixOvaV2Create(ctx context.Context, d *schema.ResourceData, met
 	}
 	if clsExts, ok := d.GetOk("cluster_location_ext_ids"); ok {
 		body.ClusterLocationExtIds = flattenStringValue(clsExts.([]interface{}))
-	}
-
-	rawConfig := d.GetRawConfig()
-	if attrVal := rawConfig.GetAttr("vm_config"); attrVal.IsKnown() && !attrVal.IsNull() {
-		vmList := attrVal.AsValueSlice()
-		if len(vmList) > 0 {
-			vmObject := vmList[0]
-
-			// Build a map of explicitly set fields manually
-			explicitFields := make(map[string]interface{})
-			for key, val := range vmObject.AsValueMap() {
-				if val.IsKnown() && !val.IsNull() {
-					switch val.Type().FriendlyName() {
-					case "string":
-						explicitFields[key] = val.AsString()
-					case "number":
-						bf := val.AsBigFloat()
-						if intVal, acc := bf.Int64(); acc == 0 {
-							explicitFields[key] = int(intVal)
-						} else {
-							floatVal, _ := bf.Float64()
-							explicitFields[key] = floatVal // fallback if needed
-						}
-					case "bool":
-						explicitFields[key] = val.True()
-					default:
-						// You can log or skip complex types
-						log.Printf("[DEBUG] Skipping unsupported type for key: %s", key)
-					}
-				}
-			}
-
-			log.Printf("[DEBUG] Explicit fields in vm_config: %+v", explicitFields)
-
-			body.VmConfig = prepareVmConfigFromMap(explicitFields)
-		}
 	}
 
 	var diskFormatMap = map[string]import1.OvaDiskFormat{
