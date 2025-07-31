@@ -496,9 +496,6 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 
 	updateresp, err := conn.UsersAPIInstance.UpdateUserById(utils.StringPtr(d.Id()), updateSpec, args)
 
-	aJSON, _ = json.MarshalIndent(err, "", "  ")
-	log.Printf("[DEBUG] update user err response: %s", aJSON)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
