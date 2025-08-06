@@ -299,6 +299,8 @@ func Provider() *schema.Provider {
 			"nutanix_protection_policies_v2":                  datapoliciesv2.DatasourceNutanixProtectionPoliciesV2(),
 			"nutanix_image_v2":                                vmmv2.DatasourceNutanixImageV4(),
 			"nutanix_images_v2":                               vmmv2.DatasourceNutanixImagesV4(),
+			"nutanix_ova_v2":                                  vmmv2.DatasourceNutanixOvaV2(),
+			"nutanix_ovas_v2":                                 vmmv2.DatasourceNutanixOvasV2(),
 			"nutanix_virtual_machine_v2":                      vmmv2.DatasourceNutanixVirtualMachineV4(),
 			"nutanix_virtual_machines_v2":                     vmmv2.DatasourceNutanixVirtualMachinesV4(),
 			"nutanix_template_v2":                             vmmv2.DatasourceNutanixTemplateV2(),

@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	import3 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -415,7 +415,7 @@ func ResourceNutanixOvaVmDeploymentCreate(ctx context.Context, d *schema.Resourc
 				overrideSpec.MemorySizeBytes = &mem
 			}
 			// Handle categories
-			if cats, ok := ovm["categories"]; ok{
+			if cats, ok := ovm["categories"]; ok {
 				overrideSpec.Categories = expandCategoryReference(cats.([]interface{}))
 			}
 			// Handle nics
@@ -428,7 +428,7 @@ func ResourceNutanixOvaVmDeploymentCreate(ctx context.Context, d *schema.Resourc
 			}
 			vmDeploymentSpec.OverrideVmConfig = overrideSpec
 		}
-		
+
 	}
 
 	resp, err := conn.OvasAPIInstance.DeployOva(&extID, vmDeploymentSpec)
