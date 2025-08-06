@@ -106,6 +106,7 @@ func ResourceNutanixImageV4() *schema.Resource {
 						"object_lite_source": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"key": {
@@ -134,6 +135,15 @@ func ResourceNutanixImageV4() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"links": schemaForLinks(),
 			"size_bytes": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -275,6 +285,15 @@ func ResourceNutanixImageV4Read(ctx context.Context, d *schema.ResourceData, met
 
 	getResp := resp.Data.GetValue().(import5.Image)
 
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("links", flattenAPILink(getResp.Links)); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("name", getResp.Name); err != nil {
 		return diag.FromErr(err)
 	}
