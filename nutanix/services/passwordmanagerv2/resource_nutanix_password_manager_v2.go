@@ -28,7 +28,7 @@ func ResourceNutanixPasswordManagerV2() *schema.Resource {
 			},
 			"current_password": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"new_password": {
 				Type:     schema.TypeString,
