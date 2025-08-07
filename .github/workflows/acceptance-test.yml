@@ -12,7 +12,6 @@ on:
 jobs:
   Acceptance-Tests:
     runs-on: self-hosted
-    if: github.event_name == 'repository_dispatch'
     steps:
       - name: Trigger Event
         run: |
@@ -71,7 +70,7 @@ jobs:
           go mod tidy
           go mod vendor
 
-      - name: Install unzip and sshpass
+      - name: Install unzip and sshpass and curl
         run: |
           sudo apt update && sudo apt upgrade -y
           sudo apt install unzip sshpass curl -y
