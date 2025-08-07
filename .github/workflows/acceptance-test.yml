@@ -1,6 +1,12 @@
 name: Acceptance Test cases
 on:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to run against"
+        required: true
+        default: "master"
   repository_dispatch:
     types: [ok-to-test-command]
 jobs:
@@ -67,7 +73,12 @@ jobs:
 
       - name: Install unzip and sshpass
         run: |
-          sudo apt-get update && sudo apt-get install -y unzip sshpass
+          sudo apt update && sudo apt upgrade -y
+          sudo apt install unzip sshpass curl -y
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+          aws --version
 
       - name: Setup Terraform v1.10.5
         run: |
