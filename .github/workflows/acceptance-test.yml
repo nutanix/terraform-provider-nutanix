@@ -25,7 +25,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
         with:
-          ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
+          ref: "refs/pull/${{ github.event.pull_request.number }}/merge"
 
       - name: Remove Cached Go Versions
         run: |
@@ -65,9 +65,14 @@ jobs:
           go mod tidy
           go mod vendor
 
-      - name: Install unzip and sshpass
+      - name: Install unzip and sshpass and curl
         run: |
-          sudo apt-get update && sudo apt-get install -y unzip sshpass
+          sudo apt update && sudo apt upgrade -y
+          sudo apt install unzip sshpass curl -y
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+          aws --version
 
       - name: Setup Terraform v1.10.5
         run: |
