@@ -1,17 +1,12 @@
 name: Acceptance Test cases
 on:
   pull_request:
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: "Branch to run against"
-        required: true
-        default: "master"
   repository_dispatch:
     types: [ok-to-test-command]
 jobs:
   Acceptance-Tests:
     runs-on: self-hosted
+    if: github.event_name == 'repository_dispatch'
     steps:
       - name: Trigger Event
         run: |
