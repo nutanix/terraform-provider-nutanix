@@ -35,7 +35,6 @@ data "nutanix_system_user_passwords_v2" "passwords" {
 
 # List Password Status Of All System Users With Limit
 data "nutanix_system_user_passwords_v2" "limited_passwords" {
-  filter = local.systemTypePCFilter
   limit  = 10
 }
 
