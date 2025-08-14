@@ -24,6 +24,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networkingv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/nke"
 	objectstoresv2 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/objectsv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/passwordmanagerv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prismv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/selfservice"
