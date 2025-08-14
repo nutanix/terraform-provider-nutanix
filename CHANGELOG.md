@@ -1,3 +1,46 @@
+## 2.3.0 (July 17, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.2.1...v2.3.0)
+
+**New Features:**
+- Objects [\#864](https://github.com/nutanix/terraform-provider-nutanix/issues/864)
+  - CRUD for objects
+  - Resource for SSL Certificate
+  - Datasource for SSL Certificate
+
+- Service accounts [\#865](https://github.com/nutanix/terraform-provider-nutanix/issues/865)
+  - Support of CRU for Service Account
+  - Support of Datasource to fetch Service Account
+  - CRUD for User API Key
+  - Datasource to fetch User API Keys
+  - Resource to revoke User API Key
+
+## 2.2.1 (June 30, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.2.0...v2.2.1)
+
+**Implemented enhancements:**
+- Add support for import of resource nutanix_pbr_v2 [\#844](https://github.com/nutanix/terraform-provider-nutanix/issues/844)
+- Add support for import of resource nutanix_users_v2 [\#847](https://github.com/nutanix/terraform-provider-nutanix/issues/847)
+
+
+**Fixed bugs:**
+- nutanix_virtual_machine_v2 cannot read guest customization config for windows [\#791](https://github.com/nutanix/terraform-provider-nutanix/issues/791)
+- nutanix_self_service_app_provision destroy operation returns before resource is fully destroyed [\#831](https://github.com/nutanix/terraform-provider-nutanix/issues/831)
+- ip_endpoint_list type is mandatory even if documentation says the opposite [\#669](https://github.com/nutanix/terraform-provider-nutanix/issues/669)
+- nutanix_image version always shows changes [\#682](https://github.com/nutanix/terraform-provider-nutanix/issues/682)
+- provider plugin panic when trying to add multiple security policies [\#835](https://github.com/nutanix/terraform-provider-nutanix/issues/835)
+- nutanix_access_control_policy unable to be applied due to scope validation [\#688](https://github.com/nutanix/terraform-provider-nutanix/issues/688)
+- directory_services_v2 creates directory if terraform apply is re run plugin crashes [\#747](https://github.com/nutanix/terraform-provider-nutanix/issues/747)
+- power_state: this field cannot be set [\#172](https://github.com/nutanix/terraform-provider-nutanix/issues/172)
+- panic: runtime error: invalid memory address or nil pointer dereference [signal SIGSEGV: segmentation violation code=0x1 addr=0x10 pc=0x11223d3] [\#823](https://github.com/nutanix/terraform-provider-nutanix/issues/823)
+- Error message missing when trying to deploy a new VM with insufficient disk size [\#649](https://github.com/nutanix/terraform-provider-nutanix/issues/649)
+- Error Using 'data_source_reference' attribute for 'nutanix_image' resource [\#652](https://github.com/nutanix/terraform-provider-nutanix/issues/652)
+- Improve documentation for resource nutanix_images_v2, nutanix_templates_v2 [\#842](https://github.com/nutanix/terraform-provider-nutanix/issues/842)
+- Add examples for categories, protection policies, recovery plans [\#681](https://github.com/nutanix/terraform-provider-nutanix/issues/681)
+- Doc error for resource nutanix_user [\#674](https://github.com/nutanix/terraform-provider-nutanix/issues/674)
+- Markdown for certain docs pages isn't valid [\#680](https://github.com/nutanix/terraform-provider-nutanix/issues/680)
+- How to use boot_config under nutanix_virtual_machine_v2 [\#857](https://github.com/nutanix/terraform-provider-nutanix/issues/857)
+- data nutanix_virtual_machine doesn't return ip_address attribute [\#306](https://github.com/nutanix/terraform-provider-nutanix/issues/306)
+
 ## 2.2.0 (April 17, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.1.1...v2.2.0)
 
