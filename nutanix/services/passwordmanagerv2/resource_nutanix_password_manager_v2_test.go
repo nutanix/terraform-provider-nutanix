@@ -103,7 +103,7 @@ resource "nutanix_password_change_request_v2" "test" {
 	current_password = "%[2]s"
 	new_password = "%[3]s"
 }
-`,  filter, currentPassword, nextPassword)
+`, filter, currentPassword, nextPassword)
 }
 
 func testAccPasswordManagerResourceUpdatePasswordForAdminAOSUserConfig(filter, currentPassword, nextPassword string) string {

@@ -16,7 +16,7 @@ const (
 	timeSleep                = 2 * time.Minute
 )
 
-func TestAccV2NutanixNGTInsertIsoResource_InsertNGTIsoIntoVmHaveNGT(t *testing.T) {
+func TestAccV2NutanixNGTInsertIsoResource_InsertNGTIsoIntoVmHaveNGTTest(t *testing.T) {
 	r := acctest.RandInt()
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 

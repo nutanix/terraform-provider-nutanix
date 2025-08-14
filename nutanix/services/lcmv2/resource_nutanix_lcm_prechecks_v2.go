@@ -98,7 +98,8 @@ func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.Resource
 		body.SkippedPrecheckFlags = expandSystemAutoMgmtFlag(skippedPrecheckFlags.([]interface{}))
 	}
 
-	resp, err := conn.LcmPreChecksAPIInstance.PerformPrechecks(body, utils.StringPtr(clusterExtID))
+	// pass nil for the new dyRun flag
+	resp, err := conn.LcmPreChecksAPIInstance.PerformPrechecks(body, utils.StringPtr(clusterExtID), nil)
 	if err != nil {
 		return diag.Errorf("error while performing the prechecks: %v", err)
 	}
