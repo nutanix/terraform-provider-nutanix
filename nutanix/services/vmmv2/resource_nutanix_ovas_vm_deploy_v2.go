@@ -14,7 +14,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func ResourceNutanixOvaVmDeploymentV2() *schema.Resource {
+func ResourceNutanixOvaVMDeploymentV2() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: ResourceNutanixOvaVmDeploymentCreate,
 		ReadContext:   ResourceNutanixOvaVmDeploymentRead,
@@ -442,7 +442,7 @@ func ResourceNutanixOvaVmDeploymentCreate(ctx context.Context, d *schema.Resourc
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the Image to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
