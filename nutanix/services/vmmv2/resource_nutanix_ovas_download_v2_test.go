@@ -2,7 +2,6 @@ package vmmv2_test
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
@@ -11,22 +10,20 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameOva = "nutanix_ovas_v2.test"
-const resourceNameVMForOva = "nutanix_virtual_machine_v2.ova-vm"
+const resourceNameOvaDownload = "nutanix_ova_download_v2.test"
 
-func TestAccV2NutanixOvaResource_CreateOvaFromVM(t *testing.T) {
+func TestAccV2NutanixOvaDownloadResource_DownloadOvaFile(t *testing.T) {
 	r := acctest.RandIntRange(1, 999)
 	vmName := fmt.Sprintf("tf-test-vm-ova-%d", r)
 	vmDescription := "VM for OVA terraform testing"
 	ovaName := fmt.Sprintf("tf-test-ova-%d", r)
-	ovaNameUpdated := fmt.Sprintf("tf-test-ova-updated-%d", r)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testOvaResourceConfigCreateOvaFromVM(vmName, vmDescription, ovaName),
+				Config: testOvaResourceConfigOvaDownload(vmName, vmDescription, ovaName),
 				Check: resource.ComposeTestCheckFunc(
 					// vm checks
 					resource.TestCheckResourceAttrSet(resourceNameVMForOva, "id"),
@@ -75,111 +72,16 @@ func TestAccV2NutanixOvaResource_CreateOvaFromVM(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceNameOva, "vm_config.0.disks.0.disk_address.0.bus_type", resourceNameVMForOva, "disks.0.disk_address.0.bus_type"),
 					resource.TestCheckResourceAttrPair(resourceNameOva, "vm_config.0.nics.#", resourceNameVMForOva, "nics.#"),
 					resource.TestCheckResourceAttrPair(resourceNameOva, "vm_config.0.nics.0.network_info.0.nic_type", resourceNameVMForOva, "nics.0.network_info.0.nic_type"),
-				),
-			},
-			// update ova
-			{
-				Config: testOvaResourceConfigCreateOvaFromVM(vmName, vmDescription, ovaNameUpdated),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameOva, "ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameOva, "cluster_location_ext_ids.0"),
-					resource.TestCheckResourceAttrSet(resourceNameOva, "size_bytes"),
-					resource.TestCheckResourceAttr(resourceNameOva, "name", ovaNameUpdated),
+
+					// ova Download Checks
+					resource.TestCheckResourceAttrPair(resourceNameOvaDownload, "ova_ext_id", resourceNameOva, "ext_id"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccV2NutanixOvaResource_CreateOvaFromVMDoseNotExists(t *testing.T) {
-	r := acctest.RandIntRange(1, 999)
-	ovaName := fmt.Sprintf("tf-test-ova-%d", r)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config:      testOvaResourceConfigCreateOvaFromVMDoseNotExists(ovaName),
-				ExpectError: regexp.MustCompile("Failed to perform the operation as the VM entity is not present in the backend database."),
-			},
-		},
-	})
-}
-
-func TestAccV2NutanixOvaResource_CreateOvaFromValidUrl(t *testing.T) {
-	r := acctest.RandIntRange(1, 999)
-	ovaName := fmt.Sprintf("tf-test-ova-%d", r)
-	ovaNameUpdated := fmt.Sprintf("tf-test-ova-updated-%d", r)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testOvaResourceConfigCreateOvaFromValidUrl(ovaName),
-				Check: resource.ComposeTestCheckFunc(
-					// ova checks
-					resource.TestCheckResourceAttrSet(resourceNameOva, "ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameOva, "cluster_location_ext_ids.0"),
-					resource.TestCheckResourceAttrSet(resourceNameOva, "size_bytes"),
-					resource.TestCheckResourceAttrSet(resourceNameOva, "create_time"),
-					resource.TestCheckResourceAttr(resourceNameOva, "name", ovaName),
-					resource.TestCheckResourceAttr(resourceNameOva, "source.0.ova_url_source.0.url", testVars.VMM.OvaUrl),
-					resource.TestCheckResourceAttr(resourceNameOva, "source.0.ova_url_source.0.should_allow_insecure_url", "true"),
-					resource.TestCheckResourceAttrSet(resourceNameOva, "vm_config"),
-				),
-			},
-			// update ova
-			{
-				Config: testOvaResourceConfigCreateOvaFromValidUrl(ovaNameUpdated),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameOva, "ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameOva, "cluster_location_ext_ids.0"),
-					resource.TestCheckResourceAttrSet(resourceNameOva, "size_bytes"),
-					resource.TestCheckResourceAttr(resourceNameOva, "name", ovaNameUpdated),
-					resource.TestCheckResourceAttr(resourceNameOva, "source.0.ova_url_source.0.url", testVars.VMM.OvaUrl),
-					resource.TestCheckResourceAttr(resourceNameOva, "source.0.ova_url_source.0.should_allow_insecure_url", "true"),
-					resource.TestCheckResourceAttrSet(resourceNameOva, "vm_config.#"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccV2NutanixOvaResource_CreateOvaFromInvalidUrl(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: `
-					data "nutanix_clusters_v2" "clusters" {
-						filter = "config/clusterFunction/any(a:a eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
-						limit  = 1
-					}
-					locals {
-						cluster_ext_id = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
-					}
-					resource "nutanix_ovas_v2" "test" {
-						name = "tf-test-ova-invalid-url"
-						source {
-							ova_url_source {
-								url = "https://invalid-url.com/path/to/ova/file.ova"
-								should_allow_insecure_url = true
-							}
-						}
-						cluster_location_ext_ids = [local.cluster_ext_id]
-						disk_format = "QCOW2"
-					}
-					`,
-				ExpectError: regexp.MustCompile("Failed to upload the OVA as the dependent backend service has encountered an error."),
-			},
-		},
-	})
-}
-
-func testOvaResourceConfigCreateOvaFromVM(vmName, vmDescription, ovaName string) string {
+func testOvaResourceConfigOvaDownload(vmName, vmDescription, ovaName string) string {
 	return fmt.Sprintf(`
 
 data "nutanix_clusters_v2" "clusters" {
@@ -252,46 +154,9 @@ resource "nutanix_ovas_v2" "test" {
   }
 }
 
+resource "nutanix_ova_download_v2" "test" {
+  ova_ext_id = nutanix_ovas_v2.test.id
+}
+
 `, filepath, vmName, vmDescription, ovaName)
-}
-
-func testOvaResourceConfigCreateOvaFromVMDoseNotExists(ovaName string) string {
-	return fmt.Sprintf(`
-resource "nutanix_ovas_v2" "test" {
-  name = "%[1]s"
-  source {
-    ova_vm_source {
-      vm_ext_id        = "123e4567-e89b-12d3-a456-426614174000"
-      disk_file_format = "QCOW2"
-    }
-  }
-}
-`, ovaName)
-}
-
-func testOvaResourceConfigCreateOvaFromValidUrl(ovaName string) string {
-	return fmt.Sprintf(`
-
-data "nutanix_clusters_v2" "clusters" {
-  filter = "config/clusterFunction/any(a:a eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
-  limit  = 1
-}
-
-locals {
-  cluster_ext_id = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
-  config = jsondecode(file("%[1]s"))
-  vmm = local.config.vmm
-}
-
-resource "nutanix_ovas_v2" "test" {
-  name = "%[2]s"
-  source {
-    ova_url_source {
-      url = local.vmm.ova_url
-      should_allow_insecure_url = true
-    }
-  }
-  cluster_location_ext_ids = [local.cluster_ext_id]
-}
-`, filepath, ovaName)
 }
