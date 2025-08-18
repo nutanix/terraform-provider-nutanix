@@ -14,12 +14,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func ResourceNutanixOvaVmDeploymentV2() *schema.Resource {
+func ResourceNutanixOvaVMDeploymentV2() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: ResourceNutanixOvaVmDeploymentCreate,
-		ReadContext:   ResourceNutanixOvaVmDeploymentRead,
-		UpdateContext: ResourceNutanixOvaVmDeploymentUpdate,
-		DeleteContext: ResourceNutanixOvaVmDeploymentDelete,
+		CreateContext: ResourceNutanixOvaVMDeploymentCreate,
+		ReadContext:   ResourceNutanixOvaVMDeploymentRead,
+		UpdateContext: ResourceNutanixOvaVMDeploymentUpdate,
+		DeleteContext: ResourceNutanixOvaVMDeploymentDelete,
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -384,7 +384,7 @@ func ResourceNutanixOvaVmDeploymentV2() *schema.Resource {
 	}
 }
 
-func ResourceNutanixOvaVmDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
 	extID := d.Get("ext_id").(string)
@@ -456,14 +456,14 @@ func ResourceNutanixOvaVmDeploymentCreate(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func ResourceNutanixOvaVmDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixOvaVMDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func ResourceNutanixOvaVmDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixOvaVMDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func ResourceNutanixOvaVmDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixOvaVMDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
