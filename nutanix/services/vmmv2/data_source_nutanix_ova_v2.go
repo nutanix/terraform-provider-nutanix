@@ -48,13 +48,29 @@ func DatasourceNutanixOvaV2() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"hex_digest": {
-							Type:     schema.TypeString,
+						"ova_sha1_checksum": {
+							Type:     schema.TypeList,
 							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"hex_digest": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
 						},
-						"object_type": {
-							Type:     schema.TypeString,
+						"ova_sha256_checksum": {
+							Type:     schema.TypeList,
 							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"hex_digest": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -133,6 +149,30 @@ func DatasourceNutanixOvaV2() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"tenant_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"links": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"href": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"rel": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"username": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -173,11 +213,6 @@ func DatasourceNutanixOvaV2() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"password": {
-							Type:      schema.TypeString,
-							Computed:  true,
-							Sensitive: true,
-						},
 						"is_force_reset_password_enabled": {
 							Type:     schema.TypeBool,
 							Computed: true,
@@ -191,14 +226,75 @@ func DatasourceNutanixOvaV2() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"value": {
+									"value": schemaForValue(),
+								},
+							},
+						},
+						"status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"buckets_access_keys": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ext_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"links": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"href": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"rel": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"access_key_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"secret_access_key": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"user_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"created_time": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
 							},
 						},
-						"status": {
+						"last_login_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"created_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"last_updated_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"created_by": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"last_updated_by": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -207,10 +303,6 @@ func DatasourceNutanixOvaV2() *schema.Resource {
 							Computed: true,
 						},
 						"creation_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ext_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
