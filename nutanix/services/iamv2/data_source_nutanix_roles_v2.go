@@ -199,7 +199,7 @@ func DatasourceNutanixRolesV2Read(ctx context.Context, d *schema.ResourceData, m
 
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
-			Summary:  "🫙 No Data found",
+			Summary:  "🫙 No data found.",
 			Detail:   "The API returned an empty list of roles.",
 		}}
 	}
