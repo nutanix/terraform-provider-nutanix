@@ -95,7 +95,8 @@ func testOvasDatasourceConfigFilterOvasByName() string {
 data "nutanix_ovas_v2" "test" {
 	filter = "name eq '${nutanix_ovas_v2.test.name}'"
 }
-`}
+`
+}
 
 func testOvasDatasourceConfigLimit() string {
 	return `
