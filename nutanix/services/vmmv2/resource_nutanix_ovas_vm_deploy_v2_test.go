@@ -70,78 +70,6 @@ func TestAccV2NutanixOvaVmDeployResource_DeployVmFromOvaDoseNotExists(t *testing
 	})
 }
 
-// func TestAccV2NutanixOvaVmDeployResource_CreateOvaFromValidUrl(t *testing.T) {
-// 	r := acctest.RandIntRange(1, 999)
-// 	ovaName := fmt.Sprintf("tf-test-ova-%d", r)
-// 	ovaNameUpdated := fmt.Sprintf("tf-test-ova-updated-%d", r)
-
-// 	resource.Test(t, resource.TestCase{
-// 		PreCheck:  func() { acc.TestAccPreCheck(t) },
-// 		Providers: acc.TestAccProviders,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testOvaVmDeployResourceConfigCreateOvaFromValidUrl(ovaName),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					// ova checks
-// 					resource.TestCheckResourceAttrSet(resourceNameOva, "ext_id"),
-// 					resource.TestCheckResourceAttrSet(resourceNameOva, "cluster_location_ext_ids.0"),
-// 					resource.TestCheckResourceAttrSet(resourceNameOva, "size_bytes"),
-// 					resource.TestCheckResourceAttrSet(resourceNameOva, "create_time"),
-// 					resource.TestCheckResourceAttr(resourceNameOva, "name", ovaName),
-// 					resource.TestCheckResourceAttr(resourceNameOva, "source.0.ova_url_source.0.url", testVars.VMM.OvaUrl),
-// 					resource.TestCheckResourceAttr(resourceNameOva, "source.0.ova_url_source.0.should_allow_insecure_url", "true"),
-// 					resource.TestCheckResourceAttrSet(resourceNameOva, "vm_config"),
-// 				),
-// 			},
-// 			// update ova
-// 			{
-// 				Config: testOvaVmDeployResourceConfigCreateOvaFromValidUrl(ovaNameUpdated),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					resource.TestCheckResourceAttrSet(resourceNameOva, "ext_id"),
-// 					resource.TestCheckResourceAttrSet(resourceNameOva, "cluster_location_ext_ids.0"),
-// 					resource.TestCheckResourceAttrSet(resourceNameOva, "size_bytes"),
-// 					resource.TestCheckResourceAttr(resourceNameOva, "name", ovaNameUpdated),
-// 					resource.TestCheckResourceAttr(resourceNameOva, "source.0.ova_url_source.0.url", testVars.VMM.OvaUrl),
-// 					resource.TestCheckResourceAttr(resourceNameOva, "source.0.ova_url_source.0.should_allow_insecure_url", "true"),
-// 					resource.TestCheckResourceAttrSet(resourceNameOva, "vm_config.#"),
-// 				),
-// 			},
-// 		},
-// 	})
-// }
-
-// func TestAccV2NutanixOvaVmDeployResource_CreateOvaFromInvalidUrl(t *testing.T) {
-// 	resource.Test(t, resource.TestCase{
-// 		PreCheck:  func() { acc.TestAccPreCheck(t) },
-// 		Providers: acc.TestAccProviders,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: `
-// 					data "nutanix_clusters_v2" "clusters" {
-// 						filter = "config/clusterFunction/any(a:a eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
-// 						limit  = 1
-// 					}
-// 					locals {
-// 						cluster_ext_id = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
-// 					}
-// 					resource "nutanix_ovas_v2" "test" {
-// 						name = "tf-test-ova-invalid-url"
-// 						source {
-// 							ova_url_source {
-// 								url = "https://invalid-url.com/path/to/ova/file.ova"
-// 								should_allow_insecure_url = true
-// 							}
-// 						}
-// 						cluster_location_ext_ids = [local.cluster_ext_id]
-// 						disk_format = "QCOW2"
-// 					}
-// 					`,
-// 				ExpectError: regexp.MustCompile("Failed to upload the OVA as the dependent backend service has encountered an error."),
-// 			},
-// 		},
-// 	})
-// }
-
 func testOvaVMDeployResourceConfigDeployVMFromOva(vmName, vmDescription, ovaName string) string {
 	return fmt.Sprintf(`
 
@@ -269,7 +197,7 @@ resource "nutanix_ova_vm_deploy_v2" "test" {
 `, filepath)
 }
 
-func testOvaVmDeployResourceConfigCreateOvaFromValidUrl(ovaName string) string {
+func testOvaVMDeployResourceConfigCreateOvaFromValidURL(ovaName string) string {
 	return fmt.Sprintf(`
 
 data "nutanix_clusters_v2" "clusters" {

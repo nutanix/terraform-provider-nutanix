@@ -117,7 +117,7 @@ func TestAccV2NutanixOvaResource_CreateOvaFromValidUrl(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testOvaResourceConfigCreateOvaFromValidUrl(ovaName),
+				Config: testOvaResourceConfigCreateOvaFromValidURL(ovaName),
 				Check: resource.ComposeTestCheckFunc(
 					// ova checks
 					resource.TestCheckResourceAttrSet(resourceNameOva, "ext_id"),
@@ -125,20 +125,20 @@ func TestAccV2NutanixOvaResource_CreateOvaFromValidUrl(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameOva, "size_bytes"),
 					resource.TestCheckResourceAttrSet(resourceNameOva, "create_time"),
 					resource.TestCheckResourceAttr(resourceNameOva, "name", ovaName),
-					resource.TestCheckResourceAttr(resourceNameOva, "source.0.ova_url_source.0.url", testVars.VMM.OvaUrl),
+					resource.TestCheckResourceAttr(resourceNameOva, "source.0.ova_url_source.0.url", testVars.VMM.OvaURL),
 					resource.TestCheckResourceAttr(resourceNameOva, "source.0.ova_url_source.0.should_allow_insecure_url", "true"),
 					resource.TestCheckResourceAttrSet(resourceNameOva, "vm_config"),
 				),
 			},
 			// update ova
 			{
-				Config: testOvaResourceConfigCreateOvaFromValidUrl(ovaNameUpdated),
+				Config: testOvaResourceConfigCreateOvaFromValidURL(ovaNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameOva, "ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameOva, "cluster_location_ext_ids.0"),
 					resource.TestCheckResourceAttrSet(resourceNameOva, "size_bytes"),
 					resource.TestCheckResourceAttr(resourceNameOva, "name", ovaNameUpdated),
-					resource.TestCheckResourceAttr(resourceNameOva, "source.0.ova_url_source.0.url", testVars.VMM.OvaUrl),
+					resource.TestCheckResourceAttr(resourceNameOva, "source.0.ova_url_source.0.url", testVars.VMM.OvaURL),
 					resource.TestCheckResourceAttr(resourceNameOva, "source.0.ova_url_source.0.should_allow_insecure_url", "true"),
 					resource.TestCheckResourceAttrSet(resourceNameOva, "vm_config.#"),
 				),
@@ -269,7 +269,7 @@ resource "nutanix_ovas_v2" "test" {
 `, ovaName)
 }
 
-func testOvaResourceConfigCreateOvaFromValidUrl(ovaName string) string {
+func testOvaResourceConfigCreateOvaFromValidURL(ovaName string) string {
 	return fmt.Sprintf(`
 
 data "nutanix_clusters_v2" "clusters" {
