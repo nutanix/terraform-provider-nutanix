@@ -34,16 +34,42 @@ func ResourceNutanixOvaV2() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
+				MaxItems: 1, //nolint:gomnd
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"hex_digest": {
-							Type:     schema.TypeString,
-							Required: true,
+						"ova_sha1_checksum": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							ExactlyOneOf: []string{ // Exactly one of the following fields must be set
+								"checksum.0.ova_sha1_checksum",
+								"checksum.0.ova_sha256_checksum",
+							},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"hex_digest": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
 						},
-						"object_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"sha1", "sha256"}, false),
+						"ova_sha256_checksum": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							ExactlyOneOf: []string{ // Exactly one of the following fields must be set
+								"checksum.0.ova_sha1_checksum",
+								"checksum.0.ova_sha256_checksum",
+							},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"hex_digest": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -130,6 +156,30 @@ func ResourceNutanixOvaV2() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"tenant_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"links": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"href": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"rel": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"username": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -188,10 +238,7 @@ func ResourceNutanixOvaV2() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"value": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
+									"value": schemaForValue(),
 								},
 							},
 						},
@@ -204,10 +251,6 @@ func ResourceNutanixOvaV2() *schema.Resource {
 							Computed: true,
 						},
 						"creation_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ext_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -496,15 +539,20 @@ func expandOneOfOvaChecksum(pr interface{}) *import1.OneOfOvaChecksum {
 
 		chksum := &import1.OneOfOvaChecksum{}
 
-		if val["object_type"] == "sha1" {
-			sha1 := chksum.GetValue().(import1.OvaSha1Checksum)
+		if val["ova_sha1_checksum"] != nil && len(val["ova_sha1_checksum"].([]interface{})) > 0 {
+			hexDigestI := val["ova_sha1_checksum"].([]interface{})
+			hexDigestVal := hexDigestI[0].(map[string]interface{})
+			sha1 := import1.NewOvaSha1Checksum()
 
-			sha1.HexDigest = utils.StringPtr(val["hex_digest"].(string))
-			chksum.SetValue(sha1)
-		} else {
-			sha256 := chksum.GetValue().(import1.OvaSha256Checksum)
-			sha256.HexDigest = utils.StringPtr(val["hex_digest"].(string))
-			chksum.SetValue(sha256)
+			sha1.HexDigest = utils.StringPtr(hexDigestVal["hex_digest"].(string))
+			chksum.SetValue(*sha1)
+		} else if val["ova_sha256_checksum"] != nil && len(val["ova_sha256_checksum"].([]interface{})) > 0 {
+			hexDigestI := val["ova_sha256_checksum"].([]interface{})
+			hexDigestVal := hexDigestI[0].(map[string]interface{})
+
+			sha256 := import1.NewOvaSha256Checksum()
+			sha256.HexDigest = utils.StringPtr(hexDigestVal["hex_digest"].(string))
+			chksum.SetValue(*sha256)
 		}
 		return chksum
 	}
@@ -522,11 +570,19 @@ func flattenOneOfOvaChecksum(checksum *import1.OneOfOvaChecksum) []map[string]in
 		if utils.StringValue(getVal) == "vmm.v4.content.OvaSha1Checksum" {
 			sha1 := checksum.GetValue().(import1.OvaSha1Checksum)
 
-			sha["hex_digest"] = sha1.HexDigest
+			sha1List := make([]map[string]interface{}, 0)
+			sha1Map := make(map[string]interface{})
+			sha1Map["hex_digest"] = sha1.HexDigest
+			sha1List = append(sha1List, sha1Map)
+			sha["ova_sha1_checksum"] = sha1List
 		} else {
 			sha256 := checksum.GetValue().(import1.OvaSha256Checksum)
 
-			sha["hex_digest"] = sha256.HexDigest
+			sha256List := make([]map[string]interface{}, 0)
+			sha256Map := make(map[string]interface{})
+			sha256Map["hex_digest"] = sha256.HexDigest
+			sha256List = append(sha256List, sha256Map)
+			sha["ova_sha256_checksum"] = sha256List
 		}
 		resList = append(resList, sha)
 		return resList
@@ -709,6 +765,15 @@ func flattenCreatedBy(createdBy *import4.User) []map[string]interface{} {
 	if createdBy != nil {
 		resList := make([]map[string]interface{}, 0)
 		createdByMap := make(map[string]interface{})
+		if v := utils.StringValue(createdBy.TenantId); v != "" {
+			createdByMap["tenant_id"] = v
+		}
+		if v := createdBy.Links; len(v) > 0 {
+			createdByMap["links"] = flattenAPILink(v)
+		}
+		if v := utils.StringValue(createdBy.ExtId); v != "" {
+			createdByMap["ext_id"] = v
+		}
 		if v := utils.StringValue(createdBy.Username); v != "" {
 			createdByMap["username"] = v
 		}
@@ -739,9 +804,6 @@ func flattenCreatedBy(createdBy *import4.User) []map[string]interface{} {
 		if v := utils.StringValue(createdBy.Region); v != "" {
 			createdByMap["region"] = v
 		}
-		if v := utils.StringValue(createdBy.ExtId); v != "" {
-			createdByMap["ext_id"] = v
-		}
 		if v := utils.StringValue(createdBy.Password); v != "" {
 			createdByMap["password"] = v
 		}
@@ -753,6 +815,21 @@ func flattenCreatedBy(createdBy *import4.User) []map[string]interface{} {
 		}
 		if v := flattenUserStatusType(createdBy.Status); v != "" {
 			createdByMap["status"] = v
+		}
+		if len(createdBy.BucketsAccessKeys) > 0 {
+			createdByMap["buckets_access_keys"] = flattenBucketsAccessKey(createdBy.BucketsAccessKeys)
+		}
+		if createdBy.LastLoginTime != nil {
+			createdByMap["last_login_time"] = createdBy.LastLoginTime.String()
+		}
+		if createdBy.CreatedTime != nil {
+			createdByMap["created_time"] = createdBy.CreatedTime.String()
+		}
+		if createdBy.LastUpdatedTime != nil {
+			createdByMap["last_updated_time"] = createdBy.LastUpdatedTime.String()
+		}
+		if v := utils.StringValue(createdBy.CreatedBy); v != "" {
+			createdByMap["created_by"] = v
 		}
 		if v := utils.StringValue(createdBy.Description); v != "" {
 			createdByMap["description"] = v
