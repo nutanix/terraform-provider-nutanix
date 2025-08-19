@@ -55,7 +55,8 @@ func ResourceNutanixUnregisterClusterV2Create(ctx context.Context, d *schema.Res
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Unregister Cluster Request payload: %s", string(aJSON))
 
-	resp, err := conn.DomainManagerAPIInstance.Unregister(utils.StringPtr(pcExtID.(string)), &body, args)
+	// pass nil for the new dyRun flag
+	resp, err := conn.DomainManagerAPIInstance.Unregister(utils.StringPtr(pcExtID.(string)), &body, nil, args)
 
 	if err != nil {
 		return diag.Errorf("error while unregistering cluster : %v", err)
