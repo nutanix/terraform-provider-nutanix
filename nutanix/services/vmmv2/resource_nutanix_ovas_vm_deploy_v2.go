@@ -392,10 +392,10 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 	if clusterLocationExtID := d.Get("cluster_location_ext_id").(string); clusterLocationExtID != "" {
 		vmDeploymentSpec.ClusterLocationExtId = &clusterLocationExtID
 	}
-	if overrideVmConfig, ok := d.GetOk("override_vm_config"); ok {
-		overrideVmConfigList := overrideVmConfig.([]interface{})
-		if len(overrideVmConfigList) > 0 && overrideVmConfigList[0] != nil {
-			ovm := overrideVmConfigList[0].(map[string]interface{})
+	if overrideVMConfig, ok := d.GetOk("override_vm_config"); ok {
+		overrideVMConfigList := overrideVMConfig.([]interface{})
+		if len(overrideVMConfigList) > 0 && overrideVMConfigList[0] != nil {
+			ovm := overrideVMConfigList[0].(map[string]interface{})
 			overrideSpec := &import2.OvaVmConfigOverrideSpec{}
 
 			if v, ok := ovm["name"].(string); ok && v != "" {
@@ -428,7 +428,6 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 			}
 			vmDeploymentSpec.OverrideVmConfig = overrideSpec
 		}
-
 	}
 
 	resp, err := conn.OvasAPIInstance.DeployOva(&extID, vmDeploymentSpec)
