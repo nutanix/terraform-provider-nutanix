@@ -1501,8 +1501,8 @@ func schemaForGuestCustomization() *schema.Schema {
 
 func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
-	VmConfigMap := resourceDataToMap(d, ResourceNutanixVirtualMachineV2().Schema)
-	body := prepareVmConfigFromMap(VmConfigMap)
+	VMConfigMap := resourceDataToMap(d, ResourceNutanixVirtualMachineV2().Schema)
+	body := prepareVMConfigFromMap(VMConfigMap)
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] Vm Create Request Payload: %s", string(aJSON))
 
@@ -3539,7 +3539,7 @@ func waitForIPRefreshFunc(client *vmm.Client, vmUUID string) resource.StateRefre
 	}
 }
 
-func prepareVmConfigFromMap(m map[string]interface{}) *config.Vm {
+func prepareVMConfigFromMap(m map[string]interface{}) *config.Vm {
 	body := &config.Vm{}
 	if extID, ok := m["ext_id"]; ok {
 		body.ExtId = utils.StringPtr(extID.(string))

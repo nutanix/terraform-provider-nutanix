@@ -1,3 +1,19 @@
+## 2.3.0 (July 17, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.2.1...v2.3.0)
+
+**New Features:**
+- Objects [\#864](https://github.com/nutanix/terraform-provider-nutanix/issues/864)
+  - CRUD for objects
+  - Resource for SSL Certificate
+  - Datasource for SSL Certificate
+
+- Service accounts [\#865](https://github.com/nutanix/terraform-provider-nutanix/issues/865)
+  - Support of CRU for Service Account
+  - Support of Datasource to fetch Service Account
+  - CRUD for User API Key
+  - Datasource to fetch User API Keys
+  - Resource to revoke User API Key
+
 ## 2.2.1 (June 30, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.2.0...v2.2.1)
 
