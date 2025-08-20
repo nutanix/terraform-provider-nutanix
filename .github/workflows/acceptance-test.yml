@@ -69,9 +69,18 @@ jobs:
         run: |
           sudo apt update && sudo apt upgrade -y
           sudo apt install unzip sshpass curl -y
+
+          # Remove any existing AWS CLI installation
+          sudo rm -rf /usr/local/aws-cli
+          sudo rm -f /usr/bin/aws
+          sudo rm -f /usr/bin/aws_completer
+
+          # Download and install latest AWS CLI v2
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
-          sudo ./aws/install
+          sudo ./aws/install --update
+
+          # Verify installation
           aws --version
 
       - name: Setup Terraform v1.10.5
