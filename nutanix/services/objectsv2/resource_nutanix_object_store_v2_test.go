@@ -510,7 +510,6 @@ resource "terraform_data" "post_update_hook" {
 }
 
 func testAccObjectStoreObjectLiteSourceConfig(objectLiteSourceImgName, vmName, vmOvaName, objectOvaName string) string {
-
 	nutanixUsername := os.Getenv("NUTANIX_USERNAME")
 	nutanixPassword := os.Getenv("NUTANIX_PASSWORD")
 	nutanixEndpoint := os.Getenv("NUTANIX_ENDPOINT")
