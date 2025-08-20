@@ -145,7 +145,6 @@ func flattenClusterEntities(pr []import1.Cluster) []interface{} {
 			cls["cluster_profile_ext_id"] = v.ClusterProfileExtId
 			cls["backup_eligibility_score"] = v.BackupEligibilityScore
 
-
 			clsList[k] = cls
 		}
 		return clsList
