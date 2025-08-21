@@ -37,7 +37,7 @@ func associateCategoryToCluster() resource.TestCheckFunc {
 		}
 
 		if clusterExtID == "" || categoryExtID == "" {
-			return fmt.Errorf("cluster or category not found in state")
+			return fmt.Errorf("Cluster or category not found in state")
 		}
 
 		log.Printf("[DEBUG] Associating category: %s to cluster: %s", categoryExtID, clusterExtID)
@@ -98,7 +98,7 @@ func disassociateCategoryFromCluster() resource.TestCheckFunc {
 		}
 
 		if clusterExtID == "" || categoryExtID == "" {
-			return fmt.Errorf("cluster or category not found in state")
+			return fmt.Errorf("Cluster or category not found in state")
 		}
 
 		log.Printf("[DEBUG] Disassociating category: %s from cluster: %s", categoryExtID, clusterExtID)
