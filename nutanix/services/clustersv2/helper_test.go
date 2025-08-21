@@ -37,7 +37,7 @@ func associateCategoryToCluster() resource.TestCheckFunc {
 		}
 
 		if clusterExtID == "" || categoryExtID == "" {
-			return fmt.Errorf("Cluster or category not found in state")
+			return fmt.Errorf("cluster or category not found in state")
 		}
 
 		log.Printf("[DEBUG] Associating category: %s to cluster: %s", categoryExtID, clusterExtID)
@@ -51,7 +51,7 @@ func associateCategoryToCluster() resource.TestCheckFunc {
 
 		resp, err := client.AssociateCategoriesToCluster(utils.StringPtr(clusterExtID), body)
 		if err != nil {
-			return fmt.Errorf("Error associating category to cluster: %v", err)
+			return fmt.Errorf("error associating category to cluster: %v", err)
 		}
 
 		TaskRef := resp.Data.GetValue().(clusterPrism.TaskReference)
@@ -67,12 +67,12 @@ func associateCategoryToCluster() resource.TestCheckFunc {
 		}
 
 		if _, taskErr := stateConf.WaitForState(); taskErr != nil {
-			return fmt.Errorf("Error waiting for category association task to complete: %s", taskErr)
+			return fmt.Errorf("error waiting for category association task to complete: %s", taskErr)
 		}
 
 		_, err = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 		if err != nil {
-			return fmt.Errorf("Error while fetching Category Association Task Details: %s", err)
+			return fmt.Errorf("error while fetching Category Association Task Details: %s", err)
 		}
 
 		return nil
@@ -98,7 +98,7 @@ func disassociateCategoryFromCluster() resource.TestCheckFunc {
 		}
 
 		if clusterExtID == "" || categoryExtID == "" {
-			return fmt.Errorf("Cluster or category not found in state")
+			return fmt.Errorf("cluster or category not found in state")
 		}
 
 		log.Printf("[DEBUG] Disassociating category: %s from cluster: %s", categoryExtID, clusterExtID)
@@ -112,7 +112,7 @@ func disassociateCategoryFromCluster() resource.TestCheckFunc {
 
 		resp, err := client.DisassociateCategoriesFromCluster(utils.StringPtr(clusterExtID), body)
 		if err != nil {
-			return fmt.Errorf("Error disassociating category from cluster: %v", err)
+			return fmt.Errorf("error disassociating category from cluster: %v", err)
 		}
 
 		TaskRef := resp.Data.GetValue().(clusterPrism.TaskReference)
@@ -128,12 +128,12 @@ func disassociateCategoryFromCluster() resource.TestCheckFunc {
 		}
 
 		if _, taskErr := stateConf.WaitForState(); taskErr != nil {
-			return fmt.Errorf("Error waiting for category disassociation task to complete: %s", taskErr)
+			return fmt.Errorf("error waiting for category disassociation task to complete: %s", taskErr)
 		}
 
 		_, err = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 		if err != nil {
-			return fmt.Errorf("Error while fetching Category Disassociation Task Details: %s", err)
+			return fmt.Errorf("error while fetching Category Disassociation Task Details: %s", err)
 		}
 
 		return nil
@@ -150,7 +150,7 @@ func taskStateRefreshPrismTaskGroupFunc(taskUUID string) resource.StateRefreshFu
 		vresp, err := conn.PrismAPI.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
 
 		if err != nil {
-			return "", "", (fmt.Errorf("Error while polling prism task: %v", err))
+			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
 		}
 
 		// get the group results
