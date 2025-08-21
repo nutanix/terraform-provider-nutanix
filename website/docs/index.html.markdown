@@ -13,11 +13,11 @@ The provider is used to interact with the many resources and data sources suppor
 Use the navigation on the left to read about the available resources and data sources this provider can use.
 
 
-## Introducing Nutanix Terraform Provider Version v2.3.0.1
+## Introducing Nutanix Terraform Provider Version v2.3.1
 
-We're excited to announce the release of Nutanix Terraform Provider Version 2.3.0.1! This minor update includes important bug fixes to further improve automation of your Nutanix infrastructure.
+We're excited to announce the release of Nutanix Terraform Provider Version 2.3.1! This minor update includes important bug fixes to further improve automation of your Nutanix infrastructure.
 
-### What's New in v2.3.0.1
+### What's New in v2.3.1
 
 - **Built on v4.1 APIs/SDKs**  
   This release is built on the latest Nutanix v4 APIs and SDKs, providing improved performance, stability, and alignment with the newest platform capabilities.
@@ -37,7 +37,7 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
-| 2.3.0.1 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.3.1 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.0 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.2.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.0 | | | Self Service  v4.1.0 | yes | 
