@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
+	clusterPrism "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
@@ -19,7 +20,7 @@ const timeout = 3 * time.Minute
 
 func associateCategoryToCluster() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		log.Println("Checking Object store destroy")
+		log.Println("Associating category with cluster")
 		conn := acc.TestAccProvider.Meta().(*conns.Client)
 		client := conn.ClusterAPI.ClusterEntityAPI
 
@@ -53,7 +54,7 @@ func associateCategoryToCluster() resource.TestCheckFunc {
 			return fmt.Errorf("error associating category to cluster: %v", err)
 		}
 
-		TaskRef := resp.Data.GetValue().(prismConfig.TaskReference)
+		TaskRef := resp.Data.GetValue().(clusterPrism.TaskReference)
 		taskUUID := TaskRef.ExtId
 
 		taskconn := conn.PrismAPI
@@ -65,13 +66,74 @@ func associateCategoryToCluster() resource.TestCheckFunc {
 			Timeout: timeout,
 		}
 
-		if _, taskErr := stateConf.WaitForState(); err != nil {
+		if _, taskErr := stateConf.WaitForState(); taskErr != nil {
 			return fmt.Errorf("error waiting for category association task to complete: %s", taskErr)
 		}
 
 		_, err = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 		if err != nil {
 			return fmt.Errorf("error while fetching Category Association Task Details: %s", err)
+		}
+
+		return nil
+	}
+}
+
+func disassociateCategoryFromCluster() resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		log.Println("Disassociating category from cluster")
+		conn := acc.TestAccProvider.Meta().(*conns.Client)
+		client := conn.ClusterAPI.ClusterEntityAPI
+
+		clusterExtID := ""
+		categoryExtID := ""
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type == "nutanix_cluster_v2" {
+				clusterExtID = rs.Primary.ID
+			}
+			if rs.Type == "nutanix_category_v2" {
+				categoryExtID = rs.Primary.ID
+			}
+		}
+
+		if clusterExtID == "" || categoryExtID == "" {
+			return fmt.Errorf("cluster or category not found in state")
+		}
+
+		log.Printf("[DEBUG] Disassociating category: %s from cluster: %s", categoryExtID, clusterExtID)
+
+		body := config.NewCategoryEntityReferences()
+
+		body.Categories = append(body.Categories, categoryExtID)
+
+		aJSON, _ := json.MarshalIndent(body, "", "  ")
+		log.Printf("[DEBUG] Category body: %s", aJSON)
+
+		resp, err := client.DisassociateCategoriesFromCluster(utils.StringPtr(clusterExtID), body)
+		if err != nil {
+			return fmt.Errorf("error disassociating category from cluster: %v", err)
+		}
+
+		TaskRef := resp.Data.GetValue().(clusterPrism.TaskReference)
+		taskUUID := TaskRef.ExtId
+
+		taskconn := conn.PrismAPI
+		// Wait for the backup target to be deleted
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: taskStateRefreshPrismTaskGroupFunc(utils.StringValue(taskUUID)),
+			Timeout: timeout,
+		}
+
+		if _, taskErr := stateConf.WaitForState(); taskErr != nil {
+			return fmt.Errorf("error waiting for category disassociation task to complete: %s", taskErr)
+		}
+
+		_, err = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		if err != nil {
+			return fmt.Errorf("error while fetching Category Disassociation Task Details: %s", err)
 		}
 
 		return nil

@@ -128,6 +128,7 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					// check on list cluster data source for categories
 					resource.TestCheckResourceAttr(dataSourceNameClusters, "cluster_entities.0.categories.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceNameClusters, "cluster_entities.0.categories.0", "nutanix_category_v2.test", "id"),
+					disassociateCategoryFromCluster(),
 				),
 			},
 			// Disable the cluster pulse status
@@ -282,11 +283,20 @@ func testAccClusterResourceAllConfig(name string) string {
 		  }
 		}
 
+
 		# create a new category
 		resource "nutanix_category_v2" "test" {
 			key         = "%[2]s-key"
 			value       = "%[2]s-value"
 			description = "test-cat-cluster-description"
+			provisioner "local-exec" {
+				command = "sleep 120"
+				when = destroy
+				on_failure = continue
+			}
+		  lifecycle {
+			ignore_changes = [key,  value]
+		  }
 		}
 
 		resource "nutanix_cluster_v2" "test" {
@@ -405,6 +415,14 @@ func testAccClusterResourceUpdateConfig(updatedName, pulseStatus string) string 
 			key         = "%[2]s-key"
 			value       = "%[2]s-value"
 			description = "test-cat-cluster-description"
+			provisioner "local-exec" {
+				command = "sleep 120"
+				when = destroy
+				on_failure = continue
+			}
+		  lifecycle {
+			ignore_changes = [key,  value]
+		  }
 		}
 
 		resource "nutanix_cluster_v2" "test" {
@@ -483,7 +501,6 @@ func testAccClusterResourceUpdateConfig(updatedName, pulseStatus string) string 
 		  }
 
 		  provisioner "local-exec" {
-
 			command = "ssh-keygen -f '~/.ssh/known_hosts' -R '${local.clusters.nodes[0].cvm_ip}';  sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[0].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}' "
 			on_failure = continue
 		  }
