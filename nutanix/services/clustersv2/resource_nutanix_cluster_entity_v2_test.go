@@ -54,7 +54,7 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 	if testVars.Clusters.Nodes[0].CvmIP == "" {
 		t.Skip("Skipping test as No available node to be used for testing")
 	}
-	r := acctest.RandInt()
+	r := acctest.RandIntRange(1, 10000)
 	name := fmt.Sprintf("tf-test-cluster-%d", r)
 
 	resource.Test(t, resource.TestCase{
@@ -95,6 +95,8 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameClusterRegistration, "pc_ext_id"),
 					resource.TestCheckResourceAttr(resourceNameClusterRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.address.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
 					resource.TestCheckResourceAttr(resourceNameClusterRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.credentials.0.authentication.0.username", testVars.Clusters.Nodes[0].Username),
+
+					associateCategoryToCluster(),
 				),
 			},
 			{
@@ -122,6 +124,10 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.server.0.port", strconv.Itoa(testVars.Clusters.Network.SMTPServer.Port)),
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.server.0.username", testVars.Clusters.Network.SMTPServer.Username),
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.type", testVars.Clusters.Network.SMTPServer.Type),
+
+					// check on list cluster data source for categories
+					resource.TestCheckResourceAttr(dataSourceNameClusters, "cluster_entities.0.categories.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceNameClusters, "cluster_entities.0.categories.0", "nutanix_category_v2.test", "id"),
 				),
 			},
 			// Disable the cluster pulse status
@@ -276,6 +282,12 @@ func testAccClusterResourceAllConfig(name string) string {
 		  }
 		}
 
+		# create a new category
+		resource "nutanix_category_v2" "test" {
+			key         = "%[2]s-key"
+			value       = "%[2]s-value"
+			description = "test-cat-cluster-description"
+		}
 
 		resource "nutanix_cluster_v2" "test" {
 		  name   = "%[2]s"
@@ -334,7 +346,7 @@ func testAccClusterResourceAllConfig(name string) string {
 
 				on_failure = continue
 		  }
-		  depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node]
+		  depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node, nutanix_category_v2.test]
 		}
 
 		# register the cluster to pc
@@ -386,6 +398,13 @@ func testAccClusterResourceUpdateConfig(updatedName, pulseStatus string) string 
 			  error_message = "The node ${local.clusters.nodes[0].cvm_ip} are not unconfigured"
 			}
 		  }
+		}
+
+		# create a new category
+		resource "nutanix_category_v2" "test" {
+			key         = "%[2]s-key"
+			value       = "%[2]s-value"
+			description = "test-cat-cluster-description"
 		}
 
 		resource "nutanix_cluster_v2" "test" {
@@ -468,7 +487,7 @@ func testAccClusterResourceUpdateConfig(updatedName, pulseStatus string) string 
 			command = "ssh-keygen -f '~/.ssh/known_hosts' -R '${local.clusters.nodes[0].cvm_ip}';  sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[0].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}' "
 			on_failure = continue
 		  }
-		  depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node]
+		  depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node, nutanix_category_v2.test]
 		}
 
 		# register the cluster to pc
@@ -494,5 +513,10 @@ func testAccClusterResourceUpdateConfig(updatedName, pulseStatus string) string 
 		  depends_on = [nutanix_cluster_v2.test]
 		}
 
+		# List all cluster to tests categories
+		data "nutanix_clusters_v2" "test" {
+			filter = "name eq '${nutanix_cluster_v2.test.name}'"
+			depends_on = [nutanix_pc_registration_v2.node-registration]
+		}
 `, clusterConfig, updatedName, pulseStatus)
 }
