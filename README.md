@@ -32,7 +32,7 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.3.
   This release is built on the latest Nutanix v4 APIs and SDKs, providing improved performance, stability, and alignment with the newest platform capabilities.
 
 - **Bug Fix**
-  - **nutanix_clusters_v2**: nutanix_clusters_v2 not returning associated categories.
+  - **nutanix_clusters_v2**: nutanix_clusters_v2 will return list of associated categories.
 
 ---
 
