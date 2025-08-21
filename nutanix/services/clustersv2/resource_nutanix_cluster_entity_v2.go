@@ -949,10 +949,7 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 	if d.HasChange("categories") {
 		categories := d.Get("categories")
 		categoriesList := categories.([]interface{})
-		categoriesListStr := make([]string, len(categoriesList))
-		for i, v := range categoriesList {
-			categoriesListStr[i] = v.(string)
-		}
+		categoriesListStr := common.ExpandListOfString(categoriesList)
 		log.Printf("[DEBUG] categories List update Spec: %v", categoriesListStr)
 		updateSpec.Categories = categoriesListStr
 	}

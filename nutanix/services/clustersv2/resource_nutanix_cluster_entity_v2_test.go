@@ -95,13 +95,6 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameClusterRegistration, "pc_ext_id"),
 					resource.TestCheckResourceAttr(resourceNameClusterRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.address.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
 					resource.TestCheckResourceAttr(resourceNameClusterRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.credentials.0.authentication.0.username", testVars.Clusters.Nodes[0].Username),
-
-					// Categories are commented out due to an issue with the Create Cluster API.
-					// The API does not associate categories when they are provided during cluster creation.
-					// resource.TestCheckResourceAttrPair(resourceNameCluster, "categories.0", "nutanix_category_v2.test", "id"),
-					// // check on list cluster data source for categories
-					// resource.TestCheckResourceAttr(dataSourceNameClusters, "cluster_entities.0.categories.#", "1"),
-					// resource.TestCheckResourceAttrPair(dataSourceNameClusters, "cluster_entities.0.categories.0", "nutanix_category_v2.test", "id"),
 				),
 			},
 			{
@@ -283,11 +276,6 @@ func testAccClusterResourceAllConfig(name string) string {
 		  }
 		}
 
-		resource "nutanix_category_v2" "test" {
-			key         = "test-cat-cluster"
-			value       = "test-cat-cluster-value"
-			description = "test-cat-cluster-description"
-		}
 
 		resource "nutanix_cluster_v2" "test" {
 		  name   = "%[2]s"
@@ -336,7 +324,6 @@ func testAccClusterResourceAllConfig(name string) string {
 				}
 		  }
 
-		  categories = [nutanix_category_v2.test.id]
 
 		  lifecycle {
 				ignore_changes = [network.0.smtp_server.0.server.0.password,  links, categories, config.0.cluster_function]
@@ -373,10 +360,6 @@ func testAccClusterResourceAllConfig(name string) string {
 		  depends_on = [nutanix_cluster_v2.test]
 		}
 
-		data "nutanix_clusters_v2" "test" {
-			filter = "name eq '${nutanix_cluster_v2.test.name}'"
-			depends_on = [nutanix_pc_registration_v2.node-registration]
-		}
 	`, clusterConfig, name)
 }
 
@@ -404,7 +387,6 @@ func testAccClusterResourceUpdateConfig(updatedName, pulseStatus string) string 
 			}
 		  }
 		}
-
 
 		resource "nutanix_cluster_v2" "test" {
 		  name   = "%[2]s"
