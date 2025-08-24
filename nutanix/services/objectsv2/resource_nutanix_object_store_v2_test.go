@@ -632,7 +632,7 @@ resource "terraform_data" "upload_ova_to_object_store" {
   }
 }
 
-# Sleep 1 min before uploding ova
+# Sleep 1 min before uploading ova
 resource "terraform_data" "delay" {
   provisioner "local-exec" {
     when       = create
