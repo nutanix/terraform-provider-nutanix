@@ -546,13 +546,18 @@ func expandURLBasicAuth(pr interface{}) *import5.UrlBasicAuth {
 }
 
 func flattenStringValue(pr []interface{}) []string {
-	if len(pr) > 0 {
-		res := make([]string, len(pr))
-
-		for k, v := range pr {
-			res[k] = v.(string)
-		}
-		return res
+	if len(pr) == 0 {
+		return []string{} // return empty slice, not nil
 	}
-	return nil
+
+	res := make([]string, 0, len(pr))
+	for _, v := range pr {
+		str, ok := v.(string)
+		if !ok {
+			// handle the error gracefully — maybe skip or log?
+			continue
+		}
+		res = append(res, str)
+	}
+	return res
 }
