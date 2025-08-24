@@ -27,8 +27,8 @@ const datasourceNameCertificatesList = "data.nutanix_certificates_v2.list"
 const resourceNameObjectLiteStoreImage = "nutanix_images_v2.object-liteStore-img"
 const resourceNameVM = "nutanix_virtual_machine_v2.vm-test"
 
-const resourceNameVMOva = "nutanix_ova_v2.vm-ova"
-const resourceNameObjectLiteSourceOva = "nutanix_ova_v2.object-liteSource-ova"
+const resourceNameVMOva = "nutanix_ovas_v2.vm-ova"
+const resourceNameObjectLiteSourceOva = "nutanix_ovas_v2.object-liteSource-ova"
 
 func TestAccV2NutanixObjectStoreResource_OneWorkerNode(t *testing.T) {
 	r := acctest.RandIntRange(1, 99)
@@ -128,7 +128,7 @@ func TestAccV2NutanixObjectStoreResource_OneWorkerNode(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceNameCertificatesList, "certificates.0.ext_id", resourceNameObjectStoreCertificate, "id"),
 				),
 			},
-			// Create image using object store source
+			// Lite source tests for image and ova using object store source
 			{
 				PreConfig: func() {
 					fmt.Println("object lite source tests")
@@ -607,7 +607,7 @@ resource "nutanix_virtual_machine_v2" "vm-test" {
 }
 
 # Create Ova from the VM
-resource "nutanix_ova_v2" "vm-ova" {
+resource "nutanix_ovas_v2" "vm-ova" {
   name = "%[7]s"
   source {
     ova_vm_source {
@@ -617,15 +617,41 @@ resource "nutanix_ova_v2" "vm-ova" {
   }
 }
 
+# Download Ova
+resource "nutanix_ova_download_v2" "test" {
+  ova_ext_id = nutanix_ovas_v2.vm-ova.id
+}
+
+
+# Upload Ova to object store using AWS CLI
+resource "terraform_data" "upload_ova_to_object_store" {
+  provisioner "local-exec" {
+    when       = create
+    command    = "aws s3api put-object --bucket vmm-ovas --body ${nutanix_ova_download_v2.test.ova_file_path} --key ${nutanix_object_store_v2.test.name} --no-verify-ssl"
+    on_failure = fail
+  }
+}
+
+# Sleep 1 min before uploding ova
+resource "terraform_data" "delay" {
+  provisioner "local-exec" {
+    when       = create
+    command    = "sleep 60"
+    on_failure = fail
+  }
+  depends_on = [terraform_data.upload_ova_to_object_store]
+}
+
 # Create ova using object store source
-resource "nutanix_ova_v2" "object-liteSource-ova" {
-  name = "%[8]s"
+resource "nutanix_ovas_v2" "object-liteSource-ova" {
+  name = "tf-object-ova"
   source {
     object_lite_source {
       key = nutanix_object_store_v2.test.name
     }
   }
   cluster_location_ext_ids = [local.clusterExtId]
+  depends_on               = [terraform_data.delay]
 }
 
 
