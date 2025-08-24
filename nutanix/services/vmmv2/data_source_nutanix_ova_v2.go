@@ -362,6 +362,15 @@ func datasourceNutanixOvaV2Read(ctx context.Context, d *schema.ResourceData, met
 }
 
 func setOva(d *schema.ResourceData, ova import1.Ova) diag.Diagnostics {
+	if err := d.Set("ext_id", utils.StringValue(ova.ExtId)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("links", flattenAPILink(ova.Links)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("tenant_id", utils.StringValue(ova.TenantId)); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("name", utils.StringValue(ova.Name)); err != nil {
 		return diag.FromErr(err)
 	}
