@@ -75,6 +75,7 @@ func TestAccV2NutanixOvaDownloadResource_DownloadOvaFile(t *testing.T) {
 
 					// ova Download Checks
 					resource.TestCheckResourceAttrPair(resourceNameOvaDownload, "ova_ext_id", resourceNameOva, "ext_id"),
+					resource.TestCheckResourceAttrSet(resourceNameOvaDownload, "ova_file_path"),
 				),
 			},
 		},
