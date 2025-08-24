@@ -86,17 +86,11 @@ func ResourceNutanixOvaV2() *schema.Resource {
 						"ova_url_source": {
 							Type:     schema.TypeList,
 							Optional: true,
-							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"url": {
 										Type:     schema.TypeString,
 										Required: true,
-									},
-									"should_allow_insecure_url": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Computed: true,
 									},
 									"basic_auth": {
 										Type:     schema.TypeList,
@@ -121,7 +115,6 @@ func ResourceNutanixOvaV2() *schema.Resource {
 						"ova_vm_source": {
 							Type:     schema.TypeList,
 							Optional: true,
-							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"vm_ext_id": {
@@ -138,7 +131,6 @@ func ResourceNutanixOvaV2() *schema.Resource {
 						"object_lite_source": {
 							Type:     schema.TypeList,
 							Optional: true,
-							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"key": {
@@ -277,7 +269,6 @@ func ResourceNutanixOvaV2() *schema.Resource {
 			"disk_format": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
 				ValidateFunc: validation.StringInSlice([]string{"VMDK", "QCOW2"}, false),
 			},
 			"create_time": {
@@ -285,30 +276,6 @@ func ResourceNutanixOvaV2() *schema.Resource {
 				Computed: true,
 			},
 			"last_update_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ext_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"links": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"href": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"rel": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"tenant_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -346,8 +313,9 @@ func ResourceNutanixOvaV2Create(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 	}
+	log.Printf("[DEBUG] OVA body: %+v", body)
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
-	log.Printf("[DEBUG] Ova Create call: %s", string(aJSON))
+	log.Printf("[DEBUG] Akhil Create call: %s", string(aJSON))
 	resp, err := conn.OvasAPIInstance.CreateOva(body)
 	if err != nil {
 		return diag.Errorf("error creating OVA: %v", err)
@@ -359,7 +327,7 @@ func ResourceNutanixOvaV2Create(ctx context.Context, d *schema.ResourceData, met
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the Ova to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
@@ -396,15 +364,6 @@ func ResourceNutanixOvaV2Read(ctx context.Context, d *schema.ResourceData, meta 
 	ova := getResp.Data.GetValue().(import1.Ova)
 	aJSON, _ := json.MarshalIndent(ova, "", "  ")
 	log.Printf("[DEBUG] Get Network call: %s", string(aJSON))
-	if err := d.Set("ext_id", utils.StringValue(ova.ExtId)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("links", flattenAPILink(ova.Links)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("tenant_id", utils.StringValue(ova.TenantId)); err != nil {
-		return diag.FromErr(err)
-	}
 	if err := d.Set("name", utils.StringValue(ova.Name)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -472,10 +431,6 @@ func ResourceNutanixOvaV2Update(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	// remove created by from the request as it cause the request to fail
-	// [Path '/createdBy'] Object has missing required properties ([\"userType\"])
-	updateSpec.CreatedBy = nil
-
 	// Prepare the update request
 	updateResp, err := conn.OvasAPIInstance.UpdateOvaById(utils.StringPtr(d.Id()), &updateSpec)
 	if err != nil {
@@ -488,7 +443,7 @@ func ResourceNutanixOvaV2Update(ctx context.Context, d *schema.ResourceData, met
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the Ova to be Updated
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
