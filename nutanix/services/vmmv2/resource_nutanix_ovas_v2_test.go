@@ -127,7 +127,7 @@ func TestAccV2NutanixOvaResource_CreateOvaFromValidUrl(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameOva, "name", ovaName),
 					resource.TestCheckResourceAttr(resourceNameOva, "source.0.ova_url_source.0.url", testVars.VMM.OvaURL),
 					resource.TestCheckResourceAttr(resourceNameOva, "source.0.ova_url_source.0.should_allow_insecure_url", "true"),
-					resource.TestCheckResourceAttrSet(resourceNameOva, "vm_config"),
+					resource.TestCheckResourceAttrSet(resourceNameOva, "vm_config.#"),
 				),
 			},
 			// update ova
