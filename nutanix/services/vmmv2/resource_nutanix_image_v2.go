@@ -77,9 +77,9 @@ func ResourceNutanixImageV4() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"url_source": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							Computed:      true,
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"url": {

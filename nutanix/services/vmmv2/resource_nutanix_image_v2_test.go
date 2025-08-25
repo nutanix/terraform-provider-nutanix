@@ -158,7 +158,7 @@ func TestAccV2NutanixImagesResource_WithMoreThanOneSource(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testImagesV2ConfigWithMoreThanOneSource(),
+				Config:      testImagesV2ConfigWithMoreThanOneSource(),
 				ExpectError: regexp.MustCompile("only one of url_source, vm_disk_source, or object_lite_source can be specified in source"),
 			},
 		},
@@ -266,7 +266,6 @@ func testImagesV2ConfigWithVMDiskSource(name, desc string) string {
 		}
 `, name, desc, filepath)
 }
-
 
 func testImagesV2ConfigWithMoreThanOneSource() string {
 	return `
