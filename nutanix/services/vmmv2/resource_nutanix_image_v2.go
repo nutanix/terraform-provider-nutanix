@@ -22,6 +22,23 @@ func ResourceNutanixImageV4() *schema.Resource {
 		ReadContext:   ResourceNutanixImageV4Read,
 		UpdateContext: ResourceNutanixImageV4Update,
 		DeleteContext: ResourceNutanixImageV4Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			sources := []string{"source.0.url_source", "source.0.vm_disk_source", "source.0.object_lite_source"}
+			count := 0
+			for _, s := range sources {
+				if _, ok := d.GetOk(s); ok {
+					count++
+				}
+			}
+			if count > 1 {
+				return fmt.Errorf("only one of url_source, vm_disk_source, or object_lite_source can be specified in source")
+			}
+			return nil
+		},
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -56,11 +73,13 @@ func ResourceNutanixImageV4() *schema.Resource {
 			"source": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"url_source": {
-							Type:     schema.TypeList,
-							Optional: true,
+							Type:          schema.TypeList,
+							Optional:      true,
+							Computed:      true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"url": {
@@ -75,6 +94,7 @@ func ResourceNutanixImageV4() *schema.Resource {
 									"basic_auth": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"username": {
@@ -94,6 +114,7 @@ func ResourceNutanixImageV4() *schema.Resource {
 						"vm_disk_source": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ext_id": {
