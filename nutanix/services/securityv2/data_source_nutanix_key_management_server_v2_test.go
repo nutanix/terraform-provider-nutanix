@@ -37,7 +37,6 @@ func TestAccV2NutanixKeyManagementServerDatasource_Basic(t *testing.T) {
 
 						if strings.Split(keyID, ":")[0] == testVars.Security.KeyID {
 							return nil
-
 						}
 						return fmt.Errorf("expected key_id to contain %q, got %q", testVars.Security.KeyID, keyID)
 					},
