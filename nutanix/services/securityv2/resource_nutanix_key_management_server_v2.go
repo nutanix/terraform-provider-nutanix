@@ -129,7 +129,7 @@ func ResourceNutanixKeyManagementServerV2Create(ctx context.Context, d *schema.R
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for kms (%s) to be created: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for kms to be created: %s", errWaitTask)
 	}
 
 	// Get UUID from TASK API
