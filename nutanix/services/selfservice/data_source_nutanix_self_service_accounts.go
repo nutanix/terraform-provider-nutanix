@@ -659,7 +659,6 @@ func flattenAccountEntities(entities []map[string]interface{}) []map[string]inte
 		// Handle status (as a list)
 		statusMap := make(map[string]interface{})
 		if status, ok := entity["status"].(map[string]interface{}); ok {
-
 			// Handle description, name, state, availability_zone_reference, cluster_reference from status
 			if description, ok := status["description"].(string); ok {
 				statusMap["description"] = description
