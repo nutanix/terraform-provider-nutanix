@@ -30,9 +30,9 @@ func ResourceNutanixKeyManagementServerV2() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(15 * time.Minute),
-			Update: schema.DefaultTimeout(15 * time.Minute),
-			Delete: schema.DefaultTimeout(15 * time.Minute),
+			Create: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
