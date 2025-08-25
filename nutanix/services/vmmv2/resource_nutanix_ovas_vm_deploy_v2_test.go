@@ -64,7 +64,7 @@ func TestAccV2NutanixOvaVmDeployResource_DeployVmFromOvaDoseNotExists(t *testing
 		Steps: []resource.TestStep{
 			{
 				Config:      testOvaVMDeployResourceConfigDeployVMFromOvaDoseNotExists(ovaName),
-				ExpectError: regexp.MustCompile("Failed to perform the operation as the VM entity is not present in the backend database."),
+				ExpectError: regexp.MustCompile("Failed to perform the operation as the backend service could not find the entity."),
 			},
 		},
 	})
@@ -179,20 +179,25 @@ data "nutanix_subnets_v2" "subnets" {
 
 
 resource "nutanix_ova_vm_deploy_v2" "test" {
-  name = "new_vm_from_non_existent_ova"
-  nics {
-    backing_info {
-      is_connected = true
-    }
-    network_info {
-      nic_type = "NORMAL_NIC"
-      subnet {
-        ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+  ext_id = "9fdb1211-5adf-4da3-8b52-19c743b15aa1"
+  override_vm_config {
+    name              = "tf-test-vm-ova-from-ova"
+    memory_size_bytes = 8 * 1024 * 1024 * 1024 # 8 GiB
+    nics {
+      backing_info {
+        is_connected = true
       }
-      vlan_mode     = "TRUNK"
-      trunked_vlans = ["1"]
+      network_info {
+        nic_type = "NORMAL_NIC"
+        subnet {
+          ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+        }
+        vlan_mode     = "TRUNK"
+        trunked_vlans = ["1"]
+      }
     }
   }
+  cluster_location_ext_id = "1f8b1211-5adf-4da3-8b52-19c743b15aa1"
 }
 `, filepath)
 }

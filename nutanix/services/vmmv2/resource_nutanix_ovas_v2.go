@@ -280,35 +280,20 @@ func ResourceNutanixOvaV2() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice([]string{"VMDK", "QCOW2"}, false),
 			},
+			"ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"links": schemaForLinks(),
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"create_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"last_update_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ext_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"links": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"href": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"rel": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"tenant_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -347,7 +332,8 @@ func ResourceNutanixOvaV2Create(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
-	log.Printf("[DEBUG] Ova Create call: %s", string(aJSON))
+	log.Printf("[DEBUG] OVA body: %s", string(aJSON))
+
 	resp, err := conn.OvasAPIInstance.CreateOva(body)
 	if err != nil {
 		return diag.Errorf("error creating OVA: %v", err)
@@ -399,10 +385,10 @@ func ResourceNutanixOvaV2Read(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("ext_id", utils.StringValue(ova.ExtId)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("links", flattenAPILink(ova.Links)); err != nil {
+	if err := d.Set("tenant_id", utils.StringValue(ova.TenantId)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("tenant_id", utils.StringValue(ova.TenantId)); err != nil {
+	if err := d.Set("links", flattenAPILink(ova.Links)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("name", utils.StringValue(ova.Name)); err != nil {
@@ -473,7 +459,7 @@ func ResourceNutanixOvaV2Update(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// remove created by from the request as it cause the request to fail
-	// [Path '/createdBy'] Object has missing required properties ([\"userType\"])
+	// with error -> [Path '/createdBy'] Object has missing required properties ([\"userType\"])
 	updateSpec.CreatedBy = nil
 
 	// Prepare the update request
@@ -518,7 +504,7 @@ func ResourceNutanixOvaV2Delete(ctx context.Context, d *schema.ResourceData, met
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the Ova to delete
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
@@ -633,7 +619,6 @@ func expandOneOfOvaSource(pr interface{}) *import1.OneOfOvaSource {
 					OvavmDiskSrc.DiskFileFormat = &enumValue
 				}
 			}
-			log.Printf("[DEBUG] Akhil OvaVmSource: %+v", OvavmDiskSrc)
 			err := imgSrc.SetValue(OvavmDiskSrc)
 			if err != nil {
 				log.Fatalf("SetValue failed: %v", err)

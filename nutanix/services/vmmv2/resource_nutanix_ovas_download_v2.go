@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -22,6 +23,10 @@ func ResourceNutanixOvaDownloadV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"ova_file_path": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -36,7 +41,20 @@ func ResourceNutanixOvaDownloadV2Create(ctx context.Context, d *schema.ResourceD
 	}
 
 	aJSON, _ := json.MarshalIndent(resp, "", "  ")
-	log.Printf("Downloaded OVA file Response: %s", aJSON)
+	log.Printf("[DEBUG] Downloaded OVA file response: %s", aJSON)
+
+	respData := resp.Data
+	if respData == nil {
+		return diag.Errorf("error Downloading Ova file: %v", resp)
+	}
+
+	filePath := respData.GetValue().(content.FileDetail).Path
+
+	log.Printf("[DEBUG] OVA file path: %s", utils.StringValue(filePath))
+
+	if err := d.Set("ova_file_path", utils.StringValue(filePath)); err != nil {
+		return diag.Errorf("error setting ova_file_path: %v", err)
+	}
 
 	d.SetId(utils.GenUUID())
 	return ResourceNutanixOvaDownloadV2Read(ctx, d, meta)
