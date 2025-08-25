@@ -76,6 +76,24 @@ func flattenReferenceValues(r *v3.Reference) map[string]interface{} {
 	}
 	return reference
 }
+func flattenURLReferenceValues(r *v3.URLReference) map[string]interface{} {
+	reference := make(map[string]interface{})
+	if r != nil {
+		if r.Kind != nil {
+			reference["kind"] = utils.StringValue(r.Kind)
+		}
+		if r.UUID != nil {
+			reference["uuid"] = utils.StringValue(r.UUID)
+		}
+		if r.Name != nil {
+			reference["name"] = utils.StringValue(r.Name)
+		}
+		if r.URL != nil {
+			reference["url"] = utils.StringValue(r.URL)
+		}
+	}
+	return reference
+}
 
 func flattenClusterReference(r *v3.Reference, d *schema.ResourceData) error {
 	if r != nil {
@@ -120,6 +138,33 @@ func buildReference(uuid, kind string) *v3.Reference {
 		Kind: utils.StringPtr(kind),
 		UUID: utils.StringPtr(uuid),
 	}
+}
+
+func validateShortURLRef(ref map[string]interface{}) *v3.URLReference {
+	r := &v3.URLReference{}
+	hasValue := false
+	if v, ok := ref["kind"]; ok {
+		r.Kind = utils.StringPtr(v.(string))
+		hasValue = true
+	}
+	if v, ok := ref["url"]; ok {
+		r.URL = utils.StringPtr(v.(string))
+		hasValue = true
+	}
+	if v, ok := ref["uuid"]; ok {
+		r.UUID = utils.StringPtr(v.(string))
+		hasValue = true
+	}
+	if v, ok := ref["name"]; ok {
+		r.Name = utils.StringPtr(v.(string))
+		hasValue = true
+	}
+
+	if hasValue {
+		return r
+	}
+
+	return nil
 }
 
 func validateShortRef(ref map[string]interface{}) *v3.Reference {
