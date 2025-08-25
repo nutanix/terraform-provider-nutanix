@@ -90,7 +90,6 @@ func TestAccV2NutanixPasswordManagerResource_UpdatePasswordForAdminAOSUserWrongC
 }
 
 func testAccPasswordManagerResourceUpdatePasswordForAdminPCUserConfig(filter, currentPassword, nextPassword string) string {
-
 	return fmt.Sprintf(`
 
 
