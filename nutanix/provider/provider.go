@@ -26,6 +26,7 @@ import (
 	objectstoresv2 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/objectsv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prismv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/securityv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/selfservice"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/storagecontainersv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/vmm"
@@ -436,6 +437,7 @@ func Provider() *schema.Provider {
 			"nutanix_lcm_config_v2":                           lcmv2.ResourceNutanixLcmConfigV2(),
 			"nutanix_object_store_v2":                         objectstoresv2.ResourceNutanixObjectStoresV2(),
 			"nutanix_object_store_certificate_v2":             objectstoresv2.ResourceNutanixObjectStoreCertificateV2(),
+			"nutanix_key_management_server_v2":                securityv2.ResourceNutanixKeyManagementServerV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
