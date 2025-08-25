@@ -319,6 +319,8 @@ func Provider() *schema.Provider {
 			"nutanix_object_stores_v2":                        objectstoresv2.DatasourceNutanixObjectStoresV2(),
 			"nutanix_certificate_v2":                          objectstoresv2.DatasourceNutanixObjectStoreCertificateV2(),
 			"nutanix_certificates_v2":                         objectstoresv2.DatasourceNutanixObjectStoreCertificatesV2(),
+			"nutanix_key_management_server_v2":                securityv2.DatasourceNutanixKeyManagementServerV2(),
+			"nutanix_key_management_servers_v2":               securityv2.DatasourceNutanixKeyManagementServersV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
