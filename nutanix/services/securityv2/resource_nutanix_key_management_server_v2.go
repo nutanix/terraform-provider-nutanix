@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/models/common/v1/response"
 	securityPrism "github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/models/security/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -27,6 +26,14 @@ func ResourceNutanixKeyManagementServerV2() *schema.Resource {
 		ReadContext:   ResourceNutanixKeyManagementServerV2Read,
 		UpdateContext: ResourceNutanixKeyManagementServerV2Update,
 		DeleteContext: ResourceNutanixKeyManagementServerV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(15 * time.Minute),
+			Update: schema.DefaultTimeout(15 * time.Minute),
+			Delete: schema.DefaultTimeout(15 * time.Minute),
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -279,42 +286,4 @@ func expandAccessInformation(accessInfo []interface{}) (*config.AzureAccessInfor
 		ClientSecret:         utils.StringPtr(accessInfoVal["client_secret"].(string)),
 		CredentialExpiryDate: utils.Time(expiryTime),
 	}, nil
-}
-
-func flattenAccessInformation(azureAccessInformation *config.AzureAccessInformation) ([]map[string]interface{}, error) {
-	if azureAccessInformation == nil {
-		return nil, fmt.Errorf("access information is nil")
-	}
-
-	flattenedAccessInfo := make([]map[string]interface{}, 1)
-	flattenedAccessInfo[0] = map[string]interface{}{
-		"endpoint_url":            utils.StringValue(azureAccessInformation.EndpointUrl),
-		"key_id":                  utils.StringValue(azureAccessInformation.KeyId),
-		"tenant_id":               utils.StringValue(azureAccessInformation.TenantId),
-		"client_id":               utils.StringValue(azureAccessInformation.ClientId),
-		"client_secret":           utils.StringValue(azureAccessInformation.ClientSecret),
-		"truncated_client_secret": utils.StringValue(azureAccessInformation.TruncatedClientSecret),
-		"credential_expiry_date":  utils.TimeValue(azureAccessInformation.CredentialExpiryDate).Format("2006-01-02"),
-	}
-	return flattenedAccessInfo, nil
-}
-
-func flattenLinks(links []response.ApiLink) []interface{} {
-	if len(links) > 0 {
-		flattenedLinks := make([]interface{}, len(links))
-
-		for k, v := range links {
-			link := make(map[string]interface{})
-
-			if v.Href != nil {
-				link["href"] = v.Href
-			}
-			if v.Rel != nil {
-				link["rel"] = v.Rel
-			}
-			flattenedLinks[k] = link
-		}
-		return flattenedLinks
-	}
-	return nil
 }
