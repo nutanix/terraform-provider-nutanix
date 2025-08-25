@@ -745,13 +745,42 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
 
+		data "nutanix_subnets_v2" "subnets" {}
+
+		data "nutanix_self_service_accounts" "fetch_accounts"{
+			filter = "name==NTNX_LOCAL_AZ"
+		}
+
 		locals {
 			cluster0 = [
 			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
 			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 		  ][0]
+			accountId = data.nutanix_self_service_accounts.fetch_accounts.accounts[0].metadata[0].uuid
+			subnetExtId = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
 			config = jsondecode(file("%[3]s"))
 			vmm = local.config.vmm
+		}
+
+		resource "nutanix_project" "projects" {
+			name          = "tf-project-%[1]d"
+			description   = "project twice"
+			use_project_internal = true
+			api_version = "3.1"
+			cluster_reference_list {
+				uuid = local.cluster0
+			}
+			account_reference_list {
+				uuid = local.accountId
+			}
+
+			subnet_reference_list {
+				uuid = local.subnetExtId
+			}
+
+			default_subnet_reference {
+				uuid = local.subnetExtId
+			}
 		}
 
 		data "nutanix_storage_containers_v2" "ngt-sc" {
@@ -767,6 +796,9 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 			cluster {
 				ext_id = local.cluster0
 			}
+			project {
+				ext_id = nutanix_project.projects.metadata.uuid
+      }
 			disks{
 				disk_address{
 					bus_type = "SCSI"
@@ -779,6 +811,15 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 							ext_id = data.nutanix_storage_containers_v2.ngt-sc.storage_containers[0].ext_id
 						}
 					}
+				}
+			}
+			nics{
+				network_info{
+					nic_type = "NORMAL_NIC"
+					subnet{
+						ext_id = local.subnetExtId
+					}
+					vlan_mode = "ACCESS"
 				}
 			}
 		}

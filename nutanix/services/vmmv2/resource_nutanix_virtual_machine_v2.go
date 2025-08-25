@@ -159,6 +159,20 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 					},
 				},
 			},
+			"project": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ext_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"ownership_info": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -1560,6 +1574,9 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	if categories, ok := d.GetOk("categories"); ok {
 		body.Categories = expandCategoryReference(categories.([]interface{}))
 	}
+	if project, ok := d.GetOk("project"); ok {
+		body.Project = expandProjectReference(project.([]interface{}))
+	}
 	if ownerRef, ok := d.GetOk("ownership_info"); ok {
 		body.OwnershipInfo = expandOwnershipInfo(ownerRef)
 	}
@@ -1831,6 +1848,9 @@ func ResourceNutanixVirtualMachineV2Read(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 	if err := d.Set("categories", flattenCategoryReference(getResp.Categories)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project", flattenProjectReference(getResp.Project)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("ownership_info", flattenOwnershipInfo(getResp.OwnershipInfo)); err != nil {
@@ -3802,4 +3822,16 @@ func waitForIPRefreshFunc(client *vmm.Client, vmUUID string) resource.StateRefre
 		}
 		return resp, "WAITING", nil
 	}
+}
+
+func expandProjectReference(pr []interface{}) *config.ProjectReference {
+	if len(pr) > 0 {
+		val := pr[0].(map[string]interface{})
+		project := config.ProjectReference{}
+		if extID, ok := val["ext_id"]; ok && len(extID.(string)) > 0 {
+			project.ExtId = utils.StringPtr(extID.(string))
+		}
+		return &project
+	}
+	return nil
 }
