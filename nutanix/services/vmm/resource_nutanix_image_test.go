@@ -244,7 +244,7 @@ func TestAccNutanixImage_WithDataSourceRefInvalidUUID(t *testing.T) {
 	})
 }
 
-func TestAccNutanixImage_WithDataSourceRef(t *testing.T) {
+func TestAccNutanixImage_WithDataSourceRefTest(t *testing.T) {
 	rInt := acctest.RandInt()
 	r := acctest.RandInt()
 	description := fmt.Sprintf("UbuntuServer-%d", r)

@@ -240,15 +240,18 @@ func flattenObjectStoreLocation(objectStoreLocation management.ObjectStoreLocati
 	return objectStoreLocationList
 }
 
-func flattenProviderConfig(providerConfig *management.AWSS3Config) []map[string]interface{} {
+func flattenProviderConfig(providerConfig *management.OneOfObjectStoreLocationProviderConfig) []map[string]interface{} {
 	if providerConfig == nil {
 		return nil
 	}
 
 	providerConfigMap := make(map[string]interface{})
-	providerConfigMap["bucket_name"] = providerConfig.BucketName
-	providerConfigMap["region"] = providerConfig.Region
-	providerConfigMap["credentials"] = flattenAccessKeyCredentials(providerConfig.Credentials)
+
+	awsConfig := providerConfig.GetValue().(management.AWSS3Config)
+
+	providerConfigMap["bucket_name"] = awsConfig.BucketName
+	providerConfigMap["region"] = awsConfig.Region
+	providerConfigMap["credentials"] = flattenAccessKeyCredentials(awsConfig.Credentials)
 
 	providerConfigList := make([]map[string]interface{}, 0)
 	providerConfigList = append(providerConfigList, providerConfigMap)

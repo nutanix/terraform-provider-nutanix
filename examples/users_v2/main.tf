@@ -74,3 +74,21 @@ data "nutanix_users_v2" "test" {
 data "nutanix_user_v2" "get-user" {
   ext_id = nutanix_users_v2.active-user.id
 }
+
+# Create Service Account
+resource "nutanix_users_v2" "service_account" {
+  username = "service_account_terraform_example"
+  description = "service account tf"
+  email_id = "terraform_plugin@domain.com"
+  user_type = "SERVICE_ACCOUNT"
+}
+
+# Get Service Account using the ext_id
+data "nutanix_user_v2" "get_service_account" {
+	ext_id = nutanix_users_v2.service_account.id
+}
+
+# Get list of Service Accounts with Filter
+data "nutanix_users_v2" "list_service_account" {
+	filter = "userType eq Schema.Enums.UserType'SERVICE_ACCOUNT' and username contains '${nutanix_users_v2.service_account.username}'"
+}

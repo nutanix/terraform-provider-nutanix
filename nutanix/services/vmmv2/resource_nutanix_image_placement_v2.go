@@ -166,7 +166,7 @@ func ResourceNutanixImagePlacementV2Create(ctx context.Context, d *schema.Resour
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the ImagePlacement to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
@@ -320,7 +320,7 @@ func ResourceNutanixImagePlacementV2Update(ctx context.Context, d *schema.Resour
 		taskconn := meta.(*conns.Client).PrismAPI
 		// Wait for the ImagePlacement to be available
 		stateConf := &resource.StateChangeConf{
-			Pending: []string{"PENDING", "RUNNING"},
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 			Target:  []string{"SUCCEEDED"},
 			Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 			Timeout: d.Timeout(schema.TimeoutCreate),
@@ -364,7 +364,7 @@ func suspendAction(ctx context.Context, conn *vmm.Client, d *schema.ResourceData
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the ImagePlacement to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
@@ -407,7 +407,7 @@ func resumeAction(ctx context.Context, conn *vmm.Client, d *schema.ResourceData,
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the ImagePlacement to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
@@ -449,7 +449,7 @@ func ResourceNutanixImagePlacementV2Delete(ctx context.Context, d *schema.Resour
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the ImagePlacement to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
