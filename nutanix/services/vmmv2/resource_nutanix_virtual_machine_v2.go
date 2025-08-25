@@ -1391,6 +1391,11 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"links": schemaForLinks(),
 		},
 	}
 }
@@ -1767,6 +1772,15 @@ func ResourceNutanixVirtualMachineV2Read(ctx context.Context, d *schema.Resource
 
 	getResp := resp.Data.GetValue().(config.Vm)
 
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("links", flattenAPILink(getResp.Links)); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("name", getResp.Name); err != nil {
 		return diag.FromErr(err)
 	}
