@@ -9,22 +9,23 @@ jobs:
     if: github.event_name == 'repository_dispatch'
     steps:
       - name: Trigger Event
-        run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+        run: |
+          echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
 
       - name: Runner Info
-        run: echo "🐧 This job is now running on runner: $RUNNER_NAME (OS: ${{ runner.os }})"
+        run: |
+          echo "🐧 This job is now running on runner: $RUNNER_NAME (OS: ${{ runner.os }})"
 
       - name: Pull Request Info
         run: |
           echo "your repository is ${{ github.repository }}."
           echo "PR Number: ${{ github.event.client_payload.pull_request.number }}"
-          echo "PR Title: ${{ github.event.client_payload.pull_request.title }}"
           echo "Branch Name: ${{ github.event.client_payload.pull_request.head.ref }}"
 
       - name: Check out repository code
         uses: actions/checkout@v4
         with:
-          ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
+          ref: "refs/pull/${{ github.event.client_payload.pull_request.number }}/merge"
 
       - name: Remove Cached Go Versions
         run: |
@@ -36,9 +37,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
-          check-latest: true  # Ensures the latest patch of Go 1.20 is installed
-          cache: true  # Enables module caching
+          go-version: "1.20"
+          check-latest: true # Ensures the latest patch of Go 1.20 is installed
+          cache: true # Enables module caching
 
       - name: Verify Go Installation
         run: |
@@ -64,16 +65,30 @@ jobs:
           go mod tidy
           go mod vendor
 
-      - name: Install unzip and sshpass
+      - name: Install unzip and sshpass and curl
         run: |
-          sudo apt-get update && sudo apt-get install -y unzip sshpass
+          sudo apt update && sudo apt upgrade -y
+          sudo apt install unzip sshpass curl -y
+
+          # Remove any existing AWS CLI installation
+          sudo rm -rf /usr/local/aws-cli
+          sudo rm -f /usr/bin/aws
+          sudo rm -f /usr/bin/aws_completer
+
+          # Download and install latest AWS CLI v2
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install --update
+
+          # Verify installation
+          aws --version
 
       - name: Setup Terraform v1.10.5
         run: |
           set -e  # Exit on error
           TERRAFORM_VERSION="1.10.5"
           curl -fsSL -o terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
-          
+
           if [ ! -f terraform.zip ]; then
             echo "Terraform zip file not found!"
             exit 1
@@ -86,199 +101,251 @@ jobs:
 
       - name: Set environment variables
         run: |
-            echo "NUTANIX_PE_PASSWORD=${{ secrets.NUTANIX_PE_PASSWORD }}" >> $GITHUB_ENV
-            echo "NUTANIX_PE_USERNAME=${{ secrets.NUTANIX_PE_USERNAME }}" >> $GITHUB_ENV
-            echo "NUTANIX_USERNAME=${{ secrets.NUTANIX_USERNAME }}" >> $GITHUB_ENV
-            echo "NUTANIX_PASSWORD=${{ secrets.NUTANIX_PASSWORD }}" >> $GITHUB_ENV
-            echo "NUTANIX_INSECURE=${{ secrets.NUTANIX_INSECURE }}" >> $GITHUB_ENV
-            echo "NUTANIX_PORT=${{ secrets.NUTANIX_PORT }}" >> $GITHUB_ENV
-            echo "NUTANIX_ENDPOINT=${{ secrets.NUTANIX_ENDPOINT }}" >> $GITHUB_ENV
-            echo "NUTANIX_STORAGE_CONTAINER=${{ secrets.NUTANIX_STORAGE_CONTAINER }}" >> $GITHUB_ENV
-            echo "FOUNDATION_ENDPOINT=${{ secrets.FOUNDATION_ENDPOINT }}" >> $GITHUB_ENV
-            echo "FOUNDATION_PORT=${{ secrets.FOUNDATION_PORT }}" >> $GITHUB_ENV
-            echo "NOS_IMAGE_TEST_URL=${{ secrets.NOS_IMAGE_TEST_URL }}" >> $GITHUB_ENV
-            echo "NDB_ENDPOINT=${{ secrets.NDB_ENDPOINT }}" >> $GITHUB_ENV
-            echo "NDB_PASSWORD=${{ secrets.NDB_PASSWORD }}" >> $GITHUB_ENV
-            echo "NDB_USERNAME=${{ secrets.NDB_USERNAME }}" >> $GITHUB_ENV
-            echo "PROTECTION_RULES_TEST_FLAG=${{ secrets.PROTECTION_RULES_TEST_FLAG }}" >> $GITHUB_ENV
-            echo "CGO_ENABLED=${{ secrets.CGO_ENABLED }}" >> $GITHUB_ENV
+          echo "NUTANIX_PE_PASSWORD=${{ secrets.NUTANIX_PE_PASSWORD }}" >> $GITHUB_ENV
+          echo "NUTANIX_PE_USERNAME=${{ secrets.NUTANIX_PE_USERNAME }}" >> $GITHUB_ENV
+          echo "NUTANIX_USERNAME=${{ secrets.NUTANIX_USERNAME }}" >> $GITHUB_ENV
+          echo "NUTANIX_PASSWORD=${{ secrets.NUTANIX_PASSWORD }}" >> $GITHUB_ENV
+          echo "NUTANIX_INSECURE=${{ secrets.NUTANIX_INSECURE }}" >> $GITHUB_ENV
+          echo "NUTANIX_PORT=${{ secrets.NUTANIX_PORT }}" >> $GITHUB_ENV
+          echo "NUTANIX_ENDPOINT=${{ secrets.NUTANIX_ENDPOINT }}" >> $GITHUB_ENV
+          echo "NUTANIX_STORAGE_CONTAINER=${{ secrets.NUTANIX_STORAGE_CONTAINER }}" >> $GITHUB_ENV
+          echo "FOUNDATION_ENDPOINT=${{ secrets.FOUNDATION_ENDPOINT }}" >> $GITHUB_ENV
+          echo "FOUNDATION_PORT=${{ secrets.FOUNDATION_PORT }}" >> $GITHUB_ENV
+          echo "NOS_IMAGE_TEST_URL=${{ secrets.NOS_IMAGE_TEST_URL }}" >> $GITHUB_ENV
+          echo "NDB_ENDPOINT=${{ secrets.NDB_ENDPOINT }}" >> $GITHUB_ENV
+          echo "NDB_PASSWORD=${{ secrets.NDB_PASSWORD }}" >> $GITHUB_ENV
+          echo "NDB_USERNAME=${{ secrets.NDB_USERNAME }}" >> $GITHUB_ENV
+          echo "PROTECTION_RULES_TEST_FLAG=${{ secrets.PROTECTION_RULES_TEST_FLAG }}" >> $GITHUB_ENV
+          echo "CGO_ENABLED=${{ secrets.CGO_ENABLED }}" >> $GITHUB_ENV
 
       - name: Check gofmt
         run: |
-            echo "==> Checking that code complies with gofmt requirements..."
-            gofmt_files=$(gofmt -l `find . -name '*.go' | grep -v vendor`)
-            if [[ -n ${gofmt_files} ]]; then
-                echo 'gofmt needs running on the following files:'
-                echo "${gofmt_files}"
-                echo "You can use the command: \`make fmt\` to reformat code."
-                exit 1
-            else
-                echo "No gofmt issues found."
-            fi
+          echo "==> Checking that code complies with gofmt requirements..."
+          gofmt_files=$(gofmt -l `find . -name '*.go' | grep -v vendor`)
+          if [[ -n ${gofmt_files} ]]; then
+              echo 'gofmt needs running on the following files:'
+              echo "${gofmt_files}"
+              echo "You can use the command: \`make fmt\` to reformat code."
+              exit 1
+          else
+              echo "No gofmt issues found."
+          fi
         continue-on-error: true
 
       - name: Acceptance test cases
+        id: test-execution
         run: |
-              args="${{ github.event.client_payload.slash_command.args }}"
-              providers=(${args})
-              index=0
-              n=${#providers[@]}
-              runFlag=""
-              for provider in $args
-              do 
-                  if [ "$provider" = "foundation" ]
-                      then 
-                          runFlag+="TestAccFoundation*"
-                  elif [ "$provider" = "foundation_central" ]
-                      then
-                          runFlag+="TestAccFC*"
-                  elif [ "$provider" = "karbon" ]
-                      then
-                          runFlag+="TestAccKarbon*"
-                  elif [ "$provider" = "v3" ]
-                      then
-                          runFlag+="TestAccNutanix*"
-                  elif [ "$provider" = "v4" ]
-                      then
-                          runFlag+="TestAccV2Nutanix*"
-                  elif [ "$provider" = "lcm" ]
-                      then
-                          runFlag+="TestAccV2NutanixLcm*"
-                  elif [ "$provider" = "era" ]
-                      then
-                          runFlag+="TestAccEra*"
-                  else
-                      echo "running individual testcase/package"
-                      runFlag+="$provider"
-                  fi
-                  if [ $index -lt $((n-1)) ]
-                      then
-                          runFlag+="|"
-                  fi
-                  index=$((index+1))
-              done
-              export TESTARGS="-run=${runFlag}"
-              echo "TESTARGS = $TESTARGS"
-              echo "==> Setup Foundation Config"
-              echo '${{ secrets.FOUNDATION_CONFIG }}' > test_foundation_config.json
-              echo "==> Setup PC Config"
-              echo '${{ secrets.PC_CONFIG }}' > test_config.json
-              echo "==> Setup V4 Config"
-              echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
-              echo "==> Running testcases..."
-              TF_LOG="ERROR" TF_ACC=1  GOTRACEBACK=all go test ./... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count | tee test_output.log
-              
-              set +e  # Ignore failures
-
-              # Ensure log file exists
-              if [ ! -f test_output.log ]; then
-                  echo "Error: test_output.log not found!"
-                  exit 0  # Ignore missing file instead of failing
-              fi
-
-              # Extract total test cases executed safely
-              TOTAL_RUN=$(grep -c '^=== RUN' test_output.log || echo 0)
-              TOTAL_PASSED=$(grep -c '^--- PASS' test_output.log || echo 0)
-              TOTAL_FAILED=$(grep -c '^--- FAIL' test_output.log || echo 0)
-              TOTAL_SKIPPED=$(grep -c '^--- SKIP' test_output.log || echo 0)
-
-              # Calculate percentages safely
-              if [ "$TOTAL_RUN" -gt 0 ]; then
-                  PASS_PERCENT=$((TOTAL_PASSED * 100 / TOTAL_RUN))
-                  FAIL_PERCENT=$((TOTAL_FAILED * 100 / TOTAL_RUN))
-                  SKIP_PERCENT=$((TOTAL_SKIPPED * 100 / TOTAL_RUN))
+          echo "tests_executed=tests_execution_not_successful" >> $GITHUB_OUTPUT
+          args="${{ github.event.client_payload.slash_command.args }}"
+          providers=(${args})
+          index=0
+          n=${#providers[@]}
+          runFlag=""
+          for provider in $args
+          do
+              if [ "$provider" = "foundation" ]
+                  then
+                      runFlag+="TestAccFoundation*"
+              elif [ "$provider" = "foundation_central" ]
+                  then
+                      runFlag+="TestAccFC*"
+              elif [ "$provider" = "karbon" ]
+                  then
+                      runFlag+="TestAccKarbon*"
+              elif [ "$provider" = "v3" ]
+                  then
+                      runFlag+="TestAccNutanix*"
+              elif [ "$provider" = "v4" ]
+                  then
+                      runFlag+="TestAccV2Nutanix*"
+              elif [ "$provider" = "lcm" ]
+                  then
+                      runFlag+="TestAccV2NutanixLcm*"
+              elif [ "$provider" = "era" ]
+                  then
+                      runFlag+="TestAccEra*"
               else
-                  PASS_PERCENT=0
-                  FAIL_PERCENT=0
-                  SKIP_PERCENT=0
+                  echo "running individual testcase/package"
+                  runFlag+="$provider"
               fi
+              if [ $index -lt $((n-1)) ]
+                  then
+                      runFlag+="|"
+              fi
+              index=$((index+1))
+          done
+          export TESTARGS="-run=${runFlag}"
+          echo "TESTARGS = $TESTARGS"
+          echo "==> Setup Foundation Config"
+          echo '${{ secrets.FOUNDATION_CONFIG }}' > test_foundation_config.json
+          echo "==> Setup PC Config"
+          echo '${{ secrets.PC_CONFIG }}' > test_config.json
+          echo "==> Setup V4 Config"
+          echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
+          echo "==> Running testcases..."
+          TF_LOG="ERROR" TF_ACC=1  GOTRACEBACK=all go test ./... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count | tee test_output.log
 
-              echo "==================================================🧪 TEST SUMMARY 🧪================================================================================="
-              echo "Total Test Cases Run 🐹🚀: $TOTAL_RUN"
-              echo "Total Test Cases Passed 🐹✅: $TOTAL_PASSED ($PASS_PERCENT %)" 
-              echo "Total Test Cases Failed 🐹❌: $TOTAL_FAILED ($FAIL_PERCENT %)"
-              echo "Total Test Cases Skipped 🐹⚠️: $TOTAL_SKIPPED ($SKIP_PERCENT %)"
-              echo "=================================================================================================================================================="
+          set +e  # Ignore failures
 
-              echo "================================================== TESTS SUCCEEDED ✅ ============================================================================="
+          # Ensure log file exists
+          if [ ! -f test_output.log ]; then
+              echo "Error: test_output.log not found!"
+              exit 1  # Ignore missing file instead of failing
+          fi
+
+          # Extract total test cases executed safely
+          TOTAL_RUN=$(grep -c '^=== RUN' test_output.log)
+          if [ "$TOTAL_RUN" -eq 0 ]; then
+              echo "No test cases executed. Exiting..."
+              exit 1
+          fi
+
+          # Extract counts of passed, failed, and skipped tests
+          TOTAL_PASSED=$(grep -c '^--- PASS' test_output.log)
+          TOTAL_FAILED=$(grep -c '^--- FAIL' test_output.log)
+          TOTAL_SKIPPED=$(grep -c '^--- SKIP' test_output.log)
+
+          # Set output as successful for GitHub Actions which will be used in subsequent steps, Set only if tests were executed
+          echo "tests_executed=tests_execution_successful" >> $GITHUB_OUTPUT
+
+          # Calculate percentages safely
+          PASS_PERCENT=0
+          FAIL_PERCENT=0
+          SKIP_PERCENT=0
+          if [ "$TOTAL_RUN" -gt 0 ]; then
               if [ "$TOTAL_PASSED" -gt 0 ]; then
-                  echo ""
-                  grep '^--- PASS' test_output.log | awk '{print "✅ " $3}' || true
+                  PASS_PERCENT=$((TOTAL_PASSED * 100 / TOTAL_RUN))
               fi
-
-              echo "==================================================================================================================================================="
-              echo "================================================== TESTS FAILED ❌ ================================================================================"
               if [ "$TOTAL_FAILED" -gt 0 ]; then
-                  echo ""
-                  grep '^--- FAIL' test_output.log | awk '{print "❌ " $3}' || true
+                  FAIL_PERCENT=$((TOTAL_FAILED * 100 / TOTAL_RUN))
               fi
-
-              echo "==================================================================================================================================================="
-              echo "================================================== TESTS SKIPPED ⚠️ =============================================================================="
               if [ "$TOTAL_SKIPPED" -gt 0 ]; then
-                  awk '
-                    /^=== RUN/ { testname=$3; reason="No reason provided" }
-                    /--- SKIP/ { print "⚠️ " testname "   : Reason: ➡️ :  " reason }
-                    /^[[:space:]]+/ { reason=$0 }' test_output.log || true
+                  SKIP_PERCENT=$((TOTAL_SKIPPED * 100 / TOTAL_RUN))
               fi
+          fi
 
-              echo "==================================================================================================================================================="
-              if [ "$TOTAL_FAILED" -gt 0 ]; then
-                  echo ""
-                  echo "================== FAILURE DETAILS OF TESTCASES EXECUTED ==============================================================================================="
-                  grep '^=== RUN' test_output.log | awk '{print $3}' | while read -r test; do
-                      if grep -q "^--- FAIL: $test" test_output.log; then
-                          echo "TESTCASE: $test"
-                          echo "========================================🔥🔥🔥🔥📝 TRACEBACK 📝🔥🔥🔥🔥 ======================================================================================="
-                          awk "/=== RUN   $test/,/--- FAIL: $test/" test_output.log | sed 's/^/    /' || true
-                          echo "==========================================================================================================================================================="
-                      fi
-                  done
-              fi
+          # Write summary to a file
+          {
+            echo "==================================================🧪 TEST SUMMARY 🧪================================================================================="
+            echo "Total Test Cases Run 🚀: $TOTAL_RUN"
+            echo "Total Test Cases Passed ✅: $TOTAL_PASSED ($PASS_PERCENT %)"
+            echo "Total Test Cases Failed ❌: $TOTAL_FAILED ($FAIL_PERCENT %)"
+            echo "Total Test Cases Skipped ⚠️: $TOTAL_SKIPPED ($SKIP_PERCENT %)"
+            echo "=================================================================================================================================================="
+            echo ""
+            echo "================================================== TESTS SUCCEEDED ✅ ============================================================================="
+            if [ "$TOTAL_PASSED" -gt 0 ]; then
+                echo ""
+                grep '^--- PASS' test_output.log | awk '{print "✅ " $3}' || true
+            else
+                echo "No tests passed 😞❗"
+            fi
+            echo "==================================================================================================================================================="
+            echo ""
+            echo "================================================== TESTS FAILED ❌ ================================================================================"
+            if [ "$TOTAL_FAILED" -gt 0 ]; then
+                echo ""
+                grep '^--- FAIL' test_output.log | awk '{print "❌ " $3}' || true
+            else
+                echo "🎉💃 No tests failed 🕺🎉"
+            fi
+            echo "==================================================================================================================================================="
+            echo ""
+            echo "================================================== TESTS SKIPPED ⚠️ =============================================================================="
+            if [ "$TOTAL_SKIPPED" -gt 0 ]; then
+                awk '
+                  /^=== RUN/ { testname=$3; reason="No reason provided" }
+                  /--- SKIP/ { print "⚠️ " testname "   : Reason: ➡️ :  " reason }
+                  /^[[:space:]]+/ { reason=$0 }' test_output.log || true
+            else
+                echo "🎉💃 No tests skipped 🕺🎉"
+            fi
+            echo "==================================================================================================================================================="
+            echo ""
 
-              echo "Tests Execution is done, please debug if any failures"
+          } > test_summary.txt
+          echo "TEST_SUMMARY_FILE=test_summary.txt" >> $GITHUB_ENV
 
-              # 🔁 This now ensures the stage fails if tests fail
-              if [ "$TOTAL_FAILED" -gt 0 ]; then
-                  exit 1
-              else
-                  exit 0
-              fi
-        continue-on-error: true
+          # Write to GitHub output for PR comment
+          {
+            echo "summary_content<<EOF"
+            cat test_summary.txt
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
+
+          if [ "$TOTAL_FAILED" -gt 0 ]; then
+              echo ""
+              echo "================== FAILURE DETAILS OF TESTCASES EXECUTED ==============================================================================================="
+              grep '^=== RUN' test_output.log | awk '{print $3}' | while read -r test; do
+                  if grep -q "^--- FAIL: $test" test_output.log; then
+                      echo "TESTCASE: $test"
+                      echo "========================================🔥🔥🔥🔥📝 TRACEBACK 📝🔥🔥🔥🔥 ======================================================================================="
+                      awk "/=== RUN   $test/,/--- FAIL: $test/" test_output.log | sed 's/^/    /' || true
+                      echo "==========================================================================================================================================================="
+                      echo ""
+                  fi
+              done
+          fi
+
+          echo "Tests Execution is done, please debug if any failures"
+
+          # 🔁 This now ensures the stage fails if tests fail
+          if [ "$TOTAL_FAILED" -gt 0 ]; then
+              echo "Making the stage fail due to test failures."
+              exit 1
+          else
+              exit 0
+          fi
+
+      # Code Coverage Check only if tests executed successfully
       - name: Code Coverage Check
-        if: ${{ always() }}
-        run:  |
-              echo "Code coverage: Checking if code coverage is above threshold..."
-              export TESTCOV_THRESHOLD=50
-              echo "Threshold: $TESTCOV_THRESHOLD %"
-              totalCoverage=`go tool cover -func=c.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
-              echo "Current test coverage : $totalCoverage %"
-              if (( $(echo "$totalCoverage $TESTCOV_THRESHOLD" | awk '{print ($1 > $2)}') )); then
-                  echo "CODE_COVERAGE_OUTPUT=Line code coverage is $totalCoverage" >> $GITHUB_ENV
-                  echo "Line coverage is $totalCoverage"
-              else
-                  echo "CODE_COVERAGE_OUTPUT=Current line coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD). Kindly add more acceptance tests." >> $GITHUB_ENV
-                  echo "Current coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD)."
-              fi
+        if: ${{ always() && steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
+        run: |
+          echo "Code coverage: Checking if code coverage is above threshold..."
+          export TESTCOV_THRESHOLD=50
+          echo "Threshold: $TESTCOV_THRESHOLD %"
+          totalCoverage=`go tool cover -func=c.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
+          echo "Current test coverage : $totalCoverage %"
+          if (( $(echo "$totalCoverage $TESTCOV_THRESHOLD" | awk '{print ($1 > $2)}') )); then
+              echo "CODE_COVERAGE_OUTPUT=Line code coverage is $totalCoverage" >> $GITHUB_ENV
+              echo "Line coverage is $totalCoverage"
+          else
+              echo "CODE_COVERAGE_OUTPUT=Current line coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD). Kindly add more acceptance tests." >> $GITHUB_ENV
+              echo "Current coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD)."
+          fi
 
-      # Update the comment back
-      - name: Update comment
-        uses: peter-evans/create-or-update-comment@v1
-        if: ${{ always() }}
+      # Post build status along with test summary as a comment only if tests executed successfully
+      - name: Post build status and test summary
+        if: ${{ always() && steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
+        uses: peter-evans/create-or-update-comment@v4
         with:
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           body: |
-            ```
-            Acceptance test run status: ${{ job.status }}
-            **📌 [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**
-            ${{ env.CODE_COVERAGE_OUTPUT }}
-
+            - 🧪 **`Build Status: `** `${{ job.status }}`
+            - 📌 **`GitHub Action: `** [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - 📊 **`Code Coverage: `** `${{ env.CODE_COVERAGE_OUTPUT }}`
+            - 📝 **`Test Summary: `**
+            ```txt
+            ${{ steps.test-execution.outputs.summary_content }}
             ```
           reaction-type: hooray
 
+      # Post only Build Status and workflow info as Comment if tests execution is not successful
+      - name: Post build status and workflow info
+        if: ${{ always() && (steps.test-execution.outputs.tests_executed == 'tests_execution_not_successful' || !steps.test-execution.outputs.tests_executed) }}
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
+          body: |
+            - 🧪 **`Build Status: `** `${{ job.status }}`
+            - 📌 **`GitHub Action: `** [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - ℹ️ **`Tests were not successfully executed, so no summary is available.`**
+
+          reaction-type: confused
+
       # Print job status
-      - name: Print job status
+      - name: Workflow Status
         if: ${{ always() }}
         run: |
           STATUS="${{ job.status }}"
@@ -287,3 +354,20 @@ jobs:
           else
             echo "Job Status: $STATUS ✅"
           fi
+
+      - name: Debugging Information
+        if: always()
+        env:
+          TESTS_EXECUTED: ${{ steps.test-execution.outputs.tests_executed }}
+        run: |
+          echo "Debugging information:"
+          echo "tests_executed: $TESTS_EXECUTED"
+
+          echo "GITHUB_ENV content:"
+          cat "$GITHUB_ENV"
+
+          echo "GITHUB_OUTPUT content:"
+          cat "$GITHUB_OUTPUT" || echo "GITHUB_OUTPUT not found"
+
+          echo "Test summary file content:"
+          cat test_summary.txt || echo "No test summary file found."

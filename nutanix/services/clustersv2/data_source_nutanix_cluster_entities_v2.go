@@ -141,6 +141,9 @@ func flattenClusterEntities(pr []import1.Cluster) []interface{} {
 			cls["vm_count"] = v.VmCount
 			cls["inefficient_vm_count"] = v.InefficientVmCount
 			cls["container_name"] = v.ContainerName
+			cls["categories"] = v.Categories
+			cls["cluster_profile_ext_id"] = v.ClusterProfileExtId
+			cls["backup_eligibility_score"] = v.BackupEligibilityScore
 
 			clsList[k] = cls
 		}
