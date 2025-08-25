@@ -11,6 +11,8 @@ description: |-
 Create an image using the provided request body. Name, type and source are mandatory fields to create an image.
 
 
+## Example
+
 ```hcl
 
 resource "nutanix_images_v2" "img-1" {
