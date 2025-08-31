@@ -1,3 +1,10 @@
+## 2.2.2 (September 1, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.2.1...v2.2.2)
+
+**Fixed bugs:**
+- nutanix_clusters_v2 not returning associated categories [\#907](https://github.com/nutanix/terraform-provider-nutanix/issues/907)
+
+
 ## 2.2.1 (June 30, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.2.0...v2.2.1)
 
@@ -61,7 +68,7 @@
 ## 2.1.0 (April 07, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.0.0...v2.1.0)
 
-All new features are v4 SDKs based. 
+All new features are v4 SDKs based.
 
 **New Feature:**
 - Prism [\#815](https://github.com/nutanix/terraform-provider-nutanix/issues/815)
@@ -109,7 +116,7 @@ All new features are v4 SDKs based.
 ## 2.0.0 (January 07, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.9.5...v2.0.0)
 
-All new features are v4 SDKs based. 
+All new features are v4 SDKs based.
 
 **New Feature:**
 - Cluster Management [\#704](https://github.com/nutanix/terraform-provider-nutanix/issues/704)
@@ -260,7 +267,7 @@ All new features are v4 SDKs based.
 
 **New Feature:**
 - Add support for new Karbon features. [\#290](https://github.com/nutanix/terraform-provider-nutanix/issues/290)
-    
+
     New Resource :
     - nutanix_karbon_worker_nodepool
 
@@ -305,7 +312,7 @@ All new features are v4 SDKs based.
 - lcm_config should be Set without plugin crash in clone resource. [\#583](https://github.com/nutanix/terraform-provider-nutanix/issues/583)
 
 **Closed issues:**
-- NDB datasource for network available ips. [\#569](https://github.com/nutanix/terraform-provider-nutanix/issues/569) 
+- NDB datasource for network available ips. [\#569](https://github.com/nutanix/terraform-provider-nutanix/issues/569)
 - Support for adding import on ndb day2 actions. [\#582](https://github.com/nutanix/terraform-provider-nutanix/issues/582)
 - How to configure IP address for Nutanix Packer images. [\#576](https://github.com/nutanix/terraform-provider-nutanix/issues/576)
 
@@ -337,7 +344,7 @@ All new features are v4 SDKs based.
     - nutanix_ndb_networks
     - nutanix_ndb_dbserver
     - nutanix_ndb_dbservers
-    
+
 
 ## 1.8.0-beta-2 (Jan 20, 2023)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.8.0-beta.1...v1.8.0-beta.2)
@@ -373,7 +380,7 @@ All new features are v4 SDKs based.
  - Support for HA instance in nutanix_ndb_database resource. [\#518](https://github.com/nutanix/terraform-provider-nutanix/pull/518)
  - Improving the error when server is unreachable. [\#530](https://github.com/nutanix/terraform-provider-nutanix/pull/530)
  - Fetching of database based on database_type filter [\#513](https://github.com/nutanix/terraform-provider-nutanix/pull/513)
- - Support of Tags and Maintainence Window in provisioning [\#528](https://github.com/nutanix/terraform-provider-nutanix/pull/528) 
+ - Support of Tags and Maintainence Window in provisioning [\#528](https://github.com/nutanix/terraform-provider-nutanix/pull/528)
 
 
 ## 1.8.0-beta.1 (Oct 12, 2022)
@@ -432,7 +439,7 @@ All new features are v4 SDKs based.
 
 **Fixed bugs:**
 
-- Terraform provider crashes when using guest_customization_sysprep_custom_key_values [\#441] (https://github.com/nutanix/terraform-provider-nutanix/issues/441) 
+- Terraform provider crashes when using guest_customization_sysprep_custom_key_values [\#441] (https://github.com/nutanix/terraform-provider-nutanix/issues/441)
 - Nutanix terraform- Karbon clusters, the storage_class_config is not been displayed. [\#417] (https://github.com/nutanix/terraform-provider-nutanix/issues/417)
 - Checksum is not considered while uploading image from local using nutanix_image resource. [\#469] (https://github.com/nutanix/terraform-provider-nutanix/issues/469)
 - Not able to update image_type of PC image [\#454] (https://github.com/nutanix/terraform-provider-nutanix/issues/454)
@@ -441,7 +448,7 @@ All new features are v4 SDKs based.
 **Closed issues:**
 
 - Support for User Groups [\#475] (https://github.com/nutanix/terraform-provider-nutanix/issues/475)
-- Resizing disk identified in plan, but not actually done during apply [\#463] (https://github.com/nutanix/terraform-provider-nutanix/issues/463) 
+- Resizing disk identified in plan, but not actually done during apply [\#463] (https://github.com/nutanix/terraform-provider-nutanix/issues/463)
 - uuid of address_groups are not available [\#461] (https://github.com/nutanix/terraform-provider-nutanix/issues/461)
 - ntx provider have ENTITY_READ_ERROR when try to recreate a VM deleted manually [\#451] (https://github.com/nutanix/terraform-provider-nutanix/issues/451)
 - Allow project definiation by name and not just ID [\#406] (https://github.com/nutanix/terraform-provider-nutanix/issues/406)
@@ -499,7 +506,7 @@ All new features are v4 SDKs based.
 - Foundation Acceptance tests and minor fixes [\#436](https://github.com/nutanix/terraform-provider-nutanix/pull/436) ([bhatipradeep](https://github.com/bhatipradeep))
 - Foundation Central unit tests and acceptance tests [\#439](https://github.com/nutanix/terraform-provider-nutanix/pull/439) ([abhimutant](https://github.com/abhimutant))
 - Optimize Image upload to avoid buffering. Add cluster related fields in image upload resource & data source for PC [\#432](https://github.com/nutanix/terraform-provider-nutanix/pull/432) ([bhatipradeep](https://github.com/bhatipradeep))
-- fixing karbon docs at registry [\#434](https://github.com/nutanix/terraform-provider-nutanix/pull/434)([abhimutant](https://github.com/abhimutant)) 
+- fixing karbon docs at registry [\#434](https://github.com/nutanix/terraform-provider-nutanix/pull/434)([abhimutant](https://github.com/abhimutant))
 - Example for using config downloaded from install.nutanix.com to image nodes[\#444](https://github.com/nutanix/terraform-provider-nutanix/pull/444) ([bhatipradeep](https://github.com/bhatipradeep))
 - Add example to pull secrets from hashicorp vault to use them in node imaging [\#431](https://github.com/nutanix/terraform-provider-nutanix/pull/431) ([bhatipradeep](https://github.com/bhatipradeep))
 
@@ -536,12 +543,12 @@ All new features are v4 SDKs based.
     -   nutanix_foundation_central_cluster_details
     -   nutanix_foundation_central_imaged_node_details
 
-    
+
     New Resources :
     -   nutanix_foundation_central_image_cluster
     -   nutanix_foundation_central_api_keys
 
-    New Modules : 
+    New Modules :
     -   aos-based-node-imaging/node-serials-filter
     -   manual-mode-imaging
 
@@ -559,13 +566,13 @@ All new features are v4 SDKs based.
     -   nutanix_foundation_hypervisor_isos
     -   nutanix_foundation_discover_nodes
     -   nutanix_foundation_node_network_details
-    
+
     New Resources :
     -   nutanix_foundation_image_nodes
     -   nutanix_foundation_ipmi_config
     -   nutanix_foundation_image
 
-    New Modules : 
+    New Modules :
     -   aos-based-node-imaging/node-serials-filter
     -   discover-nodes-network-details/node-serials-filter
     -   manual-mode-imaging
