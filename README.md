@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Cloud Platform.
 
-NOTE: The latest version of the Nutanix provider is [v2.2.1](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.2.1).
+NOTE: The latest version of the Nutanix provider is [v2.2.2](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.2.2).
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 
@@ -22,19 +22,24 @@ Modules based on Terraform Nutanix Provider can be found here : [Modules](https:
 * [Go](https://golang.org/doc/install) 1.17+ (to build the provider plugin)
 * This provider uses [SDKv2](https://www.terraform.io/plugin/sdkv2/sdkv2-intro) from release 1.3.0
 
+### Introducing Nutanix Terraform Provider Version 2.2.2
+We're excited to announce the release of Nutanix Terraform Provider Version 2.2.2! This update brings significant enhancements and bug fixes to your infrastructure management experience:
+
+- This is a minor release that includes enhancements and bug fixes, aimed at improving stability and reliability.
+
 ### Introducing Nutanix Terraform Provider Version 2.2.1
 We're excited to announce the release of Nutanix Terraform Provider Version 2.2.1! This update brings significant enhancements and bug fixes to your infrastructure management experience:
- 
+
 - This is a minor release that includes enhancements and bug fixes, aimed at improving stability and reliability.
 
 ### Introducing Nutanix Terraform Provider Version 2.2.0
 We're excited to announce the release of Nutanix Terraform Provider Version 2.2.0! This major update brings significant improvements to your infrastructure management experience:
- 
+
 - It will allow you to interact with Self Service API. With this new plugin support you will be able to launch a Single VM Blueprint to create an Application in Self Service and perform some Day 2 actions like updating application, creating snapshot/restore etc.
 
 ### Introducing Nutanix Terraform Provider Version 2.1.0
 We're excited to announce the release of Nutanix Terraform Provider Version 2.1.0! This major update brings significant improvements to your infrastructure management experience:
- 
+
 - Built on the latest v4 APIs/SDKs: Leveraging the power of Nutanix v4 APIs/SDKs, this version offers enhanced functionality and better integration with the latest Nutanix features.
 - Expanded Resource Coverage:  Discover new resources and data sources, enabling you to model and manage a broader spectrum of Nutanix infrastructure components within your Terraform configurations.
 - <b>Version Suffix: Modules built based on v4 PC/PE GA sdks are marked with the *_v2 suffix.</b>
@@ -44,14 +49,15 @@ The provider is used to interact with the many resources and data sources suppor
 - Self Service version: 4.1.0 (Required only for running Self Service based resource and data source)
 - AOS Version: 7.0.1, 7.0 or later
 - Prism Central Version: pc2024.3, pc2024.3.1 or later
-- Nutanix Terraform Provider Version: 2.2.0
+- Nutanix Terraform Provider Version: 2.2.2
 
 
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
+| 2.2.2 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
-| 2.2.0 | | | Self Service v4.1.0 | yes | 
+| 2.2.0 | | | Self Service v4.1.0 | yes |
 | 2.1.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.1.0 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.0.0 | 7.0 | pc2024.3 or later  | ndb v2.7, nke v2.8, foundation v5.7 | Yes |
@@ -380,7 +386,7 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 
 
 
-## Developing the provider 
+## Developing the provider
 
 The Nutanix Provider for Terraform is the work of many contributors. We appreciate your help!
 
@@ -392,7 +398,7 @@ The Nutanix Provider for Terraform is the work of many contributors. We apprecia
 
 -> **Note:** We now have a brand new developer-centric Support Program designed for organizations that require a deeper level of developer support to manage their Nutanix environment and build applications quickly and efficiently. As part of this new Advanced API/SDK Support Program, you will get access to trusted technical advisors who specialize in developer tools including Nutanix Terraform Provider and receive support for your unique development needs and custom integration queries. Visit our Support Portal - [Premium Add-On Support Programs](https://www.nutanix.com/support-services/product-support/premium-support-programs) to learn more about this program.
 
-Customers not taking advantage of the  Advanced API/SDK Support Program will continue to receive the support through our standard, community-supported model. This community model also provides support for contributions to the open-sourceNutanix Terraform Provider repository .Visit https://portal.nutanix.com/kb/13424   for more details. 
+Customers not taking advantage of the  Advanced API/SDK Support Program will continue to receive the support through our standard, community-supported model. This community model also provides support for contributions to the open-sourceNutanix Terraform Provider repository .Visit https://portal.nutanix.com/kb/13424   for more details.
 
 
 ## Community

@@ -12,19 +12,25 @@ The provider is used to interact with the many resources and data sources suppor
 
 Use the navigation on the left to read about the available resources and data sources this provider can use.
 
+### Introducing Nutanix Terraform Provider Version 2.2.2
+We're excited to announce the release of Nutanix Terraform Provider Version 2.2.2! This update brings significant enhancements and bug fixes to your infrastructure management experience:
+
+- This is a minor release that includes enhancements and bug fixes, aimed at improving stability and reliability.
+
+
 ### Introducing Nutanix Terraform Provider Version 2.2.1
 We're excited to announce the release of Nutanix Terraform Provider Version 2.2.1! This update brings significant enhancements and bug fixes to your infrastructure management experience:
- 
+
 - This is a minor release that includes enhancements and bug fixes, aimed at improving stability and reliability.
 
 ### Introducing Nutanix Terraform Provider Version 2.2.0
 We're excited to announce the release of Nutanix Terraform Provider Version 2.2.0! This major update brings significant improvements to your infrastructure management experience:
- 
+
 - It will allow you to interact with Self Service API. With this new plugin support you will be able to launch a Single VM Blueprint to create an Application in Self Service and perform some Day 2 actions like updating application, creating snapshot/restore etc.
 
 ### Introducing Nutanix Terraform Provider Version 2.1.0
 We're excited to announce the release of Nutanix Terraform Provider Version 2.1.0! This major update brings significant improvements to your infrastructure management experience:
- 
+
 - Built on the latest v4 APIs/SDKs: Leveraging the power of Nutanix v4 APIs/SDKs, this version offers enhanced functionality and better integration with the latest Nutanix features.
 - Expanded Resource Coverage:  Discover new resources and data sources, enabling you to model and manage a broader spectrum of Nutanix infrastructure components within your Terraform configurations.
 - <b>Version Suffix: Modules built based on v4 PC/PE GA sdks are marked with the *_v2 suffix.</b>
@@ -35,13 +41,14 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.1.
 
 -> **Note:** We now have a brand new developer-centric Support Program designed for organizations that require a deeper level of developer support to manage their Nutanix environment and build applications quickly and efficiently. As part of this new Advanced API/SDK Support Program, you will get access to trusted technical advisors who specialize in developer tools including Nutanix Terraform Provider and receive support for your unique development needs and custom integration queries. Visit our Support Portal - [Premium Add-On Support Programs](https://www.nutanix.com/support-services/product-support/premium-support-programs) to learn more about this program.
 
-Customers not taking advantage of the  Advanced API/SDK Support Program will continue to receive the support through our standard, community-supported model. This community model also provides support for contributions to the open-sourceNutanix Terraform Provider repository .Visit https://portal.nutanix.com/kb/13424   for more details. 
+Customers not taking advantage of the  Advanced API/SDK Support Program will continue to receive the support through our standard, community-supported model. This community model also provides support for contributions to the open-sourceNutanix Terraform Provider repository .Visit https://portal.nutanix.com/kb/13424   for more details.
 
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
+| 2.2.2 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
-| 2.2.0 | | | Self Service  v4.1.0 | yes | 
+| 2.2.0 | | | Self Service  v4.1.0 | yes |
 | 2.1.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.1.0 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.0.0   |  7.0  | pc2024.3 or later  | ndb v2.7, nke v2.8, foundation v5.7 | Yes |
@@ -312,7 +319,7 @@ terraform {
   required_providers {
     nutanix = {
       source = "nutanix/nutanix"
-      version = "2.0.0"
+      version = "2.2.2"
     }
   }
 }
@@ -417,7 +424,7 @@ provider "nutanix" {
   port                = var.nutanix_port
   insecure            = true
   wait_timeout        = 10
-  ndb_endpoint        = var.ndb_endpoint 
+  ndb_endpoint        = var.ndb_endpoint
   ndb_username        = var.ndb_username
   ndb_password        = var.ndb_password
 }
@@ -427,9 +434,9 @@ NDB based examples : https://github.com/nutanix/terraform-provider-nutanix/blob/
 
 ## Provider configuration required details
 
-Going from 1.8.0-beta release of nutanix provider, fields inside provider configuration would be mandatory as per the usecase : 
+Going from 1.8.0-beta release of nutanix provider, fields inside provider configuration would be mandatory as per the usecase :
 
 * `Prism Central & Karbon` : For prism central and karbon related resources and data sources, `username`, `password` & `endpoint` are manadatory.
 * `Foundation` : For foundation related resources and data sources, `foundation_endpoint` in manadatory.
-* `NDB` : For Nutanix Database Service (NDB) related resources and data sources. 
+* `NDB` : For Nutanix Database Service (NDB) related resources and data sources.
 
