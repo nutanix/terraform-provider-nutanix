@@ -11,7 +11,7 @@ import (
 
 type Client struct {
 	KeyManagementServersAPIInstance *api.KeyManagementServersApi
-	STIGsApi                        *api.STIGsApi
+	STIGsAPI                        *api.STIGsApi
 }
 
 func NewSecurityClient(credentials client.Credentials) (*Client, error) {
@@ -37,7 +37,7 @@ func NewSecurityClient(credentials client.Credentials) (*Client, error) {
 
 	f := &Client{
 		KeyManagementServersAPIInstance: api.NewKeyManagementServersApi(baseClient),
-		STIGsApi:                        api.NewSTIGsApi(baseClient),
+		STIGsAPI:                        api.NewSTIGsApi(baseClient),
 	}
 
 	return f, nil
