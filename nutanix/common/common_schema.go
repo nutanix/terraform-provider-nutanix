@@ -3,7 +3,7 @@ package common
 import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 // schema
-func LinksSchema() *schema.Schema { 
+func LinksSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Computed: true,
