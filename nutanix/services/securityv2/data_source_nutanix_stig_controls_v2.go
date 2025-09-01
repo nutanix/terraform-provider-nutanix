@@ -139,7 +139,7 @@ func DatasourceNutanixStigsControlsV2Read(ctx context.Context, d *schema.Resourc
 		selectQ = nil
 	}
 
-	resp, err := conn.STIGsApi.ListStigs(page, limit, filter, orderBy, selectQ)
+	resp, err := conn.STIGsAPI.ListStigs(page, limit, filter, orderBy, selectQ)
 	if err != nil {
 		return diag.Errorf("error while fetching STIGs : %v", err)
 	}
