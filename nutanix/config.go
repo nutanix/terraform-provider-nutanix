@@ -15,6 +15,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/dataprotection"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/lcm"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/licensing"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/microseg"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/objectstores"
@@ -131,6 +132,10 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	LicensingClient, err := licensing.NewLicensingClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 	return &Client{
 		WaitTimeout:         c.WaitTimeout,
 		API:                 v3Client,
@@ -150,6 +155,7 @@ func (c *Config) Client() (*Client, error) {
 		LcmAPI:              LcmClient,
 		CalmAPI:             calmClient,
 		ObjectStoreAPI:      ObjectStoreClient,
+		LicensingAPI:        LicensingClient,
 	}, nil
 }
 
@@ -173,4 +179,5 @@ type Client struct {
 	LcmAPI              *lcm.Client
 	CalmAPI             *selfservice.Client
 	ObjectStoreAPI      *objectstores.Client
+	LicensingAPI        *licensing.Client
 }
