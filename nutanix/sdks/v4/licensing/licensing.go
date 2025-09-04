@@ -8,8 +8,8 @@ import (
 
 type Client struct {
 	LicensingEULAAPIInstance *api.EndUserLicenseAgreementApi
-	LicensesAPIInstance       *api.LicensesApi
-	LicenseKeysAPIInstance    *api.LicenseKeysApi
+	LicensesAPIInstance      *api.LicensesApi
+	LicenseKeysAPIInstance   *api.LicenseKeysApi
 }
 
 func NewLicensingClient(credentials client.Credentials) (*Client, error) {
@@ -30,8 +30,8 @@ func NewLicensingClient(credentials client.Credentials) (*Client, error) {
 
 	f := &Client{
 		LicensingEULAAPIInstance: api.NewEndUserLicenseAgreementApi(baseClient),
-		LicensesAPIInstance:       api.NewLicensesApi(baseClient),
-		LicenseKeysAPIInstance:    api.NewLicenseKeysApi(baseClient),
+		LicensesAPIInstance:      api.NewLicensesApi(baseClient),
+		LicenseKeysAPIInstance:   api.NewLicenseKeysApi(baseClient),
 	}
 	return f, nil
 }

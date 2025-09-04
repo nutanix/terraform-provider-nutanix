@@ -15,13 +15,13 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/dataprotection"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/lcm"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/licensing"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/microseg"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/objectstores"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/volumes"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/licensing"
 )
 
 // Version represents api version
@@ -153,7 +153,7 @@ func (c *Config) Client() (*Client, error) {
 		VmmAPI:              vmmClient,
 		DataPoliciesAPI:     dataPoliciesClient,
 		LcmAPI:              LcmClient,
-		LicensingAPI:           LicensingClient,
+		LicensingAPI:        LicensingClient,
 		CalmAPI:             calmClient,
 		ObjectStoreAPI:      ObjectStoreClient,
 	}, nil
@@ -177,7 +177,7 @@ type Client struct {
 	VmmAPI              *vmm.Client
 	DataPoliciesAPI     *datapolicies.Client
 	LcmAPI              *lcm.Client
-	LicensingAPI           *licensing.Client
+	LicensingAPI        *licensing.Client
 	CalmAPI             *selfservice.Client
 	ObjectStoreAPI      *objectstores.Client
 }
