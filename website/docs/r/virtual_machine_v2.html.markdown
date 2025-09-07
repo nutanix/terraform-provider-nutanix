@@ -213,6 +213,8 @@ The `host` attribute supports the following:
 * `ext_id`: A globally unique identifier of a host of type UUID.
 
 ### Cluster
+> 💡Cluster automatic selection is supported.
+
 The `cluster` attribute supports the following:
 
 * `ext_id`: The globally unique identifier of a cluster type UUID.
