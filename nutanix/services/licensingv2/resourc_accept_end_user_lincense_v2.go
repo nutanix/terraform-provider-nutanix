@@ -75,7 +75,6 @@ func ResourceNutanixLicensesV2Create(ctx context.Context, d *schema.ResourceData
 
 // Read license
 func ResourceNutanixLicensesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	return nil
 }
 
