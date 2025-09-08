@@ -747,16 +747,11 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 
 		data "nutanix_subnets_v2" "subnets" {}
 
-		data "nutanix_self_service_accounts" "fetch_accounts"{
-			filter = "name==NTNX_LOCAL_AZ"
-		}
-
 		locals {
 			cluster0 = [
 			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
 			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 		  ][0]
-			accountId = data.nutanix_self_service_accounts.fetch_accounts.accounts[0].metadata[0].uuid
 			subnetExtId = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
 			config = jsondecode(file("%[3]s"))
 			vmm = local.config.vmm
@@ -769,9 +764,6 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 			api_version = "3.1"
 			cluster_reference_list {
 				uuid = local.cluster0
-			}
-			account_reference_list {
-				uuid = local.accountId
 			}
 
 			subnet_reference_list {
