@@ -438,7 +438,7 @@ func Provider() *schema.Provider {
 			"nutanix_lcm_config_v2":                           lcmv2.ResourceNutanixLcmConfigV2(),
 			"nutanix_object_store_v2":                         objectstoresv2.ResourceNutanixObjectStoresV2(),
 			"nutanix_object_store_certificate_v2":             objectstoresv2.ResourceNutanixObjectStoreCertificateV2(),
-			"nutanix_accept_eula_v2":                           licensingv2.ResourceNutanixAcceptEULAV2(),
+			"nutanix_accept_eula_v2":                          licensingv2.ResourceNutanixAcceptEULAV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

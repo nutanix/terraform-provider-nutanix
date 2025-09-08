@@ -5,12 +5,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/licensing-go-client/v4/models/licensing/v4/agreements"
 	"github.com/nutanix/ntnx-api-golang-clients/licensing-go-client/v4/models/common/v1/response"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/licensing-go-client/v4/models/licensing/v4/agreements"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
-
 
 func DatasourceNutanixEULAV2() *schema.Resource {
 	return &schema.Resource{
@@ -76,10 +75,9 @@ func DatasourceNutanixEULAV2() *schema.Resource {
 	}
 }
 
-
 func DatasourceNutanixEULAReadV2(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LicensingAPI
-  
+
 	resp, err := conn.LicensingEULAAPIInstance.GetEula()
 	if err != nil {
 		return diag.Errorf("error while retrieving EULA: %v", err)
@@ -88,7 +86,6 @@ func DatasourceNutanixEULAReadV2(ctx context.Context, d *schema.ResourceData, me
 	if resp == nil {
 		return diag.Errorf("error while retrieving EULA: empty response")
 	}
-
 
 	getResp := resp.Data.GetValue().(import1.Eula)
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {

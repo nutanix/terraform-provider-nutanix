@@ -11,12 +11,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func ResourceNutanixAcceptEULA() *schema.Resource {
+func ResourceNutanixAcceptEULAV2() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceNutanixAcceptEULACreate,
-		ReadContext:   resourceNutanixAcceptEULARead,
-		DeleteContext: resourceNutanixAcceptEULADelete,
-		UpdateContext: resourceNutanixAcceptEULAUpdate,
+		CreateContext: resourceNutanixAcceptEULACreateV2,
+		ReadContext:   resourceNutanixAcceptEULAReadV2,
+		DeleteContext: resourceNutanixAcceptEULADeleteV2,
+		UpdateContext: resourceNutanixAcceptEULAUpdateV2,
 		Schema: map[string]*schema.Schema{
 			"user_name": {
 				Type:     schema.TypeString,
@@ -70,7 +70,7 @@ func ResourceNutanixAcceptEULA() *schema.Resource {
 	}
 }
 
-func resourceNutanixAcceptEULACreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixAcceptEULACreateV2(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LicensingAPI
 
 	body := &import1.EndUser{}
@@ -115,18 +115,18 @@ func resourceNutanixAcceptEULACreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.SetId(utils.GenUUID())
-	return resourceNutanixAcceptEULARead(ctx, d, meta)
+	return resourceNutanixAcceptEULAReadV2(ctx, d, meta)
 }
 
-func resourceNutanixAcceptEULARead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixAcceptEULAReadV2(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func resourceNutanixAcceptEULADelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixAcceptEULADeleteV2(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func resourceNutanixAcceptEULAUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixAcceptEULAUpdateV2(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
