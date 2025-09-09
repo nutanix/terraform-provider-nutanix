@@ -31,6 +31,7 @@ type Service interface {
 	CreateImage(createRequest *ImageIntentInput) (*ImageIntentResponse, error)
 	DeleteImage(uuid string) (*DeleteResponse, error)
 	GetImage(uuid string) (*ImageIntentResponse, error)
+	GetOVAImage(uuid string) (*OVAImageIntentResponse, error)
 	ListImage(getEntitiesRequest *DSMetadata) (*ImageListIntentResponse, error)
 	UpdateImage(uuid string, body *ImageIntentInput) (*ImageIntentResponse, error)
 	UploadImage(uuid string, filepath string, checksum *Checksum) error
@@ -145,6 +146,7 @@ type Service interface {
 	CreateProjectInternal(ctx context.Context, request *ProjectInternalIntentInput) (*ProjectInternalIntentResponse, error)
 	GetProjectInternal(ctx context.Context, uuid string) (*ProjectInternalIntentResponse, error)
 	UpdateProjectInternal(ctx context.Context, uuid string, body *ProjectInternalIntentInput) (*ProjectInternalIntentResponse, error)
+	GroupsGetEntities(ctx context.Context, request *GroupsGetEntitiesRequest) (*GroupsGetEntitiesResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -447,6 +449,28 @@ func (op Operations) GetImage(uuid string) (*ImageIntentResponse, error) {
 	}
 
 	return imageIntentResponse, op.client.Do(ctx, req, imageIntentResponse)
+}
+
+/*GetOVAImage gets a OVAIMAGE
+ * This operation gets a OVAIMAGE.
+ *
+ * @param uuid The uuid of the entity.
+ * @return *OVAImageIntentResponse
+ */
+func (op Operations) GetOVAImage(uuid string) (*OVAImageIntentResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/ovas/%s/vm_spec", uuid)
+
+	log.Printf("GetOVAImage: %s", path)
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	ovaImageIntentResponse := new(OVAImageIntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return ovaImageIntentResponse, op.client.Do(ctx, req, ovaImageIntentResponse)
 }
 
 /*ListImage gets a list of IMAGEs This operation gets a list of IMAGEs, allowing for sorting and pagination. Note: Entities that have not
@@ -2841,4 +2865,22 @@ func (op Operations) UpdateProjectInternal(ctx context.Context, uuid string, bod
 	}
 
 	return projectInput, op.client.Do(ctx, req, projectInput)
+}
+
+/*Get a projection of the attributes of entities of certain type.
+ * This operation returns the attributes of the entities that match the
+ * filter criteria specified in 'request'.
+ *
+ * @param request pointer to the specification of type GroupsGetEntitiesRequest
+ */
+func (op Operations) GroupsGetEntities(ctx context.Context, request *GroupsGetEntitiesRequest,
+) (*GroupsGetEntitiesResponse, error) {
+	req, err := op.client.NewRequest(ctx, http.MethodPost, "/groups", request)
+	response := new(GroupsGetEntitiesResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response, op.client.Do(ctx, req, response)
 }
