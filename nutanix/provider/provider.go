@@ -320,6 +320,7 @@ func Provider() *schema.Provider {
 			"nutanix_certificate_v2":                          objectstoresv2.DatasourceNutanixObjectStoreCertificateV2(),
 			"nutanix_certificates_v2":                         objectstoresv2.DatasourceNutanixObjectStoreCertificatesV2(),
 			"nutanix_eula_v2":                                 licensingv2.DatasourceNutanixEULAV2(),
+			"nutanix_license_features_v2":                     licensingv2.DatasourceNutanixLicenseFeaturesV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
