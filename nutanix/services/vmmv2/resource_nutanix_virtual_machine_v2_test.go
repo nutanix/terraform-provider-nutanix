@@ -32,6 +32,7 @@ func TestAccV2NutanixVmsResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "protection_type", "UNPROTECTED"),
 					resource.TestCheckResourceAttr(resourceNameVms, "is_agent_vm", "false"),
 					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "ext_id"),
 				),
 			},
 		},
