@@ -103,6 +103,7 @@ func TestAccV2NutanixVmsResource_WithDisk(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.bus_type", "SCSI"),
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.index", "0"),
 					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "project"),
 				),
 			},
 		},

@@ -3553,7 +3553,6 @@ func waitForIPRefreshFunc(client *vmm.Client, vmUUID string) resource.StateRefre
 	}
 }
 
-
 func expandProjectReference(pr []interface{}) *config.ProjectReference {
 	if len(pr) > 0 {
 		val := pr[0].(map[string]interface{})
@@ -3759,6 +3758,7 @@ func extractVMConfigFields(getResp config.Vm) (map[string]interface{}, diag.Diag
 	fields["generation_uuid"] = getResp.GenerationUuid
 	fields["bios_uuid"] = getResp.BiosUuid
 	fields["categories"] = flattenCategoryReference(getResp.Categories)
+	fields["project"] = flattenProjectReference(getResp.Project)
 	fields["ownership_info"] = flattenOwnershipInfo(getResp.OwnershipInfo)
 	fields["host"] = flattenHostReference(getResp.Host)
 	fields["cluster"] = flattenClusterReference(getResp.Cluster)
@@ -3796,7 +3796,7 @@ func setVMConfig(d *schema.ResourceData, getResp config.Vm) diag.Diagnostics {
 			return diag.FromErr(fmt.Errorf("failed setting %q: %w", k, err))
 		}
 	}
-<<<<<<< HEAD
+
 	if err := d.Set("source", flattenVMSourceReference(getResp.Source)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -3917,7 +3917,5 @@ func setVMConfig(d *schema.ResourceData, getResp config.Vm) diag.Diagnostics {
 	if err := d.Set("protection_policy_state", flattenProtectionPolicyState(getResp.ProtectionPolicyState)); err != nil {
 		return diag.FromErr(err)
 	}
-=======
->>>>>>> 6d7d5c5c (Add support for CRUD of Ova)
 	return nil
 }
