@@ -3734,6 +3734,7 @@ func extractVMConfigFields(getResp config.Vm) (map[string]interface{}, diag.Diag
 	var diags diag.Diagnostics
 
 	fields["name"] = getResp.Name
+	fields["ext_id"] = getResp.ExtId
 	fields["description"] = getResp.Description
 
 	if getResp.CreateTime != nil {
