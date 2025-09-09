@@ -1,9 +1,3 @@
-## 2.3.1 (August 21, 2025)
-[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.0...v2.3.1)
-
-**Fixed bugs:**
-- nutanix_clusters_v2 not returning associated categories [\#907](https://github.com/nutanix/terraform-provider-nutanix/issues/907)
-
 ## 2.3.0 (July 17, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.2.1...v2.3.0)
 
