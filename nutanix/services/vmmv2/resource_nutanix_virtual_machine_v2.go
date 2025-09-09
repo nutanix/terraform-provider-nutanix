@@ -1405,6 +1405,11 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"links": schemaForLinks(),
 		},
 	}
 }

@@ -12,6 +12,10 @@ variable "nutanix_port" {
   type = string
 }
 
-variable "lite_source_key" {
+
+variable "current_password" {
+  type = string
+}
+variable "new_password" {
   type = string
 }

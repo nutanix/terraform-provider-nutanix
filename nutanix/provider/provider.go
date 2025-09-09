@@ -24,6 +24,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networkingv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/nke"
 	objectstoresv2 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/objectsv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/passwordmanagerv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prismv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/selfservice"
@@ -310,6 +311,7 @@ func Provider() *schema.Provider {
 			"nutanix_image_placement_policies_v2":             vmmv2.DatasourceNutanixImagePlacementsV4(),
 			"nutanix_cluster_v2":                              clustersv2.DatasourceNutanixClusterEntityV2(),
 			"nutanix_clusters_v2":                             clustersv2.DatasourceNutanixClusterEntitiesV2(),
+			"nutanix_system_user_passwords_v2":                passwordmanagerv2.DataSourceNutanixPasswordManagersV2(),
 			"nutanix_host_v2":                                 clustersv2.DatasourceNutanixHostEntityV2(),
 			"nutanix_hosts_v2":                                clustersv2.DatasourceNutanixHostEntitiesV2(),
 			"nutanix_lcm_status_v2":                           lcmv2.DatasourceNutanixLcmStatusV2(),
@@ -435,6 +437,7 @@ func Provider() *schema.Provider {
 			"nutanix_cluster_add_node_v2":                     clustersv2.ResourceNutanixClusterAddNodeV2(),
 			"nutanix_clusters_discover_unconfigured_nodes_v2": clustersv2.ResourceNutanixClusterDiscoverUnconfiguredNodesV2(),
 			"nutanix_clusters_unconfigured_node_networks_v2":  clustersv2.ResourceNutanixClusterUnconfiguredNodeNetworkV2(),
+			"nutanix_password_change_request_v2":              passwordmanagerv2.ResourceNutanixPasswordManagerV2(),
 			"nutanix_lcm_perform_inventory_v2":                lcmv2.ResourceNutanixLcmPerformInventoryV2(),
 			"nutanix_lcm_prechecks_v2":                        lcmv2.ResourceNutanixPreChecksV2(),
 			"nutanix_lcm_upgrade_v2":                          lcmv2.ResourceLcmUpgradeV2(),
