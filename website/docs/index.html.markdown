@@ -13,17 +13,18 @@ The provider is used to interact with the many resources and data sources suppor
 Use the navigation on the left to read about the available resources and data sources this provider can use.
 
 
-## Introducing Nutanix Terraform Provider Version v2.3.1
+## Introducing Nutanix Terraform Provider Version v2.3.0
 
-We're excited to announce the release of Nutanix Terraform Provider Version 2.3.1! This minor update includes important bug fixes to further improve automation of your Nutanix infrastructure.
+We're excited to announce the release of Nutanix Terraform Provider Version 2.3.0! This major update brings new features for automating your Nutanix infrastructure.
 
-### What's New in v2.3.1
+### What's New in v2.3.0
 
 - **Built on v4.1 APIs/SDKs**  
   This release is built on the latest Nutanix v4 APIs and SDKs, providing improved performance, stability, and alignment with the newest platform capabilities.
 
-- **Bug Fix**
-  - **nutanix_clusters_v2**: nutanix_clusters_v2 will return list of associated categories.
+- **New Resource Support**
+  - **Objects**: Automate Nutanix Objects (S3-compatible storage) management for scalable storage use cases.
+  - **Service Accounts**: Manage service accounts directly through Terraform.
 
 
 ~> **Important Notice:** Upcoming Deprecation of Legacy Nutanix Terraform Provider Resources. Starting with the Nutanix Terraform Provider release planned for Q4-CY2026, legacy resources which are based on v0.8,v1,v2 and v3 APIs will be deprecated and no longer supported. For more information, visit [Legacy API Deprecation Announcement](https://portal.nutanix.com/page/documents/eol/list?type=announcement) [Legacy API Deprecation - FAQs](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA0VO0000005rgP0AQ). Nutanix strongly encourages you to migrate your scripts and applications to the latest v2 version of the Nutanix Terraform Provider resources, which are built on our v4 APIs/SDKs. By adopting the latest v2 version based on v4 APIs and SDKs, our users can leverage the enhanced capabilities and latest innovations from Nutanix. We understand that this transition may require some effort, and we are committed to supporting you throughout the process. Please refer to our documentation and support channels for guidance and assistance.
@@ -37,7 +38,6 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
-| 2.3.1 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.0 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.2.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.0 | | | Self Service  v4.1.0 | yes | 

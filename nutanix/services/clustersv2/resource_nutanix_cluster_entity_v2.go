@@ -18,7 +18,6 @@ import (
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/clusters"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -35,9 +34,6 @@ func ResourceNutanixClusterV2() *schema.Resource {
 		ReadContext:   ResourceNutanixClusterV2Read,
 		UpdateContext: ResourceNutanixClusterV2Update,
 		DeleteContext: ResourceNutanixClusterV2Delete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -781,7 +777,12 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if categories, ok := d.GetOk("categories"); ok {
-		categoriesListStr := common.ExpandListOfString(categories.([]interface{}))
+		categoriesList := categories.([]interface{})
+		categoriesListStr := make([]string, len(categoriesList))
+		for i, v := range categoriesList {
+			categoriesListStr[i] = v.(string)
+		}
+		log.Printf("[DEBUG] categories List : %v", categoriesListStr)
 		body.Categories = categoriesListStr
 	}
 
@@ -952,7 +953,10 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 	if d.HasChange("categories") {
 		categories := d.Get("categories")
 		categoriesList := categories.([]interface{})
-		categoriesListStr := common.ExpandListOfString(categoriesList)
+		categoriesListStr := make([]string, len(categoriesList))
+		for i, v := range categoriesList {
+			categoriesListStr[i] = v.(string)
+		}
 		log.Printf("[DEBUG] categories List update Spec: %v", categoriesListStr)
 		updateSpec.Categories = categoriesListStr
 	}
