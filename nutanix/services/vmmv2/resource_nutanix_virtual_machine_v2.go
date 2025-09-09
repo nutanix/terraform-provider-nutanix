@@ -3570,7 +3570,7 @@ func expandProjectReference(pr []interface{}) *config.ProjectReference {
 	return nil
 }
 
-func prepareVmConfigFromMap(m map[string]interface{}) *config.Vm {
+func prepareVMConfigFromMap(m map[string]interface{}) *config.Vm {
 	body := &config.Vm{}
 	if extID, ok := m["ext_id"]; ok {
 		body.ExtId = utils.StringPtr(extID.(string))
@@ -3629,7 +3629,7 @@ func prepareVmConfigFromMap(m map[string]interface{}) *config.Vm {
 	if categories, ok := m["categories"]; ok {
 		body.Categories = expandCategoryReference(categories.([]interface{}))
 	}
-	if project, ok := d.GetOk("project"); ok {
+	if project, ok := m["project"]; ok {
 		body.Project = expandProjectReference(project.([]interface{}))
 	}
 	if ownerRef, ok := m["ownership_info"]; ok {
