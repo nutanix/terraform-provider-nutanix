@@ -230,7 +230,7 @@ func ResourceNutanixVolumeGroupDiskV2Update(ctx context.Context, d *schema.Resou
 		updateSpec.Index = nil
 	}
 	if d.HasChange("disk_size_bytes") {
-		diskSizeBytes := d.Get("disk_size_bytes").(int64)
+		diskSizeBytes := int64(d.Get("disk_size_bytes").(int))
 		updateSpec.DiskSizeBytes = &diskSizeBytes
 	}
 	if d.HasChange("description") {
