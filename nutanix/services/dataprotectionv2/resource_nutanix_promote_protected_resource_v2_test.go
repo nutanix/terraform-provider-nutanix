@@ -67,7 +67,7 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVG(t *testing.T) {
 	// variables for the test
 	vgName := fmt.Sprintf("tf-test-protected-vg-promote-%d", r)
 	ppName := fmt.Sprintf("tf-test-protected-policy-promote-vg-%d", r)
-	clusterName := fmt.Sprintf("tf-test-cluster-%d", r)
+	clusterName := fmt.Sprintf("tf-test-cluster-pp-%d", r)
 	description := "create a new protected VG and promote it"
 	categoryKey := fmt.Sprintf("tf-test-category-pp-promote-vg-%d", r)
 	categoryValue := fmt.Sprintf("tf_test_category_pp_promote_vg_%d", r)

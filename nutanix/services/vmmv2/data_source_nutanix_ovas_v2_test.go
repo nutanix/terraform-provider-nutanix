@@ -102,6 +102,7 @@ func testOvasDatasourceConfigLimit() string {
 	return `
 data "nutanix_ovas_v2" "test" {
 	limit = 1
+	depends_on = [nutanix_ovas_v2.test]
 }
 `
 }

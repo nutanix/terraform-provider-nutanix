@@ -1405,11 +1405,6 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tenant_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"links": schemaForLinks(),
 		},
 	}
 }
@@ -3563,6 +3558,7 @@ func expandProjectReference(pr []interface{}) *config.ProjectReference {
 		val := pr[0].(map[string]interface{})
 		project := config.ProjectReference{}
 		if extID, ok := val["ext_id"]; ok && len(extID.(string)) > 0 {
+			log.Printf("[DEBUG] Project ExtID: %s", extID.(string))
 			project.ExtId = utils.StringPtr(extID.(string))
 		}
 		return &project

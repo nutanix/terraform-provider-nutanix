@@ -103,7 +103,8 @@ func TestAccV2NutanixVmsResource_WithDisk(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.bus_type", "SCSI"),
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.index", "0"),
 					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
-					resource.TestCheckResourceAttrSet(resourceNameVms, "project"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "project.#"),
+					resource.TestCheckResourceAttrPair(resourceNameVms, "project.0.ext_id", "nutanix_project.projects", "metadata.uuid"),
 				),
 			},
 		},
@@ -825,12 +826,13 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 			description =  "%[2]s"
 			num_cores_per_socket = 1
 			num_sockets = 1
+			power_state = "OFF"
 			cluster {
 				ext_id = local.cluster0
 			}
 			project {
 				ext_id = nutanix_project.projects.metadata.uuid
-      }
+      		}
 			disks{
 				disk_address{
 					bus_type = "SCSI"

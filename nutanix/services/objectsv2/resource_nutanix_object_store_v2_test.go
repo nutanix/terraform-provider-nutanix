@@ -423,8 +423,8 @@ locals {
   ][0]
   subnetExtId = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
 
-  pcSSHPassword    = local.ssh_pc_password
-  username         = local.ssh_pc_username
+  pcSSHPassword    = local.config.ssh_pc_password
+  username         = local.config.ssh_pc_username
   ip               = "%[2]s"
 
 }

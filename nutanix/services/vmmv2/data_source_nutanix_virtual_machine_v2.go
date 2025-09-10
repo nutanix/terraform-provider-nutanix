@@ -2897,7 +2897,7 @@ func flattenProjectReference(project *config.ProjectReference) []map[string]inte
 		prjList := make([]map[string]interface{}, 0)
 		prj := make(map[string]interface{})
 		if project.ExtId != nil {
-			prj["ext_id"] = project.ExtId
+			prj["ext_id"] = utils.StringValue(project.ExtId)
 		}
 		prjList = append(prjList, prj)
 		return prjList

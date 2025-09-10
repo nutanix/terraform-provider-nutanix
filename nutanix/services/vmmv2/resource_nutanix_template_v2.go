@@ -16,6 +16,7 @@ import (
 	vmmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	vmmContent "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -128,7 +129,14 @@ func ResourceNutanixTemplatesV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"category_ext_ids": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"tenant_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -191,6 +199,9 @@ func ResourceNutanixTemplatesV2Create(ctx context.Context, d *schema.ResourceDat
 	}
 	if createdBy, ok := d.GetOk("created_by"); ok && len(createdBy.([]interface{})) > 0 {
 		body.CreatedBy = expandTemplateUser(createdBy)
+	}
+	if categoryExtIDs, ok := d.GetOk("category_ext_ids"); ok {
+		body.CategoryExtIds = common.ExpandListOfString(categoryExtIDs.([]interface{}))
 	}
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
