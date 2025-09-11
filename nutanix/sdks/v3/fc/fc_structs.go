@@ -213,6 +213,7 @@ type Node struct {
 	IpmiIP                     *string                `json:"ipmi_ip,omitempty"`
 	HypervisorGateway          *string                `json:"hypervisor_gateway,omitempty"`
 	HardwareAttributesOverride map[string]interface{} `json:"hardware_attributes_override,omitempty"`
+	ServerConfigurationData    map[string]interface{} `json:"server_configuration_data,omitempty"`
 	CvmRAMGb                   *int                   `json:"cvm_ram_gb,omitempty"`
 	CvmIP                      *string                `json:"cvm_ip,omitempty"`
 	HypervisorIP               *string                `json:"hypervisor_ip,omitempty"`
@@ -222,19 +223,21 @@ type Node struct {
 
 // Input to Create a cluster
 type CreateClusterInput struct {
-	ClusterExternalIP     *string                 `json:"cluster_external_ip,omitempty"`
-	CommonNetworkSettings *CommonNetworkSettings  `json:"common_network_settings,omitempty"`
-	HypervisorIsoDetails  *HypervisorIsoDetails   `json:"hypervisor_iso_details,omitempty"`
-	HypervisorIsos        *[]HypervisorIsoDetails `json:"hypervisor_isos,omitempty"`
-	StorageNodeCount      *int                    `json:"storage_node_count,omitempty"`
-	RedundancyFactor      *int                    `json:"redundancy_factor,omitempty"`
-	ClusterName           *string                 `json:"cluster_name,omitempty"`
-	AosPackageURL         *string                 `json:"aos_package_url,omitempty"`
-	ClusterSize           *int                    `json:"cluster_size,omitempty"`
-	AosPackageSha256sum   *string                 `json:"aos_package_sha256sum,omitempty"`
-	Timezone              *string                 `json:"timezone,omitempty"`
-	NodesList             []*Node                 `json:"nodes_list,omitempty"`
-	SkipClusterCreation   bool                    `json:"skip_cluster_creation,omitempty"`
+	ClusterExternalIP       *string                 `json:"cluster_external_ip,omitempty"`
+	CommonNetworkSettings   *CommonNetworkSettings  `json:"common_network_settings,omitempty"`
+	HypervisorIsoDetails    *HypervisorIsoDetails   `json:"hypervisor_iso_details,omitempty"`
+	HypervisorIsos          *[]HypervisorIsoDetails `json:"hypervisor_isos,omitempty"`
+	StorageNodeCount        *int                    `json:"storage_node_count,omitempty"`
+	RedundancyFactor        *int                    `json:"redundancy_factor,omitempty"`
+	ClusterName             *string                 `json:"cluster_name,omitempty"`
+	AosPackageURL           *string                 `json:"aos_package_url,omitempty"`
+	ClusterSize             *int                    `json:"cluster_size,omitempty"`
+	AosPackageSha256sum     *string                 `json:"aos_package_sha256sum,omitempty"`
+	Timezone                *string                 `json:"timezone,omitempty"`
+	NodesList               []*Node                 `json:"nodes_list,omitempty"`
+	SkipClusterCreation     bool                    `json:"skip_cluster_creation,omitempty"`
+	ServerConfigurationData map[string]interface{}  `json:"server_configuration_data,omitempty"`
+	FcMetadata              *FcMetadata             `json:"fc_metadata,omitempty"`
 }
 
 // Response of cluster creation
@@ -336,4 +339,52 @@ type Clusters struct {
 // input of Imaged node details
 type ImagedNodeDetailsInput struct {
 	ImagedNodeUUID string `json:"imaged_node_uuid"`
+}
+
+type FcMetadata struct {
+	APIKeyUUID *string `json:"api_key_uuid,omitempty"`
+}
+
+type CreateOnboardNodeInput struct {
+	HardwareManagerNodeResponse
+	EntityID   *string `json:"entity_id,omitempty"`
+	EntityType *string `json:"entity_type,omitempty"`
+}
+
+type CreateOnboardNodeResponse struct {
+	ImagedNodeDetails
+	EntityID   *string `json:"entityId,omitempty"`
+	EntityType *string `json:"entity_type,omitempty"`
+}
+
+type ListHardwareManagersResponse struct {
+	Metadata         *ListMetadataOutput
+	HardwareManagers []*HardwareManager `json:"hardware_managers,omitempty"`
+}
+
+type HardwareManager struct {
+	DeploymentType      *string                `json:"deployment_type,omitempty"`
+	HardwareManagerUUID *string                `json:"hardware_manager_uuid,omitempty"`
+	Name                *string                `json:"name,omitempty"`
+	ObjectVersion       *int                   `json:"object_version,omitempty"`
+	Region              *string                `json:"region,omitempty"`
+	Type                *string                `json:"type,omitempty"`
+	ConnectionDetails   map[string]interface{} `json:"connection_details,omitempty"`
+}
+
+type ListHardwareManagerNodesResponse struct {
+	Metadata *ListMetadataOutput
+	Nodes    []*HardwareManagerNodeResponse `json:"nodes,omitempty"`
+}
+
+type HardwareManagerNodeResponse struct {
+	BlockSerial         *string                `json:"block_serial,omitempty"`
+	CPUCoreCount        *int                   `json:"cpu_core_count,omitempty"`
+	CPUVendor           *string                `json:"cpu_vendor,omitempty"`
+	HardwareManagerData map[string]interface{} `json:"hardware_manager_data,omitempty"`
+	HardwareManagerType *string                `json:"hardware_manager_type,omitempty"`
+	HardwareManagerUUID *string                `json:"hardware_manager_uuid,omitempty"`
+	MemoryGb            *int                   `json:"memory_gb,omitempty"`
+	Model               *string                `json:"model,omitempty"`
+	NodeSerial          *string                `json:"node_serial,omitempty"`
 }
