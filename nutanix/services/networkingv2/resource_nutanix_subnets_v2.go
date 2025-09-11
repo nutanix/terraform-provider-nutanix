@@ -23,6 +23,9 @@ func ResourceNutanixSubnetV2() *schema.Resource {
 		ReadContext:   ResourceNutanixSubnetV2Read,
 		UpdateContext: ResourceNutanixSubnetV2Update,
 		DeleteContext: ResourceNutanixSubnetV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Optional: true,
