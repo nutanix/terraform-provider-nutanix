@@ -301,6 +301,9 @@ func ResourceNutanixTemplatesV2Read(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 	log.Printf("[DEBUG] template_version_spec : %v", d.Get("template_version_spec"))
+	if err := d.Set("category_ext_ids", getResp.CategoryExtIds); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
