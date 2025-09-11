@@ -403,9 +403,9 @@ resource "nutanix_category_v2" "test" {
     command    = local.modifyLocalClusterFirewallRules
     on_failure = continue
   }
-  # Delay 5 minutes before destroying the resource to make sure that synced data is deleted
+  # Delay 8 minutes before destroying the resource to make sure that synced data is deleted
   provisioner "local-exec" {
-    command    = "sleep 300"
+    command    = "sleep 480"
     when       = destroy
     on_failure = continue
   }
