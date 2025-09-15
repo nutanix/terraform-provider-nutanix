@@ -92,7 +92,11 @@ func resourceNutanixAcceptEULACreateV2(ctx context.Context, d *schema.ResourceDa
 		return diag.FromErr(err)
 	}
 
-	getResp := resp.Data.GetValue().(import2.AppMessage)
+	appMessages, ok := resp.Data.GetValue().([]import2.AppMessage)
+	if !ok || len(appMessages) == 0 {
+		return diag.Errorf("unexpected response type or empty AppMessage slice")
+	}
+	getResp := appMessages[0]
 	if getResp.Message != nil {
 		d.Set("message", getResp.Message)
 	}

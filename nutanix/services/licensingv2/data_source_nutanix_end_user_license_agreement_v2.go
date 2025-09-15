@@ -2,6 +2,7 @@ package licensingv2
 
 import (
 	"context"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,7 +22,7 @@ func DatasourceNutanixEULAV2() *schema.Resource {
 			},
 			"ext_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
 			"links": {
 				Type:     schema.TypeList,
@@ -43,7 +44,7 @@ func DatasourceNutanixEULAV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"upated_time": {
+			"updated_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,7 +62,7 @@ func DatasourceNutanixEULAV2() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"accepted_by": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeMap,
 							Computed: true,
 						},
 						"acceptance_time": {
@@ -100,7 +101,7 @@ func DatasourceNutanixEULAReadV2(ctx context.Context, d *schema.ResourceData, me
 	if err := d.Set("content", getResp.Content); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("upated_time", getResp.UpdatedTime); err != nil {
+	if err := d.Set("updated_time", flattenTime(getResp.UpdatedTime)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("version", getResp.Version); err != nil {
@@ -143,10 +144,10 @@ func flattenAcceptances(acceptances []import1.Acceptance) []map[string]interface
 		for _, acceptance := range acceptances {
 			acceptanceMap := make(map[string]interface{})
 			if acceptance.AcceptedBy != nil {
-				acceptanceMap["accepted_by"] = acceptance.AcceptedBy
+				acceptanceMap["accepted_by"] = flattenEndUser(acceptance.AcceptedBy)
 			}
 			if acceptance.AcceptanceTime != nil {
-				acceptanceMap["acceptance_time"] = acceptance.AcceptanceTime
+				acceptanceMap["acceptance_time"] = flattenTime(acceptance.AcceptanceTime)
 			}
 
 			acceptanceList = append(acceptanceList, acceptanceMap)
@@ -154,4 +155,24 @@ func flattenAcceptances(acceptances []import1.Acceptance) []map[string]interface
 		return acceptanceList
 	}
 	return nil
+}
+
+
+func flattenTime(inTime *time.Time) string {
+	if inTime != nil {
+		return inTime.UTC().Format(time.RFC3339)
+	}
+	return ""
+}
+
+func flattenEndUser(endUser *import1.EndUser) map[string]interface{} {
+	if endUser == nil {
+		return nil
+	}
+	m := make(map[string]interface{})
+	m["company_name"] = endUser.CompanyName
+	m["job_title"] = endUser.JobTitle
+	m["login_id"] = endUser.LoginId
+	m["user_name"] = endUser.UserName
+	return m
 }
