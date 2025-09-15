@@ -56,7 +56,7 @@ func DatasourceNutanixLicenseConfigurationV2() *schema.Resource {
 							Computed: true,
 						},
 						"logical_version": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{

@@ -325,8 +325,8 @@ func Provider() *schema.Provider {
 			"nutanix_license_configuration_v2":                licensingv2.DatasourceNutanixLicenseConfigurationV2(),
 			"nutanix_license_violations_v2":                   licensingv2.DatasourceNutanixLicenseViolationsV2(),
 			"nutanix_list_allowances_v2":                      licensingv2.DatasourceNutanixListAllowancesV2(),
-			"nutanix_license_entitlements_v2":                  licensingv2.DatasourceNutanixListLicenseEntitlementsV2(),
-			"nutanix_license_compliances_v2":                   licensingv2.DatasourceNutanixListLicenseCompliancesV2(),
+			"nutanix_license_entitlements_v2":                 licensingv2.DatasourceNutanixListLicenseEntitlementsV2(),
+			"nutanix_license_compliances_v2":                  licensingv2.DatasourceNutanixListLicenseCompliancesV2(),
 			"nutanix_cluster_license_recommendations_v2":      licensingv2.DatasourceNutanixClusterLicenseRecommendationsV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{

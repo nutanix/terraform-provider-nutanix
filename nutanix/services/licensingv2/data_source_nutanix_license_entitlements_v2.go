@@ -88,7 +88,7 @@ func DatasourceNutanixListLicenseEntitlementsV2() *schema.Resource {
 							Computed: true,
 						},
 						"details": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
