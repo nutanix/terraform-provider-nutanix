@@ -157,7 +157,6 @@ func flattenAcceptances(acceptances []import1.Acceptance) []map[string]interface
 	return nil
 }
 
-
 func flattenTime(inTime *time.Time) string {
 	if inTime != nil {
 		return inTime.UTC().Format(time.RFC3339)

@@ -2,6 +2,7 @@ package licensingv2
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -157,11 +158,16 @@ func flattenLicenseFeatures(features []import1.Feature) []map[string]interface{}
 		m["ext_id"] = feature.ExtId
 		m["links"] = flattenLinks(feature.Links)
 		m["name"] = feature.Name
-		m["value_type"] = feature.ValueType
-		m["value"] = feature.Value
-		m["license_type"] = feature.LicenseType
-		m["license_category"] = feature.LicenseCategory
-		m["scope"] = feature.Scope
+		m["value_type"] = feature.ValueType.GetName()
+		switch v := feature.Value.GetValue().(type) {
+		case bool, int:
+			m["value"] = fmt.Sprintf("%v", v)
+		default:
+			m["value"] = ""
+		}
+		m["license_type"] = feature.LicenseType.GetName()
+		m["license_category"] = feature.LicenseCategory.GetName()
+		m["scope"] = feature.Scope.GetName()
 		out[i] = m
 	}
 	return out
