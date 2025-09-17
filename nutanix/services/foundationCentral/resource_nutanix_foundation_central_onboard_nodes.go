@@ -26,8 +26,6 @@ func ResourceNutanixFCOnboardNodes() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"node_serial": {
 				Type:     schema.TypeString,
-				Computed: false,
-				Optional: false,
 				Required: true,
 			},
 			"block_serial": {
@@ -85,7 +83,6 @@ func resourceNutanixFCOnboardNodesRead(ctx context.Context, d *schema.ResourceDa
 		return diag.FromErr(err)
 	}
 
-	d.SetId(*resp.ImagedNodeUUID)
 	return nil
 }
 

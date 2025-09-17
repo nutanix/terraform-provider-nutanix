@@ -1,6 +1,7 @@
 package fc_test
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -12,27 +13,30 @@ func TestAccFCOnboardNodesResource(t *testing.T) {
 	// Since the acceptance test environment most likely doesn't have any Intersight managed nodes
 	// to onboard, we test that an onboarding config has a non-empty plan and correctly produces
 	// a Node not found error
+
+	nodeSerial := foundationVars.OnboardNodes[0].NodeSerial
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:             testFCOnboardNodesResource(),
+				Config:             testFCOnboardNodesResource(nodeSerial),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config:      testFCOnboardNodesResource(),
-				ExpectError: regexp.MustCompile(`Node not found with serial ABC12345D6E`),
+				Config:      testFCOnboardNodesResource(nodeSerial),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`Node not found with serial %[1]s`, nodeSerial)),
 			},
 		},
 	})
 }
 
-func testFCOnboardNodesResource() string {
-	return `
+func testFCOnboardNodesResource(nodeSerial string) string {
+	return fmt.Sprintf(`
 		resource "nutanix_foundation_central_onboard_nodes" "node" {
-			node_serial = "ABC12345D6E"
+			node_serial = "%[1]s"
 		}
-  `
+  `, nodeSerial)
 }
