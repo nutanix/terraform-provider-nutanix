@@ -177,7 +177,7 @@ func flattenAllowances(allowances []import1.Allowance) []map[string]interface{} 
 		m["links"] = flattenLinks(allowance.Links)
 		m["is_multi_cluster"] = allowance.IsMulticluster
 		m["name"] = allowance.Name
-		m["type"] = allowance.Type
+		m["type"] = allowance.Type.GetName()
 		m["details"] = flattenAllowanceDetails(allowance.Details)
 		out[i] = m
 	}
@@ -192,9 +192,9 @@ func flattenAllowanceDetails(details []import1.AllowanceDetail) []map[string]int
 	for i, detail := range details {
 		m := make(map[string]interface{})
 		m["feature_id"] = detail.FeatureId
-		m["value_type"] = detail.ValueType
+		m["value_type"] = detail.ValueType.GetName()
 		m["value"] = detail.Value
-		m["scope"] = detail.Scope
+		m["scope"] = detail.Scope.GetName()
 		out[i] = m
 	}
 	return out

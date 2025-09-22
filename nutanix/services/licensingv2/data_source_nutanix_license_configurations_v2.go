@@ -61,11 +61,11 @@ func DatasourceNutanixLicenseConfigurationV2() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cluster_version": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"license_verison": {
-										Type:     schema.TypeString,
+									"license_version": {
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 								},
@@ -187,15 +187,15 @@ func flattenLicenseConfiguration(settings []import1.Setting) []map[string]interf
 		m["ext_id"] = setting.ExtId
 		m["links"] = flattenLinks(setting.Links)
 		m["is_multi_cluster"] = setting.IsMulticluster
-		m["logical_version"] = flattenLogicalVersion(setting.LogicalVersion)
+		m["logical_version"] = []map[string]interface{}{flattenLogicalVersion(setting.LogicalVersion)}
 		m["is_stand_by"] = setting.IsStandby
 		m["has_non_compliant_features"] = setting.HasNonCompliantFeatures
 		m["is_license_check_disabled"] = setting.IsLicenseCheckDisabled
-		m["license_class"] = setting.LicenseClass
-		m["enforcement_policy"] = setting.EnforcementPolicy
+		m["license_class"] = setting.LicenseClass.GetName()
+		m["enforcement_policy"] = setting.EnforcementPolicy.GetName()
 		m["license_key"] = setting.LicenseKey
 		m["has_ultimate_trail_ended"] = setting.HasUltimateTrialEnded
-		m["post_paid_config"] = flattenPostPaidConfig(setting.PostPaidConfig)
+		m["post_paid_config"] = []map[string]interface{}{flattenPostPaidConfig(setting.PostPaidConfig)}
 		out[i] = m
 	}
 	return out
@@ -207,10 +207,10 @@ func flattenPostPaidConfig(postPaidConfig *import1.PostPaidConfig) map[string]in
 	}
 	m := make(map[string]interface{})
 	m["id"] = postPaidConfig.Id
-	m["category"] = postPaidConfig.Category
+	m["category"] = postPaidConfig.Category.GetName()
 	m["is_pulse_required"] = postPaidConfig.IsPulseRequired
-	m["billing_plan"] = postPaidConfig.BillingPlan
-	m["consumption_type"] = postPaidConfig.ConsumptionType
+	m["billing_plan"] = postPaidConfig.BillingPlan.GetName()
+	m["consumption_type"] = postPaidConfig.ConsumptionType.GetName()
 	return m
 }
 

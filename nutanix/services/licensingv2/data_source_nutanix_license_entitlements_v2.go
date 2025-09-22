@@ -203,7 +203,7 @@ func flattenEntitlements(entitlements []import1.Entitlement) []map[string]interf
 		m["cluster_ext_id"] = entitlement.ClusterExtId
 		m["is_registered"] = entitlement.IsRegistered
 		m["name"] = entitlement.Name
-		m["type"] = entitlement.Type
+		m["type"] = entitlement.Type.GetName()
 		m["details"] = flattenEntitlementDetails(entitlement.Details)
 		out[i] = m
 	}
@@ -217,10 +217,10 @@ func flattenEntitlementDetails(details []import1.EntitlementDetail) map[string]i
 	m := make(map[string]interface{})
 	for _, detail := range details {
 		m["name"] = detail.Name
-		m["type"] = detail.Type
-		m["category"] = detail.Category
-		m["sub_category"] = detail.SubCategory
-		m["meter"] = detail.Meter
+		m["type"] = detail.Type.GetName()
+		m["category"] = detail.Category.GetName()
+		m["sub_category"] = detail.SubCategory.GetName()
+		m["meter"] = detail.Meter.GetName()
 		m["quantity"] = detail.Quantity
 		if detail.EarliestExpiryDate != nil {
 			m["earliest_expiry_date"] = detail.EarliestExpiryDate.String()
