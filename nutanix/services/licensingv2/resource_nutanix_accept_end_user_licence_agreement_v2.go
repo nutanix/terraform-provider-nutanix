@@ -101,7 +101,7 @@ func resourceNutanixAcceptEULACreateV2(ctx context.Context, d *schema.ResourceDa
 		d.Set("message", getResp.Message)
 	}
 	if getResp.Severity != nil {
-		d.Set("severity", getResp.Severity)
+		d.Set("severity", getResp.Severity.GetName())
 	}
 	if getResp.Code != nil {
 		d.Set("code", getResp.Code)
