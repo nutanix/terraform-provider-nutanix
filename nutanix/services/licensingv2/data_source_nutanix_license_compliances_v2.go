@@ -200,7 +200,7 @@ func flattenCompliances(compliances []import1.Compliance) []map[string]interface
 		m["links"] = flattenLinks(compliance.Links)
 		m["is_multi_cluster"] = compliance.IsMulticluster
 		m["cluster_ext_id"] = compliance.ClusterExtId
-		m["type"] = compliance.Type
+		m["type"] = compliance.Type.GetName()
 		m["services"] = flattenComplianceServices(compliance.Services)
 		out[i] = m
 	}

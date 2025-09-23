@@ -210,12 +210,13 @@ func flattenEntitlements(entitlements []import1.Entitlement) []map[string]interf
 	return out
 }
 
-func flattenEntitlementDetails(details []import1.EntitlementDetail) map[string]interface{} {
+func flattenEntitlementDetails(details []import1.EntitlementDetail) []map[string]interface{} {
 	if details == nil {
-		return map[string]interface{}{}
+		return []map[string]interface{}{}
 	}
-	m := make(map[string]interface{})
-	for _, detail := range details {
+	out := make([]map[string]interface{}, len(details))
+	for i, detail := range details {
+		m := make(map[string]interface{})
 		m["name"] = detail.Name
 		m["type"] = detail.Type.GetName()
 		m["category"] = detail.Category.GetName()
@@ -225,7 +226,8 @@ func flattenEntitlementDetails(details []import1.EntitlementDetail) map[string]i
 		if detail.EarliestExpiryDate != nil {
 			m["earliest_expiry_date"] = detail.EarliestExpiryDate.String()
 		}
-		m["scope"] = detail.Scope
+		m["scope"] = detail.Scope.GetName()
+		out[i] = m
 	}
-	return m
+	return out
 }
