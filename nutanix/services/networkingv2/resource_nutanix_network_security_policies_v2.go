@@ -525,13 +525,13 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 	}
 	getResp := resp.Data.GetValue().(import1.NetworkSecurityPolicy)
 
-	if err := d.Set("name", getResp.Name); err != nil {
+	if err := d.Set("name", utils.StringValue(getResp.Name)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("type", flattenSecurityPolicyType(getResp.Type)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("description", getResp.Description); err != nil {
+	if err := d.Set("description", utils.StringValue(getResp.Description)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("state", flattenPolicyState(getResp.State)); err != nil {
@@ -579,16 +579,16 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 		}
 	}
 
-	if err := d.Set("is_ipv6_traffic_allowed", getResp.IsIpv6TrafficAllowed); err != nil {
+	if err := d.Set("is_ipv6_traffic_allowed", utils.BoolValue(getResp.IsIpv6TrafficAllowed)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("is_hitlog_enabled", getResp.IsHitlogEnabled); err != nil {
+	if err := d.Set("is_hitlog_enabled", utils.BoolValue(getResp.IsHitlogEnabled)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("scope", flattenSecurityPolicyScope(getResp.Scope)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("vpc_reference", getResp.VpcReferences); err != nil {
+	if err := d.Set("vpc_reference", utils.StringSlice(getResp.VpcReferences)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("secured_groups", utils.StringSlice(getResp.SecuredGroups)); err != nil {
@@ -606,16 +606,16 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 			return diag.FromErr(err)
 		}
 	}
-	if err := d.Set("is_system_defined", getResp.IsSystemDefined); err != nil {
+	if err := d.Set("is_system_defined", utils.BoolValue(getResp.IsSystemDefined)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("created_by", getResp.CreatedBy); err != nil {
+	if err := d.Set("created_by", utils.StringValue(getResp.CreatedBy)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+	if err := d.Set("ext_id", utils.StringValue(getResp.ExtId)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
+	if err := d.Set("tenant_id", utils.StringValue(getResp.TenantId)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("links", flattenLinksMicroSeg(getResp.Links)); err != nil {
