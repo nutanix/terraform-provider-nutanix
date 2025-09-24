@@ -105,7 +105,7 @@ func resourceNutanixFCOnboardNodesCreate(ctx context.Context, d *schema.Resource
 		for _, node := range hwManagerNodes.Nodes {
 			if *node.NodeSerial == serial {
 				var req fc.CreateOnboardNodeInput
-				err := copier.Copy(&req, &node) //nolint:scopelint
+				err := copier.Copy(&req, node)
 				if err != nil {
 					return diag.FromErr(err)
 				}

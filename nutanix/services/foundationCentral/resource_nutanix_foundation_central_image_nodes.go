@@ -816,7 +816,7 @@ func expandNodesList(d *schema.ResourceData) []*fc.Node {
 				// Convert json string to map[string]interface{}
 				var mapData map[string]interface{}
 				if err := json.Unmarshal([]byte(serverConfigurationData), &mapData); err != nil {
-					fmt.Println(err)
+					log.Printf("Error unmarshalling server_configuration_data: %v", err)
 				}
 				node.ServerConfigurationData = mapData
 			}
@@ -903,7 +903,7 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 			// Convert json string to map[string]interface{}
 			var mapData map[string]interface{}
 			if err := json.Unmarshal([]byte(serverConfigurationData), &mapData); err != nil {
-				fmt.Println(err)
+				log.Printf("Error unmarshalling server_configuration_data: %v", err)
 			}
 			req.ServerConfigurationData = mapData
 		}
