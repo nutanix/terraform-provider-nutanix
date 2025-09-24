@@ -945,7 +945,6 @@ func expandIPv6Address(pr interface{}) *config.IPv6Address {
 	return ipv6
 }
 
-
 func expandVirtualSwitch(pr interface{}) *import1.VirtualSwitch {
 	if pr != nil {
 		vSwitch := &import1.VirtualSwitch{}
@@ -1102,7 +1101,6 @@ func expandIPv6Subnet(pr interface{}) *import1.IPv6Subnet {
 
 	return ipv6Subs
 }
-
 
 func expandVpc(pr interface{}) *import1.Vpc {
 	if pr != nil {
@@ -1288,7 +1286,6 @@ func expandIPv6AddressMap(pr interface{}) *config.IPv6Address {
 
 	return ipv6Add
 }
-
 
 func expandIPSubnet(pr []interface{}) []import1.IPSubnet {
 	if len(pr) > 0 {

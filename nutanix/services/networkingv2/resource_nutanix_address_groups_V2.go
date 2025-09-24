@@ -284,7 +284,7 @@ func expandIPv4AddressList(pr []interface{}) []config.IPv4Address {
 					ip.PrefixLength = utils.IntPtr(n)
 				}
 			}
-			
+
 			ipv4s[k] = ip
 		}
 		return ipv4s

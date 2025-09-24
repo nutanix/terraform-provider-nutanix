@@ -510,7 +510,7 @@ func expandFloatingIPv6Address(pr interface{}) *import1.FloatingIPv6Address {
 			ipv6.PrefixLength = utils.IntPtr(n)
 		}
 	}
-	
+
 	return ipv6
 }
 
