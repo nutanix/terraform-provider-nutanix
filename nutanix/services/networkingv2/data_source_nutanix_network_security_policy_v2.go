@@ -461,10 +461,10 @@ func flattenNetworkSecurityPolicyRule(pr []import1.NetworkSecurityPolicyRule) []
 			net := make(map[string]interface{})
 
 			if v.ExtId != nil {
-				net["ext_id"] = v.ExtId
+				net["ext_id"] = utils.StringValue(v.ExtId)
 			}
 			if v.Description != nil {
-				net["description"] = v.Description
+				net["description"] = utils.StringValue(v.Description)
 			}
 			if v.Type != nil {
 				net["type"] = flattenRuleType(v.Type)
@@ -547,7 +547,7 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 				app["service_group_references"] = appRuleValue.ServiceGroupReferences
 			}
 			if appRuleValue.IsAllProtocolAllowed != nil {
-				app["is_all_protocol_allowed"] = appRuleValue.IsAllProtocolAllowed
+				app["is_all_protocol_allowed"] = utils.BoolValue(appRuleValue.IsAllProtocolAllowed)
 			}
 			if appRuleValue.TcpServices != nil {
 				app["tcp_services"] = flattenTCPPortRangeSpec(appRuleValue.TcpServices)
@@ -640,8 +640,8 @@ func flattenIPv4AddressMicroSegList(pr *config.IPv4Address) []interface{} {
 
 		ip := make(map[string]interface{})
 
-		ip["value"] = pr.Value
-		ip["prefix_length"] = pr.PrefixLength
+		ip["value"] = utils.StringValue(pr.Value)
+		ip["prefix_length"] = utils.IntValue(pr.PrefixLength)
 
 		ipv4 = append(ipv4, ip)
 
