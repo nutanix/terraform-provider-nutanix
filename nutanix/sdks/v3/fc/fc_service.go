@@ -25,6 +25,10 @@ type Service interface {
 	CreateAPIKey(context.Context, *CreateAPIKeysInput) (*CreateAPIKeysResponse, error)
 	GetAPIKey(context.Context, string) (*CreateAPIKeysResponse, error)
 	ListAPIKeys(context.Context, *ListMetadataInput) (*ListAPIKeysResponse, error)
+	ListHardwareManagers(context.Context) (*ListHardwareManagersResponse, error)
+	ListHardwareManagerNodes(context.Context, string) (*ListHardwareManagerNodesResponse, error)
+	CreateOnboardNode(context.Context, *CreateOnboardNodeInput) (*CreateOnboardNodeResponse, error)
+	DeleteOnboardNode(context.Context, string) error
 }
 
 /*GetImagedNode Get the details of an imaged node
@@ -211,4 +215,51 @@ func (op Operations) ListAPIKeys(ctx context.Context, body *ListMetadataInput) (
 
 	listAPIKeysResponse := new(ListAPIKeysResponse)
 	return listAPIKeysResponse, op.client.Do(ctx, req, listAPIKeysResponse)
+}
+
+func (op Operations) ListHardwareManagers(ctx context.Context) (*ListHardwareManagersResponse, error) {
+	path := "/hardware_managers/list"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, &map[string]interface{}{})
+	if err != nil {
+		return nil, err
+	}
+
+	listHardwareManagersResponse := new(ListHardwareManagersResponse)
+	return listHardwareManagersResponse, op.client.Do(ctx, req, listHardwareManagersResponse)
+}
+
+func (op Operations) ListHardwareManagerNodes(ctx context.Context, hardwareManagerUUID string) (*ListHardwareManagerNodesResponse, error) {
+	path := fmt.Sprintf("/hardware_managers/%s/nodes/list", hardwareManagerUUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, &map[string]interface{}{})
+	if err != nil {
+		return nil, err
+	}
+
+	listHardwareManagersResponse := new(ListHardwareManagerNodesResponse)
+	return listHardwareManagersResponse, op.client.Do(ctx, req, listHardwareManagersResponse)
+}
+
+func (op Operations) CreateOnboardNode(ctx context.Context, input *CreateOnboardNodeInput) (*CreateOnboardNodeResponse, error) {
+	path := "/imaged_nodes/onboard"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
+	if err != nil {
+		return nil, err
+	}
+
+	createAPIResponse := new(CreateOnboardNodeResponse)
+	return createAPIResponse, op.client.Do(ctx, req, createAPIResponse)
+}
+
+func (op Operations) DeleteOnboardNode(ctx context.Context, nodeUUID string) error {
+	path := fmt.Sprintf("/imaged_nodes/%s", nodeUUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	if err != nil {
+		return err
+	}
+
+	return op.client.Do(ctx, req, nil)
 }

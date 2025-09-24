@@ -52,6 +52,9 @@ type FoundationVars struct {
 			HypervisorNtpServers []string `json:"hypervisor_ntp_servers"`
 		} `json:"common_network_settings"`
 	} `json:"blocks"`
+	OnboardNodes []struct {
+		NodeSerial string `json:"node_serial"`
+	} `json:"onboard_nodes"`
 }
 
 var foundationVars FoundationVars
