@@ -23,7 +23,7 @@ resource "nutanix_foundation_central_onboard_nodes" "node" {
 
 The following arguments are supported:
 
-* `node_serial`: Serial number of the node to onbaord
+* `node_serial`: Serial number of the node to onboard
 
 ## Attributes Reference
 
