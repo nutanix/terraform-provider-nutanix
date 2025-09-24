@@ -590,33 +590,40 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 			return intraRuleSpecList
 		}
 		if *pr.ObjectType_ == "microseg.v4.config.MultiEnvIsolationRuleSpec" {
-			multiEenv := make(map[string]interface{})
-			multiEnvList := make([]map[string]interface{}, 0)
-
-			specMap := make([]map[string]interface{}, 0)
-			allToAllIsolationGroup := make([]map[string]interface{}, 0)
-			isolationGroups := make([]map[string]interface{}, 0)
-			groupCategoryRef := make(map[string]interface{})
-
+			// Extract input value
 			multiEnvIsolationValue := pr.GetValue().(import1.MultiEnvIsolationRuleSpec)
-
 			allIsolationGroupValue := multiEnvIsolationValue.Spec.GetValue().(import1.AllToAllIsolationGroup)
 
+			isolationGroups := make([]interface{}, 0)
 			for _, group := range allIsolationGroupValue.IsolationGroups {
-				groupCategoryRef["group_category_reference"] = group.GroupCategoryReferences
-				isolationGroups = append(isolationGroups, groupCategoryRef)
+				groupMap := make(map[string]interface{})
+				groupMap["group_category_references"] = group.GroupCategoryReferences
+				isolationGroups = append(isolationGroups, groupMap)
 			}
 
-			allToAllIsolationGroup = append(allToAllIsolationGroup, isolationGroups...)
+			// Wrap isolation_group inside all_to_all_isolation_group
+			allToAllGroup := make(map[string]interface{})
+			allToAllGroup["isolation_group"] = isolationGroups
 
-			specMap = append(specMap, allToAllIsolationGroup...)
+			allToAllGroupList := make([]interface{}, 0)
+			allToAllGroupList = append(allToAllGroupList, allToAllGroup)
 
-			multiEenv["multi_env_isolation_rule_spec"] = specMap
+			// Wrap all_to_all_isolation_group in spec
+			specMap := make(map[string]interface{})
+			specMap["all_to_all_isolation_group"] = allToAllGroupList
 
-			multiEnvList = append(multiEnvList, multiEenv)
+			specList := make([]interface{}, 0)
+			specList = append(specList, specMap)
 
+			// Wrap spec in multi_env_isolation_rule_spec
+			multiEnv := make(map[string]interface{})
+			multiEnv["spec"] = specList
+
+			multiEnvList := make([]interface{}, 0)
+			multiEnvList = append(multiEnvList, multiEnv)
+
+			// Wrap into top-level return object
 			multiEnvIsolationRuleSpec["multi_env_isolation_rule_spec"] = multiEnvList
-
 			multiEnvIsolationRuleSpecList = append(multiEnvIsolationRuleSpecList, multiEnvIsolationRuleSpec)
 
 			aJSON, _ := json.Marshal(multiEnvIsolationRuleSpecList)
