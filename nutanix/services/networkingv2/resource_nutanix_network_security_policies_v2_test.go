@@ -2,14 +2,13 @@ package networkingv2_test
 
 import (
 	// "encoding/json"
-	"encoding/json"
+
 	"fmt"
 	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -164,13 +163,6 @@ func TestAccV2NutanixNetworkSecurityResource_WithApplicationAndInfraGroupRules(t
 					resource.TestCheckResourceAttr(resourceNameNs, "rules.10.spec.0.application_rule_spec.0.tcp_services.4.start_port", "5985"),
 					resource.TestCheckResourceAttr(resourceNameNs, "rules.10.spec.0.application_rule_spec.0.src_allow_spec", "ALL"),
 					resource.TestCheckResourceAttr(resourceNameNs, "rules.10.type", "APPLICATION"),
-					func(s *terraform.State) error {
-						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceNameNs].Primary.Attributes, "", "  ")
-						fmt.Printf("################### %s #########################\n", resourceNameNs)
-						fmt.Printf("Resource Attributes: \n%v\n", string(aJSON))
-						fmt.Printf("\n############################################\n")
-						return nil
-					},
 				),
 			},
 		},
