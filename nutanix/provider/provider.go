@@ -346,6 +346,7 @@ func Provider() *schema.Provider {
 			"nutanix_foundation_image":                        foundation.ResourceNutanixFoundationImage(),
 			"nutanix_foundation_central_image_cluster":        foundationCentral.ResourceNutanixFCImageCluster(),
 			"nutanix_foundation_central_api_keys":             foundationCentral.ResourceNutanixFCAPIKeys(),
+			"nutanix_foundation_central_onboard_nodes":        foundationCentral.ResourceNutanixFCOnboardNodes(),
 			"nutanix_vpc":                                     networking.ResourceNutanixVPC(),
 			"nutanix_pbr":                                     networking.ResourceNutanixPbr(),
 			"nutanix_floating_ip":                             networking.ResourceNutanixFloatingIP(),
