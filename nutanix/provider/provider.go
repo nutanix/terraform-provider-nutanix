@@ -322,7 +322,7 @@ func Provider() *schema.Provider {
 			"nutanix_eula_v2":                                 licensingv2.DatasourceNutanixEULAV2(),
 			"nutanix_license_features_v2":                     licensingv2.DatasourceNutanixLicenseFeaturesV2(),
 			"nutanix_applied_license_inventory_v2":            licensingv2.DatasourceNutanixAppliedLicenseInventoryV2(),
-			"nutanix_license_configuration_v2":                licensingv2.DatasourceNutanixLicenseConfigurationV2(),
+			"nutanix_license_configurations_v2":                licensingv2.DatasourceNutanixLicenseConfigurationV2(),
 			"nutanix_license_violations_v2":                   licensingv2.DatasourceNutanixLicenseViolationsV2(),
 			"nutanix_list_allowances_v2":                      licensingv2.DatasourceNutanixListAllowancesV2(),
 			"nutanix_license_entitlements_v2":                 licensingv2.DatasourceNutanixListLicenseEntitlementsV2(),
