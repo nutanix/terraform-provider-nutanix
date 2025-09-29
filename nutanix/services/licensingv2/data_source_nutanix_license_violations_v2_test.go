@@ -9,17 +9,18 @@ import (
 
 const datasourceLicenseViolations = "data.nutanix_license_violations_v2.get_violations"
 
-func TestDataSourceLicenseViolationsV2(t *testing.T) {
+func TestLicensingDataSourceLicenseViolationsV2(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testDataSourceLicenseViolationsConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceGetEula, "acceptances.0.accepted_by.company_name", "Nutanix"),
-					resource.TestCheckResourceAttr(datasourceGetEula, "acceptances.0.accepted_by.job_title", "MTS"),
-					resource.TestCheckResourceAttr(datasourceGetEula, "acceptances.0.accepted_by.login_id", "admin"),
-					resource.TestCheckResourceAttr(datasourceGetEula, "acceptances.0.accepted_by.user_name", "Nutanix"),
+					resource.TestCheckResourceAttrSet(datasourceLicenseViolations, "entities.#"),
+					resource.TestCheckResourceAttrSet(datasourceLicenseViolations, "entities.0.capacity_violations.#"),
+					resource.TestCheckResourceAttrSet(datasourceLicenseViolations, "entities.0.feature_violations.#"),
+					resource.TestCheckResourceAttrSet(datasourceLicenseViolations, "entities.0.expired_licenses.#"),
+					resource.TestCheckResourceAttrSet(datasourceLicenseViolations, "entities.0.is_multi_cluster"),
 				),
 			},
 		},

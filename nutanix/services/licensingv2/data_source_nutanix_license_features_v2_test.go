@@ -9,17 +9,20 @@ import (
 
 const datasourceLicenseFeatures = "data.nutanix_license_features_v2.get_features"
 
-func TestDataSourceLicenseFeaturesV2(t *testing.T) {
+func TestLicensingDataSourceLicenseFeaturesV2(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testDataSourceLicenseFeaturesConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceLicenseFeatures, "acceptances.0.accepted_by.company_name", "Nutanix"),
-					resource.TestCheckResourceAttr(datasourceLicenseFeatures, "acceptances.0.accepted_by.job_title", "MTS"),
-					resource.TestCheckResourceAttr(datasourceLicenseFeatures, "acceptances.0.accepted_by.login_id", "admin"),
-					resource.TestCheckResourceAttr(datasourceLicenseFeatures, "acceptances.0.accepted_by.user_name", "Nutanix"),
+					resource.TestCheckResourceAttrSet(datasourceLicenseFeatures, "entities.#"),
+					resource.TestCheckResourceAttrSet(datasourceLicenseFeatures, "entities.0.license_category"),
+					resource.TestCheckResourceAttrSet(datasourceLicenseFeatures, "entities.0.license_type"),
+					resource.TestCheckResourceAttrSet(datasourceLicenseFeatures, "entities.0.name"),
+					resource.TestCheckResourceAttrSet(datasourceLicenseFeatures, "entities.0.scope"),
+					resource.TestCheckResourceAttrSet(datasourceLicenseFeatures, "entities.0.value"),
+					resource.TestCheckResourceAttrSet(datasourceLicenseFeatures, "entities.0.value_type"),
 				),
 			},
 		},

@@ -9,17 +9,18 @@ import (
 
 const datasourceListAllowances = "data.nutanix_license_violations_v2.get_violations"
 
-func TestDataSourceListAllowancesV2(t *testing.T) {
+func TestLicensingDataSourceListAllowancesV2(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testDataSourceListAllowancesConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceListAllowances, "acceptances.0.accepted_by.company_name", "Nutanix"),
-					resource.TestCheckResourceAttr(datasourceListAllowances, "acceptances.0.accepted_by.job_title", "MTS"),
-					resource.TestCheckResourceAttr(datasourceListAllowances, "acceptances.0.accepted_by.login_id", "admin"),
-					resource.TestCheckResourceAttr(datasourceListAllowances, "acceptances.0.accepted_by.user_name", "Nutanix"),
+					resource.TestCheckResourceAttrSet(datasourceListAllowances, "entities.#"),
+					resource.TestCheckResourceAttrSet(datasourceListAllowances, "entities.0.feature_id"),
+					resource.TestCheckResourceAttrSet(datasourceListAllowances, "entities.0.scope"),
+					resource.TestCheckResourceAttrSet(datasourceListAllowances, "entities.0.value"),
+					resource.TestCheckResourceAttrSet(datasourceListAllowances, "entities.0.value_type"),
 				),
 			},
 		},

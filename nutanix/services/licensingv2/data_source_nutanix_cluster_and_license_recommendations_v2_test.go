@@ -9,7 +9,7 @@ import (
 
 const datasourceClusterLicenseRecommendations = "data.nutanix_cluster_license_recommendations_v2.get_recommendations"
 
-func TestDataSourceClusterLicenseRecommendationsV2(t *testing.T) {
+func TestLicensingDataSourceClusterLicenseRecommendationsV2(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
