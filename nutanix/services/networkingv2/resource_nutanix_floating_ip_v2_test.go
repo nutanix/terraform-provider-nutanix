@@ -166,7 +166,7 @@ func testFloatingIPv2ConfigWithVMNic(name, desc string) string {
 			external_subnet_reference = data.nutanix_subnets_v2.test.subnets.0.ext_id
 			floating_ip {
 				ipv4 {
-					value = "10.44.3.205"
+					value = "10.44.3.206"
 				}
 			}
 			association{
