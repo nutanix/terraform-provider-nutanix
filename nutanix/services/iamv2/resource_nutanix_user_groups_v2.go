@@ -101,7 +101,9 @@ func ResourceNutanixUserGroupsV4Read(ctx context.Context, d *schema.ResourceData
 	}
 
 	getResp := resp.Data.GetValue().(import1.UserGroup)
-
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("group_type", flattenGroupType(getResp.GroupType)); err != nil {
 		return diag.FromErr(err)
 	}

@@ -24,6 +24,7 @@ func TestAccV2NutanixUserGroupsResource_LDAPUserGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "idp_id", testVars.Iam.Users.DirectoryServiceID),
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "group_type", "LDAP"),
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "distinguished_name", testVars.Iam.UserGroups.DistinguishedName),
+					resource.TestCheckResourceAttrSet(resourceNameUserGroups, "ext_id"),
 				),
 			},
 			{
