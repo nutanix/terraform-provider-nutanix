@@ -592,6 +592,7 @@ func TestAccV2NutanixVmsResource_WithCategories(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "num_cores_per_socket", "1"),
 					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
 					resource.TestCheckResourceAttr(resourceNameVms, "num_sockets", "2"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameVms, "create_time"),
 					resource.TestCheckResourceAttrSet(resourceNameVms, "update_time"),
 					resource.TestCheckResourceAttr(resourceNameVms, "protection_type", "UNPROTECTED"),
