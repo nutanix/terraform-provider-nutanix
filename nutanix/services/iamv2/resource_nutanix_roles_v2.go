@@ -210,6 +210,9 @@ func ResourceNutanixRolesV4Read(ctx context.Context, d *schema.ResourceData, met
 	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("display_name", getResp.DisplayName); err != nil {
 		return diag.FromErr(err)
 	}
