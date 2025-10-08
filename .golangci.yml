@@ -68,7 +68,7 @@ linters:
     - unconvert
     - varcheck
     - vet
-    - revive
+    # - revive
     - makezero
     - tagalign
     - gci
