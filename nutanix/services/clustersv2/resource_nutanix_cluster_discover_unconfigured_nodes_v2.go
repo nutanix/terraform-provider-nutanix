@@ -38,12 +38,7 @@ func ResourceNutanixClusterDiscoverUnconfiguredNodesV2() *schema.Resource {
 			"ip_filter_list": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-						"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
-					},
-				},
+				Elem: SchemaForIPList(false),
 			},
 			"uuid_filter_list": {
 				Type:     schema.TypeList,
@@ -133,12 +128,7 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 			"cvm_ip": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-						"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
-					},
-				},
+				Elem: SchemaForIPList(false),
 			},
 			"foundation_version": {
 				Type:     schema.TypeString,
@@ -151,12 +141,7 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 			"hypervisor_ip": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
-						"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
-					},
-				},
+				Elem:     SchemaForIPList(false),
 			},
 			"hypervisor_type": {
 				Type:     schema.TypeString,
@@ -173,12 +158,7 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 			"ipmi_ip": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
-						"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
-					},
-				},
+				Elem:     SchemaForIPList(false),
 			},
 			"is_secure_booted": {
 				Type:     schema.TypeBool,

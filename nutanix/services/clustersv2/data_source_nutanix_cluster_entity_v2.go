@@ -69,12 +69,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 									"controller_vm_ip": {
 										Type:     schema.TypeList,
 										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-												"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
-											},
-										},
+										Elem: SchemaForIPList(false),
 									},
 									"node_uuid": {
 										Type:     schema.TypeString,
@@ -83,12 +78,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 									"host_ip": {
 										Type:     schema.TypeList,
 										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-												"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
-											},
-										},
+										Elem: SchemaForIPList(false),
 									},
 								},
 							},
@@ -104,22 +94,12 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 						"external_address": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
-								},
-							},
+							Elem: SchemaForIPList(false),
 						},
 						"external_data_services_ip": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
-								},
-							},
+							Elem: SchemaForIPList(false),
 						},
 						"external_subnet": {
 							Type:     schema.TypeString,
@@ -139,46 +119,12 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 						"name_server_ip_list": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
-									"fqdn": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"value": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
+							Elem: SchemaForIPList(true),
 						},
 						"ntp_server_ip_list": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
-									"fqdn": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"value": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
+							Elem: SchemaForIPList(true),
 						},
 						"smtp_server": {
 							Type:     schema.TypeList,
@@ -197,24 +143,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 												"ip_address": {
 													Type:     schema.TypeList,
 													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-															"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
-															"fqdn": {
-																Type:     schema.TypeList,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"value": {
-																			Type:     schema.TypeString,
-																			Computed: true,
-																		},
-																	},
-																},
-															},
-														},
-													},
+													Elem: SchemaForIPList(true),
 												},
 												"port": {
 													Type:     schema.TypeInt,
@@ -241,12 +170,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 						"masquerading_ip": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
-								},
-							},
+							Elem: SchemaForIPList(false),
 						},
 						"masquerading_port": {
 							Type:     schema.TypeString,
@@ -260,12 +184,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 									"ip": {
 										Type:     schema.TypeList,
 										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-												"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
-											},
-										},
+										Elem: SchemaForIPList(false),
 									},
 									"type": {
 										Type:     schema.TypeBool,
@@ -350,42 +269,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 									"ip_address": {
 										Type:     schema.TypeList,
 										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ipv4": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"value": {
-																Type:     schema.TypeString,
-																Computed: true,
-															},
-															"prefix_length": {
-																Type:     schema.TypeInt,
-																Computed: true,
-															},
-														},
-													},
-												},
-												"ipv6": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"value": {
-																Type:     schema.TypeString,
-																Computed: true,
-															},
-															"prefix_length": {
-																Type:     schema.TypeInt,
-																Computed: true,
-															},
-														},
-													},
-												},
-											},
-										},
+										Elem: SchemaForIPList(false),
 									},
 									"port": {
 										Type:     schema.TypeInt,
@@ -723,28 +607,6 @@ func DatasourceNutanixClusterEntityV2Read(ctx context.Context, d *schema.Resourc
 
 	d.SetId(*getResp.ExtId)
 	return nil
-}
-
-func SchemaForValuePrefixLength(defaultPrefixLength int) *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		Computed: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"value": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-				},
-				"prefix_length": {
-					Type:     schema.TypeInt,
-					Optional: true,
-					Default:  defaultPrefixLength,
-				},
-			},
-		},
-	}
 }
 
 func flattenLinks(pr []import3.ApiLink) []map[string]interface{} {

@@ -59,12 +59,7 @@ func DatasourceNutanixHostEntityV2() *schema.Resource {
 						"external_address": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
-								},
-							},
+							Elem: SchemaForIPList(false),
 						},
 						"user_name": {
 							Type:     schema.TypeString,
@@ -121,42 +116,22 @@ func DatasourceNutanixHostEntityV2() *schema.Resource {
 						"external_address": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
-								},
-							},
+							Elem: SchemaForIPList(false),
 						},
 						"backplane_address": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
-								},
-							},
+							Elem: SchemaForIPList(false),
 						},
 						"rdma_backplane_address": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
-								},
-							},
+							Elem: SchemaForIPList(false),
 						},
 						"nat_ip": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
-								},
-							},
+							Elem: SchemaForIPList(false),
 						},
 						"nat_port": {
 							Type:     schema.TypeInt,
@@ -324,12 +299,7 @@ func DatasourceNutanixHostEntityV2() *schema.Resource {
 						"ip": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
-								},
-							},
+							Elem: SchemaForIPList(false),
 						},
 						"username": {
 							Type:     schema.TypeString,

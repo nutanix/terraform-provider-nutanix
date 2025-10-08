@@ -72,12 +72,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 									"controller_vm_ip": {
 										Type:     schema.TypeList,
 										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
-												"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
-											},
-										},
+										Elem:     SchemaForIPList(false),
 									},
 									"node_uuid": {
 										Type:     schema.TypeString,
@@ -87,12 +82,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
-												"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
-											},
-										},
+										Elem:     SchemaForIPList(false),
 									},
 								},
 							},
@@ -110,23 +100,13 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
-								},
-							},
+							Elem:     SchemaForIPList(false),
 						},
 						"external_data_services_ip": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
-								},
-							},
+							Elem:     SchemaForIPList(false),
 						},
 						"external_subnet": {
 							Type:     schema.TypeString,
@@ -148,51 +128,13 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
-									"fqdn": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"value": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
+							Elem:     SchemaForIPList(true),
 						},
 						"ntp_server_ip_list": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
-									"fqdn": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"value": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
+							Elem:     SchemaForIPList(true),
 						},
 						"smtp_server": {
 							Type:     schema.TypeList,
@@ -215,25 +157,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 													Type:     schema.TypeList,
 													Optional: true,
 													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
-															"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
-															"fqdn": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"value": {
-																			Type:     schema.TypeString,
-																			Computed: true,
-																		},
-																	},
-																},
-															},
-														},
-													},
+													Elem:     SchemaForIPList(true),
 												},
 												"port": {
 													Type:     schema.TypeInt,
@@ -266,12 +190,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
-								},
-							},
+							Elem:     SchemaForIPList(false),
 						},
 						"masquerading_port": {
 							Type:     schema.TypeString,
@@ -287,12 +206,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
-												"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
-											},
-										},
+										Elem:     SchemaForIPList(false),
 									},
 									"type": {
 										Type:         schema.TypeString,
@@ -359,12 +273,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
-												"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
-											},
-										},
+										Elem: SchemaForIPList(false),
 									},
 									"port": {
 										Type:     schema.TypeInt,
@@ -719,27 +628,6 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 						},
 					},
-				},
-			},
-		},
-	}
-}
-
-func SchemaForValuePrefixLengthResource(defaultPrefixLength int) *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		Computed: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"value": {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-				"prefix_length": {
-					Type:     schema.TypeInt,
-					Optional: true,
-					Default:  defaultPrefixLength,
 				},
 			},
 		},

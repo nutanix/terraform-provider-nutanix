@@ -269,12 +269,7 @@ func AddNodeListSchema() *schema.Schema {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
-							"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
-						},
-					},
+					Elem: SchemaForIPList(false),
 				},
 				"digital_certificate_map_list": {
 					Type:     schema.TypeList,
@@ -299,23 +294,13 @@ func AddNodeListSchema() *schema.Schema {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
-							"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
-						},
-					},
+					Elem: SchemaForIPList(false),
 				},
 				"hypervisor_ip": {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
-							"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
-						},
-					},
+					Elem: SchemaForIPList(false),
 				},
 				"model": {
 					Type:     schema.TypeString,
@@ -387,23 +372,13 @@ func computedNodeListSchema() *schema.Schema {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
-							"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
-						},
-					},
+					Elem: SchemaForIPList(false),
 				},
 				"ipmi_ip": {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
-							"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
-						},
-					},
+					Elem: SchemaForIPList(false),
 				},
 				"digital_certificate_map_list": {
 					Type:     schema.TypeList,
