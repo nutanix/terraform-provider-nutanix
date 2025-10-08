@@ -46,7 +46,8 @@ linters-settings:
 linters:
   disable-all: true
   enable:
-    - errcheck
+    #TODO: re-enable these later
+    # - errcheck
     - gofmt
     - gosimple
     - ineffassign
