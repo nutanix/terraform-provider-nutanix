@@ -14,6 +14,7 @@ import (
 	clsMangPrismConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -114,8 +115,8 @@ func nodeListNetworkingDetailsSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"ipv4": SchemaForValuePrefixLengthResource(),
-										"ipv6": SchemaForValuePrefixLengthResource(),
+										"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+										"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 									},
 								},
 							},
@@ -177,8 +178,8 @@ func nodeListSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
+							"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+							"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 						},
 					},
 				},
@@ -188,8 +189,8 @@ func nodeListSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
+							"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+							"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 						},
 					},
 				},
@@ -199,8 +200,8 @@ func nodeListSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
+							"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+							"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 						},
 					},
 				},
@@ -310,7 +311,7 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Create(ctx context.Context, 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 

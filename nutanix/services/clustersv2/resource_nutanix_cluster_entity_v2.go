@@ -1,3 +1,4 @@
+// Package clustersv2 provides resources for managing Nutanix clusters.
 package clustersv2
 
 import (
@@ -18,8 +19,8 @@ import (
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/clusters"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -73,8 +74,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLengthResource(),
-												"ipv6": SchemaForValuePrefixLengthResource(),
+												"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+												"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 											},
 										},
 									},
@@ -88,8 +89,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLengthResource(),
-												"ipv6": SchemaForValuePrefixLengthResource(),
+												"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+												"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 											},
 										},
 									},
@@ -111,8 +112,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(),
-									"ipv6": SchemaForValuePrefixLengthResource(),
+									"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -122,8 +123,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(),
-									"ipv6": SchemaForValuePrefixLengthResource(),
+									"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -149,8 +150,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(),
-									"ipv6": SchemaForValuePrefixLengthResource(),
+									"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 									"fqdn": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -174,8 +175,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(),
-									"ipv6": SchemaForValuePrefixLengthResource(),
+									"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 									"fqdn": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -216,8 +217,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"ipv4": SchemaForValuePrefixLengthResource(),
-															"ipv6": SchemaForValuePrefixLengthResource(),
+															"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+															"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 															"fqdn": {
 																Type:     schema.TypeList,
 																Optional: true,
@@ -267,8 +268,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(),
-									"ipv6": SchemaForValuePrefixLengthResource(),
+									"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -288,8 +289,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLengthResource(),
-												"ipv6": SchemaForValuePrefixLengthResource(),
+												"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+												"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 											},
 										},
 									},
@@ -343,8 +344,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
-									"subnet":  SchemaForValuePrefixLengthResource(),
-									"netmask": SchemaForValuePrefixLengthResource(),
+									"subnet":  SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+									"netmask": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -360,8 +361,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLengthResource(),
-												"ipv6": SchemaForValuePrefixLengthResource(),
+												"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+												"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 											},
 										},
 									},
@@ -724,7 +725,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 	}
 }
 
-func SchemaForValuePrefixLengthResource() *schema.Schema {
+func SchemaForValuePrefixLengthResource(defaultPrefixLength int) *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -738,7 +739,7 @@ func SchemaForValuePrefixLengthResource() *schema.Schema {
 				"prefix_length": {
 					Type:     schema.TypeInt,
 					Optional: true,
-					Default:  defaultValue,
+					Default:  defaultPrefixLength,
 				},
 			},
 		},
@@ -802,7 +803,7 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -977,7 +978,7 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -1047,7 +1048,7 @@ func ResourceNutanixClusterV2Delete(ctx context.Context, d *schema.ResourceData,
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -1055,49 +1056,6 @@ func ResourceNutanixClusterV2Delete(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error waiting for cluster (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	return nil
-}
-
-func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
-		// encodeUUID := data + ":" + taskUUID
-		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-		if err != nil {
-			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
-		}
-
-		// get the group results
-
-		v := vresp.Data.GetValue().(import2.Task)
-
-		if getTaskStatus(v.Status) == "CANCELED" || getTaskStatus(v.Status) == "FAILED" {
-			return v, getTaskStatus(v.Status),
-				fmt.Errorf("error_detail: %s, progress_message: %d", utils.StringValue(v.ErrorMessages[0].Message), utils.IntValue(v.ProgressPercentage))
-		}
-		return v, getTaskStatus(v.Status), nil
-	}
-}
-
-func getTaskStatus(pr *import2.TaskStatus) string {
-	const two, three, five, six, seven = 2, 3, 5, 6, 7
-	if pr != nil {
-		if *pr == import2.TaskStatus(six) {
-			return "FAILED"
-		}
-		if *pr == import2.TaskStatus(seven) {
-			return "CANCELED"
-		}
-		if *pr == import2.TaskStatus(two) {
-			return "QUEUED"
-		}
-		if *pr == import2.TaskStatus(three) {
-			return "RUNNING"
-		}
-		if *pr == import2.TaskStatus(five) {
-			return "SUCCEEDED"
-		}
-	}
-	return "UNKNOWN"
 }
 
 func getClusterExtID(d *schema.ResourceData, conn *clusters.Client) error {
@@ -1534,44 +1492,72 @@ func expandIPAddressOrFQDN(pr []interface{}) []import4.IPAddressOrFQDN {
 }
 
 func expandIPv4Address(pr interface{}) *import4.IPv4Address {
-	if len(pr.([]interface{})) == 0 {
+	// nil check
+	if pr == nil {
 		return nil
 	}
-	if pr != nil {
-		ipv4 := import4.NewIPv4Address()
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
 
-		if value, ok := val["value"]; ok {
-			ipv4.Value = utils.StringPtr(value.(string))
-		}
-		if prefix, ok := val["prefix_length"]; ok {
-			ipv4.PrefixLength = utils.IntPtr(prefix.(int))
-		}
-		return ipv4
+	// safe type assert for expected slice
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
 	}
-	return nil
+
+	// safe type assert for first element being a map
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+	ipv4 := import4.NewIPv4Address()
+
+	if v, ok := valMap["value"]; ok {
+		if s, ok2 := v.(string); ok2 {
+			ipv4.Value = utils.StringPtr(s)
+		}
+	}
+
+	if p, ok := valMap["prefix_length"]; ok {
+		if n, ok2 := p.(int); ok2 {
+			ipv4.PrefixLength = utils.IntPtr(n)
+		}
+	}
+
+	return ipv4
 }
 
 func expandIPv6Address(pr interface{}) *import4.IPv6Address {
-	if len(pr.([]interface{})) == 0 {
+	// nil check
+	if pr == nil {
 		return nil
 	}
 
-	if pr != nil {
-		ipv6 := import4.NewIPv6Address()
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
-
-		if value, ok := val["value"]; ok {
-			ipv6.Value = utils.StringPtr(value.(string))
-		}
-		if prefix, ok := val["prefix_length"]; ok {
-			ipv6.PrefixLength = utils.IntPtr(prefix.(int))
-		}
-		return ipv6
+	// safe type assert for expected slice
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
 	}
-	return nil
+
+	// safe type assert for first element being a map
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+
+	ipv6 := import4.NewIPv6Address()
+
+	if v, ok := valMap["value"]; ok {
+		if s, ok2 := v.(string); ok2 {
+			ipv6.Value = utils.StringPtr(s)
+		}
+	}
+
+	if p, ok := valMap["prefix_length"]; ok {
+		if n, ok2 := p.(int); ok2 {
+			ipv6.PrefixLength = utils.IntPtr(n)
+		}
+	}
+
+	return ipv6
 }
 
 func expandSMTPServerRef(pr interface{}) *config.SmtpServerRef {
@@ -1697,17 +1683,33 @@ func expandSMTPNetwork(pr []interface{}) *config.SmtpNetwork {
 	return nil
 }
 
-func expandFQDN(pr []interface{}) *import4.FQDN {
-	if len(pr) > 0 {
-		fqdn := import4.FQDN{}
-		val := pr[0].(map[string]interface{})
-		if value, ok := val["value"]; ok {
-			fqdn.Value = utils.StringPtr(value.(string))
-		}
-
-		return &fqdn
+func expandFQDN(pr interface{}) *import4.FQDN {
+	// nil check
+	if pr == nil {
+		return nil
 	}
-	return nil
+
+	// safe type assert for expected slice
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
+	}
+
+	// safe type assert for first element being a map
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+
+	fqdn := import4.NewFQDN()
+
+	if v, ok := valMap["value"]; ok {
+		if s, ok2 := v.(string); ok2 && s != "" {
+			fqdn.Value = utils.StringPtr(s)
+		}
+	}
+
+	return fqdn
 }
 
 func expandBuildReference(buildInfo interface{}) *config.BuildReference {
