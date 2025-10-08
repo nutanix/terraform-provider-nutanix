@@ -29,6 +29,9 @@ linters-settings:
   forbidigo:
     exclude:
       - '^fmt\.Print(|f|ln)$'
+  tagliatelle:
+    case:
+      json: snake
 
 linters:
   enable-all: true
@@ -60,7 +63,7 @@ linters:
     - staticcheck
     - deadcode
     # - exhaustruct
-    # - nolintlint
+    - nolintlint
     - gosimple
     - ineffassign
     - misspell
@@ -77,7 +80,7 @@ linters:
     # - depguard
     # - varnamelen
     # - wastedassign
-    # - wrapcheck
+    - wrapcheck
     # - containedctx
     - exhaustruct
     - varnamelen
