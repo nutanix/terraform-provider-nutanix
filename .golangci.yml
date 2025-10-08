@@ -87,8 +87,7 @@ linters:
     - varnamelen
     - errchkjson
     - tagliatelle
-    - mnd
-    - execinquery  
+    - execinquery
 
 issues:
   exclude:
