@@ -38,7 +38,7 @@ func ResourceNutanixClusterDiscoverUnconfiguredNodesV2() *schema.Resource {
 			"ip_filter_list": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem: SchemaForIPList(false),
+				Elem:     SchemaForIPList(false),
 			},
 			"uuid_filter_list": {
 				Type:     schema.TypeList,
@@ -128,7 +128,7 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 			"cvm_ip": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: SchemaForIPList(false),
+				Elem:     SchemaForIPList(false),
 			},
 			"foundation_version": {
 				Type:     schema.TypeString,
