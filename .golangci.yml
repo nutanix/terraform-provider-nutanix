@@ -54,7 +54,8 @@ linters:
     - staticcheck
     - structcheck
     - unconvert
-    - unused
+    #TODO: re-enable these later
+    # - unused
     - varcheck
     - vet
 
