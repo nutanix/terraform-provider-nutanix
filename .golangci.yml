@@ -59,6 +59,7 @@ linters:
     - unused
     - staticcheck
     - deadcode
+    - exhaustruct
 
 issues:
   exclude:
