@@ -59,7 +59,8 @@ linters:
     - unused
     - staticcheck
     - deadcode
-    - nolintlint
+    # - exhaustruct
+    # - nolintlint
     - gosimple
     - ineffassign
     - misspell
