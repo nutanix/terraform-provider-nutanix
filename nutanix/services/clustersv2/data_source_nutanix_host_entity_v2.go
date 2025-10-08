@@ -8,6 +8,7 @@ import (
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -27,22 +28,7 @@ func DatasourceNutanixHostEntityV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"links": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"href": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"rel": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
+			"links": common.LinksSchema(),
 			"host_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -442,11 +428,11 @@ func DatasourceNutanixHostEntityV2Read(ctx context.Context, d *schema.ResourceDa
 }
 
 func flattenNodeStatus(nodeStatus *import1.NodeStatus) string {
-	return nodeStatus.GetName()
+	return common.FlattenPtrEnum(nodeStatus)
 }
 
 func flattenHostTypeEnum(hostTypeEnum *import1.HostTypeEnum) string {
-	return hostTypeEnum.GetName()
+	return common.FlattenPtrEnum(hostTypeEnum)
 }
 
 func flattenHypervisorReference(pr *import1.HypervisorReference) []map[string]interface{} {
@@ -470,15 +456,15 @@ func flattenHypervisorReference(pr *import1.HypervisorReference) []map[string]in
 }
 
 func flattenHypervisorState(hypervisorState *import1.HypervisorState) string {
-	return hypervisorState.GetName()
+	return common.FlattenPtrEnum(hypervisorState)
 }
 
 func flattenHostHypervisorType(hypervisorType *import1.HypervisorType) string {
-	return hypervisorType.GetName()
+	return common.FlattenPtrEnum(hypervisorType)
 }
 
 func flattenAcropolisConnectionState(acropolisConnState *import1.AcropolisConnectionState) string {
-	return acropolisConnState.GetName()
+	return common.FlattenPtrEnum(acropolisConnState)
 }
 
 func flattenClusterReference(pr *import1.ClusterReference) []map[string]interface{} {
@@ -584,5 +570,5 @@ func flattenKeyManagementDeviceToCertStatusInfo(pr []import1.KeyManagementDevice
 }
 
 func flattenStorageTierReference(storageTierReference *import1.StorageTierReference) string {
-	return storageTierReference.GetName()
+	return common.FlattenPtrEnum(storageTierReference)
 }

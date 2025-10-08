@@ -223,7 +223,7 @@ func nodeListSchema() *schema.Schema {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
-					ValidateFunc: validation.StringInSlice([]string{"XEN", "HYPERV", "NATIVEHOST", "ESX", "AHV"}, false),
+					ValidateFunc: validation.StringInSlice(HypervisorTypeStrings, false),
 				},
 				"hypervisor_version": {
 					Type:     schema.TypeString,
@@ -440,19 +440,7 @@ func expandNodeListNetworkingDetails(pr []interface{}) []config.NodeListNetworki
 				node.NodePosition = utils.StringPtr(nodePosition.(string))
 			}
 			if hypervisorType, ok := val["hypervisor_type"]; ok {
-				const two, three, four, five, six = 2, 3, 4, 5, 6
-				subMap := map[string]interface{}{
-					"AHV":        two,
-					"ESX":        three,
-					"HYPERV":     four,
-					"XEN":        five,
-					"NATIVEHOST": six,
-				}
-				if subMap[hypervisorType.(string)] != nil {
-					pVal := subMap[hypervisorType.(string)]
-					p := config.HypervisorType(pVal.(int))
-					node.HypervisorType = &p
-				}
+				node.HypervisorType = common.ExpandEnum(hypervisorType, HypervisorTypeMap, "hypervisor_type")
 			}
 			if roboMixedHypervisor, ok := val["is_robo_mixed_hypervisor"]; ok {
 				node.IsRoboMixedHypervisor = utils.BoolPtr(roboMixedHypervisor.(bool))

@@ -10,6 +10,7 @@ import (
 	import4 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
 	import3 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/response"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -32,22 +33,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"links": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"href": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"rel": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
+			"links": common.LinksSchema(),
 			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -708,7 +694,7 @@ func flattenHTTPProxyWhiteList(proxyWhiteList []import1.HttpProxyWhiteListConfig
 }
 
 func flattenTargetType(targetType *import1.HttpProxyWhiteListTargetType) string {
-	return targetType.GetName()
+	return common.FlattenPtrEnum(targetType)
 }
 
 func flattenHTTPProxyList(httpProxyList []import1.HttpProxyConfig) []interface{} {
@@ -732,17 +718,8 @@ func flattenHTTPProxyList(httpProxyList []import1.HttpProxyConfig) []interface{}
 	return nil
 }
 
-func flattenProxyTypes(proxyTypes []import1.HttpProxyType) []interface{} {
-	if len(proxyTypes) == 0 {
-		return nil
-	}
-
-	types := make([]interface{}, len(proxyTypes))
-	for i, t := range proxyTypes {
-		types[i] = t.GetName()
-	}
-
-	return types
+func flattenProxyTypes(proxyTypes []import1.HttpProxyType) []string {
+	return common.FlattenEnumValueList(proxyTypes)
 }
 
 func flattenClusterConfigReference(pr *import1.ClusterConfigReference) []map[string]interface{} {
@@ -790,7 +767,7 @@ func flattenPulseStatus(status *import1.PulseStatus) []map[string]interface{} {
 }
 
 func flattenPulseScrubbingLevel(level *import1.PIIScrubbingLevel) string {
-	return level.GetName()
+	return common.FlattenPtrEnum(level)
 }
 
 func flattenIPAddress(addr *import4.IPAddress) []map[string]interface{} {
@@ -832,10 +809,7 @@ func flattenSMTPServerRef(smtpServerRef *import1.SmtpServerRef) []map[string]int
 		"email_address": utils.StringValue(smtpServerRef.EmailAddress),
 		"server":        flattenSMTPNetwork(smtpServerRef.Server),
 	}
-
-	if smtpServerRef.Type != nil {
-		smtpRef["type"] = smtpServerRef.Type.GetName()
-	}
+	smtpRef["type"] = common.FlattenPtrEnum(smtpServerRef.Type)
 
 	return []map[string]interface{}{smtpRef}
 }
@@ -912,7 +886,7 @@ func flattenIPv6Address(ipv6Address *import4.IPv6Address) []interface{} {
 	}
 
 	ip := map[string]interface{}{
-		"value":        ipv6Address.Value,
+		"value":         ipv6Address.Value,
 		"prefix_length": ipv6Address.PrefixLength,
 	}
 
@@ -1019,81 +993,49 @@ func flattenRedundancyStatus(redundancyStatus *import1.RedundancyStatusDetails) 
 }
 
 func flattenClusterFaultTolerance(faultTolerance *import1.ClusterFaultToleranceRef) string {
-	return faultTolerance.GetName()
+	return common.FlattenPtrEnum(faultTolerance)
 }
 
 func flattenHypervisorType(hypervisorTypes []import1.HypervisorType) []string {
-	if len(hypervisorTypes) == 0 {
-		return []string{"UNKNOWN"}
-	}
-
-	hypervisorTypeList := make([]string, len(hypervisorTypes))
-	for i, ht := range hypervisorTypes {
-		hypervisorTypeList[i] = ht.GetName()
-	}
-	return hypervisorTypeList
+	return common.FlattenEnumValueList(hypervisorTypes)
 }
 
 func flattenClusterFunctionRef(clusterFunctionRefs []import1.ClusterFunctionRef) []string {
-	if len(clusterFunctionRefs) == 0 {
-		return nil
-	}
-
-	clusterFunctionList := make([]string, len(clusterFunctionRefs))
-	for i, ref := range clusterFunctionRefs {
-		clusterFunctionList[i] = ref.GetName()
-	}
-	return clusterFunctionList
+	return common.FlattenEnumValueList(clusterFunctionRefs)
 }
 
 func flattenClusterArchReference(clusterArchReference *import1.ClusterArchReference) string {
-	return clusterArchReference.GetName()
+	return common.FlattenPtrEnum(clusterArchReference)
 }
 
 func flattenOperationMode(operationMode *import1.OperationMode) string {
-	return operationMode.GetName()
+	return common.FlattenPtrEnum(operationMode)
 }
 
 func flattenEncryptionStatus(EncryptionStatus *import1.EncryptionStatus) string {
-	return EncryptionStatus.GetName()
+	return common.FlattenPtrEnum(EncryptionStatus)
 }
 
 func flattenEncryptionOptionInfo(encryptionOptionInfos []import1.EncryptionOptionInfo) []string {
-	if len(encryptionOptionInfos) == 0 {
-		return nil
-	}
-
-	encryptionOptionList := make([]string, len(encryptionOptionInfos))
-	for i, info := range encryptionOptionInfos {
-		encryptionOptionList[i] = info.GetName()
-	}
-	return encryptionOptionList
+	return common.FlattenEnumValueList(encryptionOptionInfos)
 }
 
 func flattenEncryptionScopeInfo(encryptionScopeInfos []import1.EncryptionScopeInfo) []string {
-	if len(encryptionScopeInfos) == 0 {
-		return nil
-	}
-
-	encryptionScopeInfoList := make([]string, len(encryptionScopeInfos))
-	for i, encryptionScopeInfo := range encryptionScopeInfos {
-		encryptionScopeInfoList[i] = encryptionScopeInfo.GetName()
-	}
-	return encryptionScopeInfoList
+	return common.FlattenEnumValueList(encryptionScopeInfos)
 }
 
 func flattenKeyManagementServerType(keyManagementServerType *import1.KeyManagementServerType) string {
-	return keyManagementServerType.GetName()
+	return common.FlattenPtrEnum(keyManagementServerType)
 }
 
 func flattenDomainAwarenessLevel(domainAwarenessLevel *import1.DomainAwarenessLevel) string {
-	return domainAwarenessLevel.GetName()
+	return common.FlattenPtrEnum(domainAwarenessLevel)
 }
 
 func flattenUpgradeStatus(upgradeStatus *import1.UpgradeStatus) string {
-	return upgradeStatus.GetName()
+	return common.FlattenPtrEnum(upgradeStatus)
 }
 
 func flattenSoftwareTypeRef(softwareTypeRef *import1.SoftwareTypeRef) string {
-	return softwareTypeRef.GetName()
+	return common.FlattenPtrEnum(softwareTypeRef)
 }

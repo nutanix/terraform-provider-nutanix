@@ -181,7 +181,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
-										ValidateFunc: validation.StringInSlice([]string{"PLAIN", "STARTTLS", "SSL"}, false),
+										ValidateFunc: validation.StringInSlice(SMTPTypeStrings, false),
 									},
 								},
 							},
@@ -212,7 +212,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
-										ValidateFunc: validation.StringInSlice([]string{"VCENTER"}, false),
+										ValidateFunc: validation.StringInSlice(ManagementServerTypeStrings, false),
 									},
 									"is_drs_enabled": {
 										Type:     schema.TypeBool,
@@ -238,9 +238,10 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 						},
 						"key_management_server_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(KeyManagementServerTypeStrings, false),
 						},
 						"backplane": {
 							Type:     schema.TypeList,
@@ -273,7 +274,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
-										Elem: SchemaForIPList(false),
+										Elem:     SchemaForIPList(false),
 									},
 									"port": {
 										Type:     schema.TypeInt,
@@ -300,7 +301,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringInSlice([]string{"HTTP", "HTTPS", "SOCKS"}, false),
+											ValidateFunc: validation.StringInSlice(HTTPProxyTypeStrings, false),
 										},
 									},
 								},
@@ -319,7 +320,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 									"target_type": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringInSlice([]string{"IPV6_ADDRESS", "HOST_NAME", "DOMAIN_NAME_SUFFIX", "IPV4_NETWORK_MASK", "IPV4_ADDRESS"}, false),
+										ValidateFunc: validation.StringInSlice(HTTPProxyWhiteListTargetStrings, false),
 									},
 								},
 							},
@@ -378,7 +379,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice([]string{"AOS", "ONE_NODE", "TWO_NODE"}, false),
+								ValidateFunc: validation.StringInSlice(ClusterFunctionStrings, false),
 							},
 						},
 						"timezone": {
@@ -460,9 +461,10 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							},
 						},
 						"cluster_arch": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(ClusterArchStrings, false),
 						},
 						"fault_tolerance_state": {
 							Type:     schema.TypeList,
@@ -482,7 +484,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
-										ValidateFunc: validation.StringInSlice([]string{"RACK", "NODE", "BLOCK", "DISK"}, false),
+										ValidateFunc: validation.StringInSlice(DomainAwarenessLevelStrings, false),
 									},
 									"current_cluster_fault_tolerance": {
 										Type:     schema.TypeString,
@@ -492,7 +494,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
-										ValidateFunc: validation.StringInSlice([]string{"CFT_1N_OR_1D", "CFT_2N_OR_2D", "CFT_1N_AND_1D", "CFT_0N_AND_0D"}, false),
+										ValidateFunc: validation.StringInSlice(ClusterFaultToleranceStrings, false),
 									},
 									"redundancy_status": {
 										Type:     schema.TypeList,
@@ -518,9 +520,10 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 						},
 						"operation_mode": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(OperationModeStrings, false),
 						},
 						"is_lts": {
 							Type:     schema.TypeBool,
@@ -564,7 +567,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
-										ValidateFunc: validation.StringInSlice([]string{"ALL", "DEFAULT"}, false),
+										ValidateFunc: validation.StringInSlice(PIIScrubbingLevelStrings, false),
 									},
 								},
 							},
@@ -614,22 +617,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"links": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"href": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"rel": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
+			"links": common.LinksSchema(),
 		},
 	}
 }
@@ -658,7 +646,7 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 		body.Config = expandClusterConfigReference(configVar, d)
 	}
 	if upgradeStatus, ok := d.GetOk("upgrade_status"); ok {
-		body.UpgradeStatus = expandUpgradeStatus(upgradeStatus)
+		body.UpgradeStatus = common.ExpandEnum(upgradeStatus, UpgradeStatusMap, "upgrade_status")
 	}
 
 	if containerName, ok := d.GetOk("container_name"); ok {
@@ -833,7 +821,7 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 		updateSpec.Config = expandClusterConfigReference(d.Get("config"), d)
 	}
 	if d.HasChange("upgrade_status") {
-		updateSpec.UpgradeStatus = expandUpgradeStatus(d.Get("upgrade_status"))
+		updateSpec.UpgradeStatus = common.ExpandEnum(d.Get("upgrade_status"), UpgradeStatusMap, "upgrade_status")
 	}
 
 	if d.HasChange("container_name") {
@@ -1005,28 +993,6 @@ func expandNodeReference(pr interface{}) *config.NodeReference {
 	return nil
 }
 
-func expandUpgradeStatus(upgradeStatus interface{}) *config.UpgradeStatus {
-	const two, three, four, five, six, seven, eight, nine, ten = 2, 3, 4, 5, 6, 7, 8, 9, 10
-	subMap := map[string]interface{}{
-		"PENDING":     two,
-		"DOWNLOADING": three,
-		"QUEUED":      four,
-		"PREUPGRADE":  five,
-		"UPGRADING":   six,
-		"SUCCEEDED":   seven,
-		"FAILED":      eight,
-		CANCELED:      nine,
-		"SCHEDULED":   ten,
-	}
-	if subMap[upgradeStatus.(string)] != nil {
-		pVal := subMap[upgradeStatus.(string)]
-		p := config.UpgradeStatus(pVal.(int))
-		return &p
-	}
-	log.Printf("[INFO] upgrade_status is not provided")
-	return nil
-}
-
 func expandNodeListItemReference(pr []interface{}) []config.NodeListItemReference {
 	if len(pr) > 0 {
 		nodeList := make([]config.NodeListItemReference, len(pr))
@@ -1096,20 +1062,7 @@ func expandClusterNetworkReference(pr interface{}) *config.ClusterNetworkReferen
 			cls.Fqdn = utils.StringPtr(fqdn.(string))
 		}
 		if keyManagementServerType, ok := val["key_management_server_type"]; ok {
-			log.Printf("[DEBUG] key_management_server_type : %s", keyManagementServerType)
-			const zero, one, two, three, four = 0, 1, 2, 3, 4
-			subMap := map[string]interface{}{
-				"UNKNOWN":       zero,
-				"$REDACTED":     one,
-				"LOCAL":         two,
-				"PRISM_CENTRAL": three,
-				"EXTERNAL":      four,
-			}
-			if subMap[keyManagementServerType.(string)] != nil {
-				pVal := subMap[keyManagementServerType.(string)]
-				p := config.KeyManagementServerType(pVal.(int))
-				cls.KeyManagementServerType = &p
-			}
+			cls.KeyManagementServerType = common.ExpandEnum(keyManagementServerType, KeyManagementServerTypeMap, "key_management_server_type")
 		}
 		if backplane, ok := val["backplane"]; ok {
 			cls.Backplane = expandBackplaneNetworkParams(backplane)
@@ -1138,21 +1091,8 @@ func expandHTTPProxyWhiteList(proxyTypesWhiteList []interface{}) []config.HttpPr
 			if target, ok := val["target"]; ok {
 				httpProxy.Target = utils.StringPtr(target.(string))
 			}
-			if targetType, ok := val["target_type"]; ok {
-				const two, three, four, five, six = 2, 3, 4, 5, 6
-				subMap := map[string]interface{}{
-					"IPV4_ADDRESS":       two,
-					"IPV6_ADDRESS":       three,
-					"IPV4_NETWORK_MASK":  four,
-					"DOMAIN_NAME_SUFFIX": five,
-					"HOST_NAME":          six,
-				}
-				if subMap[targetType.(string)] != nil {
-					pVal := subMap[targetType.(string)]
-					p := config.HttpProxyWhiteListTargetType(pVal.(int))
-					httpProxy.TargetType = &p
-				}
-			}
+			httpProxy.TargetType = common.ExpandEnum(val["target_type"], HTTPProxyWhiteListTargetMap, "target_type")
+
 			httpProxyWhiteList[k] = *httpProxy
 		}
 		return httpProxyWhiteList
@@ -1183,27 +1123,8 @@ func expandHTTPProxyList(httpProxyList []interface{}) []config.HttpProxyConfig {
 			if name, ok := val["name"]; ok {
 				httpProxy.Name = utils.StringPtr(name.(string))
 			}
-			if proxyTypes, ok := val["proxy_types"]; ok {
-				if proxyTypes == nil || len(proxyTypes.([]interface{})) == 0 {
-					httpProxy.ProxyTypes = nil
-				} else {
-					proxyTypesList := make([]config.HttpProxyType, len(proxyTypes.([]interface{})))
-					const two, three, four = 2, 3, 4
-					subMap := map[string]interface{}{
-						"HTTP":  two,
-						"HTTPS": three,
-						"SOCKS": four,
-					}
-					for i, val := range proxyTypes.([]interface{}) {
-						if subMap[val.(string)] != nil {
-							pVal := subMap[val.(string)]
-							p := config.HttpProxyType(pVal.(int))
-							proxyTypesList[i] = p
-						}
-					}
-					httpProxy.ProxyTypes = proxyTypesList
-				}
-			}
+			httpProxy.ProxyTypes = common.ExpandEnumList(val["proxy_types"], HTTPProxyTypeMap, "proxy_type")
+
 			httpProxyConfig[k] = *httpProxy
 		}
 		return httpProxyConfig
@@ -1220,29 +1141,8 @@ func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *confi
 		if buildInfo, ok := val["build_info"]; ok && d.HasChange("config.0.build_info") {
 			clsConf.BuildInfo = expandBuildReference(buildInfo)
 		}
-		if clusterFunction, ok := val["cluster_function"]; ok && d.HasChange("config.0.cluster_function") {
-			cfLen := len(clusterFunction.([]interface{}))
-			cfs := make([]config.ClusterFunctionRef, cfLen)
-			const two, three, four, five, six, seven, eight = 2, 3, 4, 5, 6, 7, 8
-			subMap := map[string]interface{}{
-				"AOS":                two,
-				"PRISM_CENTRAL":      three,
-				"CLOUD_DATA_GATEWAY": four,
-				"AFS":                five,
-				"ONE_NODE":           six,
-				"TWO_NODE":           seven,
-				"ANALYTICS_PLATFORM": eight,
-			}
+		clsConf.ClusterFunction = common.ExpandEnumList(val["cluster_function"], ClusterFunctionMap, "cluster_function")
 
-			for k, v := range clusterFunction.([]interface{}) {
-				if subMap[v.(string)] != nil {
-					pVal := subMap[v.(string)]
-					p := config.ClusterFunctionRef(pVal.(int))
-					cfs[k] = p
-				}
-			}
-			clsConf.ClusterFunction = cfs
-		}
 		if _, ok := val["authorized_public_key_list"]; ok && d.HasChange("config.0.authorized_public_key_list") {
 			_, newObj := d.GetChange("config.0.authorized_public_key_list")
 			clsConf.AuthorizedPublicKeyList = expandPublicKey(newObj.([]interface{}))
@@ -1250,48 +1150,17 @@ func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *confi
 		if redundancyFactor, ok := val["redundancy_factor"]; ok && d.HasChange("config.0.redundancy_factor") {
 			clsConf.RedundancyFactor = utils.Int64Ptr(int64(redundancyFactor.(int)))
 		}
-		if clusterArch, ok := val["cluster_arch"]; ok && d.HasChange("config.0.cluster_arch") {
-			const two, three = 2, 3
-			subMap := map[string]interface{}{
-				"X86_64":  two,
-				"PPC64LE": three,
-			}
-			if subMap[clusterArch.(string)] != nil {
-				pVal := subMap[clusterArch.(string)]
-				p := config.ClusterArchReference(pVal.(int))
-				clsConf.ClusterArch = &p
-			}
-		}
+		clsConf.ClusterArch = common.ExpandEnum(val["cluster_arch"], ClusterArchMap, "cluster_arch")
+
 		if faultToleranceState, ok := val["fault_tolerance_state"]; ok && d.HasChange("config.0.fault_tolerance_state") {
 			clsConf.FaultToleranceState = expandFaultToleranceState(faultToleranceState)
 		}
 		if operationMode, ok := val["operation_mode"]; ok && d.HasChange("config.0.operation_mode") {
-			const two, three, four, five, six = 2, 3, 4, 5, 6
-			subMap := map[string]interface{}{
-				"NORMAL":             two,
-				"READ_ONLY":          three,
-				"STAND_ALONE":        four,
-				"SWITCH_TO_TWO_NODE": five,
-				"OVERRIDE":           six,
-			}
-			if subMap[operationMode.(string)] != nil {
-				pVal := subMap[operationMode.(string)]
-				p := config.OperationMode(pVal.(int))
-				clsConf.OperationMode = &p
-			}
+			clsConf.OperationMode = common.ExpandEnum(operationMode, OperationModeMap, "operation_mode")
 		}
-		if encryptionInTransitStatus, ok := val["encryption_in_transit_status"]; ok && d.HasChange("config.0.encryption_in_transit_status") {
-			const two, three = 2, 3
-			subMap := map[string]interface{}{
-				"ENABLED":  two,
-				"DISABLED": three,
-			}
 
-			if subMap[encryptionInTransitStatus.(string)] != nil {
-				pVal := subMap[encryptionInTransitStatus.(string)]
-				p := config.EncryptionStatus(pVal.(int))
-				clsConf.EncryptionInTransitStatus = &p
-			}
+		if encryptionInTransitStatus, ok := val["encryption_in_transit_status"]; ok && d.HasChange("config.0.encryption_in_transit_status") {
+			clsConf.EncryptionInTransitStatus = common.ExpandEnum(encryptionInTransitStatus, EncryptionStatusMap, "encryption_in_transit_status")
 		}
 
 		if pulseStatus, ok := val["pulse_status"]; ok && d.HasChange("config.0.pulse_status") {
@@ -1317,17 +1186,9 @@ func expandPulseStatus(status interface{}) *config.PulseStatus {
 		pulse.IsEnabled = utils.BoolPtr(isEnabled.(bool))
 	}
 	if piiScrubbingLevel, ok := val["pii_scrubbing_level"]; ok {
-		const two, three = 2, 3
-		subMap := map[string]interface{}{
-			"DEFAULT": two,
-			"ALL":     three,
-		}
-		if subMap[piiScrubbingLevel.(string)] != nil {
-			pVal := subMap[piiScrubbingLevel.(string)]
-			p := config.PIIScrubbingLevel(pVal.(int))
-			pulse.PiiScrubbingLevel = &p
-		}
+		pulse.PiiScrubbingLevel = common.ExpandEnum(piiScrubbingLevel, PIIScrubbingLevelMap, "pii_scrubbing_level")
 	}
+
 	return pulse
 }
 
@@ -1465,18 +1326,9 @@ func expandSMTPServerRef(pr interface{}) *config.SmtpServerRef {
 			smtp.Server = expandSMTPNetwork(server.([]interface{}))
 		}
 		if smtpType, ok := val["type"]; ok {
-			const two, three, four = 2, 3, 4
-			subMap := map[string]interface{}{
-				"PLAIN":    two,
-				"STARTTLS": three,
-				"SSL":      four,
-			}
-			if subMap[smtpType.(string)] != nil {
-				pVal := subMap[smtpType.(string)]
-				p := config.SmtpType(pVal.(int))
-				smtp.Type = &p
-			}
+			smtp.Type = common.ExpandEnum(smtpType, SMTPTypeMap, "smtp_type")
 		}
+
 		return smtp
 	}
 	return nil
@@ -1521,17 +1373,7 @@ func expandManagementServerRef(pr interface{}) *config.ManagementServerRef {
 			mgm.Ip = expandIPAddress(ip.([]interface{}))
 		}
 		if mgmType, ok := val["type"]; ok {
-			const two = 2
-			switch mgmType.(string) {
-			case "VCENTER":
-				p := config.ManagementServerType(two)
-				mgm.Type = &p
-				log.Printf("[DEBUG] mgmType : VCENTER case")
-			default:
-				log.Printf("[DEBUG] mgmType : default case")
-				mgm.Type = nil
-			}
-			log.Printf("[DEBUG] mgmType : %v", mgmType.(string))
+			mgm.Type = common.ExpandEnum(mgmType, ManagementServerTypeMap, "management_server_type")
 		}
 		if drsEnabled, ok := val["is_drs_enabled"]; ok {
 			mgm.IsDrsEnabled = utils.BoolPtr(drsEnabled.(bool))
@@ -1659,48 +1501,25 @@ func expandFaultToleranceState(pr interface{}) *config.FaultToleranceState {
 		val := prI[0].(map[string]interface{})
 
 		if domainAwarenessLevel, ok := val["domain_awareness_level"]; ok {
-			const two, three, four, five = 2, 3, 4, 5
-			subMap := map[string]interface{}{
-				"NODE":  two,
-				"BLOCK": three,
-				"RACK":  four,
-				"DISK":  five,
-			}
-			if subMap[domainAwarenessLevel.(string)] != nil {
-				pVal := subMap[domainAwarenessLevel.(string)]
-				p := config.DomainAwarenessLevel(pVal.(int))
-				fts.DomainAwarenessLevel = &p
-			}
+			fts.DomainAwarenessLevel = common.ExpandEnum(domainAwarenessLevel, DomainAwarenessLevelMap, "domain_awareness_level")
 		}
 
 		if currentClusterFaultTolerance, ok := val["current_cluster_fault_tolerance"]; ok {
-			const two, three, four, five = 2, 3, 4, 5
-			subMap := map[string]interface{}{
-				"CFT_0N_AND_0D": two,
-				"CFT_1N_OR_1D":  three,
-				"CFT_2N_OR_2D":  four,
-				"CFT_1N_AND_1D": five,
-			}
-			if subMap[currentClusterFaultTolerance.(string)] != nil {
-				pVal := subMap[currentClusterFaultTolerance.(string)]
-				p := config.ClusterFaultToleranceRef(pVal.(int))
-				fts.CurrentClusterFaultTolerance = &p
-			}
+			fts.CurrentClusterFaultTolerance = common.ExpandEnum(
+				currentClusterFaultTolerance,
+				ClusterFaultToleranceMap,
+				"current_cluster_fault_tolerance",
+			)
 		}
+
 		if desiredClusterFaultTolerance, ok := val["desired_cluster_fault_tolerance"]; ok {
-			const two, three, four, five = 2, 3, 4, 5
-			subMap := map[string]interface{}{
-				"CFT_0N_AND_0D": two,
-				"CFT_1N_OR_1D":  three,
-				"CFT_2N_OR_2D":  four,
-				"CFT_1N_AND_1D": five,
-			}
-			if subMap[desiredClusterFaultTolerance.(string)] != nil {
-				pVal := subMap[desiredClusterFaultTolerance.(string)]
-				p := config.ClusterFaultToleranceRef(pVal.(int))
-				fts.DesiredClusterFaultTolerance = &p
-			}
+			fts.DesiredClusterFaultTolerance = common.ExpandEnum(
+				desiredClusterFaultTolerance,
+				ClusterFaultToleranceMap,
+				"desired_cluster_fault_tolerance",
+			)
 		}
+
 		return fts
 	}
 	return nil

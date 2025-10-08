@@ -67,3 +67,100 @@ func TaskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 func getTaskStatus(pr *prismConfig.TaskStatus) string {
 	return pr.GetName()
 }
+
+// EnumToStrings converts any slice of enums that implement GetName() to []string
+func EnumToStrings[T interface{ GetName() string }](enums []T) []string {
+	names := make([]string, len(enums))
+	for i, e := range enums {
+		names[i] = e.GetName()
+	}
+	return names
+}
+
+// EnumToMap returns a map from string names to enum values for any enum type that implements GetName()
+func EnumToMap[T interface{ GetName() string }](enums []T) map[string]T {
+	m := make(map[string]T, len(enums))
+	for _, e := range enums {
+		m[e.GetName()] = e
+	}
+	return m
+}
+
+// ExpandEnum expands a single string value to an enum pointer
+func ExpandEnum[T any](val interface{}, enumMap map[string]T, fieldName string) *T {
+	if val == nil {
+		return nil
+	}
+
+	if str, ok := val.(string); ok && str != "" {
+		if enumVal, found := enumMap[str]; found {
+			return &enumVal
+		} else {
+			log.Printf("[WARN] unknown %s: %s", fieldName, str)
+		}
+	}
+
+	return nil
+}
+
+// ExpandEnumList expands a list of strings to enum values
+func ExpandEnumList[T any](val interface{}, enumMap map[string]T, fieldName string) []T {
+	if val == nil {
+		return nil
+	}
+
+	list := make([]T, 0)
+	for _, item := range val.([]interface{}) {
+		if str, ok := item.(string); ok && str != "" {
+			if enumVal, found := enumMap[str]; found {
+				list = append(list, enumVal)
+			} else {
+				log.Printf("[WARN] unknown %s: %s", fieldName, str)
+			}
+		}
+	}
+
+	if len(list) == 0 {
+		return nil
+	}
+	return list
+}
+
+// FlattenPtrEnum converts a pointer to an enum implementing GetName() to a string.
+// Returns "" if the pointer is nil.
+func FlattenPtrEnum[T interface{ GetName() string }](enumPtr *T) string {
+	if enumPtr == nil {
+		return ""
+	}
+	return (*enumPtr).GetName()
+}
+
+// FlattenEnumPtrList converts a slice of pointers to enums into a slice of strings.
+// Nil pointers are skipped.
+func FlattenEnumPtrList[T interface{ GetName() string }](enums []*T) []string {
+	if len(enums) == 0 {
+		return nil
+	}
+
+	names := make([]string, 0, len(enums))
+	for _, e := range enums {
+		if e != nil {
+			names = append(names, (*e).GetName())
+		}
+	}
+	return names
+}
+
+// FlattenEnumValueList converts a slice of enum values (not pointers) to []string
+func FlattenEnumValueList[T interface{ GetName() string }](enums []T) []string {
+	if len(enums) == 0 {
+		return nil
+	}
+
+	names := make([]string, 0, len(enums))
+	for _, e := range enums {
+		names = append(names, (e).GetName())
+
+	}
+	return names
+}

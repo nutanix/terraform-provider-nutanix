@@ -982,23 +982,7 @@ func expandDetails(pr interface{}) *config.UserInfo {
 }
 
 func expandHypervisorType(hypervisorType interface{}) *config.HypervisorType {
-	if hypervisorType != nil && hypervisorType != "" {
-		const two, three, four, five, six = 2, 3, 4, 5, 6
-		subMap := map[string]interface{}{
-			"AHV":        two,
-			"ESX":        three,
-			"HYPERV":     four,
-			"XEN":        five,
-			"NATIVEHOST": six,
-		}
-		pVal := subMap[hypervisorType.(string)]
-		if pVal == nil {
-			return nil
-		}
-		p := config.HypervisorType(pVal.(int))
-		return &p
-	}
-	return nil
+	return common.ExpandEnum(hypervisorType, HypervisorTypeMap, "hypervisor_type")
 }
 
 func expandExtraParams(pr interface{}) *config.NodeRemovalExtraParam {
