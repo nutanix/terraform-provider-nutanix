@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+var allowedOverridesEnum = []string{"NFS_SUBNET_WHITELIST_CONFIG", "NTP_SERVER_CONFIG", "SNMP_SERVER_CONFIG", "SMTP_SERVER_CONFIG", "PULSE_CONFIG", "NAME_SERVER_CONFIG", "RSYSLOG_SERVER_CONFIG"}
+
 func ResourceNutanixClusterProfilesV2() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: ResourceNutanixClusterProfilesV2Create,
@@ -30,21 +32,21 @@ func ResourceNutanixClusterProfilesV2() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(allowedConfigTypeNames, false),
+					ValidateFunc: validation.StringInSlice(allowedOverridesEnum, false),
 				},
 			},
 			"name_server_ip_list": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-						"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
-					},
-				},
+				Elem:     SchemaForIPList(false),
 			},
-
+			"ntpServerIpList": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     SchemaForIPList(false),
+			},
 			// Computed fields
 			"ext_id": {
 				Type:     schema.TypeString,
