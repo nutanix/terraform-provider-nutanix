@@ -70,15 +70,15 @@ linters:
     - vet
     # - revive
     # - makezero
-    - tagalign
-    - gci
-    - gofumpt
-    - cyclop
-    - depguard
-    - varnamelen
-    - wastedassign
-    - wrapcheck
-    - containedctx
+    # - tagalign
+    # - gci
+    # - gofumpt
+    # - cyclop
+    # - depguard
+    # - varnamelen
+    # - wastedassign
+    # - wrapcheck
+    # - containedctx
 
 issues:
   exclude:
