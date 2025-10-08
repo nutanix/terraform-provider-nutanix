@@ -37,7 +37,7 @@ lint: fmtcheck
 
 tools:
 	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
-	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.2
 	GO111MODULE=on go install github.com/mitchellh/gox
 
 vet:
