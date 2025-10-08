@@ -79,6 +79,10 @@ linters:
     # - wastedassign
     # - wrapcheck
     # - containedctx
+    - exhaustruct
+    - varnamelen
+    - errchkjson
+    - tagliatelle
 
 issues:
   exclude:
