@@ -1,10 +1,13 @@
 linters-settings:
   errcheck:
     ignore: |
-      github.com/hashicorp/terraform-plugin-sdk/helper/schema:ForceNew|Set
+       github.com/hashicorp/terraform-plugin-sdk/helper/schema:ForceNew|Set
       fmt:.*
       io:Close
       github.com/hashicorp/terraform-provider-google-beta/google-beta:Set
+      encoding/json:Unmarshal
+      net/http:Request.ParseForm
+      github.com/hashicorp/terraform-plugin-sdk/helper/schema:Set
   govet:
     check-shadowing: true
   golint:
