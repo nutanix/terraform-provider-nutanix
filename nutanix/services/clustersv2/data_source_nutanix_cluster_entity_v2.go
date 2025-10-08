@@ -10,6 +10,7 @@ import (
 	import4 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
 	import3 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/response"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -32,22 +33,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"links": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"href": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"rel": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
+			"links": common.LinksSchema(),
 			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -912,7 +898,7 @@ func flattenIPv6Address(ipv6Address *import4.IPv6Address) []interface{} {
 	}
 
 	ip := map[string]interface{}{
-		"value":        ipv6Address.Value,
+		"value":         ipv6Address.Value,
 		"prefix_length": ipv6Address.PrefixLength,
 	}
 

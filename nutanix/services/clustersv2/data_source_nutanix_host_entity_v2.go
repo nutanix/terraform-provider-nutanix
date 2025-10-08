@@ -8,6 +8,7 @@ import (
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -27,22 +28,7 @@ func DatasourceNutanixHostEntityV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"links": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"href": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"rel": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
+			"links": common.LinksSchema(),
 			"host_name": {
 				Type:     schema.TypeString,
 				Computed: true,

@@ -614,22 +614,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"links": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"href": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"rel": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
+			"links": common.LinksSchema(),
 		},
 	}
 }
