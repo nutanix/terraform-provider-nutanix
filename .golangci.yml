@@ -6,7 +6,8 @@ linters-settings:
       io:Close
       github.com/hashicorp/terraform-provider-google-beta/google-beta:Set
       encoding/json:Unmarshal
-      net/http.(*Request).ParseForm
+      net/http:Request.ParseForm
+      github.com/hashicorp/terraform-plugin-sdk/helper/schema:Set
   govet:
     check-shadowing: true
   golint:
