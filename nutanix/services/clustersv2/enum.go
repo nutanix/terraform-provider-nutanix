@@ -135,4 +135,5 @@ var (
 	OperationModeMap            = common.EnumToMap(OperationModes)
 	EncryptionStatusMap         = common.EnumToMap(EncryptionStatuses)
 	UpgradeStatusMap            = common.EnumToMap(UpgradeStatuses)
+	
 )

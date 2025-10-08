@@ -64,8 +64,8 @@ func TaskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 	}
 }
 
-func getTaskStatus(pr *prismConfig.TaskStatus) string {
-	return pr.GetName()
+func getTaskStatus(taskStatus *prismConfig.TaskStatus) string {
+	return FlattenPtrEnum(taskStatus)
 }
 
 // EnumToStrings converts any slice of enums that implement GetName() to []string
