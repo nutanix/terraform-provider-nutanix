@@ -77,3 +77,4 @@ run:
   skip-dirs:
     - vendor
     - future
+    - nutanix/sdks/v3
