@@ -189,7 +189,7 @@ func ResourceNutanixAddressGroupsV2Read(ctx context.Context, d *schema.ResourceD
 
 func ResourceNutanixAddressGroupsV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
-	updateInput := &import1.AddressGroup{}
+	
 	resp, err := conn.AddressGroupAPIInstance.GetAddressGroupById(utils.StringPtr(d.Id()))
 	if err != nil {
 		return diag.Errorf("error while fetching address group : %v", err)
@@ -197,7 +197,7 @@ func ResourceNutanixAddressGroupsV2Update(ctx context.Context, d *schema.Resourc
 
 	getResp := resp.Data.GetValue().(import1.AddressGroup)
 
-	updateInput = &getResp
+	updateInput := &getResp
 
 	if d.HasChange("name") {
 		updateInput.Name = utils.StringPtr(d.Get("name").(string))
