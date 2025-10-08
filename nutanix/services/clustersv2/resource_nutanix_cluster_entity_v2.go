@@ -1,3 +1,4 @@
+// Package clustersv2 provides resources for managing Nutanix clusters.
 package clustersv2
 
 import (
