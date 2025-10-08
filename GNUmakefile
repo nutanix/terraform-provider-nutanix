@@ -14,8 +14,8 @@ test: fmtcheck
 testacc: fmtcheck
 	@echo "==> Running testcases..."
 	@echo "TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=count"
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=count 
-	
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=count
+
 fmt:
 	@echo "==> Fixing source code with gofmt..."
 	goimports -w ./$(PKG_NAME)
@@ -36,8 +36,8 @@ lint: fmtcheck
 	@GOGC=30 golangci-lint run --timeout=30m
 
 tools:
-	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
-	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell@v0.3.4
+	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.0
 	GO111MODULE=on go install github.com/mitchellh/gox
 
 vet:
