@@ -26,6 +26,9 @@ linters-settings:
   gocritic:
     disable:
       - ifElseChain
+  forbidigo:
+    exclude:
+      - '^fmt\.Print(|f|ln)$'
 
 linters:
   enable-all: true
@@ -77,3 +80,4 @@ run:
   skip-dirs:
     - vendor
     - future
+    - nutanix/sdks/v3
