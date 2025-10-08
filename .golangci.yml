@@ -60,6 +60,25 @@ linters:
     - staticcheck
     - deadcode
     - exhaustruct
+    - nolintlint
+    - gosimple
+    - ineffassign
+    - misspell
+    - structcheck
+    - unconvert
+    - varcheck
+    - vet
+    - revive
+    - makezero
+    - tagalign
+    - gci
+    - gofumpt
+    - cyclop
+    - depguard
+    - varnamelen
+    - wastedassign
+    - wrapcheck
+    - containedctx
 
 issues:
   exclude:
