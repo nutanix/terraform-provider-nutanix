@@ -70,9 +70,9 @@ func getTaskStatus(pr *prismConfig.TaskStatus) string {
 
 // EnumToStrings converts any slice of enums that implement GetName() to []string
 func EnumToStrings[T interface{ GetName() string }](enums []T) []string {
-	names := make([]string, len(enums))
-	for i, e := range enums {
-		names[i] = e.GetName()
+	names := make([]string, 0, len(enums))
+	for _, e := range enums {
+		names = append(names, e.GetName())
 	}
 	return names
 }
@@ -159,8 +159,7 @@ func FlattenEnumValueList[T interface{ GetName() string }](enums []T) []string {
 
 	names := make([]string, 0, len(enums))
 	for _, e := range enums {
-		names = append(names, (e).GetName())
-
+		names = append(names, e.GetName())
 	}
 	return names
 }
