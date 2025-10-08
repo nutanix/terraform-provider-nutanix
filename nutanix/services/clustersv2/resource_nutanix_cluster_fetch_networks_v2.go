@@ -115,8 +115,8 @@ func nodeListNetworkingDetailsSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-										"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
+										"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+										"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 									},
 								},
 							},
@@ -178,8 +178,8 @@ func nodeListSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-							"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
+							"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+							"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 						},
 					},
 				},
@@ -189,8 +189,8 @@ func nodeListSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-							"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
+							"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+							"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 						},
 					},
 				},
@@ -200,8 +200,8 @@ func nodeListSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-							"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
+							"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+							"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 						},
 					},
 				},

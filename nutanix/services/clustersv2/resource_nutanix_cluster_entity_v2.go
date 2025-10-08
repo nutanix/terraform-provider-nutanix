@@ -74,8 +74,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-												"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
+												"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+												"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 											},
 										},
 									},
@@ -89,8 +89,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-												"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
+												"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+												"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 											},
 										},
 									},
@@ -112,8 +112,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
+									"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -123,8 +123,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
+									"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -150,8 +150,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
+									"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 									"fqdn": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -175,8 +175,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
+									"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 									"fqdn": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -217,8 +217,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-															"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
+															"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+															"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 															"fqdn": {
 																Type:     schema.TypeList,
 																Optional: true,
@@ -268,8 +268,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
+									"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -289,8 +289,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-												"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
+												"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+												"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 											},
 										},
 									},
@@ -344,8 +344,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
-									"subnet":  SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-									"netmask": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+									"subnet":  SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+									"netmask": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -361,8 +361,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
-												"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
+												"ipv4": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+												"ipv6": SchemaForValuePrefixLengthResource(ipv6PrefixLengthDefaultValue),
 											},
 										},
 									},
@@ -719,6 +719,27 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 						},
 					},
+				},
+			},
+		},
+	}
+}
+
+func SchemaForValuePrefixLengthResource(defaultPrefixLength int) *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"value": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"prefix_length": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  defaultPrefixLength,
 				},
 			},
 		},
