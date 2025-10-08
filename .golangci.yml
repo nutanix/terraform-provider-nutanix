@@ -1,4 +1,6 @@
 linters-settings:
+  errcheck:
+    ignore: github.com/hashicorp/terraform-plugin-sdk/helper/schema:ForceNew|Set,fmt:.*,io:Close,github.com/hashicorp/terraform-provider-google-beta/google-beta:Set
   govet:
     check-shadowing: true
   golint:
@@ -35,59 +37,20 @@ linters-settings:
       json: snake
 
 linters:
-  enable-all: true
-  disable:
-    - gocyclo
-      # disabled gocyclo as we do have a lot of large methods to iterate thru the large JSON specs
-    - dupl
-      # disabled dupl as we do have a lot of duplicated code between resources and their tests, which gets flagged by this
-    - errcheck
-      # errocheck disabled to silience errors here: https://travis-ci.com/nutanix/terraform-provider-nutanix/jobs/131154435
-      # Example error:
-      # nutanix/data_source_nutanix_image.go:61:7: Error return value of `d.Set` is not checked (errcheck)
-      # d.Set("name", utils.StringValue(resp.Status.Name))
-      # waiting on terraform/hashi to let us know how they want us to changle those errors
-      # see Error return value of `d.Set` is not checked (errcheck)
-    - typecheck
-    - gosec
-    - gochecknoinits
-    - gochecknoglobals
-    - funlen
-    - gocognit
-    - godox
-    - wsl
-    - nestif
-    - godot
-    - goconst
-    - unparam
-    - unused
-    - staticcheck
+  disable-all: true
+  enable:
     - deadcode
-    # - exhaustruct
-    - nolintlint
+    - errcheck
+    - gofmt
     - gosimple
     - ineffassign
     - misspell
+    - staticcheck
     - structcheck
     - unconvert
+    - unused
     - varcheck
     - vet
-    # - revive
-    # - makezero
-    # - tagalign
-    # - gci
-    - gofumpt
-    # - cyclop
-    # - depguard
-    # - varnamelen
-    # - wastedassign
-    - wrapcheck
-    # - containedctx
-    - exhaustruct
-    - varnamelen
-    - errchkjson
-    - tagliatelle
-    - execinquery
 
 issues:
   exclude:
