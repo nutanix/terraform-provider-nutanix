@@ -61,8 +61,8 @@ func DatasourceNutanixHostEntityV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
+									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -123,8 +123,8 @@ func DatasourceNutanixHostEntityV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
+									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -133,8 +133,8 @@ func DatasourceNutanixHostEntityV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
+									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -143,8 +143,8 @@ func DatasourceNutanixHostEntityV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
+									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -153,8 +153,8 @@ func DatasourceNutanixHostEntityV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
+									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -326,8 +326,8 @@ func DatasourceNutanixHostEntityV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
+									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 								},
 							},
 						},

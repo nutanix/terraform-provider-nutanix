@@ -39,8 +39,8 @@ func ResourceNutanixClusterDiscoverUnconfiguredNodesV2() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForValuePrefixLength(),
-						"ipv6": SchemaForValuePrefixLength(),
+						"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+						"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 					},
 				},
 			},
@@ -134,8 +134,8 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForValuePrefixLength(),
-						"ipv6": SchemaForValuePrefixLength(),
+						"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+						"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 					},
 				},
 			},
@@ -152,8 +152,8 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForValuePrefixLengthResource(),
-						"ipv6": SchemaForValuePrefixLengthResource(),
+						"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+						"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 					},
 				},
 			},
@@ -174,8 +174,8 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForValuePrefixLengthResource(),
-						"ipv6": SchemaForValuePrefixLengthResource(),
+						"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+						"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 					},
 				},
 			},

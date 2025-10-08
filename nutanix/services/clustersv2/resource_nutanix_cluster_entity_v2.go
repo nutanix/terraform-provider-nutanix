@@ -73,8 +73,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLengthResource(),
-												"ipv6": SchemaForValuePrefixLengthResource(),
+												"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+												"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 											},
 										},
 									},
@@ -88,8 +88,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLengthResource(),
-												"ipv6": SchemaForValuePrefixLengthResource(),
+												"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+												"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 											},
 										},
 									},
@@ -111,8 +111,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(),
-									"ipv6": SchemaForValuePrefixLengthResource(),
+									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -122,8 +122,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(),
-									"ipv6": SchemaForValuePrefixLengthResource(),
+									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -149,8 +149,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(),
-									"ipv6": SchemaForValuePrefixLengthResource(),
+									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 									"fqdn": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -174,8 +174,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(),
-									"ipv6": SchemaForValuePrefixLengthResource(),
+									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 									"fqdn": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -216,8 +216,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"ipv4": SchemaForValuePrefixLengthResource(),
-															"ipv6": SchemaForValuePrefixLengthResource(),
+															"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+															"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 															"fqdn": {
 																Type:     schema.TypeList,
 																Optional: true,
@@ -267,8 +267,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(),
-									"ipv6": SchemaForValuePrefixLengthResource(),
+									"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+									"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -288,8 +288,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLengthResource(),
-												"ipv6": SchemaForValuePrefixLengthResource(),
+												"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+												"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 											},
 										},
 									},
@@ -343,8 +343,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
-									"subnet":  SchemaForValuePrefixLengthResource(),
-									"netmask": SchemaForValuePrefixLengthResource(),
+									"subnet":  SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+									"netmask": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -360,8 +360,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLengthResource(),
-												"ipv6": SchemaForValuePrefixLengthResource(),
+												"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+												"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 											},
 										},
 									},
@@ -718,27 +718,6 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 						},
 					},
-				},
-			},
-		},
-	}
-}
-
-func SchemaForValuePrefixLengthResource() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		Computed: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"value": {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-				"prefix_length": {
-					Type:     schema.TypeInt,
-					Optional: true,
-					Default:  defaultValue,
 				},
 			},
 		},
@@ -1534,44 +1513,72 @@ func expandIPAddressOrFQDN(pr []interface{}) []import4.IPAddressOrFQDN {
 }
 
 func expandIPv4Address(pr interface{}) *import4.IPv4Address {
-	if len(pr.([]interface{})) == 0 {
+	// nil check
+	if pr == nil {
 		return nil
 	}
-	if pr != nil {
-		ipv4 := import4.NewIPv4Address()
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
 
-		if value, ok := val["value"]; ok {
-			ipv4.Value = utils.StringPtr(value.(string))
-		}
-		if prefix, ok := val["prefix_length"]; ok {
-			ipv4.PrefixLength = utils.IntPtr(prefix.(int))
-		}
-		return ipv4
+	// safe type assert for expected slice
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
 	}
-	return nil
+
+	// safe type assert for first element being a map
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+	ipv4 := import4.NewIPv4Address()
+
+	if v, ok := valMap["value"]; ok {
+		if s, ok2 := v.(string); ok2 {
+			ipv4.Value = utils.StringPtr(s)
+		}
+	}
+
+	if p, ok := valMap["prefix_length"]; ok {
+		if n, ok2 := p.(int); ok2 {
+			ipv4.PrefixLength = utils.IntPtr(n)
+		}
+	}
+
+	return ipv4
 }
 
 func expandIPv6Address(pr interface{}) *import4.IPv6Address {
-	if len(pr.([]interface{})) == 0 {
+	// nil check
+	if pr == nil {
 		return nil
 	}
 
-	if pr != nil {
-		ipv6 := import4.NewIPv6Address()
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
-
-		if value, ok := val["value"]; ok {
-			ipv6.Value = utils.StringPtr(value.(string))
-		}
-		if prefix, ok := val["prefix_length"]; ok {
-			ipv6.PrefixLength = utils.IntPtr(prefix.(int))
-		}
-		return ipv6
+	// safe type assert for expected slice
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
 	}
-	return nil
+
+	// safe type assert for first element being a map
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+
+	ipv6 := import4.NewIPv6Address()
+
+	if v, ok := valMap["value"]; ok {
+		if s, ok2 := v.(string); ok2 {
+			ipv6.Value = utils.StringPtr(s)
+		}
+	}
+
+	if p, ok := valMap["prefix_length"]; ok {
+		if n, ok2 := p.(int); ok2 {
+			ipv6.PrefixLength = utils.IntPtr(n)
+		}
+	}
+
+	return ipv6
 }
 
 func expandSMTPServerRef(pr interface{}) *config.SmtpServerRef {
@@ -1697,17 +1704,33 @@ func expandSMTPNetwork(pr []interface{}) *config.SmtpNetwork {
 	return nil
 }
 
-func expandFQDN(pr []interface{}) *import4.FQDN {
-	if len(pr) > 0 {
-		fqdn := import4.FQDN{}
-		val := pr[0].(map[string]interface{})
-		if value, ok := val["value"]; ok {
-			fqdn.Value = utils.StringPtr(value.(string))
-		}
-
-		return &fqdn
+func expandFQDN(pr interface{}) *import4.FQDN {
+	// nil check
+	if pr == nil {
+		return nil
 	}
-	return nil
+
+	// safe type assert for expected slice
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
+	}
+
+	// safe type assert for first element being a map
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+
+	fqdn := import4.NewFQDN()
+
+	if v, ok := valMap["value"]; ok {
+		if s, ok2 := v.(string); ok2 && s != "" {
+			fqdn.Value = utils.StringPtr(s)
+		}
+	}
+
+	return fqdn
 }
 
 func expandBuildReference(buildInfo interface{}) *config.BuildReference {

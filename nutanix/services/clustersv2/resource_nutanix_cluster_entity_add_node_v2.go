@@ -270,8 +270,8 @@ func AddNodeListSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
+							"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+							"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 						},
 					},
 				},
@@ -300,8 +300,8 @@ func AddNodeListSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
+							"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+							"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 						},
 					},
 				},
@@ -311,8 +311,8 @@ func AddNodeListSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
+							"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+							"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 						},
 					},
 				},
@@ -388,8 +388,8 @@ func computedNodeListSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
+							"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+							"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 						},
 					},
 				},
@@ -399,8 +399,8 @@ func computedNodeListSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
+							"ipv4": SchemaForValuePrefixLength(ipv4PrefixLengthDefaultValue),
+							"ipv6": SchemaForValuePrefixLength(ipv6PrefixLengthDefaultValue),
 						},
 					},
 				},
