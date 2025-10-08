@@ -27,6 +27,7 @@ linters-settings:
     disable:
       - ifElseChain
   forbidigo:
+    ignore-tests: true
     exclude:
       - '^fmt\.Print(|f|ln)$'
   tagliatelle:
@@ -75,7 +76,7 @@ linters:
     # - makezero
     # - tagalign
     # - gci
-    # - gofumpt
+    - gofumpt
     # - cyclop
     # - depguard
     # - varnamelen
