@@ -60,6 +60,7 @@ linters:
     - staticcheck
     - deadcode
     - exhaustruct
+    - nolintlint
 
 issues:
   exclude:
