@@ -15,7 +15,6 @@ import (
 )
 
 const ipv4PrefixLengthDefaultValue = 32
-const ipv6PrefixLengthDefaultValue = 128
 
 func DatasourceNutanixClusterEntityV2() *schema.Resource {
 	return &schema.Resource{
