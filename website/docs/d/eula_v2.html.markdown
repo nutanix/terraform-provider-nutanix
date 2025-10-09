@@ -24,7 +24,7 @@ data "nutanix_eula_v2" "get_eula" {}
 * `updated_time`: - EULA update time since epoch in ISO date time.
 * `version`: - Version of the EULA.
 * `is_enabled`: - Indicates whether this is the current EULA of the cluster or not.
-*  `acceptances`: - List of users accepting the EULA along with acceptance time for each.
+* `acceptances`: - List of users accepting the EULA along with acceptance time for each.
 
 ### acceptances
 The `acceptances` object contains the following attributes:
