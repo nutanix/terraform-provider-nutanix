@@ -167,23 +167,5 @@ func taskStateRefreshPrismTaskGroupFunc(taskUUID string) resource.StateRefreshFu
 
 // helper function to flatten the task status to string
 func getTaskStatus(pr *prismConfig.TaskStatus) string {
-	if pr != nil {
-		const QUEUED, RUNNING, SUCCEEDED, FAILED, CANCELED = 2, 3, 5, 6, 7
-		if *pr == prismConfig.TaskStatus(FAILED) {
-			return "FAILED"
-		}
-		if *pr == prismConfig.TaskStatus(CANCELED) {
-			return "CANCELED"
-		}
-		if *pr == prismConfig.TaskStatus(QUEUED) {
-			return "QUEUED"
-		}
-		if *pr == prismConfig.TaskStatus(RUNNING) {
-			return "RUNNING"
-		}
-		if *pr == prismConfig.TaskStatus(SUCCEEDED) {
-			return "SUCCEEDED"
-		}
-	}
-	return "UNKNOWN"
+	return pr.GetName()
 }
