@@ -58,6 +58,29 @@ func TestAccV2NutanixVmsDatasource_ListWithFilterName(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixVmsDatasource_ListWithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVMDataSourceConfigV4VmsWithInvalidFilter(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceNameVM, "vms.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccVMDataSourceConfigV4VmsWithInvalidFilter() string {
+	return `
+		data "nutanix_virtual_machines_v2" "test" {
+			filter = "name eq 'invalid'"
+		}
+	`
+}
+
 func testAccVMDataSourceConfigV4Vms() string {
 	return `
 		data "nutanix_virtual_machines_v2" "test" {

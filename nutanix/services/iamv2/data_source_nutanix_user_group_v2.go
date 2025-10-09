@@ -15,10 +15,15 @@ func DatasourceNutanixUserGroupV2() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: DatasourceNutanixUserGroupV4Read,
 		Schema: map[string]*schema.Schema{
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"ext_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"links": SchemaForLinks(),
 			"group_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -70,6 +75,9 @@ func DatasourceNutanixUserGroupV4Read(ctx context.Context, d *schema.ResourceDat
 
 	getResp := resp.Data.GetValue().(import1.UserGroup)
 
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("group_type", flattenGroupType(getResp.GroupType)); err != nil {
 		return diag.FromErr(err)
 	}

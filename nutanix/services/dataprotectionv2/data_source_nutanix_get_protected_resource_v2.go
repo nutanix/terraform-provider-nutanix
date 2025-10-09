@@ -225,7 +225,7 @@ func flattenSourceSiteReference(sourceSiteReference *config.DataProtectionSiteRe
 
 	return []map[string]interface{}{
 		{
-			"mgmt_cluster_ext_id": utils.StringValue(sourceSiteReference.MgmtClusterExtId),
+			"mgmt_cluster_ext_id": utils.StringValue(sourceSiteReference.DomainManagerExtId),
 			"cluster_ext_id":      utils.StringValue(sourceSiteReference.ClusterExtId),
 		},
 	}

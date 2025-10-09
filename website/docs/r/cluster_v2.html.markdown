@@ -360,4 +360,15 @@ The ipv6 attribute supports the following:
 * `prefix_length`: - (Optional) The prefix length of the network to which this host IPv4 address belongs.
 * `value`: - (Required) Ip address.
 
+## Import
+
+This helps to manage existing entities which are not created through terraform. Users can be imported using the `UUID`.  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_cluster_v2" "import_cluster" {}
+
+// execute this cli command
+terraform import nutanix_cluster_v2.import_cluster <UUID>
+```
+
 See detailed information in [Nutanix Create Cluster V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/Clusters/operation/createCluster).

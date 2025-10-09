@@ -72,6 +72,10 @@ func DatasourceNutanixUsersV2() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"idp_id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -237,6 +241,20 @@ func datasourceNutanixUsersV2Read(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("error while fetching users : %v", err)
 	}
 
+	if resp.Data == nil {
+		if err := d.Set("users", []map[string]interface{}{}); err != nil {
+			return diag.FromErr(err)
+		}
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No data found.",
+			Detail:   "The API returned an empty list of users.",
+		}}
+	}
+
 	getResp := resp.Data.GetValue().([]iamConfig.User)
 
 	if err := d.Set("users", flattenUsersEntities(getResp)); err != nil {
@@ -267,6 +285,9 @@ func flattenUsersEntities(usersResp []iamConfig.User) []interface{} {
 			}
 			if v.UserType != nil {
 				user["user_type"] = flattenUserType(v.UserType)
+			}
+			if v.Description != nil {
+				user["description"] = v.Description
 			}
 			if v.IdpId != nil {
 				user["idp_id"] = v.IdpId

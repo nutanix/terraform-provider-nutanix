@@ -56,6 +56,22 @@ func TestAccV2NutanixClustersDataSource_limit(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixClustersDataSource_InvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClustersDataSourceConfigWithInvalidFilter(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceNameClusters, "cluster_entities.#"),
+					resource.TestCheckResourceAttr(dataSourceNameClusters, "cluster_entities.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 // Lookup based on InstanceID
 const testAccClustersDataSourceConfig = `
 data "nutanix_clusters_v2" "test" {}`
@@ -68,8 +84,15 @@ data "nutanix_clusters_v2" "test" {
 }
 
 func testAccClustersDataSourceConfigWithLimit() string {
-	return ` 
+	return `
 data "nutanix_clusters_v2" "test" {
 	limit = 1
+}`
+}
+
+func testAccClustersDataSourceConfigWithInvalidFilter() string {
+	return `
+data "nutanix_clusters_v2" "test" {
+	filter = "startswith(name, 'invalid_filter')"
 }`
 }

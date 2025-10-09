@@ -58,6 +58,21 @@ func TestAccV2NutanixImagesDatasource_WithFilters(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixImagesDatasource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImagesDataSourceConfigV2WithInvalidFilters(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceNameImages, "images.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testImagePreConfigV2(name, desc string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_images_v2" "test" {
@@ -74,7 +89,7 @@ func testImagePreConfigV2(name, desc string) string {
 }
 
 func testAccImagesDataSourceConfigV2() string {
-	return `		
+	return `
 		data "nutanix_images_v2" "test"{
 			depends_on = [
 				resource.nutanix_images_v2.test
@@ -90,6 +105,15 @@ func testAccImagesDataSourceConfigV2WithFilters() string {
 			page=0
 			limit=10
 			filter="name eq '${nutanix_images_v2.test.name}'"
+		}
+`
+}
+
+func testAccImagesDataSourceConfigV2WithInvalidFilters() string {
+	return `
+
+		data "nutanix_images_v2" "test"{
+			filter="name eq 'invalid-name'"
 		}
 `
 }

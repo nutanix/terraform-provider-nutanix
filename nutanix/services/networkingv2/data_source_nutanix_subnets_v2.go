@@ -460,13 +460,24 @@ func dataSourceNutanixSubnetsV2Read(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error while fetching subnets : %v", err)
 	}
 
-	getResp := resp.Data
-
-	if getResp != nil {
-		tmp := getResp.GetValue().([]import1.Subnet)
-		if err := d.Set("subnets", flattenSubnetEntities(tmp)); err != nil {
+	if resp.Data == nil {
+		if err := d.Set("subnets", make([]interface{}, 0)); err != nil {
 			return diag.FromErr(err)
 		}
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No data found.",
+			Detail:   "The API returned an empty list of subnets.",
+		}}
+	}
+
+	getResp := resp.Data.GetValue().([]import1.Subnet)
+
+	if err := d.Set("subnets", flattenSubnetEntities(getResp)); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(resource.UniqueId())

@@ -178,6 +178,40 @@ func TestAccNutanixImage_uploadLocal(t *testing.T) {
 	})
 }
 
+func TestAccNutanixImage_Version(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixImageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixImageVersionConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixImageExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "version.product_name", fmt.Sprintf("Ubuntu-%d", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "version.product_version", "mini.iso"),
+				),
+			},
+			{
+				Config: testAccNutanixImageVersionUpdateConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixImageExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("Ubuntu-%d", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "version.product_name", fmt.Sprintf("Ubuntu-%d-updated", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "version.product_version", "mini.iso.updated"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccNutanixImage_WithInvalidConfig(t *testing.T) {
 	r := acctest.RandInt()
 	description := fmt.Sprintf("UbuntuServer-%d", r)
@@ -210,7 +244,7 @@ func TestAccNutanixImage_WithDataSourceRefInvalidUUID(t *testing.T) {
 	})
 }
 
-func TestAccNutanixImage_WithDataSourceRef(t *testing.T) {
+func TestAccNutanixImage_WithDataSourceRefTest(t *testing.T) {
 	rInt := acctest.RandInt()
 	r := acctest.RandInt()
 	description := fmt.Sprintf("UbuntuServer-%d", r)
@@ -468,6 +502,36 @@ func testAccNutanixImageConfigWithLargeImageURL(r int) string {
 	`, r)
 }
 
+func testAccNutanixImageVersionConfig(r int) string {
+	return fmt.Sprintf(`
+resource "nutanix_image" "acctest-test" {
+  name        = "Ubuntu-%[1]d"
+  description = "Ubuntu"
+  source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
+  image_type = "ISO_IMAGE"
+  version = {
+    product_name    = "Ubuntu-%[1]d"
+    product_version = "mini.iso"
+  }
+}
+`, r)
+}
+
+func testAccNutanixImageVersionUpdateConfig(r int) string {
+	return fmt.Sprintf(`
+resource "nutanix_image" "acctest-test" {
+  name        = "Ubuntu-%[1]d"
+  description = "Ubuntu"
+  source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
+  image_type = "ISO_IMAGE"
+  version = {
+    product_name    = "Ubuntu-%[1]d-updated"
+    product_version = "mini.iso.updated"
+  }
+}
+`, r)
+}
+
 func testAccNutanixImageNegativeConfig(name string, description string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_image" "negative-test" {
@@ -512,36 +576,40 @@ func testAccNutanixImageDataSourceRefConfig(name string, description string, r i
          description = "heres a tiny linux image, not an iso, but a real disk!"
     }
 
-		# create a VM to install NGT
-		resource "nutanix_virtual_machine_v2" "vm-disk" {
-			name                 = "vm-example-%d"
-			description          = "vm to test ngt installation"
-			num_cores_per_socket = 1
-			num_sockets          = 1
-			memory_size_bytes    = 4 * 1024 * 1024 * 1024
-			cluster {
-				ext_id = local.cluster_ext_id
+
+	resource "nutanix_virtual_machine" "vm-disk" {
+		name                 = "tf-vm-example-%d"
+		cluster_uuid         = local.cluster_ext_id
+		description          = "vm to test ngt installation"
+		num_vcpus_per_socket = 1
+		num_sockets          = 1
+		memory_size_mib      = 4 * 1024
+
+		disk_list {
+			data_source_reference = {
+				kind = "image"
+				uuid = nutanix_image.cirros-034-disk.id
 			}
 
-			disks {
-				disk_address {
-					bus_type = "SCSI"
-					index    = 0
+			device_properties {
+				disk_address = {
+					device_index = 0
+					adapter_type = "SCSI"
 				}
-				backing_info {
-					vm_disk {
-						data_source {
-							reference {
-								image_reference {
-									image_ext_id = nutanix_image.cirros-034-disk.id
-								}
-							}
-						}
-						disk_size_bytes = 20 * 1024 * 1024 * 1024
-					}
-				}
+				device_type = "DISK"
 			}
-			power_state = "OFF"
+			disk_size_bytes = 20 * 1024 * 1024 * 1024
+		}
+		disk_list {
+			disk_size_mib = 100
+		}
+		disk_list {
+			disk_size_mib = 200
+		}
+		disk_list {
+			disk_size_mib = 300
+		}
+		power_state = "OFF"
 	}
 
 	resource "nutanix_image" "create-image-vm-disk" {
@@ -550,7 +618,7 @@ func testAccNutanixImageDataSourceRefConfig(name string, description string, r i
 		image_type = "DISK_IMAGE"
 		data_source_reference {
 			kind = "vm_disk"
-			uuid = nutanix_virtual_machine_v2.vm-disk.disks[0].ext_id
+			uuid = nutanix_virtual_machine.vm-disk.disk_list[0].uuid
 		}
 	}
 

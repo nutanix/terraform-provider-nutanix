@@ -53,6 +53,21 @@ func TestAccV2NutanixImagePlacementsDatasource_WithFilters(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixImagePlacementsDatasource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImagePlacementsDataSourceConfigV2WithInvalidFilters(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceNameImagePlacements, "placement_policies.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccImagePlacementsPreConfigV2(name, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_categories_v2" "categories" {}
@@ -83,14 +98,14 @@ func testAccImagePlacementsPreConfigV2(name, desc string) string {
 					image_entity_filter,
 				]
 			}
-		}		
+		}
 `, name, desc)
 }
 
 func testAccImagePlacementsDataSourceConfigV2() string {
 	return `
 		data "nutanix_image_placement_policies_v2" "test"{
-			
+
 			depends_on = [
 				resource.nutanix_image_placement_policy_v2.ipp
 			]
@@ -100,7 +115,7 @@ func testAccImagePlacementsDataSourceConfigV2() string {
 
 func testAccImagePlacementsDataSourceConfigV2WithFilters(name string) string {
 	return fmt.Sprintf(`
-		
+
 		data "nutanix_image_placement_policies_v2" "test"{
 			page=0
 			limit=10
@@ -111,4 +126,12 @@ func testAccImagePlacementsDataSourceConfigV2WithFilters(name string) string {
 			]
 		}
 `, name)
+}
+
+func testAccImagePlacementsDataSourceConfigV2WithInvalidFilters() string {
+	return `
+		data "nutanix_image_placement_policies_v2" "test"{
+			filter="name eq 'invalid_filter'"
+		}
+`
 }

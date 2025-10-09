@@ -70,6 +70,22 @@ func TestAccV2NutanixIdentityProvidersDatasource_WithLimit(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixIdentityProvidersDatasource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testIdentityProvidersDatasourceWithInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameIdentityProviders, "identity_providers.#"),
+					resource.TestCheckResourceAttr(datasourceNameIdentityProviders, "identity_providers.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testIdentityProvidersDatasourceConfig(filepath string) string {
 	return fmt.Sprintf(`
 	locals{
@@ -146,4 +162,12 @@ func testIdentityProvidersDatasourceWithLimitConfig(filepath string) string {
 			depends_on = [ resource.nutanix_saml_identity_providers_v2.test ]
 		}
 	`, filepath, xmlFilePath)
+}
+
+func testIdentityProvidersDatasourceWithInvalidFilterConfig() string {
+	return `
+	data "nutanix_saml_identity_providers_v2" "test" {
+		filter = "extId eq 'invalid_filter'"
+	}
+	`
 }

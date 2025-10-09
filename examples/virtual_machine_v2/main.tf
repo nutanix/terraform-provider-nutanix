@@ -418,6 +418,21 @@ resource "nutanix_virtual_machine_v2" "example-12" {
   }
 }
 
+resource "nutanix_virtual_machine_v2" "example-13" {
+  name                 = "example-13"
+  description          = "vm example with uefi boot"
+  num_cores_per_socket = 1
+  num_sockets          = 1
+  cluster {
+    ext_id = local.cluster_ext_id
+  }
+  boot_config {
+    uefi_boot {
+      boot_order = ["NETWORK", "DISK", "CDROM", ]
+    }
+  }
+  power_state = "OFF"
+}
 
 
 # list all virtual machines

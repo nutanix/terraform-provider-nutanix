@@ -510,6 +510,28 @@ func resourceNutanixImageUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("Checksum update is not allowed. Previous checksum algorithm is %s and value is %s", *res.Checksum.ChecksumAlgorithm, *res.Checksum.ChecksumValue)
 	}
 
+	if d.HasChange("version") {
+		version := d.Get("version")
+		versionResource := &v3.ImageVersionResources{}
+
+		versionMap := version.(map[string]interface{})
+		productName, productNameOk := versionMap["product_name"]
+		productVersion, productVersionOk := versionMap["product_version"]
+		if productNameOk {
+			if productName.(string) == "" {
+				return diag.Errorf("'product_name' is not given")
+			}
+			versionResource.ProductName = utils.StringPtr(productName.(string))
+		}
+		if productVersionOk {
+			if productVersion.(string) == "" {
+				return diag.Errorf("'product_version' is not given")
+			}
+			versionResource.ProductVersion = utils.StringPtr(productVersion.(string))
+		}
+
+		spec.Resources.Version = versionResource
+	}
 	request.Metadata = metadata
 	request.Spec = spec
 
@@ -577,6 +599,8 @@ func resourceNutanixImageDelete(ctx context.Context, d *schema.ResourceData, met
 func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 	cs, csok := d.GetOk("checksum")
 	checks := &v3.Checksum{}
+	version, versionOk := d.GetOk("version")
+	versionResource := &v3.ImageVersionResources{}
 	su, suok := d.GetOk("source_uri")
 	sp, spok := d.GetOk("source_path")
 	var furi string
@@ -627,6 +651,25 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 		image.Checksum = checks
 	}
 
+	if versionOk {
+		versionMap := version.(map[string]interface{})
+		productName, productNameOk := versionMap["product_name"]
+		productVersion, productVersionOk := versionMap["product_version"]
+
+		if productNameOk {
+			if productName.(string) == "" {
+				return fmt.Errorf("'product_name' is not given")
+			}
+			versionResource.ProductName = utils.StringPtr(productName.(string))
+		}
+		if productVersionOk {
+			if productVersion.(string) == "" {
+				return fmt.Errorf("'product_version' is not given")
+			}
+			versionResource.ProductVersion = utils.StringPtr(productVersion.(string))
+		}
+		image.Version = versionResource
+	}
 	// List of clusters where image is requested to be placed at time of creation
 	if refs, refsok := d.GetOk("cluster_references"); refsok && len(refs.([]interface{})) > 0 {
 		image.InitialPlacementRefList = validateArrayRefValues(refs, "cluster")

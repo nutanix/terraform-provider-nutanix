@@ -39,6 +39,7 @@ func TestAccV2NutanixDirectoryServicesResource_CreateACTIVE_DIRECTORYService(t *
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "name", testVars.Iam.DirectoryServices.Name),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "domain_name", testVars.Iam.DirectoryServices.DomainName),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "directory_type", "ACTIVE_DIRECTORY"),
+					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "group_search_type", "NON_RECURSIVE"),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "url", testVars.Iam.DirectoryServices.URL),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "service_account.0.username", testVars.Iam.DirectoryServices.ServiceAccount.Username),
 					resource.TestCheckResourceAttrSet(resourceNameDirectoryServices, "service_account.0.password"),
@@ -205,6 +206,7 @@ func testDirectoryServicesUpdateResourceConfig() string {
 		url = local.directory_services.url
 		directory_type = "ACTIVE_DIRECTORY"
 		domain_name = local.directory_services.domain_name
+		group_search_type = "NON_RECURSIVE"
 		service_account {
 			username = local.directory_services.service_account.username
 			password = local.directory_services.service_account.password
@@ -250,7 +252,7 @@ func testDirectoryOpenLDAPServicesResourceConfig(name string) string {
 		}
 		lifecycle {
 			ignore_changes = [
-			  service_account.0.password,
+				service_account.0.password,
 			]
 	  	}
 	}`, name, filepath)
@@ -391,6 +393,5 @@ func testDirectoryServicesResourceWithoutServiceAccountConfig() string {
 			  service_account.0.password,
 			]
 	  	}
-
 	}`, filepath)
 }

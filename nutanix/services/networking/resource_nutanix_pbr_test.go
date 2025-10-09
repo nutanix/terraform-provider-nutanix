@@ -11,7 +11,7 @@ import (
 const resourceNamePbr = "nutanix_pbr.acctest-managed"
 
 func TestAccNutanixPbr_basic(t *testing.T) {
-	r := randIntBetween(31, 40)
+	r := randIntBetween(221, 230)
 	pbrName := fmt.Sprintf("acctest-managed-%d", r)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -30,7 +30,7 @@ func TestAccNutanixPbr_basic(t *testing.T) {
 }
 
 func TestAccNutanixPbr_WithSourceExternalDestinationNetwork(t *testing.T) {
-	r := randIntBetween(41, 50)
+	r := randIntBetween(231, 240)
 	pbrName := fmt.Sprintf("acctest-managed-%d", r)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -63,7 +63,7 @@ func TestAccNutanixPbr_WithSourceExternalDestinationNetwork(t *testing.T) {
 }
 
 func TestAccNutanixPbr_WithTCP(t *testing.T) {
-	r := randIntBetween(51, 60)
+	r := randIntBetween(241, 250)
 	pbrName := fmt.Sprintf("acctest-managed-%d", r)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -98,7 +98,7 @@ func TestAccNutanixPbr_WithTCP(t *testing.T) {
 }
 
 func TestAccNutanixPbr_WithProtocolUDP(t *testing.T) {
-	r := randIntBetween(51, 60)
+	r := randIntBetween(251, 260)
 	pbrName := fmt.Sprintf("acctest-managed-%d", r)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -136,7 +136,7 @@ func TestAccNutanixPbr_WithProtocolUDP(t *testing.T) {
 }
 
 func TestAccNutanixPbr_WithProtocolICMP(t *testing.T) {
-	r := randIntBetween(51, 60)
+	r := randIntBetween(261, 270)
 	pbrName := fmt.Sprintf("acctest-managed-%d", r)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -173,7 +173,7 @@ func TestAccNutanixPbr_WithProtocolICMP(t *testing.T) {
 }
 
 func TestAccNutanixPbr_WithProtocolNumber(t *testing.T) {
-	r := randIntBetween(21, 40)
+	r := randIntBetween(271, 280)
 	pbrName := fmt.Sprintf("acctest-managed-%d", r)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -209,7 +209,7 @@ func TestAccNutanixPbr_WithProtocolNumber(t *testing.T) {
 }
 
 func TestAccNutanixPbr_WithVPCName(t *testing.T) {
-	r := randIntBetween(50, 65)
+	r := randIntBetween(281, 290)
 	pbrName := fmt.Sprintf("acctest-managed-%d", r)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -228,7 +228,7 @@ func TestAccNutanixPbr_WithVPCName(t *testing.T) {
 }
 
 func TestAccNutanixPbr_WithVPCNameAndBidirectional(t *testing.T) {
-	r := randIntBetween(50, 65)
+	r := randIntBetween(291, 300)
 	pbrName := fmt.Sprintf("acctest-managed-%d", r)
 	vpcName := fmt.Sprintf("acctest-vpc-%d", r)
 	resource.Test(t, resource.TestCase{
@@ -255,14 +255,14 @@ func testAccNutanixPbrConfig(r int) string {
 	return fmt.Sprintf(`
 
 	data "nutanix_clusters" "clusters" {}
-	
+
 	locals {
 		cluster1 = [
 		for cluster in data.nutanix_clusters.clusters.entities :
 		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 		][0]
 	}
-	
+
 	resource "nutanix_subnet" "sub-test" {
 		cluster_uuid = local.cluster1
 		name        = "acctest-managed-%[1]d"
@@ -278,18 +278,18 @@ func testAccNutanixPbrConfig(r int) string {
 
 	resource "nutanix_vpc" "test-vpc" {
 		name = "acctest-vpc-%[1]d"
-	  
-	  
+
+
 		external_subnet_reference_uuid = [
 		  resource.nutanix_subnet.sub-test.id
 		]
-	  
+
 		common_domain_name_server_ip_list{
 				ip = "8.8.8.9"
 		}
-	  
+
 		externally_routable_prefix_list{
-		  ip=  "172.31.0.0"
+		  ip=  "172.42.0.0"
 		  prefix_length= 16
 		}
 	  }
@@ -314,14 +314,14 @@ func testAccNutanixPbrConfigUpdateWithSourceExternalDestinationNetwork(r int) st
 	return fmt.Sprintf(`
 
 	data "nutanix_clusters" "clusters" {}
-	
+
 	locals {
 		cluster1 = [
 		for cluster in data.nutanix_clusters.clusters.entities :
 		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 		][0]
 	}
-	
+
 	resource "nutanix_subnet" "sub-test" {
 		cluster_uuid = local.cluster1
 		name        = "acctest-managed-%[1]d"
@@ -337,18 +337,18 @@ func testAccNutanixPbrConfigUpdateWithSourceExternalDestinationNetwork(r int) st
 
 	resource "nutanix_vpc" "test-vpc" {
 		name = "acctest-vpc-%[1]d"
-	  
-	  
+
+
 		external_subnet_reference_uuid = [
 		  resource.nutanix_subnet.sub-test.id
 		]
-	  
+
 		common_domain_name_server_ip_list{
 				ip = "8.8.8.9"
 		}
-	  
+
 		externally_routable_prefix_list{
-		  ip=  "172.31.0.0"
+		  ip=  "172.43.0.0"
 		  prefix_length= 16
 		}
 	  }
@@ -374,14 +374,14 @@ func testAccNutanixPbrConfigWithSourceNetworkDestinationExternalWithTCP(r int) s
 	return fmt.Sprintf(`
 
 	data "nutanix_clusters" "clusters" {}
-	
+
 	locals {
 		cluster1 = [
 		for cluster in data.nutanix_clusters.clusters.entities :
 		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 		][0]
 	}
-	
+
 	resource "nutanix_subnet" "sub-test" {
 		cluster_uuid = local.cluster1
 		name        = "acctest-managed-%[1]d"
@@ -397,18 +397,18 @@ func testAccNutanixPbrConfigWithSourceNetworkDestinationExternalWithTCP(r int) s
 
 	resource "nutanix_vpc" "test-vpc" {
 		name = "acctest-vpc-%[1]d"
-	  
-	  
+
+
 		external_subnet_reference_uuid = [
 		  resource.nutanix_subnet.sub-test.id
 		]
-	  
+
 		common_domain_name_server_ip_list{
 				ip = "8.8.8.9"
 		}
-	  
+
 		externally_routable_prefix_list{
-		  ip=  "172.31.0.0"
+		  ip=  "172.44.0.0"
 		  prefix_length= 16
 		}
 	  }
@@ -447,14 +447,14 @@ func testAccNutanixPbrConfigWithSourceExternalDestinationAnyWithUDP(r int) strin
 	return fmt.Sprintf(`
 
 	data "nutanix_clusters" "clusters" {}
-	
+
 	locals {
 		cluster1 = [
 		for cluster in data.nutanix_clusters.clusters.entities :
 		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 		][0]
 	}
-	
+
 	resource "nutanix_subnet" "sub-test" {
 		cluster_uuid = local.cluster1
 		name        = "acctest-managed-%[1]d"
@@ -470,18 +470,18 @@ func testAccNutanixPbrConfigWithSourceExternalDestinationAnyWithUDP(r int) strin
 
 	resource "nutanix_vpc" "test-vpc" {
 		name = "acctest-vpc-%[1]d"
-	  
-	  
+
+
 		external_subnet_reference_uuid = [
 		  resource.nutanix_subnet.sub-test.id
 		]
-	  
+
 		common_domain_name_server_ip_list{
 				ip = "8.8.8.9"
 		}
-	  
+
 		externally_routable_prefix_list{
-		  ip=  "172.31.0.0"
+		  ip=  "172.45.0.0"
 		  prefix_length= 16
 		}
 	  }
@@ -520,14 +520,14 @@ func testAccNutanixPbrConfigWithSourceAnyDestinationExternalWithICMP(r int) stri
 	return fmt.Sprintf(`
 
 	data "nutanix_clusters" "clusters" {}
-	
+
 	locals {
 		cluster1 = [
 		for cluster in data.nutanix_clusters.clusters.entities :
 		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 		][0]
 	}
-	
+
 	resource "nutanix_subnet" "sub-test" {
 		cluster_uuid = local.cluster1
 		name        = "acctest-managed-%[1]d"
@@ -543,18 +543,18 @@ func testAccNutanixPbrConfigWithSourceAnyDestinationExternalWithICMP(r int) stri
 
 	resource "nutanix_vpc" "test-vpc" {
 		name = "acctest-vpc-%[1]d"
-	  
-	  
+
+
 		external_subnet_reference_uuid = [
 		  resource.nutanix_subnet.sub-test.id
 		]
-	  
+
 		common_domain_name_server_ip_list{
 				ip = "8.8.8.9"
 		}
-	  
+
 		externally_routable_prefix_list{
-		  ip=  "172.31.0.0"
+		  ip=  "172.46.0.0"
 		  prefix_length= 16
 		}
 	  }
@@ -585,14 +585,14 @@ func testAccNutanixPbrConfigUpdateWithSourceAnyDestinationAnyWithProtocolNumber(
 	return fmt.Sprintf(`
 
 	data "nutanix_clusters" "clusters" {}
-	
+
 	locals {
 		cluster1 = [
 		for cluster in data.nutanix_clusters.clusters.entities :
 		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 		][0]
 	}
-	
+
 	resource "nutanix_subnet" "sub-test" {
 		cluster_uuid = local.cluster1
 		name        = "acctest-managed-%[1]d"
@@ -608,18 +608,18 @@ func testAccNutanixPbrConfigUpdateWithSourceAnyDestinationAnyWithProtocolNumber(
 
 	resource "nutanix_vpc" "test-vpc" {
 		name = "acctest-vpc-%[1]d"
-	  
-	  
+
+
 		external_subnet_reference_uuid = [
 		  resource.nutanix_subnet.sub-test.id
 		]
-	  
+
 		common_domain_name_server_ip_list{
 				ip = "8.8.8.9"
 		}
-	  
+
 		externally_routable_prefix_list{
-		  ip=  "172.31.0.0"
+		  ip=  "172.47.0.0"
 		  prefix_length= 16
 		}
 	  }
@@ -647,14 +647,14 @@ func testAccNutanixPbrConfigWithVpcName(r int) string {
 	return fmt.Sprintf(`
 
 	data "nutanix_clusters" "clusters" {}
-	
+
 	locals {
 		cluster1 = [
 		for cluster in data.nutanix_clusters.clusters.entities :
 		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 		][0]
 	}
-	
+
 	resource "nutanix_subnet" "sub-test" {
 		cluster_uuid = local.cluster1
 		name        = "acctest-managed-%[1]d"
@@ -670,18 +670,18 @@ func testAccNutanixPbrConfigWithVpcName(r int) string {
 
 	resource "nutanix_vpc" "test-vpc" {
 		name = "acctest-vpc-%[1]d"
-	  
-	  
+
+
 		external_subnet_reference_uuid = [
 		  resource.nutanix_subnet.sub-test.id
 		]
-	  
+
 		common_domain_name_server_ip_list{
 				ip = "8.8.8.9"
 		}
-	  
+
 		externally_routable_prefix_list{
-		  ip=  "172.31.0.0"
+		  ip=  "172.48.0.0"
 		  prefix_length= 16
 		}
 	  }
@@ -706,14 +706,14 @@ func testAccNutanixPbrConfigWithVpcNameAndBidirectional(r int) string {
 	return fmt.Sprintf(`
 
 	data "nutanix_clusters" "clusters" {}
-	
+
 	locals {
 		cluster1 = [
 		for cluster in data.nutanix_clusters.clusters.entities :
 		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 		][0]
 	}
-	
+
 	resource "nutanix_subnet" "sub-test" {
 		cluster_uuid = local.cluster1
 		name        = "acctest-managed-%[1]d"
@@ -729,18 +729,18 @@ func testAccNutanixPbrConfigWithVpcNameAndBidirectional(r int) string {
 
 	resource "nutanix_vpc" "test-vpc" {
 		name = "acctest-vpc-%[1]d"
-	  
-	  
+
+
 		external_subnet_reference_uuid = [
 		  resource.nutanix_subnet.sub-test.id
 		]
-	  
+
 		common_domain_name_server_ip_list{
 				ip = "8.8.8.9"
 		}
-	  
+
 		externally_routable_prefix_list{
-		  ip=  "172.31.0.0"
+		  ip=  "172.49.0.0"
 		  prefix_length= 16
 		}
 	  }
