@@ -269,7 +269,7 @@ func AddNodeListSchema() *schema.Schema {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem:     SchemaForIPList(false),
+					Elem:     common.SchemaForIPList(false),
 				},
 				"digital_certificate_map_list": {
 					Type:     schema.TypeList,
@@ -294,13 +294,13 @@ func AddNodeListSchema() *schema.Schema {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem:     SchemaForIPList(false),
+					Elem:     common.SchemaForIPList(false),
 				},
 				"hypervisor_ip": {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem:     SchemaForIPList(false),
+					Elem:     common.SchemaForIPList(false),
 				},
 				"model": {
 					Type:     schema.TypeString,
@@ -372,13 +372,13 @@ func computedNodeListSchema() *schema.Schema {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem:     SchemaForIPList(false),
+					Elem:     common.SchemaForIPList(false),
 				},
 				"ipmi_ip": {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem:     SchemaForIPList(false),
+					Elem:     common.SchemaForIPList(false),
 				},
 				"digital_certificate_map_list": {
 					Type:     schema.TypeList,

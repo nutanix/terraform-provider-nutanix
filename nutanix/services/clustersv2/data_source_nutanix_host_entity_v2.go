@@ -45,7 +45,7 @@ func DatasourceNutanixHostEntityV2() *schema.Resource {
 						"external_address": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem:     SchemaForIPList(false),
+							Elem:     common.SchemaForIPList(false),
 						},
 						"user_name": {
 							Type:     schema.TypeString,
@@ -102,22 +102,22 @@ func DatasourceNutanixHostEntityV2() *schema.Resource {
 						"external_address": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem:     SchemaForIPList(false),
+							Elem:     common.SchemaForIPList(false),
 						},
 						"backplane_address": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem:     SchemaForIPList(false),
+							Elem:     common.SchemaForIPList(false),
 						},
 						"rdma_backplane_address": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem:     SchemaForIPList(false),
+							Elem:     common.SchemaForIPList(false),
 						},
 						"nat_ip": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem:     SchemaForIPList(false),
+							Elem:     common.SchemaForIPList(false),
 						},
 						"nat_port": {
 							Type:     schema.TypeInt,
@@ -285,7 +285,7 @@ func DatasourceNutanixHostEntityV2() *schema.Resource {
 						"ip": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem:     SchemaForIPList(false),
+							Elem:     common.SchemaForIPList(false),
 						},
 						"username": {
 							Type:     schema.TypeString,

@@ -38,7 +38,7 @@ func ResourceNutanixClusterDiscoverUnconfiguredNodesV2() *schema.Resource {
 			"ip_filter_list": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem:     SchemaForIPList(false),
+				Elem:     common.SchemaForIPList(false),
 			},
 			"uuid_filter_list": {
 				Type:     schema.TypeList,
@@ -128,7 +128,7 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 			"cvm_ip": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     SchemaForIPList(false),
+				Elem:     common.SchemaForIPList(false),
 			},
 			"foundation_version": {
 				Type:     schema.TypeString,
@@ -141,7 +141,7 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 			"hypervisor_ip": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     SchemaForIPList(false),
+				Elem:     common.SchemaForIPList(false),
 			},
 			"hypervisor_type": {
 				Type:     schema.TypeString,
@@ -158,7 +158,7 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 			"ipmi_ip": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     SchemaForIPList(false),
+				Elem:     common.SchemaForIPList(false),
 			},
 			"is_secure_booted": {
 				Type:     schema.TypeBool,

@@ -72,7 +72,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 									"controller_vm_ip": {
 										Type:     schema.TypeList,
 										Required: true,
-										Elem:     SchemaForIPList(false),
+										Elem:     common.SchemaForIPList(false),
 									},
 									"node_uuid": {
 										Type:     schema.TypeString,
@@ -82,7 +82,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
-										Elem:     SchemaForIPList(false),
+										Elem:     common.SchemaForIPList(false),
 									},
 								},
 							},
@@ -100,13 +100,13 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Elem:     SchemaForIPList(false),
+							Elem:     common.SchemaForIPList(false),
 						},
 						"external_data_services_ip": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Elem:     SchemaForIPList(false),
+							Elem:     common.SchemaForIPList(false),
 						},
 						"external_subnet": {
 							Type:     schema.TypeString,
@@ -128,13 +128,13 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Elem:     SchemaForIPList(true),
+							Elem:     common.SchemaForIPList(true),
 						},
 						"ntp_server_ip_list": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Elem:     SchemaForIPList(true),
+							Elem:     common.SchemaForIPList(true),
 						},
 						"smtp_server": {
 							Type:     schema.TypeList,
@@ -157,7 +157,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 													Type:     schema.TypeList,
 													Optional: true,
 													Computed: true,
-													Elem:     SchemaForIPList(true),
+													Elem:     common.SchemaForIPList(true),
 												},
 												"port": {
 													Type:     schema.TypeInt,
@@ -190,7 +190,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Elem:     SchemaForIPList(false),
+							Elem:     common.SchemaForIPList(false),
 						},
 						"masquerading_port": {
 							Type:     schema.TypeString,
@@ -206,7 +206,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
-										Elem:     SchemaForIPList(false),
+										Elem:     common.SchemaForIPList(false),
 									},
 									"type": {
 										Type:         schema.TypeString,
@@ -259,8 +259,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
-									"subnet":  SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
-									"netmask": SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+									"subnet":  common.SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+									"netmask": common.SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -274,7 +274,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
-										Elem:     SchemaForIPList(false),
+										Elem:     common.SchemaForIPList(false),
 									},
 									"port": {
 										Type:     schema.TypeInt,

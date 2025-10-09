@@ -55,7 +55,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 									"controller_vm_ip": {
 										Type:     schema.TypeList,
 										Computed: true,
-										Elem:     SchemaForIPList(false),
+										Elem:     common.SchemaForIPList(false),
 									},
 									"node_uuid": {
 										Type:     schema.TypeString,
@@ -64,7 +64,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 									"host_ip": {
 										Type:     schema.TypeList,
 										Computed: true,
-										Elem:     SchemaForIPList(false),
+										Elem:     common.SchemaForIPList(false),
 									},
 								},
 							},
@@ -80,12 +80,12 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 						"external_address": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem:     SchemaForIPList(false),
+							Elem:     common.SchemaForIPList(false),
 						},
 						"external_data_services_ip": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem:     SchemaForIPList(false),
+							Elem:     common.SchemaForIPList(false),
 						},
 						"external_subnet": {
 							Type:     schema.TypeString,
@@ -105,12 +105,12 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 						"name_server_ip_list": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem:     SchemaForIPList(true),
+							Elem:     common.SchemaForIPList(true),
 						},
 						"ntp_server_ip_list": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem:     SchemaForIPList(true),
+							Elem:     common.SchemaForIPList(true),
 						},
 						"smtp_server": {
 							Type:     schema.TypeList,
@@ -129,7 +129,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 												"ip_address": {
 													Type:     schema.TypeList,
 													Computed: true,
-													Elem:     SchemaForIPList(true),
+													Elem:     common.SchemaForIPList(true),
 												},
 												"port": {
 													Type:     schema.TypeInt,
@@ -156,7 +156,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 						"masquerading_ip": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem:     SchemaForIPList(false),
+							Elem:     common.SchemaForIPList(false),
 						},
 						"masquerading_port": {
 							Type:     schema.TypeString,
@@ -170,7 +170,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 									"ip": {
 										Type:     schema.TypeList,
 										Computed: true,
-										Elem:     SchemaForIPList(false),
+										Elem:     common.SchemaForIPList(false),
 									},
 									"type": {
 										Type:     schema.TypeBool,
@@ -255,7 +255,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 									"ip_address": {
 										Type:     schema.TypeList,
 										Computed: true,
-										Elem:     SchemaForIPList(false),
+										Elem:     common.SchemaForIPList(false),
 									},
 									"port": {
 										Type:     schema.TypeInt,
