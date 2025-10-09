@@ -1767,6 +1767,9 @@ func ResourceNutanixVirtualMachineV2Read(ctx context.Context, d *schema.Resource
 
 	getResp := resp.Data.GetValue().(config.Vm)
 
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("name", getResp.Name); err != nil {
 		return diag.FromErr(err)
 	}

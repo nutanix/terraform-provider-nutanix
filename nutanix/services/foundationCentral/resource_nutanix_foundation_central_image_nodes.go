@@ -265,6 +265,10 @@ func ResourceNutanixFCImageCluster() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"server_configuration_data": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -498,6 +502,14 @@ func ResourceNutanixFCImageCluster() *schema.Resource {
 						},
 					},
 				},
+			},
+			"fc_api_key_uuid": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"server_configuration_data": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"cluster_status": {
 				Type:     schema.TypeList,
@@ -798,6 +810,17 @@ func expandNodesList(d *schema.ResourceData) []*fc.Node {
 			}
 			node.HardwareAttributesOverride = mapData
 		}
+
+		if serverConfigurationData, ok := nodeSettings["server_configuration_data"]; ok {
+			if serverConfigurationData, ok := serverConfigurationData.(string); ok {
+				// Convert json string to map[string]interface{}
+				var mapData map[string]interface{}
+				if err := json.Unmarshal([]byte(serverConfigurationData), &mapData); err != nil {
+					log.Printf("Error unmarshalling server_configuration_data: %v", err)
+				}
+				node.ServerConfigurationData = mapData
+			}
+		}
 		nodeList = append(nodeList, &node)
 	}
 
@@ -875,6 +898,23 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 		}
 	}
 
+	if serverConfigurationData, ok := d.GetOk("server_configuration_data"); ok {
+		if serverConfigurationData, ok := serverConfigurationData.(string); ok {
+			// Convert json string to map[string]interface{}
+			var mapData map[string]interface{}
+			if err := json.Unmarshal([]byte(serverConfigurationData), &mapData); err != nil {
+				log.Printf("Error unmarshalling server_configuration_data: %v", err)
+			}
+			req.ServerConfigurationData = mapData
+		}
+	}
+
+	if fcAPIKeyUUID, ok := d.GetOk("fc_api_key_uuid"); ok {
+		req.FcMetadata = &fc.FcMetadata{
+			APIKeyUUID: utils.StringPtr(fcAPIKeyUUID.(string)),
+		}
+	}
+
 	req.CommonNetworkSettings = expandCommonNetworkSettings(d)
 	req.NodesList = expandNodesList(d)
 
@@ -882,7 +922,7 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 	for _, vv := range req.NodesList {
 		stateConfig := &resource.StateChangeConf{
 			Pending: []string{"STATE_DISCOVERING", "STATE_UNAVAILABLE"},
-			Target:  []string{"STATE_AVAILABLE", "STATE_IMAGING"},
+			Target:  []string{"STATE_AVAILABLE", "STATE_IMAGING", "STATE_ONBOARDED"},
 			Refresh: foundationCentralPollingNode(ctx, conn, *vv.ImagedNodeUUID),
 			Timeout: NodePollTimeout,
 			Delay:   DelayTimeNodeAvailability,
@@ -892,7 +932,7 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 			return diag.Errorf("error waiting for node (%s) to be available: %v", *vv.CvmIP, err)
 		}
 		if progress, ok := infos.(*fc.ImagedNodeDetails); ok {
-			if !(*progress.Available) {
+			if !(*progress.Available) && *progress.NodeState != "STATE_ONBOARDED" {
 				return diag.Errorf("Current Node Available Status: (%s). Node is not available to image or already be a part of cluster", *progress.NodeState)
 			}
 		}
