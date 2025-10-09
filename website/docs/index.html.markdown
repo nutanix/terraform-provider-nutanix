@@ -204,6 +204,7 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | nutanix_category_key | nutanix_category_v2 |
 | - | nutanix_categories_v2 |
 | nutanix_image | nutanix_image_v2 |
+| nutanix_ova_image | - |
 | - | nutanix_images_v2 |
 | nutanix_virtual_machine | nutanix_virtual_machine_v2 |
 | - | nutanix_virtual_machines_v2 |
