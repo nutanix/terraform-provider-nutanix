@@ -703,6 +703,7 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 			"disks": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ext_id": {
@@ -895,6 +896,7 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 			"cd_roms": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ext_id": {
@@ -1067,6 +1069,7 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 			"nics": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ext_id": {
@@ -1264,6 +1267,7 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 			"gpus": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ext_id": {
@@ -1843,6 +1847,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 		if len(oldDeletedDisk) > 0 {
 			for _, disk := range oldDeletedDisk {
+
 				diskInput := expandDisk([]interface{}{disk})[0]
 
 				diskExtID := diskInput.ExtId
@@ -1894,6 +1899,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 						}
 					}
 				}
+
 				diskInput := expandDisk([]interface{}{disk})[0]
 
 				diskExtID := diskInput.ExtId
