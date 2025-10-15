@@ -8,6 +8,7 @@ import (
 
 type Client struct {
 	ProtectionPolicies *api.ProtectionPoliciesApi
+	StoragePolicies    *api.StoragePoliciesApi
 }
 
 func NewDataPoliciesClient(credentials client.Credentials) (*Client, error) {
@@ -28,6 +29,7 @@ func NewDataPoliciesClient(credentials client.Credentials) (*Client, error) {
 
 	f := &Client{
 		ProtectionPolicies: api.NewProtectionPoliciesApi(baseClient),
+		StoragePolicies:    api.NewStoragePoliciesApi(baseClient),
 	}
 
 	return f, nil
