@@ -21,7 +21,7 @@ func TestNewKarbonAPIClient(t *testing.T) {
 	}
 	_, err := NewKarbonAPIClient(cred)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%s", err.Error())
 	}
 
 	// verify missing client scenario
@@ -34,7 +34,7 @@ func TestNewKarbonAPIClient(t *testing.T) {
 	}
 	v3Client2, err2 := NewKarbonAPIClient(cred2)
 	if err2 != nil {
-		t.Errorf(err2.Error())
+		t.Errorf("%s", err2.Error())
 	}
 
 	if v3Client2.client.ErrorMsg == "" {

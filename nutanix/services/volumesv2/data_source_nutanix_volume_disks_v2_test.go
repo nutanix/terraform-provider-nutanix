@@ -23,7 +23,7 @@ func TestAccV2NutanixVolumeGroupsDisksDataSource_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVolumeGroupsDisksDataSourceConfig(filepath, name, desc),
+				Config: testAccVolumeGroupsDisksDataSourceConfig(filepath, name, desc, int(diskSizeBytes)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceAttrListNotEmpty(dataSourceVolumeGroupsDisks, "disks", "index"),
 					resource.TestCheckResourceAttrSet(dataSourceVolumeGroupsDisks, "disks.#"),
@@ -48,7 +48,7 @@ func TestAccV2NutanixVolumeGroupsDisksDataSource_WithLimit(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVolumeGroupsDisksDataSourceWithLimit(filepath, name, desc, limit),
+				Config: testAccVolumeGroupsDisksDataSourceWithLimit(filepath, name, desc, int(diskSizeBytes), limit),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceAttrListNotEmpty(dataSourceVolumeGroupsDisks, "disks", "index"),
 					resource.TestCheckResourceAttr(dataSourceVolumeGroupsDisks, "disks.#", "1"),
@@ -80,8 +80,8 @@ func TestAccV2NutanixVolumeGroupsDisksDataSource_WithInvalidFilter(t *testing.T)
 	})
 }
 
-func testAccVolumeGroupsDisksDataSourceConfig(filepath, name, desc string) string {
-	return testAccVolumeGroupResourceConfig(name, desc) + testAccVolumeGroupDiskResourceConfig(name, desc) +
+func testAccVolumeGroupsDisksDataSourceConfig(filepath, name, desc string, diskSizeBytes int) string {
+	return testAccVolumeGroupResourceConfig(name, desc) + testAccVolumeGroupDiskResourceConfig(name, desc, diskSizeBytes) +
 		fmt.Sprintf(`
 
 
@@ -116,8 +116,8 @@ func testAccVolumeGroupsDisksDataSourceConfig(filepath, name, desc string) strin
 	`, desc, diskSizeBytes)
 }
 
-func testAccVolumeGroupsDisksDataSourceWithLimit(filepath, name, desc string, limit int) string {
-	return testAccVolumeGroupResourceConfig(name, desc) + testAccVolumeGroupDiskResourceConfig(name, desc) +
+func testAccVolumeGroupsDisksDataSourceWithLimit(filepath, name, desc string, diskSizeBytes int, limit int) string {
+	return testAccVolumeGroupResourceConfig(name, desc) + testAccVolumeGroupDiskResourceConfig(name, desc, diskSizeBytes) +
 		fmt.Sprintf(`
 
 	  	resource "nutanix_volume_group_disk_v2" "test-2" {
