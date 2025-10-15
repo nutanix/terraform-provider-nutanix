@@ -184,7 +184,7 @@ func ResourceNutanixAuthPoliciesV2Create(ctx context.Context, d *schema.Resource
 
 	d.Set("ext_id", *getResp.ExtId)
 	d.SetId(*getResp.ExtId)
-	return nil
+	return ResourceNutanixAuthPoliciesV2Read(ctx, d, meta)
 }
 
 func ResourceNutanixAuthPoliciesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
