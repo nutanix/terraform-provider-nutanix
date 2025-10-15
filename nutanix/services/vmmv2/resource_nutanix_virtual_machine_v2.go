@@ -1847,8 +1847,8 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 		if len(oldDeletedDisk) > 0 {
 			for _, disk := range oldDeletedDisk {
-				diskInput := config.Disk{}
-				diskInput = expandDisk([]interface{}{disk})[0]
+
+				diskInput := expandDisk([]interface{}{disk})[0]
 
 				diskExtID := diskInput.ExtId
 
@@ -1899,8 +1899,8 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 						}
 					}
 				}
-				diskInput := config.Disk{}
-				diskInput = expandDisk([]interface{}{disk})[0]
+
+				diskInput := expandDisk([]interface{}{disk})[0]
 
 				diskExtID := diskInput.ExtId
 
@@ -1936,8 +1936,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 		if len(newAddedDisk) > 0 {
 			for _, disk := range newAddedDisk {
-				diskInput := config.Disk{}
-				diskInput = expandDisk([]interface{}{disk})[0]
+				diskInput := expandDisk([]interface{}{disk})[0]
 
 				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
 				if err != nil {
@@ -1977,8 +1976,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 		if len(oldDeletedNic) > 0 {
 			for _, nic := range oldDeletedNic {
-				nicInput := config.Nic{}
-				nicInput = expandNic([]interface{}{nic})[0]
+				nicInput := expandNic([]interface{}{nic})[0]
 
 				nicExtID := nicInput.ExtId
 
@@ -2014,8 +2012,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		}
 		if len(updatedNic) > 0 {
 			for _, nic := range updatedNic {
-				nicInput := config.Nic{}
-				nicInput = expandNic([]interface{}{nic})[0]
+				nicInput := expandNic([]interface{}{nic})[0]
 
 				nicExtID := nicInput.ExtId
 
@@ -2051,8 +2048,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		}
 		if len(newAddedNic) > 0 {
 			for _, nic := range newAddedNic {
-				nicInput := config.Nic{}
-				nicInput = expandNic([]interface{}{nic})[0]
+				nicInput := expandNic([]interface{}{nic})[0]
 
 				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
 				if err != nil {
@@ -2091,8 +2087,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		newAddedCdRom, oldDeletedCdRom, _ := diffConfig(oldCdRom.([]interface{}), newCdRom.([]interface{}))
 		if len(newAddedCdRom) > 0 {
 			for _, cdrom := range newAddedCdRom {
-				cdromInput := config.CdRom{}
-				cdromInput = expandCdRom([]interface{}{cdrom})[0]
+				cdromInput := expandCdRom([]interface{}{cdrom})[0]
 
 				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
 				if err != nil {
@@ -2127,8 +2122,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 		if len(oldDeletedCdRom) > 0 {
 			for _, cdrom := range oldDeletedCdRom {
-				cdromInput := config.CdRom{}
-				cdromInput = expandCdRom([]interface{}{cdrom})[0]
+				cdromInput := expandCdRom([]interface{}{cdrom})[0]
 
 				cdromExtID := cdromInput.ExtId
 
@@ -2170,8 +2164,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 		if len(oldDeletedSerialPorts) > 0 {
 			for _, serialPort := range oldDeletedSerialPorts {
-				serialPortInput := config.SerialPort{}
-				serialPortInput = expandSerialPort([]interface{}{serialPort})[0]
+				serialPortInput := expandSerialPort([]interface{}{serialPort})[0]
 
 				serialPortExtID := serialPortInput.ExtId
 
@@ -2207,8 +2200,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		}
 		if len(updatedSerialPorts) > 0 {
 			for _, serialPort := range updatedSerialPorts {
-				serialPortInput := config.SerialPort{}
-				serialPortInput = expandSerialPort([]interface{}{serialPort})[0]
+				serialPortInput := expandSerialPort([]interface{}{serialPort})[0]
 
 				portExtTD := serialPortInput.ExtId
 
@@ -2244,8 +2236,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		}
 		if len(newAddedSerialPorts) > 0 {
 			for _, serialPort := range newAddedSerialPorts {
-				serialPortInput := config.SerialPort{}
-				serialPortInput = expandSerialPort([]interface{}{serialPort})[0]
+				serialPortInput := expandSerialPort([]interface{}{serialPort})[0]
 
 				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
 				if err != nil {
@@ -2285,8 +2276,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 		if len(newAddedGpus) > 0 {
 			for _, gpu := range newAddedGpus {
-				gpuInput := config.Gpu{}
-				gpuInput = expandGpu([]interface{}{gpu})[0]
+				gpuInput := expandGpu([]interface{}{gpu})[0]
 
 				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
 				if err != nil {
@@ -2321,8 +2311,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 		if len(oldDeletedGpus) > 0 {
 			for _, gpu := range oldDeletedGpus {
-				gpuInput := config.Gpu{}
-				gpuInput = expandGpu([]interface{}{gpu})[0]
+				gpuInput := expandGpu([]interface{}{gpu})[0]
 
 				gpuExtID := gpuInput.ExtId
 				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
