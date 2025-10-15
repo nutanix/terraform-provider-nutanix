@@ -152,6 +152,7 @@ The `vms` is a list of all virtual machines. Each virtual machine has the follow
 - `generation_uuid`: Generation UUID of the VM. It should be of type UUID.
 - `bios_uuid`: BIOS UUID of the VM. It should be of type UUID.
 - `categories`: Categories for the VM.
+* `project`: Reference to a project.
 - `ownership_info`: Ownership information for the VM.
 - `host`: Reference to the host, the VM is running on.
 - `cluster`: Reference to a cluster.
@@ -194,6 +195,11 @@ The `source` attribute supports the following:
 The `categories` attribute supports the following:
 
 * `ext_id`: A globally unique identifier of a VM category of type UUID.
+
+### Project
+The `project` attribute supports the following:
+
+* `ext_id`: The globally unique identifier of an instance of type UUID.
 
 ### Ownership Info
 The `ownership_info` attribute supports the following:

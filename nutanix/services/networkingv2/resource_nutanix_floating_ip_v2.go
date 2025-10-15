@@ -445,37 +445,73 @@ func expandFloatingIPAddress(pr interface{}) *import1.FloatingIPAddress {
 }
 
 func expandFloatingIPv4Address(pr interface{}) *import1.FloatingIPv4Address {
-	if pr != nil {
-		ipv4 := &import1.FloatingIPv4Address{}
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
-
-		if value, ok := val["value"]; ok {
-			ipv4.Value = utils.StringPtr(value.(string))
-		}
-		if prefix, ok := val["prefix_length"]; ok {
-			ipv4.PrefixLength = utils.IntPtr(prefix.(int))
-		}
-		return ipv4
+	// nil check
+	if pr == nil {
+		return nil
 	}
-	return nil
+
+	// safe type assert for expected slice
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
+	}
+
+	// safe type assert for first element being a map
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+
+	ipv4 := &import1.FloatingIPv4Address{}
+
+	if v, ok := valMap["value"]; ok {
+		if s, ok2 := v.(string); ok2 {
+			ipv4.Value = utils.StringPtr(s)
+		}
+	}
+
+	if p, ok := valMap["prefix_length"]; ok {
+		if n, ok2 := p.(int); ok2 {
+			ipv4.PrefixLength = utils.IntPtr(n)
+		}
+	}
+
+	return ipv4
 }
 
 func expandFloatingIPv6Address(pr interface{}) *import1.FloatingIPv6Address {
-	if pr != nil {
-		ipv6 := &import1.FloatingIPv6Address{}
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
-
-		if value, ok := val["value"]; ok {
-			ipv6.Value = utils.StringPtr(value.(string))
-		}
-		if prefix, ok := val["prefix_length"]; ok {
-			ipv6.PrefixLength = utils.IntPtr(prefix.(int))
-		}
-		return ipv6
+	// nil check
+	if pr == nil {
+		return nil
 	}
-	return nil
+
+	// safe type assert for expected slice
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
+	}
+
+	// safe type assert for first element being a map
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+
+	ipv6 := &import1.FloatingIPv6Address{}
+
+	if v, ok := valMap["value"]; ok {
+		if s, ok2 := v.(string); ok2 {
+			ipv6.Value = utils.StringPtr(s)
+		}
+	}
+
+	if p, ok := valMap["prefix_length"]; ok {
+		if n, ok2 := p.(int); ok2 {
+			ipv6.PrefixLength = utils.IntPtr(n)
+		}
+	}
+
+	return ipv6
 }
 
 func expandSubnet(pr interface{}) *import1.Subnet {
