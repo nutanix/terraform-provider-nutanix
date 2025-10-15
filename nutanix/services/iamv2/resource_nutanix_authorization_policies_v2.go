@@ -352,7 +352,7 @@ func expandIdentityFilter(identities []interface{}) ([]import1.IdentityFilter, e
 				log.Printf("[DEBUG] expandIdentityFilter val type : %v\n", reflect.TypeOf(val))
 				reserved, err := deserializeJSONStringToMap(val.(string))
 				if err != nil {
-					return nil, fmt.Errorf(err.Error())
+					return nil, fmt.Errorf("%s", err.Error())
 				}
 				log.Printf("[DEBUG] expandIdentityFilter reserved : %v\n", reserved)
 				filter.Reserved_ = reserved
@@ -389,7 +389,7 @@ func expandEntityFilter(entities []interface{}) ([]import1.EntityFilter, error) 
 				log.Printf("[DEBUG] expandEntityFilter val type : %v\n", reflect.TypeOf(val))
 				reserved, err := deserializeJSONStringToMap(val.(string))
 				if err != nil {
-					return nil, fmt.Errorf(err.Error())
+					return nil, fmt.Errorf("%s", err.Error())
 				}
 				log.Printf("[DEBUG] expandEntityFilter reserved : %v\n", reserved)
 				filter.Reserved_ = reserved

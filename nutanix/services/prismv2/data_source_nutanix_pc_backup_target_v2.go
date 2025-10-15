@@ -169,10 +169,6 @@ func DatasourceNutanixBackupTargetV2Read(ctx context.Context, d *schema.Resource
 }
 
 func flattenClusterLocation(location management.ClusterLocation) []map[string]interface{} {
-	if &location == nil {
-		return nil
-	}
-
 	clusterLocation := make([]map[string]interface{}, 0)
 	clusterLocationMap := make(map[string]interface{})
 	clusterLocationMap["config"] = flattenClusterReference(location.Config)
@@ -226,10 +222,6 @@ func flattenBackupTargetLocation(location *management.OneOfBackupTargetLocation)
 }
 
 func flattenObjectStoreLocation(objectStoreLocation management.ObjectStoreLocation) []map[string]interface{} {
-	if &objectStoreLocation == nil {
-		return nil
-	}
-
 	objectStoreLocationMap := make(map[string]interface{})
 	objectStoreLocationMap["provider_config"] = flattenProviderConfig(objectStoreLocation.ProviderConfig)
 	objectStoreLocationMap["backup_policy"] = flattenBackupPolicy(objectStoreLocation.BackupPolicy)
