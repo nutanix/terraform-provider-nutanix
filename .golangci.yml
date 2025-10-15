@@ -26,6 +26,10 @@ run:
 # Linter Settings
 # =========================
 linters-settings:
+  # golint linter settings
+  golint:
+    min-confidence: 0
+
   govet:
     check-shadowing: true
     check-print-funcs: false
@@ -64,13 +68,6 @@ linters-settings:
   gocritic:
     disable:
       - ifElseChain
-  forbidigo:
-    ignore-tests: true
-    exclude:
-      - '^fmt\.Print(|f|ln)$'
-  tagliatelle:
-    case:
-      json: snake
 
 # =========================
 # Linter Enable/Disable
@@ -89,7 +86,6 @@ linters:
       # d.Set("name", utils.StringValue(resp.Status.Name))
       # waiting on terraform/hashi to let us know how they want us to changle those errors
       # see Error return value of `d.Set` is not checked (errcheck)
-    - typecheck
     - gosec
     - gochecknoinits
     - gochecknoglobals
@@ -103,7 +99,6 @@ linters:
     - unparam
     - unused
     - staticcheck
-    - deadcode
 
 # =========================
 # Issues exclusions
@@ -130,9 +125,3 @@ issues:
       # interfacer lint on `filter` func suggests lint changes that dont compile
       # Details: linter suggests to convert `body` param to io.Reader since we don't use Close method, but return type requires
       ## io.ReadCloser thus failing to compile
-
-run:
-  # which dirs to skip: they won't be analyzed;
-  skip-dirs:
-    - vendor
-    - future
