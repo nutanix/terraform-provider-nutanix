@@ -840,15 +840,27 @@ func ResourceNutanixClusterV2Read(ctx context.Context, d *schema.ResourceData, m
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Read : extID is empty")
 		err := getClusterExtID(d, conn)
 		if err != nil {
-			log.Printf("[DEBUG] ResourceNutanixClusterV2Read : Cluster not found, err -> %v", err)
-			return diag.Errorf("error while fetching cluster : %v", err)
+
+			// Check if the error is a ClusterNotFoundError
+			if _, ok := err.(*ClusterNotFoundError); ok {
+				log.Printf("[DEBUG] ResourceNutanixClusterV2Read : Cluster not found, err -> %v", err)
+				diags := diag.Diagnostics{
+					{
+						Severity: diag.Warning,
+						Summary:  "Cluster not found. Please register the cluster to Prism Central if not. If deleted, then reset the state.",
+						Detail:   fmt.Sprintf("Cluster %s not found: %v", d.Get("name").(string), err),
+					},
+				}
+				return diags
+			} else {
+				log.Printf("[DEBUG] ResourceNutanixClusterV2Read : error while fetching cluster : %v", err)
+				return diag.Errorf("error while fetching cluster : %v", err)
+			}
 		}
 	}
 
-	log.Printf("[DEBUG] ResourceNutanixClusterV2Read : Cluster found, extID : %s", d.Id())
 	resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(d.Id()), expand)
 	if err != nil {
-		log.Printf("[DEBUG] ResourceNutanixClusterV2Read : Cluster %s not found", d.Id())
 		return diag.Errorf("error while fetching cluster : %v", err)
 	}
 
@@ -1114,20 +1126,26 @@ func getClusterExtID(d *schema.ResourceData, conn *clusters.Client) error {
 		return fmt.Errorf("error while fetching cluster : %v", err)
 	}
 
+	if utils.IntValue(listResp.Metadata.TotalAvailableResults) == 0 {
+		log.Printf("[DEBUG] getClusterExtID Cluster not found, TotalAvailableResults is 0")
+		return &ClusterNotFoundError{Name: d.Get("name").(string), Err: err}
+	}
+
 	if listResp.Data == nil {
 		log.Printf("[DEBUG] getClusterExtID Cluster not found, clustersResponse.Data is nil")
-		return fmt.Errorf("cluster not found : %v", err)
+		return &ClusterNotFoundError{Name: d.Get("name").(string), Err: err}
 	}
+
 	cls := listResp.Data.GetValue().([]config.Cluster)
 
 	if len(cls) == 0 {
 		log.Printf("[DEBUG] getClusterExtID Cluster not found, len(clusters) is 0")
-		return fmt.Errorf("cluster not found : %v", err)
+		return &ClusterNotFoundError{Name: d.Get("name").(string), Err: err}
 	}
 	extID := utils.StringValue(cls[0].ExtId)
 	if extID == "" {
 		log.Printf("[DEBUG] getClusterExtID Cluster not found, extID is empty")
-		return fmt.Errorf("cluster not found : %v", err)
+		return &ClusterNotFoundError{Name: d.Get("name").(string), Err: err}
 	}
 	log.Printf("[DEBUG] getClusterExtID Cluster found, extId : %s", extID)
 	d.SetId(extID)
@@ -1810,4 +1828,16 @@ func expandFaultToleranceState(pr interface{}) *config.FaultToleranceState {
 		return fts
 	}
 	return nil
+}
+
+type ClusterNotFoundError struct {
+	Name string
+	Err  error
+}
+
+func (e *ClusterNotFoundError) Error() string {
+	if e.Err != nil {
+		return fmt.Sprintf("cluster not found: %s, %v", e.Name, e.Err)
+	}
+	return fmt.Sprintf("cluster not found: %s", e.Name)
 }
