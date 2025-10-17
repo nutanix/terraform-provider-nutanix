@@ -2,6 +2,7 @@ package datapoliciesv2
 
 import (
 	"context"
+	"fmt"
 
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -107,7 +108,11 @@ func ResourceNutanixStoragePoliciesV2Create(ctx context.Context, d *schema.Resou
 		 compressionSpecMap := v.(map[string]interface{})
 		 compressionSpec := &import1.CompressionSpec{}
 		 if compressionState, ok := compressionSpecMap["compression_state"]; ok {
-			 compressionSpec.CompressionState = utils.StringPtr(compressionState.(string))
+			  var cs import1.CompressionState
+				err := cs.UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, compressionState.(string))))
+				if err == nil {
+					compressionSpec.CompressionState = cs.Ref()
+				}
 		 }
 		 body.CompressionSpec = compressionSpec
 	 }
@@ -115,7 +120,11 @@ func ResourceNutanixStoragePoliciesV2Create(ctx context.Context, d *schema.Resou
 		 encryptionSpecMap := v.(map[string]interface{})
 		 encryptionSpec := &import1.EncryptionSpec{}
 		 if encryptionState, ok := encryptionSpecMap["encryption_state"]; ok {
-			 encryptionSpec.EncryptionState = encryptionState.(string)
+			  var es import1.EncryptionState
+				err := es.UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, encryptionState.(string))))
+				if err == nil {
+					encryptionSpec.EncryptionState = es.Ref()
+				}
 		 }
 		 body.EncryptionSpec = encryptionSpec
 	 }
