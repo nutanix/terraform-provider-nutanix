@@ -101,9 +101,10 @@ func ResourceNutanixUserV2() *schema.Resource {
 				Computed: true,
 			},
 			"password": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"force_reset_password": {
 				Type:     schema.TypeBool,
@@ -180,23 +181,19 @@ func ResourceNutanixUserV2() *schema.Resource {
 				},
 			},
 			"last_login_time": {
-				Type: schema.TypeString,
-				// Optional: true,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"created_time": {
-				Type: schema.TypeString,
-				// Optional: true,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"last_updated_time": {
-				Type: schema.TypeString,
-				// Optional: true,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"created_by": {
-				Type: schema.TypeString,
-				// Optional: true,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
@@ -397,7 +394,7 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 	updateSpec = &getUserResp
 
 	// validation on update spec
-	// Note: user read response has "" as default value for  middleInitial, emailId,
+	// Note: user read response has "" as default value for  middleInitial, emailId, displayName.
 	if updateSpec.MiddleInitial != nil && utils.StringValue(updateSpec.MiddleInitial) == "" {
 		updateSpec.MiddleInitial = nil
 	}
@@ -508,7 +505,14 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceNutanixUserV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	log.Printf("[DEBUG] ResourceNutanixUserV2Delete : Delete not supported yet")
+	return diag.Diagnostics{
+		{
+			Severity: diag.Warning,
+			Summary:  "Delete operation not supported",
+			Detail:   "Deleting users via Terraform is not supported yet. Please delete the user manually from the Prism Central UI if required.",
+		},
+	}
 }
 
 func expandKVPair(pr []interface{}) []config.KVPair {
