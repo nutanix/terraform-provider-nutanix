@@ -840,7 +840,6 @@ func ResourceNutanixClusterV2Read(ctx context.Context, d *schema.ResourceData, m
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Read : extID is empty")
 		err := getClusterExtID(d, conn)
 		if err != nil {
-
 			// Check if the error is a ClusterNotFoundError
 			if _, ok := err.(*ClusterNotFoundError); ok {
 				log.Printf("[DEBUG] ResourceNutanixClusterV2Read : Cluster not found, err -> %v", err)
@@ -852,10 +851,9 @@ func ResourceNutanixClusterV2Read(ctx context.Context, d *schema.ResourceData, m
 					},
 				}
 				return diags
-			} else {
-				log.Printf("[DEBUG] ResourceNutanixClusterV2Read : error while fetching cluster : %v", err)
-				return diag.Errorf("error while fetching cluster : %v", err)
 			}
+			log.Printf("[DEBUG] ResourceNutanixClusterV2Read : error while fetching cluster : %v", err)
+			return diag.Errorf("error while fetching cluster : %v", err)
 		}
 	}
 
