@@ -510,7 +510,7 @@ func resourceNutanixUserV2Delete(ctx context.Context, d *schema.ResourceData, me
 		{
 			Severity: diag.Warning,
 			Summary:  "Delete operation not supported",
-			Detail:   "Deleting users via Terraform is not supported yet. Please delete the user manually from the Prism Central UI if required.",
+			Detail:   "Deleting users via Terraform is not supported yet. Please delete the user manually from the Prism Central UI if required, or use v3 resource for now",
 		},
 	}
 }
