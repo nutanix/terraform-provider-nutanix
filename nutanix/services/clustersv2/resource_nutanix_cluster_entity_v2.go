@@ -924,9 +924,23 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 	if d.Get("ext_id").(string) == "" {
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster not found, extID is empty")
 		err := getClusterExtID(d, conn)
+
+		// Check if the error is a ClusterNotFoundError
 		if err != nil {
-			log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster not found, err -> %v", err)
-			return diag.Errorf("error while fetching cluster : %v", err)
+			if _, ok := err.(*ClusterNotFoundError); ok {
+				log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster not found, err -> %v", err)
+				diags := diag.Diagnostics{
+					{
+						Severity: diag.Warning,
+						Summary:  "Cluster not found. Please register the cluster to Prism Central if not. If deleted, then reset the state.",
+						Detail:   fmt.Sprintf("Cluster %s not found: %v", d.Get("name").(string), err),
+					},
+				}
+				return diags
+			} else {
+				log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster not found, err -> %v", err)
+				return diag.Errorf("error while fetching cluster : %v", err)
+			}
 		}
 	}
 
