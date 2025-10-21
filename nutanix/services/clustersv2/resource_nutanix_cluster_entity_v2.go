@@ -7,6 +7,7 @@ import (
 	"log"
 	"reflect"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
+	clustermgmtPrism "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -96,6 +98,18 @@ func ResourceNutanixClusterV2() *schema.Resource {
 												"ipv6": SchemaForValuePrefixLengthResource(),
 											},
 										},
+									},
+
+									// expand cluster with node params
+									"should_skip_add_node": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"should_skip_pre_expand_checks": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
 									},
 								},
 							},
@@ -750,6 +764,17 @@ func SchemaForValuePrefixLengthResource() *schema.Schema {
 }
 
 func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// Validate forbidden fields at creation
+	if v, ok := d.GetOk("nodes.0.node_list.0.node_params"); ok && len(v.([]interface{})) > 0 {
+		return diag.Errorf("parameter 'node_params' can only be used during update operations")
+	}
+	if v, ok := d.GetOk("nodes.0.node_list.0.config_params"); ok && len(v.([]interface{})) > 0 {
+		return diag.Errorf("parameter 'config_params' can only be used during update operations")
+	}
+	if v, ok := d.GetOk("nodes.0.node_list.0.remove_node_params"); ok && len(v.([]interface{})) > 0 {
+		return diag.Errorf("parameter 'remove_node_params' can only be used during update operations")
+	}
+
 	conn := meta.(*conns.Client).ClusterAPI
 	body := config.NewCluster()
 	var dryRun *bool
@@ -839,10 +864,19 @@ func ResourceNutanixClusterV2Read(ctx context.Context, d *schema.ResourceData, m
 	if d.Get("ext_id").(string) == "" {
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Read : extID is empty")
 		err := getClusterExtID(d, conn)
-		if err != nil {
+		// Check if the error is a ClusterNotFoundError
+		if _, ok := err.(*ClusterNotFoundError); ok {
 			log.Printf("[DEBUG] ResourceNutanixClusterV2Read : Cluster not found, err -> %v", err)
-			return diag.Errorf("error while fetching cluster : %v", err)
+			diags := diag.Diagnostics{
+				{
+					Severity: diag.Warning,
+					Summary:  "Cluster not found. Please register the cluster to Prism Central if not. If deleted, then reset the state.",
+					Detail:   fmt.Sprintf("Cluster %s not found: %v", d.Get("name").(string), err),
+				},
+			}
+			return diags
 		}
+		log.Printf("[DEBUG] ResourceNutanixClusterV2Read : error while fetching cluster : %v", err)
 	}
 
 	log.Printf("[DEBUG] ResourceNutanixClusterV2Read : Cluster found, extID : %s", d.Id())
@@ -912,10 +946,19 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 	if d.Get("ext_id").(string) == "" {
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster not found, extID is empty")
 		err := getClusterExtID(d, conn)
-		if err != nil {
+		// Check if the error is a ClusterNotFoundError
+		if _, ok := err.(*ClusterNotFoundError); ok {
 			log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster not found, err -> %v", err)
-			return diag.Errorf("error while fetching cluster : %v", err)
+			diags := diag.Diagnostics{
+				{
+					Severity: diag.Warning,
+					Summary:  "Cluster not found. Please register the cluster to Prism Central if not. If deleted, then reset the state.",
+					Detail:   fmt.Sprintf("Cluster %s not found: %v", d.Get("name").(string), err),
+				},
+			}
+			return diags
 		}
+		log.Printf("[DEBUG] ResourceNutanixClusterV2Update : error while fetching cluster : %v", err)
 	}
 
 	log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster found, extID : %s", d.Id())
@@ -934,7 +977,56 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
 	}
 	if d.HasChange("nodes") {
-		updateSpec.Nodes = expandNodeReference(d.Get("nodes"))
+		exitingNodes := resp.Data.GetValue().(config.Cluster).Nodes.NodeList
+		rawNodes := expandNodeReference(d.Get("nodes")).NodeList
+		added, removed, changed := DiffNodes(exitingNodes, rawNodes)
+
+		if len(added) > 0 {
+			b, _ := json.MarshalIndent(added, "", "  ")
+			log.Printf("[DEBUG] Nodes to add: %s", string(b))
+
+			for _, nodeToAdd := range added {
+				// Discover unconfigured node before adding to cluster
+				// make sure that node is unconfigured
+				diags, unconfiguredNodeDetails := discoverUnconfiguredNode(ctx, d, meta, *conn, nodeToAdd)
+				if diags.HasError() {
+					return diags
+				}
+				aJSON, _ := json.MarshalIndent(unconfiguredNodeDetails, "", "  ")
+				log.Printf("[DEBUG] expand cluster: unconfigured node details: %s", string(aJSON))
+
+				// fetch network info for nodes to be added
+				diags, networkDetails := fetchNetworkDetailsForNodes(ctx, d, meta, *conn, *unconfiguredNodeDetails)
+				if diags.HasError() {
+					return diags
+				}
+
+				log.Printf("[DEBUG] network details for node to be added: %v", networkDetails)
+
+				// expanding the cluster with new node
+				diags = expandClusterWithNewNode(ctx, d, meta, *conn, *unconfiguredNodeDetails,
+					*networkDetails, false, false, false)
+				if diags.HasError() {
+					return diags
+				}
+			}
+		}
+		if len(removed) > 0 {
+			b, _ := json.MarshalIndent(removed, "", "  ")
+			log.Printf("[DEBUG] Nodes to remove: %s", string(b))
+
+			// remove nodes from cluster
+			for _, nodeToRemove := range removed {
+				diags := removeNodeFromCluster(ctx, d, meta, *conn, nodeToRemove)
+				if diags.HasError() {
+					return diags
+				}
+			}
+		}
+		if len(changed) > 0 {
+			b, _ := json.MarshalIndent(changed, "", "  ")
+			log.Printf("[DEBUG] Nodes changed: %s", string(b))
+		}
 	}
 	if d.HasChange("network") {
 		updateSpec.Network = expandClusterNetworkReference(d.Get("network"))
@@ -958,7 +1050,7 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 	}
 
 	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
-	log.Printf("[DEBUG] Update Cluster Request Body: %s", string(aJSON))
+	log.Printf("[DEBUG] cluster update: update payload: %s", string(aJSON))
 
 	updateResp, err := conn.ClusterEntityAPI.UpdateClusterById(utils.StringPtr(d.Id()), &updateSpec, args)
 	if err != nil {
@@ -996,6 +1088,333 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 	return ResourceNutanixClusterV2Read(ctx, d, meta)
 }
 
+func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta interface{},
+	conn clusters.Client, nodeToRemove config.NodeListItemReference) diag.Diagnostics {
+	body := &config.NodeRemovalParams{}
+
+	nodeUUIDList := make([]string, 0)
+
+	// set node UUID
+	nodeUUIDList = append(nodeUUIDList, utils.StringValue(nodeToRemove.NodeUuid))
+
+	if len(nodeUUIDList) > 0 {
+		body.NodeUuids = nodeUUIDList
+	} else {
+		return diag.Errorf("error while removing node : Node UUID is required for remove node")
+	}
+
+	aJSON, _ := json.MarshalIndent(body, "", " ")
+	log.Printf("[DEBUG] cluster update: remove node request body: %s", string(aJSON))
+	resp, err := conn.ClusterEntityAPI.RemoveNode(utils.StringPtr(d.Id()), body)
+	if err != nil {
+		return diag.Errorf("error while Removing node : %v", err)
+	}
+
+	TaskRef := resp.Data.GetValue().(clustermgmtPrism.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the node to be available
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		resourceUUID, _ := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		rUUID := resourceUUID.Data.GetValue().(import2.Task)
+		aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+		log.Printf("Error Remove Node Task Details : %s", string(aJSON))
+		return diag.Errorf("error waiting for  node (%s) to Remove: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
+
+	// Get UUID from TASK API
+	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching  node UUID : %v", err)
+	}
+	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+
+	bJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	log.Printf("cluster update: remove node task details : %s", string(bJSON))
+	return nil
+}
+
+func expandClusterWithNewNode(ctx context.Context, d *schema.ResourceData, meta interface{}, conn clusters.Client,
+	unconfigureNodeDetails config.UnconfigureNodeDetails,
+	nodeNetworkingDetails config.NodeNetworkingDetails,
+	shouldSkipHostNetworking, shouldSkipAddNode, shouldSkipPreExpandChecks bool) diag.Diagnostics {
+
+	unConfNode := unconfigureNodeDetails.NodeList[0]
+	nodeNetInfo := nodeNetworkingDetails
+
+	networks := make([]config.UplinkNetworkItem, 0)
+	networks = append(networks, config.UplinkNetworkItem{
+		Name:     nodeNetInfo.NetworkInfo.Hci[0].Name,
+		Networks: nodeNetInfo.NetworkInfo.Hci[0].Networks,
+		Uplinks: &config.Uplinks{
+			Active: []config.UplinksField{
+				{
+					Name:  nodeNetInfo.Uplinks[0].UplinkList[0].Name,
+					Mac:   nodeNetInfo.Uplinks[0].UplinkList[0].Mac,
+					Value: nodeNetInfo.Uplinks[0].UplinkList[0].Name,
+				},
+			},
+			Standby: []config.UplinksField{
+				{
+					Name:  nodeNetInfo.Uplinks[0].UplinkList[1].Name,
+					Mac:   nodeNetInfo.Uplinks[0].UplinkList[1].Mac,
+					Value: nodeNetInfo.Uplinks[0].UplinkList[1].Name,
+				},
+			},
+		},
+	})
+
+	nodeItem := config.NodeItem{
+		NodeUuid:                unConfNode.NodeUuid,
+		NodePosition:            unConfNode.NodePosition,
+		Model:                   unConfNode.RackableUnitModel,
+		BlockId:                 unConfNode.RackableUnitSerial,
+		HypervisorType:          unConfNode.HypervisorType,
+		HypervisorVersion:       unConfNode.HypervisorVersion,
+		NosVersion:              unConfNode.NosVersion,
+		CurrentNetworkInterface: nodeNetInfo.Uplinks[0].UplinkList[0].Name,
+		HypervisorIp:            unConfNode.HypervisorIp,
+		CvmIp:                   unConfNode.CvmIp,
+		IpmiIp:                  unConfNode.IpmiIp,
+		IsRoboMixedHypervisor:   unConfNode.Attributes.IsRoboMixedHypervisor,
+		Networks:                networks,
+	}
+
+	nodeList := []config.NodeItem{
+		nodeItem,
+	}
+
+	nodeParam := config.NodeParam{
+		ShouldSkipHostNetworking: utils.BoolPtr(shouldSkipHostNetworking),
+		NodeList:                 nodeList,
+		HypervisorIsos: []config.HypervisorIsoMap{
+			{
+				Type: unConfNode.HypervisorType,
+			},
+		},
+	}
+
+	body := config.ExpandClusterParams{
+		ShouldSkipAddNode:         utils.BoolPtr(shouldSkipAddNode),
+		ShouldSkipPreExpandChecks: utils.BoolPtr(shouldSkipPreExpandChecks),
+		NodeParams:                &nodeParam,
+		ConfigParams: &config.ConfigParams{
+			TargetHypervisor: utils.StringPtr(unConfNode.HypervisorType.GetName()),
+		},
+	}
+
+	aJSON, _ := json.MarshalIndent(body, "", " ")
+	log.Printf("[DEBUG] Add Node Request Body: %s", string(aJSON))
+
+	resp, err := conn.ClusterEntityAPI.ExpandCluster(utils.StringPtr(d.Id()), &body)
+	if err != nil {
+		return diag.Errorf("error while adding node : %v", err)
+	}
+
+	TaskRef := resp.Data.GetValue().(clustermgmtPrism.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the  node to be available
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for  node (%s) to add: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
+
+	// Get UUID from TASK API
+
+	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching  node UUID : %v", err)
+	}
+
+	aJSON, _ = json.Marshal(resourceUUID)
+	log.Printf("[DEBUG] Add Node Response: %s", string(aJSON))
+	return nil
+
+}
+
+func fetchNetworkDetailsForNodes(ctx context.Context, d *schema.ResourceData, meta interface{},
+	conn clusters.Client, node config.UnconfigureNodeDetails) (diag.Diagnostics, *config.NodeNetworkingDetails) {
+
+	readResp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(d.Id()), nil)
+	if err != nil {
+		return diag.Errorf("error while reading cluster : %v", err), nil
+	}
+	// Extract E-Tag Header
+	args := getEtagHeader(readResp, &conn)
+
+	unconfiguredNodeDetail := node.NodeList[0]
+
+	nodeListNetworkingDetails := make([]config.NodeListNetworkingDetails, 0)
+	nodeListItem := config.NodeListNetworkingDetails{
+		CurrentNetworkInterface: unconfiguredNodeDetail.CurrentNetworkInterface,
+		HypervisorType:          unconfiguredNodeDetail.HypervisorType,
+		HypervisorVersion:       unconfiguredNodeDetail.HypervisorVersion,
+		IpmiIp:                  unconfiguredNodeDetail.IpmiIp,
+		NodePosition:            unconfiguredNodeDetail.NodePosition,
+		NodeUuid:                unconfiguredNodeDetail.NodeUuid,
+		NosVersion:              unconfiguredNodeDetail.NosVersion,
+		CvmIp:                   unconfiguredNodeDetail.CvmIp,
+		HypervisorIp:            unconfiguredNodeDetail.HypervisorIp,
+	}
+
+	nodeListNetworkingDetails = append(nodeListNetworkingDetails, nodeListItem)
+
+	nodeNetworkDetailsBody := config.NodeDetails{
+		NodeList:    nodeListNetworkingDetails,
+		RequestType: utils.StringPtr("expand_cluster"),
+	}
+
+	networkDetailsResp, err := conn.ClusterEntityAPI.FetchNodeNetworkingDetails(utils.StringPtr(d.Id()), &nodeNetworkDetailsBody, args)
+	if err != nil {
+		return diag.Errorf("error while Fetching Node Networking Details : %v", err), nil
+	}
+
+	TaskRef := networkDetailsResp.Data.GetValue().(import1.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the  node to be available
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"QUEUED", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for  node (%s) to add: %s", utils.StringValue(taskUUID), errWaitTask), nil
+	}
+
+	// Get UUID from TASK API
+
+	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching task : %v", err), nil
+	}
+	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+
+	bJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	log.Printf("[DEBUG] Fetch Network Info Task Details: %s", string(bJSON))
+
+	uuid := strings.Split(utils.StringValue(rUUID.ExtId), "=:")[1]
+
+	const networkingDetails = 3
+	taskResponseType := config.TaskResponseType(networkingDetails)
+	networkDetailsTaskResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
+	if taskErr != nil {
+		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr), nil
+	}
+
+	taskResp := networkDetailsTaskResp.Data.GetValue().(config.TaskResponse)
+
+	if *taskResp.TaskResponseType != config.TaskResponseType(networkingDetails) {
+		return diag.Errorf("error while fetching Task Response for Network Detail Nodes : %v", "task response type mismatch"), nil
+	}
+
+	nodeNetworkDetails := taskResp.Response.GetValue().(config.NodeNetworkingDetails)
+
+	aJSON, _ := json.MarshalIndent(networkDetailsTaskResp, "", " ")
+	log.Printf("[DEBUG] fetching Network Details for Node to be added task details: %s", string(aJSON))
+	return nil, &nodeNetworkDetails
+}
+
+func discoverUnconfiguredNode(ctx context.Context, d *schema.ResourceData, meta interface{},
+	conn clusters.Client, node config.NodeListItemReference) (diag.Diagnostics, *config.UnconfigureNodeDetails) {
+	ipType := getIPType(node.ControllerVmIp)
+
+	var addressType config.AddressType
+	switch ipType {
+	case "IPV4":
+		addressType = config.ADDRESSTYPE_IPV4
+	case "IPV6":
+		addressType = config.ADDRESSTYPE_IPV6
+	}
+
+	unconfiguredNodeBody := &config.NodeDiscoveryParams{
+		AddressType:  &addressType,
+		IpFilterList: []import4.IPAddress{*node.ControllerVmIp},
+	}
+
+	aJSON, _ := json.MarshalIndent(unconfiguredNodeBody, "", " ")
+	log.Printf("[DEBUG] Discover Unconfigured Nodes body : %s", string(aJSON))
+
+	// get pcExtId, since ot will be used on the discover unconfigured nodes API
+	pcFilter := "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')"
+	getPcResp, err := conn.ClusterEntityAPI.ListClusters(nil, utils.IntPtr(1), utils.StringPtr(pcFilter), nil, nil, nil, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching cluster list : %v", err), nil
+	}
+	pcExtID := getPcResp.Data.GetValue().([]config.Cluster)[0].ExtId
+
+	discoverUnconfiguredNodesResp, err := conn.ClusterEntityAPI.DiscoverUnconfiguredNodes(pcExtID, unconfiguredNodeBody)
+	if err != nil {
+		return diag.Errorf("error while Discover Unconfigured Nodes : %v", err), nil
+	}
+
+	TaskRef := discoverUnconfiguredNodesResp.Data.GetValue().(import1.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the Nodes Trap to be available
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for Unconfigured Nodes (%s) to fetch: %s", utils.StringValue(taskUUID), errWaitTask), nil
+	}
+
+	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching Unconfigured Nodes UUID : %v", err), nil
+	}
+	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+
+	jsonBody, _ := json.MarshalIndent(resourceUUID, "", "  ")
+	log.Printf("[DEBUG] fetching Unconfigured Nodes resourceUUID : %s", string(jsonBody))
+
+	uuid := strings.Split(utils.StringValue(rUUID.ExtId), "=:")[1]
+
+	const unconfiguredNodes = 2
+	taskResponseType := config.TaskResponseType(unconfiguredNodes)
+	unconfiguredNodesResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
+	if taskErr != nil {
+		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr), nil
+	}
+
+	taskResp := unconfiguredNodesResp.Data.GetValue().(config.TaskResponse)
+
+	if *taskResp.TaskResponseType != config.TaskResponseType(unconfiguredNodes) {
+		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", "task response type mismatch"), nil
+	}
+
+	unconfiguredNodeDetails := taskResp.Response.GetValue().(config.UnconfigureNodeDetails)
+
+	aJSON, _ = json.MarshalIndent(unconfiguredNodeDetails, "", " ")
+	log.Printf("[DEBUG] cluster expand: unconfigured node details: %s", string(aJSON))
+
+	return nil, &unconfiguredNodeDetails
+}
+
 func ResourceNutanixClusterV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ClusterAPI
 	var expand *string
@@ -1009,8 +1428,19 @@ func ResourceNutanixClusterV2Delete(ctx context.Context, d *schema.ResourceData,
 	if d.Get("ext_id").(string) == "" {
 		err := getClusterExtID(d, conn)
 		if err != nil {
+			// Check if the error is a ClusterNotFoundError
+			if _, ok := err.(*ClusterNotFoundError); ok {
+				log.Printf("[DEBUG] ResourceNutanixClusterV2Delete : Cluster not found, err -> %v", err)
+				diags := diag.Diagnostics{
+					{
+						Severity: diag.Warning,
+						Summary:  "Cluster not found. Please register the cluster to Prism Central if not. If deleted, then reset the state.",
+						Detail:   fmt.Sprintf("Cluster %s not found: %v", d.Get("name").(string), err),
+					},
+				}
+				return diags
+			}
 			log.Printf("[DEBUG] ResourceNutanixClusterV2Delete : error while fetching cluster : %v", err)
-			return diag.Errorf("error while fetching cluster : %v", err)
 		}
 	}
 
@@ -1114,20 +1544,25 @@ func getClusterExtID(d *schema.ResourceData, conn *clusters.Client) error {
 		return fmt.Errorf("error while fetching cluster : %v", err)
 	}
 
+	if utils.IntValue(listResp.Metadata.TotalAvailableResults) == 0 {
+		log.Printf("[DEBUG] getClusterExtID Cluster not found, TotalAvailableResults is 0")
+		return &ClusterNotFoundError{Name: d.Get("name").(string), Err: err}
+	}
+
 	if listResp.Data == nil {
 		log.Printf("[DEBUG] getClusterExtID Cluster not found, clustersResponse.Data is nil")
-		return fmt.Errorf("cluster not found : %v", err)
+		return &ClusterNotFoundError{Name: d.Get("name").(string), Err: err}
 	}
 	cls := listResp.Data.GetValue().([]config.Cluster)
 
 	if len(cls) == 0 {
 		log.Printf("[DEBUG] getClusterExtID Cluster not found, len(clusters) is 0")
-		return fmt.Errorf("cluster not found : %v", err)
+		return &ClusterNotFoundError{Name: d.Get("name").(string), Err: err}
 	}
 	extID := utils.StringValue(cls[0].ExtId)
 	if extID == "" {
 		log.Printf("[DEBUG] getClusterExtID Cluster not found, extID is empty")
-		return fmt.Errorf("cluster not found : %v", err)
+		return &ClusterNotFoundError{Name: d.Get("name").(string), Err: err}
 	}
 	log.Printf("[DEBUG] getClusterExtID Cluster found, extId : %s", extID)
 	d.SetId(extID)
