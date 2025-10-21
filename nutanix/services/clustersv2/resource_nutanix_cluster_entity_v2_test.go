@@ -162,6 +162,81 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixClusterResource_ExpandCluster(t *testing.T) {
+	if testVars.Clusters.Nodes[1].CvmIP == "" &&
+		testVars.Clusters.Nodes[2].CvmIP == "" &&
+		testVars.Clusters.Nodes[3].CvmIP == "" {
+		t.Skip("Skipping test as No available nodes to be used for testing")
+	}
+
+	r := acctest.RandIntRange(1, 10000)
+	clusterName := fmt.Sprintf("tf-3node-cluster-%d", r)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClustersConfig(clusterName, 3),
+				Check: resource.ComposeTestCheckFunc(
+					// add node to cluster check
+					// unconfigured Nodes check
+					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredClusterNodes, "unconfigured_nodes.#", "3"),
+				),
+			},
+			// register a cluster to pc
+			{
+				Config: testAccClustersConfig(clusterName, 3) + clusterRegistrationConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					//Cluster Check
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "name", clusterName),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.#", "3"),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.1.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[1].CvmIP),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.2.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[2].CvmIP),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_function.0", testVars.Clusters.Config.ClusterFunctions[0]),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
+				),
+			},
+
+			// expand cluster by adding 4th node
+			{
+				Config: testAccClustersConfig(clusterName, 4),
+				Check: resource.ComposeTestCheckFunc(
+					//Cluster Check
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "name", clusterName),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.#", "4"),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.1.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[1].CvmIP),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.2.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[2].CvmIP),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.3.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[3].CvmIP),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_function.0", testVars.Clusters.Config.ClusterFunctions[0]),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
+				),
+			},
+
+			// remove node from cluster by reducing to 3 nodes
+			{
+				PreConfig: func() {
+					t.Log("Sleeping for 10 Minute before removing the node")
+					time.Sleep(10 * time.Minute)
+				},
+				Config: testAccClustersConfig(clusterName, 3),
+				Check: resource.ComposeTestCheckFunc(
+					//Cluster Check
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "name", clusterName),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.#", "3"),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.1.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[1].CvmIP),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.2.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[2].CvmIP),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_function.0", testVars.Clusters.Config.ClusterFunctions[0]),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
+				),
+			},
+		},
+	})
+}
+
 var clusterConfig = fmt.Sprintf(`
 	data "nutanix_clusters_v2" "clusters" {}
 
