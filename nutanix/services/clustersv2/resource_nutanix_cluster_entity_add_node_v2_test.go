@@ -5,10 +5,10 @@ import (
 )
 
 const (
-	resourceNameDiscoverUnconfiguredNode         = "nutanix_clusters_discover_unconfigured_nodes_v2.cluster-node"
+	// resourceNameDiscoverUnconfiguredNode         = "nutanix_clusters_discover_unconfigured_nodes_v2.cluster-node"
 	resourceNameDiscoverUnconfiguredClusterNodes = "nutanix_clusters_discover_unconfigured_nodes_v2.cluster-nodes"
-	resourceNameFetchUnconfiguredNodeNetwork     = "nutanix_clusters_unconfigured_node_networks_v2.node-network-info"
-	resourceNameAddNodeToCluster                 = "nutanix_cluster_add_node_v2.test"
+	// resourceNameFetchUnconfiguredNodeNetwork     = "nutanix_clusters_unconfigured_node_networks_v2.node-network-info"
+	// resourceNameAddNodeToCluster                 = "nutanix_cluster_add_node_v2.test"
 	resourceName3NodesCluster                    = "nutanix_cluster_v2.cluster-3nodes"
 )
 
