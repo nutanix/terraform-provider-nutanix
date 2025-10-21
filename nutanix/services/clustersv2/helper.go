@@ -142,7 +142,6 @@ type ChangedPair struct {
 // newNodes = desired nodes from the resource/state
 func DiffNodes(existing, newNodes []config.NodeListItemReference) (
 	added, removed []config.NodeListItemReference, changed []ChangedPair) {
-
 	matchedNew := make(map[int]bool)
 
 	for _, old := range existing {
