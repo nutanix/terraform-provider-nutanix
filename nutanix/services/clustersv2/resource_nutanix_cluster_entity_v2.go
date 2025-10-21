@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
-	clustermgmtPrism "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -1942,7 +1941,7 @@ func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("error while Removing node : %v", err)
 	}
 
-	TaskRef := resp.Data.GetValue().(clustermgmtPrism.TaskReference)
+	TaskRef := resp.Data.GetValue().(import1.TaskReference)
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
@@ -1978,7 +1977,6 @@ func expandClusterWithNewNode(ctx context.Context, d *schema.ResourceData, meta 
 	unconfigureNodeDetails config.UnconfigureNodeDetails,
 	nodeNetworkingDetails config.NodeNetworkingDetails,
 	shouldSkipHostNetworking, shouldSkipAddNode, shouldSkipPreExpandChecks bool) diag.Diagnostics {
-
 	unConfNode := unconfigureNodeDetails.NodeList[0]
 	nodeNetInfo := nodeNetworkingDetails
 
@@ -2051,7 +2049,7 @@ func expandClusterWithNewNode(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("error while adding node : %v", err)
 	}
 
-	TaskRef := resp.Data.GetValue().(clustermgmtPrism.TaskReference)
+	TaskRef := resp.Data.GetValue().(import1.TaskReference)
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
@@ -2077,12 +2075,10 @@ func expandClusterWithNewNode(ctx context.Context, d *schema.ResourceData, meta 
 	aJSON, _ = json.Marshal(resourceUUID)
 	log.Printf("[DEBUG] Add Node Response: %s", string(aJSON))
 	return nil
-
 }
 
 func fetchNetworkDetailsForNodes(ctx context.Context, d *schema.ResourceData, meta interface{},
 	conn clusters.Client, node config.UnconfigureNodeDetails) (diag.Diagnostics, *config.NodeNetworkingDetails) {
-
 	readResp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(d.Id()), nil)
 	if err != nil {
 		return diag.Errorf("error while reading cluster : %v", err), nil

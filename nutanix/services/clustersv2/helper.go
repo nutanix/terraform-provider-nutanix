@@ -146,18 +146,19 @@ func DiffNodes(existing, newNodes []config.NodeListItemReference) (
 	matchedNew := make(map[int]bool)
 
 	for _, old := range existing {
-		var (
-			found bool
-		)
+		oldCopy := old // ✅ local copy to safely take address
+		var found bool
+
 		for j, newNode := range newNodes {
 			if matchedNew[j] {
 				continue
 			}
 
-			// match by any key or by IP equality
+			newCopy := newNode // ✅ local copy to safely take address
+
 			match := false
-			for _, kOld := range nodeKeyCandidates(&old) {
-				for _, kNew := range nodeKeyCandidates(&newNode) {
+			for _, kOld := range nodeKeyCandidates(&oldCopy) {
+				for _, kNew := range nodeKeyCandidates(&newCopy) {
 					if kOld == kNew {
 						match = true
 						break
@@ -169,15 +170,15 @@ func DiffNodes(existing, newNodes []config.NodeListItemReference) (
 				found = true
 				matchedNew[j] = true
 
-				if !nodeEqual(&old, &newNode) {
-					changed = append(changed, ChangedPair{Old: old, New: newNode})
+				if !nodeEqual(&oldCopy, &newCopy) {
+					changed = append(changed, ChangedPair{Old: oldCopy, New: newCopy})
 				}
 				break
 			}
 		}
 
 		if !found {
-			removed = append(removed, old)
+			removed = append(removed, oldCopy)
 		}
 	}
 
@@ -187,7 +188,7 @@ func DiffNodes(existing, newNodes []config.NodeListItemReference) (
 		}
 	}
 
-	return
+	return added, removed, changed
 }
 
 // ############################
