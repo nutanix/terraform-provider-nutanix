@@ -9,7 +9,7 @@ const (
 	resourceNameDiscoverUnconfiguredClusterNodes = "nutanix_clusters_discover_unconfigured_nodes_v2.cluster-nodes"
 	// resourceNameFetchUnconfiguredNodeNetwork     = "nutanix_clusters_unconfigured_node_networks_v2.node-network-info"
 	// resourceNameAddNodeToCluster                 = "nutanix_cluster_add_node_v2.test"
-	resourceName3NodesCluster                    = "nutanix_cluster_v2.cluster-3nodes"
+	resourceName3NodesCluster = "nutanix_cluster_v2.cluster-3nodes"
 )
 
 // func TestAccV2NutanixClusterAddNodeResource_Basic(t *testing.T) {
