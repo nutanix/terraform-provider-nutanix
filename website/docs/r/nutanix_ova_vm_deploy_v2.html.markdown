@@ -44,19 +44,20 @@ resource "nutanix_ova_vm_deploy_v2" "test" {
 
 The following arguments are supported:
 
-- `extId`: -(Required) The external identifier for an OVA.
+- `ext_id`: -(Required) The external identifier for an OVA.
 - `override_vm_config`: -(Required) VM config override spec for OVA VM deploy endpoint
-- `cluster_location_ext_id`: -(Optional) Cluster identifier to deploy VM from OVA. This field is required when deploying an OVA and must be a part of the OVA location list.
+- `cluster_location_ext_id`: -(Required) Cluster identifier to deploy VM from OVA. This field is required when deploying an OVA and must be a part of the OVA location list.
 
 ### Override VM Config
 The `override_vm_config` arguments are support the following :
 
 * `name`: (Optional) VM name.
-* `num_sockets`: (Required) Number of vCPU sockets. Value should be at least 1.
+* `num_sockets`: (Optional) Number of vCPU sockets. Value should be at least 1.
 * `num_cores_per_socket`: (Optional) Number of cores per socket. Value should be at least 1.
 * `num_threads_per_core`: (Optional) Number of threads per core. Value should be at least 1.
-* `memory_size_bytes`: (Required) Memory size in bytes.
-* `nics`: (Optional) NICs attached to the VM.
+* `memory_size_bytes`: (Optional) Memory size in bytes.
+* `power_state`: (Optional) Power state of the VM (ON or OFF). Default is "ON".
+* `nics`: (Required) NICs attached to the VM.
 * `cd_roms`: (Optional) CD-ROMs attached to the VM.
 * `categories`: (Optional) Categories for the VM.
 
