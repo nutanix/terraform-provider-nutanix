@@ -848,7 +848,6 @@ func ResourceNutanixClusterV2Read(ctx context.Context, d *schema.ResourceData, m
 			log.Printf("[DEBUG] ResourceNutanixClusterV2Read : error while fetching cluster : %v", err)
 			return diag.Errorf("error while fetching cluster : %v", err)
 		}
-
 	}
 	// Clusters READ context
 	return clusterRead(d, meta)
