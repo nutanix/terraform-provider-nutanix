@@ -850,7 +850,7 @@ func ResourceNutanixClusterV2Read(ctx context.Context, d *schema.ResourceData, m
 		}
 
 	}
-  // Clusters READ context
+	// Clusters READ context
 	return clusterRead(d, meta)
 }
 
@@ -1777,8 +1777,8 @@ func clusterImportFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	// calling read logic here
 	diags := clusterRead(d, meta)
 	if diags.HasError() {
-			// convert diagnostics to error
-			return nil, fmt.Errorf("failed to import cluster: %v", diags)
+		// convert diagnostics to error
+		return nil, fmt.Errorf("failed to import cluster: %v", diags)
 	}
 	return []*schema.ResourceData{d}, nil
 }
@@ -1843,7 +1843,6 @@ func clusterRead(d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	}
 	return nil
 }
-
 
 type ClusterNotFoundError struct {
 	Name string
