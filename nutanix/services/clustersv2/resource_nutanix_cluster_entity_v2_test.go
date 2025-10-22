@@ -176,6 +176,7 @@ func TestAccV2NutanixClusterResource_ExpandCluster(t *testing.T) {
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
+			// step 1: create cluster with 3 nodes
 			{
 				Config: testAccClustersConfig(clusterName, 3),
 				Check: resource.ComposeTestCheckFunc(
@@ -184,7 +185,8 @@ func TestAccV2NutanixClusterResource_ExpandCluster(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredClusterNodes, "unconfigured_nodes.#", "3"),
 				),
 			},
-			// register a cluster to pc
+
+			// step 2: register a cluster to pc
 			{
 				Config: testAccClustersConfig(clusterName, 3) + clusterRegistrationConfig(),
 				Check: resource.ComposeTestCheckFunc(
@@ -199,7 +201,7 @@ func TestAccV2NutanixClusterResource_ExpandCluster(t *testing.T) {
 				),
 			},
 
-			// expand cluster by adding 4th node
+			// step 3: expand cluster by adding 4th node
 			{
 				Config: testAccClustersConfig(clusterName, 4),
 				Check: resource.ComposeTestCheckFunc(
@@ -215,23 +217,11 @@ func TestAccV2NutanixClusterResource_ExpandCluster(t *testing.T) {
 				),
 			},
 
-			// remove node from cluster by reducing to 3 nodes
+			// step 4: remove node from cluster by reducing to 3 nodes
 			{
 				PreConfig: func() {
 					t.Log("Sleeping for 10 Minute before removing the node")
 					time.Sleep(10 * time.Minute)
-				},
-				Config: testAccClustersConfig(clusterName, 3),
-				Check: resource.ComposeTestCheckFunc(
-					//Cluster Check
-					resource.TestCheckResourceAttr(resourceName3NodesCluster, "name", clusterName),
-				),
-			},
-			// check after removing node from cluster
-			{
-				PreConfig: func() {
-					t.Log("Sleeping for 2 Minute before removing the node")
-					time.Sleep(2 * time.Minute)
 				},
 				Config: testAccClustersConfig(clusterName, 3),
 				Check: resource.ComposeTestCheckFunc(

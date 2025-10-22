@@ -935,7 +935,7 @@ func ResourceNutanixClusterV2Read(ctx context.Context, d *schema.ResourceData, m
 func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ClusterAPI
 	var expand *string
-	var modified bool = false
+	var nodeChanges bool
 
 	if expandVar, ok := d.GetOk("expand"); ok {
 		expand = utils.StringPtr(expandVar.(string))
@@ -963,145 +963,59 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 
 	log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster found, extID : %s", d.Id())
 
-	updateSpec := config.Cluster{}
-
-	if d.HasChange("name") {
-		modified = true
-		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
-	}
+	// === Handle Node Add/Remove ===
 	if d.HasChange("nodes") {
-		resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(d.Id()), expand)
-		if err != nil {
-			return diag.Errorf("error while fetching cluster : %v", err)
+		if diags := handleNodeChanges(ctx, d, meta, conn, expand); diags.HasError() {
+			return diags
 		}
-		exitingNodes := resp.Data.GetValue().(config.Cluster).Nodes.NodeList
-		rawNodes := expandNodeReference(d.Get("nodes")).NodeList
-		added, removed, changed := DiffNodes(exitingNodes, rawNodes)
+		nodeChanges = true
+	}
 
-		if len(added) > 0 {
-			b, _ := json.MarshalIndent(added, "", "  ")
-			log.Printf("[DEBUG] Nodes to add: %s", string(b))
-
-			for _, nodeToAdd := range added {
-				// Discover unconfigured node before adding to cluster
-				// make sure that node is unconfigured
-				diags, unconfiguredNodeDetails := discoverUnconfiguredNode(ctx, d, meta, *conn, nodeToAdd)
-				if diags.HasError() {
-					return diags
-				}
-				aJSON, _ := json.MarshalIndent(unconfiguredNodeDetails, "", "  ")
-				log.Printf("[DEBUG] expand cluster: unconfigured node details: %s", string(aJSON))
-
-				// fetch network info for nodes to be added
-				diags, networkDetails := fetchNetworkDetailsForNodes(ctx, d, meta, *conn, *unconfiguredNodeDetails)
-				if diags.HasError() {
-					return diags
-				}
-
-				log.Printf("[DEBUG] network details for node to be added: %v", networkDetails)
-
-				// expanding the cluster with new node
-				diags = expandClusterWithNewNode(ctx, d, meta, *conn, *unconfiguredNodeDetails,
-					*networkDetails, false, false, false)
-				if diags.HasError() {
-					return diags
-				}
-			}
+	// === Handle other Cluster field changes ===
+	updateSpec, hasClusterFieldChange := handleClusterFieldUpdate(d)
+	if !hasClusterFieldChange {
+		log.Printf("[DEBUG] No cluster field changes detected, skipping UpdateClusterById")
+		if nodeChanges {
+			// delay to allow cluster to stabilize after node changes
+			log.Printf("[DEBUG] Delaying for 1 minute to allow cluster to stabilize after node changes")
+			time.Sleep(1 * time.Minute)
 		}
-		if len(removed) > 0 {
-			b, _ := json.MarshalIndent(removed, "", "  ")
-			log.Printf("[DEBUG] Nodes to remove: %s", string(b))
-
-			// remove nodes from cluster
-			for _, nodeToRemove := range removed {
-				diags := removeNodeFromCluster(ctx, d, meta, *conn, nodeToRemove)
-				if diags.HasError() {
-					return diags
-				}
-			}
-		}
-		if len(changed) > 0 {
-			b, _ := json.MarshalIndent(changed, "", "  ")
-			log.Printf("[DEBUG] Nodes changed: %s", string(b))
-		}
-	}
-	if d.HasChange("network") {
-		modified = true
-		updateSpec.Network = expandClusterNetworkReference(d.Get("network"))
-	}
-	if d.HasChange("config") {
-		modified = true
-		updateSpec.Config = expandClusterConfigReference(d.Get("config"), d)
-	}
-	if d.HasChange("upgrade_status") {
-		modified = true
-		updateSpec.UpgradeStatus = expandUpgradeStatus(d.Get("upgrade_status"))
-	}
-
-	if d.HasChange("container_name") {
-		modified = true
-		updateSpec.ContainerName = utils.StringPtr(d.Get("container_name").(string))
-	}
-	if d.HasChange("categories") {
-		modified = true
-		categories := d.Get("categories")
-		categoriesList := categories.([]interface{})
-		categoriesListStr := common.ExpandListOfString(categoriesList)
-		log.Printf("[DEBUG] categories List update Spec: %v", categoriesListStr)
-		updateSpec.Categories = categoriesListStr
-	}
-
-	// If no fields are modified, return early
-	// to ignore unnecessary update calls when add/remove nodes are handled separately
-	if !modified {
-		log.Printf("[DEBUG] No changes detected in Cluster resource for update.")
 		return ResourceNutanixClusterV2Read(ctx, d, meta)
 	}
 
+	// === Apply update via UpdateClusterById ===
 	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
 	log.Printf("[DEBUG] cluster update: update payload: %s", string(aJSON))
 
 	resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(d.Id()), expand)
 	if err != nil {
-		return diag.Errorf("error while fetching cluster : %v", err)
+		return diag.Errorf("error fetching cluster: %v", err)
 	}
 
-	// get etag value from read response to pass in update request If-Match header, Required for update request
 	args := getEtagHeader(resp, conn)
-
 	updateResp, err := conn.ClusterEntityAPI.UpdateClusterById(utils.StringPtr(d.Id()), &updateSpec, args)
 	if err != nil {
-		return diag.Errorf("error while updating clusters : %v", err)
+		return diag.Errorf("error updating cluster: %v", err)
 	}
 
+	// === Wait for Task completion ===
 	TaskRef := updateResp.Data.GetValue().(import1.TaskReference)
 	taskUUID := TaskRef.ExtId
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-	if err != nil {
-		return diag.Errorf("error while updating clusters : %v", err)
+	if _, errWait := stateConf.WaitForStateContext(ctx); errWait != nil {
+		return diag.Errorf("error waiting for cluster update task (%s): %s", utils.StringValue(taskUUID), errWait)
 	}
 
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for cluster (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
-	}
-
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
-	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Update Cluster Task Response Details: %s", string(aJSON))
-
-	//delay 1 min to get the updated data
+	log.Printf("[DEBUG] Cluster update completed successfully")
 	time.Sleep(1 * time.Minute)
-
 	return ResourceNutanixClusterV2Read(ctx, d, meta)
 }
 
@@ -1935,6 +1849,83 @@ func expandFaultToleranceState(pr interface{}) *config.FaultToleranceState {
 		return fts
 	}
 	return nil
+}
+
+func handleNodeChanges(ctx context.Context, d *schema.ResourceData, meta interface{}, conn *clusters.Client, expand *string) diag.Diagnostics {
+	log.Printf("[DEBUG] Handling node changes for cluster: %s", d.Id())
+
+	resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(d.Id()), expand)
+	if err != nil {
+		return diag.Errorf("error fetching cluster for node diff: %v", err)
+	}
+
+	existingNodes := resp.Data.GetValue().(config.Cluster).Nodes.NodeList
+	rawNodes := expandNodeReference(d.Get("nodes")).NodeList
+	added, removed, changed := DiffNodes(existingNodes, rawNodes)
+
+	// === Add Nodes ===
+	for _, nodeToAdd := range added {
+		diags, unconfiguredNodeDetails := discoverUnconfiguredNode(ctx, d, meta, *conn, nodeToAdd)
+		if diags.HasError() {
+			return diags
+		}
+		diags, networkDetails := fetchNetworkDetailsForNodes(ctx, d, meta, *conn, *unconfiguredNodeDetails)
+		if diags.HasError() {
+			return diags
+		}
+		if diags := expandClusterWithNewNode(ctx, d, meta, *conn, *unconfiguredNodeDetails, *networkDetails, false, false, false); diags.HasError() {
+			return diags
+		}
+	}
+
+	// === Remove Nodes ===
+	for _, nodeToRemove := range removed {
+		if diags := removeNodeFromCluster(ctx, d, meta, *conn, nodeToRemove); diags.HasError() {
+			return diags
+		}
+	}
+
+	// === Log Changed Nodes (no direct API call, just informational) ===
+	if len(changed) > 0 {
+		b, _ := json.MarshalIndent(changed, "", "  ")
+		log.Printf("[DEBUG] Nodes changed (informational only): %s", string(b))
+	}
+
+	return nil
+}
+
+func handleClusterFieldUpdate(d *schema.ResourceData) (config.Cluster, bool) {
+	var updateSpec config.Cluster
+	var hasChanges bool
+
+	if d.HasChange("name") {
+		hasChanges = true
+		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
+	}
+	if d.HasChange("network") {
+		hasChanges = true
+		updateSpec.Network = expandClusterNetworkReference(d.Get("network"))
+	}
+	if d.HasChange("config") {
+		hasChanges = true
+		updateSpec.Config = expandClusterConfigReference(d.Get("config"), d)
+	}
+	if d.HasChange("upgrade_status") {
+		hasChanges = true
+		updateSpec.UpgradeStatus = expandUpgradeStatus(d.Get("upgrade_status"))
+	}
+	if d.HasChange("container_name") {
+		hasChanges = true
+		updateSpec.ContainerName = utils.StringPtr(d.Get("container_name").(string))
+	}
+	if d.HasChange("categories") {
+		hasChanges = true
+		categories := d.Get("categories").([]interface{})
+		updateSpec.Categories = common.ExpandListOfString(categories)
+	}
+
+	log.Printf("[DEBUG] handleClusterFieldUpdate: hasChanges=%v", hasChanges)
+	return updateSpec, hasChanges
 }
 
 func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta interface{},
