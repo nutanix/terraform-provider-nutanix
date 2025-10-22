@@ -148,7 +148,7 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
   }
 
   lifecycle {
-    ignore_changes = [nodes.0.node_list, links, categories, config.0.cluster_function]
+    ignore_changes = [links, categories, config.0.cluster_function]
   }
 
   depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.cluster-nodes]

@@ -935,6 +935,7 @@ func ResourceNutanixClusterV2Read(ctx context.Context, d *schema.ResourceData, m
 func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ClusterAPI
 	var expand *string
+	var modified bool = false
 
 	if expandVar, ok := d.GetOk("expand"); ok {
 		expand = utils.StringPtr(expandVar.(string))
@@ -962,20 +963,17 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 
 	log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster found, extID : %s", d.Id())
 
-	resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(d.Id()), expand)
-	if err != nil {
-		return diag.Errorf("error while fetching cluster : %v", err)
-	}
-
-	// get etag value from read response to pass in update request If-Match header, Required for update request
-	args := getEtagHeader(resp, conn)
-
 	updateSpec := config.Cluster{}
 
 	if d.HasChange("name") {
+		modified = true
 		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
 	}
 	if d.HasChange("nodes") {
+		resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(d.Id()), expand)
+		if err != nil {
+			return diag.Errorf("error while fetching cluster : %v", err)
+		}
 		exitingNodes := resp.Data.GetValue().(config.Cluster).Nodes.NodeList
 		rawNodes := expandNodeReference(d.Get("nodes")).NodeList
 		added, removed, changed := DiffNodes(exitingNodes, rawNodes)
@@ -1028,19 +1026,24 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 	if d.HasChange("network") {
+		modified = true
 		updateSpec.Network = expandClusterNetworkReference(d.Get("network"))
 	}
 	if d.HasChange("config") {
+		modified = true
 		updateSpec.Config = expandClusterConfigReference(d.Get("config"), d)
 	}
 	if d.HasChange("upgrade_status") {
+		modified = true
 		updateSpec.UpgradeStatus = expandUpgradeStatus(d.Get("upgrade_status"))
 	}
 
 	if d.HasChange("container_name") {
+		modified = true
 		updateSpec.ContainerName = utils.StringPtr(d.Get("container_name").(string))
 	}
 	if d.HasChange("categories") {
+		modified = true
 		categories := d.Get("categories")
 		categoriesList := categories.([]interface{})
 		categoriesListStr := common.ExpandListOfString(categoriesList)
@@ -1048,8 +1051,23 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 		updateSpec.Categories = categoriesListStr
 	}
 
+	// If no fields are modified, return early
+	// to ignore unnecessary update calls when add/remove nodes are handled separately
+	if !modified {
+		log.Printf("[DEBUG] No changes detected in Cluster resource for update.")
+		return ResourceNutanixClusterV2Read(ctx, d, meta)
+	}
+
 	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
 	log.Printf("[DEBUG] cluster update: update payload: %s", string(aJSON))
+
+	resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(d.Id()), expand)
+	if err != nil {
+		return diag.Errorf("error while fetching cluster : %v", err)
+	}
+
+	// get etag value from read response to pass in update request If-Match header, Required for update request
+	args := getEtagHeader(resp, conn)
 
 	updateResp, err := conn.ClusterEntityAPI.UpdateClusterById(utils.StringPtr(d.Id()), &updateSpec, args)
 	if err != nil {
@@ -2108,6 +2126,9 @@ func fetchNetworkDetailsForNodes(ctx context.Context, d *schema.ResourceData, me
 		RequestType: utils.StringPtr("expand_cluster"),
 	}
 
+	aJSON, _ := json.MarshalIndent(nodeNetworkDetailsBody, "", " ")
+	log.Printf("[DEBUG] Fetch Network Info for Node to be added body : %s", string(aJSON))
+
 	networkDetailsResp, err := conn.ClusterEntityAPI.FetchNodeNetworkingDetails(utils.StringPtr(d.Id()), &nodeNetworkDetailsBody, args)
 	if err != nil {
 		return diag.Errorf("error while Fetching Node Networking Details : %v", err), nil
@@ -2157,7 +2178,7 @@ func fetchNetworkDetailsForNodes(ctx context.Context, d *schema.ResourceData, me
 
 	nodeNetworkDetails := taskResp.Response.GetValue().(config.NodeNetworkingDetails)
 
-	aJSON, _ := json.MarshalIndent(networkDetailsTaskResp, "", " ")
+	aJSON, _ = json.MarshalIndent(networkDetailsTaskResp, "", " ")
 	log.Printf("[DEBUG] fetching Network Details for Node to be added task details: %s", string(aJSON))
 	return nil, &nodeNetworkDetails
 }
@@ -2182,15 +2203,7 @@ func discoverUnconfiguredNode(ctx context.Context, d *schema.ResourceData, meta 
 	aJSON, _ := json.MarshalIndent(unconfiguredNodeBody, "", " ")
 	log.Printf("[DEBUG] Discover Unconfigured Nodes body : %s", string(aJSON))
 
-	// get pcExtId, since ot will be used on the discover unconfigured nodes API
-	pcFilter := "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')"
-	getPcResp, err := conn.ClusterEntityAPI.ListClusters(nil, utils.IntPtr(1), utils.StringPtr(pcFilter), nil, nil, nil, nil)
-	if err != nil {
-		return diag.Errorf("error while fetching cluster list : %v", err), nil
-	}
-	pcExtID := getPcResp.Data.GetValue().([]config.Cluster)[0].ExtId
-
-	discoverUnconfiguredNodesResp, err := conn.ClusterEntityAPI.DiscoverUnconfiguredNodes(pcExtID, unconfiguredNodeBody)
+	discoverUnconfiguredNodesResp, err := conn.ClusterEntityAPI.DiscoverUnconfiguredNodes(utils.StringPtr(d.Id()), unconfiguredNodeBody)
 	if err != nil {
 		return diag.Errorf("error while Discover Unconfigured Nodes : %v", err), nil
 	}
