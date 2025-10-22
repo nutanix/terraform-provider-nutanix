@@ -225,6 +225,18 @@ func TestAccV2NutanixClusterResource_ExpandCluster(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					//Cluster Check
 					resource.TestCheckResourceAttr(resourceName3NodesCluster, "name", clusterName),
+				),
+			},
+			// check after removing node from cluster
+			{
+				PreConfig: func() {
+					t.Log("Sleeping for 2 Minute before removing the node")
+					time.Sleep(2 * time.Minute)
+				},
+				Config: testAccClustersConfig(clusterName, 3),
+				Check: resource.ComposeTestCheckFunc(
+					//Cluster Check
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "name", clusterName),
 					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.#", "3"),
 					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
 					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.1.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[1].CvmIP),
