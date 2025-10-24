@@ -674,7 +674,7 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 	log.Printf("[DEBUG] OVA deployment task started with UUID: %s", utils.StringValue(taskUUID))
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the deployed vm from ova to be available
+	// Wait for OVA deployment to complete - using specialized config for OVA deployment
 	stateConf := &resource.StateChangeConf{
 		Pending:      []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:       []string{"SUCCEEDED"},
@@ -686,7 +686,7 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		log.Printf("[ERROR] OVA deployment task failed with UUID %s: %v", utils.StringValue(taskUUID), errWaitTask)
-		return diag.Errorf("error in Ova VM Deployment (%s): %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error in OVA deployment (%s): %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	log.Printf("[DEBUG] OVA deployment task completed successfully with UUID: %s", utils.StringValue(taskUUID))
@@ -752,21 +752,10 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 						TaskRef := resp.Data.GetValue().(import3.TaskReference)
 						diskTaskUUID := TaskRef.ExtId
 
-						taskconn := meta.(*conns.Client).PrismAPI
-						// Wait for the disk creation to complete
-						stateConf := &resource.StateChangeConf{
-							Pending:      []string{"QUEUED", "RUNNING"},
-							Target:       []string{"SUCCEEDED"},
-							Refresh:      taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(diskTaskUUID)),
-							Timeout:      d.Timeout(schema.TimeoutCreate),
-							Delay:        ovaVMDeployDelay,
-							PollInterval: ovaVMDeployDelay,
+						// Wait for disk creation to complete
+						if err := waitForTask(ctx, d, meta, diskTaskUUID, schema.TimeoutCreate, "disk creation"); err != nil {
+							return err
 						}
-
-						if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-							return diag.Errorf("error waiting for disk creation (%s): %s", utils.StringValue(diskTaskUUID), errWaitTask)
-						}
-						log.Printf("[DEBUG] Disk added successfully to OVA VM")
 					}
 				}
 			}
@@ -938,21 +927,10 @@ func ResourceNutanixOvaVMDeploymentUpdate(ctx context.Context, d *schema.Resourc
 		TaskRef := updateResp.Data.GetValue().(import3.TaskReference)
 		taskUUID := TaskRef.ExtId
 
-		taskconn := meta.(*conns.Client).PrismAPI
-		// Wait for the VM update to complete
-		stateConf := &resource.StateChangeConf{
-			Pending:      []string{"QUEUED", "RUNNING"},
-			Target:       []string{"SUCCEEDED"},
-			Refresh:      taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-			Timeout:      d.Timeout(schema.TimeoutUpdate),
-			Delay:        ovaVMDeployDelay,
-			PollInterval: ovaVMDeployDelay,
+		// Wait for VM update to complete
+		if err := waitForTask(ctx, d, meta, taskUUID, schema.TimeoutUpdate, "VM configuration update"); err != nil {
+			return err
 		}
-
-		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-			return diag.Errorf("error waiting for VM update task (%s): %s", utils.StringValue(taskUUID), errWaitTask)
-		}
-		log.Printf("[DEBUG] VM configuration update completed successfully")
 	}
 
 	// Handle disk changes
@@ -1000,20 +978,10 @@ func ResourceNutanixOvaVMDeploymentUpdate(ctx context.Context, d *schema.Resourc
 				TaskRef := resp.Data.GetValue().(import3.TaskReference)
 				taskUUID := TaskRef.ExtId
 
-				taskconn := meta.(*conns.Client).PrismAPI
-				stateConf := &resource.StateChangeConf{
-					Pending:      []string{"QUEUED", "RUNNING"},
-					Target:       []string{"SUCCEEDED"},
-					Refresh:      taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-					Timeout:      d.Timeout(schema.TimeoutUpdate),
-					Delay:        ovaVMDeployDelay,
-					PollInterval: ovaVMDeployDelay,
+				// Wait for disk deletion to complete
+				if err := waitForTask(ctx, d, meta, taskUUID, schema.TimeoutUpdate, "disk deletion"); err != nil {
+					return err
 				}
-
-				if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-					return diag.Errorf("error waiting for disk deletion (%s): %s", utils.StringValue(taskUUID), errWaitTask)
-				}
-				log.Printf("[DEBUG] Disk deleted successfully")
 			}
 		}
 
@@ -1055,20 +1023,10 @@ func ResourceNutanixOvaVMDeploymentUpdate(ctx context.Context, d *schema.Resourc
 				TaskRef := resp.Data.GetValue().(import3.TaskReference)
 				taskUUID := TaskRef.ExtId
 
-				taskconn := meta.(*conns.Client).PrismAPI
-				stateConf := &resource.StateChangeConf{
-					Pending:      []string{"QUEUED", "RUNNING"},
-					Target:       []string{"SUCCEEDED"},
-					Refresh:      taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-					Timeout:      d.Timeout(schema.TimeoutUpdate),
-					Delay:        ovaVMDeployDelay,
-					PollInterval: ovaVMDeployDelay,
+				// Wait for disk update to complete
+				if err := waitForTask(ctx, d, meta, taskUUID, schema.TimeoutUpdate, "disk update"); err != nil {
+					return err
 				}
-
-				if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-					return diag.Errorf("error waiting for disk update (%s): %s", utils.StringValue(taskUUID), errWaitTask)
-				}
-				log.Printf("[DEBUG] Disk updated successfully")
 			}
 		}
 
@@ -1092,20 +1050,10 @@ func ResourceNutanixOvaVMDeploymentUpdate(ctx context.Context, d *schema.Resourc
 				TaskRef := resp.Data.GetValue().(import3.TaskReference)
 				taskUUID := TaskRef.ExtId
 
-				taskconn := meta.(*conns.Client).PrismAPI
-				stateConf := &resource.StateChangeConf{
-					Pending:      []string{"QUEUED", "RUNNING"},
-					Target:       []string{"SUCCEEDED"},
-					Refresh:      taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-					Timeout:      d.Timeout(schema.TimeoutUpdate),
-					Delay:        ovaVMDeployDelay,
-					PollInterval: ovaVMDeployDelay,
+				// Wait for disk creation to complete
+				if err := waitForTask(ctx, d, meta, taskUUID, schema.TimeoutUpdate, "disk creation"); err != nil {
+					return err
 				}
-
-				if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-					return diag.Errorf("error waiting for disk creation (%s): %s", utils.StringValue(taskUUID), errWaitTask)
-				}
-				log.Printf("[DEBUG] Disk added successfully")
 			}
 
 			// After adding new disks, refresh the state to capture the assigned ext_id values
@@ -1190,21 +1138,11 @@ func ResourceNutanixOvaVMDeploymentUpdate(ctx context.Context, d *schema.Resourc
 			}
 
 			if taskUUID != nil {
-				taskconn := meta.(*conns.Client).PrismAPI
-				stateConf := &resource.StateChangeConf{
-					Pending:      []string{"QUEUED", "RUNNING"},
-					Target:       []string{"SUCCEEDED"},
-					Refresh:      taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-					Timeout:      d.Timeout(schema.TimeoutUpdate),
-					Delay:        ovaVMDeployDelay,
-					PollInterval: ovaVMDeployDelay,
-				}
-
-				if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-					return diag.Errorf("error waiting for power state change (%s): %s", utils.StringValue(taskUUID), errWaitTask)
+				// Wait for power state change to complete
+				if err := waitForTask(ctx, d, meta, taskUUID, schema.TimeoutUpdate, fmt.Sprintf("power state change to %s", newPowerState)); err != nil {
+					return err
 				}
 			}
-			log.Printf("[DEBUG] Power state changed successfully to: %s", newPowerState)
 		}
 	}
 
@@ -1281,7 +1219,6 @@ func setOvaVMConfig(d *schema.ResourceData, vm import2.Vm) diag.Diagnostics {
 							var apiBusType string
 							var apiIndex *int
 							if apiDisk.DiskAddress.BusType != nil {
-								const two, three, four, five, six = 2, 3, 4, 5, 6
 								switch *apiDisk.DiskAddress.BusType {
 								case 2:
 									apiBusType = "SCSI"
@@ -1417,6 +1354,26 @@ func setOvaVMConfig(d *schema.ResourceData, vm import2.Vm) diag.Diagnostics {
 	return nil
 }
 
+// waitForTask waits for a Nutanix task to complete
+func waitForTask(ctx context.Context, d *schema.ResourceData, meta interface{}, taskUUID *string, timeoutType string, operation string) diag.Diagnostics {
+	taskconn := meta.(*conns.Client).PrismAPI
+	stateConf := &resource.StateChangeConf{
+		Pending:      []string{"QUEUED", "RUNNING"},
+		Target:       []string{"SUCCEEDED"},
+		Refresh:      taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout:      d.Timeout(timeoutType),
+		Delay:        ovaVMDeployDelay,
+		PollInterval: ovaVMDeployDelay,
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for %s (%s): %s", operation, utils.StringValue(taskUUID), errWaitTask)
+	}
+
+	log.Printf("[DEBUG] %s completed successfully", operation)
+	return nil
+}
+
 func ResourceNutanixOvaVMDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
@@ -1435,21 +1392,9 @@ func ResourceNutanixOvaVMDeploymentDelete(ctx context.Context, d *schema.Resourc
 	TaskRef := resp.Data.GetValue().(import3.TaskReference)
 	taskUUID := TaskRef.ExtId
 
-	// calling group API to poll for completion of task
-
-	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
-	stateConf := &resource.StateChangeConf{
-		Pending:      []string{"QUEUED", "RUNNING"},
-		Target:       []string{"SUCCEEDED"},
-		Refresh:      taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout:      d.Timeout(schema.TimeoutCreate),
-		Delay:        ovaVMDeployDelay,
-		PollInterval: ovaVMDeployDelay,
-	}
-
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for vm (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
+	// Wait for VM deletion to complete
+	if err := waitForTask(ctx, d, meta, taskUUID, schema.TimeoutDelete, "VM deletion"); err != nil {
+		return err
 	}
 	return nil
 }
