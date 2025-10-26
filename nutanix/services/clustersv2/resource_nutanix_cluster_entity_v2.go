@@ -68,9 +68,10 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 						},
 						"node_list": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
+							Set:      hashNodeItem,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"controller_vm_ip": {
@@ -100,6 +101,11 @@ func ResourceNutanixClusterV2() *schema.Resource {
 									},
 
 									// expand cluster with node params
+									"should_skip_host_networking": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
 									"should_skip_add_node": {
 										Type:     schema.TypeBool,
 										Optional: true,
@@ -109,6 +115,49 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Computed: true,
+									},
+								},
+							},
+						},
+						// remove node params
+						"remove_node_params": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"extra_params": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"should_skip_upgrade_check": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Default:  false,
+												},
+												"skip_space_check": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Default:  false,
+												},
+												"should_skip_add_check": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Default:  false,
+												},
+											},
+										},
+									},
+
+									"should_skip_remove": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+									"should_skip_prechecks": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
 									},
 								},
 							},
@@ -1185,7 +1234,7 @@ func expandNodeReference(pr interface{}) *config.NodeReference {
 		nodeRef := config.NewNodeReference()
 
 		if nodeList, ok := val["node_list"]; ok {
-			nodeRef.NodeList = expandNodeListItemReference(nodeList.([]interface{}))
+			nodeRef.NodeList = expandNodeListItemReference(common.InterfaceToSlice(nodeList))
 		}
 
 		return nodeRef
@@ -1861,11 +1910,11 @@ func handleNodeChanges(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	existingNodes := resp.Data.GetValue().(config.Cluster).Nodes.NodeList
 	rawNodes := expandNodeReference(d.Get("nodes")).NodeList
-	added, removed, changed := DiffNodes(existingNodes, rawNodes)
+	added, removed, changed := DiffNodes(d, existingNodes, rawNodes)
 
 	// === Add Nodes ===
-	for _, nodeToAdd := range added {
-		diags, unconfiguredNodeDetails := discoverUnconfiguredNode(ctx, d, meta, *conn, nodeToAdd)
+	for _, nodeWithFlags := range added {
+		diags, unconfiguredNodeDetails := discoverUnconfiguredNode(ctx, d, meta, *conn, nodeWithFlags.Node)
 		if diags.HasError() {
 			return diags
 		}
@@ -1873,7 +1922,10 @@ func handleNodeChanges(ctx context.Context, d *schema.ResourceData, meta interfa
 		if diags.HasError() {
 			return diags
 		}
-		if diags := expandClusterWithNewNode(ctx, d, meta, *conn, *unconfiguredNodeDetails, *networkDetails, false, false, false); diags.HasError() {
+
+		flags := nodeWithFlags.Flags
+		if diags := expandClusterWithNewNode(ctx, d, meta, *conn, *unconfiguredNodeDetails, *networkDetails,
+			flags.ShouldSkipHostNetworking, flags.ShouldSkipAddNode, flags.ShouldSkipPreExpandChecks); diags.HasError() {
 			return diags
 		}
 	}
@@ -1929,19 +1981,26 @@ func handleClusterFieldUpdate(d *schema.ResourceData) (config.Cluster, bool) {
 }
 
 func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta interface{},
-	conn clusters.Client, nodeToRemove config.NodeListItemReference) diag.Diagnostics {
+	conn clusters.Client, nodeToRemove NodeWithFlags) diag.Diagnostics {
 	body := &config.NodeRemovalParams{}
 
 	nodeUUIDList := make([]string, 0)
 
 	// set node UUID
-	nodeUUIDList = append(nodeUUIDList, utils.StringValue(nodeToRemove.NodeUuid))
+	nodeUUIDList = append(nodeUUIDList, utils.StringValue(nodeToRemove.Node.NodeUuid))
 
 	if len(nodeUUIDList) > 0 {
 		body.NodeUuids = nodeUUIDList
+
 	} else {
 		return diag.Errorf("error while removing node : Node UUID is required for remove node")
 	}
+
+	body.ShouldSkipRemove = utils.BoolPtr(nodeToRemove.Flags.ShouldSkipRemove)
+	body.ShouldSkipPrechecks = utils.BoolPtr(nodeToRemove.Flags.ShouldSkipPrechecks)
+	body.ExtraParams.ShouldSkipUpgradeCheck = utils.BoolPtr(nodeToRemove.Flags.ShouldSkipUpgradeCheck)
+	body.ExtraParams.ShouldSkipSpaceCheck = utils.BoolPtr(nodeToRemove.Flags.SkipSpaceCheck)
+	body.ExtraParams.ShouldSkipAddCheck = utils.BoolPtr(nodeToRemove.Flags.ShouldSkipAddCheck)
 
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] cluster update: remove node request body: %s", string(aJSON))
@@ -2115,6 +2174,7 @@ func fetchNetworkDetailsForNodes(ctx context.Context, d *schema.ResourceData, me
 	nodeNetworkDetailsBody := config.NodeDetails{
 		NodeList:    nodeListNetworkingDetails,
 		RequestType: utils.StringPtr("expand_cluster"),
+
 	}
 
 	aJSON, _ := json.MarshalIndent(nodeNetworkDetailsBody, "", " ")

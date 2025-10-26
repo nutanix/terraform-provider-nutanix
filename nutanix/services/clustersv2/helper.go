@@ -2,9 +2,13 @@ package clustersv2
 
 import (
 	"fmt"
+	"hash/fnv"
+	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/clusters"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -26,6 +30,56 @@ func getEtagHeader(resp interface{}, conn *clusters.Client) map[string]interface
 // ###########################
 // ### Node list helpers ###
 // ###########################
+// hashNodeItem --- hash function for node set ---
+func hashNodeItem(v interface{}) int {
+	m, ok := v.(map[string]interface{})
+	if !ok {
+		return 0
+	}
+
+	// Extract controller_vm_ip list
+	controllerVMs, ok := m["controller_vm_ip"].([]interface{})
+	if !ok || len(controllerVMs) == 0 {
+		return 0
+	}
+
+	// Extract first controller_vm_ip map
+	ipMap, ok := controllerVMs[0].(map[string]interface{})
+	if !ok {
+		return 0
+	}
+
+	var ipValue string
+
+	// Prefer IPv4 if available
+	if ipv4List, ok := ipMap["ipv4"].([]interface{}); ok && len(ipv4List) > 0 {
+		if ipv4Map, ok := ipv4List[0].(map[string]interface{}); ok {
+			if val, ok := ipv4Map["value"].(string); ok {
+				ipValue = val
+			}
+		}
+	}
+
+	// Fall back to IPv6 if IPv4 is missing
+	if ipValue == "" {
+		if ipv6List, ok := ipMap["ipv6"].([]interface{}); ok && len(ipv6List) > 0 {
+			if ipv6Map, ok := ipv6List[0].(map[string]interface{}); ok {
+				if val, ok := ipv6Map["value"].(string); ok {
+					ipValue = val
+				}
+			}
+		}
+	}
+
+	// Compute hash — use FNV for deterministic stable hash
+	if ipValue == "" {
+		return 0
+	}
+	h := fnv.New32a()
+	_, _ = h.Write([]byte(strings.ToLower(strings.TrimSpace(ipValue))))
+	return int(h.Sum32())
+}
+
 // --- stringify IP helper used as fallback key ---
 func ipToKey(ip *import4.IPAddress) string {
 	if ip == nil {
@@ -140,12 +194,12 @@ type ChangedPair struct {
 // DiffNodes returns lists of nodes that were added, removed, or changed.
 // existing = current cluster nodes from API
 // newNodes = desired nodes from the resource/state
-func DiffNodes(existing, newNodes []config.NodeListItemReference) (
-	added, removed []config.NodeListItemReference, changed []ChangedPair) {
+func DiffNodes(d *schema.ResourceData, existing, newNodes []config.NodeListItemReference) (
+	added, removed []NodeWithFlags, changed []ChangedPair) {
 	matchedNew := make(map[int]bool)
 
 	for _, old := range existing {
-		oldCopy := old // ✅ local copy to safely take address
+		oldCopy := old
 		var found bool
 
 		for j, newNode := range newNodes {
@@ -153,7 +207,7 @@ func DiffNodes(existing, newNodes []config.NodeListItemReference) (
 				continue
 			}
 
-			newCopy := newNode // ✅ local copy to safely take address
+			newCopy := newNode
 
 			match := false
 			for _, kOld := range nodeKeyCandidates(&oldCopy) {
@@ -177,17 +231,127 @@ func DiffNodes(existing, newNodes []config.NodeListItemReference) (
 		}
 
 		if !found {
-			removed = append(removed, oldCopy)
+			// Removed node → extract flags for removal (if present)
+			flags := extractNodeFlags(d, oldCopy)
+			removed = append(removed, NodeWithFlags{
+				Node:  oldCopy,
+				Flags: flags,
+			})
 		}
 	}
 
 	for j, newNode := range newNodes {
 		if !matchedNew[j] {
-			added = append(added, newNode)
+			flags := extractNodeFlags(d, newNode) // compute flags once here
+			added = append(added, NodeWithFlags{
+				Node:  newNode,
+				Flags: flags,
+			})
 		}
 	}
 
 	return added, removed, changed
+}
+
+type NodeFlags struct {
+	// Add node flags
+	ShouldSkipAddNode         bool
+	ShouldSkipHostNetworking  bool
+	ShouldSkipPreExpandChecks bool
+
+	// Remove node flags
+	ShouldSkipRemove       bool
+	ShouldSkipPrechecks    bool
+	ShouldSkipUpgradeCheck bool
+	SkipSpaceCheck         bool
+	ShouldSkipAddCheck     bool
+}
+type NodeWithFlags struct {
+	Node  config.NodeListItemReference
+	Flags NodeFlags
+}
+
+// extractNodeFlags finds a node from the Terraform diff (nodes) that matches
+// the node (by comparing CVM IP) and extracts both add/remove operation flags.
+func extractNodeFlags(d *schema.ResourceData, node config.NodeListItemReference) NodeFlags {
+	flags := NodeFlags{}
+
+	nodes := common.InterfaceToSlice(d.Get("nodes"))
+	if len(nodes) == 0 {
+		return flags
+	}
+
+	for _, n := range nodes {
+		nMap, ok := n.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		// ====== Handle add-node flags from node_list ======
+		nodeLists := common.InterfaceToSlice(nMap["node_list"])
+		for _, nodeItem := range nodeLists {
+			itemMap, ok := nodeItem.(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			controllerIPs := common.InterfaceToSlice(itemMap["controller_vm_ip"])
+			for _, ipBlock := range controllerIPs {
+				ipMap, _ := ipBlock.(map[string]interface{})
+				ipv4List := common.InterfaceToSlice(ipMap["ipv4"])
+				for _, ipv4 := range ipv4List {
+					ipv4Map, _ := ipv4.(map[string]interface{})
+					if node.ControllerVmIp != nil &&
+						ipv4Map["value"].(string) == utils.StringValue(node.ControllerVmIp.Ipv4.Value) {
+
+						if v, ok := itemMap["should_skip_add_node"].(bool); ok {
+							flags.ShouldSkipAddNode = v
+						}
+						if v, ok := itemMap["should_skip_host_networking"].(bool); ok {
+							flags.ShouldSkipHostNetworking = v
+						}
+						if v, ok := itemMap["should_skip_pre_expand_checks"].(bool); ok {
+							flags.ShouldSkipPreExpandChecks = v
+						}
+						// break after matching this node
+						break
+					}
+				}
+			}
+		}
+
+		// ====== Handle remove-node flags from remove_node_params ======
+		removeParams := common.InterfaceToSlice(nMap["remove_node_params"])
+		if len(removeParams) > 0 {
+			rpMap, ok := removeParams[0].(map[string]interface{})
+			if ok {
+				if v, ok := rpMap["should_skip_remove"].(bool); ok {
+					flags.ShouldSkipRemove = v
+				}
+				if v, ok := rpMap["should_skip_prechecks"].(bool); ok {
+					flags.ShouldSkipPrechecks = v
+				}
+
+				extras := common.InterfaceToSlice(rpMap["extra_params"])
+				if len(extras) > 0 {
+					extraMap, ok := extras[0].(map[string]interface{})
+					if ok {
+						if v, ok := extraMap["should_skip_upgrade_check"].(bool); ok {
+							flags.ShouldSkipUpgradeCheck = v
+						}
+						if v, ok := extraMap["skip_space_check"].(bool); ok {
+							flags.SkipSpaceCheck = v
+						}
+						if v, ok := extraMap["should_skip_add_check"].(bool); ok {
+							flags.ShouldSkipAddCheck = v
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return flags
 }
 
 // ############################
