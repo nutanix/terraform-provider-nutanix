@@ -1991,7 +1991,6 @@ func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta int
 
 	if len(nodeUUIDList) > 0 {
 		body.NodeUuids = nodeUUIDList
-
 	} else {
 		return diag.Errorf("error while removing node : Node UUID is required for remove node")
 	}

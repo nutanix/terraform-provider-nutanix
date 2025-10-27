@@ -303,7 +303,6 @@ func extractNodeFlags(d *schema.ResourceData, node config.NodeListItemReference)
 					ipv4Map, _ := ipv4.(map[string]interface{})
 					if node.ControllerVmIp != nil &&
 						ipv4Map["value"].(string) == utils.StringValue(node.ControllerVmIp.Ipv4.Value) {
-
 						if v, ok := itemMap["should_skip_add_node"].(bool); ok {
 							flags.ShouldSkipAddNode = v
 						}
