@@ -2,72 +2,78 @@ package clustersv2_test
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 const (
-	// resourceNameDiscoverUnconfiguredNode         = "nutanix_clusters_discover_unconfigured_nodes_v2.cluster-node"
+	resourceNameDiscoverUnconfiguredNode         = "nutanix_clusters_discover_unconfigured_nodes_v2.cluster-node"
 	resourceNameDiscoverUnconfiguredClusterNodes = "nutanix_clusters_discover_unconfigured_nodes_v2.cluster-nodes"
-	// resourceNameFetchUnconfiguredNodeNetwork     = "nutanix_clusters_unconfigured_node_networks_v2.node-network-info"
-	// resourceNameAddNodeToCluster                 = "nutanix_cluster_add_node_v2.test"
-	resourceName3NodesCluster = "nutanix_cluster_v2.cluster-3nodes"
+	resourceNameFetchUnconfiguredNodeNetwork     = "nutanix_clusters_unconfigured_node_networks_v2.node-network-info"
+	resourceNameAddNodeToCluster                 = "nutanix_cluster_add_node_v2.test"
+	resourceName3NodesCluster                    = "nutanix_cluster_v2.cluster-3nodes"
 )
 
-// func TestAccV2NutanixClusterAddNodeResource_Basic(t *testing.T) {
-// 	if testVars.Clusters.Nodes[1].CvmIP == "" &&
-// 		testVars.Clusters.Nodes[2].CvmIP == "" &&
-// 		testVars.Clusters.Nodes[3].CvmIP == "" {
-// 		t.Skip("Skipping test as No available nodes to be used for testing")
-// 	}
-// 	r := acctest.RandInt()
-// 	clusterName := fmt.Sprintf("tf-3node-cluster-%d", r)
+func TestAccV2NutanixClusterAddNodeResource_Basic(t *testing.T) {
+	if testVars.Clusters.Nodes[1].CvmIP == "" &&
+		testVars.Clusters.Nodes[2].CvmIP == "" &&
+		testVars.Clusters.Nodes[3].CvmIP == "" {
+		t.Skip("Skipping test as No available nodes to be used for testing")
+	}
+	r := acctest.RandInt()
+	clusterName := fmt.Sprintf("tf-3node-cluster-%d", r)
 
-// 	resource.Test(t, resource.TestCase{
-// 		PreCheck:  func() { acc.TestAccPreCheck(t) },
-// 		Providers: acc.TestAccProviders,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccClustersConfig(clusterName, 3) + clusterRegistrationConfig(),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					// add node to cluster check
-// 					// unconfigured Nodes check
-// 					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredClusterNodes, "unconfigured_nodes.#", "3"),
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClustersConfig(clusterName, 3) + clusterRegistrationConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					// add node to cluster check
+					// unconfigured Nodes check
+					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredClusterNodes, "unconfigured_nodes.#", "3"),
 
-// 					//Cluster Check
-// 					resource.TestCheckResourceAttr(resourceName3NodesCluster, "name", clusterName),
-// 					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.#", "3"),
-// 					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_function.0", testVars.Clusters.Config.ClusterFunctions[0]),
-// 					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
-// 				),
-// 			},
-// 			{
-// 				Config: testAccClustersConfig(clusterName, 3) + testAccAddNodeToClusterConfig(),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					// unconfigured Node to be added check
-// 					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredNode, "unconfigured_nodes.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredNode, "unconfigured_nodes.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[3].CvmIP),
-// 					resource.TestCheckResourceAttrSet(resourceNameDiscoverUnconfiguredNode, "unconfigured_nodes.0.nos_version"),
-// 					resource.TestCheckResourceAttrSet(resourceNameDiscoverUnconfiguredNode, "unconfigured_nodes.0.node_uuid"),
+					//Cluster Check
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "name", clusterName),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.#", "3"),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_function.0", testVars.Clusters.Config.ClusterFunctions[0]),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
+				),
+			},
+			{
+				Config: testAccClustersConfig(clusterName, 3) + testAccAddNodeToClusterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					// unconfigured Node to be added check
+					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredNode, "unconfigured_nodes.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredNode, "unconfigured_nodes.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[3].CvmIP),
+					resource.TestCheckResourceAttrSet(resourceNameDiscoverUnconfiguredNode, "unconfigured_nodes.0.nos_version"),
+					resource.TestCheckResourceAttrSet(resourceNameDiscoverUnconfiguredNode, "unconfigured_nodes.0.node_uuid"),
 
-// 					// fetch network info for unconfigured node check
-// 					resource.TestCheckResourceAttr(resourceNameFetchUnconfiguredNodeNetwork, "nodes_networking_details.#", "1"),
-// 					resource.TestCheckResourceAttrSet(resourceNameFetchUnconfiguredNodeNetwork, "nodes_networking_details.0.network_info.#"),
-// 					resource.TestCheckResourceAttrSet(resourceNameFetchUnconfiguredNodeNetwork, "nodes_networking_details.0.uplinks.#"),
-// 				),
-// 			},
-// 			{
-// 				PreConfig: func() {
-// 					t.Log("Sleeping for 10 Minute before removing the node")
-// 					time.Sleep(10 * time.Minute)
-// 				},
-// 				Config: testAccClustersConfig(clusterName, 3) + testAccAddNodeToClusterConfig(),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					// add node to cluster check
-// 					resource.TestCheckResourceAttr(resourceNameAddNodeToCluster, "node_params.0.node_list.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[3].CvmIP),
-// 				),
-// 			},
-// 		},
-// 	})
-// }
+					// fetch network info for unconfigured node check
+					resource.TestCheckResourceAttr(resourceNameFetchUnconfiguredNodeNetwork, "nodes_networking_details.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceNameFetchUnconfiguredNodeNetwork, "nodes_networking_details.0.network_info.#"),
+					resource.TestCheckResourceAttrSet(resourceNameFetchUnconfiguredNodeNetwork, "nodes_networking_details.0.uplinks.#"),
+				),
+			},
+			{
+				PreConfig: func() {
+					t.Log("Sleeping for 10 Minute before removing the node")
+					time.Sleep(10 * time.Minute)
+				},
+				Config: testAccClustersConfig(clusterName, 3) + testAccAddNodeToClusterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					// add node to cluster check
+					resource.TestCheckResourceAttr(resourceNameAddNodeToCluster, "node_params.0.node_list.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[3].CvmIP),
+				),
+			},
+		},
+	})
+}
 
 func testAccClustersConfig(clusterName string, nodes int) string {
 	return fmt.Sprintf(`
@@ -154,39 +160,6 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
   depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.cluster-nodes]
 }
 `, clusterName, filepath, nodes)
-}
-
-func clusterRegistrationConfig() string {
-	return `
-
-## we need to register on of 3 nodes cluster to pc
-resource "nutanix_pc_registration_v2" "nodes-registration" {
-  pc_ext_id = local.pc_ext_id
-  remote_cluster {
-    aos_remote_cluster_spec {
-      remote_cluster {
-        address {
-          ipv4 {
-            value = local.clusters.nodes[1].cvm_ip
-          }
-        }
-        credentials {
-          authentication {
-            username = local.clusters.nodes[1].username
-            password = local.clusters.nodes[1].password
-          }
-        }
-      }
-    }
-  }
-  depends_on = [nutanix_cluster_v2.cluster-3nodes]
-
-  provisioner "local-exec" {
-    command    = " sleep 5s"
-    on_failure = continue
-  }
-}
-  `
 }
 
 func testAccAddNodeToClusterConfig() string {
