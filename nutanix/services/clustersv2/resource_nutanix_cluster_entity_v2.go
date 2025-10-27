@@ -1998,9 +1998,11 @@ func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta int
 
 	body.ShouldSkipRemove = utils.BoolPtr(nodeToRemove.Flags.ShouldSkipRemove)
 	body.ShouldSkipPrechecks = utils.BoolPtr(nodeToRemove.Flags.ShouldSkipPrechecks)
-	body.ExtraParams.ShouldSkipUpgradeCheck = utils.BoolPtr(nodeToRemove.Flags.ShouldSkipUpgradeCheck)
-	body.ExtraParams.ShouldSkipSpaceCheck = utils.BoolPtr(nodeToRemove.Flags.SkipSpaceCheck)
-	body.ExtraParams.ShouldSkipAddCheck = utils.BoolPtr(nodeToRemove.Flags.ShouldSkipAddCheck)
+	body.ExtraParams = &config.NodeRemovalExtraParam{
+		ShouldSkipUpgradeCheck: utils.BoolPtr(nodeToRemove.Flags.ShouldSkipUpgradeCheck),
+		ShouldSkipSpaceCheck:   utils.BoolPtr(nodeToRemove.Flags.SkipSpaceCheck),
+		ShouldSkipAddCheck:     utils.BoolPtr(nodeToRemove.Flags.ShouldSkipAddCheck),
+	}
 
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] cluster update: remove node request body: %s", string(aJSON))
@@ -2174,7 +2176,6 @@ func fetchNetworkDetailsForNodes(ctx context.Context, d *schema.ResourceData, me
 	nodeNetworkDetailsBody := config.NodeDetails{
 		NodeList:    nodeListNetworkingDetails,
 		RequestType: utils.StringPtr("expand_cluster"),
-
 	}
 
 	aJSON, _ := json.MarshalIndent(nodeNetworkDetailsBody, "", " ")
