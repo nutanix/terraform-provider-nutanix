@@ -20,7 +20,7 @@ resource "nutanix_users_v2" "user"{
   locale = "<locale>"
   region = "<region>"
   force_reset_password = <force_reset_password>
-  status = "<status>"  
+  status = "<status>"
 }
 
 # user_type of SERVICE_ACCOUNT
@@ -129,4 +129,16 @@ resource "nutanix_users_v2" "import_user" {}
 terraform import nutanix_users_v2.import_user <UUID>
 ```
 
+## Delete Behavior
+
+Deleting users via Terraform is **not currently supported** in `nutanix_users_v2`.
+If you attempt to delete a resource, Terraform will issue a **warning** and continue without removing the actual user in Prism Central.
+
+To delete a user, you must remove it manually via the **Prism Central UI**, or as a workaround, you can:
+
+1. **Import the user into the `nutanix_user` resource** (v3 API).
+2. Use Terraform to delete the user, as delete operations are supported in the v3 API.
+
+
+## References
 See detailed information in [Nutanix Users v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Users/operation/createUser).
