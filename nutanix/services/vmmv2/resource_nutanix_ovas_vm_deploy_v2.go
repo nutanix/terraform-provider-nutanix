@@ -944,15 +944,15 @@ func setOvaVMConfig(d *schema.ResourceData, vm import2.Vm) diag.Diagnostics {
 							var apiIndex *int
 							if apiDisk.DiskAddress.BusType != nil {
 								switch *apiDisk.DiskAddress.BusType {
-								case 2:
+								case import2.DISKBUSTYPE_SCSI:
 									apiBusType = "SCSI"
-								case 3:
+								case import2.DISKBUSTYPE_IDE:
 									apiBusType = "IDE"
-								case 4:
+								case import2.DISKBUSTYPE_PCI:
 									apiBusType = "PCI"
-								case 5:
+								case import2.DISKBUSTYPE_SATA:
 									apiBusType = "SATA"
-								case 6:
+								case import2.DISKBUSTYPE_SPAPR:
 									apiBusType = "SPAPR"
 								}
 							}

@@ -450,9 +450,8 @@ resource "nutanix_ova_vm_deploy_v2" "test" {
 }
 
 `, vmName, vmDescription, ovaName)
-	} else {
-		// Updated configuration with larger resources and different CPU layout
-		return fmt.Sprintf(`
+	}
+	return fmt.Sprintf(`
 
 data "nutanix_clusters_v2" "clusters" {
   filter = "config/clusterFunction/any(a:a eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
@@ -536,7 +535,6 @@ resource "nutanix_ova_vm_deploy_v2" "test" {
 }
 
 `, vmName, vmDescription, ovaName)
-	}
 }
 
 func TestAccV2NutanixOvaVmDeployResource_DiskUpdate(t *testing.T) {
