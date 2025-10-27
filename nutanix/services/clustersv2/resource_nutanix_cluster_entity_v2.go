@@ -932,12 +932,7 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-	if err != nil {
-		return diag.Errorf("error while updating clusters : %v", err)
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWait := stateConf.WaitForStateContext(ctx); errWait != nil {
@@ -1677,7 +1672,7 @@ func handleClusterFieldUpdate(d *schema.ResourceData) (config.Cluster, bool) {
 	}
 	if d.HasChange("upgrade_status") {
 		hasChanges = true
-		updateSpec.UpgradeStatus = expandUpgradeStatus(d.Get("upgrade_status"))
+		updateSpec.UpgradeStatus = common.ExpandEnum(d.Get("upgrade_status"), UpgradeStatusMap, "upgrade_status")
 	}
 	if d.HasChange("container_name") {
 		hasChanges = true
@@ -1731,7 +1726,7 @@ func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta int
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -1839,7 +1834,7 @@ func expandClusterWithNewNode(ctx context.Context, d *schema.ResourceData, meta 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -1906,7 +1901,7 @@ func fetchNetworkDetailsForNodes(ctx context.Context, d *schema.ResourceData, me
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -1980,7 +1975,7 @@ func discoverUnconfiguredNode(ctx context.Context, d *schema.ResourceData, meta 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
