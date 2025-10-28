@@ -7,13 +7,10 @@ import (
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
-	import3 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -325,46 +322,130 @@ func ResourceNutanixClusterProfileV2() *schema.Resource {
 }
 
 func ResourceNutanixClusterProfileV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).ClusterAPI
+	// conn := meta.(*conns.Client).ClusterAPI
 	body := expandClusterProfile(d)
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("Cluster Profile Create Payload: %s", string(aJSON))
 
-	createResp, createErr := conn.ClusterProfilesAPI.CreateClusterProfile(body)
-	if createErr != nil {
-		return diag.FromErr(createErr)
+	clusterProfile := body
+
+	// clusterProfile := clusterProfileResp.Data.GetValue().(config.ClusterProfile)
+
+	// Set the resource data from the API response
+	if err := d.Set("name", clusterProfile.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", clusterProfile.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("allowed_overrides", common.FlattenEnumValueList(clusterProfile.AllowedOverrides)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("name_server_ip_list", flattenIPAddressList(clusterProfile.NameServerIpList)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("ntp_server_ip_list", flattenIPAddressOrFQDN(clusterProfile.NtpServerIpList)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("smtp_server", flattenSMTPServerRef(clusterProfile.SmtpServer)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("nfs_subnet_white_list", clusterProfile.NfsSubnetWhitelist); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("snmp_config", flattenSnmpConfig(clusterProfile.SnmpConfig)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("rsyslog_server_list", flattenRsyslogServerList(clusterProfile.RsyslogServerList)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("pulse_status", flattenPulseStatus(clusterProfile.PulseStatus)); err != nil {
+		return diag.FromErr(err)
 	}
 
-	TaskRef := createResp.Data.GetValue().(import3.TaskReference)
-	taskUUID := TaskRef.ExtId
+	// createResp, createErr := conn.ClusterProfilesAPI.CreateClusterProfile(body)
+	// if createErr != nil {
+	// 	return diag.FromErr(createErr)
+	// }
 
-	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
+	// TaskRef := createResp.Data.GetValue().(import3.TaskReference)
+	// taskUUID := TaskRef.ExtId
 
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for cluster profile (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
-	}
+	// taskconn := meta.(*conns.Client).PrismAPI
+	// // Wait for the cluster to be available
+	// stateConf := &resource.StateChangeConf{
+	// 	Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+	// 	Target:  []string{"SUCCEEDED"},
+	// 	Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+	// 	Timeout: d.Timeout(schema.TimeoutCreate),
+	// }
 
-	// Get Task Details
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-	if err != nil {
-		return diag.Errorf("error while fetching cluster UUID : %v", err)
-	}
-	taskDetails := taskResp.Data.GetValue().(import2.Task)
-	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Create Cluster Profile Task Details: %s", string(aJSON))
+	// if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+	// 	return diag.Errorf("error waiting for cluster profile (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+	// }
 
-	return ResourceNutanixClusterProfileV2Read(ctx, d, meta)
+	// // Get Task Details
+	// taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	// if err != nil {
+	// 	return diag.Errorf("error while fetching cluster UUID : %v", err)
+	// }
+	// taskDetails := taskResp.Data.GetValue().(import2.Task)
+	// aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	// log.Printf("[DEBUG] Create Cluster Profile Task Details: %s", string(aJSON))
+
+	// uuid := taskDetails.EntitiesAffected[0].ExtId
+
+	// d.SetId(utils.StringValue(uuid))
+
+	d.SetId(utils.GenUUID())
+	return nil
+	// return ResourceNutanixClusterProfileV2Read(ctx, d, meta)
 }
 
 func ResourceNutanixClusterProfileV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).ClusterAPI
+
+	// Fetch the Cluster Profile by UUID
+	clusterProfileResp, err := conn.ClusterProfilesAPI.GetClusterProfileById(utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	clusterProfile := clusterProfileResp.Data.GetValue().(config.ClusterProfile)
+
+	// Set the resource data from the API response
+	if err := d.Set("name", clusterProfile.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", clusterProfile.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("allowed_overrides", common.FlattenEnumValueList(clusterProfile.AllowedOverrides)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("name_server_ip_list", flattenIPAddressList(clusterProfile.NameServerIpList)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("ntp_server_ip_list", flattenIPAddressOrFQDN(clusterProfile.NtpServerIpList)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("smtp_server", flattenSMTPServerRef(clusterProfile.SmtpServer)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("nfs_subnet_white_list", clusterProfile.NfsSubnetWhitelist); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("snmp_config", flattenSnmpConfig(clusterProfile.SnmpConfig)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("rsyslog_server_list", flattenRsyslogServerList(clusterProfile.RsyslogServerList)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("pulse_status", flattenPulseStatus(clusterProfile.PulseStatus)); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
@@ -534,7 +615,7 @@ func expandRsyslogServerList(rsyslogServerList []interface{}) []config.RsyslogSe
 			ipList := common.InterfaceToSlice(ipRaw)
 			if len(ipList) > 0 && ipList[0] != nil {
 				ipMap := ipList[0].(map[string]interface{})
-				server.IpAddress = expandIPAddress(common.InterfaceToSlice(ipMap["ip_address"]))
+				server.IpAddress = expandIPAddress(common.InterfaceToSlice(ipMap))
 			}
 		}
 
@@ -554,6 +635,111 @@ func expandRsyslogServerList(rsyslogServerList []interface{}) []config.RsyslogSe
 		}
 
 		result = append(result, server)
+	}
+
+	return result
+}
+
+// ############################################
+// ###### Cluster Profiles Flatteners #########
+// ############################################
+
+// flattenSnmpConfig flattens the SNMP configuration into the resource data format
+func flattenSnmpConfig(snmpConfig *config.SnmpConfig) interface{} {
+	if snmpConfig == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	// Flatten users
+	if len(snmpConfig.Users) > 0 {
+		users := make([]interface{}, 0, len(snmpConfig.Users))
+		for _, u := range snmpConfig.Users {
+			user := map[string]interface{}{
+				"username":  u.Username,
+				"auth_type": common.FlattenPtrEnum(u.AuthType),
+				"auth_key":  utils.StringValue(u.AuthKey),
+				"priv_type": common.FlattenPtrEnum(u.PrivType),
+				"priv_key":  utils.StringValue(u.PrivKey),
+			}
+			users = append(users, user)
+		}
+		m["users"] = users
+	}
+
+	// Flatten transports
+	if len(snmpConfig.Transports) > 0 {
+		transports := make([]interface{}, 0, len(snmpConfig.Transports))
+		for _, t := range snmpConfig.Transports {
+			trans := map[string]interface{}{
+				"protocol": common.FlattenPtrEnum(t.Protocol),
+				"port":     utils.IntValue(t.Port),
+			}
+			transports = append(transports, trans)
+		}
+		m["transports"] = transports
+	}
+
+	// Flatten traps
+	if len(snmpConfig.Traps) > 0 {
+		traps := make([]interface{}, 0, len(snmpConfig.Traps))
+		for _, tr := range snmpConfig.Traps {
+			trap := map[string]interface{}{
+				"receiver_name": tr.RecieverName,
+				"version":       common.FlattenPtrEnum(tr.Version),
+				"username":      tr.Username,
+			}
+
+			// Flatten IP address if available
+			if tr.Address != nil {
+				ip := flattenIPAddress(tr.Address)
+				trap["address"] = ip
+			}
+
+			traps = append(traps, trap)
+		}
+		m["traps"] = traps
+	}
+
+	return []interface{}{m}
+}
+
+// flattenRsyslogServerList flattens the Rsyslog server list into the resource data format
+func flattenRsyslogServerList(rsyslogServers []config.RsyslogServer) interface{} {
+	if len(rsyslogServers) == 0 {
+		return nil
+	}
+
+	result := make([]interface{}, 0, len(rsyslogServers))
+	for _, srv := range rsyslogServers {
+		s := map[string]interface{}{
+			"server_name":      utils.StringValue(srv.ServerName),
+			"port":             utils.IntValue(srv.Port),
+			"network_protocol": common.FlattenPtrEnum(srv.NetworkProtocol),
+		}
+
+		// Flatten IP if present
+		if srv.IpAddress != nil {
+			ip := flattenIPAddress(srv.IpAddress)
+			s["ip_address"] = ip
+		}
+
+		// Flatten modules
+		if len(srv.Modules) > 0 {
+			modules := make([]interface{}, 0, len(srv.Modules))
+			for _, mod := range srv.Modules {
+				m := map[string]interface{}{
+					"name":                     common.FlattenPtrEnum(mod.Name),
+					"log_severity_level":       common.FlattenPtrEnum(mod.LogSeverityLevel),
+					"should_log_monitor_files": utils.BoolValue(mod.ShouldLogMonitorFiles),
+				}
+				modules = append(modules, m)
+			}
+			s["modules"] = modules
+		}
+
+		result = append(result, s)
 	}
 
 	return result
