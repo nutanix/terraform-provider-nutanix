@@ -7,10 +7,13 @@ import (
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
+	import3 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -322,85 +325,43 @@ func ResourceNutanixClusterProfileV2() *schema.Resource {
 }
 
 func ResourceNutanixClusterProfileV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// conn := meta.(*conns.Client).ClusterAPI
+	conn := meta.(*conns.Client).ClusterAPI
 	body := expandClusterProfile(d)
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("Cluster Profile Create Payload: %s", string(aJSON))
 
-	clusterProfile := body
-
-	// clusterProfile := clusterProfileResp.Data.GetValue().(config.ClusterProfile)
-
-	// Set the resource data from the API response
-	if err := d.Set("name", clusterProfile.Name); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("description", clusterProfile.Description); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("allowed_overrides", common.FlattenEnumValueList(clusterProfile.AllowedOverrides)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("name_server_ip_list", flattenIPAddressList(clusterProfile.NameServerIpList)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("ntp_server_ip_list", flattenIPAddressOrFQDN(clusterProfile.NtpServerIpList)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("smtp_server", flattenSMTPServerRef(clusterProfile.SmtpServer)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("nfs_subnet_white_list", clusterProfile.NfsSubnetWhitelist); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("snmp_config", flattenSnmpConfig(clusterProfile.SnmpConfig)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("rsyslog_server_list", flattenRsyslogServerList(clusterProfile.RsyslogServerList)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("pulse_status", flattenPulseStatus(clusterProfile.PulseStatus)); err != nil {
-		return diag.FromErr(err)
+	createResp, createErr := conn.ClusterProfilesAPI.CreateClusterProfile(body)
+	if createErr != nil {
+		return diag.FromErr(createErr)
 	}
 
-	// createResp, createErr := conn.ClusterProfilesAPI.CreateClusterProfile(body)
-	// if createErr != nil {
-	// 	return diag.FromErr(createErr)
-	// }
+	TaskRef := createResp.Data.GetValue().(import3.TaskReference)
+	taskUUID := TaskRef.ExtId
 
-	// TaskRef := createResp.Data.GetValue().(import3.TaskReference)
-	// taskUUID := TaskRef.ExtId
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the cluster to be available
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
 
-	// taskconn := meta.(*conns.Client).PrismAPI
-	// // Wait for the cluster to be available
-	// stateConf := &resource.StateChangeConf{
-	// 	Pending: []string{"QUEUED", "RUNNING", "PENDING"},
-	// 	Target:  []string{"SUCCEEDED"},
-	// 	Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-	// 	Timeout: d.Timeout(schema.TimeoutCreate),
-	// }
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for cluster profile (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
 
-	// if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-	// 	return diag.Errorf("error waiting for cluster profile (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
-	// }
+	// Get Task Details
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching cluster UUID : %v", err)
+	}
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Create Cluster Profile Task Details: %s", string(aJSON))
 
-	// // Get Task Details
-	// taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-	// if err != nil {
-	// 	return diag.Errorf("error while fetching cluster UUID : %v", err)
-	// }
-	// taskDetails := taskResp.Data.GetValue().(import2.Task)
-	// aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
-	// log.Printf("[DEBUG] Create Cluster Profile Task Details: %s", string(aJSON))
-
-	// uuid := taskDetails.EntitiesAffected[0].ExtId
-
-	// d.SetId(utils.StringValue(uuid))
-
-	d.SetId(utils.GenUUID())
-	return nil
-	// return ResourceNutanixClusterProfileV2Read(ctx, d, meta)
+	return ResourceNutanixClusterProfileV2Read(ctx, d, meta)
 }
 
 func ResourceNutanixClusterProfileV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
