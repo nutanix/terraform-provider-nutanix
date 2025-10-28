@@ -253,7 +253,7 @@ func checkClusterLocationBackupTargetExistAndCreateIfNotExists() resource.TestCh
 			Refresh: taskStateRefreshPrismTaskGroupFunc(utils.StringValue(taskUUID)),
 			Timeout: timeout,
 		}
-
+		//nolint:staticcheck
 		if _, taskErr := stateConf.WaitForState(); err != nil {
 			return fmt.Errorf("error waiting for Backup Target to be deleted: %s", taskErr)
 		}
@@ -374,7 +374,7 @@ func checkObjectStoreLocationBackupTargetExistAndCreateIfNotExists() resource.Te
 			Refresh: taskStateRefreshPrismTaskGroupFunc(utils.StringValue(taskUUID)),
 			Timeout: timeout,
 		}
-
+		//nolint:staticcheck
 		if _, taskErr := stateConf.WaitForState(); err != nil {
 			return fmt.Errorf("error waiting for Backup Target to be deleted: %s", taskErr)
 		}
@@ -432,7 +432,7 @@ func waitDeleteTask(resp *management.DeleteBackupTargetApiResponse) error {
 		Refresh: taskStateRefreshPrismTaskGroupFunc(utils.StringValue(taskUUID)),
 		Timeout: timeout,
 	}
-
+	//nolint:staticcheck
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf("error waiting for Backup Target to be deleted: %s", err)
 	}
@@ -579,7 +579,7 @@ func checkClusterLocationBackupTargetExistAndCreateIfNot(backupTargetExtID, doma
 			Refresh: taskStateRefreshPrismTaskGroupFunc(utils.StringValue(taskUUID)),
 			Timeout: timeout,
 		}
-
+		//nolint:staticcheck
 		if _, taskErr := stateConf.WaitForState(); err != nil {
 			return fmt.Errorf("error waiting for Backup Target to be deleted: %s", taskErr)
 		}
@@ -703,7 +703,7 @@ func checkObjectRestoreLocationBackupTargetExistAndCreateIfNot(backupTargetExtID
 			Refresh: taskStateRefreshPrismTaskGroupFunc(utils.StringValue(taskUUID)),
 			Timeout: timeout,
 		}
-
+		//nolint:staticcheck
 		if _, taskErr := stateConf.WaitForState(); err != nil {
 			return fmt.Errorf("error waiting for Backup Target to be deleted: %s", taskErr)
 		}
