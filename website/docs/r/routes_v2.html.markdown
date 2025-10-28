@@ -110,6 +110,13 @@ The links attribute supports the following:
 * `href`: - The URL at which the entity described by the link can be accessed.
 * `rel`: - A name that identifies the relationship of the link to the object that is returned by the URL. The unique value of "self" identifies the URL for the object.
 
+## Import
 
+This helps to manage existing entities which are not created through terraform. Route can be imported using the route table and route uuid `routeTableExtID/routeExtID` (ext_id in v4 terms).
+
+`terraform import nutanix_routes_v2.<resource name> <routeTableExtID>/<routeExtID>`
+
+Note:
+To import Route, you need to have the Route Table Ext ID and Route Ext ID, and provide them in the format mentioned above while importing.
 
 See detailed information in [Nutanix Routes v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/Routes/operation/createRouteForRouteTable).
