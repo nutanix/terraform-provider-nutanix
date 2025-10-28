@@ -120,7 +120,7 @@ The buckets_access_keys attribute supports the following:
 
 ## Import
 
-This helps to manage existing entities which are not created through terraform. Users can be imported using the `UUID`.  eg,
+This helps to manage existing entities which are not created through terraform. Users can be imported using the `UUID`. (ext_id in v4 terms).  eg,
 ```hcl
 // create its configuration in the root module. For example:
 resource "nutanix_users_v2" "import_user" {}
@@ -138,7 +138,6 @@ To delete a user, you must remove it manually via the **Prism Central UI**, or a
 
 1. **Import the user into the `nutanix_user` resource** (v3 API).
 2. Use Terraform to delete the user, as delete operations are supported in the v3 API.
-
 
 ## References
 See detailed information in [Nutanix Users v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Users/operation/createUser).
