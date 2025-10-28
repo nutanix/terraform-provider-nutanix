@@ -529,8 +529,10 @@ func expandMetadata(metadata []interface{}) *common.Metadata {
 func importNutanixRouteV2(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	// Expect ID format: routeTableID/routeID
 
+	const expectedIDCount = 2
+
 	ids := strings.Split(d.Id(), "/")
-	if len(ids) != 2 {
+	if len(ids) != expectedIDCount {
 		return nil, fmt.Errorf("invalid import ID, expected format <route_table_ext_id>/<route_id>")
 	}
 
