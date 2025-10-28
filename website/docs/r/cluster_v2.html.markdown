@@ -10,6 +10,8 @@ description: |-
 
 Represents the Cluster entity. Provides the basic infrastructure for compute, storage and networking. This includes the operations that can be carried out on cluster and its subresources - host (node), rsyslog servers etc and actions that can be performed on cluster - add a node, remove a node, attach categories.
 
+-> **Recommendations:** It is recommended to create and register the cluster with Prism Central as part of the same workflow. Cluster updates, importing, and destruction through Terraform are supported only when the cluster is registered with Prism Central. To register a cluster with Prism Central use Terraform resource nutanix_pc_registration_v2.
+
 ## Example Usage
 
 ```hcl
@@ -70,7 +72,6 @@ resource "nutanix_cluster_v2" "cluster"{
   }
 }
 ```
-
 
 ## Argument Reference
 
@@ -362,7 +363,7 @@ The ipv6 attribute supports the following:
 
 ## Import
 
-This helps to manage existing entities which are not created through terraform. Users can be imported using the `UUID`.  eg,
+This helps to manage existing entities which are not created through terraform. Clusters can be imported using the `UUID`.  eg,
 ```hcl
 // create its configuration in the root module. For example:
 resource "nutanix_cluster_v2" "import_cluster" {}
