@@ -197,6 +197,9 @@ func ResourceNutanixAuthPoliciesV2Read(ctx context.Context, d *schema.ResourceDa
 	}
 	getResp := resp.Data.GetValue().(import1.AuthorizationPolicy)
 
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("display_name", getResp.DisplayName); err != nil {
 		return diag.FromErr(err)
 	}
