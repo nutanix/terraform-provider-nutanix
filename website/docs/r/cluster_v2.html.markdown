@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_cluster_entity_v2"
-sidebar_current: "docs-nutanix-resource-cluster-entity"
+sidebar_current: "docs-nutanix-resource-cluster-entity-v2"
 description: |-
    Provides the basic infrastructure for compute, storage and networking.
 ---
@@ -10,6 +10,9 @@ description: |-
 
 Represents the Cluster entity. Provides the basic infrastructure for compute, storage and networking. This includes the operations that can be carried out on cluster and its subresources - host (node), rsyslog servers etc and actions that can be performed on cluster - add a node, remove a node, attach categories.
 
+-> **Recommendations:** It is recommended to create and register the cluster with Prism Central as part of the same workflow. Cluster updates, importing, and destruction through Terraform are supported only when the cluster is registered with Prism Central. To register a cluster with Prism Central use Terraform resource nutanix_pc_registration_v2.
+
+Note: Cluster resource supports add/remove node operations. However, these operations require cluster to be registered with Prism Central. 
 ## Example Usage:
 
 ### 1 Node Cluster Creation Example
