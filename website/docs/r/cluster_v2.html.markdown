@@ -10,9 +10,10 @@ description: |-
 
 Represents the Cluster entity. Provides the basic infrastructure for compute, storage and networking. This includes the operations that can be carried out on cluster and its subresources - host (node), rsyslog servers etc and actions that can be performed on cluster - add a node, remove a node, attach categories.
 
--> **Recommendations:** It is recommended to create and register the cluster with Prism Central as part of the same workflow. Cluster updates, importing, and destruction through Terraform are supported only when the cluster is registered with Prism Central. To register a cluster with Prism Central use Terraform resource nutanix_pc_registration_v2.
 
-Note: Cluster resource supports add/remove node operations. However, these operations require cluster to be registered with Prism Central. 
+
+-> **Note:**: Cluster resource supports add/remove node operations. However, these operations require cluster to be registered with Prism Central.
+
 ## Example Usage:
 
 ### 1 Node Cluster Creation Example
@@ -166,7 +167,7 @@ The nodes attribute supports the following:
 * `extra_params`: - (Optional) Extra parameters for removing nodes. Supports:
   * `should_skip_upgrade_check`: - (Optional, default false) Skip upgrade check during node removal.
   * `skip_space_check`: - (Optional, default false) Skip space check during node removal.
-  * `should_skip_add_check`:- - (Optional, default false) Skip add check during node removal.
+  * `should_skip_add_check`:- (Optional, default false) Skip add check during node removal.
 
 ### Node List
 
