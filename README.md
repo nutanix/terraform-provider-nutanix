@@ -46,7 +46,7 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.3.
         - **nutanix_roles_v2**
         - **nutanix_authorization_policy_v2**
         - **nutanix_category_v2**
-        - **nutanix_subnets_v2**
+        - **nutanix_subnet_v2**
 
 ---
 
