@@ -119,6 +119,7 @@ func ResourceNutanixAuthPoliciesV2() *schema.Resource {
 			"authorization_policy_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"PREDEFINED_READ_ONLY", "SERVICE_DEFINED_READ_ONLY",
 					"PREDEFINED_UPDATE_IDENTITY_ONLY", "SERVICE_DEFINED", "USER_DEFINED",
