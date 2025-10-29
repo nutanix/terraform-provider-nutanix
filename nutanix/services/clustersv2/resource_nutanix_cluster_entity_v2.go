@@ -2234,6 +2234,8 @@ func discoverUnconfiguredNode(ctx context.Context, d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] cluster expand: unconfigured node details: %s", string(aJSON))
 
 	return nil, &unconfiguredNodeDetails
+}
+
 func clusterImportFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	// calling read logic here
 	diags := clusterRead(d, meta)
