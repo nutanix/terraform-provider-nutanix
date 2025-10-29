@@ -324,7 +324,7 @@ func extractNodeFlags(d *schema.ResourceData, node config.NodeListItemReference)
 					if !ok {
 						continue
 					}
-					if ipMapItem["value"].(string) == nodeIP {
+					if v, ok := ipMapItem["value"].(string); ok && v == nodeIP {
 						if v, ok := itemMap["should_skip_add_node"].(bool); ok {
 							flags.ShouldSkipAddNode = v
 						}
