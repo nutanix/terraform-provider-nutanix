@@ -22,6 +22,23 @@ func ResourceNutanixImageV4() *schema.Resource {
 		ReadContext:   ResourceNutanixImageV4Read,
 		UpdateContext: ResourceNutanixImageV4Update,
 		DeleteContext: ResourceNutanixImageV4Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			sources := []string{"source.0.url_source", "source.0.vm_disk_source", "source.0.object_lite_source"}
+			count := 0
+			for _, s := range sources {
+				if _, ok := d.GetOk(s); ok {
+					count++
+				}
+			}
+			if count > 1 {
+				return fmt.Errorf("only one of url_source, vm_disk_source, or object_lite_source can be specified in source")
+			}
+			return nil
+		},
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -56,11 +73,13 @@ func ResourceNutanixImageV4() *schema.Resource {
 			"source": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"url_source": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"url": {
@@ -75,6 +94,7 @@ func ResourceNutanixImageV4() *schema.Resource {
 									"basic_auth": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"username": {
@@ -94,6 +114,7 @@ func ResourceNutanixImageV4() *schema.Resource {
 						"vm_disk_source": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ext_id": {
@@ -106,6 +127,7 @@ func ResourceNutanixImageV4() *schema.Resource {
 						"object_lite_source": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"key": {
@@ -134,6 +156,15 @@ func ResourceNutanixImageV4() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"links": schemaForLinks(),
 			"size_bytes": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -275,6 +306,15 @@ func ResourceNutanixImageV4Read(ctx context.Context, d *schema.ResourceData, met
 
 	getResp := resp.Data.GetValue().(import5.Image)
 
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("links", flattenAPILink(getResp.Links)); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("name", getResp.Name); err != nil {
 		return diag.FromErr(err)
 	}
@@ -546,13 +586,18 @@ func expandURLBasicAuth(pr interface{}) *import5.UrlBasicAuth {
 }
 
 func flattenStringValue(pr []interface{}) []string {
-	if len(pr) > 0 {
-		res := make([]string, len(pr))
-
-		for k, v := range pr {
-			res[k] = v.(string)
-		}
-		return res
+	if len(pr) == 0 {
+		return []string{} // return empty slice, not nil
 	}
-	return nil
+
+	res := make([]string, 0, len(pr))
+	for _, v := range pr {
+		str, ok := v.(string)
+		if !ok {
+			// handle the error gracefully — maybe skip or log?
+			continue
+		}
+		res = append(res, str)
+	}
+	return res
 }

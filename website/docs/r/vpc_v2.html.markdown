@@ -85,6 +85,9 @@ The following arguments are supported:
 
 - `subnet_reference`: (Required) External subnet reference.
 - `external_ips`: (Optional) List of IP Addresses used for SNAT, if NAT is enabled on the external subnet. If NAT is not enabled, this specifies the IP address of the VPC port connected to the external gateway.
+- `gateway_nodes`: (Optional) List of gateway nodes that can be used for external connectivity.
+- `active_gateway_node`: (Optional) Maximum number of active gateway nodes for the VPC external subnet association.
+
 
 ### external_ips
 
