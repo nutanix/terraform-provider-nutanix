@@ -34,9 +34,6 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.3.
 - **New Resource Support**
   - **Password Manager**: Provides the ability to manage system user passwords
   - **OVAs**: Enables the creation and management of OVAs.
-  - **Project Association with VM for V2 resource**: Associate Project with Virtual Machine V2 resource.
-  - **Automatic Cluster Selection**: Automatic cluster selection support.
-  - **Support for object lite source**: Support for lite source in terraform for images and object store modules.
 
 - **Enhancements**
   - **Project Association with VM for V2 resource**: Associate Project with Virtual Machine V2 resource.
