@@ -189,8 +189,8 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
 
   }
   config {
-    cluster_function = local.clusters.config.cluster_functions
-    cluster_arch     = local.clusters.config.cluster_arch
+    cluster_function = ["AOS"]
+    cluster_arch     = "X86_64"
     fault_tolerance_state {
       domain_awareness_level = "NODE"
     }
