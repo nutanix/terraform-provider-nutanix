@@ -37,7 +37,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 		UpdateContext: ResourceNutanixClusterV2Update,
 		DeleteContext: ResourceNutanixClusterV2Delete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: clusterImportFunc,
 		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
@@ -890,84 +890,30 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 
 func ResourceNutanixClusterV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ClusterAPI
-	var expand *string
-
-	if expandVar, ok := d.GetOk("expand"); ok {
-		expand = utils.StringPtr(expandVar.(string))
-	} else {
-		expand = nil
-	}
 
 	if d.Get("ext_id").(string) == "" {
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Read : extID is empty")
 		err := getClusterExtID(d, conn)
-		// Check if the error is a ClusterNotFoundError
-		if _, ok := err.(*ClusterNotFoundError); ok {
-			log.Printf("[DEBUG] ResourceNutanixClusterV2Read : Cluster not found, err -> %v", err)
-			diags := diag.Diagnostics{
-				{
-					Severity: diag.Warning,
-					Summary:  "Cluster not found. Please register the cluster to Prism Central if not. If deleted, then reset the state.",
-					Detail:   fmt.Sprintf("Cluster %s not found: %v", d.Get("name").(string), err),
-				},
+		if err != nil {
+			// Check if the error is a ClusterNotFoundError
+			if _, ok := err.(*ClusterNotFoundError); ok {
+				log.Printf("[DEBUG] ResourceNutanixClusterV2Read : Cluster not found, err -> %v", err)
+				diags := diag.Diagnostics{
+					{
+						Severity: diag.Warning,
+						Summary:  "Cluster not found. Please register the cluster to Prism Central if not. If deleted, then reset the state.",
+						Detail:   fmt.Sprintf("Cluster %s not found: %v", d.Get("name").(string), err),
+					},
+				}
+				return diags
 			}
-			return diags
+			log.Printf("[DEBUG] ResourceNutanixClusterV2Read : error while fetching cluster : %v", err)
+			return diag.Errorf("error while fetching cluster : %v", err)
 		}
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Read : error while fetching cluster : %v", err)
 	}
-
-	log.Printf("[DEBUG] ResourceNutanixClusterV2Read : Cluster found, extID : %s", d.Id())
-	resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(d.Id()), expand)
-	if err != nil {
-		log.Printf("[DEBUG] ResourceNutanixClusterV2Read : Cluster %s not found", d.Id())
-		return diag.Errorf("error while fetching cluster : %v", err)
-	}
-
-	getResp := resp.Data.GetValue().(config.Cluster)
-	aJSON, _ := json.MarshalIndent(getResp, "", "  ")
-	log.Printf("[DEBUG] Read Cluster Response Details: %s", string(aJSON))
-
-	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("name", getResp.Name); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("nodes", flattenNodeReference(getResp.Nodes)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("network", flattenClusterNetworkReference(getResp.Network)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("config", flattenClusterConfigReference(getResp.Config)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("upgrade_status", flattenUpgradeStatus(getResp.UpgradeStatus)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("categories", getResp.Categories); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("vm_count", getResp.VmCount); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("inefficient_vm_count", getResp.InefficientVmCount); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("container_name", getResp.ContainerName); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("cluster_profile_ext_id", getResp.ClusterProfileExtId); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("backup_eligibility_score", getResp.BackupEligibilityScore); err != nil {
-		return diag.FromErr(err)
-	}
-
-	return nil
+	// Clusters READ context
+	return clusterRead(d, meta)
 }
 
 func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -984,17 +930,9 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 	if d.Get("ext_id").(string) == "" {
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster not found, extID is empty")
 		err := getClusterExtID(d, conn)
-		// Check if the error is a ClusterNotFoundError
-		if _, ok := err.(*ClusterNotFoundError); ok {
-			log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster not found, err -> %v", err)
-			diags := diag.Diagnostics{
-				{
-					Severity: diag.Warning,
-					Summary:  "Cluster not found. Please register the cluster to Prism Central if not. If deleted, then reset the state.",
-					Detail:   fmt.Sprintf("Cluster %s not found: %v", d.Get("name").(string), err),
-				},
-			}
-			return diags
+		if err != nil {
+			log.Printf("[DEBUG] ResourceNutanixClusterV2Update : error while fetching cluster : %v", err)
+			return diag.Errorf("error while fetching cluster : %v: Please register the cluster to Prism Central if not.", err)
 		}
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Update : error while fetching cluster : %v", err)
 	}
@@ -1083,6 +1021,7 @@ func ResourceNutanixClusterV2Delete(ctx context.Context, d *schema.ResourceData,
 				return diags
 			}
 			log.Printf("[DEBUG] ResourceNutanixClusterV2Delete : error while fetching cluster : %v", err)
+			return diag.Errorf("error while fetching cluster : %v: Please register the cluster to Prism Central if not.", err)
 		}
 	}
 
@@ -1195,6 +1134,7 @@ func getClusterExtID(d *schema.ResourceData, conn *clusters.Client) error {
 		log.Printf("[DEBUG] getClusterExtID Cluster not found, clustersResponse.Data is nil")
 		return &ClusterNotFoundError{Name: d.Get("name").(string), Err: err}
 	}
+
 	cls := listResp.Data.GetValue().([]config.Cluster)
 
 	if len(cls) == 0 {
@@ -2294,4 +2234,73 @@ func discoverUnconfiguredNode(ctx context.Context, d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] cluster expand: unconfigured node details: %s", string(aJSON))
 
 	return nil, &unconfiguredNodeDetails
+func clusterImportFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	// calling read logic here
+	diags := clusterRead(d, meta)
+	if diags.HasError() {
+		// convert diagnostics to error
+		return nil, fmt.Errorf("failed to import cluster: %v", diags)
+	}
+	return []*schema.ResourceData{d}, nil
+}
+
+func clusterRead(d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).ClusterAPI
+
+	var expand *string
+
+	if expandVar, ok := d.GetOk("expand"); ok {
+		expand = utils.StringPtr(expandVar.(string))
+	} else {
+		expand = nil
+	}
+	resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(d.Id()), expand)
+	if err != nil {
+		return diag.Errorf("error while fetching cluster : %v: Please register the cluster to Prism Central if not.", err)
+	}
+
+	getResp := resp.Data.GetValue().(config.Cluster)
+	aJSON, _ := json.MarshalIndent(getResp, "", "  ")
+	log.Printf("[DEBUG] Read Cluster Response Details: %s", string(aJSON))
+
+	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("name", getResp.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("nodes", flattenNodeReference(getResp.Nodes)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("network", flattenClusterNetworkReference(getResp.Network)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("config", flattenClusterConfigReference(getResp.Config)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("upgrade_status", flattenUpgradeStatus(getResp.UpgradeStatus)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("categories", getResp.Categories); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("vm_count", getResp.VmCount); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("inefficient_vm_count", getResp.InefficientVmCount); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("container_name", getResp.ContainerName); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("cluster_profile_ext_id", getResp.ClusterProfileExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("backup_eligibility_score", getResp.BackupEligibilityScore); err != nil {
+		return diag.FromErr(err)
+	}
+	return nil
 }
