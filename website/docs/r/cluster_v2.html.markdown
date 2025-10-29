@@ -372,4 +372,24 @@ resource "nutanix_cluster_v2" "import_cluster" {}
 terraform import nutanix_cluster_v2.import_cluster <UUID>
 ```
 
+## What happens when you destroy a cluster or delete it? First thing, inorder to destroy the cluster from Terraform it need to be registered.
+```
+1. Deregister the cluster and its nodes from Prism Central
+
+* The cluster and all its member nodes are gracefully deregistered from Prism Central.
+
+* This ensures the cluster is no longer visible in the PC inventory or associated with any management plane workflows.
+
+2. Remove the clustering configuration on each node
+
+* Once deregistration completes, teardown of the cluster configuration on each node begins.
+
+* This effectively disbands the cluster, converting all participating nodes back into standalone (unconfigured) nodes.
+
+* At this stage, the nodes no longer share storage, network, or management metadata — they’re ready to be re-clustered or repurposed.
+
+```
+
+
+
 See detailed information in [Nutanix Create Cluster V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/Clusters/operation/createCluster).
