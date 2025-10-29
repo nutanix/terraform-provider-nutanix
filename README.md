@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Cloud Platform.
 
-NOTE: The latest version of the Nutanix provider is [v2.3.0](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.3.0).
+NOTE: The latest version of the Nutanix provider is [v2.3.2](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.3.2).
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 
@@ -22,18 +22,34 @@ Modules based on Terraform Nutanix Provider can be found here : [Modules](https:
 * [Go](https://golang.org/doc/install) 1.17+ (to build the provider plugin)
 * This provider uses [SDKv2](https://www.terraform.io/plugin/sdkv2/sdkv2-intro) from release 1.3.0
 
-## Introducing Nutanix Terraform Provider Version v2.3.0
+## Introducing Nutanix Terraform Provider Version v2.3.2
 
 We're excited to announce the release of Nutanix Terraform Provider Version 2.3.0! This major update brings new features for automating your Nutanix infrastructure.
 
-### What's New in v2.3.0
+### What's New in v2.3.2
 
 - **Built on v4.1 APIs/SDKs**  
   This release is built on the latest Nutanix v4 APIs and SDKs, providing improved performance, stability, and alignment with the newest platform capabilities.
 
 - **New Resource Support**
-  - **Objects**: Automate Nutanix Objects (S3-compatible storage) management for scalable storage use cases.
-  - **Service Accounts**: Manage service accounts directly through Terraform.
+  - **Password Manager**: Provides the ability to manage system user passwords
+  - **OVAs**: Enables the creation and management of OVAs.
+  - **Project Association with VM for V2 resource**: Associate Project with Virtual Machine V2 resource.
+  - **Automatic Cluster Selection**: Automatic cluster selection support.
+  - **Support for object lite source**: Support for lite source in terraform for images and object store modules.
+
+- **Enhancements**
+  - **Project Association with VM for V2 resource**: Associate Project with Virtual Machine V2 resource.
+  - **Automatic Cluster Selection**: Automatic cluster selection support.
+  - **Support for object lite source**: Support for lite source in terraform for images and object store modules.
+  - **the nutanix_cluster_v2 resource now fully supports cluster expansion operations**, including adding and removing nodes. This enhancement eliminates the need for a separate nutanix_cluster_add_node_v2 resource.
+  - **Import support is now available for V2 resources**, This enhancement allows users to seamlessly bring existing Nutanix entities under Terraform management, **without recreating them**. List of resources we support the import for,
+        - **nutanix_vpc_v2**
+        - **nutanix_routes_v2**
+        - **nutanix_roles_v2**
+        - **nutanix_authorization_policy_v2**
+        - **nutanix_category_v2**
+        - **nutanix_subnets_v2**
 
 ---
 
@@ -45,12 +61,13 @@ The provider is used to interact with the many resources and data sources suppor
 - Self Service version: 4.2.0 (Required only for running Self Service based resource and data source)
 - AOS Version: 7.3 or later
 - Prism Central Version: pc 7.3 or later
-- Nutanix Terraform Provider Version: 2.3.0
+- Nutanix Terraform Provider Version: 2.3.2
 
 
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
+| 2.3.2 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.0 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.2.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.0 | | | Self Service v4.1.0 | yes | 
