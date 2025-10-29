@@ -9,7 +9,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNameOvas = "data.nutanix_ova_v2.test"
+const datasourceNameOvas = "data.nutanix_ovas_v2.test"
 
 func TestAccV2NutanixOvaDatasource_ListAllOvas(t *testing.T) {
 	r := acctest.RandIntRange(1, 999)
@@ -86,13 +86,13 @@ func TestAccV2NutanixOvaDatasource_ListAllOvasWithLimit(t *testing.T) {
 }
 func testOvasDatasourceConfigListAllOvas() string {
 	return `
-data "nutanix_ova_v2" "test" {}
+data "nutanix_ovas_v2" "test" {}
 `
 }
 
 func testOvasDatasourceConfigFilterOvasByName() string {
 	return `
-data "nutanix_ova_v2" "test" {
+data "nutanix_ovas_v2" "test" {
 	filter = "name eq '${nutanix_ova_v2.test.name}'"
 }
 `
@@ -100,7 +100,7 @@ data "nutanix_ova_v2" "test" {
 
 func testOvasDatasourceConfigLimit() string {
 	return `
-data "nutanix_ova_v2" "test" {
+data "nutanix_ovas_v2" "test" {
 	limit = 1
 	depends_on = [nutanix_ova_v2.test]
 }
