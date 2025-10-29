@@ -812,17 +812,6 @@ func SchemaForValuePrefixLengthResource() *schema.Schema {
 }
 
 func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Validate forbidden fields at creation
-	if v, ok := d.GetOk("nodes.0.node_list.0.node_params"); ok && len(v.([]interface{})) > 0 {
-		return diag.Errorf("parameter 'node_params' can only be used during update operations")
-	}
-	if v, ok := d.GetOk("nodes.0.node_list.0.config_params"); ok && len(v.([]interface{})) > 0 {
-		return diag.Errorf("parameter 'config_params' can only be used during update operations")
-	}
-	if v, ok := d.GetOk("nodes.0.node_list.0.remove_node_params"); ok && len(v.([]interface{})) > 0 {
-		return diag.Errorf("parameter 'remove_node_params' can only be used during update operations")
-	}
-
 	conn := meta.(*conns.Client).ClusterAPI
 	body := config.NewCluster()
 	var dryRun *bool
@@ -1127,7 +1116,7 @@ func ResourceNutanixClusterV2Delete(ctx context.Context, d *schema.ResourceData,
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -2127,7 +2116,7 @@ func expandClusterWithNewNode(ctx context.Context, d *schema.ResourceData, meta 
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -2194,7 +2183,7 @@ func fetchNetworkDetailsForNodes(ctx context.Context, d *schema.ResourceData, me
 		Pending: []string{"QUEUED", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -2268,7 +2257,7 @@ func discoverUnconfiguredNode(ctx context.Context, d *schema.ResourceData, meta 
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
