@@ -372,7 +372,7 @@ resource "nutanix_cluster_v2" "import_cluster" {}
 terraform import nutanix_cluster_v2.import_cluster <UUID>
 ```
 
-## What happens when you destroy a cluster or delete it? First thing, inorder to destroy the cluster from Terraform it need to be registered.
+## What happens when you do terraform destroy for nutanix_clusters_v2?  First thing, inorder to destroy the cluster from Terraform it need to be registered.
 ```
 1. Deregister the cluster and its nodes from Prism Central
 
