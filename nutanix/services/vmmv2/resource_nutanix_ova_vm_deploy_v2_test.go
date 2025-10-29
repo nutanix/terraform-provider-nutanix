@@ -123,7 +123,7 @@ resource "nutanix_virtual_machine_v2" "ova-vm" {
 }
 
 
-resource "nutanix_ovas_v2" "test" {
+resource "nutanix_ova_v2" "test" {
   name = "%[4]s"
   source {
     ova_vm_source {
@@ -134,7 +134,7 @@ resource "nutanix_ovas_v2" "test" {
 }
 
 resource "nutanix_ova_vm_deploy_v2" "test" {
-  ext_id = nutanix_ovas_v2.test.id
+  ext_id = nutanix_ova_v2.test.id
   override_vm_config {
     name              = "${nutanix_virtual_machine_v2.ova-vm.name}-from-ova"
     memory_size_bytes = 8 * 1024 * 1024 * 1024 # 8 GiB
@@ -216,7 +216,7 @@ locals {
   vmm = local.config.vmm
 }
 
-resource "nutanix_ovas_v2" "test" {
+resource "nutanix_ova_v2" "test" {
   name = "%[2]s"
   source {
     ova_url_source {

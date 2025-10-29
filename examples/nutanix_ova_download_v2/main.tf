@@ -41,7 +41,7 @@ resource "nutanix_virtual_machine_v2" "vm-example" {
 }
 
 # Create Ova from the VM
-resource "nutanix_ovas_v2" "ov-vm-example" {
+resource "nutanix_ova_v2" "ov-vm-example" {
   name = "tf-ova-vm-example"
   source {
     ova_vm_source {
@@ -53,7 +53,7 @@ resource "nutanix_ovas_v2" "ov-vm-example" {
 
 
 # Create Ova from Url
-resource "nutanix_ovas_v2" "ov-url-example" {
+resource "nutanix_ova_v2" "ov-url-example" {
   name = "tf-ova-url-example"
   source {
     ova_url_source {
@@ -65,7 +65,7 @@ resource "nutanix_ovas_v2" "ov-url-example" {
 
 
 // Create a new OVA using the object_lite_source
-resource "nutanix_ovas_v2" "ova-object-lite"{
+resource "nutanix_ova_v2" "ova-object-lite"{
   name = "tf-example-ova-object-lite-example"
   source {
     object_lite_source {
@@ -75,7 +75,7 @@ resource "nutanix_ovas_v2" "ova-object-lite"{
 }
 
 resource "nutanix_ova_download_v2" "download-ova" {
-  ova_ext_id = nutanix_ovas_v2.ov-vm-example.id
+  ova_ext_id = nutanix_ova_v2.ov-vm-example.id
 }
 
 output "ova_file_path" {

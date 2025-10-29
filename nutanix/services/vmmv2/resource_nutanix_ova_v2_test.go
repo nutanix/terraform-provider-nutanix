@@ -11,7 +11,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameOva = "nutanix_ovas_v2.test"
+const resourceNameOva = "nutanix_ova_v2.test"
 const resourceNameVMForOva = "nutanix_virtual_machine_v2.ova-vm"
 
 func TestAccV2NutanixOvaResource_CreateOvaFromVM(t *testing.T) {
@@ -161,7 +161,7 @@ func TestAccV2NutanixOvaResource_CreateOvaFromInvalidUrl(t *testing.T) {
 					locals {
 						cluster_ext_id = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
 					}
-					resource "nutanix_ovas_v2" "test" {
+					resource "nutanix_ova_v2" "test" {
 						name = "tf-test-ova-invalid-url"
 						source {
 							ova_url_source {
@@ -242,7 +242,7 @@ resource "nutanix_virtual_machine_v2" "ova-vm" {
 }
 
 
-resource "nutanix_ovas_v2" "test" {
+resource "nutanix_ova_v2" "test" {
   name = "%[4]s"
   source {
     ova_vm_source {
@@ -257,7 +257,7 @@ resource "nutanix_ovas_v2" "test" {
 
 func testOvaResourceConfigCreateOvaFromVMDoseNotExists(ovaName string) string {
 	return fmt.Sprintf(`
-resource "nutanix_ovas_v2" "test" {
+resource "nutanix_ova_v2" "test" {
   name = "%[1]s"
   source {
     ova_vm_source {
@@ -283,7 +283,7 @@ locals {
   vmm = local.config.vmm
 }
 
-resource "nutanix_ovas_v2" "test" {
+resource "nutanix_ova_v2" "test" {
   name = "%[2]s"
   source {
     ova_url_source {

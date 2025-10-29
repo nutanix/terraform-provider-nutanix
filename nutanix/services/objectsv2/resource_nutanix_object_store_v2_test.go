@@ -27,8 +27,8 @@ const datasourceNameCertificatesList = "data.nutanix_certificates_v2.list"
 const resourceNameObjectLiteStoreImage = "nutanix_images_v2.object-liteStore-img"
 const resourceNameVM = "nutanix_virtual_machine_v2.vm-test"
 
-const resourceNameVMOva = "nutanix_ovas_v2.vm-ova"
-const resourceNameObjectLiteSourceOva = "nutanix_ovas_v2.object-liteSource-ova"
+const resourceNameVMOva = "nutanix_ova_v2.vm-ova"
+const resourceNameObjectLiteSourceOva = "nutanix_ova_v2.object-liteSource-ova"
 
 func TestAccV2NutanixObjectStoreResource_OneWorkerNode(t *testing.T) {
 	r := acctest.RandIntRange(1, 99)
@@ -607,7 +607,7 @@ resource "nutanix_virtual_machine_v2" "vm-test" {
 }
 
 # Create Ova from the VM
-resource "nutanix_ovas_v2" "vm-ova" {
+resource "nutanix_ova_v2" "vm-ova" {
   name = "%[7]s"
   source {
     ova_vm_source {
@@ -619,7 +619,7 @@ resource "nutanix_ovas_v2" "vm-ova" {
 
 # Download Ova
 resource "nutanix_ova_download_v2" "test" {
-  ova_ext_id = nutanix_ovas_v2.vm-ova.id
+  ova_ext_id = nutanix_ova_v2.vm-ova.id
 }
 
 
@@ -643,7 +643,7 @@ resource "terraform_data" "delay" {
 }
 
 # Create ova using object store source
-resource "nutanix_ovas_v2" "object-liteSource-ova" {
+resource "nutanix_ova_v2" "object-liteSource-ova" {
   name = "tf-object-ova"
   source {
     object_lite_source {
