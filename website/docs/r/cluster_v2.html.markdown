@@ -368,7 +368,7 @@ This helps to manage existing entities which are not created through terraform. 
 // create its configuration in the root module. For example:
 resource "nutanix_cluster_v2" "import_cluster" {}
 
-// execute this cli command
+// execute this command in cli
 terraform import nutanix_cluster_v2.import_cluster <UUID>
 ```
 
