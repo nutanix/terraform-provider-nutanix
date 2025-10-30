@@ -408,4 +408,15 @@ The `nics` attribute supports the following:
 * `policy`: (Optional) Reference to the policy object in use.
 * `policy.ext_id`: (Optional) Reference to the policy object in use.
 
+## Import
+
+This helps to manage existing entities which are not created through terraform. OVAs can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_ova_v2" "import_ova" {}
+
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_ovas_v2" "fetch_ovas"{}
+terraform import nutanix_ova_v2.import_ova <UUID>
+```
+
 See detailed information in [Nutanix Get Ova Details V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/getDomainManagerById).
