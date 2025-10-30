@@ -3,7 +3,9 @@ package prismv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -32,6 +34,17 @@ func ResourceNutanixBackupTargetV2() *schema.Resource {
 		ReadContext:   ResourceNutanixBackupTargetV2Read,
 		UpdateContext: ResourceNutanixBackupTargetV2Update,
 		DeleteContext: ResourceNutanixBackupTargetV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				parts := strings.Split(d.Id(), "/")
+				if len(parts) != 2 {
+					return nil, fmt.Errorf("invalid import uuid (%q), expected domain_manager_ext_id/backup_target_ext_id", d.Id())
+				}
+				d.Set("domain_manager_ext_id", parts[0])
+				d.SetId(parts[1])
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 		Schema: map[string]*schema.Schema{
 			"domain_manager_ext_id": {
 				Type:     schema.TypeString,
