@@ -25,7 +25,9 @@ func ResourceNutanixVolumeGroupDiskV2() *schema.Resource {
 		ReadContext:   ResourceNutanixVolumeGroupDiskV2Read,
 		UpdateContext: ResourceNutanixVolumeGroupDiskV2Update,
 		DeleteContext: ResourceNutanixVolumeGroupDiskV2Delete,
-
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"volume_group_ext_id": {
 				Description: "The external identifier of the volume group.",

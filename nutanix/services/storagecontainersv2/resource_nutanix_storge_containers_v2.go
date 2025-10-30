@@ -31,6 +31,9 @@ func ResourceNutanixStorageContainersV2() *schema.Resource {
 		ReadContext:   ResourceNutanixStorageContainersV2Read,
 		UpdateContext: ResourceNutanixStorageContainersV2Update,
 		DeleteContext: ResourceNutanixStorageContainersV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"cluster_ext_id": {
 				Type:     schema.TypeString,

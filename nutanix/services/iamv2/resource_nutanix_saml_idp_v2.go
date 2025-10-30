@@ -18,6 +18,9 @@ func ResourceNutanixSamlIdpV2() *schema.Resource {
 		ReadContext:   ResourceNutanixSamlIdpV2Read,
 		UpdateContext: ResourceNutanixSamlIdpV2Update,
 		DeleteContext: ResourceNutanixSamlIdpV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,

@@ -18,6 +18,9 @@ func ResourceNutanixUserGroupsV2() *schema.Resource {
 		ReadContext:   ResourceNutanixUserGroupsV4Read,
 		UpdateContext: ResourceNutanixUserGroupsV4Update,
 		DeleteContext: ResourceNutanixUserGroupsV4Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,

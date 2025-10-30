@@ -26,7 +26,9 @@ func ResourceNutanixVolumeGroupV2() *schema.Resource {
 		ReadContext:   ResourceNutanixVolumeGroupV2Read,
 		UpdateContext: ResourceNutanixVolumeGroupV2Update,
 		DeleteContext: ResourceNutanixVolumeGroupV2Delete,
-
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Description: "A globally unique identifier of an instance that is suitable for external consumption.",
