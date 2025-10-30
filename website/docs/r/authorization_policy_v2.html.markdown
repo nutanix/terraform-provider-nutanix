@@ -75,13 +75,12 @@ The links attribute supports the following:
 
 ## Import
 
-This helps to manage existing entities which are not created through terraform. authorization policy can be imported using the `UUID`. (ext_id in v4 terms). eg,
-
+This helps to manage existing entities which are not created through terraform. authorization policy can be imported using the `UUID`. (ext_id in v4 API context).  eg,
 ```hcl
 // create its configuration in the root module. For example:
 resource "nutanix_authorization_policy_v2" "import_policy" {}
 
-// execute this command
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_authorization_policies_v2" "fetch_policies"{}
 terraform import nutanix_authorization_policy_v2.import_policy <UUID>
 ```
 
