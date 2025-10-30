@@ -46,6 +46,7 @@ func ResourceNutanixAuthPoliciesV2() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"client_name": {
 				Type:     schema.TypeString,
@@ -60,6 +61,7 @@ func ResourceNutanixAuthPoliciesV2() *schema.Resource {
 						"reserved": {
 							Type:             schema.TypeString,
 							Optional:         true,
+							Computed:         true,
 							DiffSuppressFunc: SuppressEquivalentAuthPolicyDiffs,
 							StateFunc: func(v interface{}) string {
 								log.Printf("[DEBUG] StateFunc value: %v\n", v)

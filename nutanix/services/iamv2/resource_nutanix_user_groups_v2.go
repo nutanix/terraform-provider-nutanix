@@ -39,10 +39,12 @@ func ResourceNutanixUserGroupsV2() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"distinguished_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"created_time": {
 				Type:     schema.TypeString,
