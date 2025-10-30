@@ -2,7 +2,8 @@
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.2.2...v2.2.3)
 
 **No Major changes**
-- This release is equivalent to v2.2.2, releasing a 2.2.3 version to avoid the checksum issues created on version 2.2.2
+- This version is functionally equivalent to v2.2.2, and was published to resolve checksum issues identified in the previous release(v2.2.2).
+The updated version ensures smooth installation and usage, helping to unblock customers affected by the earlier checksum mismatch.
 
 ## 2.2.2 (September 1, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.2.1...v2.2.2)

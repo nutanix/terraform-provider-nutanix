@@ -23,9 +23,10 @@ Modules based on Terraform Nutanix Provider can be found here : [Modules](https:
 * This provider uses [SDKv2](https://www.terraform.io/plugin/sdkv2/sdkv2-intro) from release 1.3.0
 
 ### Introducing Nutanix Terraform Provider Version 2.2.3
-We're excited to announce the release of Nutanix Terraform Provider Version 2.2.3! This release is equivalent to 2.2.2. Made this release to avoid the checksum issues created for version 2.2.2 and unblocks customer.
+We’re excited to announce the release of Nutanix Terraform Provider v2.2.3! 🎉
 
-- This is a minor release equivalent to 2.2.2.
+This version is functionally equivalent to v2.2.2, and was published to resolve checksum issues identified in the previous release(v2.2.2).
+The updated version ensures smooth installation and usage, helping to unblock customers affected by the earlier checksum mismatch.
 
 ### Software Requirements
 The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.2.0, ensure your Nutanix environment meets the following software requirements:
@@ -39,7 +40,7 @@ The provider is used to interact with the many resources and data sources suppor
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
 | 2.2.3 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
-| 2.2.2 (Deprecated/Invalid) | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
+| 2.2.2 (⚠️ Deprecated/Invalid) | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.0 | | | Self Service v4.1.0 | yes |
 | 2.1.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
