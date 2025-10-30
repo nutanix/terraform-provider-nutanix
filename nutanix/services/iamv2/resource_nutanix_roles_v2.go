@@ -37,6 +37,7 @@ func ResourceNutanixRolesV2() *schema.Resource {
 				Description: "Description of the Role.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 			},
 			"client_name": {
 				Description: "Client that created the entity.",
