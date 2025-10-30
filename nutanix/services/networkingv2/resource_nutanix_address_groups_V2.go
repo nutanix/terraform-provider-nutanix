@@ -20,6 +20,9 @@ func ResourceNutanixAddressGroupsV2() *schema.Resource {
 		ReadContext:   ResourceNutanixAddressGroupsV2Read,
 		UpdateContext: ResourceNutanixAddressGroupsV2Update,
 		DeleteContext: ResourceNutanixAddressGroupsV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
