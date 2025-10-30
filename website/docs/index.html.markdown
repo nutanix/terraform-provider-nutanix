@@ -12,28 +12,10 @@ The provider is used to interact with the many resources and data sources suppor
 
 Use the navigation on the left to read about the available resources and data sources this provider can use.
 
-### Introducing Nutanix Terraform Provider Version 2.2.2
-We're excited to announce the release of Nutanix Terraform Provider Version 2.2.2! This update brings significant enhancements and bug fixes to your infrastructure management experience:
+### Introducing Nutanix Terraform Provider Version 2.2.3
+We're excited to announce the release of Nutanix Terraform Provider Version 2.2.3! This release is equivalent to 2.2.2. Made this release to avoid the checksum issues created on version 2.2.2 and to unblock customer.
 
-- This is a minor release that includes enhancements and bug fixes, aimed at improving stability and reliability.
-
-
-### Introducing Nutanix Terraform Provider Version 2.2.1
-We're excited to announce the release of Nutanix Terraform Provider Version 2.2.1! This update brings significant enhancements and bug fixes to your infrastructure management experience:
-
-- This is a minor release that includes enhancements and bug fixes, aimed at improving stability and reliability.
-
-### Introducing Nutanix Terraform Provider Version 2.2.0
-We're excited to announce the release of Nutanix Terraform Provider Version 2.2.0! This major update brings significant improvements to your infrastructure management experience:
-
-- It will allow you to interact with Self Service API. With this new plugin support you will be able to launch a Single VM Blueprint to create an Application in Self Service and perform some Day 2 actions like updating application, creating snapshot/restore etc.
-
-### Introducing Nutanix Terraform Provider Version 2.1.0
-We're excited to announce the release of Nutanix Terraform Provider Version 2.1.0! This major update brings significant improvements to your infrastructure management experience:
-
-- Built on the latest v4 APIs/SDKs: Leveraging the power of Nutanix v4 APIs/SDKs, this version offers enhanced functionality and better integration with the latest Nutanix features.
-- Expanded Resource Coverage:  Discover new resources and data sources, enabling you to model and manage a broader spectrum of Nutanix infrastructure components within your Terraform configurations.
-- <b>Version Suffix: Modules built based on v4 PC/PE GA sdks are marked with the *_v2 suffix.</b>
+- This is a minor release equivalent to 2.2.2.
 
 ~> **Important Notice:** Upcoming Deprecation of Legacy Nutanix Terraform Provider Resources. Starting with the Nutanix Terraform Provider release planned for Q4-CY2026, legacy resources which are based on v0.8,v1,v2 and v3 APIs will be deprecated and no longer supported. For more information, visit [Legacy API Deprecation Announcement](https://portal.nutanix.com/page/documents/eol/list?type=announcement) [Legacy API Deprecation - FAQs](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA0VO0000005rgP0AQ). Nutanix strongly encourages you to migrate your scripts and applications to the latest v2 version of the Nutanix Terraform Provider resources, which are built on our v4 APIs/SDKs. By adopting the latest v2 version based on v4 APIs and SDKs, our users can leverage the enhanced capabilities and latest innovations from Nutanix. We understand that this transition may require some effort, and we are committed to supporting you throughout the process. Please refer to our documentation and support channels for guidance and assistance.
 
@@ -46,7 +28,8 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
-| 2.2.2 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
+| 2.2.3 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
+| 2.2.2 (Deprecated/Invalid) | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.0 | | | Self Service  v4.1.0 | yes |
 | 2.1.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
