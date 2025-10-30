@@ -69,8 +69,13 @@ The links attribute supports the following:
 
 ## Import
 
-This helps to manage existing entities which are not created through terraform. Role can be imported using the role `UUID` (ext_id in v4 terms).
+This helps to manage existing entities which are not created through terraform. Role can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_roles_v2" "import_role" {}
 
-`terraform import nutanix_roles_v2.<resource_name> <UUID>`
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_roles_v2" "fetch_roles"{}
+terraform import nutanix_roles_v2.import_role <UUID>
+```
 
 See detailed information in [Nutanix Create Role ](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Roles/operation/createRole).
