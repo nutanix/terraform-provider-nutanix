@@ -251,7 +251,7 @@ func ResourceNutanixTemplatesV2Read(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error while fetching template : %v", err)
 	}
 	getResp := resp.Data.GetValue().(vmmContent.Template)
-  aJSON, _ := json.MarshalIndent(getResp, "", "  ")
+	aJSON, _ := json.MarshalIndent(getResp, "", "  ")
 	log.Printf("[DEBUG] Get Template call: %s", string(aJSON))
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
