@@ -3,7 +3,9 @@ package prismv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -32,6 +34,18 @@ func ResourceNutanixBackupTargetV2() *schema.Resource {
 		ReadContext:   ResourceNutanixBackupTargetV2Read,
 		UpdateContext: ResourceNutanixBackupTargetV2Update,
 		DeleteContext: ResourceNutanixBackupTargetV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				const expectedPartsCount = 2
+				parts := strings.Split(d.Id(), "/")
+				if len(parts) != expectedPartsCount {
+					return nil, fmt.Errorf("invalid import uuid (%q), expected domain_manager_ext_id/backup_target_ext_id", d.Id())
+				}
+				d.Set("domain_manager_ext_id", parts[0])
+				d.SetId(parts[1])
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 		Schema: map[string]*schema.Schema{
 			"domain_manager_ext_id": {
 				Type:     schema.TypeString,
@@ -361,8 +375,18 @@ func flattenResourceObjectStoreLocation(objectStoreLocation *management.ObjectSt
 	objectStoreLocationMap["backup_policy"] = flattenBackupPolicy(objectStoreLocation.BackupPolicy)
 
 	// extract the credentials from the state file since they are not returned in the response
-	locationI := d.([]interface{})
-	location := locationI[0].(map[string]interface{})
+	locationI, ok := d.([]interface{})
+
+	if !ok || len(locationI) == 0 {
+		// no previous state, just return flattened response
+		return []map[string]interface{}{objectStoreLocationMap}
+	}
+
+	location, ok := locationI[0].(map[string]interface{})
+	if !ok {
+		return []map[string]interface{}{objectStoreLocationMap}
+	}
+
 	objectStoreLocationI := location["object_store_location"].([]interface{})[0].(map[string]interface{})
 	providerConfig := objectStoreLocationI["provider_config"].([]interface{})[0].(map[string]interface{})
 	credentials := providerConfig["credentials"].([]interface{})
