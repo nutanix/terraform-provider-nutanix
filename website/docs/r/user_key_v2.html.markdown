@@ -35,11 +35,13 @@ The following arguments are supported:
   _ "OBJECT_KEY": A combination of access key and secret key to sign an API request.
 - `creation_type`: - ( Optional ) The creation mechanism of this entity. Enum Values:
   _ "PREDEFINED": Predefined creator workflow type is for entity created by the system.
-  _ "SERVICEDEFINED": Servicedefined creator workflow type is for entity created by the service. \* "USERDEFINED": Userdefined creator workflow type is for entity created by the users.
+  _ "SERVICEDEFINED": Servicedefined creator workflow type is for entity created by the service.
+  _ "USERDEFINED": Userdefined creator workflow type is for entity created by the users.
 - `expiry_time`: - ( Optional ) The time when the key will expire.
 - `status`: - ( Optional ) The status of the key. Enum Values:
   _ "REVOKED": Key is revoked.
-  _ "VALID": Key is valid. \* "EXPIRED": Key is expired.
+  _ "VALID": Key is valid.
+  _ "EXPIRED": Key is expired.
 - `assigned_to`: - ( Optional ) External client to whom the given key is allocated.
 
 ## Attributes Reference
