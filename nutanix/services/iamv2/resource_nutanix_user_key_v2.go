@@ -22,8 +22,9 @@ func ResourceNutanixUserKeyV2() *schema.Resource {
 		DeleteContext: resourceNutanixUserKeyV2Delete,
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				const expectedPartsCount = 2
 				parts := strings.Split(d.Id(), "/")
-				if len(parts) != 2 {
+				if len(parts) != expectedPartsCount {
 					return nil, fmt.Errorf("invalid import uuid (%q), expected user_ext_id/user_key_ext_id", d.Id())
 				}
 				d.Set("user_ext_id", parts[0])
