@@ -94,7 +94,7 @@ The flash mode features attribute supports the following:
 The disks attribute supports the following:
 
 - `index`: - Index of the disk in a Volume Group. This field is optional and immutable.
-- `disk_size_bytes`: - ize of the disk in bytes. This field is mandatory during Volume Group creation if a new disk is being created on the storage container.
+- `disk_size_bytes`: - Size of the disk in bytes. This field is mandatory during Volume Group creation if a new disk is being created on the storage container.
 - `description`: - Volume Disk description.
 - `disk_data_source_reference`: -(Required) Disk Data Source Reference.
 - `disk_storage_features`: - Storage optimization features which must be enabled on the Volume Disks. This is an optional field. If omitted, the disks will honor the Volume Group specific storage features setting.
