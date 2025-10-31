@@ -36,8 +36,9 @@ func ResourceNutanixBackupTargetV2() *schema.Resource {
 		DeleteContext: ResourceNutanixBackupTargetV2Delete,
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				const expectedPartsCount = 2
 				parts := strings.Split(d.Id(), "/")
-				if len(parts) != 2 {
+				if len(parts) != expectedPartsCount {
 					return nil, fmt.Errorf("invalid import uuid (%q), expected domain_manager_ext_id/backup_target_ext_id", d.Id())
 				}
 				d.Set("domain_manager_ext_id", parts[0])

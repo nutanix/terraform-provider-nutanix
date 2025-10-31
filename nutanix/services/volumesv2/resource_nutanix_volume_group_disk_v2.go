@@ -29,8 +29,9 @@ func ResourceNutanixVolumeGroupDiskV2() *schema.Resource {
 		DeleteContext: ResourceNutanixVolumeGroupDiskV2Delete,
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				const expectedPartsCount = 2
 				parts := strings.Split(d.Id(), "/")
-				if len(parts) != 2 {
+				if len(parts) != expectedPartsCount {
 					return nil, fmt.Errorf("invalid import uuid (%q), expected volume_group_ext_id/disk_ext_id", d.Id())
 				}
 				d.Set("volume_group_ext_id", parts[0])
