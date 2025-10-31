@@ -83,7 +83,7 @@ data "nutanix_user_keys_v2" "fetch_uks"{
     user_ext_id = data.nutanix_users_v2.fetch_users.users[0].ext_id
 }
 
-terraform import nutanix_user_key_v2.import_uk <UUID>
+terraform import nutanix_user_key_v2.import_uk userExtID/keyExtID
 ```
 
 See detailed information in [Nutanix Create User Key V4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Users/operation/createUserKey)
