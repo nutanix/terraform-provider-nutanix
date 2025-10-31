@@ -3,7 +3,9 @@ package volumesv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -26,7 +28,15 @@ func ResourceNutanixVolumeGroupDiskV2() *schema.Resource {
 		UpdateContext: ResourceNutanixVolumeGroupDiskV2Update,
 		DeleteContext: ResourceNutanixVolumeGroupDiskV2Delete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				parts := strings.Split(d.Id(), "/")
+				if len(parts) != 2 {
+					return nil, fmt.Errorf("invalid import uuid (%q), expected volume_group_ext_id/disk_ext_id", d.Id())
+				}
+				d.Set("volume_group_ext_id", parts[0])
+				d.SetId(parts[1])
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 		Schema: map[string]*schema.Schema{
 			"volume_group_ext_id": {
@@ -54,6 +64,7 @@ func ResourceNutanixVolumeGroupDiskV2() *schema.Resource {
 				Description: "Volume Disk description. This is an optional field.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 			},
 			"disk_data_source_reference": {
 				Description: "Disk Data Source Reference.",
@@ -70,6 +81,7 @@ func ResourceNutanixVolumeGroupDiskV2() *schema.Resource {
 							Description: "The name of the Data Source Reference.",
 							Type:        schema.TypeString,
 							Optional:    true,
+							Computed:    true,
 						},
 						"uris": {
 							Description: "The uri list of the Data Source Reference.",
@@ -84,6 +96,7 @@ func ResourceNutanixVolumeGroupDiskV2() *schema.Resource {
 							Description:  "The Entity Type of the Data Source Reference.",
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{"STORAGE_CONTAINER", "VM_DISK", "VOLUME_DISK", "DISK_RECOVERY_POINT"}, false),
 						},
 					},
@@ -93,18 +106,21 @@ func ResourceNutanixVolumeGroupDiskV2() *schema.Resource {
 				Description: "Storage optimization features which must be enabled on the Volume Disks. This is an optional field. If omitted, the disks will honor the Volume Group specific storage features setting.",
 				Type:        schema.TypeList,
 				Optional:    true,
+				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"flash_mode": {
 							Description: "Once configured, this field will avoid down migration of data from the hot tier unless the overrides field is specified for the virtual disks.",
 							Type:        schema.TypeList,
 							Optional:    true,
+							Computed:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"is_enabled": {
 										Description: "The flash mode is enabled or not.",
 										Type:        schema.TypeBool,
 										Optional:    true,
+										Computed:    true,
 									},
 								},
 							},
