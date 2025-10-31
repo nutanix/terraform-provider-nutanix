@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_cluster_entity_v2"
-sidebar_current: "docs-nutanix-resource-cluster-entity"
+sidebar_current: "docs-nutanix-resource-cluster-entity-v2"
 description: |-
    Provides the basic infrastructure for compute, storage and networking.
 ---
@@ -11,6 +11,9 @@ description: |-
 Represents the Cluster entity. Provides the basic infrastructure for compute, storage and networking. This includes the operations that can be carried out on cluster and its subresources - host (node), rsyslog servers etc and actions that can be performed on cluster - add a node, remove a node, attach categories.
 
 -> **Recommendations:** It is recommended to create and register the cluster with Prism Central as part of the same workflow. Cluster updates, importing, and destruction through Terraform are supported only when the cluster is registered with Prism Central. To register a cluster with Prism Central use Terraform resource nutanix_pc_registration_v2.
+
+
+-> **Note:**: Cluster resource supports add/remove node operations. However, these operations require cluster to be registered with Prism Central.
 
 ## Example Usage
 
@@ -73,13 +76,69 @@ resource "nutanix_cluster_v2" "cluster"{
 }
 ```
 
+### 3 Node Cluster Creation Example and Adding Nodes Example
+
+```hcl
+resource "nutanix_cluster_v2" "cluster-3nodes" {
+  name   = "tf-cluster-3nodes"
+  dryrun = false
+  nodes {
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = "10.00.00.1"
+        }
+      }
+    }
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = "10.00.00.2"
+        }
+      }
+    }
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = "10.00.00.3"
+        }
+      }
+    }
+
+    ## after creating and registering the cluster with prism central,
+    ## to add another node to the cluster, uncomment the following block
+    # node_list {
+    #   controller_vm_ip {
+    #     ipv4 {
+    #       value = "10.00.00.4"
+    #     }
+    #   }
+    #   should_skip_host_networking   = false
+    #   should_skip_pre_expand_checks = true
+    # }
+  }
+  config {
+    cluster_function = local.clusters.config.cluster_functions
+    cluster_arch     = local.clusters.config.cluster_arch
+    fault_tolerance_state {
+      domain_awareness_level = "NODE"
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [links, categories, config.0.cluster_function]
+  }
+}
+```
+
+
 ## Argument Reference
 
 The following arguments are supported:
 > after creating the cluster, you need to register the cluster with prism central to be able to use it.
 * `dryrun`: - (Optional) parameter that allows long-running operations to execute in a dry-run mode providing ability to identify trouble spots and system failures without performing the actual operation. Additionally this mode also offers a summary snapshot of the resultant system in order to better understand how things fit together. The operation runs in dry-run mode only if the provided value is true.
 * `name`: - (Required) The name for the vm.
-* `nodes`: - (Optional) The reference to a node.
+* `nodes`: - (Optional) The reference to a node and remove node parameters.
 * `config`: - (Optional) Cluster configuration details.
 * `network`: - (Optional) Network details of a cluster.
 * `upgrade_status`: - (Optional) The reference to a project.
@@ -99,12 +158,25 @@ The following arguments are supported:
 
 The nodes attribute supports the following:
 * `node_list`: - (Optional) List of nodes in a cluster.
+* `remove_node_params`: - (Optional) Parameters for removing nodes. Supports:
+
+#### remove_node_params Attributes
+* `should_skip_remove`: - (Optional, default false) Skip remove operation for the node.
+* `should_skip_prechecks`: - (Optional, default false) Skip remove prechecks.
+* `extra_params`: - (Optional) Extra parameters for removing nodes. Supports:
+  * `should_skip_upgrade_check`: - (Optional, default false) Skip upgrade check during node removal.
+  * `skip_space_check`: - (Optional, default false) Skip space check during node removal.
+  * `should_skip_add_check`:- (Optional, default false) Skip add check during node removal.
 
 ### Node List
 
 The nodes attribute supports the following:
 * `controller_vm_ip`: - (Required) An unique address that identifies a device on the internet or a local network in IPv4 or IPv6 format.
 * `host_ip`: - (Optional) An unique address that identifies a device on the internet or a local network in IPv4 or IPv6 format.
+* `should_skip_host_networking`: - (Optional, default false) Flag to indicate if host networking needs to be skipped during node addition.
+* `should_skip_pre_expand_checks`: - (Optional, default false) Flag to indicate if pre expand checks needs to be skipped during node addition.
+* `should_skip_add_node`: - (Optional, default false) Flag to indicate if add node operation needs to be skipped during node addition.
+
 
 ### Controller VM IP
 
