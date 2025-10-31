@@ -42,7 +42,7 @@ resource "nutanix_virtual_machine_v2" "vm-example" {
 }
 
 # Create Ova from the VM
-resource "nutanix_ovas_v2" "ov-vm-example" {
+resource "nutanix_ova_v2" "ov-vm-example" {
   name = "tf-ova-vm-example"
   source {
     ova_vm_source {
@@ -54,7 +54,7 @@ resource "nutanix_ovas_v2" "ov-vm-example" {
 
 
 # Create Ova from Url
-resource "nutanix_ovas_v2" "ov-url-example" {
+resource "nutanix_ova_v2" "ov-url-example" {
   name = "tf-ova-url-example"
   source {
     ova_url_source {
@@ -67,7 +67,7 @@ resource "nutanix_ovas_v2" "ov-url-example" {
 
 
 // Create a new OVA using the object_lite_source
-resource "nutanix_ovas_v2" "ova-object-lite" {
+resource "nutanix_ova_v2" "ova-object-lite" {
   name = "tf-example-ova-object-lite-example"
   source {
     object_lite_source {
@@ -79,39 +79,39 @@ resource "nutanix_ovas_v2" "ova-object-lite" {
 
 
 // list all Ovas
-data "nutanix_ovas_v2" "ovas-list" {}
+data "nutanix_ova_v2" "ovas-list" {}
 
 // limit, page and ordered by ovas
-data "nutanix_ovas_v2" "ovas-limit" {
+data "nutanix_ova_v2" "ovas-limit" {
   limit      = 20
   page       = 1
   order_by   = "createTime"
-  depends_on = [nutanix_ovas_v2.ov-vm-example]
+  depends_on = [nutanix_ova_v2.ov-vm-example]
 }
 
 
 // filtered Ovas examples
-data "nutanix_ovas_v2" "filtered-name" {
+data "nutanix_ova_v2" "filtered-name" {
   filter     = "name eq 'tf-ova-vm-example'"
-  depends_on = [nutanix_ovas_v2.ov-vm-example]
+  depends_on = [nutanix_ova_v2.ov-vm-example]
 }
 
-data "nutanix_ovas_v2" "filtered-disk-format" {
+data "nutanix_ova_v2" "filtered-disk-format" {
   filter     = "diskFormat eq Vmm.Content.OvaDiskFormat'QCOW2'"
-  depends_on = [nutanix_ovas_v2.ov-vm-example]
+  depends_on = [nutanix_ova_v2.ov-vm-example]
 }
 
-data "nutanix_ovas_v2" "filtered-parent-vm" {
+data "nutanix_ova_v2" "filtered-parent-vm" {
   filter     = "parentVm eq 'LinuxServer_VM'"
-  depends_on = [nutanix_ovas_v2.ov-vm-example]
+  depends_on = [nutanix_ova_v2.ov-vm-example]
 }
 
-data "nutanix_ovas_v2" "filtered-size" {
+data "nutanix_ova_v2" "filtered-size" {
   filter     = "sizeBytes eq ${4 * 1024 * 1024 * 1024}"
-  depends_on = [nutanix_ovas_v2.ov-vm-example]
+  depends_on = [nutanix_ova_v2.ov-vm-example]
 }
 
 // Get ova details by ext id
 data "nutanix_ova_v2" "ova" {
-  ext_id = nutanix_ovas_v2.ov-vm-example.id
+  ext_id = nutanix_ova_v2.ov-vm-example.id
 }

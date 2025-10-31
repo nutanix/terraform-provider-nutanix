@@ -145,7 +145,7 @@ resource "nutanix_virtual_machine_v2" "ova-vm" {
 }
 
 
-resource "nutanix_ovas_v2" "test" {
+resource "nutanix_ova_v2" "test" {
   name = "%[4]s"
   source {
     ova_vm_source {
@@ -156,7 +156,7 @@ resource "nutanix_ovas_v2" "test" {
 }
 
 resource "nutanix_ova_download_v2" "test" {
-  ova_ext_id = nutanix_ovas_v2.test.id
+  ova_ext_id = nutanix_ova_v2.test.id
 }
 
 `, filepath, vmName, vmDescription, ovaName)
