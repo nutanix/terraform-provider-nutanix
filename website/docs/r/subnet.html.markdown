@@ -110,15 +110,4 @@ attributes supports the following:
 
 Note: `subnet_reference` does not support the attribute `name`
 
-## Import
-
-This helps to manage existing entities which are not created through terraform. Subnet can be imported using the `UUID`. (ext_id in v4 API context).  eg,
-```hcl
-// create its configuration in the root module. For example:
-resource "nutanix_subnet_v2" "import_subnet" {}
-
-// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_subnets_v2" "fetch_subnets"{}
-terraform import nutanix_subnet_v2.import_subnet <UUID>
-```
-
 See detailed information in [Nutanix Subnet](https://www.nutanix.dev/api_references/prism-central-v3/#/0cc5a30420b29-create-a-new-subnet).
