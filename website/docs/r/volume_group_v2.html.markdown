@@ -104,7 +104,7 @@ The disks attribute supports the following:
 The disk_data_source_reference attribute supports the following:
 
 - `ext_id`: - The external identifier of the Data Source Reference.
-- `name`: - The name of the Data Source Reference.bled for the Volume Group.
+- `name`: - The name of the Data Source Reference. for the Volume Group.
 - `uris`: - The uri list of the Data Source Reference.
 - `entity_type`: - The Entity Type of the Data Source Reference.
 
