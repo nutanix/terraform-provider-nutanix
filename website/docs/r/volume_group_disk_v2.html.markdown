@@ -52,7 +52,7 @@ The following arguments are supported:
 
 - `index`: - Index of the disk in a Volume Group. This field is optional and immutable.
 
-- `disk_size_bytes`: - ize of the disk in bytes. This field is mandatory during Volume Group creation if a new disk is being created on the storage container.
+- `disk_size_bytes`: - Size of the disk in bytes. This field is mandatory during Volume Group creation if a new disk is being created on the storage container.
 
 - `description`: - Volume Disk description.
 
