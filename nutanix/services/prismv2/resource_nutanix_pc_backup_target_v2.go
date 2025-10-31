@@ -374,8 +374,18 @@ func flattenResourceObjectStoreLocation(objectStoreLocation *management.ObjectSt
 	objectStoreLocationMap["backup_policy"] = flattenBackupPolicy(objectStoreLocation.BackupPolicy)
 
 	// extract the credentials from the state file since they are not returned in the response
-	locationI := d.([]interface{})
-	location := locationI[0].(map[string]interface{})
+	locationI, ok := d.([]interface{})
+
+	if !ok || len(locationI) == 0 {
+		// no previous state, just return flattened response
+		return []map[string]interface{}{objectStoreLocationMap}
+	}
+
+	location, ok := locationI[0].(map[string]interface{})
+	if !ok {
+		return []map[string]interface{}{objectStoreLocationMap}
+	}
+
 	objectStoreLocationI := location["object_store_location"].([]interface{})[0].(map[string]interface{})
 	providerConfig := objectStoreLocationI["provider_config"].([]interface{})[0].(map[string]interface{})
 	credentials := providerConfig["credentials"].([]interface{})
