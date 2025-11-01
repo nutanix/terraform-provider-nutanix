@@ -37,3 +37,27 @@ func IsExplicitlySet(d *schema.ResourceData, key string) bool {
 	}
 	return false
 }
+
+// InterfaceToSlice converts various input types to a slice of interfaces.
+func InterfaceToSlice(v interface{}) []interface{} {
+	if v == nil {
+		return nil
+	}
+
+	switch t := v.(type) {
+	case *schema.Set:
+		return t.List()
+	case []interface{}:
+		return t
+	case []map[string]interface{}:
+		// unlikely, but handle it
+		out := make([]interface{}, len(t))
+		for i := range t {
+			out[i] = t[i]
+		}
+		return out
+	default:
+		// single element provided
+		return []interface{}{v}
+	}
+}

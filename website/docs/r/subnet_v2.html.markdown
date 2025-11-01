@@ -235,4 +235,16 @@ resource "nutanix_subnet_v2" "van-114" {
 - `value`: value of address
 - `prefix_length`: The prefix length of the network to which this host IPv4/IPv6 address belongs. Default value is 32.
 
+## Import
+
+This helps to manage existing entities which are not created through terraform. Subnet can be imported using the `UUID`. (ext_id in v4 API context). eg,
+
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_subnet_v2" "import_subnet" {}
+
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_subnet_v2" "fetch_subnet"{}
+terraform import nutanix_subnet_v2.import_subnet <UUID>
+```
+
 See detailed information in [Nutanix Subnet v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/Subnets/operation/createSubnet).

@@ -340,6 +340,15 @@ The template_version_spec block supports the following:
 * `cloud_init_script.user_data`: (Optional) user data object
 * `cloud_init_script.custom_keys`: (Optional) The list of the individual KeyValuePair elements.
 
+## Import
 
+This helps to manage existing entities which are not created through terraform. Templates can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_template_v2" "import_template" {}
+
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_templates_v2" "fetch_templates"{}
+terraform import nutanix_template_v2.import_template <UUID>
+```
 
 See detailed information in [Nutanix Create Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Templates/operation/createTemplate).

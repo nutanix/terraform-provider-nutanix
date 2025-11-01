@@ -22,6 +22,9 @@ func ResourceNutanixImagePlacementV2() *schema.Resource {
 		ReadContext:   ResourceNutanixImagePlacementV2Read,
 		UpdateContext: ResourceNutanixImagePlacementV2Update,
 		DeleteContext: ResourceNutanixImagePlacementV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,

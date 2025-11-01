@@ -18,6 +18,9 @@ func ResourceNutanixDirectoryServicesV2() *schema.Resource {
 		ReadContext:   ResourceNutanixDirectoryServicesV2Read,
 		UpdateContext: ResourceNutanixDirectoryServicesV2Update,
 		DeleteContext: ResourceNutanixDirectoryServicesV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

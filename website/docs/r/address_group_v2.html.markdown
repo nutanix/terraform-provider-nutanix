@@ -69,5 +69,14 @@ The following attributes are exported:
 * `policy_references`: Reference to policy associated with Address Group.
 * `created_by`: created by.
 
+## Import
+
+This helps to manage existing entities which are not created through terraform. Address Group can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_address_groups_v2" "addr_groups" {}
+
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_address_groups_v2" "fetch_addr_groups"{}
+terraform import nutanix_address_groups_v2.addr_groups <UUID>
 
 See detailed information in [Nutanix Address Group V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0#tag/AddressGroups/operation/createAddressGroup).

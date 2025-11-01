@@ -18,7 +18,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-// CRUD for Volume Group.
+// ResourceNutanixVolumeGroupV2 CRUD for Volume Group.
 func ResourceNutanixVolumeGroupV2() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Creates a new Volume Group.",
@@ -26,7 +26,9 @@ func ResourceNutanixVolumeGroupV2() *schema.Resource {
 		ReadContext:   ResourceNutanixVolumeGroupV2Read,
 		UpdateContext: ResourceNutanixVolumeGroupV2Update,
 		DeleteContext: ResourceNutanixVolumeGroupV2Delete,
-
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Description: "A globally unique identifier of an instance that is suitable for external consumption.",
@@ -42,22 +44,26 @@ func ResourceNutanixVolumeGroupV2() *schema.Resource {
 				Description: "Volume Group description. This is an optional field.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 			},
 			"should_load_balance_vm_attachments": {
 				Description: "Indicates whether to enable Volume Group load balancing for VM attachments. This cannot be enabled if there are iSCSI client attachments already associated with the Volume Group, and vice-versa. This is an optional field.",
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 			},
 			"sharing_status": {
 				Description:  "Indicates whether the Volume Group can be shared across multiple iSCSI initiators. The mode cannot be changed from SHARED to NOT_SHARED on a Volume Group with multiple attachments. Similarly, a Volume Group cannot be associated with more than one attachment as long as it is in exclusive mode. This is an optional field.",
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice([]string{"NOT_SHARED", "SHARED"}, false),
 			},
 			"target_prefix": {
 				Description: "The specifications contain the target prefix for external clients as the value. This is an optional field.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 			},
 			"target_name": {
 				Description: "Name of the external client target that will be visible and accessible to the client. This is an optional field.",
@@ -82,11 +88,13 @@ func ResourceNutanixVolumeGroupV2() *schema.Resource {
 							Description: "Target secret in case of a CHAP authentication. This field must only be provided in case the authentication type is not set to CHAP. This is an optional field and it cannot be retrieved once configured.",
 							Type:        schema.TypeString,
 							Optional:    true,
+							Computed:    true,
 						},
 						"enabled_authentications": {
 							Description:  "The authentication type enabled for the Volume Group. This is an optional field. If omitted, authentication is not configured for the Volume Group. If this is set to CHAP, the target/client secret must be provided.",
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{"CHAP", "NONE"}, false),
 						},
 					},
@@ -96,6 +104,7 @@ func ResourceNutanixVolumeGroupV2() *schema.Resource {
 				Description: "Service/user who created this Volume Group. This is an optional field.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 			},
 			"cluster_reference": {
 				Description: "The UUID of the cluster that will host the Volume Group. This is a mandatory field for creating a Volume Group on Prism Central.",
@@ -106,18 +115,21 @@ func ResourceNutanixVolumeGroupV2() *schema.Resource {
 				Description: "Storage optimization features which must be enabled on the Volume Group. This is an optional field.",
 				Type:        schema.TypeList,
 				Optional:    true,
+				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"flash_mode": {
 							Description: "Once configured, this field will avoid down migration of data from the hot tier unless the overrides field is specified for the virtual disks.",
 							Type:        schema.TypeList,
 							Optional:    true,
+							Computed:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"is_enabled": {
 										Description: "Indicates whether the flash mode is enabled for the Volume Group.",
 										Type:        schema.TypeBool,
 										Optional:    true,
+										Computed:    true,
 									},
 								},
 							},
@@ -129,31 +141,36 @@ func ResourceNutanixVolumeGroupV2() *schema.Resource {
 				Description:  "Expected usage type for the Volume Group. This is an indicative hint on how the caller will consume the Volume Group. This is an optional field.",
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice([]string{"USER", "INTERNAL", "TEMPORARY", "BACKUP_TARGET"}, false),
 			},
 			"attachment_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice([]string{"EXTERNAL", "NONE", "DIRECT"}, false),
 			},
 			"protocol": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice([]string{"NOT_ASSIGNED", "ISCSI", "NVMF"}, false),
 			},
 			"is_hidden": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"disks": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"index": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"disk_size_bytes": {
 							Type:     schema.TypeInt,
@@ -162,6 +179,7 @@ func ResourceNutanixVolumeGroupV2() *schema.Resource {
 						"description": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"disk_data_source_reference": {
 							Type:     schema.TypeList,
@@ -175,6 +193,7 @@ func ResourceNutanixVolumeGroupV2() *schema.Resource {
 									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Computed: true,
 									},
 									"uris": {
 										Type:     schema.TypeList,
@@ -187,6 +206,7 @@ func ResourceNutanixVolumeGroupV2() *schema.Resource {
 									"entity_type": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.StringInSlice([]string{"STORAGE_CONTAINER", "VM_DISK", "VOLUME_DISK", "DISK_RECOVERY_POINT"}, false),
 									},
 								},
@@ -195,16 +215,19 @@ func ResourceNutanixVolumeGroupV2() *schema.Resource {
 						"disk_storage_features": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"flash_mode": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"is_enabled": {
 													Type:     schema.TypeBool,
 													Optional: true,
+													Computed: true,
 												},
 											},
 										},

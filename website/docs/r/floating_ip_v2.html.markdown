@@ -82,4 +82,15 @@ The following attributes are exported:
 - `vpc`: Networking common base object
 - `vm_nic`: Virtual NIC for projections
 
+## Import
+
+This helps to manage existing entities which are not created through terraform. Floating IPs can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_floating_ip_v2" "floating_ip"{}
+
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_floating_ips_v2" "fetch_fips"{}
+terraform import nutanix_floating_ip_v2.floating_ip <UUID>
+```
+
 See detailed information in [Nutanix Floating IP v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/FloatingIps/operation/createFloatingIp).

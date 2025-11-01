@@ -3,7 +3,9 @@ package networkingv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -23,6 +25,9 @@ func ResourceNutanixRoutesV2() *schema.Resource {
 		ReadContext:   ResourceNutanixRoutesV2Read,
 		UpdateContext: ResourceNutanixRoutesV2Update,
 		DeleteContext: ResourceNutanixRoutesV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: importNutanixRouteV2,
+		},
 		Schema: map[string]*schema.Schema{
 			"route_table_ext_id": {
 				Type:     schema.TypeString,
@@ -273,60 +278,8 @@ func ResourceNutanixRoutesV2Create(ctx context.Context, d *schema.ResourceData, 
 
 func ResourceNutanixRoutesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] ResourceNutanixRoutesV2Read \n")
-	conn := meta.(*conns.Client).NetworkingAPI
 
-	routeTableExtID := d.Get("route_table_ext_id").(string)
-
-	resp, err := conn.Routes.GetRouteForRouteTableById(utils.StringPtr(d.Id()), &routeTableExtID)
-	if err != nil {
-		return diag.Errorf("error while fetching route : %v", err)
-	}
-
-	getResp := resp.Data.GetValue().(config.Route)
-
-	if err := d.Set("ext_id", getResp.ExtId); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("metadata", flattenMetadata(getResp.Metadata)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("name", getResp.Name); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("description", getResp.Description); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("destination", flattenDestination(getResp.Destination)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("next_hop", flattenNextHop(getResp.Nexthop)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("route_table_reference", getResp.RouteTableReference); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("vpc_reference", getResp.VpcReference); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("external_routing_domain_reference", getResp.ExternalRoutingDomainReference); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("route_type", flattenRouteType(getResp.RouteType)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("is_active", getResp.IsActive); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("priority", getResp.Priority); err != nil {
-		return diag.FromErr(err)
-	}
-	return nil
+	return routeRead(d, meta)
 }
 
 func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -570,4 +523,95 @@ func expandMetadata(metadata []interface{}) *common.Metadata {
 	log.Printf("[DEBUG] Metadata Object: %v", string(aJSON))
 
 	return metadataObj
+}
+
+// importNutanixRouteV2 imports a route resource given an ID in the format <route_table_ext_id>/<route_id>
+func importNutanixRouteV2(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	// Expect ID format: routeTableID/routeID
+
+	const expectedIDCount = 2
+
+	ids := strings.Split(d.Id(), "/")
+	if len(ids) != expectedIDCount {
+		return nil, fmt.Errorf("invalid import ID, expected format <route_table_ext_id>/<route_id>")
+	}
+
+	routeTableID := ids[0]
+	routeID := ids[1]
+
+	// Set the IDs in the resource data
+	if err := d.Set("route_table_ext_id", routeTableID); err != nil {
+		return nil, err
+	}
+	// Set the resource ID to the route ID
+	d.SetId(routeID)
+
+	// Set route table_ext_id attribute
+	if err := d.Set("route_table_ext_id", routeTableID); err != nil {
+		return nil, fmt.Errorf("error setting route_table_ext_id during import: %v", err)
+	}
+
+	diags := routeRead(d, meta)
+	if diags.HasError() {
+		// convert diagnostics to error
+		return nil, fmt.Errorf("failed to import route: %v", diags)
+	}
+	return []*schema.ResourceData{d}, nil
+}
+
+func routeRead(d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).NetworkingAPI
+
+	routeTableExtID := d.Get("route_table_ext_id").(string)
+
+	resp, err := conn.Routes.GetRouteForRouteTableById(utils.StringPtr(d.Id()), &routeTableExtID)
+	if err != nil {
+		return diag.Errorf("error while fetching route : %v", err)
+	}
+
+	getResp := resp.Data.GetValue().(config.Route)
+
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("metadata", flattenMetadata(getResp.Metadata)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("name", getResp.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", getResp.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("destination", flattenDestination(getResp.Destination)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("next_hop", flattenNextHop(getResp.Nexthop)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("route_table_reference", getResp.RouteTableReference); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("vpc_reference", getResp.VpcReference); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("external_routing_domain_reference", getResp.ExternalRoutingDomainReference); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("route_type", flattenRouteType(getResp.RouteType)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("is_active", getResp.IsActive); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("priority", getResp.Priority); err != nil {
+		return diag.FromErr(err)
+	}
+	return nil
 }

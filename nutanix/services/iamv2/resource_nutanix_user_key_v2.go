@@ -2,6 +2,8 @@ package iamv2
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -18,6 +20,18 @@ func ResourceNutanixUserKeyV2() *schema.Resource {
 		ReadContext:   resourceNutanixUserKeyV2Read,
 		UpdateContext: resourceNutanixUserKeyV2Update,
 		DeleteContext: resourceNutanixUserKeyV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				const expectedPartsCount = 2
+				parts := strings.Split(d.Id(), "/")
+				if len(parts) != expectedPartsCount {
+					return nil, fmt.Errorf("invalid import uuid (%q), expected user_ext_id/user_key_ext_id", d.Id())
+				}
+				d.Set("user_ext_id", parts[0])
+				d.SetId(parts[1])
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 		Schema: map[string]*schema.Schema{
 			"user_ext_id": {
 				Type:     schema.TypeString,

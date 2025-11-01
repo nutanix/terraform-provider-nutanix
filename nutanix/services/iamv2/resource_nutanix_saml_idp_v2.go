@@ -18,6 +18,9 @@ func ResourceNutanixSamlIdpV2() *schema.Resource {
 		ReadContext:   ResourceNutanixSamlIdpV2Read,
 		UpdateContext: ResourceNutanixSamlIdpV2Update,
 		DeleteContext: ResourceNutanixSamlIdpV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -46,10 +49,12 @@ func ResourceNutanixSamlIdpV2() *schema.Resource {
 						"logout_url": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"error_url": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"certificate": {
 							Type:     schema.TypeString,
@@ -58,6 +63,7 @@ func ResourceNutanixSamlIdpV2() *schema.Resource {
 						"name_id_policy_format": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								"emailAddress", "encrypted", "unspecified", "transient",
 								"WindowsDomainQualifiedName", "X509SubjectName", "kerberos", "persistent", "entity",
@@ -78,18 +84,22 @@ func ResourceNutanixSamlIdpV2() *schema.Resource {
 			"username_attribute": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"email_attribute": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"groups_attribute": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"groups_delim": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"custom_attributes": {
 				Type:     schema.TypeList,
@@ -102,10 +112,12 @@ func ResourceNutanixSamlIdpV2() *schema.Resource {
 			"entity_issuer": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"is_signed_authn_req_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"created_time": {
 				Type:     schema.TypeString,
