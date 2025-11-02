@@ -119,7 +119,6 @@ func ResourceNutanixVMAntiAffinityPolicyV2Create(ctx context.Context, d *schema.
 	uuid := rUUID.EntitiesAffected[0].ExtId
 	d.SetId(*uuid)
 	return ResourceNutanixVMAntiAffinityPolicyV2Read(ctx, d, meta)
-
 }
 
 func ResourceNutanixVMAntiAffinityPolicyV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
