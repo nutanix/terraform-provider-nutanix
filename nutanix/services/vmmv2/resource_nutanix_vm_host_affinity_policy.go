@@ -130,7 +130,6 @@ func ResourceNutanixVMHostAffinityPolicyV2Create(ctx context.Context, d *schema.
 	uuid := rUUID.EntitiesAffected[0].ExtId
 	d.SetId(*uuid)
 	return ResourceNutanixVMHostAffinityPolicyV2Read(ctx, d, meta)
-
 }
 
 func ResourceNutanixVMHostAffinityPolicyV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
