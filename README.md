@@ -39,15 +39,8 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.3.
   - **Project Association with VM for V2 resource**: Associate Project with Virtual Machine V2 resource.
   - **Automatic Cluster Selection**: Automatic cluster selection support.
   - **Support for object lite source**: Support for lite source in terraform for images and object store modules.
-  - **the nutanix_cluster_v2 resource now fully supports cluster expansion operations**, including adding and removing nodes. This enhancement eliminates the need for a separate nutanix_cluster_add_node_v2 resource.
-  - **Import support is now available for V2 resources**, This enhancement allows users to seamlessly bring existing Nutanix entities under Terraform management, **without recreating them**. List of resources we support the import for,
-        - **nutanix_vpc_v2**
-        - **nutanix_routes_v2**
-        - **nutanix_roles_v2**
-        - **nutanix_authorization_policy_v2**
-        - **nutanix_category_v2**
-        - **nutanix_subnet_v2**
-
+  - **nutanix_cluster_v2 resource now fully supports cluster expansion operations**, including adding and removing nodes. This enhancement eliminates the need for a separate nutanix_cluster_add_node_v2 resource.
+  - **Import support is now available for V2 resources**, This enhancement allows users to seamlessly bring existing Nutanix entities under Terraform management(using V2 resources which uses V4 API SDK's), **without recreating them**.
 ---
 
 Upgrade now to take advantage of these powerful features and streamline your Nutanix automation workflows!
@@ -66,6 +59,8 @@ The provider is used to interact with the many resources and data sources suppor
 |  :--- |  :--- | :--- | :--- | :--- |
 | 2.3.2 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.0 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.2.3 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
+| 2.2.2 (⚠️ Deprecated/Invalid) | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.0 | | | Self Service v4.1.0 | yes | 
 | 2.1.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
