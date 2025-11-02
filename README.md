@@ -28,7 +28,7 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.3.
 
 ### What's New in v2.3.2
 
-- **Built on v4.1 APIs/SDKs**  
+- **Built on v4.1 APIs/SDKs**
   This release is built on the latest Nutanix v4 APIs and SDKs, providing improved performance, stability, and alignment with the newest platform capabilities.
 
 - **New Resource Support**
@@ -62,7 +62,7 @@ The provider is used to interact with the many resources and data sources suppor
 | 2.2.3 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.2 (⚠️ Deprecated/Invalid) | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
-| 2.2.0 | | | Self Service v4.1.0 | yes | 
+| 2.2.0 | | | Self Service v4.1.0 | yes |
 | 2.1.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.1.0 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.0.0 | 7.0 | pc2024.3 or later  | ndb v2.7, nke v2.8, foundation v5.7 | Yes |
@@ -183,6 +183,9 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | nutanix_image |nutanix_images_v2 |
 | - | nutanix_image_placement_policy_v2 |
 | nutanix_virtual_machine | nutanix_virtual_machine_v2 |
+| - | nutanix_ova_v2 |
+| - | nutanix_ova_vm_deploy_v2 |
+| - | nutanix_ova_download_v2 |
 | - | nutanix_vm_clone_v2 |
 | - | nutanix_vm_cdrom_insert_eject_v2 |
 | - | nutanix_vm_shutdown_action_v2 |
@@ -263,6 +266,7 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | - | nutanix_user_key_revoke_v2 |
 | - | nutanix_object_store_v2 |
 | - | nutanix_object_store_certificate_v2 |
+| - | nutanix_password_change_request_v2 |
 
 
 
@@ -308,6 +312,8 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | - | nutanix_images_v2 |
 | nutanix_virtual_machine | nutanix_virtual_machine_v2 |
 | - | nutanix_virtual_machines_v2 |
+| - | nutanix_ova_v2 |
+| - | nutanix_ovas_v2 |
 | - | nutanix_template_v2 |
 | - | nutanix_templates_v2 |
 | - | nutanix_ngt_configuration_v2 |
@@ -399,10 +405,11 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | - | nutanix_object_stores_v2 |
 | - | nutanix_certificate_v2 |
 | - | nutanix_certificates_v2 |
+| - | nutanix_system_user_passwords_v2 |
 
 
 
-## Developing the provider 
+## Developing the provider
 
 The Nutanix Provider for Terraform is the work of many contributors. We appreciate your help!
 
@@ -414,7 +421,7 @@ The Nutanix Provider for Terraform is the work of many contributors. We apprecia
 
 -> **Note:** We now have a brand new developer-centric Support Program designed for organizations that require a deeper level of developer support to manage their Nutanix environment and build applications quickly and efficiently. As part of this new Advanced API/SDK Support Program, you will get access to trusted technical advisors who specialize in developer tools including Nutanix Terraform Provider and receive support for your unique development needs and custom integration queries. Visit our Support Portal - [Premium Add-On Support Programs](https://www.nutanix.com/support-services/product-support/premium-support-programs) to learn more about this program.
 
-Customers not taking advantage of the  Advanced API/SDK Support Program will continue to receive the support through our standard, community-supported model. This community model also provides support for contributions to the open-sourceNutanix Terraform Provider repository .Visit https://portal.nutanix.com/kb/13424   for more details. 
+Customers not taking advantage of the  Advanced API/SDK Support Program will continue to receive the support through our standard, community-supported model. This community model also provides support for contributions to the open-sourceNutanix Terraform Provider repository .Visit https://portal.nutanix.com/kb/13424   for more details.
 
 
 ## Community
