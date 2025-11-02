@@ -7,11 +7,13 @@ import (
 )
 
 type Client struct {
-	ImagesAPIInstance          *api.ImagesApi
-	TemplatesAPIInstance       *api.TemplatesApi
-	VMAPIInstance              *api.VmApi
-	ImagesPlacementAPIInstance *api.ImagePlacementPoliciesApi
-	OvasAPIInstance            *api.OvasApi
+	ImagesAPIInstance               *api.ImagesApi
+	TemplatesAPIInstance            *api.TemplatesApi
+	VMAPIInstance                   *api.VmApi
+	ImagesPlacementAPIInstance      *api.ImagePlacementPoliciesApi
+	OvasAPIInstance                 *api.OvasApi
+	VMAntiAffinityPolicyAPIInstance *api.VmAntiAffinityPoliciesApi
+	VMHostAffinityPolicyAPIInstance *api.VmHostAffinityPoliciesApi
 }
 
 func NewVmmClient(credentials client.Credentials) (*Client, error) {
