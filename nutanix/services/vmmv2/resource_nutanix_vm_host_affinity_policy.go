@@ -82,17 +82,17 @@ func ResourceNutanixVMHostAffinityPolicyV2Create(ctx context.Context, d *schema.
 	if desc, ok := d.GetOk("description"); ok {
 		body.Description = utils.StringPtr(desc.(string))
 	}
-	if vm_cats, ok := d.GetOk("vm_categories"); ok {
-		if vmCatSet, ok := vm_cats.(*schema.Set); ok {
+	if vmCats, ok := d.GetOk("vm_categories"); ok {
+		if vmCatSet, ok := vmCats.(*schema.Set); ok {
 			body.VmCategories = expandPolicyCategoryReference(vmCatSet.List())
-		} else if vmCatList, ok := vm_cats.([]interface{}); ok {
+		} else if vmCatList, ok := vmCats.([]interface{}); ok {
 			body.VmCategories = expandPolicyCategoryReference(vmCatList)
 		}
 	}
-	if host_cats, ok := d.GetOk("host_categories"); ok {
-		if hostCatSet, ok := host_cats.(*schema.Set); ok {
+	if hostCats, ok := d.GetOk("host_categories"); ok {
+		if hostCatSet, ok := hostCats.(*schema.Set); ok {
 			body.HostCategories = expandPolicyCategoryReference(hostCatSet.List())
-		} else if hostCatList, ok := host_cats.([]interface{}); ok {
+		} else if hostCatList, ok := hostCats.([]interface{}); ok {
 			body.HostCategories = expandPolicyCategoryReference(hostCatList)
 		}
 	}
