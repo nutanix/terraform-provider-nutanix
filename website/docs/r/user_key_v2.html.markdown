@@ -67,7 +67,7 @@ The following attributes are exported:
 
 ## Import
 
-This helps to manage existing entities which are not created through terraform. User Key can be imported using the `user ExtID/keyExtID`. (ext_id in v4 API context). eg,
+This helps to manage existing entities which are not created through terraform. User Key can be imported using the `userUUID/keyUUID`. (ext_id in v4 API context). eg,
 
 **Note**:To import User Key, you need to have the User Key UUID, and provide it in the format mentioned above while importing.
 
@@ -85,7 +85,7 @@ data "nutanix_user_keys_v2" "fetch_uks"{
     user_ext_id = data.nutanix_users_v2.fetch_users.users[0].ext_id
 }
 
-terraform import nutanix_user_key_v2.import_uk userExtID/keyExtID
+terraform import nutanix_user_key_v2.import_uk userUUID/keyUUID
 ```
 
 See detailed information in [Nutanix Create User Key V4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Users/operation/createUserKey)

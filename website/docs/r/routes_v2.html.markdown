@@ -116,7 +116,7 @@ The links attribute supports the following:
 
 ## Import
 
-This helps to manage existing entities which are not created through terraform. Route can be imported using the route table and route uuid `routeTableExtID/routeExtID` (ext_id in v4 terms). eg,
+This helps to manage existing entities which are not created through terraform. Route can be imported using the route table and route uuid `routeTableUUID/routeUUID` (ext_id in v4 terms). eg,
 
 **Note**:To import Route, you need to have the Route Table Ext ID and Route Ext ID, and provide them in the format mentioned above while importing.
 

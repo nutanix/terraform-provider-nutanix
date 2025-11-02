@@ -115,7 +115,7 @@ The `backup_policy` argument supports the following:
 
 ## Import
 
-This helps to manage existing entities which are not created through terraform. Backup Target can be imported using the `domainManagerExtID/backupTargetExtID`. (ext_id in v4 API context). eg,
+This helps to manage existing entities which are not created through terraform. Backup Target can be imported using the `domainManagerUUID/backupTargetUUID`. (ext_id in v4 API context). eg,
 
 **Note**:To import Backup Target, you need to have the Backup Target UUID, and provide it in the format mentioned above while importing.
 
@@ -141,7 +141,7 @@ data "nutanix_pc_backup_targets_v2" "backup_targets" {
 }
 
 
-terraform import nutanix_pc_backup_target_v2.imported <domainManagerExtId/backupTargetExtId>
+terraform import nutanix_pc_backup_target_v2.imported <domainManagerUUID/backupTargetUUID>
 ```
 
 See detailed information in [Nutanix Create Backup Target V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createBackupTarget).
