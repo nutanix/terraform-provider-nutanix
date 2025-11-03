@@ -169,7 +169,7 @@ jobs:
               echo "==> Setup V4 Config"
               echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
               echo "==> Running testcases..."
-	      package_path="./..."  # default if no -p argument is passed
+	            package_path="./..."  # default if no -p argument is passed
 
               # Extract `-p <package>` argument from the slash command, if provided
               for arg in $args; do
