@@ -23,13 +23,13 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.3.
   This release is built on the latest Nutanix v4 APIs and SDKs, providing improved performance, stability, and alignment with the newest platform capabilities.
 
 - **New Resource Support**
-  - **OVAs**: Enables the creation and management of OVAs.
+  - **OVAs**: Enables the creation and management of OVAs, deployment of VM's through OVA.
   - **Password Manager**: Provides the ability to manage system user passwords
 
 - **Enhancements**
   - **Project Association with VM for V2 resource**: Associate Project with Virtual Machine V2 resource.
   - **Automatic Cluster Selection**: Automatic cluster selection support.
-  - **Support for object lite source**: Support for lite source in terraform for images and object store modules.
+  - **Support for object lite source**: Support for object lite source in terraform for images and object store modules.
   - **nutanix_cluster_v2 resource now fully supports cluster expansion operations**, including adding and removing nodes. This enhancement eliminates the need for a separate nutanix_cluster_add_node_v2 resource.
   - **Import support is now available for V2 resources**, This enhancement allows users to seamlessly bring existing Nutanix entities under Terraform management(using V2 resources which uses V4 API SDK's), **without recreating them**.
 
