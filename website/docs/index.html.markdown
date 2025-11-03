@@ -15,7 +15,7 @@ Use the navigation on the left to read about the available resources and data so
 
 ## Introducing Nutanix Terraform Provider Version v2.3.2
 
-We're excited to announce the release of Nutanix Terraform Provider Version 2.3.0! This major update brings new features for automating your Nutanix infrastructure.
+We're excited to announce the release of Nutanix Terraform Provider Version 2.3.2! This major update brings new features for automating your Nutanix infrastructure.
 
 ### What's New in v2.3.2
 
