@@ -45,6 +45,7 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
 | 2.3.2 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.3.1 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.0 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.2.3 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.2 (⚠️ Deprecated/Invalid) | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
@@ -92,6 +93,9 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | nutanix_image |nutanix_images_v2 |
 | - | nutanix_image_placement_policy_v2 |
 | nutanix_virtual_machine | nutanix_virtual_machine_v2 |
+| - | nutanix_ova_v2 |
+| - | nutanix_ova_vm_deploy_v2 |
+| - | nutanix_ova_download_v2 |
 | - | nutanix_vm_clone_v2 |
 | - | nutanix_vm_cdrom_insert_eject_v2 |
 | - | nutanix_vm_shutdown_action_v2 |
@@ -172,7 +176,7 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_user_key_revoke_v2 |
 | - | nutanix_object_store_v2 |
 | - | nutanix_object_store_certificate_v2 |
-
+| - | nutanix_password_change_request_v2 |
 
 ## Data Sources
 
@@ -216,6 +220,8 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_images_v2 |
 | nutanix_virtual_machine | nutanix_virtual_machine_v2 |
 | - | nutanix_virtual_machines_v2 |
+| - | nutanix_ova_v2 |
+| - | nutanix_ovas_v2 |
 | - | nutanix_template_v2 |
 | - | nutanix_templates_v2 |
 | - | nutanix_ngt_configuration_v2 |
@@ -307,6 +313,7 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_object_stores_v2 |
 | - | nutanix_certificate_v2 |
 | - | nutanix_certificates_v2 |
+| - | nutanix_system_user_passwords_v2 |
 
 ## Example Usage
 

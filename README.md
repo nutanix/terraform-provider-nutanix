@@ -58,6 +58,7 @@ The provider is used to interact with the many resources and data sources suppor
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
 | 2.3.2 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.3.1 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.0 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.2.3 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.2 (⚠️ Deprecated/Invalid) | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
