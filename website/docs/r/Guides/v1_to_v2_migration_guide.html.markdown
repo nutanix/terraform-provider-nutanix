@@ -284,7 +284,6 @@ You can now:
 
 - **No Downtime:** The migration process does not recreate resources, so there's no service interruption
 - **Gradual Migration:** You can migrate resources one at a time - you don't need to migrate everything at once
-- **Dependencies:** Pay attention to resource dependencies and migrate them in the correct order
 
 ### Configuration Mismatches
 After import, if `terraform plan` shows changes:
