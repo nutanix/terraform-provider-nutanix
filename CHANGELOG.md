@@ -1,3 +1,29 @@
+## 2.3. (July 17, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.1...v2.3.2)
+
+**New Features:**
+- Ovas [\#852](https://github.com/nutanix/terraform-provider-nutanix/issues/852)
+- Password Manager [\#873](https://github.com/nutanix/terraform-provider-nutanix/issues/873)
+
+
+**Enhancements:**
+- Support of import for all V2 resources [\#988](https://github.com/nutanix/terraform-provider-nutanix/issues/988)
+- Project Association with VM for V2 resource [\#807](https://github.com/nutanix/terraform-provider-nutanix/issues/807)
+- Cluster Expansion using clusters_v2 resource [\#976](https://github.com/nutanix/terraform-provider-nutanix/issues/976)
+- Automatic Cluster Selection Support [\#903](https://github.com/nutanix/terraform-provider-nutanix/issues/903)
+- Support for object lite source in Images [\#990](https://github.com/nutanix/terraform-provider-nutanix/issues/990)
+
+
+**Fixed Bugs:**
+- Add a clear documentation for cluster delete [\#977](https://github.com/nutanix/terraform-provider-nutanix/issues/977)
+- Show warning if cluster is not registered to the PC [\#974](https://github.com/nutanix/terraform-provider-nutanix/issues/974)
+- nutanix_clusters_v2 not returning associated categories [\#907](https://github.com/nutanix/terraform-provider-nutanix/issues/907)
+- Resource: nutanix_users_v2: Password exposed in state file, Show Warning in case of delete, Documentation changes for using users_v2 resource [\#949](https://github.com/nutanix/terraform-provider-nutanix/issues/949)
+- Resource: nutanix_users_v2: Can't change local user password [\#897](https://github.com/nutanix/terraform-provider-nutanix/issues/897)
+- Empty id attributes returned for Auth Policy, Roles [\#989](https://github.com/nutanix/terraform-provider-nutanix/issues/989)
+- nutanix_user_groups_v2 empty ext_id in state file [\#899](https://github.com/nutanix/terraform-provider-nutanix/issues/899)
+
+
 ## 2.3.0 (July 17, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.2.1...v2.3.0)
 
