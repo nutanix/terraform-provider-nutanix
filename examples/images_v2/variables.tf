@@ -11,3 +11,7 @@ variable "nutanix_endpoint" {
 variable "nutanix_port" {
   type = string
 }
+
+variable "lite_source_key" {
+  type = string
+}

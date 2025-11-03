@@ -163,9 +163,9 @@ The following arguments are supported:
 * `enable_collab` - (Optional) flag to allow collaboration of projects. (Use with project_internal flag)
 
 ### Resource Domain
-* `resource_domain` - (Required) The status for a resource domain (limits and values)
+* `resource_domain` - (Optional) The status for a resource domain (limits and values)
 * `resource_domain.resources` - (Required) Array of the utilization/limit for resource types
-* `resource_domain.resources.#.limit` - (Required) The resource consumption limit (unspecified is unlimited)
+* `resource_domain.resources.#.limit` - (Required) The resource consumption limit.
 * `resource_domain.resources.#.resource_type` - (Required) The type of resource (for example storage, CPUs)
 
 ### Account Reference List

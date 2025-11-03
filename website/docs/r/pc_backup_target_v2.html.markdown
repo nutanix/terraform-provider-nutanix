@@ -113,4 +113,35 @@ The `backup_policy` argument supports the following:
 
 - `rpo_in_minutes`: -(Required) RPO interval in minutes at which the backup will be taken. The Value should be in the range of 60 to 1440.
 
+## Import
+
+This helps to manage existing entities which are not created through terraform. Backup Target can be imported using the `domainManagerUUID/backupTargetUUID`. (ext_id in v4 API context). eg,
+
+**Note**:To import Backup Target, you need to have the Backup Target UUID, and provide it in the format mentioned above while importing.
+
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_pc_backup_target_v2" "imported"{}
+
+
+// execute the below command. UUID can be fetched using datasource. Example:
+
+// list pcs
+data "nutanix_clusters_v2" "pcs" {
+	filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')"
+}
+
+locals {
+  domainManagerExtId = data.nutanix_clusters_v2.pcs.cluster_entities.0.ext_id
+}
+
+// list backup targets for a pc
+data "nutanix_pc_backup_targets_v2" "backup_targets" {
+  domain_manager_ext_id = local.domainManagerExtId
+}
+
+
+terraform import nutanix_pc_backup_target_v2.imported <domainManagerUUID/backupTargetUUID>
+```
+
 See detailed information in [Nutanix Create Backup Target V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createBackupTarget).

@@ -39,7 +39,7 @@ func TestAccV2NutanixFloatingIPsDataSource_WithFilter(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFipsDataSourceConfig(name, desc),
+				Config: testAccFipsDataSourceWithFilterConfig(name, desc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameFIPps, "floating_ips.#"),
 					resource.TestCheckResourceAttr(datasourceNameFIPps, "floating_ips.#", "1"),

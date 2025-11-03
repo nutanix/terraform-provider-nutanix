@@ -125,6 +125,18 @@ func DatasourceNutanixVirtualMachineV4() *schema.Resource {
 					},
 				},
 			},
+			"project": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"ownership_info": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -1375,6 +1387,9 @@ func DatasourceNutanixVirtualMachineV4Read(ctx context.Context, d *schema.Resour
 		return diag.FromErr(err)
 	}
 	if err := d.Set("categories", flattenCategoryReference(getResp.Categories)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project", flattenProjectReference(getResp.Project)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("ownership_info", flattenOwnershipInfo(getResp.OwnershipInfo)); err != nil {
@@ -2873,6 +2888,19 @@ func flattenAPILink(pr []response.ApiLink) []interface{} {
 			links[k] = link
 		}
 		return links
+	}
+	return nil
+}
+
+func flattenProjectReference(project *config.ProjectReference) []map[string]interface{} {
+	if project != nil {
+		prjList := make([]map[string]interface{}, 0)
+		prj := make(map[string]interface{})
+		if project.ExtId != nil {
+			prj["ext_id"] = utils.StringValue(project.ExtId)
+		}
+		prjList = append(prjList, prj)
+		return prjList
 	}
 	return nil
 }

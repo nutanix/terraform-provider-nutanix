@@ -434,7 +434,7 @@ func restorePcResourceConfig(pcDetails map[string]interface{}, restoreSourceExtI
 	pcIP := os.Getenv("NUTANIX_ENDPOINT")
 
 	// Build the full SSH command. Note the single quotes around the remoteCommands.
-	resetCommand := fmt.Sprintf("sshpass -p '%s' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %s@%s '%s'",
+	resetCommand := fmt.Sprintf("ssh-keygen -f ~/.ssh/known_hosts -R %[3]s; sshpass -p '%[1]s' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %[2]s@%[3]s '%[4]s'",
 		testVars.Prism.RestoreSource.SSHPassword, testVars.Prism.RestoreSource.SSHUser, pcIP, remoteCommands)
 
 	// pe config

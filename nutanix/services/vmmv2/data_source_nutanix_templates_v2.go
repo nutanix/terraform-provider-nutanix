@@ -128,6 +128,7 @@ func flattenTemplatesEntities(pr []import5.Template) []interface{} {
 			}
 			temp["created_by"] = flattenTemplateUser(v.CreatedBy)
 			temp["updated_by"] = flattenTemplateUser(v.UpdatedBy)
+			temp["category_ext_ids"] = v.CategoryExtIds
 
 			temps[k] = temp
 		}

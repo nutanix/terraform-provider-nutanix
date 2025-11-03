@@ -50,5 +50,15 @@ The following arguments are supported:
 * `type`: (Required) Filter matching type. Valid values "CATEGORIES_MATCH_ALL", "CATEGORIES_MATCH_ANY"
 * `category_ext_ids`: Array of strings
 
+## Import
+
+This helps to manage existing entities which are not created through terraform. Image Placement Policies can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_image_placement_policy_v2" "import_ipp"{}
+
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_image_placement_policies_v2" "list_ipps"{}
+terraform import nutanix_image_placement_policy_v2.import_ipp <UUID>
+```
 
 See detailed information in [Nutanix Create Image Placement Policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/ImagePlacementPolicies/operation/createPlacementPolicy)

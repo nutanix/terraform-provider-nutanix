@@ -19,6 +19,9 @@ func ResourceNutanixServiceGroupsV2() *schema.Resource {
 		ReadContext:   ResourceNutanixServiceGroupsV2Read,
 		UpdateContext: ResourceNutanixServiceGroupsV2Update,
 		DeleteContext: ResourceNutanixServiceGroupsV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

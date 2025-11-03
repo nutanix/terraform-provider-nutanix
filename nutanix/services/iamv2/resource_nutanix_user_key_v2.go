@@ -2,6 +2,10 @@ package iamv2
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -18,6 +22,18 @@ func ResourceNutanixUserKeyV2() *schema.Resource {
 		ReadContext:   resourceNutanixUserKeyV2Read,
 		UpdateContext: resourceNutanixUserKeyV2Update,
 		DeleteContext: resourceNutanixUserKeyV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				const expectedPartsCount = 2
+				parts := strings.Split(d.Id(), "/")
+				if len(parts) != expectedPartsCount {
+					return nil, fmt.Errorf("invalid import uuid (%q), expected user_ext_id/user_key_ext_id", d.Id())
+				}
+				d.Set("user_ext_id", parts[0])
+				d.SetId(parts[1])
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 		Schema: map[string]*schema.Schema{
 			"user_ext_id": {
 				Type:     schema.TypeString,
@@ -220,6 +236,10 @@ func resourceNutanixUserKeyV2Read(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	keyConfig := resp.Data.GetValue().(import1.Key)
+
+	aJSON, _ := json.MarshalIndent(keyConfig, "", "  ")
+	log.Printf("[DEBUG] Retrieved User Key: %s", aJSON)
+
 	if err := d.Set("tenant_id", keyConfig.TenantId); err != nil {
 		return diag.Errorf("error while setting tenant_id: %v", err)
 	}
@@ -265,11 +285,45 @@ func resourceNutanixUserKeyV2Read(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("last_used_time", flattenTime(keyConfig.LastUsedTime)); err != nil {
 		return diag.Errorf("error while setting last_used_time: %v", err)
 	}
-	if err := d.Set("key_details", keyConfig.KeyDetails); err != nil {
+	if err := d.Set("key_details", flattenKeyDetails(keyConfig.KeyDetails)); err != nil {
 		return diag.Errorf("error while setting key_details: %v", err)
 	}
 	d.SetId(*keyConfig.ExtId)
 	return nil
+}
+
+func flattenKeyDetails(oneOfKeyKeyDetails *import1.OneOfKeyKeyDetails) interface{} {
+	if oneOfKeyKeyDetails == nil {
+		return nil
+	}
+
+	keyDetailsMap := make(map[string]interface{})
+
+	// Determine which type is set using discriminator
+	switch v := oneOfKeyKeyDetails.GetValue().(type) {
+	case import1.ApiKeyDetails:
+		apiKeyList := []map[string]interface{}{
+			{
+				"api_key": v.ApiKey,
+			},
+		}
+		keyDetailsMap["api_key_details"] = apiKeyList
+
+	case import1.ObjectKeyDetails:
+		objectKeyList := []map[string]interface{}{
+			{
+				"secret_key": v.SecretKey,
+				"access_key": v.AccessKey,
+			},
+		}
+		keyDetailsMap["object_key_details"] = objectKeyList
+
+	default:
+		// If discriminator not set or unknown type
+		return nil
+	}
+
+	return []map[string]interface{}{keyDetailsMap}
 }
 
 func resourceNutanixUserKeyV2Update(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

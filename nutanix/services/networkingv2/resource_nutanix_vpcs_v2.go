@@ -20,6 +20,9 @@ func ResourceNutanixVPCsV2() *schema.Resource {
 		ReadContext:   ResourceNutanixVPCsV2Read,
 		UpdateContext: ResourceNutanixVPCsV2Update,
 		DeleteContext: ResourceNutanixVPCsV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,

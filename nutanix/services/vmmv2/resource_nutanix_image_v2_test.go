@@ -2,6 +2,7 @@ package vmmv2_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -151,6 +152,19 @@ func TestAccV2NutanixImagesResource_WithClusterExts(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixImagesResource_WithMoreThanOneSource(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testImagesV2ConfigWithMoreThanOneSource(),
+				ExpectError: regexp.MustCompile("only one of url_source, vm_disk_source, or object_lite_source can be specified in source"),
+			},
+		},
+	})
+}
+
 func testImagesV2Config(name, desc string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_images_v2" "test" {
@@ -205,7 +219,7 @@ func testImagesV2ConfigWithVMDiskSource(name, desc string) string {
 			config = jsondecode(file("%[3]s"))
 			vmm = local.config.vmm
 		}
-		
+
 		data "nutanix_storage_containers_v2" "ngt-sc" {
 		  filter = "clusterExtId eq '${local.cluster0}'"
 		  limit = 1
@@ -243,7 +257,7 @@ func testImagesV2ConfigWithVMDiskSource(name, desc string) string {
 			source{
 				vm_disk_source{
 					ext_id = resource.nutanix_virtual_machine_v2.test.disks.0.ext_id
-				}		
+				}
 			}
 			cluster_location_ext_ids = [
 				local.cluster0
@@ -251,4 +265,25 @@ func testImagesV2ConfigWithVMDiskSource(name, desc string) string {
 			depends_on = [nutanix_virtual_machine_v2.test]
 		}
 `, name, desc, filepath)
+}
+
+func testImagesV2ConfigWithMoreThanOneSource() string {
+	return `
+resource "nutanix_images_v2" "test" {
+	name = "img-with-two sources"
+	description = "%[2]s"
+	type = "DISK_IMAGE"
+	source{
+		url_source{
+			url = "http://invalid-url.com"
+		}
+		vm_disk_source{
+			ext_id = "796cef72-ceb9-4d23-9146-af16eec1345f"
+		}
+	}
+	cluster_location_ext_ids = [
+		"6eebcfc0-acdc-4c2c-a367-496df04acaea"
+	]
+}
+`
 }

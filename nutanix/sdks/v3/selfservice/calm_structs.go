@@ -94,21 +94,20 @@ type OutputList struct {
 	Script *string `json:"script"`
 }
 
-type BlueprintListInput struct {
+type ListInput struct {
 	Filter string `json:"filter"`
 }
 
-type ApplicationListInput struct {
-	Filter string `json:"filter"`
-}
+type BlueprintListInput = ListInput
+type ApplicationListInput = ListInput
+type AccountsListInput = ListInput
 
-type BlueprintListResponse struct {
+type ListResponse struct {
 	Entities json.RawMessage `json:"entities"`
 }
 
-type ApplicationListResponse struct {
-	Entities json.RawMessage `json:"entities"`
-}
+type BlueprintListResponse = ListResponse
+type ApplicationListResponse = ListResponse
 
 type RuntimeEditablesResponse struct {
 	Resources []*Resources `json:"resources"`
@@ -207,8 +206,10 @@ type RecoveryPointsListInput struct {
 	Offset int    `json:"offset,omitempty"`
 }
 
-type RecoveryPointsListResponse struct {
+type ListResponseData struct {
 	APIVersion string                   `json:"api_version,omitempty"`
 	Metadata   map[string]interface{}   `json:"metadata,omitempty"`
 	Entities   []map[string]interface{} `json:"entities,omitempty"`
 }
+type RecoveryPointsListResponse = ListResponseData
+type AccountsListResponse = ListResponseData
