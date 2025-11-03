@@ -15,7 +15,6 @@
 **Fixed Bugs:**
 - Add a clear documentation for cluster delete [\#977](https://github.com/nutanix/terraform-provider-nutanix/issues/977)
 - Show warning if cluster is not registered to the PC [\#974](https://github.com/nutanix/terraform-provider-nutanix/issues/974)
-- nutanix_clusters_v2 not returning associated categories [\#907](https://github.com/nutanix/terraform-provider-nutanix/issues/907)
 - Resource: nutanix_users_v2: Password exposed in state file, Show Warning in case of delete, Documentation changes for using users_v2 resource [\#949](https://github.com/nutanix/terraform-provider-nutanix/issues/949)
 - Resource: nutanix_users_v2: Can't change local user password [\#897](https://github.com/nutanix/terraform-provider-nutanix/issues/897)
 - Empty id attributes returned for Auth Policy, Roles [\#989](https://github.com/nutanix/terraform-provider-nutanix/issues/989)

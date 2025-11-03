@@ -41,6 +41,18 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.3.
   - **Support for object lite source**: Support for lite source in terraform for images and object store modules.
   - **nutanix_cluster_v2 resource now fully supports cluster expansion operations**, including adding and removing nodes. This enhancement eliminates the need for a separate nutanix_cluster_add_node_v2 resource.
   - **Import support is now available for V2 resources**, This enhancement allows users to seamlessly bring existing Nutanix entities under Terraform management(using V2 resources which uses V4 API SDK's), **without recreating them**.
+
+- **Fixed Bugs:**
+  - Add a clear documentation for cluster delete [\#977](https://github.com/nutanix/terraform-provider-nutanix/issues/977)
+  - Show warning if cluster is not registered to the PC [\#974](https://github.com/nutanix/terraform-provider-nutanix/issues/974)
+  - Resource: nutanix_users_v2: Password exposed in state file, Show Warning in case of delete, Documentation changes for using users_v2 resource [\#949](https://github.com/nutanix/terraform-provider-nutanix/issues/949)
+  - Resource: nutanix_users_v2: Can't change local user password [\#897](https://github.com/nutanix/terraform-provider-nutanix/issues/897)
+  - Empty id attributes returned for Auth Policy, Roles [\#989](https://github.com/nutanix/terraform-provider-nutanix/issues/989)
+  - nutanix_user_groups_v2 empty ext_id in state file [\#899](https://github.com/nutanix/terraform-provider-nutanix/issues/899)
+  - Resource: nutanix_user_key_v2: User should be able to create User Key of OBJECT KEY type [\#996](https://github.com/nutanix/terraform-provider-nutanix/issues/996)
+  - Creation of a floating IP fails when specifying the desired IP address. Ok if not specify the desired IP [\#939](https://github.com/nutanix/terraform-provider-nutanix/issues/939)
+  - nutanix_network_security_policy_v2 error: The terraform-provider-nutanix_v2.3.1 plugin crashed! [\#935](https://github.com/nutanix/terraform-provider-nutanix/issues/935)
+  - nutanix_volume_group_disk_v2 encounters panic when updating disk_size_bytes [\#866](https://github.com/nutanix/terraform-provider-nutanix/issues/886)
 ---
 
 Upgrade now to take advantage of these powerful features and streamline your Nutanix automation workflows!
