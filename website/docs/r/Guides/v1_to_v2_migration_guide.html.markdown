@@ -129,16 +129,17 @@ If your Terraform modules reference v1 resources, they must be migrated as well.
 
 Locate modules in your configuration that reference v1 resources. For example, in your main configuration file:
 
-``hcl
+- Example Main Configuration
+```hcl
 module "vm_module" {
-  source = "./modules/vm-module"
+  source  = "./modules/vm-module"
   
   vm_name = "dev_vm"
   # ... other module inputs
 }
 ```
-Within the module directory (e.g., ./modules/vm-module/main.tf), you may find code like:
 
+- Within the module directory (e.g., ./modules/vm-module/main.tf), you may find code like:
 ```hcl
 # modules/vm-module/main.tf
 
