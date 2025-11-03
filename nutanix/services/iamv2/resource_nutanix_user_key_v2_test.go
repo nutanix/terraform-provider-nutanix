@@ -1,14 +1,12 @@
 package iamv2_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -56,6 +54,10 @@ func TestAccV2NutanixUsers_CreateKeyObjectKey(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-revoke-object-%d", r)
 	keyName := fmt.Sprintf("tf-revoke-object-key-%d", r)
+
+	listKeyDataSource := "data.nutanix_user_keys_v2.get_keys"
+	getKeyDataSource := "data.nutanix_user_key_v2.get_key"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() {},
 		Providers: acc.TestAccProviders,
@@ -63,14 +65,7 @@ func TestAccV2NutanixUsers_CreateKeyObjectKey(t *testing.T) {
 			{
 				Config: testObjectKeyCreateResourceConfig(name, keyName, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
-					func(s *terraform.State) error {
-						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceNutanixUserKeyV2Create].Primary.Attributes, "", "  ")
-						fmt.Printf("################### %s #########################\n", resourceNutanixUserKeyV2Create)
-						fmt.Printf("Resource Attributes: \n%v\n", string(aJSON))
-						fmt.Printf("\n############################################\n")
-						return nil
-					},
-					resource.TestCheckResourceAttrPair(resourceNutanixUserKeyV2Create, "user_ext_id", "nutanix_users_v2.service_account","id"),
+					resource.TestCheckResourceAttrPair(resourceNutanixUserKeyV2Create, "user_ext_id", "nutanix_users_v2.service_account", "id"),
 					resource.TestCheckResourceAttrSet(resourceNutanixUserKeyV2Create, "id"),
 					resource.TestCheckResourceAttrSet(resourceNutanixUserKeyV2Create, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNutanixUserKeyV2Create, "name", keyName),
@@ -80,6 +75,15 @@ func TestAccV2NutanixUsers_CreateKeyObjectKey(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNutanixUserKeyV2Create, "key_details.0.object_key_details.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceNutanixUserKeyV2Create, "key_details.0.object_key_details.0.access_key"),
 					resource.TestCheckResourceAttr(resourceNutanixUserKeyV2Create, "status", "VALID"),
+
+					// Get and list key details check
+					resource.TestCheckResourceAttr(listKeyDataSource, "keys.0.key_details.0.api_key_details.#", "0"),
+					resource.TestCheckResourceAttr(listKeyDataSource, "keys.0.key_details.0.object_key_details.#", "1"),
+					resource.TestCheckResourceAttrSet(listKeyDataSource, "keys.0.key_details.0.object_key_details.0.access_key"),
+
+					resource.TestCheckResourceAttr(getKeyDataSource, "key_details.0.api_key_details.#", "0"),
+					resource.TestCheckResourceAttr(getKeyDataSource, "key_details.0.object_key_details.#", "1"),
+					resource.TestCheckResourceAttrSet(getKeyDataSource, "key_details.0.object_key_details.0.access_key"),
 				),
 			},
 		},
@@ -146,6 +150,16 @@ resource "nutanix_user_key_v2" "create_key" {
 	name = "%[3]s"
 	key_type = "OBJECT_KEY"
 	expiry_time = "%[4]s"
+}
+
+data "nutanix_user_keys_v2" "get_keys" {
+  user_ext_id = nutanix_users_v2.service_account.ext_id
+  depends_on = [nutanix_user_key_v2.create_key]
+}
+
+data "nutanix_user_key_v2" "get_key" {
+  user_ext_id = nutanix_users_v2.service_account.ext_id
+  ext_id      = nutanix_user_key_v2.create_key.ext_id
 }
 	`, filepath, name, keyName, expirationTimeFormatted)
 }
