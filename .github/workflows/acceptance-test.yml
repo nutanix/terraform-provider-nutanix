@@ -169,7 +169,23 @@ jobs:
               echo "==> Setup V4 Config"
               echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
               echo "==> Running testcases..."
-              TF_LOG="ERROR" TF_ACC=1  GOTRACEBACK=all go test ./... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count | tee test_output.log
+	      package_path="./..."  # default if no -p argument is passed
+
+              # Extract `-p <package>` argument from the slash command, if provided
+              for arg in $args; do
+                  if [[ "$arg" == "-p" ]]; then
+                      next_is_package=true
+                      continue
+                  fi
+                  if [[ "$next_is_package" == true ]]; then
+                      package_path="./nutanix/services/$arg"
+                      next_is_package=false
+                      echo "📦 Running tests only in package: $package_path"
+                      break
+                  fi
+              done
+
+              TF_LOG="ERROR" TF_ACC=1 GOTRACEBACK=all go test "$package_path" -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count | tee test_output.log
               
               set +e  # Ignore failures
 
