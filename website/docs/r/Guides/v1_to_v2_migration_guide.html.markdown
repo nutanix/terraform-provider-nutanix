@@ -43,10 +43,7 @@ resource "nutanix_virtual_machine" "dev_vm" {
 Add a corresponding v2 resource configuration to your Terraform file:
 
 ```hcl
-resource "nutanix_virtual_machine_v2" "import_dev_vm" {
-  # Configuration will be imported from existing resource
-  # You can add minimal required attributes if needed
-}
+resource "nutanix_virtual_machine_v2" "import_dev_vm" {}
 ```
 
 ~> **Note:** At this stage, you only need to declare the resource block.
@@ -105,6 +102,7 @@ Once you've verified the import is successful, remove the v1 resource configurat
 2. **Remove the v1 resource from Terraform state:**
    
    ```bash
+   # terraform state rm <RESOURCE_TYPE>.<RESOURCE_NAME> <UUID_OF_ENTITY>
    terraform state rm nutanix_virtual_machine.dev_vm
    ```
 
@@ -232,6 +230,7 @@ Once you've verified that all imports are successful, remove the v1 resource con
    Remove v1 resource managed by the module from Terraform state:
    
    ```bash
+   # terraform import <MODULE_INSTANCE_NAME>.<RESOURCE_TYPE>.<RESOURCE_NAME> <UUID_OF_ENTITY>
    terraform state rm module.vm_module.nutanix_virtual_machine.vm
    ```
 ~> **Important:** Ensure all v2 resource imports were successful (verified in Step 6) before removing the v1 module resources from state. Once removed, the v1 resources will no longer be managed by Terraform.
