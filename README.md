@@ -32,8 +32,8 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.3.
   This release is built on the latest Nutanix v4 APIs and SDKs, providing improved performance, stability, and alignment with the newest platform capabilities.
 
 - **New Resource Support**
-  - **Password Manager**: Provides the ability to manage system user passwords
   - **OVAs**: Enables the creation and management of OVAs.
+  - **Password Manager**: Provides the ability to manage system user passwords
 
 - **Enhancements**
   - **Project Association with VM for V2 resource**: Associate Project with Virtual Machine V2 resource.
