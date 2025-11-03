@@ -13,18 +13,37 @@ The provider is used to interact with the many resources and data sources suppor
 Use the navigation on the left to read about the available resources and data sources this provider can use.
 
 
-## Introducing Nutanix Terraform Provider Version v2.3.0
+## Introducing Nutanix Terraform Provider Version v2.3.2
 
-We're excited to announce the release of Nutanix Terraform Provider Version 2.3.0! This major update brings new features for automating your Nutanix infrastructure.
+We're excited to announce the release of Nutanix Terraform Provider Version 2.3.2! This major update brings new features for automating your Nutanix infrastructure.
 
-### What's New in v2.3.0
+### What's New in v2.3.2
 
 - **Built on v4.1 APIs/SDKs**  
   This release is built on the latest Nutanix v4 APIs and SDKs, providing improved performance, stability, and alignment with the newest platform capabilities.
 
 - **New Resource Support**
-  - **Objects**: Automate Nutanix Objects (S3-compatible storage) management for scalable storage use cases.
-  - **Service Accounts**: Manage service accounts directly through Terraform.
+  - **OVAs**: Enables the creation and management of OVAs.
+  - **Password Manager**: Provides the ability to manage system user passwords
+
+- **Enhancements**
+  - **Project Association with VM for V2 resource**: Associate Project with Virtual Machine V2 resource.
+  - **Automatic Cluster Selection**: Automatic cluster selection support.
+  - **Support for object lite source**: Support for lite source in terraform for images and object store modules.
+  - **nutanix_cluster_v2 resource now fully supports cluster expansion operations**, including adding and removing nodes. This enhancement eliminates the need for a separate nutanix_cluster_add_node_v2 resource.
+  - **Import support is now available for V2 resources**, This enhancement allows users to seamlessly bring existing Nutanix entities under Terraform management(using V2 resources which uses V4 API SDK's), **without recreating them**.
+
+- **Fixed Bugs:**
+  - Add a clear documentation for cluster delete [\#977](https://github.com/nutanix/terraform-provider-nutanix/issues/977)
+  - Show warning if cluster is not registered to the PC [\#974](https://github.com/nutanix/terraform-provider-nutanix/issues/974)
+  - Resource: nutanix_users_v2: Password exposed in state file, Show Warning in case of delete, Documentation changes for using users_v2 resource [\#949](https://github.com/nutanix/terraform-provider-nutanix/issues/949)
+  - Resource: nutanix_users_v2: Can't change local user password [\#897](https://github.com/nutanix/terraform-provider-nutanix/issues/897)
+  - Empty id attributes returned for Auth Policy, Roles [\#989](https://github.com/nutanix/terraform-provider-nutanix/issues/989)
+  - nutanix_user_groups_v2 empty ext_id in state file [\#899](https://github.com/nutanix/terraform-provider-nutanix/issues/899)
+  - Resource: nutanix_user_key_v2: User should be able to create User Key of OBJECT KEY type [\#996](https://github.com/nutanix/terraform-provider-nutanix/issues/996)
+  - Creation of a floating IP fails when specifying the desired IP address. Ok if not specify the desired IP [\#939](https://github.com/nutanix/terraform-provider-nutanix/issues/939)
+  - nutanix_network_security_policy_v2 error: The terraform-provider-nutanix_v2.3.1 plugin crashed! [\#935](https://github.com/nutanix/terraform-provider-nutanix/issues/935)
+  - nutanix_volume_group_disk_v2 encounters panic when updating disk_size_bytes [\#866](https://github.com/nutanix/terraform-provider-nutanix/issues/886)
 
 
 ~> **Important Notice:** Upcoming Deprecation of Legacy Nutanix Terraform Provider Resources. Starting with the Nutanix Terraform Provider release planned for Q4-CY2026, legacy resources which are based on v0.8,v1,v2 and v3 APIs will be deprecated and no longer supported. For more information, visit [Legacy API Deprecation Announcement](https://portal.nutanix.com/page/documents/eol/list?type=announcement) [Legacy API Deprecation - FAQs](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA0VO0000005rgP0AQ). Nutanix strongly encourages you to migrate your scripts and applications to the latest v2 version of the Nutanix Terraform Provider resources, which are built on our v4 APIs/SDKs. By adopting the latest v2 version based on v4 APIs and SDKs, our users can leverage the enhanced capabilities and latest innovations from Nutanix. We understand that this transition may require some effort, and we are committed to supporting you throughout the process. Please refer to our documentation and support channels for guidance and assistance.
@@ -38,7 +57,11 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
+| 2.3.2 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.3.1 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.0 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.2.3 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
+| 2.2.2 (⚠️ Deprecated/Invalid) | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.0 | | | Self Service  v4.1.0 | yes | 
 | 2.1.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
@@ -83,6 +106,9 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | nutanix_image |nutanix_images_v2 |
 | - | nutanix_image_placement_policy_v2 |
 | nutanix_virtual_machine | nutanix_virtual_machine_v2 |
+| - | nutanix_ova_v2 |
+| - | nutanix_ova_vm_deploy_v2 |
+| - | nutanix_ova_download_v2 |
 | - | nutanix_vm_clone_v2 |
 | - | nutanix_vm_cdrom_insert_eject_v2 |
 | - | nutanix_vm_shutdown_action_v2 |
@@ -163,7 +189,7 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_user_key_revoke_v2 |
 | - | nutanix_object_store_v2 |
 | - | nutanix_object_store_certificate_v2 |
-
+| - | nutanix_password_change_request_v2 |
 
 ## Data Sources
 
@@ -207,6 +233,8 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_images_v2 |
 | nutanix_virtual_machine | nutanix_virtual_machine_v2 |
 | - | nutanix_virtual_machines_v2 |
+| - | nutanix_ova_v2 |
+| - | nutanix_ovas_v2 |
 | - | nutanix_template_v2 |
 | - | nutanix_templates_v2 |
 | - | nutanix_ngt_configuration_v2 |
@@ -298,6 +326,7 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_object_stores_v2 |
 | - | nutanix_certificate_v2 |
 | - | nutanix_certificates_v2 |
+| - | nutanix_system_user_passwords_v2 |
 
 ## Example Usage
 
