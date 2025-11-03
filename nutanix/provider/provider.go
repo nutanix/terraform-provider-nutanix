@@ -19,6 +19,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iamv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/lcmv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/licensingv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/ndb"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networkingv2"
@@ -318,6 +319,15 @@ func Provider() *schema.Provider {
 			"nutanix_object_stores_v2":                        objectstoresv2.DatasourceNutanixObjectStoresV2(),
 			"nutanix_certificate_v2":                          objectstoresv2.DatasourceNutanixObjectStoreCertificateV2(),
 			"nutanix_certificates_v2":                         objectstoresv2.DatasourceNutanixObjectStoreCertificatesV2(),
+			"nutanix_eula_v2":                                 licensingv2.DatasourceNutanixEULAV2(),
+			"nutanix_license_features_v2":                     licensingv2.DatasourceNutanixLicenseFeaturesV2(),
+			"nutanix_applied_license_inventory_v2":            licensingv2.DatasourceNutanixAppliedLicenseInventoryV2(),
+			"nutanix_license_configurations_v2":                licensingv2.DatasourceNutanixLicenseConfigurationV2(),
+			"nutanix_license_violations_v2":                   licensingv2.DatasourceNutanixLicenseViolationsV2(),
+			"nutanix_list_allowances_v2":                      licensingv2.DatasourceNutanixListAllowancesV2(),
+			"nutanix_license_entitlements_v2":                 licensingv2.DatasourceNutanixListLicenseEntitlementsV2(),
+			"nutanix_license_compliances_v2":                  licensingv2.DatasourceNutanixListLicenseCompliancesV2(),
+			"nutanix_cluster_license_recommendations_v2":      licensingv2.DatasourceNutanixClusterLicenseRecommendationsV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
@@ -437,6 +447,7 @@ func Provider() *schema.Provider {
 			"nutanix_lcm_config_v2":                           lcmv2.ResourceNutanixLcmConfigV2(),
 			"nutanix_object_store_v2":                         objectstoresv2.ResourceNutanixObjectStoresV2(),
 			"nutanix_object_store_certificate_v2":             objectstoresv2.ResourceNutanixObjectStoreCertificateV2(),
+			"nutanix_accept_eula_v2":                          licensingv2.ResourceNutanixAcceptEULAV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
