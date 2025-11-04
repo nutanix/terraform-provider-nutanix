@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Cloud Platform.
 
-NOTE: The latest version of the Nutanix provider is [v2.3.2](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.3.2).
+NOTE: The latest version of the Nutanix provider is [v2.3.3](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.3.3).
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 
@@ -22,40 +22,13 @@ Modules based on Terraform Nutanix Provider can be found here : [Modules](https:
 * [Go](https://golang.org/doc/install) 1.17+ (to build the provider plugin)
 * This provider uses [SDKv2](https://www.terraform.io/plugin/sdkv2/sdkv2-intro) from release 1.3.0
 
-## Introducing Nutanix Terraform Provider Version v2.3.2
+## Introducing Nutanix Terraform Provider Version v2.3.3
 
-We're excited to announce the release of Nutanix Terraform Provider Version 2.3.2! This major update brings new features for automating your Nutanix infrastructure.
+We're excited to announce the release of Nutanix Terraform Provider Version 2.3.3!
 
-### What's New in v2.3.2
+### What's New in v2.3.3
 
-- **Built on v4.1 APIs/SDKs**
-  This release is built on the latest Nutanix v4 APIs and SDKs, providing improved performance, stability, and alignment with the newest platform capabilities.
-
-- **New Resource Support**
-  - **OVAs**: Enables the creation and management of OVAs, deployment of VM's through OVA.
-  - **Password Manager**: Provides the ability to manage system user passwords
-
-- **Enhancements**
-  - **Project Association with VM for V2 resource**: Associate Project with Virtual Machine V2 resource.
-  - **Automatic Cluster Selection**: Automatic cluster selection support.
-  - **Support for object lite source**: Support for object lite source in terraform for images.
-  - **nutanix_cluster_v2 resource now fully supports cluster expansion operations**, including adding and removing nodes. This enhancement eliminates the need for a separate nutanix_cluster_add_node_v2 resource.
-  - **Import support is now available for V2 resources**, This enhancement allows users to seamlessly bring existing Nutanix entities under Terraform management(using V2 resources which uses V4 API SDK's), **without recreating them**.
-
-- **Fixed Bugs:**
-  - Add a clear documentation for cluster delete [\#977](https://github.com/nutanix/terraform-provider-nutanix/issues/977)
-  - Show warning if cluster is not registered to the PC [\#974](https://github.com/nutanix/terraform-provider-nutanix/issues/974)
-  - Resource: nutanix_users_v2: Password exposed in state file, Show Warning in case of delete, Documentation changes for using users_v2 resource [\#949](https://github.com/nutanix/terraform-provider-nutanix/issues/949)
-  - Resource: nutanix_users_v2: Can't change local user password [\#897](https://github.com/nutanix/terraform-provider-nutanix/issues/897)
-  - Empty id attributes returned for Auth Policy, Roles [\#989](https://github.com/nutanix/terraform-provider-nutanix/issues/989)
-  - nutanix_user_groups_v2 empty ext_id in state file [\#899](https://github.com/nutanix/terraform-provider-nutanix/issues/899)
-  - Resource: nutanix_user_key_v2: User should be able to create User Key of OBJECT KEY type [\#996](https://github.com/nutanix/terraform-provider-nutanix/issues/996)
-  - Creation of a floating IP fails when specifying the desired IP address. Ok if not specify the desired IP [\#939](https://github.com/nutanix/terraform-provider-nutanix/issues/939)
-  - nutanix_network_security_policy_v2 error: The terraform-provider-nutanix_v2.3.1 plugin crashed! [\#935](https://github.com/nutanix/terraform-provider-nutanix/issues/935)
-  - nutanix_volume_group_disk_v2 encounters panic when updating disk_size_bytes [\#866](https://github.com/nutanix/terraform-provider-nutanix/issues/886)
----
-
-Upgrade now to take advantage of these powerful features and streamline your Nutanix automation workflows!
+- This release includes one documentation fix to show guides in Terraform provider docs [#1002](https://github.com/nutanix/terraform-provider-nutanix/issues/1002), functionally this release is equivalent to v2.3.2
 
 
 ### Software Requirements
@@ -69,6 +42,7 @@ The provider is used to interact with the many resources and data sources suppor
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
+| 2.3.3 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.2 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.1 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.0 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |

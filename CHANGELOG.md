@@ -1,3 +1,10 @@
+## 2.3.3 (November 4, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.2...v2.3.3)
+
+**Fixed Bugs:**
+- Documentation fix to show guides in Terraform provider docs [#1002](https://github.com/nutanix/terraform-provider-nutanix/issues/1002)
+
+
 ## 2.3.2 (November 3, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.1...v2.3.2)
 
