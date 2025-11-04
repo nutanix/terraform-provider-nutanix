@@ -1,7 +1,8 @@
 ---
 layout: "nutanix"
 page_title: "Migration Guide: V1 to V2 Resources"
-sidebar_current: "docs-nutanix-migration-v1-to-v2"
+subcategory: "Guides"
+sidebar_current: "docs-nutanix-guides-v1-to-v2-migration-guide"
 description: |-
   This guide provides step-by-step instructions for migrating from Nutanix Terraform Provider v1 resources to v2 resources, which are built on v4 APIs/SDKs.
 ---
