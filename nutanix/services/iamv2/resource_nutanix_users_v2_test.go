@@ -265,7 +265,7 @@ func TestAccV2NutanixUsersResource_WithNoUserType(t *testing.T) {
 	})
 }
 
-func TestAccv2NutanixUsersResource_ServiceAccountDuplicateName(t *testing.T) {
+func TestAccV2NutanixUsersResource_ServiceAccountDuplicateName(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-service-account-%d", r)
 	resource.Test(t, resource.TestCase{
@@ -280,7 +280,7 @@ func TestAccv2NutanixUsersResource_ServiceAccountDuplicateName(t *testing.T) {
 	})
 }
 
-func TestAccv2NutanixUsersResource_ServiceAccountCreate(t *testing.T) {
+func TestAccV2NutanixUsersResource_ServiceAccountCreate(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-service-account-%d", r)
 	description := "test service account tf"
