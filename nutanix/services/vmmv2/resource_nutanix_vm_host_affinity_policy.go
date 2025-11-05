@@ -19,6 +19,9 @@ func ResourceNutanixVMHostAffinityPolicyV2() *schema.Resource {
 		ReadContext:   ResourceNutanixVMHostAffinityPolicyV2Read,
 		UpdateContext: ResourceNutanixVMHostAffinityPolicyV2Update,
 		DeleteContext: ResourceNutanixVMHostAffinityPolicyV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
