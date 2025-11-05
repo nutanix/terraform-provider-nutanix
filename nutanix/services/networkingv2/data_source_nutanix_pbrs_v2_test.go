@@ -54,6 +54,21 @@ func TestAccV2NutanixPbrsDataSource_WithFilter(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixPbrsDataSource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPbrsDataSourceWithInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceNamePbrs, "routing_policies.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccPbrsDataSourceConfig(name, desc string) string {
 	return fmt.Sprintf(`
 
@@ -213,4 +228,12 @@ func testAccPbrsDataSourceWithFilterConfig(name, desc string) string {
 		]
 	}
 	`, name, desc)
+}
+
+func testAccPbrsDataSourceWithInvalidFilterConfig() string {
+	return `
+		data "nutanix_pbrs_v2" "test" {
+			filter = "name eq 'invalid_name'"
+		}
+	`
 }

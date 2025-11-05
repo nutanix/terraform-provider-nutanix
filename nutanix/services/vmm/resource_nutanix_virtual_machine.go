@@ -2,6 +2,7 @@ package vmm
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"reflect"
@@ -269,7 +270,7 @@ func ResourceNutanixVirtualMachine() *schema.Resource {
 									"type": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										Default:  "ASSIGNED",
 									},
 								},
 							},
@@ -311,6 +312,7 @@ func ResourceNutanixVirtualMachine() *schema.Resource {
 			},
 			"power_state": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"nutanix_guest_tools": {
@@ -675,6 +677,9 @@ func resourceNutanixVirtualMachineCreate(ctx context.Context, d *schema.Resource
 	spec.Resources = res
 	request.Metadata = metadata
 	request.Spec = spec
+
+	aJSON, _ := json.MarshalIndent(request, "", "  ")
+	log.Printf("[DEBUG] VM  Spec: %s", string(aJSON))
 
 	// Make request to the API
 	resp, err := conn.V3.CreateVM(request)
@@ -1192,8 +1197,14 @@ func resourceNutanixVirtualMachineUpdate(ctx context.Context, d *schema.Resource
 		res.GuestCustomization = guest
 	}
 
+	if d.HasChange("power_state") {
+		_, powerState := d.GetChange("power_state")
+		res.PowerState = utils.StringPtr(powerState.(string))
+	}
+
 	// If there are non-hotPlug changes, then poweroff is needed
 	if !hotPlugChange {
+		log.Printf("[DEBUG] Powering OFF Virtual Machine UUID(%s) before update", d.Id())
 		if err := changePowerState(ctx, conn, d.Id(), "OFF"); err != nil {
 			return diag.Errorf("internal error: cannot shut down the VM with UUID(%s): %s", d.Id(), err)
 		}
@@ -1231,8 +1242,13 @@ func resourceNutanixVirtualMachineUpdate(ctx context.Context, d *schema.Resource
 	}
 
 	// Then, Turn On the VM.
-	if err := changePowerState(ctx, conn, d.Id(), "ON"); err != nil {
-		return diag.Errorf("internal error: cannot turn ON the VM with UUID(%s): %s", d.Id(), err)
+	if !hotPlugChange {
+		// If there are non-hotPlug changes and we powered off the VM, then we need to turn it ON again.
+		// only if there are non-hotPlug changes
+		log.Printf("[DEBUG] Turning ON Virtual Machine UUID(%s) after update", d.Id())
+		if err := changePowerState(ctx, conn, d.Id(), "ON"); err != nil {
+			return diag.Errorf("internal error: cannot turn ON the VM with UUID(%s): %s", d.Id(), err)
+		}
 	}
 
 	return resourceNutanixVirtualMachineRead(ctx, d, meta)
@@ -1370,7 +1386,7 @@ func changePowerState(ctx context.Context, conn *v3.Client, id string, powerStat
 
 	// Check Power State
 	stateConfVM := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
+		Pending:    []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:     []string{"COMPLETE"},
 		Refresh:    taskVMStateRefreshFunc(conn, id, powerState),
 		Timeout:    vmTimeout,
@@ -1587,6 +1603,10 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	if v, ok := d.GetOk("enable_script_exec"); ok {
 		vm.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec = utils.BoolPtr(v.(bool))
 	}
+	if v, ok := d.GetOk("power_state"); ok {
+		vm.PowerState = utils.StringPtr(v.(string))
+	}
+
 	vm.SerialPortList = expandSerialPortList(d)
 
 	vmDiskList := expandDiskList(d)
@@ -1663,9 +1683,15 @@ func expandIPAddressList(ipl []interface{}) []*v3.IPAddress {
 			if ipset, ipsetok := v["ip"]; ipsetok {
 				v3ip.IP = utils.StringPtr(ipset.(string))
 			}
-			if iptype, iptypeok := v["type"]; iptypeok {
+			// Check if 'type' is provided
+			if iptype, iptypeok := v["type"]; !iptypeok || iptype == "" {
+				// ip type not provided, set a default value to ASSIGNED
+				log.Printf("[DEBUG] IP type not provided, setting default value to ASSIGNED")
+				v3ip.Type = utils.StringPtr("ASSIGNED")
+			} else {
 				v3ip.Type = utils.StringPtr(iptype.(string))
 			}
+
 			ip[k] = v3ip
 		}
 		return ip
@@ -2280,7 +2306,7 @@ func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {
 									"type": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										Default:  "ASSIGNED",
 									},
 								},
 							},

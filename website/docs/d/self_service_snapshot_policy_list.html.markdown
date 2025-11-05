@@ -12,7 +12,7 @@ Describes snapshot policies present in a blueprint. Environment containing snaps
 
 ## Example Usage
 
-``` hcl
+```hcl
 data "nutanix_self_service_snapshot_policy_list" "test" {
     bp_name = "NAME OF BLUEPRINT"
     length = 250

@@ -1,3 +1,80 @@
+## 2.3.3 (November 4, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.2...v2.3.3)
+
+**Fixed Bugs:**
+- Documentation fix to show guides in Terraform provider docs [#1002](https://github.com/nutanix/terraform-provider-nutanix/issues/1002)
+
+
+## 2.3.2 (November 3, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.1...v2.3.2)
+
+**New Features:**
+- Ovas [\#852](https://github.com/nutanix/terraform-provider-nutanix/issues/852)
+- Password Manager [\#873](https://github.com/nutanix/terraform-provider-nutanix/issues/873)
+
+**Enhancements:**
+- Support of import for all V2 resources [\#988](https://github.com/nutanix/terraform-provider-nutanix/issues/988)
+- Project Association with VM for V2 resource [\#807](https://github.com/nutanix/terraform-provider-nutanix/issues/807)
+- Cluster Expansion using clusters_v2 resource [\#976](https://github.com/nutanix/terraform-provider-nutanix/issues/976)
+- Automatic Cluster Selection Support [\#903](https://github.com/nutanix/terraform-provider-nutanix/issues/903)
+- Support for object lite source in Images [\#990](https://github.com/nutanix/terraform-provider-nutanix/issues/990)
+
+**Fixed Bugs:**
+- Add a clear documentation for cluster delete [\#977](https://github.com/nutanix/terraform-provider-nutanix/issues/977)
+- Show warning if cluster is not registered to the PC [\#974](https://github.com/nutanix/terraform-provider-nutanix/issues/974)
+- Resource: nutanix_users_v2: Password exposed in state file, Show Warning in case of delete, Documentation changes for using users_v2 resource [\#949](https://github.com/nutanix/terraform-provider-nutanix/issues/949)
+- Resource: nutanix_users_v2: Can't change local user password [\#897](https://github.com/nutanix/terraform-provider-nutanix/issues/897)
+- Empty id attributes returned for Auth Policy, Roles [\#989](https://github.com/nutanix/terraform-provider-nutanix/issues/989)
+- nutanix_user_groups_v2 empty ext_id in state file [\#899](https://github.com/nutanix/terraform-provider-nutanix/issues/899)
+- Resource: nutanix_user_key_v2: User should be able to create User Key of OBJECT KEY type [\#996](https://github.com/nutanix/terraform-provider-nutanix/issues/996)
+- Creation of a floating IP fails when specifying the desired IP address. Ok if not specify the desired IP [\#939](https://github.com/nutanix/terraform-provider-nutanix/issues/939)
+- nutanix_network_security_policy_v2 error: The terraform-provider-nutanix_v2.3.1 plugin crashed! [\#935](https://github.com/nutanix/terraform-provider-nutanix/issues/935)
+- nutanix_volume_group_disk_v2 encounters panic when updating disk_size_bytes [\#866](https://github.com/nutanix/terraform-provider-nutanix/issues/886)
+
+
+## 2.3.0 (July 17, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.2.1...v2.3.0)
+
+**New Features:**
+- Objects [\#864](https://github.com/nutanix/terraform-provider-nutanix/issues/864)
+  - CRUD for objects
+  - Resource for SSL Certificate
+  - Datasource for SSL Certificate
+
+- Service accounts [\#865](https://github.com/nutanix/terraform-provider-nutanix/issues/865)
+  - Support of CRU for Service Account
+  - Support of Datasource to fetch Service Account
+  - CRUD for User API Key
+  - Datasource to fetch User API Keys
+  - Resource to revoke User API Key
+
+## 2.2.1 (June 30, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.2.0...v2.2.1)
+
+**Implemented enhancements:**
+- Add support for import of resource nutanix_pbr_v2 [\#844](https://github.com/nutanix/terraform-provider-nutanix/issues/844)
+- Add support for import of resource nutanix_users_v2 [\#847](https://github.com/nutanix/terraform-provider-nutanix/issues/847)
+
+
+**Fixed bugs:**
+- nutanix_virtual_machine_v2 cannot read guest customization config for windows [\#791](https://github.com/nutanix/terraform-provider-nutanix/issues/791)
+- nutanix_self_service_app_provision destroy operation returns before resource is fully destroyed [\#831](https://github.com/nutanix/terraform-provider-nutanix/issues/831)
+- ip_endpoint_list type is mandatory even if documentation says the opposite [\#669](https://github.com/nutanix/terraform-provider-nutanix/issues/669)
+- nutanix_image version always shows changes [\#682](https://github.com/nutanix/terraform-provider-nutanix/issues/682)
+- provider plugin panic when trying to add multiple security policies [\#835](https://github.com/nutanix/terraform-provider-nutanix/issues/835)
+- nutanix_access_control_policy unable to be applied due to scope validation [\#688](https://github.com/nutanix/terraform-provider-nutanix/issues/688)
+- directory_services_v2 creates directory if terraform apply is re run plugin crashes [\#747](https://github.com/nutanix/terraform-provider-nutanix/issues/747)
+- power_state: this field cannot be set [\#172](https://github.com/nutanix/terraform-provider-nutanix/issues/172)
+- panic: runtime error: invalid memory address or nil pointer dereference [signal SIGSEGV: segmentation violation code=0x1 addr=0x10 pc=0x11223d3] [\#823](https://github.com/nutanix/terraform-provider-nutanix/issues/823)
+- Error message missing when trying to deploy a new VM with insufficient disk size [\#649](https://github.com/nutanix/terraform-provider-nutanix/issues/649)
+- Error Using 'data_source_reference' attribute for 'nutanix_image' resource [\#652](https://github.com/nutanix/terraform-provider-nutanix/issues/652)
+- Improve documentation for resource nutanix_images_v2, nutanix_templates_v2 [\#842](https://github.com/nutanix/terraform-provider-nutanix/issues/842)
+- Add examples for categories, protection policies, recovery plans [\#681](https://github.com/nutanix/terraform-provider-nutanix/issues/681)
+- Doc error for resource nutanix_user [\#674](https://github.com/nutanix/terraform-provider-nutanix/issues/674)
+- Markdown for certain docs pages isn't valid [\#680](https://github.com/nutanix/terraform-provider-nutanix/issues/680)
+- How to use boot_config under nutanix_virtual_machine_v2 [\#857](https://github.com/nutanix/terraform-provider-nutanix/issues/857)
+- data nutanix_virtual_machine doesn't return ip_address attribute [\#306](https://github.com/nutanix/terraform-provider-nutanix/issues/306)
+
 ## 2.2.0 (April 17, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.1.1...v2.2.0)
 

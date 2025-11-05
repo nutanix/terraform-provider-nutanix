@@ -24,10 +24,11 @@ func TestAccV2NutanixUserGroupsResource_LDAPUserGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "idp_id", testVars.Iam.Users.DirectoryServiceID),
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "group_type", "LDAP"),
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "distinguished_name", testVars.Iam.UserGroups.DistinguishedName),
+					resource.TestCheckResourceAttrSet(resourceNameUserGroups, "ext_id"),
 				),
 			},
 			{
-				Config:      testLDAPUserGroupsResourceAlreadyExistsConfig(filepath),
+				Config:      testLDAPUserGroupsResourceConfig(filepath) + testLDAPUserGroupsResourceAlreadyExistsConfig(),
 				ExpectError: regexp.MustCompile("Failed to create the user group as an user group already exists with same DN"),
 			},
 		},
@@ -99,21 +100,15 @@ func testLDAPUserGroupsResourceConfig(filepath string) string {
 	  }`, filepath)
 }
 
-func testLDAPUserGroupsResourceAlreadyExistsConfig(filepath string) string {
-	return fmt.Sprintf(`
-
-	locals{
-		config = (jsondecode(file("%s")))
-		users = local.config.iam.users
-		user_groups = local.config.iam.user_groups
-	}
+func testLDAPUserGroupsResourceAlreadyExistsConfig() string {
+	return `
 
 	resource "nutanix_user_groups_v2" "test_2" {
 		group_type = "LDAP"
 		idp_id = local.users.directory_service_id
 		name = local.user_groups.name
 		distinguished_name = local.user_groups.distinguished_name
-	  }`, filepath)
+	  }`
 }
 
 func testSAMLUserGroupsResourceConfig(filepath string) string {

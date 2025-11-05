@@ -40,6 +40,9 @@ func TestAccV2NutanixUserGroupsDatasource_WithFilter(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.0.name", testVars.Iam.UserGroups.Name),
 					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.0.idp_id", testVars.Iam.Users.DirectoryServiceID),
 					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.0.group_type", "LDAP"),
+					resource.TestCheckResourceAttrSet(datasourceNameUserGroups, "user_groups.0.ext_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameUserGroups, "user_groups.0.created_time"),
+					resource.TestCheckResourceAttrSet(datasourceNameUserGroups, "user_groups.0.created_by"),
 				),
 			},
 		},
@@ -56,6 +59,22 @@ func TestAccV2NutanixUserGroupsDatasource_WithLimit(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameUserGroups, "user_groups.#"),
 					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccV2NutanixUserGroupsDatasource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testUserGroupsDatasourceV4WithInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameUserGroups, "user_groups.#"),
+					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.#", "0"),
 				),
 			},
 		},
@@ -126,4 +145,12 @@ func testUserGroupsDatasourceV4WithLimitConfig(filepath string) string {
 			depends_on = [resource.nutanix_user_groups_v2.test]
 		}
 	`, filepath)
+}
+
+func testUserGroupsDatasourceV4WithInvalidFilterConfig() string {
+	return `
+	  data "nutanix_user_groups_v2" "test" {
+		filter     = "name eq 'invalid_filter'"
+	  }
+	`
 }

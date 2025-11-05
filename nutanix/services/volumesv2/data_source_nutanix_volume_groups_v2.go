@@ -226,13 +226,20 @@ func DatasourceNutanixVolumeGroupsV2Read(ctx context.Context, d *schema.Resource
 		if err := d.Set("volumes", flattenVolumesEntities(volumesResp.GetValue().([]volumesClient.VolumeGroup))); err != nil {
 			return diag.FromErr(err)
 		}
-	} else {
-		// set the volume groups data in the terraform resource
-		d.Set("volumes", make([]volumesClient.VolumeGroup, 0))
+		d.SetId(resource.UniqueId())
+		return nil
 	}
 
-	d.SetId(resource.UniqueId())
-	return nil
+	// set the volume groups data to empty list
+	d.Set("volumes", make([]volumesClient.VolumeGroup, 0))
+
+	d.SetId(utils.GenUUID())
+
+	return diag.Diagnostics{{
+		Severity: diag.Warning,
+		Summary:  "🫙 No data found.",
+		Detail:   "The API returned an empty list of volume groups.",
+	}}
 }
 
 func flattenVolumesEntities(volumeGroups []volumesClient.VolumeGroup) []interface{} {

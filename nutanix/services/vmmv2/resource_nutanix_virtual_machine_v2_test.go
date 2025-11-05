@@ -32,6 +32,7 @@ func TestAccV2NutanixVmsResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "protection_type", "UNPROTECTED"),
 					resource.TestCheckResourceAttr(resourceNameVms, "is_agent_vm", "false"),
 					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "ext_id"),
 				),
 			},
 		},
@@ -102,6 +103,8 @@ func TestAccV2NutanixVmsResource_WithDisk(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.bus_type", "SCSI"),
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.index", "0"),
 					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "project.#"),
+					resource.TestCheckResourceAttrPair(resourceNameVms, "project.0.ext_id", "nutanix_project.projects", "metadata.uuid"),
 				),
 			},
 		},
@@ -592,6 +595,7 @@ func TestAccV2NutanixVmsResource_WithCategories(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "num_cores_per_socket", "1"),
 					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
 					resource.TestCheckResourceAttr(resourceNameVms, "num_sockets", "2"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameVms, "create_time"),
 					resource.TestCheckResourceAttrSet(resourceNameVms, "update_time"),
 					resource.TestCheckResourceAttr(resourceNameVms, "protection_type", "UNPROTECTED"),
@@ -718,6 +722,44 @@ func TestAccV2NutanixVmsResource_WithGpus(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixVmsResource_ClusterAutomaticSelection(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-vm-%d", r)
+	desc := "test vm description"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testVmsClusterAutomaticSelectionConfig(name, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", name),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_cores_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_sockets", "1"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "create_time"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "update_time"),
+					resource.TestCheckResourceAttr(resourceNameVms, "protection_type", "UNPROTECTED"),
+					resource.TestCheckResourceAttr(resourceNameVms, "is_agent_vm", "false"),
+					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "cluster.0.ext_id"),
+
+					// list vms checks
+					resource.TestCheckResourceAttrSet(datasourceNameVM, "vms.#"),
+					resource.TestCheckResourceAttr(datasourceNameVM, "vms.0.name", name),
+					resource.TestCheckResourceAttrSet(datasourceNameVM, "vms.0.ext_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameVM, "vms.0.cluster.0.ext_id"),
+
+					// get vm checks
+					resource.TestCheckResourceAttr(datasourceNameVMs, "name", name),
+					resource.TestCheckResourceAttrSet(datasourceNameVMs, "ext_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameVMs, "cluster.0.ext_id"),
+				),
+			},
+		},
+	})
+}
+
 func testVmsV4Config(name, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
@@ -745,13 +787,34 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
 
+		data "nutanix_subnets_v2" "subnets" {}
+
 		locals {
 			cluster0 = [
 			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
 			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 		  ][0]
+			subnetExtId = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
 			config = jsondecode(file("%[3]s"))
 			vmm = local.config.vmm
+		}
+
+		resource "nutanix_project" "projects" {
+			name          = "tf-project-%[1]d"
+			description   = "project twice"
+			use_project_internal = true
+			api_version = "3.1"
+			cluster_reference_list {
+				uuid = local.cluster0
+			}
+
+			subnet_reference_list {
+				uuid = local.subnetExtId
+			}
+
+			default_subnet_reference {
+				uuid = local.subnetExtId
+			}
 		}
 
 		data "nutanix_storage_containers_v2" "ngt-sc" {
@@ -764,9 +827,13 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 			description =  "%[2]s"
 			num_cores_per_socket = 1
 			num_sockets = 1
+			power_state = "OFF"
 			cluster {
 				ext_id = local.cluster0
 			}
+			project {
+				ext_id = nutanix_project.projects.metadata.uuid
+      		}
 			disks{
 				disk_address{
 					bus_type = "SCSI"
@@ -779,6 +846,15 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 							ext_id = data.nutanix_storage_containers_v2.ngt-sc.storage_containers[0].ext_id
 						}
 					}
+				}
+			}
+			nics{
+				network_info{
+					nic_type = "NORMAL_NIC"
+					subnet{
+						ext_id = local.subnetExtId
+					}
+					vlan_mode = "ACCESS"
 				}
 			}
 		}
@@ -1903,4 +1979,24 @@ func testVmsConfigWithSerialPorts(name, desc string, isconn bool) string {
 			power_state = "ON"
 		}
 	`, name, desc, isconn, filepath)
+}
+
+func testVmsClusterAutomaticSelectionConfig(name, desc string) string {
+	return fmt.Sprintf(`
+
+		resource "nutanix_virtual_machine_v2" "test"{
+			name= "%[1]s"
+			description =  "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets = 1
+		}
+
+		data "nutanix_virtual_machine_v2" "test" {
+			ext_id = nutanix_virtual_machine_v2.test.id
+		}
+
+		data "nutanix_virtual_machines_v2" "test" {
+			filter = "name eq '${nutanix_virtual_machine_v2.test.name}'"
+		}
+`, name, desc)
 }

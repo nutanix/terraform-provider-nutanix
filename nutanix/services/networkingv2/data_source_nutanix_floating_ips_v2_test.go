@@ -39,7 +39,7 @@ func TestAccV2NutanixFloatingIPsDataSource_WithFilter(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFipsDataSourceConfig(name, desc),
+				Config: testAccFipsDataSourceWithFilterConfig(name, desc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameFIPps, "floating_ips.#"),
 					resource.TestCheckResourceAttr(datasourceNameFIPps, "floating_ips.#", "1"),
@@ -49,6 +49,22 @@ func TestAccV2NutanixFloatingIPsDataSource_WithFilter(t *testing.T) {
 					resource.TestCheckResourceAttrSet(datasourceNameFIPps, "floating_ips.0.links.#"),
 					resource.TestCheckResourceAttrSet(datasourceNameFIPps, "floating_ips.0.association.#"),
 					resource.TestCheckResourceAttrSet(datasourceNameFIPps, "floating_ips.0.external_subnet_reference"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccV2NutanixFloatingIPsDataSource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFipsDataSourceWithInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameFIPps, "floating_ips.#"),
+					resource.TestCheckResourceAttr(datasourceNameFIPps, "floating_ips.#", "0"),
 				),
 			},
 		},
@@ -164,4 +180,12 @@ func testAccFipsDataSourceWithFilterConfig(name, desc string) string {
 			]
 		}
 	`, name, desc)
+}
+
+func testAccFipsDataSourceWithInvalidFilterConfig() string {
+	return `
+		data "nutanix_floating_ips_v2" "test" {
+			filter = "name eq 'invalid_name'"
+		}
+	`
 }

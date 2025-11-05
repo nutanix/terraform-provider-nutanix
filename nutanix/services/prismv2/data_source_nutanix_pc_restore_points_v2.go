@@ -92,21 +92,28 @@ func DatasourceNutanixRestorePointsV2Read(ctx context.Context, d *schema.Resourc
 	}
 
 	resp, err := conn.DomainManagerBackupsAPIInstance.ListRestorePoints(restoreSourceExtID, restorableDomainManagerExtID, page, limit, filter, orderBy, selects)
-
 	if err != nil {
 		return diag.Errorf("error while fetching Domain Manager Restore Point Detail: %s", err)
 	}
 
 	if resp.Data == nil {
-		if err := d.Set("restore_points", []map[string]interface{}{}); err != nil {
+		if err := d.Set("restore_points", make([]interface{}, 0)); err != nil {
 			return diag.Errorf("Error setting restore_points: %v", err)
 		}
-	} else {
-		restorePoints := resp.Data.GetValue().([]management.RestorePoint)
 
-		if err := d.Set("restore_points", flattenRestorePoints(restorePoints)); err != nil {
-			return diag.Errorf("Error setting restore_points: %v", err)
-		}
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No data found.",
+			Detail:   "The API returned an empty list of restore points.",
+		}}
+	}
+
+	restorePoints := resp.Data.GetValue().([]management.RestorePoint)
+
+	if err := d.Set("restore_points", flattenRestorePoints(restorePoints)); err != nil {
+		return diag.Errorf("Error setting restore_points: %v", err)
 	}
 
 	d.SetId(utils.GenUUID())

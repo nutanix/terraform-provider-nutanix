@@ -10,6 +10,7 @@ import (
 )
 
 const datasourceNameUser = "data.nutanix_user_v2.test"
+const datasourceNameServiceAccount = "data.nutanix_user_v2.get_service_account"
 
 func TestAccV2NutanixUserDatasource_Basic(t *testing.T) {
 	r := acctest.RandInt()
@@ -34,6 +35,27 @@ func TestAccV2NutanixUserDatasource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameUser, "display_name", "display-name-"+name),
 					resource.TestCheckResourceAttr(datasourceNameUser, "user_type", "LOCAL"),
 					resource.TestCheckResourceAttr(datasourceNameUser, "status", "ACTIVE"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccV2NutanixUserDatasourceServiceAccount(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-service-account-%d", r)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() {},
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testServiceAccountDataSourceV4Config(name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceNameServiceAccount, "username", name),
+					resource.TestCheckResourceAttr(datasourceNameServiceAccount, "description", "test service account tf"),
+					resource.TestCheckResourceAttr(datasourceNameServiceAccount, "email_id", "terraform_plugin@domain.com"),
+					resource.TestCheckResourceAttr(datasourceNameServiceAccount, "user_type", "SERVICE_ACCOUNT"),
 				),
 			},
 		},
@@ -67,7 +89,20 @@ func testUserDatasourceV4Config(filepath, name string) string {
 			ext_id = nutanix_users_v2.test.id
 			depends_on = [nutanix_users_v2.test]
 		}
+	`, filepath, name)
+}
 
+func testServiceAccountDataSourceV4Config(name string) string {
+	return fmt.Sprintf(`
+	resource "nutanix_users_v2" "service_account" {
+		username = "%[2]s"
+		description = "test service account tf"
+		email_id = "terraform_plugin@domain.com"
+		user_type = "SERVICE_ACCOUNT"
+	}
 
+	data "nutanix_user_v2" "get_service_account" {
+		ext_id = nutanix_users_v2.service_account.id
+	}
 	`, filepath, name)
 }

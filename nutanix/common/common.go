@@ -10,9 +10,13 @@ import (
 // which is defined in the schema
 // its return a list of string
 func ExpandListOfString(list []interface{}) []string {
-	stringListStr := make([]string, len(list))
+	stringListStr := make([]string, 0)
 	for i, v := range list {
-		stringListStr[i] = v.(string)
+		if v == nil || v == "" {
+			log.Printf("[DEBUG] Skipping nil or empty value at index %d", i)
+			continue // Skip nil or empty values
+		}
+		stringListStr = append(stringListStr, v.(string))
 	}
 	return stringListStr
 }
@@ -32,4 +36,28 @@ func IsExplicitlySet(d *schema.ResourceData, key string) bool {
 		return !val.IsNull() // Ensure key exists and isn't explicitly null
 	}
 	return false
+}
+
+// InterfaceToSlice converts various input types to a slice of interfaces.
+func InterfaceToSlice(v interface{}) []interface{} {
+	if v == nil {
+		return nil
+	}
+
+	switch t := v.(type) {
+	case *schema.Set:
+		return t.List()
+	case []interface{}:
+		return t
+	case []map[string]interface{}:
+		// unlikely, but handle it
+		out := make([]interface{}, len(t))
+		for i := range t {
+			out[i] = t[i]
+		}
+		return out
+	default:
+		// single element provided
+		return []interface{}{v}
+	}
 }

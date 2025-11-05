@@ -12,7 +12,7 @@ Launches a blueprint to create an application and perform system actions on appl
 
 ## Example 1: Provision Application
 
-``` hcl
+```hcl
 resource "nutanix_self_service_app_provision" "test" {
     bp_name         = "NAME OF BLUEPRINT"
     app_name        = "NAME OF APPLICATION TO SET"
@@ -28,15 +28,15 @@ For ubuntu: sudo apt-get install jq. For detail installation [Read here](https:/
 
 Runtime editable is currently supported for updating `num_sockets, num_vcpus_per_socket, memory_size_mib` Follow below steps:
 
-- Step 1: Extract runtime editable from data source nutanix_blueprint_runtime_editables [Read here](../d/blueprint_runtime_editables.html.markdown)
-- Step 2: Dump extracted value in a json [Read here](../d/blueprint_runtime_editables.html.markdown)
+- Step 1: Extract runtime editable from data source nutanix_blueprint_runtime_editables
+- Step 2: Dump extracted value in a json
 - Step 3: Open extracted json file and copy exact value string from substrate_list["value"] 
 - Step 4: In terminal. Use jq to format the string using `echo '<copied-value>' | jq -r | jq` and copy the content from terminal.
 - Step 5: Make `variables.tf` similar to the one mentioned below and put this jq formatted value in place of `<updated-value>` show below.
 - Step 6: Replace value of `num_sockets, num_vcpus_per_socket, memory_size_mib` as per your need.
 - Step 7: Provision application
 
-``` hcl
+```hcl
 data "nutanix_blueprint_runtime_editables" "example" {
     bp_name = "NAME OF BLUEPRINT"
 }
@@ -76,7 +76,7 @@ Step 1: Provision application
 
 Step 2: use external id of resource (uuid of app) created as input to run system actions on this application.
 
-``` hcl
+```hcl
 resource "nutanix_self_service_app_provision" "test" {
     bp_name         = "NAME OF BLUEPRINT"
     app_name        = "NAME OF APPLICATION TO SET"
@@ -105,7 +105,7 @@ Step 3: set soft_delete attribute as true
 
 Step 4: Run terraform destroy to soft delete application.
 
-``` hcl
+```hcl
 resource "nutanix_self_service_app_provision" "test" {
     bp_name         = "NAME OF BLUEPRINT"
     app_name        = "NAME OF APPLICATION TO SET"

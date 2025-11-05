@@ -100,6 +100,19 @@ func DatasourceNutanixClusterEntitiesV2Read(ctx context.Context, d *schema.Resou
 		return diag.Errorf("error while fetching cluster entities : %v", err)
 	}
 
+	if resp.Data == nil {
+		if err := d.Set("cluster_entities", []map[string]interface{}{}); err != nil {
+			return diag.FromErr(err)
+		}
+
+		d.SetId(resource.UniqueId())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No Clusters found",
+			Detail:   "The API returned an empty list of clusters.",
+		}}
+	}
 	getResp := resp.Data.GetValue().([]import1.Cluster)
 
 	if err := d.Set("cluster_entities", flattenClusterEntities(getResp)); err != nil {
@@ -128,6 +141,9 @@ func flattenClusterEntities(pr []import1.Cluster) []interface{} {
 			cls["vm_count"] = v.VmCount
 			cls["inefficient_vm_count"] = v.InefficientVmCount
 			cls["container_name"] = v.ContainerName
+			cls["categories"] = v.Categories
+			cls["cluster_profile_ext_id"] = v.ClusterProfileExtId
+			cls["backup_eligibility_score"] = v.BackupEligibilityScore
 
 			clsList[k] = cls
 		}

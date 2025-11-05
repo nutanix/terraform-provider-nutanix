@@ -13,7 +13,7 @@ Provides Nutanix datasource to List route tables.
 
 ## Example Usage
 
-``` hcl
+```hcl
 
 data "nutanix_route_tables_v2" "all-tables"{}
 

@@ -32,6 +32,9 @@ resource "nutanix_virtual_machine_v2" "vm-2"{
     cluster {
         ext_id = "1cefd0f5-6d38-4c9b-a07c-bdd2db004224"
     }
+    project {
+    ext_id = "2defe0f5-6e48-4c9b-b07c-bdd2dc004225"
+    }
     disks{
         disk_address{
             bus_type = "SCSI"
@@ -44,42 +47,107 @@ resource "nutanix_virtual_machine_v2" "vm-2"{
                     ext_id = "1cefd0f5-6d38-4c9b-a07c-bdd2db004224"
                 }
             }
+        }
+    }
+    boot_config {
+        uefi_boot {
+            boot_order = ["NETWORK", "DISK", "CDROM", ]
         }
     }
 }
 
-resource "nutanix_virtual_machine_v2" "vm-3"{
-    name= "example-vm-3"
-    description =  "vm desc"
-    num_cores_per_socket = 1
-    num_sockets = 1
-    cluster {
-        ext_id = "1cefd0f5-6d38-4c9b-a07c-bdd2db004224"
+resource "nutanix_virtual_machine_v2" "vm-3" {
+  name                 = "terraform-example-vm-4-disks"
+  num_cores_per_socket = 1
+  num_sockets          = 1
+  cluster {
+    ext_id = "1cefd0f5-6d38-4c9b-a07c-bdd2db004224"
+  }
+  project {
+    ext_id = "2defe0f5-6e48-4c9b-b07c-bdd2dc004225"
+  }
+
+  disks {
+    disk_address {
+      bus_type = "SCSI"
+      index    = 0
     }
-    disks{
-        disk_address{
-            bus_type = "SCSI"
-            index = 0
-        }
-        backing_info{
-            vm_disk{
-                disk_size_bytes = "1073741824"
-                storage_container{
-                    ext_id = "1cefd0f5-6d38-4c9b-a07c-bdd2db004224"
-                }
+    backing_info {
+      vm_disk {
+        data_source {
+          reference {
+            image_reference {
+              image_ext_id = "59ec786c-4311-4225-affe-68b65c5ebf10"
             }
+          }
         }
+        disk_size_bytes = 20 * pow(1024, 3) # 20 GB
+      }
     }
-    nics{
-        network_info{
-            nic_type = "NORMAL_NIC"
-            subnet{
-                ext_id = "7f66e20f-67f4-473f-96bb-c4fcfd487f16"
-            }
-            vlan_mode = "ACCESS"
+  }
+  disks {
+    disk_address {
+      bus_type = "SCSI"
+      index    = 1
+    }
+     backing_info {
+      vm_disk {
+        disk_size_bytes = 10 * pow(1024, 3) # 10 GB
+        storage_container {
+          ext_id = "5d9b5941-fec3-4996-9d31-f31bed1c7735"
         }
+      }
     }
+  }
+
+  disks {
+    disk_address {
+      bus_type = "SCSI"
+      index    = 2
+    }
+    backing_info {
+      vm_disk {
+        disk_size_bytes = 15 * pow(1024, 3) # 15 GB
+        storage_container {
+          ext_id = "5d9b5941-fec3-4996-9d31-f31bed1c7735"
+        }
+      }
+    }
+  }
+
+  disks {
+    disk_address {
+      bus_type = "SCSI"
+      index    = 3
+    }
+    backing_info {
+      vm_disk {
+        disk_size_bytes = 20 * pow(1024, 3) # 20 GB
+        storage_container {
+          ext_id = "5d9b5941-fec3-4996-9d31-f31bed1c7735"
+        }
+      }
+    }
+  }
+
+  nics {
+    network_info {
+      nic_type = "NORMAL_NIC"
+      subnet {
+        ext_id = "7f66e20f-67f4-473f-96bb-c4fcfd487f16"
+      }
+      vlan_mode = "ACCESS"
+    }
+  }
+
+  boot_config {
+    legacy_boot {
+      boot_order = ["CDROM", "DISK", "NETWORK"]
+    }
+  }
+  power_state = "ON"
 }
+
 ```
 
 ## Argument Reference
@@ -104,6 +172,7 @@ The following arguments are supported:
 * `generation_uuid`: (Optional) Generation UUID of the VM. It should be of type UUID.
 * `bios_uuid`: (Optional) BIOS UUID of the VM. It should be of type UUID.
 * `categories`: (Optional) Categories for the VM.
+* `project`: (Optional) Reference to a project.
 * `ownership_info`: Ownership information for the VM.
 * `host`: Reference to the host, the VM is running on.
 * `cluster`: (Required) Reference to a cluster.
@@ -139,6 +208,12 @@ The `categories` attribute supports the following:
 
 * `ext_id`: A globally unique identifier of a VM category of type UUID.
 
+### Project
+The `project` attribute supports the following:
+
+* `ext_id`: The globally unique identifier of an instance of type UUID.
+
+
 ### Ownership Info
 The `ownership_info` attribute supports the following:
 
@@ -151,6 +226,8 @@ The `host` attribute supports the following:
 * `ext_id`: A globally unique identifier of a host of type UUID.
 
 ### Cluster
+> 💡Cluster automatic selection is supported.
+
 The `cluster` attribute supports the following:
 
 * `ext_id`: The globally unique identifier of a cluster type UUID.

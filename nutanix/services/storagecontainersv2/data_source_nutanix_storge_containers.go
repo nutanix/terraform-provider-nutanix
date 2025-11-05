@@ -88,6 +88,20 @@ func DatasourceNutanixStorageContainersV2Read(ctx context.Context, d *schema.Res
 		return diag.Errorf("error while fetching Storage Containers : %v", err)
 	}
 
+	if resp.Data == nil {
+		if err := d.Set("storage_containers", make([]interface{}, 0)); err != nil {
+			return diag.FromErr(err)
+		}
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No data found.",
+			Detail:   "The API returned an empty list of storage containers.",
+		}}
+	}
+
 	getResp := resp.Data.GetValue().([]clustermgmt.StorageContainer)
 
 	if err := d.Set("storage_containers", flattenStorageContainers(getResp)); err != nil {

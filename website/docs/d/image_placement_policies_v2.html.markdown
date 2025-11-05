@@ -19,7 +19,7 @@ data "nutanix_image_placement_policies_v2" "list-ipp"{}
 # List image placement policies with filter, page and limit
 data "nutanix_image_placement_policies_v2" "filtered-ipp"{
     filter="startswith(name,'ipp_name')"
-    page=1
+    page=0
     limit=10
 }
 
