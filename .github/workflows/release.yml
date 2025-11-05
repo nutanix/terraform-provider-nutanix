@@ -1,42 +1,34 @@
 name: release
-
 on:
   push:
-    # Run on tag pushes (real release)
     tags:
       - 'v*'
 jobs:
-  release:
+  goreleaser:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      -
+        name: Checkout
         uses: actions/checkout@v4
-
-      - name: Set up Go
+      -
+        name: Unshallow
+        run: git fetch --prune --unshallow
+      -
+        name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
-
-      - name: Import GPG key
+          go-version: 1.21
+      -
+        name: Import GPG key
         id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PASSPHRASE }}
-
-      # 👇 Show mode (for clarity)
-      - name: Print run mode
-        run: |
-          if [ "${{ github.ref_type }}" = "tag" ]; then
-            echo "🚀 release detected for tag ${{ github.ref_name }}"
-          else
-            echo "🧪 Test release on branch ${{ github.ref_name }}"
-          fi
-
-      # 🚀 Real release only for tags
-      - name: Run GoReleaser (Release Mode)
-        if: github.ref_type == 'tag'
+        uses: paultyng/ghaction-import-gpg@v2.1.0
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.PASSPHRASE }}
+      - name: Set the user terminal
+        run: export GPG_TTY=$(tty)
+      -
+        name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
