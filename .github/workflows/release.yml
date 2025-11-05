@@ -1,34 +1,47 @@
 name: release
+
 on:
   push:
+    # Run on tag pushes (real release)
     tags:
       - 'v*'
+    # 👇 Also run on branch pushes for testing
+    branches:
+      - task/store-release-artifacts   # <-- change this to your branch name
+  workflow_dispatch:          # allows manual trigger anytime
+
 jobs:
-  goreleaser:
+  release:
     runs-on: ubuntu-latest
+
     steps:
-      -
-        name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
-      -
-        name: Unshallow
-        run: git fetch --prune --unshallow
-      -
-        name: Set up Go
+
+      - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.21
-      -
-        name: Import GPG key
+          go-version: '1.22'
+
+      - name: Import GPG key
         id: import_gpg
-        uses: paultyng/ghaction-import-gpg@v2.1.0
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          PASSPHRASE: ${{ secrets.PASSPHRASE }}
-      - name: Set the user terminal
-        run: export GPG_TTY=$(tty)
-      -
-        name: Run GoReleaser
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      # 👇 Show mode (for clarity)
+      - name: Print run mode
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            echo "🚀 Real release detected for tag ${{ github.ref_name }}"
+          else
+            echo "🧪 Test release on branch ${{ github.ref_name }}"
+          fi
+
+      # 🧩 Only run GoReleaser if it’s a tagged release
+      - name: Run GoReleaser
+        if: github.ref_type == 'tag'
         uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
@@ -36,7 +49,8 @@ jobs:
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+
+      # 🟩 Backup artifacts (runs always)
       - name: Backup artifacts
         uses: actions/upload-artifact@v4
         with:
