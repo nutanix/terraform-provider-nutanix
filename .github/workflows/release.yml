@@ -5,11 +5,6 @@ on:
     # Run on tag pushes (real release)
     tags:
       - 'v*'
-    # 👇 Also run on branch pushes for testing
-    branches:
-      - task/store-release-artifacts   # <-- change this to your branch name
-  workflow_dispatch:          # allows manual trigger anytime
-
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -34,31 +29,21 @@ jobs:
       - name: Print run mode
         run: |
           if [ "${{ github.ref_type }}" = "tag" ]; then
-            echo "🚀 Real release detected for tag ${{ github.ref_name }}"
+            echo "🚀 release detected for tag ${{ github.ref_name }}"
           else
             echo "🧪 Test release on branch ${{ github.ref_name }}"
           fi
 
-       # 🧩 Build on branches, Release on tags
-      - name: Run GoReleaser (Build Mode)
-        if: github.ref_type != 'tag'
+      # 🚀 Real release only for tags
+      - name: Run GoReleaser (Release Mode)
+        if: github.ref_type == 'tag'
         uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
-          args: build --clean --snapshot  # ✅ creates dist/ folder, but does NOT publish
+          args: release --clean
         env:
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # # 🚀 Real release only for tags
-      # - name: Run GoReleaser (Release Mode)
-      #   if: github.ref_type == 'tag'
-      #   uses: goreleaser/goreleaser-action@v6
-      #   with:
-      #     version: latest
-      #     args: release --clean
-      #   env:
-      #     GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # 🟩 Backup artifacts (runs always)
       - name: Backup artifacts
