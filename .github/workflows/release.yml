@@ -39,16 +39,26 @@ jobs:
             echo "🧪 Test release on branch ${{ github.ref_name }}"
           fi
 
-      # 🧩 Only run GoReleaser if it’s a tagged release
-      - name: Run GoReleaser
-        if: github.ref_type == 'tag'
+       # 🧩 Build on branches, Release on tags
+      - name: Run GoReleaser (Build Mode)
+        if: github.ref_type != 'tag'
         uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
-          args: release --clean
+          args: build --clean    # ✅ creates dist/ folder, but does NOT publish
         env:
-          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # # 🚀 Real release only for tags
+      # - name: Run GoReleaser (Release Mode)
+      #   if: github.ref_type == 'tag'
+      #   uses: goreleaser/goreleaser-action@v6
+      #   with:
+      #     version: latest
+      #     args: release --clean
+      #   env:
+      #     GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # 🟩 Backup artifacts (runs always)
       - name: Backup artifacts
