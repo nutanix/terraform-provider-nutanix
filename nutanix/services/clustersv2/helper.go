@@ -369,3 +369,24 @@ func (e *ClusterNotFoundError) Error() string {
 	}
 	return fmt.Sprintf("cluster not found: %s", e.Name)
 }
+
+// ##################################
+// ### Authorized Public Key Hash ###
+// ##################################
+// authorizedPublicKeyHash --- hash function for authorized_public_key set ---
+func authorizedPublicKeyHash(v interface{}) int {
+	m := v.(map[string]interface{})
+	name := ""
+	key := ""
+
+	if val, ok := m["name"].(string); ok {
+		name = val
+	}
+	if val, ok := m["key"].(string); ok {
+		key = val
+	}
+
+	// Combine name and key for hashing
+	hashInput := fmt.Sprintf("%s-%s", name, key)
+	return schema.HashString(hashInput)
+}

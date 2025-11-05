@@ -117,8 +117,7 @@ func ResourceNutanixClusterProfileV2() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
-					ValidateFunc: validation.StringMatch(regexp.MustCompile(
-						`\b(?:\d{1,3}\.){3}\d{1,3}/(?:\d|[12]\d|3[0-2])\b`),
+					ValidateFunc: validation.StringMatch(regexp.MustCompile(`\b(?:\d{1,3}\.){3}\d{1,3}/(?:\d{1,3}\.){3}\d{1,3}\b`),
 						"Must be in CIDR-like format x.x.x.x/y.y.y.y"),
 				},
 			},
@@ -171,6 +170,7 @@ func ResourceNutanixClusterProfileV2() *schema.Resource {
 						},
 						"transports": {
 							Type:     schema.TypeList,
+							Computed: true,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -188,6 +188,7 @@ func ResourceNutanixClusterProfileV2() *schema.Resource {
 						},
 						"traps": {
 							Type:     schema.TypeList,
+							Computed: true,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -277,6 +278,7 @@ func ResourceNutanixClusterProfileV2() *schema.Resource {
 						"modules": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -320,6 +322,21 @@ func ResourceNutanixClusterProfileV2() *schema.Resource {
 					},
 				},
 			},
+			"dryrun": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			// computed fields
+			"ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"links": common.LinksSchema(),
 		},
 	}
 }
@@ -329,7 +346,7 @@ func ResourceNutanixClusterProfileV2Create(ctx context.Context, d *schema.Resour
 	body := expandClusterProfile(d)
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
-	log.Printf("Cluster Profile Create Payload: %s", string(aJSON))
+	log.Printf("[DEBUG] Cluster Profile Create Payload: %s", string(aJSON))
 
 	createResp, createErr := conn.ClusterProfilesAPI.CreateClusterProfile(body)
 	if createErr != nil {
@@ -361,6 +378,8 @@ func ResourceNutanixClusterProfileV2Create(ctx context.Context, d *schema.Resour
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Create Cluster Profile Task Details: %s", string(aJSON))
 
+	d.SetId(utils.StringValue(taskDetails.EntitiesAffected[0].ExtId))
+
 	return ResourceNutanixClusterProfileV2Read(ctx, d, meta)
 }
 
@@ -373,9 +392,27 @@ func ResourceNutanixClusterProfileV2Read(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
-	clusterProfile := clusterProfileResp.Data.GetValue().(config.ClusterProfile)
+	// Check if Data is nil or empty
+	if clusterProfileResp.Data == nil || clusterProfileResp.Data.GetValue() == nil {
+		return diag.Errorf("ClusterProfile API returned empty data for ID %s", d.Id())
+	}
+
+	// Safe type assertion
+	clusterProfile, ok := clusterProfileResp.Data.GetValue().(config.ClusterProfile)
+	if !ok {
+		return diag.Errorf("ClusterProfile API returned unexpected type for ID %s", d.Id())
+	}
 
 	// Set the resource data from the API response
+	if err := d.Set("tenant_id", clusterProfile.TenantId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("ext_id", clusterProfile.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("links", flattenLinks(clusterProfile.Links)); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("name", clusterProfile.Name); err != nil {
 		return diag.FromErr(err)
 	}
@@ -411,10 +448,163 @@ func ResourceNutanixClusterProfileV2Read(ctx context.Context, d *schema.Resource
 }
 
 func ResourceNutanixClusterProfileV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).ClusterAPI
+
+	// Fetch the Cluster Profile by UUID
+	clusterProfileResp, err := conn.ClusterProfilesAPI.GetClusterProfileById(utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Check if Data is nil or empty
+	if clusterProfileResp.Data == nil || clusterProfileResp.Data.GetValue() == nil {
+		return diag.Errorf("ClusterProfile API returned empty data for ID %s", d.Id())
+	}
+
+	// Safe type assertion
+	clusterProfile, ok := clusterProfileResp.Data.GetValue().(config.ClusterProfile)
+	if !ok {
+		return diag.Errorf("ClusterProfile API returned unexpected type for ID %s", d.Id())
+	}
+
+	body := config.NewClusterProfile()
+
+	if d.HasChange("name") {
+		body.Name = utils.StringPtr(d.Get("name").(string))
+	} else {
+		// name is required in update payload
+		body.Name = clusterProfile.Name
+	}
+	if d.HasChange("description") {
+		body.Description = utils.StringPtr(d.Get("description").(string))
+	}
+	if d.HasChange("allowed_overrides") {
+		aoList, _ := d.GetOk("allowed_overrides")
+		body.AllowedOverrides = common.ExpandEnumList(aoList, AllowedOverridesMap, "allowed_override")
+	}
+	if d.HasChange("name_server_ip_list") {
+		nameServerIPRaw, _ := d.GetOk("name_server_ip_list")
+		nameServerIPList := common.InterfaceToSlice(nameServerIPRaw)
+		result := make([]import1.IPAddress, 0)
+		for _, ip := range nameServerIPList {
+			result = append(result, *expandIPAddress(common.InterfaceToSlice(ip)))
+		}
+		body.NameServerIpList = result
+	}
+	if d.HasChange("ntp_server_ip_list") {
+		ntpServerIPRaw, _ := d.GetOk("ntp_server_ip_list")
+		body.NtpServerIpList = expandIPAddressOrFQDN(common.InterfaceToSlice(ntpServerIPRaw))
+	}
+	if d.HasChange("smtp_server") {
+		smtpConfigRaw, _ := d.GetOk("smtp_server")
+		smtpConfigList := common.InterfaceToSlice(smtpConfigRaw)
+		body.SmtpServer = expandSMTPServerRef(smtpConfigList)
+	}
+	if d.HasChange("nfs_subnet_white_list") {
+		nfsWhiteListRaw, _ := d.GetOk("nfs_subnet_white_list")
+		nfsWhiteList := common.InterfaceToSlice(nfsWhiteListRaw)
+		body.NfsSubnetWhitelist = common.ExpandListOfString(nfsWhiteList)
+	}
+	if d.HasChange("snmp_config") {
+		snmpConfigRaw, _ := d.GetOk("snmp_config")
+		snmpConfigList := common.InterfaceToSlice(snmpConfigRaw)
+		body.SnmpConfig = expandSNMPConfig(snmpConfigList)
+	}
+	if d.HasChange("rsyslog_server_list") {
+		rsyslogServerListRaw, _ := d.GetOk("rsyslog_server_list")
+		rsyslogServerList := common.InterfaceToSlice(rsyslogServerListRaw)
+		body.RsyslogServerList = expandRsyslogServerList(rsyslogServerList)
+	}
+	if d.HasChange("pulse_status") {
+		pulseStatusRaw, _ := d.GetOk("pulse_status")
+		pulseStatusList := common.InterfaceToSlice(pulseStatusRaw)
+		body.PulseStatus = expandPulseStatus(pulseStatusList)
+	}
+
+	aJSON, _ := json.MarshalIndent(body, "", "  ")
+	log.Printf("[DEBUG] Cluster Profile Update Payload: %s", string(aJSON))
+
+	var dryRun *bool
+	if v, ok := d.GetOk("dryrun"); ok {
+		dryRun = utils.BoolPtr(v.(bool))
+	}
+
+	// Extract E-tag from read response
+	getClusterProfileResp, getErr := conn.ClusterProfilesAPI.GetClusterProfileById(utils.StringPtr(d.Id()))
+	if getErr != nil {
+		return diag.Errorf("error fetching cluster profile: %v", getErr)
+	}
+
+	// Extract E-Tag Header
+	etagValue := conn.ClusterProfilesAPI.ApiClient.GetEtag(getClusterProfileResp)
+	args := make(map[string]interface{})
+	args["If-Match"] = utils.StringPtr(etagValue)
+
+	// Update Cluster Profile
+	updateResp, updateErr := conn.ClusterProfilesAPI.UpdateClusterProfileById(utils.StringPtr(d.Id()), body, dryRun, args)
+	if updateErr != nil {
+		return diag.FromErr(updateErr)
+	}
+
+	TaskRef := updateResp.Data.GetValue().(import3.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the cluster profile to be updated
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for cluster profile (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
+
+	// Get Task Details
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching cluster profile UUID : %v", err)
+	}
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Update Cluster Profile Task Details: %s", string(aJSON))
+
 	return ResourceNutanixClusterProfileV2Read(ctx, d, meta)
 }
 
 func ResourceNutanixClusterProfileV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).ClusterAPI
+
+	deleteResp, deleteErr := conn.ClusterProfilesAPI.DeleteClusterProfileById(utils.StringPtr(d.Id()))
+	if deleteErr != nil {
+		return diag.FromErr(deleteErr)
+	}
+
+	TaskRef := deleteResp.Data.GetValue().(import3.TaskReference)
+	taskUUID := TaskRef.ExtId
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the cluster profile to be deleted
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
+	}
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for cluster profile (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
+
+	// Get Task Details
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching cluster profile UUID : %v", err)
+	}
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Delete Cluster Profile Task Details: %s", string(aJSON))
+
 	return nil
 }
 
@@ -509,10 +699,23 @@ func expandSNMPConfig(snmpConfigList []interface{}) *config.SnmpConfig {
 			user := config.SnmpUser{
 				Username: utils.StringPtr(userMap["username"].(string)),
 				AuthType: common.ExpandEnum(userMap["auth_type"].(string), SnmpAuthTypeMap, "auth_type"),
-				AuthKey:  utils.StringPtr(userMap["auth_key"].(string)),
-				PrivType: common.ExpandEnum(userMap["priv_type"].(string), SnmpPrivTypeMap, "priv_type"),
-				PrivKey:  utils.StringPtr(userMap["priv_key"].(string)),
 			}
+
+			// Only set AuthKey if it exists and is non-empty
+			if v, ok := userMap["auth_key"].(string); ok && v != "" {
+				user.AuthKey = utils.StringPtr(v)
+			}
+
+			// Only set PrivType if it exists and is non-empty
+			if v, ok := userMap["priv_type"].(string); ok && v != "" {
+				user.PrivType = common.ExpandEnum(v, SnmpPrivTypeMap, "priv_type")
+			}
+
+			// Only set PrivKey if it exists and is non-empty
+			if v, ok := userMap["priv_key"].(string); ok && v != "" {
+				user.PrivKey = utils.StringPtr(v)
+			}
+
 			snmp.Users = append(snmp.Users, user)
 		}
 	}
@@ -613,6 +816,11 @@ func flattenSnmpConfig(snmpConfig *config.SnmpConfig) interface{} {
 
 	m := map[string]interface{}{}
 
+	// Flatten is_enabled
+	if snmpConfig.IsEnabled != nil {
+		m["is_enabled"] = utils.BoolValue(snmpConfig.IsEnabled)
+	}
+
 	// Flatten users
 	if len(snmpConfig.Users) > 0 {
 		users := make([]interface{}, 0, len(snmpConfig.Users))
@@ -647,9 +855,14 @@ func flattenSnmpConfig(snmpConfig *config.SnmpConfig) interface{} {
 		traps := make([]interface{}, 0, len(snmpConfig.Traps))
 		for _, tr := range snmpConfig.Traps {
 			trap := map[string]interface{}{
-				"receiver_name": tr.RecieverName,
-				"version":       common.FlattenPtrEnum(tr.Version),
-				"username":      tr.Username,
+				"username":         tr.Username,
+				"protocol":         common.FlattenPtrEnum(tr.Protocol),
+				"port":             utils.IntValue(tr.Port),
+				"should_inform":    utils.BoolValue(tr.ShouldInform),
+				"engine_id":        utils.StringValue(tr.EngineId),
+				"version":          common.FlattenPtrEnum(tr.Version),
+				"receiver_name":    tr.RecieverName,
+				"community_string": utils.StringValue(tr.CommunityString),
 			}
 
 			// Flatten IP address if available
