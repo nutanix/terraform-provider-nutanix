@@ -45,7 +45,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
-          args: build --clean    # ✅ creates dist/ folder, but does NOT publish
+          args: build --clean --snapshot  # ✅ creates dist/ folder, but does NOT publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
