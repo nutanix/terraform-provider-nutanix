@@ -33,11 +33,13 @@ func NewVmmClient(credentials client.Credentials) (*Client, error) {
 	}
 
 	f := &Client{
-		ImagesAPIInstance:          api.NewImagesApi(baseClient),
-		TemplatesAPIInstance:       api.NewTemplatesApi(baseClient),
-		VMAPIInstance:              api.NewVmApi(baseClient),
-		ImagesPlacementAPIInstance: api.NewImagePlacementPoliciesApi(baseClient),
-		OvasAPIInstance:            api.NewOvasApi(baseClient),
+		ImagesAPIInstance:               api.NewImagesApi(baseClient),
+		TemplatesAPIInstance:            api.NewTemplatesApi(baseClient),
+		VMAPIInstance:                   api.NewVmApi(baseClient),
+		ImagesPlacementAPIInstance:      api.NewImagePlacementPoliciesApi(baseClient),
+		OvasAPIInstance:                 api.NewOvasApi(baseClient),
+		VMAntiAffinityPolicyAPIInstance: api.NewVmAntiAffinityPoliciesApi(baseClient),
+		VMHostAffinityPolicyAPIInstance: api.NewVmHostAffinityPoliciesApi(baseClient),
 	}
 
 	return f, nil
