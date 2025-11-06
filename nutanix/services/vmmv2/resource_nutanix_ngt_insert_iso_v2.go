@@ -76,6 +76,14 @@ func ResourceNutanixNGTInsertIsoV2() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"cdrom_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"vm_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -152,9 +160,18 @@ func ResourceNutanixNGTInsertIsoV2Create(ctx context.Context, d *schema.Resource
 	}
 	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
+	for _, entity := range rUUID.EntitiesAffected {
+		if utils.StringValue(entity.Rel) == "vmm:ahv:config:vm" {
+			uuid := entity.ExtId
+			d.Set("vm_ext_id", *uuid)
+		}
+		if utils.StringValue(entity.Rel) == "vmm:ahv:config:vm:cdrom" {
+			uuid := entity.ExtId
+			d.Set("cdrom_ext_id", *uuid)
+		}
+	}
 
-	d.SetId(*uuid)
+	d.SetId(resource.UniqueId())
 
 	return ResourceNutanixNGTInsertIsoV2Read(ctx, d, meta)
 }
@@ -163,7 +180,7 @@ func ResourceNutanixNGTInsertIsoV2Create(ctx context.Context, d *schema.Resource
 func ResourceNutanixNGTInsertIsoV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	extID := d.Id()
+	extID := d.Get("vm_ext_id").(string)
 	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID))
 	if err != nil {
 		return diag.Errorf("error while fetching Gest Tool : %v", err)
@@ -200,6 +217,16 @@ func ResourceNutanixNGTInsertIsoV2Read(ctx context.Context, d *schema.ResourceDa
 	if err := d.Set("is_vm_mobility_drivers_installed", getResp.IsVmMobilityDriversInstalled); err != nil {
 		return diag.FromErr(err)
 	}
+	if cdromExtID, ok := d.GetOk("cdrom_ext_id"); ok {
+		if err := d.Set("cdrom_ext_id", cdromExtID.(string)); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if vmExtID, ok := d.GetOk("vm_ext_id"); ok {
+		if err := d.Set("vm_ext_id", vmExtID.(string)); err != nil {
+			return diag.FromErr(err)
+		}
+	}
 	return nil
 }
 
@@ -208,7 +235,42 @@ func ResourceNutanixNGTInsertIsoV2Update(ctx context.Context, d *schema.Resource
 	return ResourceNutanixNGTInsertIsoV2Create(ctx, d, meta)
 }
 
-// ResourceNutanixNGTInsertIsoV2Delete  Not supported
+// ResourceNutanixNGTInsertIsoV2Delete eject the ngt iso from the cd-rom of the vm
 func ResourceNutanixNGTInsertIsoV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).VmmAPI
+
+	vmExtID := d.Get("vm_ext_id").(string)
+	extID := d.Get("cdrom_ext_id").(string)
+
+	readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(vmExtID))
+	if err != nil {
+		return diag.Errorf("error while reading vm : %v", err)
+	}
+	// Extract E-Tag Header
+	args := make(map[string]interface{})
+	args["If-Match"] = getEtagHeader(readResp, conn)
+
+	// eject the ngt iso from the cd-rom of the vm
+	resp, err := conn.VMAPIInstance.EjectCdRomById(utils.StringPtr(vmExtID), utils.StringPtr(extID), args)
+	if err != nil {
+		return diag.Errorf("error while ejecting cd-rom : %v", err)
+	}
+
+	TaskRef := resp.Data.GetValue().(vmmPrism.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	taskconn := meta.(*conns.Client).PrismAPI
+
+	// Wait for the cd-rom to be ejected
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"QUEUED", "RUNNING"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for cd-rom (%s) to eject: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
 	return nil
 }
