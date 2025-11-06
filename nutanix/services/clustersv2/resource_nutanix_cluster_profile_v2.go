@@ -128,6 +128,15 @@ func ResourceNutanixClusterProfileV2() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"tenant_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"links": common.LinksSchema(),
 						"is_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -138,6 +147,15 @@ func ResourceNutanixClusterProfileV2() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"ext_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"tenant_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"links": common.LinksSchema(),
 									"username": {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -192,6 +210,15 @@ func ResourceNutanixClusterProfileV2() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"ext_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"tenant_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"links": common.LinksSchema(),
 									"address": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -254,6 +281,15 @@ func ResourceNutanixClusterProfileV2() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"tenant_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"links": common.LinksSchema(),
 						"server_name": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -337,6 +373,54 @@ func ResourceNutanixClusterProfileV2() *schema.Resource {
 				Computed: true,
 			},
 			"links": common.LinksSchema(),
+			"create_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_update_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created_by": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_updated_by": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"cluster_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"drifted_cluster_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"clusters": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"is_compliant": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"last_synced_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"config_drifts": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -414,6 +498,27 @@ func ResourceNutanixClusterProfileV2Read(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 	if err := d.Set("name", clusterProfile.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("create_time", utils.TimeStringValue(clusterProfile.CreateTime)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("last_update_time", utils.TimeStringValue(clusterProfile.LastUpdateTime)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("created_by", utils.StringValue(clusterProfile.CreatedBy)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("last_updated_by", utils.StringValue(clusterProfile.LastUpdatedBy)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("cluster_count", utils.IntValue(clusterProfile.ClusterCount)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("drifted_cluster_count", utils.IntValue(clusterProfile.DriftedClusterCount)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("clusters", flattenClusterProfileClusterList(clusterProfile.Clusters)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("description", clusterProfile.Description); err != nil {
@@ -816,6 +921,21 @@ func flattenSnmpConfig(snmpConfig *config.SnmpConfig) interface{} {
 
 	m := map[string]interface{}{}
 
+	// Flatten ext_id
+	if snmpConfig.ExtId != nil {
+		m["ext_id"] = utils.StringValue(snmpConfig.ExtId)
+	}
+
+	// Flatten tenant_id
+	if snmpConfig.TenantId != nil {
+		m["tenant_id"] = utils.StringValue(snmpConfig.TenantId)
+	}
+
+	// Flatten links
+	if snmpConfig.Links != nil {
+		links := flattenLinks(snmpConfig.Links)
+		m["links"] = links
+	}
 	// Flatten is_enabled
 	if snmpConfig.IsEnabled != nil {
 		m["is_enabled"] = utils.BoolValue(snmpConfig.IsEnabled)
@@ -826,6 +946,9 @@ func flattenSnmpConfig(snmpConfig *config.SnmpConfig) interface{} {
 		users := make([]interface{}, 0, len(snmpConfig.Users))
 		for _, u := range snmpConfig.Users {
 			user := map[string]interface{}{
+				"ext_id":    utils.StringValue(u.ExtId),
+				"tenant_id": utils.StringValue(u.TenantId),
+				"links":     flattenLinks(u.Links),
 				"username":  u.Username,
 				"auth_type": common.FlattenPtrEnum(u.AuthType),
 				"auth_key":  utils.StringValue(u.AuthKey),
@@ -855,6 +978,9 @@ func flattenSnmpConfig(snmpConfig *config.SnmpConfig) interface{} {
 		traps := make([]interface{}, 0, len(snmpConfig.Traps))
 		for _, tr := range snmpConfig.Traps {
 			trap := map[string]interface{}{
+				"ext_id":           utils.StringValue(tr.ExtId),
+				"tenant_id":        utils.StringValue(tr.TenantId),
+				"links":            flattenLinks(tr.Links),
 				"username":         tr.Username,
 				"protocol":         common.FlattenPtrEnum(tr.Protocol),
 				"port":             utils.IntValue(tr.Port),
@@ -888,6 +1014,9 @@ func flattenRsyslogServerList(rsyslogServers []config.RsyslogServer) interface{}
 	result := make([]interface{}, 0, len(rsyslogServers))
 	for _, srv := range rsyslogServers {
 		s := map[string]interface{}{
+			"ext_id":           utils.StringValue(srv.ExtId),
+			"tenant_id":        utils.StringValue(srv.TenantId),
+			"links":            flattenLinks(srv.Links),
 			"server_name":      utils.StringValue(srv.ServerName),
 			"port":             utils.IntValue(srv.Port),
 			"network_protocol": common.FlattenPtrEnum(srv.NetworkProtocol),
