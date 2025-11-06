@@ -44,7 +44,7 @@ func ResourceNutanixPasswordManagerV2() *schema.Resource {
 }
 
 func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	fmt.Printf("[DEBUG] Creating Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))
+	log.Printf("[DEBUG] Creating Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))
 	conn := meta.(*conns.Client).ClusterAPI
 	extID := utils.StringPtr(d.Get("ext_id").(string))
 	body := &clusterConfig.ChangePasswordSpec{}
@@ -56,7 +56,7 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 	}
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
-	fmt.Printf("[DEBUG] Change Password Request body: %s", aJSON)
+	log.Printf("[DEBUG] Change Password Request body: %s", aJSON)
 
 	resp, err := conn.PasswordManagerAPI.ChangeSystemUserPasswordById(extID, body)
 	if err != nil {
@@ -64,7 +64,7 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 	}
 
 	aJSON, _ = json.MarshalIndent(resp, "", "  ")
-	fmt.Printf("[DEBUG] Change Password Response: %s", aJSON)
+	log.Printf("[DEBUG] Change Password Response: %s", aJSON)
 
 	TaskRef := resp.Data.GetValue().(import1.TaskReference)
 	taskUUID := TaskRef.ExtId
@@ -146,18 +146,18 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 }
 
 func resourceNutanixPasswordManagerV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	fmt.Printf("[DEBUG] Reading Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))
+	log.Printf("[DEBUG] Reading Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))
 	return nil
 }
 
 func resourceNutanixPasswordManagerV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	fmt.Printf("[DEBUG] Updating Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))
+	log.Printf("[DEBUG] Updating Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))
 	return resourceNutanixPasswordManagerV2Create(ctx, d, meta)
 	// Note: The update operation is the same as create in this case.
 }
 
 func resourceNutanixPasswordManagerV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	fmt.Printf("[DEBUG] Deleting Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))
+	log.Printf("[DEBUG] Deleting Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))
 	return nil
 }
 

@@ -228,7 +228,7 @@ resource "nutanix_clusters_discover_unconfigured_nodes_v2" "cluster-node" {
       error_message = "The node ${local.clusters.nodes[3].cvm_ip} is configured"
     }
   }
-  depends_on = [nutanix_pc_registration_v2 .nodes-registration]
+  depends_on = [nutanix_pc_registration_v2.nodes-registration]
 }
 
 ## fetch Network info for unconfigured node

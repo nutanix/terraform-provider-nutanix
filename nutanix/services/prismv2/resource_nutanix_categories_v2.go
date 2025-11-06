@@ -18,6 +18,9 @@ func ResourceNutanixCategoriesV2() *schema.Resource {
 		ReadContext:   ResourceNutanixCategoriesV2Read,
 		UpdateContext: ResourceNutanixCategoriesV2Update,
 		DeleteContext: ResourceNutanixCategoriesV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"key": {
 				Type:     schema.TypeString,

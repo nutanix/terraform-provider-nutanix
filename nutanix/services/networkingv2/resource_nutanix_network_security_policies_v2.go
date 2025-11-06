@@ -26,6 +26,9 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 		ReadContext:   ResourceNutanixNetworkSecurityPolicyV2Read,
 		UpdateContext: ResourceNutanixNetworkSecurityPolicyV2Update,
 		DeleteContext: ResourceNutanixNetworkSecurityPolicyV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
