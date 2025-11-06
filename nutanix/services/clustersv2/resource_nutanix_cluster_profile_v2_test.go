@@ -3,6 +3,7 @@ package clustersv2_test
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -259,6 +260,41 @@ func TestAccNutanixClusterProfileV2_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName2, "snmp_config.0.users.0.auth_type", "SHA"),
 					resource.TestCheckResourceAttr(resourceName2, "pulse_status.0.is_enabled", "true"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccNutanixClusterProfileV2_duplicate(t *testing.T) {
+	profileName1 := "tf-test-cluster-profile"
+	profileName2 := "tf-test-cluster-profile"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckClusterProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterProfilesConfig(profileName1, profileName2),
+				ExpectError: regexp.MustCompile(`profile name already exists on another profile`),
+			},
+		},
+	})
+}
+
+func TestAccNutanixClusterProfileV2_fetchCPWrongExtID(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckClusterProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:`
+					data "nutanix_cluster_profile_v2" "test" {
+						ext_id = "00000000-0000-0000-0000-000000000000"
+					}
+				`,
+				ExpectError: regexp.MustCompile(`Error - profile 00000000-0000-0000-0000-000000000000 not found`),
 			},
 		},
 	})
