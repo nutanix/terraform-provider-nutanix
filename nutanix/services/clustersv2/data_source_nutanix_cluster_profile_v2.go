@@ -5,7 +5,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -104,7 +103,6 @@ func DatasourceNutanixClusterProfileV2() *schema.Resource {
 			"snmp_config": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"is_enabled": {
@@ -258,9 +256,8 @@ func DatasourceNutanixClusterProfileV2() *schema.Resource {
 							Computed: true,
 						},
 						"pii_scrubbing_level": {
-							Type:         schema.TypeString,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(PIIScrubbingLevelStrings, false),
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -272,8 +269,10 @@ func DatasourceNutanixClusterProfileV2() *schema.Resource {
 func DatasourceNutanixClusterProfileV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ClusterAPI
 
+	extID := d.Get("ext_id").(string)
+
 	// Fetch the Cluster Profile by UUID
-	clusterProfileResp, err := conn.ClusterProfilesAPI.GetClusterProfileById(utils.StringPtr(d.Id()))
+	clusterProfileResp, err := conn.ClusterProfilesAPI.GetClusterProfileById(utils.StringPtr(extID))
 	if err != nil {
 		return diag.FromErr(err)
 	}

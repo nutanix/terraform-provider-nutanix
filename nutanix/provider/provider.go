@@ -314,6 +314,8 @@ func Provider() *schema.Provider {
 			"nutanix_system_user_passwords_v2":                passwordmanagerv2.DataSourceNutanixPasswordManagersV2(),
 			"nutanix_host_v2":                                 clustersv2.DatasourceNutanixHostEntityV2(),
 			"nutanix_hosts_v2":                                clustersv2.DatasourceNutanixHostEntitiesV2(),
+			"nutanix_cluster_profile_v2":                      clustersv2.DatasourceNutanixClusterProfileV2(),
+			"nutanix_cluster_profiles_v2":                     clustersv2.DatasourceNutanixClusterProfilesV2(),
 			"nutanix_lcm_status_v2":                           lcmv2.DatasourceNutanixLcmStatusV2(),
 			"nutanix_lcm_entities_v2":                         lcmv2.DatasourceNutanixLcmEntitiesV2(),
 			"nutanix_lcm_entity_v2":                           lcmv2.DatasourceNutanixLcmEntityV2(),
