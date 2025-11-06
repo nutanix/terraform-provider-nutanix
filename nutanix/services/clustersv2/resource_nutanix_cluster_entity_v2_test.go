@@ -24,6 +24,9 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-cluster-%d", r)
 
+	clusterProfileResourceName := "nutanix_cluster_profile_v2.test"
+	clusterProfileDataSourceName := "data.nutanix_cluster_profile_v2.test"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -44,6 +47,34 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.number_of_nodes", "1"),
 					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
 					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
+				),
+			},
+			// Create cluster profile and associate with cluster with dryrun true
+			{
+				PreConfig: func() {
+					fmt.Println("Creating cluster profile and associating with cluster")
+				},
+				Config: testAccClusterResourceMinimumConfig(name) + testAccClusterProfileResourceConfig("tf-first-cluster-profile", "true"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(clusterProfileResourceName, "name", "tf-first-cluster-profile"),
+					resource.TestCheckResourceAttrSet(clusterProfileResourceName, "ext_id"),
+					resource.TestCheckResourceAttrPair(clusterProfileResourceName, "id", clusterProfileDataSourceName, "ext_id"),
+					resource.TestCheckResourceAttrPair(clusterProfileResourceName, "name", clusterProfileDataSourceName, "name"),
+					resource.TestCheckResourceAttr(clusterProfileDataSourceName, "clusters.#", "0"),
+				),
+			},
+			// Create cluster profile and associate with cluster with dryrun false
+			{
+				PreConfig: func() {
+					fmt.Println("Creating cluster profile and associating with cluster")
+				},
+				Config: testAccClusterResourceMinimumConfig(name) + testAccClusterProfileResourceConfig("tf-first-cluster-profile", "false"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(clusterProfileResourceName, "name", "tf-first-cluster-profile"),
+					resource.TestCheckResourceAttrSet(clusterProfileResourceName, "ext_id"),
+					resource.TestCheckResourceAttrPair(clusterProfileResourceName, "id", clusterProfileDataSourceName, "ext_id"),
+					resource.TestCheckResourceAttrPair(clusterProfileResourceName, "name", clusterProfileDataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceNameCluster, "id", clusterProfileDataSourceName, "clusters.0.ext_id"),
 				),
 			},
 		},
@@ -964,4 +995,118 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
   depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.cluster-nodes]
 }
 `, clusterName, filepath)
+}
+
+func testAccClusterProfileResourceConfig(name, dryrun string) string {
+	return fmt.Sprintf(`
+resource "nutanix_cluster_profile_v2" "test" {
+  name = "%s"
+  description = "Example First Cluster Profile created via Terraform"
+  allowed_overrides = ["NTP_SERVER_CONFIG", "SNMP_SERVER_CONFIG"]
+
+  name_server_ip_list {
+    ipv4 { value = "240.29.254.180" }
+    ipv6 { value = "1a7d:9a64:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
+  }
+
+  ntp_server_ip_list {
+    ipv4 { value = "240.29.254.180" }
+    ipv6 { value = "1a7d:9a64:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
+    fqdn { value = "ntp.example.com" }
+  }
+
+  smtp_server {
+    email_address = "email@example.com"
+    type = "SSL"
+    server {
+      ip_address {
+        ipv4 { value = "240.29.254.180" }
+        ipv6 { value = "1a7d:9a64:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
+        fqdn { value = "smtp.example.com" }
+      }
+      port     = 587
+      username = "example_user"
+      password = "example_password"
+    }
+  }
+
+  nfs_subnet_white_list = ["10.110.106.45/255.255.255.255"]
+
+  snmp_config {
+    is_enabled = true
+    users {
+      username  = "snmpuser1"
+      auth_type = "MD5"
+      auth_key  = "Test_SNMP_user_authentication_key"
+      priv_type = "DES"
+      priv_key  = "Test_SNMP_user_encryption_key"
+    }
+    transports {
+      protocol = "UDP"
+      port     = 21
+    }
+    traps {
+      address {
+        ipv4 {
+					value         = "240.29.254.180"
+					prefix_length = 24
+				}
+        ipv6 { value = "1a7d:9a64:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
+      }
+      username         = "trapuser"
+      protocol         = "UDP"
+      port             = 59
+      should_inform    = false
+      engine_id        = "0x1234567890abcdef12"
+      version          = "V2"
+      receiver_name    = "trap-receiver"
+      community_string = "snmp-server community public RO 192.168.1.0 255.255.255.0"
+    }
+  }
+
+  rsyslog_server_list {
+    server_name      = "testServer1"
+    port             = 29
+    network_protocol = "UDP"
+    ip_address {
+      ipv4 { value = "240.29.254.180" }
+      ipv6 { value = "1a7d:9a64:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
+    }
+    modules {
+      name                     = "CASSANDRA"
+      log_severity_level       = "EMERGENCY"
+      should_log_monitor_files = true
+    }
+    modules {
+      name                     = "CURATOR"
+      log_severity_level       = "ERROR"
+      should_log_monitor_files = false
+    }
+  }
+
+  pulse_status {
+    is_enabled          = false
+    pii_scrubbing_level = "DEFAULT"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      smtp_server.0.server.0.password,
+      snmp_config.0.users.0.auth_key,
+      snmp_config.0.users.0.priv_key
+    ]
+  }
+}
+
+resource "nutanix_cluster_profile_association_v2" "test" {
+  ext_id   = nutanix_cluster_profile_v2.test.id
+  clusters = [nutanix_cluster_v2.test.id]
+  dryrun    = %[2]s
+}
+
+data "nutanix_cluster_profile_v2" "test" {
+  ext_id = nutanix_cluster_profile_v2.test.id
+  depends_on = [nutanix_cluster_profile_association_v2.test]
+}
+`, name, dryrun)
 }
