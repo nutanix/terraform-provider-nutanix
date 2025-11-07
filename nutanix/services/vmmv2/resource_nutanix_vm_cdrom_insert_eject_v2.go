@@ -2,7 +2,7 @@ package vmmv2
 
 import (
 	"context"
-
+	"log"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -27,6 +27,22 @@ func ResourceNutanixVmsCdRomsInsertEjectV2() *schema.Resource {
 			"ext_id": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"disk_address": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bus_type": {
+							Type:         schema.TypeString,
+							Computed:     true,
+						},
+						"index": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"backing_info": {
 				Type:     schema.TypeList,
@@ -137,95 +153,116 @@ func ResourceNutanixVmsCdRomsInsertEjectV2() *schema.Resource {
 					},
 				},
 			},
+			"iso_type": {
+				Type:         schema.TypeString,
+				Computed:     true,
+			},
+			"action": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default: "INSERT",
+				ValidateFunc: validation.StringInSlice([]string{"INSERT", "EJECT"}, false),
+			},
 		},
 	}
 }
 
 func ResourceNutanixVmsCdRomsInsertEjectV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] ResourceNutanixVmsCdRomsInsertEjectV2Create : Inserting ISO into the CD-ROM %s of the VM %s", d.Get("ext_id").(string), d.Get("vm_ext_id").(string))
+	if action, ok := d.GetOk("action"); ok && action.(string) == "INSERT" {
+		conn := meta.(*conns.Client).VmmAPI
+
+		vmExtID := d.Get("vm_ext_id")
+		extID := d.Get("ext_id")
+		body := config.CdRomInsertParams{}
+
+		if backInfo, ok := d.GetOk("backing_info"); ok {
+			body.BackingInfo = expandVMDisk(backInfo)
+		}
+
+		readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(vmExtID.(string)))
+		if err != nil {
+			return diag.Errorf("error while reading vm : %v", err)
+		}
+		// Extract E-Tag Header
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(readResp, conn)
+
+		resp, err := conn.VMAPIInstance.InsertCdRomById(utils.StringPtr(vmExtID.(string)), utils.StringPtr(extID.(string)), &body, args)
+		if err != nil {
+			return diag.Errorf("error while inserting cd-rom : %v", err)
+		}
+
+		TaskRef := resp.Data.GetValue().(import1.TaskReference)
+		taskUUID := TaskRef.ExtId
+
+		taskconn := meta.(*conns.Client).PrismAPI
+		// Wait for the VM to be available
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"QUEUED", "RUNNING"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutCreate),
+		}
+
+		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+			return diag.Errorf("error waiting for cd-rom (%s) to insert: %s", utils.StringValue(taskUUID), errWaitTask)
+		}
+
+		d.SetId(resource.UniqueId())
+		return ResourceNutanixVmsCdRomsInsertEjectV2Read(ctx, d, meta)
+	} else {
+		return diag.Errorf("Action %s is not supported for CD-ROM Insert", action.(string))
+	}
+}
+
+func ResourceNutanixVmsCdRomsInsertEjectV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] ResourceNutanixVmsCdRomsInsertEjectV2Read : Reading CD-ROM %s of the VM %s", d.Get("ext_id").(string), d.Get("vm_ext_id").(string))
 	conn := meta.(*conns.Client).VmmAPI
 
 	vmExtID := d.Get("vm_ext_id")
 	extID := d.Get("ext_id")
-	body := config.CdRomInsertParams{}
 
-	if backInfo, ok := d.GetOk("backing_info"); ok {
-		body.BackingInfo = expandVMDisk(backInfo)
-	}
-
-	readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(vmExtID.(string)))
+	readResp, err := conn.VMAPIInstance.GetCdRomById(utils.StringPtr(vmExtID.(string)), utils.StringPtr(extID.(string)))
 	if err != nil {
-		return diag.Errorf("error while reading vm : %v", err)
-	}
-	// Extract E-Tag Header
-	args := make(map[string]interface{})
-	args["If-Match"] = getEtagHeader(readResp, conn)
-
-	resp, err := conn.VMAPIInstance.InsertCdRomById(utils.StringPtr(vmExtID.(string)), utils.StringPtr(extID.(string)), &body, args)
-	if err != nil {
-		return diag.Errorf("error while inserting cd-rom : %v", err)
+		return diag.Errorf("error while reading cd-rom : %v", err)
 	}
 
-	TaskRef := resp.Data.GetValue().(import1.TaskReference)
-	taskUUID := TaskRef.ExtId
+	getResp := readResp.Data.GetValue().(config.CdRom)
 
-	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+	if err := d.Set("iso_type", getResp.IsoType.GetName()); err != nil {
+		return diag.FromErr(err)
 	}
-
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for cd-rom (%s) to insert: %s", utils.StringValue(taskUUID), errWaitTask)
+	if err := d.Set("disk_address", flattenCdRomAddress(getResp.DiskAddress)); err != nil {
+		return diag.FromErr(err)
 	}
-
-	d.SetId(resource.UniqueId())
-	return nil
-}
-
-func ResourceNutanixVmsCdRomsInsertEjectV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if err := d.Set("backing_info", flattenVMDisk(getResp.BackingInfo)); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
 func ResourceNutanixVmsCdRomsInsertEjectV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if action, ok := d.GetOk("action"); ok && action.(string) == "EJECT" {
+		log.Printf("[DEBUG] ResourceNutanixVmsCdRomsInsertEjectV2Update : Action %s", action.(string))
+		diags := ejectCdromISO(ctx, d, meta)
+		if diags.HasError() {
+			// Ejection failed, set the action to INSERT to avoid Terraform from saving "EJECT" in state
+			d.Set("action", "INSERT")
+			return diags
+		}
+		return ResourceNutanixVmsCdRomsInsertEjectV2Read(ctx, d, meta)
+	}
 	return nil
 }
 
 func ResourceNutanixVmsCdRomsInsertEjectV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).VmmAPI
-
-	vmExtID := d.Get("vm_ext_id")
-	extID := d.Get("ext_id")
-
-	readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(vmExtID.(string)))
-	if err != nil {
-		return diag.Errorf("error while reading vm : %v", err)
+	log.Printf("[DEBUG] ResourceNutanixVmsCdRomsInsertEjectV2Delete : Ejecting ISO from the CD-ROM %s of the VM %s", d.Get("ext_id").(string), d.Get("vm_ext_id").(string))
+	if action, ok := d.GetOk("action"); ok && action.(string) == "EJECT" {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "ISO is not inserted on the CD-ROM of the VM or ejected earlier using an action, Ignoring the request to eject the ISO",
+		}}
 	}
-	// Extract E-Tag Header
-	args := make(map[string]interface{})
-	args["If-Match"] = getEtagHeader(readResp, conn)
-
-	resp, err := conn.VMAPIInstance.EjectCdRomById(utils.StringPtr(vmExtID.(string)), utils.StringPtr(extID.(string)), args)
-	if err != nil {
-		return diag.Errorf("error while ejecting cd-rom : %v", err)
-	}
-
-	TaskRef := resp.Data.GetValue().(import1.TaskReference)
-	taskUUID := TaskRef.ExtId
-
-	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
-
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for cd-rom (%s) to eject: %s", utils.StringValue(taskUUID), errWaitTask)
-	}
-	return nil
+	return ejectCdromISO(ctx, d, meta)
 }

@@ -243,7 +243,7 @@ func ResourceNutanixNGTInsertIsoV2Read(ctx context.Context, d *schema.ResourceDa
 func ResourceNutanixNGTInsertIsoV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	if action, ok := d.GetOk("action"); ok && action.(string) == "EJECT" {
 		log.Printf("[DEBUG] ResourceNutanixNGTInsertIsoV2Update : Action %s", action.(string))
-		diags := ejectNGTISO(ctx, d, meta)
+		diags := ejectCdromISO(ctx, d, meta)
 		if diags.HasError() {
 			// Ejection failed, set the action to INSERT to avoid Terraform from saving "EJECT" in state
 			d.Set("action", "INSERT")
@@ -263,11 +263,11 @@ func ResourceNutanixNGTInsertIsoV2Delete(ctx context.Context, d *schema.Resource
 			Summary:  "NGT ISO is not inserted on the CD-ROM of the VM or ejected earlier using an action, Ignoring the request to eject the NGT ISO",
 		}}
 	}
-	return ejectNGTISO(ctx, d, meta)
+	return ejectCdromISO(ctx, d, meta)
 }
 
-func ejectNGTISO(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[DEBUG] Ejecting NGT ISO from the CD-ROM %s of the VM %s", d.Get("cdrom_ext_id").(string), d.Get("vm_ext_id").(string))
+func ejectCdromISO(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics{
+	log.Printf("[DEBUG] Ejecting ISO from the CD-ROM %s of the VM %s", d.Get("cdrom_ext_id").(string), d.Get("vm_ext_id").(string))
 	conn := meta.(*conns.Client).VmmAPI
 	vmExtID := d.Get("vm_ext_id").(string)
 	extID := d.Get("cdrom_ext_id").(string)
@@ -300,7 +300,7 @@ func ejectNGTISO(ctx context.Context, d *schema.ResourceData, meta interface{}) 
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("NGT ISO EJECTION FAILED: REASON: %s : Task UUID: %s", errWaitTask, utils.StringValue(taskUUID))
+		return diag.Errorf("ISO EJECTION FAILED: REASON: %s : Task UUID: %s", errWaitTask, utils.StringValue(taskUUID))
 	}
 	return nil
 }
