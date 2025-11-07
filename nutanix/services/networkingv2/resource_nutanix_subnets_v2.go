@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -585,19 +586,45 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	getAllSubnetResp := readResp.Data.GetValue().([]import1.Subnet)
+	subnetExtId := ""
+	maxRetries := 5
+	retryCount := 0
 
-	for _, subnet := range getAllSubnetResp {
-		if (utils.StringValue(subnet.Name) == subnetName) && (flattenSubnetType(subnet.SubnetType) == subnetType) {
-			d.SetId(*subnet.ExtId)
+	for {
+		for _, subnet := range getAllSubnetResp {
+			if (utils.StringValue(subnet.Name) == subnetName) && (flattenSubnetType(subnet.SubnetType) == subnetType) {
+				subnetExtId = *subnet.ExtId
+				log.Printf("[DEBUG] Subnet ExtId: %s", subnetExtId)
+				d.SetId(subnetExtId)
+				break
+			}
+		}
+
+		if subnetExtId != "" {
 			break
 		}
+
+		retryCount++
+		if retryCount >= maxRetries {
+			return diag.Errorf("error: subnet with name %s and type %s not found after %d retries", subnetName, subnetType, maxRetries)
+		}
+
+		log.Printf("[DEBUG] Subnet ExtId not set, retrying (attempt %d/%d)...", retryCount+1, maxRetries)
+		time.Sleep(2 * time.Second)
+
+		// Re-fetch subnets for retry
+		readResp, err = conn.SubnetAPIInstance.ListSubnets(nil, nil, nil, nil, nil, nil)
+		if err != nil {
+			return diag.Errorf("error while fetching subnets on retry: %v", err)
+		}
+		getAllSubnetResp = readResp.Data.GetValue().([]import1.Subnet)
 	}
 	return ResourceNutanixSubnetV2Read(ctx, d, meta)
 }
 
 func ResourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
-
+	log.Printf("[DEBUG] Reading subnet: %s", d.Id())
 	resp, err := conn.SubnetAPIInstance.GetSubnetById(utils.StringPtr(d.Id()))
 	if err != nil {
 		return diag.Errorf("error while fetching subnets : %v", err)
