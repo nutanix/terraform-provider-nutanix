@@ -3,7 +3,6 @@ package vmmv2
 import (
 	"context"
 	"log"
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -244,7 +243,7 @@ func ResourceNutanixNGTInsertIsoV2Read(ctx context.Context, d *schema.ResourceDa
 func ResourceNutanixNGTInsertIsoV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	if action, ok := d.GetOk("action"); ok && action.(string) == "EJECT" {
 		log.Printf("[DEBUG] ResourceNutanixNGTInsertIsoV2Update : Action %s", action.(string))
-		diags := ResourceNutanixNGTInsertIsoV2Delete(ctx, d, meta)
+		diags := ejectNGTISO(ctx, d, meta)
 		if diags.HasError() {
 			// Ejection failed, set the action to INSERT to avoid Terraform from saving "EJECT" in state
 			d.Set("action", "INSERT")
@@ -257,13 +256,18 @@ func ResourceNutanixNGTInsertIsoV2Update(ctx context.Context, d *schema.Resource
 
 // ResourceNutanixNGTInsertIsoV2Delete eject the ngt iso from the cd-rom of the vm
 func ResourceNutanixNGTInsertIsoV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if isIsoInserted, ok := d.GetOk("is_iso_inserted"); ok && !isIsoInserted.(bool) {
+	log.Printf("[DEBUG] ResourceNutanixNGTInsertIsoV2Delete : Ejecting NGT ISO from the CD-ROM %s of the VM %s", d.Get("cdrom_ext_id").(string), d.Get("vm_ext_id").(string))
+	if action, ok := d.GetOk("action"); ok && action.(string) == "EJECT" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
-			Summary:  "ISO is not inserted on the VM or ejected earlier using an action, Ignoring the request to eject the ISO",
+			Summary:  "NGT ISO is not inserted on the CD-ROM of the VM or ejected earlier using an action, Ignoring the request to eject the NGT ISO",
 		}}
 	}
-	log.Printf("[DEBUG] ResourceNutanixNGTInsertIsoV2Delete : Ejecting NGT ISO from the VM %s with CD-ROM %s", d.Get("vm_ext_id").(string), d.Get("cdrom_ext_id").(string))
+	return ejectNGTISO(ctx, d, meta)
+}
+
+func ejectNGTISO(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] Ejecting NGT ISO from the CD-ROM %s of the VM %s", d.Get("cdrom_ext_id").(string), d.Get("vm_ext_id").(string))
 	conn := meta.(*conns.Client).VmmAPI
 	vmExtID := d.Get("vm_ext_id").(string)
 	extID := d.Get("cdrom_ext_id").(string)
