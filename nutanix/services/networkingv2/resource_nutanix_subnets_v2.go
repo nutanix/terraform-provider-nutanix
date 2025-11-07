@@ -568,7 +568,7 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	// Get UUID from TASK API
 	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching subnet UUID : %v", err)
+		return diag.Errorf("error while fetching task details : %v", err)
 	}
 	rUUID := resourceUUID.Data.GetValue().(import2.Task)
 	if len(rUUID.EntitiesAffected) > 0 && utils.StringValue(rUUID.EntitiesAffected[0].Rel) == "networking:config:subnet" {
