@@ -593,14 +593,14 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	for {
 		for _, subnet := range getAllSubnetResp {
 			if (utils.StringValue(subnet.Name) == subnetName) && (flattenSubnetType(subnet.SubnetType) == subnetType) {
-				subnetExtId = *subnet.ExtId
-				log.Printf("[DEBUG] Subnet ExtId: %s", subnetExtId)
-				d.SetId(subnetExtId)
+				subnetExtID = *subnet.ExtId
+				log.Printf("[DEBUG] Subnet ExtId: %s", subnetExtID)
+				d.SetId(subnetExtID)
 				break
 			}
 		}
 
-		if subnetExtId != "" {
+		if subnetExtID != "" {
 			break
 		}
 
@@ -609,9 +609,9 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 			return diag.Errorf("error: subnet with name %s and type %s not found after %d retries", subnetName, subnetType, maxRetries)
 		}
 
-	log.Printf("[DEBUG] Subnet ExtId not set, retrying (attempt %d/%d)...", retryCount+1, maxRetries)
-	const retryDelaySeconds = 2
-	time.Sleep(retryDelaySeconds * time.Second)
+		log.Printf("[DEBUG] Subnet ExtId not set, retrying (attempt %d/%d)...", retryCount+1, maxRetries)
+		const retryDelaySeconds = 2
+		time.Sleep(retryDelaySeconds * time.Second)
 
 		// Re-fetch subnets for retry
 		readResp, err = conn.SubnetAPIInstance.ListSubnets(nil, nil, nil, nil, nil, nil)
