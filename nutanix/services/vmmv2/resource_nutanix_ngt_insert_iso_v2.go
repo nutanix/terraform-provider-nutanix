@@ -2,7 +2,8 @@ package vmmv2
 
 import (
 	"context"
-
+	"log"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -84,6 +85,12 @@ func ResourceNutanixNGTInsertIsoV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"action": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "INSERT",
+				ValidateFunc: validation.StringInSlice([]string{"INSERT", "EJECT"}, false),
+			},
 		},
 	}
 }
@@ -91,89 +98,92 @@ func ResourceNutanixNGTInsertIsoV2() *schema.Resource {
 // Install NGT on Vm
 func ResourceNutanixNGTInsertIsoV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
+	if action, ok := d.GetOk("action"); ok && action.(string) == "INSERT" {
+		extID := d.Get("ext_id")
 
-	extID := d.Get("ext_id")
+		readResp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID.(string)))
+		if err != nil {
+			return diag.Errorf("error while fetching Vm : %v", err)
+		}
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(readResp, conn)
 
-	readResp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID.(string)))
-	if err != nil {
-		return diag.Errorf("error while fetching Vm : %v", err)
-	}
-	args := make(map[string]interface{})
-	args["If-Match"] = getEtagHeader(readResp, conn)
+		body := &vmmConfig.GuestToolsInsertConfig{}
 
-	body := &vmmConfig.GuestToolsInsertConfig{}
-
-	// prepare the body
-	if capabilities, ok := d.GetOk("capablities"); ok {
-		capabilitiesList := capabilities.([]interface{})
-		capabilitiesSet := make(map[vmmConfig.NgtCapability]bool)
-		// capabilitiesListStr := make([]string, len(capabilitiesList))
-		for _, v := range capabilitiesList {
-			var cap vmmConfig.NgtCapability
-			if v.(string) == "SELF_SERVICE_RESTORE" {
-				cap = 2 // Assuming 2 represents SELF_SERVICE_RESTORE
-			} else if v.(string) == "VSS_SNAPSHOT" {
-				cap = 3 // Assuming 3 represents VSS_SNAPSHOT
+		// prepare the body
+		if capabilities, ok := d.GetOk("capablities"); ok {
+			capabilitiesList := capabilities.([]interface{})
+			capabilitiesSet := make(map[vmmConfig.NgtCapability]bool)
+			// capabilitiesListStr := make([]string, len(capabilitiesList))
+			for _, v := range capabilitiesList {
+				var cap vmmConfig.NgtCapability
+				if v.(string) == "SELF_SERVICE_RESTORE" {
+					cap = 2 // Assuming 2 represents SELF_SERVICE_RESTORE
+				} else if v.(string) == "VSS_SNAPSHOT" {
+					cap = 3 // Assuming 3 represents VSS_SNAPSHOT
+				}
+				// Step 3: Add capability to the set
+				capabilitiesSet[cap] = true
 			}
-			// Step 3: Add capability to the set
-			capabilitiesSet[cap] = true
+			// Convert the set back to a slice for the API call
+			capabilitiesListStr := make([]vmmConfig.NgtCapability, 0, len(capabilitiesSet))
+			for cap := range capabilitiesSet {
+				capabilitiesListStr = append(capabilitiesListStr, cap)
+			}
+
+			body.Capabilities = capabilitiesListStr
 		}
-		// Convert the set back to a slice for the API call
-		capabilitiesListStr := make([]vmmConfig.NgtCapability, 0, len(capabilitiesSet))
-		for cap := range capabilitiesSet {
-			capabilitiesListStr = append(capabilitiesListStr, cap)
+
+		if isConfigOnly, ok := d.GetOk("is_config_only"); ok {
+			body.IsConfigOnly = utils.BoolPtr(isConfigOnly.(bool))
 		}
 
-		body.Capabilities = capabilitiesListStr
-	}
-
-	if isConfigOnly, ok := d.GetOk("is_config_only"); ok {
-		body.IsConfigOnly = utils.BoolPtr(isConfigOnly.(bool))
-	}
-
-	resp, err := conn.VMAPIInstance.InsertVmGuestTools(utils.StringPtr(extID.(string)), body, args)
-	if err != nil {
-		return diag.Errorf("error while Inserting  gest tools ISO : %v", err)
-	}
-
-	TaskRef := resp.Data.GetValue().(vmmPrism.TaskReference)
-	taskUUID := TaskRef.ExtId
-
-	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
-
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for template (%s) to Insert gest tools ISO: %s", utils.StringValue(taskUUID), errWaitTask)
-	}
-
-	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-	if err != nil {
-		return diag.Errorf("error while Inserting  gest tools ISO  : %v", err)
-	}
-	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
-
-	for _, entity := range rUUID.EntitiesAffected {
-		if utils.StringValue(entity.Rel) == "vmm:ahv:config:vm" {
-			uuid := entity.ExtId
-			d.Set("vm_ext_id", *uuid)
+		resp, err := conn.VMAPIInstance.InsertVmGuestTools(utils.StringPtr(extID.(string)), body, args)
+		if err != nil {
+			return diag.Errorf("error while Inserting  gest tools ISO : %v", err)
 		}
-		if utils.StringValue(entity.Rel) == "vmm:ahv:config:vm:cdrom" {
-			uuid := entity.ExtId
-			d.Set("cdrom_ext_id", *uuid)
+
+		TaskRef := resp.Data.GetValue().(vmmPrism.TaskReference)
+		taskUUID := TaskRef.ExtId
+
+		taskconn := meta.(*conns.Client).PrismAPI
+		// Wait for the VM to be available
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutCreate),
 		}
+
+		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+			return diag.Errorf("error waiting for template (%s) to Insert gest tools ISO: %s", utils.StringValue(taskUUID), errWaitTask)
+		}
+
+		// Get UUID from TASK API
+
+		resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		if err != nil {
+			return diag.Errorf("error while Inserting  gest tools ISO  : %v", err)
+		}
+		rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
+
+		for _, entity := range rUUID.EntitiesAffected {
+			if utils.StringValue(entity.Rel) == "vmm:ahv:config:vm" {
+				uuid := entity.ExtId
+				d.Set("vm_ext_id", *uuid)
+			}
+			if utils.StringValue(entity.Rel) == "vmm:ahv:config:vm:cdrom" {
+				uuid := entity.ExtId
+				d.Set("cdrom_ext_id", *uuid)
+			}
+		}
+
+		d.SetId(resource.UniqueId())
+
+		return ResourceNutanixNGTInsertIsoV2Read(ctx, d, meta)
+	} else {
+      return diag.Errorf("Action %s is not supported for NGT ISO Insert", action.(string))
 	}
-
-	d.SetId(resource.UniqueId())
-
-	return ResourceNutanixNGTInsertIsoV2Read(ctx, d, meta)
 }
 
 // Read NGT Configuration
@@ -232,13 +242,29 @@ func ResourceNutanixNGTInsertIsoV2Read(ctx context.Context, d *schema.ResourceDa
 
 // ResourceNutanixNGTInsertIsoV2Update  Not supported
 func ResourceNutanixNGTInsertIsoV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if action, ok := d.GetOk("action"); ok && action.(string) == "EJECT" {
+		log.Printf("[DEBUG] ResourceNutanixNGTInsertIsoV2Update : Action %s", action.(string))
+		diags := ResourceNutanixNGTInsertIsoV2Delete(ctx, d, meta)
+		if diags.HasError() {
+			// Ejection failed, set the action to INSERT to avoid Terraform from saving "EJECT" in state
+			d.Set("action", "INSERT")
+			return diags
+		}
+		return ResourceNutanixNGTInsertIsoV2Read(ctx, d, meta)
+	}
 	return ResourceNutanixNGTInsertIsoV2Create(ctx, d, meta)
 }
 
 // ResourceNutanixNGTInsertIsoV2Delete eject the ngt iso from the cd-rom of the vm
 func ResourceNutanixNGTInsertIsoV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if isIsoInserted, ok := d.GetOk("is_iso_inserted"); ok && !isIsoInserted.(bool) {
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "ISO is not inserted on the VM or ejected earlier using an action, Ignoring the request to eject the ISO",
+		}}
+	}
+	log.Printf("[DEBUG] ResourceNutanixNGTInsertIsoV2Delete : Ejecting NGT ISO from the VM %s with CD-ROM %s", d.Get("vm_ext_id").(string), d.Get("cdrom_ext_id").(string))
 	conn := meta.(*conns.Client).VmmAPI
-
 	vmExtID := d.Get("vm_ext_id").(string)
 	extID := d.Get("cdrom_ext_id").(string)
 
@@ -270,7 +296,7 @@ func ResourceNutanixNGTInsertIsoV2Delete(ctx context.Context, d *schema.Resource
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for cd-rom (%s) to eject: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("NGT ISO EJECTION FAILED: REASON: %s : Task UUID: %s", errWaitTask, utils.StringValue(taskUUID))
 	}
 	return nil
 }
