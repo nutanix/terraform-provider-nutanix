@@ -98,8 +98,6 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameClusterRegistration, "pc_ext_id"),
 					resource.TestCheckResourceAttr(resourceNameClusterRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.address.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
 					resource.TestCheckResourceAttr(resourceNameClusterRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.credentials.0.authentication.0.username", testVars.Clusters.Nodes[0].Username),
-
-					// associateCategoryToCluster(),
 				),
 			},
 			// ############################################## Associate categories with cluster ##############################################
@@ -194,8 +192,6 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.server.0.port", strconv.Itoa(testVars.Clusters.Network.SMTPServer.Port)),
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.server.0.username", testVars.Clusters.Network.SMTPServer.Username),
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.type", testVars.Clusters.Network.SMTPServer.Type),
-
-					// disassociateCategoryFromCluster(),
 				),
 			},
 			// Step 9: Disable the cluster pulse status and check on cluster resource for config
