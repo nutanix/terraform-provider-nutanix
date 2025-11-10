@@ -138,7 +138,56 @@ func ResourceNutanixClusterV2() *schema.Resource {
 											},
 										},
 									},
+									// expand cluster with node params
+									"should_skip_host_networking": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"should_skip_add_node": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"should_skip_pre_expand_checks": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+						// remove node params
+						"remove_node_params": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"extra_params": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"should_skip_upgrade_check": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Default:  false,
+												},
+												"skip_space_check": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Default:  false,
+												},
+												"should_skip_add_check": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Default:  false,
+												},
+											},
+										},
+									},
 
+>>>>>>>>> Temporary merge branch 2
 									"should_skip_remove": {
 										Type:     schema.TypeBool,
 										Optional: true,
