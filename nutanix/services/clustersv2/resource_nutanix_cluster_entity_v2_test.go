@@ -60,15 +60,18 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
+		CheckDestroy: resource.ComposeTestCheckFunc(
+			testAccCheckNutanixClusterDestroy,
+			testAccCheckNutanixClusterCategoriesDestroy,
+		),
 		Steps: []resource.TestStep{
+			// Step 1: Plan
 			{
 				Config:   testAccClusterResourceAllConfig(name),
 				PlanOnly: false,
 			},
+			// Step 2: Apply
 			{
-				PreConfig: func() {
-					time.Sleep(10 * time.Second) // 10-second delay
-				},
 				Config: testAccClusterResourceAllConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					// check the unconfigured node is discovered or not
@@ -96,9 +99,76 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameClusterRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.address.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
 					resource.TestCheckResourceAttr(resourceNameClusterRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.credentials.0.authentication.0.username", testVars.Clusters.Nodes[0].Username),
 
-					associateCategoryToCluster(),
+					// associateCategoryToCluster(),
 				),
 			},
+			// ############################################## Associate categories with cluster ##############################################
+			// Step 3: Associate categories to the cluster and check on list cluster data source for categories
+			{
+				Config: testAccClusterResourceAllConfig(name) + testAccClusterResourceAssociateCategoriesConfig(r),
+				Check: resource.ComposeTestCheckFunc(
+					// check on list cluster data source for categories (order-independent)
+					checkCategories(dataSourceNameClusters, "cluster_entities.0.categories", []string{
+						"nutanix_category_v2.cat-1",
+						"nutanix_category_v2.cat-2",
+						"nutanix_category_v2.cat-3",
+					}),
+
+					// check on cluster data source for categories (order-independent)
+					checkCategories(dataSourceNameCluster, "categories", []string{
+						"nutanix_category_v2.cat-1",
+						"nutanix_category_v2.cat-2",
+						"nutanix_category_v2.cat-3",
+					}),
+				),
+			},
+			// Step 4: Check on cluster resource for categories
+			{
+
+				Config: testAccClusterResourceAllConfig(name) + testAccClusterResourceAssociateCategoriesConfig(r),
+				Check: resource.ComposeTestCheckFunc(
+					// check on cluster resource for categories (order-independent)
+					checkCategories(resourceNameCluster, "categories", []string{
+						"nutanix_category_v2.cat-1",
+						"nutanix_category_v2.cat-2",
+						"nutanix_category_v2.cat-3",
+					}),
+				),
+			},
+			// Step 5: Disassociate categories from cluster
+			{
+				Config: testAccClusterResourceAllConfig(name),
+			},
+			// Step 6: Check if categories are disassociated from cluster, data source check for categories
+			{
+				// Check if categories are disassociated from cluster
+				Config: testAccClusterResourceAllConfig(name) + `
+					# List all cluster to tests categories
+					data "nutanix_clusters_v2" "list-cluster" {
+						filter = "name eq '${nutanix_cluster_v2.test.name}'"
+					}
+
+					# get the cluster data source to test categories
+					data "nutanix_cluster_v2" "get-cluster" {
+						ext_id = nutanix_cluster_v2.test.id
+					}
+
+				`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.nutanix_cluster_v2.get-cluster", "categories.#", "0"),
+					resource.TestCheckResourceAttr("data.nutanix_clusters_v2.list-cluster", "cluster_entities.0.categories.#", "0"),
+				),
+			},
+			// Step 7: Check if categories are disassociated from cluster, resource check for categories
+			{
+				Config: testAccClusterResourceAllConfig(name),
+				Taint:  []string{resourceNameCluster},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameCluster, "categories.#", "0"),
+				),
+			},
+			// ############################################## Update cluster config ##############################################
+			// Step 8: Update cluster config and check on cluster resource for config
 			{
 				PreConfig: func() {
 					time.Sleep(10 * time.Second) // 10-second delay
@@ -125,13 +195,10 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.server.0.username", testVars.Clusters.Network.SMTPServer.Username),
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.type", testVars.Clusters.Network.SMTPServer.Type),
 
-					// check on list cluster data source for categories
-					resource.TestCheckResourceAttr(dataSourceNameClusters, "cluster_entities.0.categories.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceNameClusters, "cluster_entities.0.categories.0", "nutanix_category_v2.test", "id"),
-					disassociateCategoryFromCluster(),
+					// disassociateCategoryFromCluster(),
 				),
 			},
-			// Disable the cluster pulse status
+			// Step 9: Disable the cluster pulse status and check on cluster resource for config
 			{
 				PreConfig: func() {
 					time.Sleep(10 * time.Second) // 10-second delay
@@ -623,11 +690,6 @@ func testAccClusterResourceUpdateConfig(updatedName, pulseStatus string) string 
 		  depends_on = [nutanix_cluster_v2.test]
 		}
 
-		# List all cluster to tests categories
-		data "nutanix_clusters_v2" "test" {
-			filter = "name eq '${nutanix_cluster_v2.test.name}'"
-			depends_on = [nutanix_pc_registration_v2.node-registration]
-		}
 `, clusterConfig, updatedName, pulseStatus)
 }
 
@@ -964,4 +1026,45 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
   depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.cluster-nodes]
 }
 `, clusterName, filepath)
+}
+
+func testAccClusterResourceAssociateCategoriesConfig(r int) string {
+	return fmt.Sprintf(`
+		# create a new category
+		resource "nutanix_category_v2" "cat-1" {
+			key         = "test-cat1-key-%[1]d"
+			value       = "test-cat1-value-%[1]d"
+			description = "first category for cluster"
+		}
+
+		resource "nutanix_category_v2" "cat-2" {
+			key         = "test-cat2-key-%[1]d"
+			value       = "test-cat2-value-%[1]d"
+			description = "second category for cluster"
+		}
+
+		resource "nutanix_category_v2" "cat-3" {
+			key         = "test-cat3-key-%[1]d"
+			value       = "test-cat3-value-%[1]d"
+			description = "third category for cluster"
+		}
+
+		# associate categories with cluster
+		resource "nutanix_clusters_categories_v2" "test" {
+			cluster_ext_id = nutanix_cluster_v2.test.id
+			categories = [nutanix_category_v2.cat-1.id, nutanix_category_v2.cat-2.id, nutanix_category_v2.cat-3.id]
+		}
+
+		# List all cluster to tests categories
+		data "nutanix_clusters_v2" "test" {
+			filter = "name eq '${nutanix_cluster_v2.test.name}'"
+			depends_on = [nutanix_clusters_categories_v2.test]
+		}
+
+		# get the cluster data source to test categories
+		data "nutanix_cluster_v2" "test" {
+			ext_id = nutanix_cluster_v2.test.id
+			depends_on = [nutanix_clusters_categories_v2.test]
+		}
+	`, r)
 }

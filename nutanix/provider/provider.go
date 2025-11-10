@@ -445,6 +445,7 @@ func Provider() *schema.Provider {
 			"nutanix_lcm_config_v2":                           lcmv2.ResourceNutanixLcmConfigV2(),
 			"nutanix_object_store_v2":                         objectstoresv2.ResourceNutanixObjectStoresV2(),
 			"nutanix_object_store_certificate_v2":             objectstoresv2.ResourceNutanixObjectStoreCertificateV2(),
+			"nutanix_clusters_categories_v2":                  clustersv2.ResourceNutanixClustersCategoriesV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
