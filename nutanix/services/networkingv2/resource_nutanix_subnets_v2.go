@@ -571,11 +571,17 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("error while fetching task details : %v", err)
 	}
 	rUUID := resourceUUID.Data.GetValue().(import2.Task)
-	if len(rUUID.EntitiesAffected) > 0 && utils.StringValue(rUUID.EntitiesAffected[0].Rel) == "networking:config:subnet" {
-		uuid := rUUID.EntitiesAffected[0].ExtId
-		d.SetId(*uuid)
+	var subnetExtID *string
+	for _, entity := range rUUID.EntitiesAffected {
+		if utils.StringValue(entity.Rel) == "networking:config:subnet" {
+			subnetExtID = entity.ExtId
+			break
+		}
+	}
+	if subnetExtID != nil {
+		d.SetId(*subnetExtID)
 	} else {
-		return diag.Errorf("error while fetching subnet UUID : %v", err)
+		return diag.Errorf("error while fetching subnet ExtId : subnet entity not found in EntitiesAffected")
 	}
 	return ResourceNutanixSubnetV2Read(ctx, d, meta)
 }
