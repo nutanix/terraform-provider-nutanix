@@ -16,12 +16,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func ResourceNutanixClustersCategoriesV2() *schema.Resource {
+func ResourceNutanixClusterCategoriesV2() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: ResourceNutanixClustersCategoriesV2Create,
-		ReadContext:   ResourceNutanixClustersCategoriesV2Read,
-		UpdateContext: ResourceNutanixClustersCategoriesV2Update,
-		DeleteContext: ResourceNutanixClustersCategoriesV2Delete,
+		CreateContext: ResourceNutanixClusterCategoriesV2Create,
+		ReadContext:   ResourceNutanixClusterCategoriesV2Read,
+		UpdateContext: ResourceNutanixClusterCategoriesV2Update,
+		DeleteContext: ResourceNutanixClusterCategoriesV2Delete,
 		Schema: map[string]*schema.Schema{
 			"cluster_ext_id": {
 				Type:     schema.TypeString,
@@ -39,7 +39,7 @@ func ResourceNutanixClustersCategoriesV2() *schema.Resource {
 	}
 }
 
-func ResourceNutanixClustersCategoriesV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixClusterCategoriesV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ClusterAPI
 
 	clusterExtID := d.Get("cluster_ext_id")
@@ -87,15 +87,15 @@ func ResourceNutanixClustersCategoriesV2Create(ctx context.Context, d *schema.Re
 	return nil
 }
 
-func ResourceNutanixClustersCategoriesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixClusterCategoriesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func ResourceNutanixClustersCategoriesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixClusterCategoriesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func ResourceNutanixClustersCategoriesV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixClusterCategoriesV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ClusterAPI
 	body := &config.CategoryEntityReferences{}
 	clusterExtID := d.Get("cluster_ext_id")

@@ -1046,7 +1046,7 @@ func testAccClusterResourceAssociateCategoriesConfig(r int) string {
 		}
 
 		# associate categories with cluster
-		resource "nutanix_clusters_categories_v2" "test" {
+		resource "nutanix_cluster_categories_v2" "test" {
 			cluster_ext_id = nutanix_cluster_v2.test.id
 			categories = [nutanix_category_v2.cat-1.id, nutanix_category_v2.cat-2.id, nutanix_category_v2.cat-3.id]
 		}
@@ -1054,13 +1054,13 @@ func testAccClusterResourceAssociateCategoriesConfig(r int) string {
 		# List all cluster to tests categories
 		data "nutanix_clusters_v2" "test" {
 			filter = "name eq '${nutanix_cluster_v2.test.name}'"
-			depends_on = [nutanix_clusters_categories_v2.test]
+			depends_on = [nutanix_cluster_categories_v2.test]
 		}
 
 		# get the cluster data source to test categories
 		data "nutanix_cluster_v2" "test" {
 			ext_id = nutanix_cluster_v2.test.id
-			depends_on = [nutanix_clusters_categories_v2.test]
+			depends_on = [nutanix_cluster_categories_v2.test]
 		}
 	`, r)
 }
