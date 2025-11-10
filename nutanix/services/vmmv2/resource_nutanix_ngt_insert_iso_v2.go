@@ -3,6 +3,7 @@ package vmmv2
 import (
 	"context"
 	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -181,7 +182,7 @@ func ResourceNutanixNGTInsertIsoV2Create(ctx context.Context, d *schema.Resource
 
 		return ResourceNutanixNGTInsertIsoV2Read(ctx, d, meta)
 	} else {
-      return diag.Errorf("Action %s is not supported for NGT ISO Insert", action.(string))
+		return diag.Errorf("Action %s is not supported for NGT ISO Insert", action.(string))
 	}
 }
 
@@ -266,7 +267,7 @@ func ResourceNutanixNGTInsertIsoV2Delete(ctx context.Context, d *schema.Resource
 	return ejectCdromISO(ctx, d, meta)
 }
 
-func ejectCdromISO(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics{
+func ejectCdromISO(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] Ejecting ISO from the CD-ROM %s of the VM %s", d.Get("cdrom_ext_id").(string), d.Get("vm_ext_id").(string))
 	conn := meta.(*conns.Client).VmmAPI
 	vmExtID := d.Get("vm_ext_id").(string)

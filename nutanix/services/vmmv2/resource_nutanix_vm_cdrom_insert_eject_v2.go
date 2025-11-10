@@ -39,8 +39,8 @@ func ResourceNutanixVmsCdRomsInsertEjectV2() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bus_type": {
-							Type:         schema.TypeString,
-							Computed:     true,
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"index": {
 							Type:     schema.TypeInt,
