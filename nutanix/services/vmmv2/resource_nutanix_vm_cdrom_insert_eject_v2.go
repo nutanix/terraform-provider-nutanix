@@ -3,6 +3,7 @@ package vmmv2
 import (
 	"context"
 	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,6 +24,10 @@ func ResourceNutanixVmsCdRomsInsertEjectV2() *schema.Resource {
 			"vm_ext_id": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"cdrom_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -49,9 +54,14 @@ func ResourceNutanixVmsCdRomsInsertEjectV2() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"disk_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"disk_size_bytes": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"storage_container": {
 							Type:     schema.TypeList,
@@ -117,10 +127,6 @@ func ResourceNutanixVmsCdRomsInsertEjectV2() *schema.Resource {
 																		"bus_type": {
 																			Type:     schema.TypeString,
 																			Optional: true,
-																			ValidateFunc: validation.StringInSlice([]string{
-																				"SCSI", "SPAPR",
-																				"PCI", "IDE", "SATA",
-																			}, false),
 																		},
 																		"index": {
 																			Type:     schema.TypeInt,
@@ -150,18 +156,22 @@ func ResourceNutanixVmsCdRomsInsertEjectV2() *schema.Resource {
 								},
 							},
 						},
+						"is_migration_in_progress": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 					},
 				},
 			},
 			"iso_type": {
-				Type:         schema.TypeString,
-				Computed:     true,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"action": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default: "INSERT",
-				ValidateFunc: validation.StringInSlice([]string{"INSERT", "EJECT"}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "insert",
+				ValidateFunc: validation.StringInSlice([]string{"insert", "eject"}, false),
 			},
 		},
 	}
@@ -169,7 +179,7 @@ func ResourceNutanixVmsCdRomsInsertEjectV2() *schema.Resource {
 
 func ResourceNutanixVmsCdRomsInsertEjectV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] ResourceNutanixVmsCdRomsInsertEjectV2Create : Inserting ISO into the CD-ROM %s of the VM %s", d.Get("ext_id").(string), d.Get("vm_ext_id").(string))
-	if action, ok := d.GetOk("action"); ok && action.(string) == "INSERT" {
+	if action, ok := d.GetOk("action"); ok && action.(string) == "insert" {
 		conn := meta.(*conns.Client).VmmAPI
 
 		vmExtID := d.Get("vm_ext_id")
@@ -239,16 +249,21 @@ func ResourceNutanixVmsCdRomsInsertEjectV2Read(ctx context.Context, d *schema.Re
 	if err := d.Set("backing_info", flattenVMDisk(getResp.BackingInfo)); err != nil {
 		return diag.FromErr(err)
 	}
+	// set the cdrom ext id to the state file, same as ext_id
+	// This attribute is used to eject, ejectCdromISO is a common function for both ngt ISO and Other ISOs
+	if err := d.Set("cdrom_ext_id", extID); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
 func ResourceNutanixVmsCdRomsInsertEjectV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if action, ok := d.GetOk("action"); ok && action.(string) == "EJECT" {
+	if action, ok := d.GetOk("action"); ok && action.(string) == "eject" {
 		log.Printf("[DEBUG] ResourceNutanixVmsCdRomsInsertEjectV2Update : Action %s", action.(string))
 		diags := ejectCdromISO(ctx, d, meta)
 		if diags.HasError() {
 			// Ejection failed, set the action to INSERT to avoid Terraform from saving "EJECT" in state
-			d.Set("action", "INSERT")
+			d.Set("action", "insert")
 			return diags
 		}
 		return ResourceNutanixVmsCdRomsInsertEjectV2Read(ctx, d, meta)
@@ -258,7 +273,7 @@ func ResourceNutanixVmsCdRomsInsertEjectV2Update(ctx context.Context, d *schema.
 
 func ResourceNutanixVmsCdRomsInsertEjectV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] ResourceNutanixVmsCdRomsInsertEjectV2Delete : Ejecting ISO from the CD-ROM %s of the VM %s", d.Get("ext_id").(string), d.Get("vm_ext_id").(string))
-	if action, ok := d.GetOk("action"); ok && action.(string) == "EJECT" {
+	if action, ok := d.GetOk("action"); ok && action.(string) == "eject" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "ISO is not inserted on the CD-ROM of the VM or ejected earlier using an action, Ignoring the request to eject the ISO",

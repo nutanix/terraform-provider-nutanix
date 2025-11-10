@@ -85,10 +85,10 @@ func ResourceNutanixNGTInsertIsoV2() *schema.Resource {
 				Computed: true,
 			},
 			"action": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "INSERT",
-				ValidateFunc: validation.StringInSlice([]string{"INSERT", "EJECT"}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "insert",
+				ValidateFunc: validation.StringInSlice([]string{"insert", "eject"}, false),
 			},
 		},
 	}
@@ -97,7 +97,7 @@ func ResourceNutanixNGTInsertIsoV2() *schema.Resource {
 // Install NGT on Vm
 func ResourceNutanixNGTInsertIsoV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
-	if action, ok := d.GetOk("action"); ok && action.(string) == "INSERT" {
+	if action, ok := d.GetOk("action"); ok && action.(string) == "insert" {
 		extID := d.Get("ext_id")
 
 		readResp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID.(string)))
@@ -241,12 +241,12 @@ func ResourceNutanixNGTInsertIsoV2Read(ctx context.Context, d *schema.ResourceDa
 
 // ResourceNutanixNGTInsertIsoV2Update  Not supported
 func ResourceNutanixNGTInsertIsoV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if action, ok := d.GetOk("action"); ok && action.(string) == "EJECT" {
+	if action, ok := d.GetOk("action"); ok && action.(string) == "eject" {
 		log.Printf("[DEBUG] ResourceNutanixNGTInsertIsoV2Update : Action %s", action.(string))
 		diags := ejectCdromISO(ctx, d, meta)
 		if diags.HasError() {
 			// Ejection failed, set the action to INSERT to avoid Terraform from saving "EJECT" in state
-			d.Set("action", "INSERT")
+			d.Set("action", "insert")
 			return diags
 		}
 		return ResourceNutanixNGTInsertIsoV2Read(ctx, d, meta)
@@ -257,7 +257,7 @@ func ResourceNutanixNGTInsertIsoV2Update(ctx context.Context, d *schema.Resource
 // ResourceNutanixNGTInsertIsoV2Delete eject the ngt iso from the cd-rom of the vm
 func ResourceNutanixNGTInsertIsoV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] ResourceNutanixNGTInsertIsoV2Delete : Ejecting NGT ISO from the CD-ROM %s of the VM %s", d.Get("cdrom_ext_id").(string), d.Get("vm_ext_id").(string))
-	if action, ok := d.GetOk("action"); ok && action.(string) == "EJECT" {
+	if action, ok := d.GetOk("action"); ok && action.(string) == "eject" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "NGT ISO is not inserted on the CD-ROM of the VM or ejected earlier using an action, Ignoring the request to eject the NGT ISO",
