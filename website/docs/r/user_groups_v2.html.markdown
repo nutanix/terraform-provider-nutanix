@@ -61,4 +61,16 @@ The links attribute supports the following:
 - `href`: - The URL at which the entity described by the link can be accessed.
 - `rel`: - A name that identifies the relationship of the link to the object that is returned by the URL. The unique value of "self" identifies the URL for the object.
 
+## Import
+
+This helps to manage existing entities which are not created through terraform. User Group can be imported using the `UUID`. (ext_id in v4 API context). eg,
+
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_user_groups_v2" "import_ug" {}
+
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_user_groups_v2" "fetch_ugs"{}
+terraform import nutanix_user_groups_v2.import_ug <UUID>
+```
+
 See detailed information in [Nutanix Create User Group v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/UserGroups/operation/createUserGroup).

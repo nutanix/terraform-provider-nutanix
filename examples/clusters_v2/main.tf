@@ -175,9 +175,8 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
       should_skip_pre_expand_checks = true
 
     }
-    ## Uncomment below code after creating and registering the 3 node cluster
-    ## to prism central to add 4th node to the cluster and run terraform apply
-    ## to remove it just comment the below code again and run terraform apply
+    ## Uncomment the block below after creating and registering a 3-node cluster to Prism Central;
+    #  then run 'terraform apply' to add a 4th node. To remove the node later, comment the block again and rerun 'terraform apply'.
     # node_list {
     #   controller_vm_ip {
     #     ipv4 {
@@ -190,8 +189,8 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
 
   }
   config {
-    cluster_function = local.clusters.config.cluster_functions
-    cluster_arch     = local.clusters.config.cluster_arch
+    cluster_function = ["AOS"]
+    cluster_arch     = "X86_64"
     fault_tolerance_state {
       domain_awareness_level = "NODE"
     }
