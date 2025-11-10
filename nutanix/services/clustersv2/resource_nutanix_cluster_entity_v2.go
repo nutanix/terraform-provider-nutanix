@@ -138,56 +138,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 											},
 										},
 									},
-									// expand cluster with node params
-									"should_skip_host_networking": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Computed: true,
-									},
-									"should_skip_add_node": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Computed: true,
-									},
-									"should_skip_pre_expand_checks": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Computed: true,
-									},
-								},
-							},
-						},
-						// remove node params
-						"remove_node_params": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"extra_params": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"should_skip_upgrade_check": {
-													Type:     schema.TypeBool,
-													Optional: true,
-													Default:  false,
-												},
-												"skip_space_check": {
-													Type:     schema.TypeBool,
-													Optional: true,
-													Default:  false,
-												},
-												"should_skip_add_check": {
-													Type:     schema.TypeBool,
-													Optional: true,
-													Default:  false,
-												},
-											},
-										},
-									},
 
->>>>>>>>> Temporary merge branch 2
 									"should_skip_remove": {
 										Type:     schema.TypeBool,
 										Optional: true,
@@ -737,17 +688,6 @@ func ResourceNutanixClusterV2() *schema.Resource {
 }
 
 func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Validate forbidden fields at creation
-	if v, ok := d.GetOk("nodes.0.node_list.0.node_params"); ok && len(v.([]interface{})) > 0 {
-		return diag.Errorf("parameter 'node_params' can only be used during update operations")
-	}
-	if v, ok := d.GetOk("nodes.0.node_list.0.config_params"); ok && len(v.([]interface{})) > 0 {
-		return diag.Errorf("parameter 'config_params' can only be used during update operations")
-	}
-	if v, ok := d.GetOk("nodes.0.node_list.0.remove_node_params"); ok && len(v.([]interface{})) > 0 {
-		return diag.Errorf("parameter 'remove_node_params' can only be used during update operations")
-	}
-
 	conn := meta.(*conns.Client).ClusterAPI
 	body := config.NewCluster()
 	var dryRun *bool
@@ -865,12 +805,11 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 	if d.Get("ext_id").(string) == "" {
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster not found, extID is empty")
 		err := getClusterExtID(d, conn)
-
-		// Check if the error is a ClusterNotFoundError
 		if err != nil {
 			log.Printf("[DEBUG] ResourceNutanixClusterV2Update : error while fetching cluster : %v", err)
 			return diag.Errorf("error while fetching cluster : %v: Please register the cluster to Prism Central if not.", err)
 		}
+		log.Printf("[DEBUG] ResourceNutanixClusterV2Update : error while fetching cluster : %v", err)
 	}
 
 	log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster found, extID : %s", d.Id())
@@ -991,7 +930,7 @@ func ResourceNutanixClusterV2Delete(ctx context.Context, d *schema.ResourceData,
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -1716,7 +1655,7 @@ func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta int
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -1824,7 +1763,7 @@ func expandClusterWithNewNode(ctx context.Context, d *schema.ResourceData, meta 
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
