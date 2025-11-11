@@ -30,6 +30,7 @@ func ResourceNutanixVmsCdRomsInsertEjectV2() *schema.Resource {
 				}
 				d.Set("vm_ext_id", parts[0])
 				d.Set("ext_id", parts[1])
+				d.Set("action", "insert")
 				d.SetId(resource.UniqueId())
 				return []*schema.ResourceData{d}, nil
 			},
