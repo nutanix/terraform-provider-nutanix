@@ -100,7 +100,6 @@ func ResourceNutanixNGTInsertIsoV2Create(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.Client).VmmAPI
 	if action, ok := d.GetOk("action"); ok && action.(string) == "insert" {
 		extID := d.Get("ext_id")
-
 		readResp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID.(string)))
 		if err != nil {
 			return diag.Errorf("error while fetching Vm : %v", err)
@@ -160,18 +159,12 @@ func ResourceNutanixNGTInsertIsoV2Create(ctx context.Context, d *schema.Resource
 		}
 
 		// Get UUID from TASK API
-
 		resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 		if err != nil {
 			return diag.Errorf("error while Inserting  gest tools ISO  : %v", err)
 		}
 		rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
-
 		for _, entity := range rUUID.EntitiesAffected {
-			if utils.StringValue(entity.Rel) == "vmm:ahv:config:vm" {
-				uuid := entity.ExtId
-				d.Set("vm_ext_id", *uuid)
-			}
 			if utils.StringValue(entity.Rel) == "vmm:ahv:config:vm:cdrom" {
 				uuid := entity.ExtId
 				d.Set("cdrom_ext_id", *uuid)
@@ -190,7 +183,7 @@ func ResourceNutanixNGTInsertIsoV2Create(ctx context.Context, d *schema.Resource
 func ResourceNutanixNGTInsertIsoV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	extID := d.Get("vm_ext_id").(string)
+	extID := d.Get("ext_id").(string)
 	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID))
 	if err != nil {
 		return diag.Errorf("error while fetching Gest Tool : %v", err)
@@ -227,15 +220,34 @@ func ResourceNutanixNGTInsertIsoV2Read(ctx context.Context, d *schema.ResourceDa
 	if err := d.Set("is_vm_mobility_drivers_installed", getResp.IsVmMobilityDriversInstalled); err != nil {
 		return diag.FromErr(err)
 	}
-	if cdromExtID, ok := d.GetOk("cdrom_ext_id"); ok {
+	// Check if cdrom_ext_id is present and not null in the state file
+	cdromExtID, cdromExists := d.GetOk("cdrom_ext_id")
+	if cdromExists && cdromExtID != nil && cdromExtID.(string) != "" {
 		if err := d.Set("cdrom_ext_id", cdromExtID.(string)); err != nil {
 			return diag.FromErr(err)
 		}
-	}
-	if vmExtID, ok := d.GetOk("vm_ext_id"); ok {
-		if err := d.Set("vm_ext_id", vmExtID.(string)); err != nil {
-			return diag.FromErr(err)
+	} else {
+		// We need to find the CD-ROM ext id with iso_type GUEST_TOOLS, if possible
+		vmResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(extID))
+		if err != nil {
+			return diag.Errorf("error while fetching vm details which helps us to set cdrom_ext_id : %v", err)
 		}
+		vmObj := vmResp.Data.GetValue().(vmmConfig.Vm)
+		// Check that CdRoms is not nil and loop through the CdRoms to find the GUEST_TOOLS ISO
+		if len(vmObj.CdRoms) > 0 {
+			for _, cdrom := range vmObj.CdRoms {
+				if cdrom.IsoType.GetName() == "GUEST_TOOLS" {
+					if err := d.Set("cdrom_ext_id", utils.StringValue(cdrom.ExtId)); err != nil {
+						return diag.FromErr(err)
+					}
+					break
+				}
+			}
+		}
+	}
+	// Set the vm_ext_id to the state file
+	if err := d.Set("vm_ext_id", extID); err != nil {
+		return diag.FromErr(err)
 	}
 	return nil
 }
