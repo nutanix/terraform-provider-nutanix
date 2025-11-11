@@ -2,8 +2,9 @@ package vmmv2
 
 import (
 	"context"
+	"fmt"
 	"log"
-
+	"strings"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -20,6 +21,19 @@ func ResourceNutanixVmsCdRomsInsertEjectV2() *schema.Resource {
 		ReadContext:   ResourceNutanixVmsCdRomsInsertEjectV2Read,
 		UpdateContext: ResourceNutanixVmsCdRomsInsertEjectV2Update,
 		DeleteContext: ResourceNutanixVmsCdRomsInsertEjectV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				const expectedPartsCount = 2
+				parts := strings.Split(d.Id(), "/")
+				if len(parts) != expectedPartsCount {
+					return nil, fmt.Errorf("invalid import uuid (%q), expected vm_ext_id/cdrom_ext_id", d.Id())
+				}
+				d.Set("vm_ext_id", parts[0])
+				d.Set("ext_id", parts[1])
+				d.SetId(resource.UniqueId())
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 		Schema: map[string]*schema.Schema{
 			"vm_ext_id": {
 				Type:     schema.TypeString,
