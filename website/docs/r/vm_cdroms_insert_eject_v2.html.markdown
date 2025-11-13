@@ -16,6 +16,16 @@ Ejects the ISO currently inserted into a CD-ROM device on a Virtual Machine.
 ## Example
 
 ```hcl
+##############################################
+# ------------------------------------------------
+# This resource allows inserting a custom ISO into
+# a VM’s CD-ROM device.
+#
+# You can manage both:
+# 1. **Insertion** — via `apply`
+# 2. **Ejection** — automatically on `delete`
+#  You can also eject the ISO by setting `action = "eject"` → triggers eject operation explicitly.
+##############################################
 resource "nutanix_vm_cdrom_insert_eject_v2" "insert-cdrom"{
   vm_ext_id = "8a938cc5-282b-48c4-81be-de22de145d07"
   ext_id    = "c2c249b0-98a0-43fa-9ff6-dcde578d3936"
@@ -38,7 +48,7 @@ The following arguments are supported:
 * `vm_ext_id`: (Required) The globally unique identifier of a VM. It should be of type UUID
 * `ext_id`: (Required) The globally unique identifier of a CD-ROM. It should be of type UUID.
 * `backing_info`: (Required) Storage provided by Nutanix ADSF
-
+* `action`: (Optional) Default value: "insert". Accepted values: "insert" → Mounts the specified ISO image to the VM’s CD-ROM, "eject" → Unmounts (ejects) the ISO image from the VM’s CD-ROM.
 
 ### backing_info
 * `disk_size_bytes`: (Required) Size of the disk in Bytes

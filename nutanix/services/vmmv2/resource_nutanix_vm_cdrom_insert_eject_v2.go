@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -236,9 +237,8 @@ func ResourceNutanixVmsCdRomsInsertEjectV2Create(ctx context.Context, d *schema.
 
 		d.SetId(resource.UniqueId())
 		return ResourceNutanixVmsCdRomsInsertEjectV2Read(ctx, d, meta)
-	} else {
-		return diag.Errorf("Action %s is not supported for CD-ROM Insert", action.(string))
 	}
+	return diag.Errorf("Action %s is not supported for CD-ROM Insert", d.Get("action").(string))
 }
 
 func ResourceNutanixVmsCdRomsInsertEjectV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
