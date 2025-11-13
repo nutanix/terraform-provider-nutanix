@@ -98,6 +98,7 @@ func ResourceNutanixNGTInsertIsoV2() *schema.Resource {
 // Install NGT on Vm
 func ResourceNutanixNGTInsertIsoV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
+
 	if action, ok := d.GetOk("action"); ok && action.(string) == "insert" {
 		extID := d.Get("ext_id")
 		readResp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID.(string)))
@@ -174,9 +175,8 @@ func ResourceNutanixNGTInsertIsoV2Create(ctx context.Context, d *schema.Resource
 		d.SetId(resource.UniqueId())
 
 		return ResourceNutanixNGTInsertIsoV2Read(ctx, d, meta)
-	} else {
-		return diag.Errorf("Action %s is not supported for NGT ISO Insert", action.(string))
 	}
+	return diag.Errorf("Action %s is not supported for NGT ISO Insert", d.Get("action").(string))
 }
 
 // Read NGT Configuration
