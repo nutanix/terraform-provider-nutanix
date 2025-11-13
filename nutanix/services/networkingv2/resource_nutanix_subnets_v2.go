@@ -12,6 +12,7 @@ import (
 	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -459,11 +460,8 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	inputSpec := import1.Subnet{}
-	subnetName := ""
-	subnetType := ""
 	if name, nok := d.GetOk("name"); nok {
 		inputSpec.Name = utils.StringPtr(name.(string))
-		subnetName = name.(string)
 	}
 	if desc, ok := d.GetOk("description"); ok {
 		inputSpec.Description = utils.StringPtr(desc.(string))
@@ -478,7 +476,6 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 
 		p := import1.SubnetType(pVal.(int))
 		inputSpec.SubnetType = &p
-		subnetType = subType.(string)
 	}
 
 	if networkID, ok := d.GetOk("network_id"); ok {
@@ -567,30 +564,24 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for subnet (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-	// Get UUID from TASK API, Entities not present in Task API
 
-	// resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-	// if err != nil {
-	// 	return diag.Errorf("error while fetching subnet UUID : %v", err)
-	// }
-	// rUUID := resourceUUID.Data.GetValue().(import2.Task)
-
-	// uuid := rUUID.EntitiesAffected[0].ExtId
-
-	// Fetch UUID based on Vlan id and vlan Name
-
-	readResp, err := conn.SubnetAPIInstance.ListSubnets(nil, nil, nil, nil, nil, nil)
+	// Get UUID from TASK API
+	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching subnets : %v", err)
+		return diag.Errorf("error while fetching task details : %v", err)
 	}
-
-	getAllSubnetResp := readResp.Data.GetValue().([]import1.Subnet)
-
-	for _, subnet := range getAllSubnetResp {
-		if (utils.StringValue(subnet.Name) == subnetName) && (flattenSubnetType(subnet.SubnetType) == subnetType) {
-			d.SetId(*subnet.ExtId)
+	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+	var subnetExtID *string
+	for _, entity := range rUUID.EntitiesAffected {
+		if utils.StringValue(entity.Rel) == "networking:config:subnet" {
+			subnetExtID = entity.ExtId
 			break
 		}
+	}
+	if subnetExtID != nil {
+		d.SetId(*subnetExtID)
+	} else {
+		return diag.Errorf("error while fetching subnet ExtId : subnet entity not found in EntitiesAffected")
 	}
 	return ResourceNutanixSubnetV2Read(ctx, d, meta)
 }
