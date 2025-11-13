@@ -13,7 +13,7 @@ import (
 
 const (
 	resourceNameNGTInsertISO = "nutanix_ngt_insert_iso_v2.test"
-	resourceVm               = "nutanix_virtual_machine_v2.ngt-vm"
+	ressourceVmNGT           = "nutanix_virtual_machine_v2.ngt-vm"
 	datasourceVmNGT          = "data.nutanix_virtual_machine_v2.ngt-vm-refresh"
 	timeSleep                = 2 * time.Minute
 )
@@ -178,23 +178,30 @@ func TestAccV2NutanixNGTInsertIsoResource_InsertNGTIsoIntoVmDoseNotHaveNGTIsConf
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testAccCheckNutanixVirtualMachineV2Destroy,
 		Steps: []resource.TestStep{
-			// Step 1: create the VM
 			{
 				PreConfig: func() {
 					fmt.Println("Step 1: Creating and Powering on the VM")
 				},
-				Config: testVmConfig(vmName),
+				Config: testPreEnvConfig(vmName, r),
 			},
-			// Step 2: insert the NGT ISO on vm
+			// Step 2: Insert the NGT ISO on vm
 			{
 				PreConfig: func() {
-					fmt.Println("Step 2: Inserting the NGT ISO on vm resource")
+					fmt.Println("Step 2: Inserting the NGT ISO on vm")
 				},
-				Config: testVmConfig(vmName) + testNGTInsertIsoConfig("false", "insert"),
+				Config: testPreEnvConfig(vmName, r) + testNGTInsertIsoConfig("false", "insert"),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameNGTInsertISO, "available_version"),
+					resource.TestCheckResourceAttrSet(resourceNameNGTInsertISO, "ext_id"),
+					resource.TestCheckResourceAttr(resourceNameNGTInsertISO, "guest_os_version", ""),
+					resource.TestCheckResourceAttr(resourceNameNGTInsertISO, "is_config_only", "false"),
+					resource.TestCheckResourceAttr(resourceNameNGTInsertISO, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceNameNGTInsertISO, "is_installed", "false"),
+					resource.TestCheckResourceAttr(resourceNameNGTInsertISO, "is_reachable", "false"),
 					resource.TestCheckResourceAttr(resourceNameNGTInsertISO, "is_iso_inserted", "true"),
-					resource.TestCheckResourceAttr(datasourceVmNGT, "guest_tools.0.is_iso_inserted", "true"),
-					resource.TestCheckResourceAttr(datasourceVmNGT, "guest_tools.0.is_installed", "false"),
+					resource.TestCheckResourceAttr(resourceNameNGTInsertISO, "capablities.#", "2"),
+					resource.TestCheckResourceAttr(resourceNameNGTInsertISO, "capablities.0", "SELF_SERVICE_RESTORE"),
+					resource.TestCheckResourceAttr(resourceNameNGTInsertISO, "capablities.1", "VSS_SNAPSHOT"),
 					resource.TestCheckResourceAttrPair(resourceNameNGTInsertISO, "is_enabled", datasourceVmNGT, "guest_tools.0.is_enabled"),
 					resource.TestCheckResourceAttrPair(resourceNameNGTInsertISO, "is_installed", datasourceVmNGT, "guest_tools.0.is_installed"),
 					resource.TestCheckResourceAttrPair(resourceNameNGTInsertISO, "is_reachable", datasourceVmNGT, "guest_tools.0.is_reachable"),
@@ -202,226 +209,71 @@ func TestAccV2NutanixNGTInsertIsoResource_InsertNGTIsoIntoVmDoseNotHaveNGTIsConf
 					resource.TestCheckResourceAttrPair(resourceNameNGTInsertISO, "guest_os_version", datasourceVmNGT, "guest_tools.0.guest_os_version"),
 					resource.TestCheckResourceAttrPair(datasourceVmNGT, "guest_tools.0.capabilities.#", resourceNameNGTInsertISO, "capablities.#"),
 					resource.TestCheckResourceAttrPair(datasourceVmNGT, "guest_tools.0.capabilities.0", resourceNameNGTInsertISO, "capablities.0"),
+					resource.TestCheckResourceAttrPair(datasourceVmNGT, "guest_tools.0.capabilities.1", resourceNameNGTInsertISO, "capablities.1"),
 					resource.TestCheckResourceAttr(datasourceVmNGT, "cd_roms.0.iso_type", "GUEST_TOOLS"),
 				),
 			},
-			// Step 3: NGT Installation
+			// Step 3: Eject the NGT ISO
 			{
 				PreConfig: func() {
-					fmt.Println("Step 3: NGT Installation")
+					fmt.Println("Step 3: Ejecting the NGT ISO")
 				},
-				Config: testVmConfig(vmName) +  testNGTInsertIsoConfig("false", "insert") + testNGTInstallationConfig(),
+				Config: testPreEnvConfig(vmName, r) + testNGTInsertIsoConfig("false", "eject"),
 			},
-			// Step 4: check the NGT is installed
+			// Step 4: check the NGT ISO is ejected
 			{
 				PreConfig: func() {
-					fmt.Println("Step 4: Checking the NGT is installed")
-				},
-				Config: testVmConfig(vmName) +  testNGTInsertIsoConfig("false", "insert") + testNGTInstallationConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceVm, "guest_tools.0.is_installed", "true"),
-					resource.TestCheckResourceAttr(resourceVm, "guest_tools.0.is_reachable", "true"),
-					resource.TestCheckResourceAttr(resourceVm, "guest_tools.0.is_enabled", "true"),
-					resource.TestCheckResourceAttrSet(resourceVm, "guest_tools.0.version"),
-					resource.TestCheckResourceAttr(resourceVm, "guest_tools.0.is_iso_inserted", "false"),
-					resource.TestCheckResourceAttrSet(resourceVm, "guest_tools.0.guest_os_version"),
-					resource.TestCheckResourceAttr(resourceVm, "guest_tools.0.capabilities.#", "1"),
-					resource.TestCheckResourceAttr(resourceVm, "guest_tools.0.capabilities.1", "VSS_SNAPSHOT"),
-				),
-			},
-			// Step 5: eject the NGT ISO from the vm
-			{
-				PreConfig: func() {
-					fmt.Println("Step 5: Ejecting the NGT ISO from the vm resource")
+					fmt.Println("Step 4: Checking the NGT ISO is ejected")
 				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInsertIsoConfig("false", "eject"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceVmNGT, "guest_tools.0.is_iso_inserted", "false"),
-					resource.TestCheckResourceAttr(datasourceVmNGT, "guest_tools.0.is_installed", "true"),
-					resource.TestCheckResourceAttr(datasourceVmNGT, "guest_tools.0.is_reachable", "true"),
 					resource.TestCheckResourceAttr(datasourceVmNGT, "guest_tools.0.is_enabled", "true"),
-					resource.TestCheckResourceAttrSet(datasourceVmNGT, "guest_tools.0.version"),
-					resource.TestCheckResourceAttrSet(datasourceVmNGT, "guest_tools.0.guest_os_version"),
-					resource.TestCheckResourceAttr(datasourceVmNGT, "guest_tools.0.capabilities.#", "1"),
-					resource.TestCheckResourceAttr(datasourceVmNGT, "guest_tools.0.capabilities.0", "VSS_SNAPSHOT"),
+					resource.TestCheckResourceAttr(datasourceVmNGT, "guest_tools.0.is_installed", "false"),
+					resource.TestCheckResourceAttr(datasourceVmNGT, "guest_tools.0.is_reachable", "false"),
+					resource.TestCheckResourceAttr(datasourceVmNGT, "guest_tools.0.is_iso_inserted", "true"),
+					resource.TestCheckResourceAttr(datasourceVmNGT, "guest_tools.0.version", ""),
+					resource.TestCheckResourceAttr(datasourceVmNGT, "guest_tools.0.guest_os_version", ""),
+					resource.TestCheckResourceAttr(datasourceVmNGT, "guest_tools.0.capabilities.#", "2"),
+					resource.TestCheckResourceAttr(datasourceVmNGT, "guest_tools.0.capabilities.0", "SELF_SERVICE_RESTORE"),
+					resource.TestCheckResourceAttr(datasourceVmNGT, "guest_tools.0.capabilities.1", "VSS_SNAPSHOT"),
 					resource.TestCheckResourceAttr(datasourceVmNGT, "cd_roms.0.iso_type", "OTHER"),
-				),
-			},
-			// Step 6: check the NGT ISO is ejected from the vm resource
-			{
-				PreConfig: func() {
-					fmt.Println("Step 6: Checking the NGT ISO is ejected from the vm resource")
-				},
-				Config: testVmConfig(vmName) + testNGTInsertIsoConfig("false", "eject"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceVm, "guest_tools.0.is_iso_inserted", "false"),
-					resource.TestCheckResourceAttr(resourceVm, "guest_tools.0.is_iso_inserted", "false"),
-					resource.TestCheckResourceAttr(resourceVm, "guest_tools.0.is_installed", "true"),
-					resource.TestCheckResourceAttr(resourceVm, "guest_tools.0.is_reachable", "true"),
-					resource.TestCheckResourceAttr(resourceVm, "guest_tools.0.is_enabled", "true"),
-					resource.TestCheckResourceAttrSet(resourceVm, "guest_tools.0.version"),
-					resource.TestCheckResourceAttrSet(resourceVm, "guest_tools.0.guest_os_version"),
-					resource.TestCheckResourceAttr(resourceVm, "guest_tools.0.capabilities.#", "2"),
-					resource.TestCheckResourceAttr(resourceVm, "guest_tools.0.capabilities.0", "SELF_SERVICE_RESTORE"),
-					resource.TestCheckResourceAttr(resourceVm, "guest_tools.0.capabilities.1", "VSS_SNAPSHOT"),
-					resource.TestCheckResourceAttr(resourceVm, "cd_roms.0.iso_type", "OTHER"),
+					resource.TestCheckResourceAttrSet(resourceNameNGTInsertISO, "available_version"),
+					resource.TestCheckResourceAttrSet(resourceNameNGTInsertISO, "ext_id"),
+					resource.TestCheckResourceAttr(resourceNameNGTInsertISO, "is_iso_inserted", "true"),
+					resource.TestCheckResourceAttr(resourceNameNGTInsertISO, "is_config_only", "false"),
+					resource.TestCheckResourceAttr(resourceNameNGTInsertISO, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceNameNGTInsertISO, "is_installed", "false"),
+					resource.TestCheckResourceAttr(resourceNameNGTInsertISO, "is_reachable", "false"),
+					resource.TestCheckResourceAttr(resourceNameNGTInsertISO, "capablities.#", "2"),
+					resource.TestCheckResourceAttr(resourceNameNGTInsertISO, "capablities.0", "SELF_SERVICE_RESTORE"),
+					resource.TestCheckResourceAttr(resourceNameNGTInsertISO, "capablities.1", "VSS_SNAPSHOT"),
+					resource.TestCheckResourceAttrPair(resourceNameNGTInsertISO, "is_enabled", ressourceVmNGT, "guest_tools.0.is_enabled"),
+					resource.TestCheckResourceAttrPair(resourceNameNGTInsertISO, "is_installed", ressourceVmNGT, "guest_tools.0.is_installed"),
+					resource.TestCheckResourceAttrPair(resourceNameNGTInsertISO, "is_reachable", ressourceVmNGT, "guest_tools.0.is_reachable"),
+					resource.TestCheckResourceAttrPair(resourceNameNGTInsertISO, "version", ressourceVmNGT, "guest_tools.0.version"),
+					resource.TestCheckResourceAttrPair(resourceNameNGTInsertISO, "guest_os_version", ressourceVmNGT, "guest_tools.0.guest_os_version"),
+					resource.TestCheckResourceAttrPair(ressourceVmNGT, "guest_tools.0.capabilities.#", resourceNameNGTInsertISO, "capablities.#"),
+					resource.TestCheckResourceAttrPair(ressourceVmNGT, "guest_tools.0.capabilities.0", resourceNameNGTInsertISO, "capablities.0"),
+					resource.TestCheckResourceAttrPair(ressourceVmNGT, "guest_tools.0.capabilities.1", resourceNameNGTInsertISO, "capablities.1"),
+					resource.TestCheckResourceAttr(ressourceVmNGT, "cd_roms.0.iso_type", "OTHER"),
 				),
 			},
 		},
 	})
 }
 
-func testVmConfig(vmName string) string {
-	return fmt.Sprintf(`
-	locals {
-		config = (jsondecode(file("%[1]s")))
-		vmm    = local.config.vmm
-		aosFilter           = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
-	}
-	data "nutanix_clusters_v2" "clusters" {
-	  filter = local.aosFilter
-	}
-	
-	locals {
-	  clusterUUID = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
-	}
-	
-	data "nutanix_images_v2" "ngt-image" {
-	  filter = "name eq '${local.vmm.image_name}'"
-	}
-	
-	data "nutanix_storage_containers_v2" "ngt-sc" {
-	  filter = "clusterExtId eq '${local.clusterUUID}'"
-	  limit  = 1
-	}
-	
-	data "nutanix_subnets_v2" "subnet" {
-	  filter = "name eq '${local.vmm.subnet_name}'"
-	}
-	
-	resource "nutanix_virtual_machine_v2" "ngt-vm" {
-	  name                 = "%[2]s"
-	  description          = "vm to test ngt installation and insert iso"
-	  num_cores_per_socket = 1
-	  num_sockets          = 1
-	  memory_size_bytes    = 4 * 1024 * 1024 * 1024
-	  cluster {
-		ext_id = local.clusterUUID
-	  }
-	
-	  disks {
-		disk_address {
-		  bus_type = "SCSI"
-		  index    = 0
-		}
-		backing_info {
-		  vm_disk {
-			data_source {
-			  reference {
-				image_reference {
-				  image_ext_id = data.nutanix_images_v2.ngt-image.images[0].ext_id
-				}
-			  }
-			}
-			disk_size_bytes = 20 * 1024 * 1024 * 1024
-		  }
-		}
-	  }
-	
-	  cd_roms {
-		disk_address {
-		  bus_type = "IDE"
-		  index    = 0
-		}
-	  }
-
-	  cd_roms {
-		disk_address {
-		  bus_type = "IDE"
-		  index    = 1
-		}
-	  }
-
-	  cd_roms {
-		disk_address {
-		  bus_type = "SATA"
-		  index    = 2
-		}
-	  }
-	
-	  nics {
-		network_info {
-		  nic_type = "NORMAL_NIC"
-		  subnet {
-			ext_id = data.nutanix_subnets_v2.subnet.subnets[0].ext_id
-		  }
-		  vlan_mode = "ACCESS"
-		}
-	  }
-
-	    # ---- Guest Customization Section ----
-		guest_customization {
-			config {
-			sysprep {
-				install_type = "PREPARED"
-				sysprep_script {
-				unattend_xml {
-					# Base64-encoded unattend.xml file content
-					value = base64encode(file("%[3]s"))
-				}
-				}
-			}
-			}
-		}
-	
-	  boot_config {
-		legacy_boot {
-		  boot_order = ["CDROM", "DISK", "NETWORK"]
-		}
-	  }
-	  power_state = "ON"
-	
-	  lifecycle {
-		ignore_changes = [
-			cd_roms,
-			disks,
-			guest_customization,
-			guest_tools
-		]
-	  }
-	}
-			`, filepath, vmName, untendedWindowsXMLFilePath)
-}
-
-func testNGTInstallationConfig() string {
-	return `
-	resource "nutanix_ngt_installation_v2" "test" {
-	  ext_id = nutanix_virtual_machine_v2.ngt-vm.id
-	  credential {
-		username = local.vmm.ngt.credential.username
-		password = local.vmm.ngt.credential.password
-	  }
-	  reboot_preference {
-		schedule_type = "SKIP"
-	  }
-	  capablities = ["VSS_SNAPSHOT"]
-	}
-	`
-}
-
 func testNGTInsertIsoConfig(configMode, action string) string {
 	return fmt.Sprintf(`
 	resource "nutanix_ngt_insert_iso_v2" "test" {
 		ext_id = nutanix_virtual_machine_v2.ngt-vm.id
-		capablities = ["VSS_SNAPSHOT"]
+		capablities = ["SELF_SERVICE_RESTORE","VSS_SNAPSHOT"]
 		is_config_only = %s
 		action = "%s"
 	}
-
+		
 	data "nutanix_virtual_machine_v2" "ngt-vm-refresh" {
 		ext_id = nutanix_virtual_machine_v2.ngt-vm.id
 		depends_on = [nutanix_ngt_insert_iso_v2.test]
 	}	
-
 		`, configMode, action)
 }
