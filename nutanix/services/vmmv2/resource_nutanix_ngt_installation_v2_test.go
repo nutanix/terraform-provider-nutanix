@@ -325,11 +325,6 @@ func testPreEnvConfig(vmName string, r int) string {
 		  filter = "name eq '${local.vmm.image_name}'"
 		}
 
-		data "nutanix_image" "ngt-image" {
-		  image_name = local.vmm.image_name
-		}
-
-
 		data "nutanix_storage_containers_v2" "ngt-sc" {
 		  filter = "clusterExtId eq '${local.clusterUUID}'"
 		  limit = 1

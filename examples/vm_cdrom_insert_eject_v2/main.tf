@@ -67,3 +67,28 @@ resource "nutanix_vm_cdrom_insert_eject_v2" "test" {
     }
   }
 }
+
+
+# Eject the ISO which is inserted through Terraform, can be done in two ways:
+# 1. By setting `action = "eject"` → triggers eject operation explicitly.
+# 2. By deleting this resource → automatically ejects the ISO.
+# resource "nutanix_vm_cdrom_insert_eject_v2" "insert-iso" {
+#   vm_ext_id = nutanix_virtual_machine_v2.example-1.id
+#   ext_id    = nutanix_virtual_machine_v2.example-1.cd_roms.0.ext_id
+#   action    = "eject"
+# }
+
+
+# Incase if users need to eject the ISO which is not inserted through Terraform, they can do so by importing the resource.(Example: GUEST CUSTOMIZATION ISO, this is mounted on the CD-ROM by default during the Guest Customization process)
+# // Step 1: Create a placeholder resource in your root module. For example:
+# resource "nutanix_vm_cdrom_insert_eject_v2" "import_cdrom_inserted" {}
+
+# // Step 2: execute this command in cli
+# terraform import nutanix_vm_cdrom_insert_eject_v2.import_cdrom_inserted vm_ext_id/cdrom_ext_id
+
+# // Step 3: Once imported, update the resource configuration(resource placeholder added in Step 1) to perform the eject operation
+# resource "nutanix_vm_cdrom_insert_eject_v2" "import_cdrom_inserted" {
+#   vm_ext_id = <Virtual_Machine_UUID>
+#   ext_id    = <CD_ROM_UUID>
+#   action    = "eject"
+# }
