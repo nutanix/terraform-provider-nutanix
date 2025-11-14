@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Cloud Platform.
 
-NOTE: The latest version of the Nutanix provider is [v2.3.3](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.3.3).
+NOTE: The latest version of the Nutanix provider is [v2.3.4](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.3.4).
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 
@@ -22,13 +22,17 @@ Modules based on Terraform Nutanix Provider can be found here : [Modules](https:
 * [Go](https://golang.org/doc/install) 1.17+ (to build the provider plugin)
 * This provider uses [SDKv2](https://www.terraform.io/plugin/sdkv2/sdkv2-intro) from release 1.3.0
 
-## Introducing Nutanix Terraform Provider Version v2.3.3
+## Introducing Nutanix Terraform Provider Version v2.3.4
 
-We're excited to announce the release of Nutanix Terraform Provider Version 2.3.3!
+We're excited to announce the release of Nutanix Terraform Provider Version 2.3.4!
 
-### What's New in v2.3.3
+### What's New in v2.3.4
 
-- This release includes one documentation fix to show guides in Terraform provider docs [#1002](https://github.com/nutanix/terraform-provider-nutanix/issues/1002), functionally this release is equivalent to v2.3.2
+- **Enhancements:**
+  - Support for Ejecting ISO from CD-ROM [\#1006](https://github.com/nutanix/terraform-provider-nutanix/issues/1006)
+
+- **Fixed Bugs:**
+   - Subnet entity is not saved in Terraform State due to plugin crash [\#894](https://github.com/nutanix/terraform-provider-nutanix/issues/894)
 
 
 ### Software Requirements
@@ -36,12 +40,13 @@ The provider is used to interact with the many resources and data sources suppor
 - Self Service version: 4.2.0 (Required only for running Self Service based resource and data source)
 - AOS Version: 7.3 or later
 - Prism Central Version: pc 7.3 or later
-- Nutanix Terraform Provider Version: 2.3.2
+- Nutanix Terraform Provider Version: 2.3.4
 
 
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
+| 2.3.4 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.3 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.2 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.1 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
