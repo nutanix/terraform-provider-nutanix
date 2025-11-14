@@ -1,3 +1,12 @@
+## 2.3.4 (November 14, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.3...v2.3.4)
+
+- **Enhancements:**
+  - Support for Ejecting ISO from CD-ROM [\#1006](https://github.com/nutanix/terraform-provider-nutanix/issues/1006)
+
+- **Fixed Bugs:**
+   - Subnet entity is not saved in Terraform State due to plugin crash [\#894](https://github.com/nutanix/terraform-provider-nutanix/issues/894)
+
 ## 2.3.3 (November 4, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.2...v2.3.3)
 
