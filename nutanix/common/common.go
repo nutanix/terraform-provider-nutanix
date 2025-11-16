@@ -44,6 +44,30 @@ func IsExplicitlySet(d *schema.ResourceData, key string) bool {
 	return false
 }
 
+// InterfaceToSlice converts various input types to a slice of interfaces.
+func InterfaceToSlice(v interface{}) []interface{} {
+	if v == nil {
+		return nil
+	}
+
+	switch t := v.(type) {
+	case *schema.Set:
+		return t.List()
+	case []interface{}:
+		return t
+	case []map[string]interface{}:
+		// unlikely, but handle it
+		out := make([]interface{}, len(t))
+		for i := range t {
+			out[i] = t[i]
+		}
+		return out
+	default:
+		// single element provided
+		return []interface{}{v}
+	}
+}
+
 func TaskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)

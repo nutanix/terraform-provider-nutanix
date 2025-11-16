@@ -129,14 +129,14 @@ func DatasourceNutanixServiceGroupV2Read(ctx context.Context, d *schema.Resource
 
 	getResp := resp.Data.GetValue().(import1.ServiceGroup)
 
-	if err := d.Set("name", getResp.Name); err != nil {
+	if err := d.Set("name", utils.StringValue(getResp.Name)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("description", getResp.Description); err != nil {
+	if err := d.Set("description", utils.StringValue(getResp.Description)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("is_system_defined", getResp.IsSystemDefined); err != nil {
+	if err := d.Set("is_system_defined", utils.BoolValue(getResp.IsSystemDefined)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -154,13 +154,13 @@ func DatasourceNutanixServiceGroupV2Read(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("created_by", getResp.CreatedBy); err != nil {
+	if err := d.Set("created_by", utils.StringValue(getResp.CreatedBy)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("links", flattenLinksMicroSeg(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
+	if err := d.Set("tenant_id", utils.StringValue(getResp.TenantId)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -175,8 +175,8 @@ func flattenUDPPortRangeSpec(pr []import1.UdpPortRangeSpec) []interface{} {
 		for k, v := range pr {
 			rg := make(map[string]interface{})
 
-			rg["start_port"] = v.StartPort
-			rg["end_port"] = v.EndPort
+			rg["start_port"] = utils.IntValue(v.StartPort)
+			rg["end_port"] = utils.IntValue(v.EndPort)
 
 			ranges[k] = rg
 		}
@@ -192,8 +192,8 @@ func flattenTCPPortRangeSpec(pr []import1.TcpPortRangeSpec) []interface{} {
 		for k, v := range pr {
 			rg := make(map[string]interface{})
 
-			rg["start_port"] = v.StartPort
-			rg["end_port"] = v.EndPort
+			rg["start_port"] = utils.IntValue(v.StartPort)
+			rg["end_port"] = utils.IntValue(v.EndPort)
 
 			ranges[k] = rg
 		}
@@ -209,9 +209,9 @@ func flattenIcmpTypeCodeSpec(pr []import1.IcmpTypeCodeSpec) []interface{} {
 		for k, v := range pr {
 			rg := make(map[string]interface{})
 
-			rg["is_all_allowed"] = v.IsAllAllowed
-			rg["type"] = v.Type
-			rg["code"] = v.Code
+			rg["is_all_allowed"] = utils.BoolValue(v.IsAllAllowed)
+			rg["type"] = utils.IntValue(v.Type)
+			rg["code"] = utils.IntValue(v.Code)
 
 			ranges[k] = rg
 		}
