@@ -36,7 +36,7 @@ func ResourceNutanixVPCsV2() *schema.Resource {
 			},
 			"description": {
 				Type:     schema.TypeString,
-				Computed:     true,
+				Computed: true,
 				Optional: true,
 			},
 			"vpc_type": {
