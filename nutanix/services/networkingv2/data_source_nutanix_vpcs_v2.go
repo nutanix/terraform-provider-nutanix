@@ -279,15 +279,14 @@ func flattenVPCsEntities(pr []import1.Vpc) []map[string]interface{} {
 		for k, v := range pr {
 			vpc := make(map[string]interface{})
 
-			if v.TenantId != nil {
-				vpc["tenant_id"] = v.TenantId
-			}
-			vpc["ext_id"] = v.ExtId
+			vpc["tenant_id"] = utils.StringValue(v.TenantId)
+			vpc["ext_id"] = utils.StringValue(v.ExtId)
 			vpc["links"] = flattenLinks(v.Links)
 			vpc["metadata"] = flattenMetadata(v.Metadata)
-			vpc["name"] = v.Name
-			vpc["description"] = v.Description
+			vpc["name"] = utils.StringValue(v.Name)
+			vpc["description"] = utils.StringValue(v.Description)
 			vpc["common_dhcp_options"] = flattenCommonDhcpOptions(v.CommonDhcpOptions)
+			vpc["vpc_type"] = v.VpcType.GetName()
 			vpc["snat_ips"] = flattenNtpServer(v.SnatIps)
 			vpc["external_subnets"] = flattenExternalSubnets(v.ExternalSubnets)
 			vpc["external_routing_domain_reference"] = v.ExternalRoutingDomainReference

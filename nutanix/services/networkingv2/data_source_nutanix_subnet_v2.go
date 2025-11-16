@@ -843,7 +843,7 @@ func DatasourceMetadataSchemaV2() map[string]*schema.Schema {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem: &schema.Schema{
-				Type: schema.TypeList,
+				Type: schema.TypeString,
 			},
 		},
 	}
@@ -1135,10 +1135,10 @@ func flattenMetadata(pr *config.Metadata) []map[string]interface{} {
 
 		m := make(map[string]interface{})
 
-		m["owner_reference_id"] = pr.OwnerReferenceId
-		m["owner_user_name"] = pr.OwnerUserName
-		m["project_reference_id"] = pr.ProjectReferenceId
-		m["project_name"] = pr.ProjectName
+		m["owner_reference_id"] = utils.StringValue(pr.OwnerReferenceId)
+		m["owner_user_name"] = utils.StringValue(pr.OwnerUserName)
+		m["project_reference_id"] = utils.StringValue(pr.ProjectReferenceId)
+		m["project_name"] = utils.StringValue(pr.ProjectName)
 		m["category_ids"] = pr.CategoryIds
 
 		meta = append(meta, m)
