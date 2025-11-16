@@ -825,23 +825,28 @@ func DatasourceMetadataSchemaV2() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"owner_reference_id": {
 			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		},
 		"owner_user_name": {
 			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		},
 		"project_reference_id": {
 			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		},
 		"project_name": {
 			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		},
 		"category_ids": {
 			Type:     schema.TypeList,
 			Computed: true,
+			Optional: true,
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
