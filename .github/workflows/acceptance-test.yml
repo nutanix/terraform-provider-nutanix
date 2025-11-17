@@ -160,7 +160,12 @@ jobs:
                   fi
                   index=$((index+1))
               done
-              export TESTARGS="-run=${runFlag}"
+              # If -p was provided, ignore runFlag since it contains arg polluted by '-p'
+              if [[ "$package_path" != "./..." ]]; then
+                  TESTARGS="-run=Test"
+              else
+                  TESTARGS="-run=${runFlag}"
+              fi
               echo "TESTARGS = $TESTARGS"
               echo "==> Setup Foundation Config"
               echo '${{ secrets.FOUNDATION_CONFIG }}' > test_foundation_config.json
