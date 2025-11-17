@@ -160,13 +160,7 @@ jobs:
                   fi
                   index=$((index+1))
               done
-              # If -p was provided, ignore runFlag since it contains arg polluted by '-p'
-              if [[ "$package_path" != "./..." ]]; then
-                  TESTARGS="-run=Test"
-              else
-                  TESTARGS="-run=${runFlag}"
-              fi
-              echo "TESTARGS = $TESTARGS"
+             
               echo "==> Setup Foundation Config"
               echo '${{ secrets.FOUNDATION_CONFIG }}' > test_foundation_config.json
               echo "==> Setup PC Config"
@@ -189,6 +183,17 @@ jobs:
                       break
                   fi
               done
+
+              # If -p was provided, ignore runFlag since it contains arg polluted by '-p'
+              if [[ "$package_path" != "./..." ]]; then
+                  # Package provided → run all tests in that package
+                  TESTARGS="-run=."
+              else
+                  # No package provided → run only the tests specified in runFlag
+                  TESTARGS="-run=${runFlag}"
+              fi
+
+               echo "TESTARGS = $TESTARGS"  
 
               TF_LOG="ERROR" TF_ACC=1 GOTRACEBACK=all go test "$package_path" -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count | tee test_output.log
               
