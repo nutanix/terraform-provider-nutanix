@@ -22,7 +22,7 @@ func TestNewFoundationAPIClient(t *testing.T) {
 	}
 	foundationClient, err := NewFoundationAPIClient(cred)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%s", err.Error())
 	}
 	outURL := fmt.Sprintf("http://%s:%s/", cred.FoundationEndpoint, cred.FoundationPort)
 	if foundationClient.client.BaseURL.String() != outURL {
@@ -43,7 +43,7 @@ func TestNewFoundationAPIClient(t *testing.T) {
 	}
 	foundationClient2, err2 := NewFoundationAPIClient(cred2)
 	if err2 != nil {
-		t.Errorf(err2.Error())
+		t.Errorf("%s", err2.Error())
 	}
 
 	if foundationClient2.client.ErrorMsg == "" {
