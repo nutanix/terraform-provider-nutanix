@@ -114,13 +114,17 @@ func ResourceNutanixKeyManagementServerV2Create(ctx context.Context, d *schema.R
 		return diag.Errorf("error while creating Key Management Server : %v", err)
 	}
 
-	TaskRef := resp.Data.GetValue().(securityPrism.TaskReference)
+	taskRefValue, ok := resp.Data.GetValue().(securityPrism.TaskReference)
+	if !ok {
+		return diag.Errorf("error: unexpected response type from create API, expected TaskReference")
+	}
+	TaskRef := taskRefValue
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Image to be available
+	// Wait for the Key Management Server to be available
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
@@ -135,14 +139,24 @@ func ResourceNutanixKeyManagementServerV2Create(ctx context.Context, d *schema.R
 	// Get UUID from TASK API
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Image UUID : %v", err)
+		return diag.Errorf("error while fetching Key Management Server UUID : %v", err)
 	}
-	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	taskDetailsValue, ok := taskResp.Data.GetValue().(prismConfig.Task)
+	if !ok {
+		return diag.Errorf("error: unexpected response type from task API, expected Task")
+	}
+	taskDetails := taskDetailsValue
 
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] create key management server task details: %s", aJSON)
 
+	if len(taskDetails.EntitiesAffected) == 0 {
+		return diag.Errorf("error: task completed but no entities affected found in task response")
+	}
 	kmsExtID := taskDetails.EntitiesAffected[0].ExtId
+	if kmsExtID == nil {
+		return diag.Errorf("error: task completed but entity ext_id is nil")
+	}
 	d.SetId(*kmsExtID)
 	return ResourceNutanixKeyManagementServerV2Read(ctx, d, meta)
 }
@@ -155,7 +169,11 @@ func ResourceNutanixKeyManagementServerV2Read(ctx context.Context, d *schema.Res
 		return diag.Errorf("error while fetching key management server : %v", err)
 	}
 
-	getResp := resp.Data.GetValue().(config.KeyManagementServer)
+	getRespValue, ok := resp.Data.GetValue().(config.KeyManagementServer)
+	if !ok {
+		return diag.Errorf("error: unexpected response type from get API, expected KeyManagementServer")
+	}
+	getResp := getRespValue
 
 	if err := d.Set("name", getResp.Name); err != nil {
 		return diag.FromErr(err)
@@ -193,7 +211,20 @@ func ResourceNutanixKeyManagementServerV2Update(ctx context.Context, d *schema.R
 	args := make(map[string]interface{})
 	args["If-Match"] = utils.StringPtr(etagValue)
 
+	// The name field is required for updating the KMS. Always populate it—either from the new value or fallback to the current resource state.
 	updateSpec := config.KeyManagementServer{}
+	var name string
+	if d.HasChange("name") {
+		if v, ok := d.GetOk("name"); ok && v.(string) != "" {
+			name = v.(string)
+		}
+	}
+	if name == "" {
+		if v := d.Get("name"); v != nil && v.(string) != "" {
+			name = v.(string)
+		}
+	}
+	updateSpec.Name = utils.StringPtr(name)
 
 	if d.HasChange("name") {
 		if v, ok := d.GetOk("name"); ok {
@@ -217,7 +248,11 @@ func ResourceNutanixKeyManagementServerV2Update(ctx context.Context, d *schema.R
 	if err != nil {
 		return diag.Errorf("error while updating key management server : %v", err)
 	}
-	TaskRef := updateResp.Data.GetValue().(securityPrism.TaskReference)
+	taskRefValue, ok := updateResp.Data.GetValue().(securityPrism.TaskReference)
+	if !ok {
+		return diag.Errorf("error: unexpected response type from update API, expected TaskReference")
+	}
+	TaskRef := taskRefValue
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
@@ -227,7 +262,7 @@ func ResourceNutanixKeyManagementServerV2Update(ctx context.Context, d *schema.R
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -244,7 +279,11 @@ func ResourceNutanixKeyManagementServerV2Delete(ctx context.Context, d *schema.R
 	if err != nil {
 		return diag.Errorf("error while deleting key management server : %v", err)
 	}
-	TaskRef := resp.Data.GetValue().(securityPrism.TaskReference)
+	taskRefValue, ok := resp.Data.GetValue().(securityPrism.TaskReference)
+	if !ok {
+		return diag.Errorf("error: unexpected response type from delete API, expected TaskReference")
+	}
+	TaskRef := taskRefValue
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
@@ -255,7 +294,7 @@ func ResourceNutanixKeyManagementServerV2Delete(ctx context.Context, d *schema.R
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -266,11 +305,13 @@ func ResourceNutanixKeyManagementServerV2Delete(ctx context.Context, d *schema.R
 
 func expandAccessInformation(accessInfo []interface{}) (*config.AzureAccessInformation, error) {
 	if len(accessInfo) == 0 {
-		log.Printf("[DEBUG] access information is nil or empty")
-		return nil, fmt.Errorf("access information is nil or empty")
+		return nil, fmt.Errorf("access information is required")
 	}
 
-	accessInfoVal := accessInfo[0].(map[string]interface{})
+	accessInfoVal, ok := accessInfo[0].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("access information must be a map")
+	}
 
 	expiryStr := accessInfoVal["credential_expiry_date"].(string)
 	expiryTime, err := time.Parse("2006-01-02", expiryStr)

@@ -82,7 +82,11 @@ func DatasourceNutanixKeyManagementServerV2Read(ctx context.Context, d *schema.R
 		return diag.Errorf("error while fetching key management server : %v", err)
 	}
 
-	getResp := resp.Data.GetValue().(config.KeyManagementServer)
+	getRespValue, ok := resp.Data.GetValue().(config.KeyManagementServer)
+	if !ok {
+		return diag.Errorf("error: unexpected response type from get API, expected KeyManagementServer")
+	}
+	getResp := getRespValue
 
 	if err := d.Set("name", getResp.Name); err != nil {
 		return diag.FromErr(err)
