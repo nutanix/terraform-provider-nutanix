@@ -806,7 +806,7 @@ func resourceNutanixVirtualMachineRead(ctx context.Context, d *schema.ResourceDa
 	if err = d.Set("parent_reference", flattenReferenceValues(resp.Status.Resources.ParentReference)); err != nil {
 		return diag.Errorf("error setting parent_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
-
+	//nolint:staticcheck
 	if uha, ok := d.GetOkExists("use_hot_add"); ok {
 		useHotAdd = uha.(bool)
 	}

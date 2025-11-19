@@ -699,7 +699,7 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) {
 	if v, ok := d.GetOk("dhcp_domain_search_list"); ok {
 		dhcpo.DomainSearchList = expandStringList(v.([]interface{}))
 	}
-
+	//nolint:staticcheck
 	if v, ok := d.GetOkExists("vlan_id"); ok {
 		subnet.VlanID = utils.Int64Ptr(int64(v.(int)))
 	}
@@ -711,11 +711,11 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) {
 	if v, ok := d.GetOk("vpc_reference_uuid"); ok {
 		subnet.VPCReference = buildReference(v.(string), "vpc")
 	}
-
+	//nolint:staticcheck
 	if isExt, eok := d.GetOkExists("is_external"); eok {
 		subnet.IsExternal = utils.BoolPtr(isExt.(bool))
 	}
-
+	//nolint:staticcheck
 	if enableNAT, nok := d.GetOkExists("enable_nat"); nok {
 		subnet.EnableNAT = utils.BoolPtr(enableNAT.(bool))
 	}

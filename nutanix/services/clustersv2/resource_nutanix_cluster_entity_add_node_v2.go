@@ -13,6 +13,7 @@ import (
 	clustermgmtPrism "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -268,12 +269,7 @@ func AddNodeListSchema() *schema.Schema {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
-						},
-					},
+					Elem:     common.SchemaForIPList(false),
 				},
 				"digital_certificate_map_list": {
 					Type:     schema.TypeList,
@@ -298,23 +294,13 @@ func AddNodeListSchema() *schema.Schema {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
-						},
-					},
+					Elem:     common.SchemaForIPList(false),
 				},
 				"hypervisor_ip": {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
-						},
-					},
+					Elem:     common.SchemaForIPList(false),
 				},
 				"model": {
 					Type:     schema.TypeString,
@@ -386,23 +372,13 @@ func computedNodeListSchema() *schema.Schema {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
-						},
-					},
+					Elem:     common.SchemaForIPList(false),
 				},
 				"ipmi_ip": {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
-						},
-					},
+					Elem:     common.SchemaForIPList(false),
 				},
 				"digital_certificate_map_list": {
 					Type:     schema.TypeList,
@@ -523,7 +499,7 @@ func ResourceNutanixClusterAddNodeV2Create(ctx context.Context, d *schema.Resour
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -604,7 +580,7 @@ func ResourceNutanixClusterAddNodeV2Delete(ctx context.Context, d *schema.Resour
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -1006,23 +982,7 @@ func expandDetails(pr interface{}) *config.UserInfo {
 }
 
 func expandHypervisorType(hypervisorType interface{}) *config.HypervisorType {
-	if hypervisorType != nil && hypervisorType != "" {
-		const two, three, four, five, six = 2, 3, 4, 5, 6
-		subMap := map[string]interface{}{
-			"AHV":        two,
-			"ESX":        three,
-			"HYPERV":     four,
-			"XEN":        five,
-			"NATIVEHOST": six,
-		}
-		pVal := subMap[hypervisorType.(string)]
-		if pVal == nil {
-			return nil
-		}
-		p := config.HypervisorType(pVal.(int))
-		return &p
-	}
-	return nil
+	return common.ExpandEnum(hypervisorType, HypervisorTypeMap, "hypervisor_type")
 }
 
 func expandExtraParams(pr interface{}) *config.NodeRemovalExtraParam {

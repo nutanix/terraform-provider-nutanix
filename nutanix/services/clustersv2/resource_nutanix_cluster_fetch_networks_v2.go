@@ -14,6 +14,7 @@ import (
 	clsMangPrismConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -112,12 +113,7 @@ func nodeListNetworkingDetailsSchema() *schema.Schema {
 							"cvm_ip": {
 								Type:     schema.TypeList,
 								Computed: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"ipv4": SchemaForValuePrefixLengthResource(),
-										"ipv6": SchemaForValuePrefixLengthResource(),
-									},
-								},
+								Elem:     common.SchemaForIPList(false),
 							},
 							"uplink_list": {
 								Type:     schema.TypeList,
@@ -175,34 +171,19 @@ func nodeListSchema() *schema.Schema {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
-						},
-					},
+					Elem:     common.SchemaForIPList(false),
 				},
 				"hypervisor_ip": {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
-						},
-					},
+					Elem:     common.SchemaForIPList(false),
 				},
 				"ipmi_ip": {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
-						},
-					},
+					Elem:     common.SchemaForIPList(false),
 				},
 				"digital_certificate_map_list": {
 					Type:     schema.TypeList,
@@ -242,7 +223,7 @@ func nodeListSchema() *schema.Schema {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
-					ValidateFunc: validation.StringInSlice([]string{"XEN", "HYPERV", "NATIVEHOST", "ESX", "AHV"}, false),
+					ValidateFunc: validation.StringInSlice(HypervisorTypeStrings, false),
 				},
 				"hypervisor_version": {
 					Type:     schema.TypeString,
@@ -310,7 +291,7 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Create(ctx context.Context, 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -459,19 +440,7 @@ func expandNodeListNetworkingDetails(pr []interface{}) []config.NodeListNetworki
 				node.NodePosition = utils.StringPtr(nodePosition.(string))
 			}
 			if hypervisorType, ok := val["hypervisor_type"]; ok {
-				const two, three, four, five, six = 2, 3, 4, 5, 6
-				subMap := map[string]interface{}{
-					"AHV":        two,
-					"ESX":        three,
-					"HYPERV":     four,
-					"XEN":        five,
-					"NATIVEHOST": six,
-				}
-				if subMap[hypervisorType.(string)] != nil {
-					pVal := subMap[hypervisorType.(string)]
-					p := config.HypervisorType(pVal.(int))
-					node.HypervisorType = &p
-				}
+				node.HypervisorType = common.ExpandEnum(hypervisorType, HypervisorTypeMap, "hypervisor_type")
 			}
 			if roboMixedHypervisor, ok := val["is_robo_mixed_hypervisor"]; ok {
 				node.IsRoboMixedHypervisor = utils.BoolPtr(roboMixedHypervisor.(bool))
