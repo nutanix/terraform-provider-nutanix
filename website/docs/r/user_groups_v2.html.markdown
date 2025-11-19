@@ -17,6 +17,7 @@ resource "nutanix_user_groups_v2" "usr_group"{
   group_type         = "LDAP"
   idp_id             = "ba250e3e-1db1-4950-917f-a9e2ea35b8e3"
   name               = "group_0664229e"
+  # IAM stores distinguished name in lowerCase, even user send them as upperCase. Suggest user to use lowerCase letters.
   distinguished_name = "cn=group_0664229e,ou=group,dc=devtest,dc=local"
 }
 
