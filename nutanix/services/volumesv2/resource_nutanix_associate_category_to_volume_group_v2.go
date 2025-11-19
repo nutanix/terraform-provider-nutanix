@@ -110,7 +110,6 @@ func ResourceNutanixAssociateCategoryToVolumeGroupV2Create(ctx context.Context, 
 	log.Printf("[DEBUG] Associate Category to Volume Group Task Details: %s", string(aJSON))
 
 	d.SetId(utils.GenUUID())
-	//d.Set("ext_id", *uuid)
 
 	return nil
 }

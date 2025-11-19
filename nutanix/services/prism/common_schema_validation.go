@@ -19,6 +19,7 @@ var requiredResourceFields map[string]map[string][]string = map[string]map[strin
 func SchemaValidation(resourceName string, d *schema.ResourceData) error {
 	var diagMap []string
 	if vals, ok := requiredResourceFields[resourceName]; ok {
+		//nolint:staticcheck
 		if dbVal, ok := d.GetOkExists("createdbserver"); ok {
 			if dbVal.(bool) {
 				createVals := vals["createdbserver"]

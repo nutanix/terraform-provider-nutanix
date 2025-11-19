@@ -11,3 +11,9 @@ variable "nutanix_endpoint" {
 variable "nutanix_port" {
   type = string
 }
+variable "ldap_idp_id" {
+  type = string
+}
+variable "sam_idp_id" {
+  type = string
+}

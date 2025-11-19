@@ -101,9 +101,10 @@ func ResourceNutanixUserV2() *schema.Resource {
 				Computed: true,
 			},
 			"password": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"force_reset_password": {
 				Type:     schema.TypeBool,
@@ -130,9 +131,10 @@ func ResourceNutanixUserV2() *schema.Resource {
 				},
 			},
 			"status": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice([]string{"ACTIVE", "INACTIVE"}, false),
 			},
 			"buckets_access_keys": {
 				Type:     schema.TypeList,
@@ -179,23 +181,19 @@ func ResourceNutanixUserV2() *schema.Resource {
 				},
 			},
 			"last_login_time": {
-				Type: schema.TypeString,
-				// Optional: true,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"created_time": {
-				Type: schema.TypeString,
-				// Optional: true,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"last_updated_time": {
-				Type: schema.TypeString,
-				// Optional: true,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"created_by": {
-				Type: schema.TypeString,
-				// Optional: true,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
@@ -287,7 +285,7 @@ func resourceNutanixUserV2Create(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	aJSON, _ := json.MarshalIndent(spec, "", "  ")
-	log.Printf("[DEBUG] nutanix create user payload: %s", aJSON)
+	log.Printf("[DEBUG] create user spec: %s", aJSON)
 
 	resp, err := conn.UsersAPIInstance.CreateUser(spec)
 	if err != nil {
@@ -309,6 +307,9 @@ func resourceNutanixUserV2Read(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	getResp := resp.Data.GetValue().(import1.User)
+
+	aJSON, _ := json.MarshalIndent(getResp, "", "  ")
+	log.Printf("[DEBUG] resourceNutanixUserV2Read: get user response: %s", aJSON)
 
 	if err = d.Set("ext_id", getResp.ExtId); err != nil {
 		return diag.Errorf("error setting ext_id for user %s: %s", d.Id(), err)
@@ -380,8 +381,6 @@ func resourceNutanixUserV2Read(ctx context.Context, d *schema.ResourceData, meta
 func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	updateSpec := &import1.User{}
-
 	// get Resp
 	getResp, er := conn.UsersAPIInstance.GetUserById(utils.StringPtr(d.Id()))
 	if er != nil {
@@ -390,7 +389,21 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 
 	getUserResp := getResp.Data.GetValue().(import1.User)
 
-	updateSpec = &getUserResp
+	updateSpec := &getUserResp
+
+	// validation on update spec
+	// Note: user read response has "" as default value for  middleInitial, emailId, displayName.
+	if updateSpec.MiddleInitial != nil && utils.StringValue(updateSpec.MiddleInitial) == "" {
+		updateSpec.MiddleInitial = nil
+	}
+	if updateSpec.EmailId != nil && utils.StringValue(updateSpec.EmailId) == "" {
+		updateSpec.EmailId = nil
+	}
+	if updateSpec.DisplayName != nil && utils.StringValue(updateSpec.DisplayName) == "" {
+		updateSpec.DisplayName = nil
+	}
+
+	// checking if attribute is updated or not
 
 	if d.HasChange("user_type") {
 		const two, three, four, five, six = 2, 3, 4, 5, 6
@@ -474,9 +487,10 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 	args["If-Match"] = utils.StringPtr(etagValue)
 
 	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
-	log.Printf("[DEBUG] nutanix update user payload: %s", aJSON)
+	log.Printf("[DEBUG] update user spec: %s", aJSON)
 
 	updateresp, err := conn.UsersAPIInstance.UpdateUserById(utils.StringPtr(d.Id()), updateSpec, args)
+
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -489,7 +503,14 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceNutanixUserV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	log.Printf("[DEBUG] ResourceNutanixUserV2Delete : Delete not supported yet")
+	return diag.Diagnostics{
+		{
+			Severity: diag.Warning,
+			Summary:  "Delete operation not supported",
+			Detail:   "Deleting users via Terraform is not supported yet. Please delete the user manually from the Prism Central UI if required, or use v3 resource for now",
+		},
+	}
 }
 
 func expandKVPair(pr []interface{}) []config.KVPair {
