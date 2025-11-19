@@ -758,6 +758,7 @@ func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, m
 	uuid := ""
 	taskUUID := ""
 	// if use project internal flag is set ,  we will use projects_internal API
+	//nolint:staticcheck
 	if _, ok := d.GetOkExists("use_project_internal"); ok {
 		req := &v3.ProjectInternalIntentInput{
 			Spec:       expandProjectInternalSpec(d, meta),
@@ -899,7 +900,7 @@ func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).API
-
+	//nolint:staticcheck
 	if _, ok := d.GetOkExists("use_project_internal"); ok {
 		project, err := conn.V3.GetProjectInternal(ctx, d.Id())
 		if err != nil {
@@ -1053,7 +1054,7 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	uuid := ""
 	taskUUID := ""
-
+	//nolint:staticcheck
 	if _, ok := d.GetOkExists("use_project_internal"); ok {
 		request := &v3.ProjectInternalIntentInput{}
 		spec := &v3.ProjectInternalSpec{}
@@ -1735,6 +1736,7 @@ func expandCreateAcp(pr []interface{}, d *schema.ResourceData, projectUUID strin
 
 				// check for project collaboration. default is set to true
 				pcCollab := true
+				//nolint:staticcheck
 				if pc, ok1 := d.GetOkExists("enable_collab"); ok1 {
 					pcCollab = pc.(bool)
 				}
@@ -1799,6 +1801,7 @@ func UpdateExpandAcpRM(pr []interface{}, res *v3.ProjectInternalIntentResponse, 
 
 				// check for project collaboration. default is set to true
 				pcCollab := true
+				//nolint:staticcheck
 				if pc, ok1 := d.GetOkExists("enable_collab"); ok1 {
 					pcCollab = pc.(bool)
 				}
