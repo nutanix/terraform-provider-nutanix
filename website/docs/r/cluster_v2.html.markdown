@@ -15,7 +15,10 @@ Represents the Cluster entity. Provides the basic infrastructure for compute, st
 
 -> **Note:**: Cluster resource supports add/remove node operations. However, these operations require cluster to be registered with Prism Central.
 
-## Example Usage
+
+## Example Usage:
+
+### Example 1: 1 Node Cluster Creation Example
 
 ```hcl
 resource "nutanix_cluster_v2" "cluster"{
@@ -76,7 +79,7 @@ resource "nutanix_cluster_v2" "cluster"{
 }
 ```
 
-### 3 Node Cluster Creation Example and Adding Nodes Example
+### Example 2: 3 Node Cluster Creation Example and Adding Nodes Example
 
 ```hcl
 resource "nutanix_cluster_v2" "cluster-3nodes" {
