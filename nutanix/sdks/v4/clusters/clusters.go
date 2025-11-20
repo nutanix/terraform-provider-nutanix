@@ -10,6 +10,7 @@ type Client struct {
 	ClusterEntityAPI     *api.ClustersApi
 	StorageContainersAPI *api.StorageContainersApi
 	PasswordManagerAPI   *api.PasswordManagerApi
+	SSLCertificateAPI    *api.SSLCertificateApi
 }
 
 func NewClustersClient(credentials client.Credentials) (*Client, error) {
@@ -32,6 +33,7 @@ func NewClustersClient(credentials client.Credentials) (*Client, error) {
 		ClusterEntityAPI:     api.NewClustersApi(baseClient),
 		StorageContainersAPI: api.NewStorageContainersApi(baseClient),
 		PasswordManagerAPI:   api.NewPasswordManagerApi(baseClient),
+		SSLCertificateAPI:    api.NewSSLCertificateApi(baseClient),
 	}
 
 	return f, nil

@@ -99,6 +99,18 @@ var (
 		config.UPGRADESTATUS_CANCELLED, //nolint:misspell
 		config.UPGRADESTATUS_SCHEDULED,
 	}
+
+	PrivateKeyAlgorithms = []config.PrivateKeyAlgorithm{
+		config.PRIVATEKEYALGORITHM_JKS,
+		config.PRIVATEKEYALGORITHM_PKCS12,
+		config.PRIVATEKEYALGORITHM_RSA_2048,
+		config.PRIVATEKEYALGORITHM_RSA_4096,
+		config.PRIVATEKEYALGORITHM_RSA_PUBLIC,
+		config.PRIVATEKEYALGORITHM_KRB_KEYTAB,
+		config.PRIVATEKEYALGORITHM_ECDSA_256,
+		config.PRIVATEKEYALGORITHM_ECDSA_384,
+		config.PRIVATEKEYALGORITHM_ECDSA_521,
+	}
 )
 
 // Generate slices of string names for schema validation
@@ -117,6 +129,7 @@ var (
 	OperationModeStrings            = common.EnumToStrings(OperationModes)
 	EncryptionStatusStrings         = common.EnumToStrings(EncryptionStatuses)
 	UpgradeStatusStrings            = common.EnumToStrings(UpgradeStatuses)
+	PrivateKeyAlgorithmStrings      = common.EnumToStrings(PrivateKeyAlgorithms)
 )
 
 // Generate maps of enum names to enum values for use in resource expansion
@@ -134,5 +147,7 @@ var (
 	KeyManagementServerTypeMap  = common.EnumToMap(KeyManagementServerTypes)
 	OperationModeMap            = common.EnumToMap(OperationModes)
 	EncryptionStatusMap         = common.EnumToMap(EncryptionStatuses)
-	UpgradeStatusMap            = common.EnumToMap(UpgradeStatuses)
+
+	UpgradeStatusMap       = common.EnumToMap(UpgradeStatuses)
+	PrivateKeyAlgorithmMap = common.EnumToMap(PrivateKeyAlgorithms)
 )
