@@ -9,12 +9,13 @@ import (
 
 type TestConfig struct {
 	Security struct {
-		EndpointURL          string `json:"endpoint_url"`
-		TenantID             string `json:"tenant_id"`
-		ClientID             string `json:"client_id"`
-		ClientSecret         string `json:"client_secret"`
-		KeyID                string `json:"key_id"`
-		CredentialExpiryDate string `json:"credential_expiry_date"`
+		KMS struct {
+			EndpointURL  string `json:"endpoint_url"`
+			TenantID     string `json:"tenant_id"`
+			ClientID     string `json:"client_id"`
+			ClientSecret string `json:"client_secret"`
+			KeyID        string `json:"key_id"`
+		} `json:"kms"`
 	} `json:"security"`
 }
 

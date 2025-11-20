@@ -47,7 +47,23 @@ func DatasourceNutanixKeyManagementServersV2Read(ctx context.Context, d *schema.
 		}}
 	}
 
-	listResp := resp.Data.GetValue().([]config.KeyManagementServer)
+	listRespValue, ok := resp.Data.GetValue().([]config.KeyManagementServer)
+	if !ok {
+		return diag.Errorf("error: unexpected response type from list API, expected []KeyManagementServer")
+	}
+	listResp := listRespValue
+
+	if len(listResp) == 0 {
+		if setErr := d.Set("kms", []map[string]interface{}{}); setErr != nil {
+			return diag.FromErr(setErr)
+		}
+		d.SetId(utils.GenUUID())
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No Key Management Servers found",
+			Detail:   "The API returned an empty list of key management servers.",
+		}}
+	}
 
 	kmsList, err := flattenKeyManagementServer(listResp)
 	if err != nil {

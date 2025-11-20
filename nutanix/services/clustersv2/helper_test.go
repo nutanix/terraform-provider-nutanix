@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -167,23 +168,39 @@ func taskStateRefreshPrismTaskGroupFunc(taskUUID string) resource.StateRefreshFu
 
 // helper function to flatten the task status to string
 func getTaskStatus(pr *prismConfig.TaskStatus) string {
-	if pr != nil {
-		const QUEUED, RUNNING, SUCCEEDED, FAILED, CANCELED = 2, 3, 5, 6, 7
-		if *pr == prismConfig.TaskStatus(FAILED) {
-			return "FAILED"
+	return pr.GetName()
+}
+
+// ##############################
+// ### Expand Cluster Helpers ###
+// ##############################
+func checkNodesIPs(expected []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attrs := s.RootModule().Resources[resourceName3NodesCluster].Primary.Attributes
+
+		// Collect all node IPs dynamically
+		var ips []string
+		for k, v := range attrs {
+			if strings.HasPrefix(k, "nodes.0.node_list.") &&
+				strings.HasSuffix(k, ".controller_vm_ip.0.ipv4.0.value") {
+				ips = append(ips, v)
+			}
 		}
-		if *pr == prismConfig.TaskStatus(CANCELED) {
-			return "CANCELED"
+
+		// Check if all expected IPs are present
+		for _, expectedIP := range expected {
+			found := false
+			for _, ip := range ips {
+				if ip == expectedIP {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return fmt.Errorf("expected IP %s not found in cluster nodes: %v", expectedIP, ips)
+			}
 		}
-		if *pr == prismConfig.TaskStatus(QUEUED) {
-			return "QUEUED"
-		}
-		if *pr == prismConfig.TaskStatus(RUNNING) {
-			return "RUNNING"
-		}
-		if *pr == prismConfig.TaskStatus(SUCCEEDED) {
-			return "SUCCEEDED"
-		}
+
+		return nil
 	}
-	return "UNKNOWN"
 }

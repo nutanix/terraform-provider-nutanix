@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -21,16 +23,30 @@ const datasourceNameObjectStoreFilter = "data.nutanix_object_stores_v2.filter"
 const datasourceNameCertificateFetch = "data.nutanix_certificate_v2.fetch"
 const datasourceNameCertificatesList = "data.nutanix_certificates_v2.list"
 
+// object store OVA resource name
+const resourceNameObjectLiteStoreImage = "nutanix_images_v2.object-liteStore-img"
+const resourceNameVM = "nutanix_virtual_machine_v2.vm-test"
+
+const resourceNameVMOva = "nutanix_ova_v2.vm-ova"
+const resourceNameObjectLiteSourceOva = "nutanix_ova_v2.object-liteSource-ova"
+
 func TestAccV2NutanixObjectStoreResource_OneWorkerNode(t *testing.T) {
 	r := acctest.RandIntRange(1, 99)
 	objectStoreName := fmt.Sprintf("tf-test-os-%d", r)
+
+	objectLiteSourceImgName := fmt.Sprintf("tf-object-ls-img-%d", r)
+	vmName := fmt.Sprintf("tf-object-vm-%d", r)
+	vmOvaName := fmt.Sprintf("tf-vm-ova-%d", r)
+	objectOvaName := fmt.Sprintf("tf-object-liteStore-ova-%d", r)
+
+	config := testAccObjectStoreWithOneWorkerNodeConfig(objectStoreName)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testAccCheckNutanixObjectStoreDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectStoreWithOneWorkerNodeConfig(objectStoreName),
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "name", objectStoreName),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "description", "terraform test object store"),
@@ -49,7 +65,7 @@ func TestAccV2NutanixObjectStoreResource_OneWorkerNode(t *testing.T) {
 			},
 			// list object store with filter and limit
 			{
-				Config: testAccObjectStoreWithOneWorkerNodeConfig(objectStoreName) + testAccObjectStoreDatasourceConfig(),
+				Config: config + testAccObjectStoreDatasourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					// fetch object store check
 					resource.TestCheckResourceAttrPair(resourceNameObjectStore, "name", datasourceNameObjectStoreFetch, "name"),
@@ -100,7 +116,7 @@ func TestAccV2NutanixObjectStoreResource_OneWorkerNode(t *testing.T) {
 			},
 			// create a new certificate for object store
 			{
-				Config: testAccObjectStoreWithOneWorkerNodeConfig(objectStoreName) + testAccObjectStoreCertificateResourceConfig() + testAccObjectStoreCertificateDatasourceConfig(),
+				Config: config + testAccObjectStoreCertificateResourceConfig() + testAccObjectStoreCertificateDatasourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					// Fetch object store certificate check
 					resource.TestCheckResourceAttrPair(resourceNameObjectStore, "ext_id", datasourceNameCertificateFetch, "object_store_ext_id"),
@@ -110,8 +126,52 @@ func TestAccV2NutanixObjectStoreResource_OneWorkerNode(t *testing.T) {
 					// List object store certificate check
 					resource.TestCheckResourceAttrSet(datasourceNameCertificatesList, "certificates.#"),
 					resource.TestCheckResourceAttrPair(datasourceNameCertificatesList, "certificates.0.ext_id", resourceNameObjectStoreCertificate, "id"),
+				),
+			},
+			// Lite source tests for image and ova using object store source
+			{
+				PreConfig: func() {
+					fmt.Println("object lite source tests")
+				},
+				Config: config + testAccObjectStoreObjectLiteSourceConfig(objectLiteSourceImgName, vmName, vmOvaName, objectOvaName),
+				Check: resource.ComposeTestCheckFunc(
+					// check object store image
+					resource.TestCheckResourceAttrSet(resourceNameObjectLiteStoreImage, "id"),
+					resource.TestCheckResourceAttrSet(resourceNameObjectLiteStoreImage, "ext_id"),
+					resource.TestCheckResourceAttr(resourceNameObjectLiteStoreImage, "name", objectLiteSourceImgName),
+					resource.TestCheckResourceAttr(resourceNameObjectLiteStoreImage, "description", "Image created from object store"),
+					resource.TestCheckResourceAttr(resourceNameObjectLiteStoreImage, "type", "DISK_IMAGE"),
+					resource.TestCheckResourceAttrSet(resourceNameObjectLiteStoreImage, "source.0.url_source.0.url"),
+					func(s *terraform.State) error {
+						attr := s.RootModule().Resources[resourceNameObjectLiteStoreImage].Primary.Attributes["source.0.url_source.0.url"]
 
-					// delete object store bucket
+						if !strings.Contains(attr, objectStoreName) {
+							return fmt.Errorf("expected URL to contain '%s', got: %s", objectStoreName, attr)
+						}
+
+						if !strings.Contains(attr, "objects") {
+							return fmt.Errorf("expected URL to contain 'objects', got: %s", attr)
+						}
+
+						return nil
+					},
+
+					// check vm
+					resource.TestCheckResourceAttrSet(resourceNameVM, "id"),
+					resource.TestCheckResourceAttrSet(resourceNameVM, "ext_id"),
+					resource.TestCheckResourceAttr(resourceNameVM, "name", vmName),
+					resource.TestCheckResourceAttr(resourceNameVM, "description", "terraform test object store vm"),
+					resource.TestCheckResourceAttr(resourceNameVM, "num_sockets", "2"),
+					resource.TestCheckResourceAttr(resourceNameVM, "memory_size_bytes", fmt.Sprintf("%d", 4*1024*1024*1024)),
+
+					// check vm ova
+					resource.TestCheckResourceAttrSet(resourceNameVMOva, "id"),
+					resource.TestCheckResourceAttrSet(resourceNameVMOva, "ext_id"),
+					resource.TestCheckResourceAttr(resourceNameVMOva, "name", vmOvaName),
+
+					// check object lite source ova
+					resource.TestCheckResourceAttrSet(resourceNameObjectLiteSourceOva, "id"),
+					resource.TestCheckResourceAttrSet(resourceNameObjectLiteSourceOva, "ext_id"),
 					deleteObjectStoreBucket(),
 				),
 			},
@@ -363,8 +423,8 @@ locals {
   ][0]
   subnetExtId = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
 
-  pcSSHPassword    = local.objectStore.ssh_pc_password
-  username         = local.objectStore.ssh_pc_username
+  pcSSHPassword    = local.config.ssh_pc_password
+  username         = local.config.ssh_pc_username
   ip               = "%[2]s"
 
 }
@@ -447,4 +507,153 @@ resource "terraform_data" "post_update_hook" {
 }
 
 `, filepath, endpoint, objectStoreName)
+}
+
+func testAccObjectStoreObjectLiteSourceConfig(objectLiteSourceImgName, vmName, vmOvaName, objectOvaName string) string {
+	nutanixUsername := os.Getenv("NUTANIX_USERNAME")
+	nutanixPassword := os.Getenv("NUTANIX_PASSWORD")
+	nutanixEndpoint := os.Getenv("NUTANIX_ENDPOINT")
+	nutanixPort := os.Getenv("NUTANIX_PORT")
+	return fmt.Sprintf(`
+
+locals {
+			        # nutanix_username:nutanix_password
+  aws_access_key  = base64encode("%[1]s:%[2]s")
+  aws_secret_key  = base64encode("%[1]s:%[2]s")
+  objects_API     = "https://%[3]s:%[4]s/api/prism/v4.0/objects/"
+  disk_image_dest = "${path.module}/CentOS-7-cloudinit-os-img.qcow2"
+}
+
+
+# Configure AWS CLI access key
+resource "terraform_data" "config_aws_access_key" {
+  provisioner "local-exec" {
+    when       = create
+    command    = "aws configure set aws_access_key_id ${local.aws_access_key}"
+    on_failure = fail
+  }
+}
+
+# Configure AWS CLI secret key
+resource "terraform_data" "config_aws_secret_key" {
+  provisioner "local-exec" {
+    when       = create
+    command    = "aws configure set aws_secret_access_key ${local.aws_secret_key}"
+    on_failure = fail
+  }
+  depends_on = [terraform_data.config_aws_access_key]
+}
+
+# Configure AWS Endpoint URL
+resource "terraform_data" "config_aws_endpoint_url" {
+  provisioner "local-exec" {
+    when       = create
+    command    = "aws configure set endpoint_url ${local.objects_API}"
+    on_failure = fail
+  }
+  depends_on = [terraform_data.config_aws_secret_key]
+}
+
+# Download disk image from remote URL
+resource "terraform_data" "download_disk_image" {
+  provisioner "local-exec" {
+    when       = create
+    command    = "curl -o ${local.disk_image_dest} ${local.objectStore.img_url}"
+    on_failure = fail
+  }
+  depends_on = [terraform_data.config_aws_endpoint_url]
+}
+
+# Upload image to object store bucket using AWS CLI
+resource "terraform_data" "upload_image_to_object_store" {
+  provisioner "local-exec" {
+    when       = create
+    command    = "aws s3api put-object --bucket vmm-images --body ${local.disk_image_dest} --key ${nutanix_object_store_v2.test.name} --no-verify-ssl"
+    on_failure = fail
+  }
+  depends_on = [terraform_data.download_disk_image]
+}
+
+# Create image using object lite source
+resource "nutanix_images_v2" "object-liteStore-img" {
+  name        = "%[5]s"
+  description = "Image created from object store"
+  type        = "DISK_IMAGE"
+  source {
+    object_lite_source {
+      key = nutanix_object_store_v2.test.name
+    }
+  }
+  lifecycle {
+    ignore_changes = [
+      source
+    ]
+  }
+  depends_on = [terraform_data.upload_image_to_object_store]
+}
+
+
+# Create VM with some specific requirements
+resource "nutanix_virtual_machine_v2" "vm-test" {
+  name              = "%[6]s"
+  description       = "terraform test object store vm"
+  num_sockets       = 2
+  memory_size_bytes = 4 * 1024 * 1024 * 1024
+  boot_config {
+    legacy_boot {
+      boot_order = ["CDROM", "DISK", "NETWORK"]
+    }
+  }
+}
+
+# Create Ova from the VM
+resource "nutanix_ova_v2" "vm-ova" {
+  name = "%[7]s"
+  source {
+    ova_vm_source {
+      vm_ext_id        = nutanix_virtual_machine_v2.vm-test.id
+      disk_file_format = "QCOW2"
+    }
+  }
+}
+
+# Download Ova
+resource "nutanix_ova_download_v2" "test" {
+  ova_ext_id = nutanix_ova_v2.vm-ova.id
+}
+
+
+# Upload Ova to object store using AWS CLI
+resource "terraform_data" "upload_ova_to_object_store" {
+  provisioner "local-exec" {
+    when       = create
+    command    = "aws s3api put-object --bucket vmm-ovas --body ${nutanix_ova_download_v2.test.ova_file_path} --key ${nutanix_object_store_v2.test.name} --no-verify-ssl"
+    on_failure = fail
+  }
+}
+
+# Sleep 1 min before uploading ova
+resource "terraform_data" "delay" {
+  provisioner "local-exec" {
+    when       = create
+    command    = "sleep 60"
+    on_failure = fail
+  }
+  depends_on = [terraform_data.upload_ova_to_object_store]
+}
+
+# Create ova using object store source
+resource "nutanix_ova_v2" "object-liteSource-ova" {
+  name = "tf-object-ova"
+  source {
+    object_lite_source {
+      key = nutanix_object_store_v2.test.name
+    }
+  }
+  cluster_location_ext_ids = [local.clusterExtId]
+  depends_on               = [terraform_data.delay]
+}
+
+
+`, nutanixUsername, nutanixPassword, nutanixEndpoint, nutanixPort, objectLiteSourceImgName, vmName, vmOvaName, objectOvaName)
 }

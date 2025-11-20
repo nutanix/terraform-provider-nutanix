@@ -118,6 +118,15 @@ The following arguments are supported:
 * `aos_package_sha256sum`: Sha256sum of AOS package.
 * `timezone`: Timezone to be set on the cluster.
 * `nodes_list`: List of details of nodes out of which the cluster needs to be created.
+* `fc_api_key_uuid`: UUID of the FC API key to be used in the imaging process. Required only for imaging via a hardware manager like Cisco Intersight managed UCS nodes. 
+* `server_configuration_data`: JSON-encoded server configuration data for cluster. Required only for imaging via a hardware manager like Cisco Intersight managed UCS nodes. Example:
+    ```
+    server_configuration_data = jsonencode({
+      intersight_data = {
+        organization = "default"
+      }
+    })
+    ```
 
 ### common network settings
 * `cvm_dns_servers`: List of dns servers for the cvms in the cluster.
@@ -157,6 +166,24 @@ The following arguments are supported:
 * `hypervisor_ip`: IP address to be set for the hypervisor on the node.
 * `use_existing_network_settings`: Decides whether to use the existing network settings for the node. If True, the existing network settings of the node will be used during cluster creation. If False, then client must provide new network settings. If all nodes are booted in phoenix, this field is, by default, considered to be False.
 * `ipmi_gateway`: Gateway of the ipmi.
+* `server_configuration_data`: JSON-encoded server configuration data for node. Required only for imaging via a hardware manager like Cisco Intersight managed UCS nodes. Example:
+
+    ```
+    server_configuration_data = jsonencode({
+        intersight_data = {
+          uuid_pool_name = ""
+          imc_settings = {
+            out_of_band_settings = {
+              ip_pool_name = "test-vlan-pool"
+            }
+          }
+          vnic_settings = {
+            mac_pool_name = "test-mac-pool"
+            vlans         = "16"
+          }
+        }
+      })
+    ```
 
 
 ## Attributes Reference
