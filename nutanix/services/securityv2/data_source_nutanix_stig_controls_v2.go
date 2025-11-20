@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/models/common/v1/response"
 	"github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/models/security/v4/report"
@@ -133,8 +134,8 @@ func DatasourceNutanixStigsControlsV2Read(ctx context.Context, d *schema.Resourc
 	} else {
 		orderBy = nil
 	}
-	if selectQy, ok := d.GetOk("select"); ok {
-		selectQ = utils.StringPtr(selectQy.(string))
+	if selectVal, ok := d.GetOk("select"); ok {
+		selectQ = utils.StringPtr(selectVal.(string))
 	} else {
 		selectQ = nil
 	}
@@ -149,7 +150,7 @@ func DatasourceNutanixStigsControlsV2Read(ctx context.Context, d *schema.Resourc
 			return diag.FromErr(err)
 		}
 
-		d.SetId(utils.GenUUID())
+		d.SetId(resource.UniqueId())
 
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
@@ -158,7 +159,11 @@ func DatasourceNutanixStigsControlsV2Read(ctx context.Context, d *schema.Resourc
 		}}
 	}
 
-	stigsData := resp.Data.GetValue().([]report.Stig)
+	value := resp.Data.GetValue()
+	stigsData, ok := value.([]report.Stig)
+	if !ok {
+		return diag.Errorf("unexpected response type: expected []report.Stig, got %T", value)
+	}
 
 	aJSON, _ := json.MarshalIndent(flattenSTIGs(stigsData), "", "  ")
 	log.Printf("[DEBUG] STIGs fetched: %s", string(aJSON))
@@ -168,7 +173,7 @@ func DatasourceNutanixStigsControlsV2Read(ctx context.Context, d *schema.Resourc
 		return diag.FromErr(err)
 	}
 
-	d.SetId(utils.GenUUID())
+	d.SetId(resource.UniqueId())
 	return nil
 }
 
@@ -224,5 +229,5 @@ func flattenLinks(links []response.ApiLink) []interface{} {
 		}
 		return flattenedLinks
 	}
-	return nil
+	return make([]interface{}, 0)
 }
