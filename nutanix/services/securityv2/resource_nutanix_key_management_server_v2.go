@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	securityPrism "github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/models/security/v4/config"
@@ -62,8 +63,9 @@ func ResourceNutanixKeyManagementServerV2() *schema.Resource {
 							Required: true,
 						},
 						"client_secret": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(8, 256),
 						},
 						"credential_expiry_date": {
 							Type:     schema.TypeString,
@@ -122,7 +124,6 @@ func ResourceNutanixKeyManagementServerV2Create(ctx context.Context, d *schema.R
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the Key Management Server to be available
 	stateConf := &resource.StateChangeConf{
@@ -139,7 +140,7 @@ func ResourceNutanixKeyManagementServerV2Create(ctx context.Context, d *schema.R
 	// Get UUID from TASK API
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Key Management Server UUID : %v", err)
+		return diag.Errorf("error while fetching Key Management Server Task UUID : %v", err)
 	}
 	taskDetailsValue, ok := taskResp.Data.GetValue().(prismConfig.Task)
 	if !ok {
@@ -211,31 +212,70 @@ func ResourceNutanixKeyManagementServerV2Update(ctx context.Context, d *schema.R
 	args := make(map[string]interface{})
 	args["If-Match"] = utils.StringPtr(etagValue)
 
-	// The name field is required for updating the KMS. Always populate it—either from the new value or fallback to the current resource state.
-	updateSpec := config.KeyManagementServer{}
-	var name string
-	if d.HasChange("name") {
-		if v, ok := d.GetOk("name"); ok && v.(string) != "" {
-			name = v.(string)
-		}
+	// Get current state to preserve values for fields that haven't changed
+	updateSpec, ok := resp.Data.GetValue().(config.KeyManagementServer)
+	if !ok {
+		return diag.Errorf("error: unexpected response type from get API, expected KeyManagementServer")
 	}
-	if name == "" {
-		if v := d.Get("name"); v != nil && v.(string) != "" {
-			name = v.(string)
-		}
-	}
-	updateSpec.Name = utils.StringPtr(name)
 
+	// Update name if it has changed
 	if d.HasChange("name") {
 		if v, ok := d.GetOk("name"); ok {
 			updateSpec.Name = utils.StringPtr(v.(string))
 		}
 	}
+
+	// Update access_information if it has changed
 	if d.HasChange("access_information") {
 		if v, ok := d.GetOk("access_information"); ok {
 			accessInfo, expandErr := expandAccessInformation(v.([]interface{}))
 			if expandErr != nil {
 				return diag.FromErr(expandErr)
+			}
+			// The API requires clientId and clientSecret to be present in update requests
+			// Get values from raw config as they are not stored in state (sensitive fields)
+			rawConfig := d.GetRawConfig()
+			configMap := rawConfig.AsValueMap()
+
+			var configClientSecret, configClientId string
+			if accessInfoVal, exists := configMap["access_information"]; exists && !accessInfoVal.IsNull() && accessInfoVal.IsKnown() {
+				if accessInfoVal.Type().IsListType() || accessInfoVal.Type().IsTupleType() {
+					accessInfoList := accessInfoVal.AsValueSlice()
+					if len(accessInfoList) > 0 {
+						firstItem := accessInfoList[0]
+						if firstItem.Type().IsObjectType() {
+							itemMap := firstItem.AsValueMap()
+							if clientSecretVal, exists := itemMap["client_secret"]; exists && !clientSecretVal.IsNull() && clientSecretVal.IsKnown() {
+								configClientSecret = clientSecretVal.AsString()
+							}
+							if clientIdVal, exists := itemMap["client_id"]; exists && !clientIdVal.IsNull() && clientIdVal.IsKnown() {
+								configClientId = clientIdVal.AsString()
+							}
+						}
+					}
+				}
+			}
+
+			// If client_secret hasn't changed, use the value from raw config
+			if !d.HasChange("access_information.0.client_secret") {
+				if configClientSecret != "" {
+					accessInfo.ClientSecret = utils.StringPtr(configClientSecret)
+				}
+			} else if accessInfo.ClientSecret != nil && utils.StringValue(accessInfo.ClientSecret) == "" {
+				// If it has changed but is empty, use the value from raw config
+				if configClientSecret != "" {
+					accessInfo.ClientSecret = utils.StringPtr(configClientSecret)
+				}
+			}
+			// client_id
+			if !d.HasChange("access_information.0.client_id") {
+				if configClientId != "" {
+					accessInfo.ClientId = utils.StringPtr(configClientId)
+				}
+			} else if accessInfo.ClientId != nil && utils.StringValue(accessInfo.ClientId) == "" {
+				if configClientId != "" {
+					accessInfo.ClientId = utils.StringPtr(configClientId)
+				}
 			}
 			updateSpec.AccessInformation = accessInfo
 		}
@@ -259,7 +299,7 @@ func ResourceNutanixKeyManagementServerV2Update(ctx context.Context, d *schema.R
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the kms to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
@@ -287,7 +327,6 @@ func ResourceNutanixKeyManagementServerV2Delete(ctx context.Context, d *schema.R
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the Delete task to be complete
 	stateConf := &resource.StateChangeConf{
