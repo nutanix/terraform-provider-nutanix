@@ -493,34 +493,49 @@ func expandNextHopType(hopType interface{}) *config.NexthopType {
 }
 
 func expandMetadata(metadata []interface{}) *common.Metadata {
-	if len(metadata) == 0 {
-		log.Printf("[DEBUG] No metadata found")
+	if len(metadata) == 0 || metadata[0] == nil {
+		log.Printf("[DEBUG] No metadata found or metadata is nil")
 		return nil
 	}
-	metadataMap := metadata[0].(map[string]interface{})
+
+	metadataMap, ok := metadata[0].(map[string]interface{})
+	if !ok {
+		log.Printf("[DEBUG] Failed to convert metadata to map[string]interface{}")
+		return nil
+	}
+
 	metadataObj := &common.Metadata{}
-	if ownerRefID, ok := metadataMap["owner_reference_id"]; ok {
-		metadataObj.OwnerReferenceId = utils.StringPtr(ownerRefID.(string))
-	}
-	if ownerUserName, ok := metadataMap["owner_user_name"]; ok {
-		metadataObj.OwnerUserName = utils.StringPtr(ownerUserName.(string))
-	}
-	if projRefID, ok := metadataMap["project_reference_id"]; ok {
-		metadataObj.ProjectReferenceId = utils.StringPtr(projRefID.(string))
-	}
-	if projName, ok := metadataMap["project_name"]; ok {
-		metadataObj.ProjectName = utils.StringPtr(projName.(string))
-	}
-	if categoryIDs, ok := metadataMap["category_ids"]; ok {
-		categoryIDList := categoryIDs.([]interface{})
-		categoryIDListStr := make([]string, len(categoryIDList))
-		for i, v := range categoryIDList {
-			categoryIDListStr[i] = v.(string)
+
+	setStringPtr := func(field **string, key string) {
+		if val, ok := metadataMap[key]; ok {
+			if strVal, valid := val.(string); valid && strVal != "" {
+				*field = utils.StringPtr(strVal)
+			}
 		}
-		metadataObj.CategoryIds = categoryIDListStr
 	}
-	aJSON, _ := json.Marshal(metadataObj)
-	log.Printf("[DEBUG] Metadata Object: %v", string(aJSON))
+
+	setStringPtr(&metadataObj.OwnerReferenceId, "owner_reference_id")
+	setStringPtr(&metadataObj.OwnerUserName, "owner_user_name")
+	setStringPtr(&metadataObj.ProjectReferenceId, "project_reference_id")
+	setStringPtr(&metadataObj.ProjectName, "project_name")
+
+	if categoryIDs, ok := metadataMap["category_ids"]; ok {
+		if categorySlice, valid := categoryIDs.([]interface{}); valid && len(categorySlice) > 0 {
+			categoryIDListStr := make([]string, 0, len(categorySlice))
+			for _, v := range categorySlice {
+				if s, ok := v.(string); ok && s != "" {
+					categoryIDListStr = append(categoryIDListStr, s)
+				}
+			}
+			metadataObj.CategoryIds = categoryIDListStr
+		}
+	}
+
+	if aJSON, err := json.Marshal(metadataObj); err == nil {
+		log.Printf("[DEBUG] Metadata Object: %v", string(aJSON))
+	} else {
+		log.Printf("[DEBUG] Failed to marshal metadata object: %v", err)
+	}
 
 	return metadataObj
 }

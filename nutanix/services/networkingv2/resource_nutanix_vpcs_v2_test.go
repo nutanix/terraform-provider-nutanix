@@ -30,6 +30,9 @@ func TestAccV2NutanixVpcResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameVpc, "metadata.#"),
 					resource.TestCheckResourceAttrSet(resourceNameVpc, "links.#"),
 					resource.TestCheckResourceAttrSet(resourceNameVpc, "snat_ips.#"),
+					resource.TestCheckResourceAttr(resourceNameVpc, "vpc_type", "REGULAR"),
+					resource.TestCheckResourceAttrSet(resourceNameVpc, "metadata.0.category_ids.#"),
+					resource.TestCheckResourceAttrPair(resourceNameVpc, "metadata.0.category_ids.0", "nutanix_category_v2.test", "id"),
 				),
 			},
 			{
@@ -40,6 +43,9 @@ func TestAccV2NutanixVpcResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameVpc, "metadata.#"),
 					resource.TestCheckResourceAttrSet(resourceNameVpc, "links.#"),
 					resource.TestCheckResourceAttrSet(resourceNameVpc, "snat_ips.#"),
+					resource.TestCheckResourceAttr(resourceNameVpc, "vpc_type", "REGULAR"),
+					resource.TestCheckResourceAttrSet(resourceNameVpc, "metadata.0.category_ids.#"),
+					resource.TestCheckResourceAttrPair(resourceNameVpc, "metadata.0.category_ids.0", "nutanix_category_v2.test", "id"),
 				),
 			},
 		},
@@ -61,6 +67,9 @@ func TestAccV2NutanixVpcResource_WithExternallyRoutablePrefixes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVpc, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVpc, "description", desc),
 					resource.TestCheckResourceAttrSet(resourceNameVpc, "metadata.#"),
+					resource.TestCheckResourceAttr(resourceNameVpc, "vpc_type", "REGULAR"),
+					resource.TestCheckResourceAttrSet(resourceNameVpc, "metadata.0.category_ids.#"),
+					resource.TestCheckResourceAttrPair(resourceNameVpc, "metadata.0.category_ids.0", "nutanix_category_v2.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceNameVpc, "links.#"),
 					resource.TestCheckResourceAttrSet(resourceNameVpc, "snat_ips.#"),
 				),
@@ -160,12 +169,23 @@ func testVpcConfig(name, desc string, vlanID int) string {
 		}
 		depends_on = [data.nutanix_clusters_v2.clusters]
 	}
+
+	resource "nutanix_category_v2" "test" {
+		key = "tf-test-category-key-%[3]d"
+		value = "tf-test-category-value-%[3]d"
+		description = "test category for vpc"
+	}
+
 	resource "nutanix_vpc_v2" "test" {
 		name =  "%[1]s"
 		description = "%[2]s"
 		external_subnets{
 		  subnet_reference = nutanix_subnet_v2.test.id
 		}
+		metadata {
+			category_ids = [nutanix_category_v2.test.id]
+		}
+		vpc_type = "REGULAR"
 		depends_on = [nutanix_subnet_v2.test]
 	}
 `, name, desc, vlanID)
@@ -213,6 +233,13 @@ func testVpcConfigWithExtRoutablePrefix(name, desc string, vlanID int) string {
 		}
 		depends_on = [data.nutanix_clusters_v2.clusters]
 	}
+
+	resource "nutanix_category_v2" "test" {
+		key = "tf-test-category-key-%[1]s"
+		value = "tf-test-category-value-%[1]s"
+		description = "test category for vpc"
+	}
+
 	resource "nutanix_vpc_v2" "test" {
 		name =  "%[1]s"
 		description = "%[2]s"
@@ -240,6 +267,10 @@ func testVpcConfigWithExtRoutablePrefix(name, desc string, vlanID int) string {
 			prefix_length = 16
 		  }
 		}
+		metadata {
+			category_ids = [nutanix_category_v2.test.id]
+		}
+		vpc_type = "REGULAR"
 		depends_on = [nutanix_subnet_v2.test]
 	}
 `, name, desc, vlanID)

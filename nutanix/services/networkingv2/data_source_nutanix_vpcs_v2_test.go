@@ -67,6 +67,9 @@ func TestAccV2NutanixVpcsDataSource_WithFilter(t *testing.T) {
 					resource.TestCheckResourceAttrSet(datasourceNameVPCs, "vpcs.0.links.#"),
 					resource.TestCheckResourceAttrSet(datasourceNameVPCs, "vpcs.0.snat_ips.#"),
 					resource.TestCheckResourceAttrSet(datasourceNameVPCs, "vpcs.0.external_subnets.#"),
+					resource.TestCheckResourceAttr(datasourceNameVPCs, "vpcs.0.vpc_type", "REGULAR"),
+					resource.TestCheckResourceAttrSet(datasourceNameVPCs, "vpcs.0.metadata.0.category_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceNameVPCs, "vpcs.0.metadata.0.category_ids.0", "nutanix_category_v2.test", "id"),
 				),
 			},
 		},
@@ -131,12 +134,22 @@ func testAccVpcsDataSourceConfig(name, desc string) string {
 			}
 			depends_on = [data.nutanix_clusters_v2.clusters]
 		}
+
+		resource "nutanix_category_v2" "test" {
+			key = "tf-test-category-key-%[1]s"
+			value = "tf-test-category-value-%[1]s"
+			description = "test category for vpc"
+		}
 		resource "nutanix_vpc_v2" "rtest" {
 			name =  "%[1]s"
 			description = "%[2]s"
+			metadata {
+				category_ids = [nutanix_category_v2.test.id]
+			}
 			external_subnets{
 			  subnet_reference = nutanix_subnet_v2.test.id
 			}
+			vpc_type = "REGULAR"
 			depends_on = [nutanix_subnet_v2.test]
 		}
 
