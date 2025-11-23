@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	clustermgmtPrism "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -137,9 +139,31 @@ func ResourceNutanixSSLCertificateV2Read(ctx context.Context, d *schema.Resource
 
 	clusterExtID := d.Get("cluster_ext_id").(string)
 
-	resp, err := conn.SSLCertificateAPI.GetSSLCertificate(utils.StringPtr(clusterExtID))
+	// Retry logic to handle temporary API unavailability after certificate regeneration
+	var resp *import1.GetSSLCertificateApiResponse
+	var err error
+	maxRetries := 10
+	retryDelay := 2 * time.Second
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		resp, err = conn.SSLCertificateAPI.GetSSLCertificate(utils.StringPtr(clusterExtID))
+		if err == nil {
+			break
+		}
+
+		if attempt < maxRetries-1 {
+			log.Printf("[DEBUG] Attempt %d/%d failed to fetch SSL certificate, retrying in %v: %v", attempt+1, maxRetries, retryDelay, err)
+			select {
+			case <-ctx.Done():
+				return diag.Errorf("context cancelled while fetching SSL certificate: %v", ctx.Err())
+			case <-time.After(retryDelay):
+				retryDelay = time.Duration(float64(retryDelay) * 1.5) // Exponential backoff
+			}
+		}
+	}
+
 	if err != nil {
-		return diag.Errorf("error while fetching SSL certificate: %v", err)
+		return diag.Errorf("error while fetching SSL certificate after %d attempts: %v", maxRetries, err)
 	}
 
 	if resp.Data == nil {
@@ -157,25 +181,12 @@ func ResourceNutanixSSLCertificateV2Read(ctx context.Context, d *schema.Resource
 		return diag.Errorf("unexpected response type: expected config.SSLCertificate, got %T", value)
 	}
 
-	// Set computed fields from the API response
-	// Only set values from API if they weren't explicitly set by the user
-	if err := d.Set("passphrase", sslCert.Passphrase); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("private_key", sslCert.PrivateKey); err != nil {
-		return diag.FromErr(err)
-	}
+	// The API returns public certificate and private key algorithm only
 	// Only set public_certificate from API if it wasn't explicitly set in config
 	// This prevents unnecessary diffs when user provides base64-encoded value
 	// but API returns formatted certificate
 	if _, ok := d.GetOk("public_certificate"); !ok {
 		if err := d.Set("public_certificate", sslCert.PublicCertificate); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-	// Only set ca_chain from API if it wasn't explicitly set in config
-	if _, ok := d.GetOk("ca_chain"); !ok {
-		if err := d.Set("ca_chain", sslCert.CaChain); err != nil {
 			return diag.FromErr(err)
 		}
 	}

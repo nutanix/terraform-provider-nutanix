@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -31,15 +30,6 @@ func TestAccNutanixSSLCertificateV2_Basic(t *testing.T) {
 			},
 			// read the ssl certificate
 			{
-				PreConfig: func() {
-					// sleep to ensure the ssl certificate is updated, logging progress every 10 seconds
-					waitTime := 10 * time.Second
-					tick := 5 * time.Second
-					for elapsed := time.Duration(0); elapsed < waitTime; elapsed += tick {
-						time.Sleep(tick)
-						t.Logf("Waiting for SSL certificate update... (%v/%v)", elapsed+tick, waitTime)
-					}
-				},
 				Config: testAccSSLCertificateConfig() + `
 				
 				data "nutanix_ssl_certificate_v2" "test" {
@@ -50,6 +40,56 @@ func TestAccNutanixSSLCertificateV2_Basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					// Decode base64 certificate from config and compare with formatted certificate from API
 					checkPublicCertificateDecoded(dataSourceNameSSLCertificate, "public_certificate", testVars.Clusters.SSLCertificate.PublicCertificate),
+					resource.TestCheckResourceAttr(dataSourceNameSSLCertificate, "private_key_algorithm", "RSA_2048"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNutanixSSLCertificateV2_Regenerate(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			// regenerate the ssl certificate
+			{
+				Config: `
+				data "nutanix_clusters_v2" "clusters" {
+					filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
+				}
+				locals {
+					clusterUUID = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
+				}
+				# regenerate the ssl certificate
+				resource "nutanix_ssl_certificate_v2" "test" {
+					cluster_ext_id = local.clusterUUID
+					private_key_algorithm = "RSA_2048"
+				}
+				`,
+			},
+			// read the ssl certificate
+			{
+				Config: `
+				data "nutanix_clusters_v2" "clusters" {
+					filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
+				}
+				locals {
+					clusterUUID = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
+				}
+				# regenerate the ssl certificate
+				resource "nutanix_ssl_certificate_v2" "test" {
+					cluster_ext_id = local.clusterUUID
+					private_key_algorithm = "RSA_2048"
+				}
+				# read the ssl certificate
+				data "nutanix_ssl_certificate_v2" "test" {
+					cluster_ext_id = local.clusterUUID
+					depends_on = [nutanix_ssl_certificate_v2.test]
+				}
+				`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceNameSSLCertificate, "public_certificate"),
 					resource.TestCheckResourceAttr(dataSourceNameSSLCertificate, "private_key_algorithm", "RSA_2048"),
 				),
 			},

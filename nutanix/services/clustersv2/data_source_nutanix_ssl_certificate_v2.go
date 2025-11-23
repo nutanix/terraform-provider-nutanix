@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -51,9 +52,31 @@ func DatasourceNutanixSSLCertificateV2Read(ctx context.Context, d *schema.Resour
 
 	clusterExtID := d.Get("cluster_ext_id").(string)
 
-	resp, err := conn.SSLCertificateAPI.GetSSLCertificate(utils.StringPtr(clusterExtID))
+	// Retry logic to handle temporary API unavailability after certificate regeneration
+	var resp *import1.GetSSLCertificateApiResponse
+	var err error
+	maxRetries := 10
+	retryDelay := 2 * time.Second
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		resp, err = conn.SSLCertificateAPI.GetSSLCertificate(utils.StringPtr(clusterExtID))
+		if err == nil {
+			break
+		}
+
+		if attempt < maxRetries-1 {
+			log.Printf("[DEBUG] Attempt %d/%d failed to fetch SSL certificate, retrying in %v: %v", attempt+1, maxRetries, retryDelay, err)
+			select {
+			case <-ctx.Done():
+				return diag.Errorf("context cancelled while fetching SSL certificate: %v", ctx.Err())
+			case <-time.After(retryDelay):
+				retryDelay = time.Duration(float64(retryDelay) * 1.5) // Exponential backoff
+			}
+		}
+	}
+
 	if err != nil {
-		return diag.Errorf("error while fetching SSL certificate: %v", err)
+		return diag.Errorf("error while fetching SSL certificate after %d attempts: %v", maxRetries, err)
 	}
 
 	if resp.Data == nil {
