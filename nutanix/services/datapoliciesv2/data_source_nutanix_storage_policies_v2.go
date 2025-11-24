@@ -1,4 +1,5 @@
 package datapoliciesv2
+
 import (
 	"context"
 
@@ -36,7 +37,7 @@ func DataSourceNutanixStoragePoliciesV2() *schema.Resource {
 			"storage_policies": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: DataSourceNutanixStoragePolicyV2(),
+				Elem:     DataSourceNutanixStoragePolicyV2(),
 			},
 		},
 	}
@@ -111,15 +112,15 @@ func flattenStoragePolicies(storagePolicies []import1.StoragePolicy) []map[strin
 
 func flattenStoragePolicy(storagePolicy import1.StoragePolicy) map[string]interface{} {
 	return map[string]interface{}{
-		"tenant_id": utils.StringValue(storagePolicy.TenantId),
-		"ext_id": utils.StringValue(storagePolicy.ExtId),
-		"links": flattenLinks(storagePolicy.Links),
-		"name": utils.StringValue(storagePolicy.Name),
-		"category_ext_ids": storagePolicy.CategoryExtIds,
-		"compression_spec": flattenCompressionSpec(storagePolicy.CompressionSpec),
-		"encryption_spec": flattenEncryptionSpec(storagePolicy.EncryptionSpec),
-		"qos_spec": flattenQosSpec(storagePolicy.QosSpec),
+		"tenant_id":            utils.StringValue(storagePolicy.TenantId),
+		"ext_id":               utils.StringValue(storagePolicy.ExtId),
+		"links":                flattenLinks(storagePolicy.Links),
+		"name":                 utils.StringValue(storagePolicy.Name),
+		"category_ext_ids":     storagePolicy.CategoryExtIds,
+		"compression_spec":     flattenCompressionSpec(storagePolicy.CompressionSpec),
+		"encryption_spec":      flattenEncryptionSpec(storagePolicy.EncryptionSpec),
+		"qos_spec":             flattenQosSpec(storagePolicy.QosSpec),
 		"fault_tolerance_spec": flattenFaultToleranceSpec(storagePolicy.FaultToleranceSpec),
-		"policy_type": storagePolicy.PolicyType.GetName(),
+		"policy_type":          storagePolicy.PolicyType.GetName(),
 	}
 }

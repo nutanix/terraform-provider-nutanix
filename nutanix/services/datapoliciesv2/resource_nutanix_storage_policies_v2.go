@@ -46,7 +46,7 @@ func ResourceNutanixStoragePoliciesV2() *schema.Resource {
 				Optional: true,
 			},
 			"compression_spec": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -59,7 +59,7 @@ func ResourceNutanixStoragePoliciesV2() *schema.Resource {
 				},
 			},
 			"encryption_spec": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -72,7 +72,7 @@ func ResourceNutanixStoragePoliciesV2() *schema.Resource {
 				},
 			},
 			"qos_spec": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -84,21 +84,21 @@ func ResourceNutanixStoragePoliciesV2() *schema.Resource {
 				},
 			},
 			"fault_tolerance_spec": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"replication_factor": {
-							Type:     schema.TypeInt,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice([]string{"SYSTEM_DERIVED", "TWO", "THREE"}, false),
 						},
 					},
 				},
 			},
 			"policy_type": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "USER",
+				Computed: true,
 			},
 		},
 	}
@@ -121,19 +121,19 @@ func ResourceNutanixStoragePoliciesV2Create(ctx context.Context, d *schema.Resou
 	}
 
 	if v, ok := d.GetOk("compression_spec"); ok {
-		body.CompressionSpec = buildCompressionSpec(v.(map[string]interface{}))
+		body.CompressionSpec = buildCompressionSpec(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("encryption_spec"); ok {
-		body.EncryptionSpec = buildEncryptionSpec(v.(map[string]interface{}))
+		body.EncryptionSpec = buildEncryptionSpec(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("qos_spec"); ok {
-		body.QosSpec = buildQosSpec(v.(map[string]interface{}))
+		body.QosSpec = buildQosSpec(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("fault_tolerance_spec"); ok {
-		body.FaultToleranceSpec = buildFaultToleranceSpec(v.(map[string]interface{}))
+		body.FaultToleranceSpec = buildFaultToleranceSpec(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if policyType, ok := d.GetOk("policy_type"); ok {
@@ -187,41 +187,13 @@ func ResourceNutanixStoragePoliciesV2Read(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("error while reading Storage Policy: %v", err)
 	}
 	body := resp.Data.GetValue().(import1.StoragePolicy)
-
- 	return commonReadStateStoragePolicy(ctx, d, meta, body)
-
-
+	aJSON, _ := json.MarshalIndent(body, "", "  ")
+	log.Printf("[DEBUG] Read Storage Policy Response: %s", string(aJSON))
+	return commonReadStateStoragePolicy(d, body)
 }
 
 func ResourceNutanixStoragePoliciesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataPoliciesAPI
-
-	body := &import1.StoragePolicy{}
-	if d.HasChange("name") {
-		body.Name = utils.StringPtr(d.Get("name").(string))
-	}
-	if d.HasChange("category_ext_ids") {
-		body.CategoryExtIds = []string{}
-		for _, id := range d.Get("category_ext_ids").([]interface{}) {
-			body.CategoryExtIds = append(body.CategoryExtIds, id.(string))
-		}
-	}
-	if d.HasChange("compression_spec") {
-		body.CompressionSpec = buildCompressionSpec(d.Get("compression_spec").(map[string]interface{}))
-	}
-	if d.HasChange("encryption_spec") {
-		body.EncryptionSpec = buildEncryptionSpec(d.Get("encryption_spec").(map[string]interface{}))
-	}
-	if d.HasChange("qos_spec") {
-		body.QosSpec = buildQosSpec(d.Get("qos_spec").(map[string]interface{}))
-	}
-	if d.HasChange("fault_tolerance_spec") {
-		body.FaultToleranceSpec = buildFaultToleranceSpec(d.Get("fault_tolerance_spec").(map[string]interface{}))
-	}
-	if d.HasChange("policy_type") {
-		body.PolicyType = buildPolicyType(d.Get("policy_type").(string))
-	}
-
 	resp, err := conn.StoragePolicies.GetStoragePolicyById(utils.StringPtr(d.Id()))
 	if err != nil {
 		return diag.Errorf("error while fetching Storage Policy: %v", err)
@@ -230,7 +202,37 @@ func ResourceNutanixStoragePoliciesV2Update(ctx context.Context, d *schema.Resou
 	headers := make(map[string]interface{})
 	headers["If-Match"] = utils.StringPtr(etagValue)
 
-	res, err := conn.StoragePolicies.UpdateStoragePolicyById(utils.StringPtr(d.Id()), body, headers)
+	updateSpec := resp.Data.GetValue().(import1.StoragePolicy)
+	if d.HasChange("name") {
+		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
+	}
+	if d.HasChange("category_ext_ids") {
+		updateSpec.CategoryExtIds = []string{}
+		for _, id := range d.Get("category_ext_ids").([]interface{}) {
+			updateSpec.CategoryExtIds = append(updateSpec.CategoryExtIds, id.(string))
+		}
+	}
+	if d.HasChange("compression_spec") {
+		updateSpec.CompressionSpec = buildCompressionSpec(d.Get("compression_spec").([]interface{})[0].(map[string]interface{}))
+	}
+	if d.HasChange("encryption_spec") {
+		if updateSpec.EncryptionSpec.EncryptionState.GetName() == "ENABLED" {
+			return diag.Errorf("Encryption value cannot be changed once enabled because it is not supported.")
+		}
+		updateSpec.EncryptionSpec = buildEncryptionSpec(d.Get("encryption_spec").([]interface{})[0].(map[string]interface{}))
+	}
+	if d.HasChange("qos_spec") {
+		updateSpec.QosSpec = buildQosSpec(d.Get("qos_spec").([]interface{})[0].(map[string]interface{}))
+	}
+	if d.HasChange("fault_tolerance_spec") {
+		updateSpec.FaultToleranceSpec = buildFaultToleranceSpec(d.Get("fault_tolerance_spec").([]interface{})[0].(map[string]interface{}))
+	}
+	// Policy type is not updatable, so we need to set it to nil
+	updateSpec.PolicyType = nil
+
+	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
+	log.Printf("[DEBUG] Update Storage Policy Payload: %s", string(aJSON))
+	res, err := conn.StoragePolicies.UpdateStoragePolicyById(utils.StringPtr(d.Id()), &updateSpec, headers)
 	if err != nil {
 		return diag.Errorf("error while updating Storage Policy: %v", err)
 	}
@@ -248,32 +250,47 @@ func ResourceNutanixStoragePoliciesV2Delete(ctx context.Context, d *schema.Resou
 	return waitForTaskCompletion(ctx, d, meta, res, "delete")
 }
 
-func flattenCompressionSpec(compressionSpec *import1.CompressionSpec) map[string]interface{} {
-	return map[string]interface{}{
+func flattenCompressionSpec(compressionSpec *import1.CompressionSpec) []interface{} {
+	if compressionSpec == nil {
+		return []interface{}{}
+	}
+	m := map[string]interface{}{
 		"compression_state": compressionSpec.CompressionState.GetName(),
 	}
+	return []interface{}{m}
 }
 
-func flattenEncryptionSpec(encryptionSpec *import1.EncryptionSpec) map[string]interface{} {
-	return map[string]interface{}{
+func flattenEncryptionSpec(encryptionSpec *import1.EncryptionSpec) []interface{} {
+	if encryptionSpec == nil {
+		return []interface{}{}
+	}
+	m := map[string]interface{}{
 		"encryption_state": encryptionSpec.EncryptionState.GetName(),
 	}
+	return []interface{}{m}
 }
 
-func flattenQosSpec(qosSpec *import1.QosSpec) map[string]interface{} {
-	return map[string]interface{}{
+func flattenQosSpec(qosSpec *import1.QosSpec) []interface{} {
+	if qosSpec == nil {
+		return []interface{}{}
+	}
+	m := map[string]interface{}{
 		"throttled_iops": qosSpec.ThrottledIops,
 	}
+	return []interface{}{m}
 }
 
-func flattenFaultToleranceSpec(faultToleranceSpec *import1.FaultToleranceSpec) map[string]interface{} {
-	return map[string]interface{}{
+func flattenFaultToleranceSpec(faultToleranceSpec *import1.FaultToleranceSpec) []interface{} {
+	if faultToleranceSpec == nil {
+		return []interface{}{}
+	}
+	m := map[string]interface{}{
 		"replication_factor": faultToleranceSpec.ReplicationFactor.GetName(),
 	}
+	return []interface{}{m}
 }
 
 // Common helper functions
-
 func buildCompressionSpec(specMap map[string]interface{}) *import1.CompressionSpec {
 	compressionSpec := &import1.CompressionSpec{}
 	if compressionState, ok := specMap["compression_state"]; ok {
@@ -352,36 +369,56 @@ func waitForTaskCompletion(ctx context.Context, d *schema.ResourceData, meta int
 	return ResourceNutanixStoragePoliciesV2Read(ctx, d, meta)
 }
 
-func commonReadStateStoragePolicy(ctx context.Context, d *schema.ResourceData, meta interface{}, res import1.StoragePolicy) diag.Diagnostics {
+func commonReadStateStoragePolicy(d *schema.ResourceData, res import1.StoragePolicy) diag.Diagnostics {
 	if res.ExtId != nil {
-		d.Set("ext_id", *res.ExtId)
+		if err := d.Set("ext_id", *res.ExtId); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if res.Name != nil {
-		d.Set("name", res.Name)
+		if err := d.Set("name", res.Name); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if res.CategoryExtIds != nil {
-		d.Set("category_ext_ids", res.CategoryExtIds)
+		if err := d.Set("category_ext_ids", res.CategoryExtIds); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if res.CompressionSpec != nil {
-		d.Set("compression_spec", flattenCompressionSpec(res.CompressionSpec))
+		if err := d.Set("compression_spec", flattenCompressionSpec(res.CompressionSpec)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if res.EncryptionSpec != nil {
-		d.Set("encryption_spec", flattenEncryptionSpec(res.EncryptionSpec))
+		if err := d.Set("encryption_spec", flattenEncryptionSpec(res.EncryptionSpec)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if res.QosSpec != nil {
-		d.Set("qos_spec", flattenQosSpec(res.QosSpec))
+		if err := d.Set("qos_spec", flattenQosSpec(res.QosSpec)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if res.FaultToleranceSpec != nil {
-		d.Set("fault_tolerance_spec", flattenFaultToleranceSpec(res.FaultToleranceSpec))
+		if err := d.Set("fault_tolerance_spec", flattenFaultToleranceSpec(res.FaultToleranceSpec)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if res.PolicyType != nil {
-		d.Set("policy_type", res.PolicyType.GetName())
+		if err := d.Set("policy_type", res.PolicyType.GetName()); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if res.Links != nil {
-		d.Set("links", flattenLinks(res.Links))
+		if err := d.Set("links", flattenLinks(res.Links)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if res.TenantId != nil {
-		d.Set("tenant_id", res.TenantId)
+		if err := d.Set("tenant_id", res.TenantId); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	return nil
 }
