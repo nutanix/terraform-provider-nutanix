@@ -3,6 +3,7 @@ package clustersv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -22,6 +23,9 @@ func ResourceNutanixClusterCategoriesV2() *schema.Resource {
 		ReadContext:   ResourceNutanixClusterCategoriesV2Read,
 		UpdateContext: ResourceNutanixClusterCategoriesV2Update,
 		DeleteContext: ResourceNutanixClusterCategoriesV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: ResourceNutanixClusterCategoriesV2Import,
+		},
 		Schema: map[string]*schema.Schema{
 			"cluster_ext_id": {
 				Type:     schema.TypeString,
@@ -88,11 +92,82 @@ func ResourceNutanixClusterCategoriesV2Create(ctx context.Context, d *schema.Res
 }
 
 func ResourceNutanixClusterCategoriesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).ClusterAPI
+
+	// Get cluster_ext_id from resource configuration
+	clusterExtID, ok := d.Get("cluster_ext_id").(string)
+	if !ok || clusterExtID == "" {
+		return diag.Errorf("cluster_ext_id is required and cannot be empty")
+	}
+
+	log.Printf("[DEBUG] Reading cluster categories for cluster_ext_id: %s", clusterExtID)
+
+	// Call GetClusterById API using the cluster_ext_id
+	resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(clusterExtID), nil)
+	if err != nil {
+		// If cluster is not found, mark resource as removed by not setting state
+		// This will cause Terraform to detect the resource needs to be recreated
+		log.Printf("[DEBUG] Error fetching cluster by ID %s: %v", clusterExtID, err)
+		d.SetId("")
+		return diag.Errorf("error while fetching cluster by ID %s: %v. The cluster may have been deleted or does not exist", clusterExtID, err)
+	}
+
+	// Extract the cluster response
+	getResp := resp.Data.GetValue().(config.Cluster)
+	aJSON, _ := json.MarshalIndent(getResp, "", "  ")
+	log.Printf("[DEBUG] GetClusterById Response Details: %s", string(aJSON))
+
+	// Extract the categories field from the cluster response
+	categories := getResp.Categories
+
+	// Convert API response format ([]string) to Terraform schema format (schema.Set)
+	// Convert []string to []interface{}
+	categoriesList := make([]interface{}, 0)
+	if len(categories) > 0 {
+		for _, category := range categories {
+			if category != "" {
+				categoriesList = append(categoriesList, category)
+			}
+		}
+	}
+
+	// Create a schema.Set from the list
+	categoriesSet := schema.NewSet(common.HashStringItem, categoriesList)
+
+	// Set cluster_ext_id in state to ensure consistency
+	if err := d.Set("cluster_ext_id", clusterExtID); err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Set categories in state with current category associations
+	if err := d.Set("categories", categoriesSet); err != nil {
+		return diag.FromErr(err)
+	}
+
+	log.Printf("[DEBUG] Successfully read cluster categories. cluster_ext_id: %s, categories count: %d", clusterExtID, len(categoriesList))
+
 	return nil
 }
 
 func ResourceNutanixClusterCategoriesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	clusterExtID := d.Get("cluster_ext_id").(string)
+
+	// Check if categories have changed
+	if !d.HasChange("categories") {
+		log.Printf("[DEBUG] No changes detected in categories, skipping update")
+		return ResourceNutanixClusterCategoriesV2Read(ctx, d, meta)
+	}
+
+	// Get old and new category values
+	oldCategoriesRaw, newCategoriesRaw := d.GetChange("categories")
+
+	// Use shared function to handle category updates
+	if diags := UpdateClusterCategories(ctx, d, meta, clusterExtID, oldCategoriesRaw, newCategoriesRaw); diags.HasError() {
+		return diags
+	}
+
+	// Refresh state by calling Read function
+	return ResourceNutanixClusterCategoriesV2Read(ctx, d, meta)
 }
 
 func ResourceNutanixClusterCategoriesV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -141,4 +216,61 @@ func ResourceNutanixClusterCategoriesV2Delete(ctx context.Context, d *schema.Res
 	aJSON, _ = json.MarshalIndent(taskResp, "", "  ")
 	log.Printf("disassociate categories from cluster task details : %s", string(aJSON))
 	return nil
+}
+
+func ResourceNutanixClusterCategoriesV2Import(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.Client).ClusterAPI
+
+	// The import ID is the cluster_ext_id
+	clusterExtID := d.Id()
+	if clusterExtID == "" {
+		return nil, fmt.Errorf("cluster_ext_id cannot be empty")
+	}
+
+	log.Printf("[DEBUG] Importing cluster categories for cluster_ext_id: %s", clusterExtID)
+
+	// Call GetClusterById API using the cluster_ext_id
+	resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(clusterExtID), nil)
+	if err != nil {
+		return nil, fmt.Errorf("error while fetching cluster by ID %s: %v", clusterExtID, err)
+	}
+
+	// Extract the cluster response
+	getResp := resp.Data.GetValue().(config.Cluster)
+	aJSON, _ := json.MarshalIndent(getResp, "", "  ")
+	log.Printf("[DEBUG] GetClusterById Response Details: %s", string(aJSON))
+
+	// Extract the categories field from the cluster response
+	categories := getResp.Categories
+
+	// Convert API response format ([]string) to Terraform schema format (schema.Set)
+	// Convert []string to []interface{}
+	categoriesList := make([]interface{}, 0)
+	if len(categories) > 0 {
+		for _, category := range categories {
+			if category != "" {
+				categoriesList = append(categoriesList, category)
+			}
+		}
+	}
+
+	// Create a schema.Set from the list
+	categoriesSet := schema.NewSet(common.HashStringItem, categoriesList)
+
+	// Set cluster_ext_id in state
+	if err := d.Set("cluster_ext_id", clusterExtID); err != nil {
+		return nil, fmt.Errorf("error setting cluster_ext_id: %v", err)
+	}
+
+	// Set categories in state
+	if err := d.Set("categories", categoriesSet); err != nil {
+		return nil, fmt.Errorf("error setting categories: %v", err)
+	}
+
+	// Set the resource ID (using a unique ID similar to Create)
+	d.SetId(resource.UniqueId())
+
+	log.Printf("[DEBUG] Successfully imported cluster categories. cluster_ext_id: %s, categories count: %d", clusterExtID, len(categoriesList))
+
+	return []*schema.ResourceData{d}, nil
 }
