@@ -22,6 +22,9 @@ func ResourceNutanixFloatingIPv2() *schema.Resource {
 		ReadContext:   ResourceNutanixFloatingIPv2Read,
 		UpdateContext: ResourceNutanixFloatingIPv2Update,
 		DeleteContext: ResourceNutanixFloatingIPv2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,

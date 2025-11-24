@@ -126,4 +126,15 @@ The following attributes are exported:
 - `enforced_cluster_ext_ids`: List of cluster external identifiers for the enforced placement policy.
 - `conflicting_policy_ext_ids`: List of image placement policy external identifier that conflict with the current one.
 
+## Import
+
+This helps to manage existing entities which are not created through terraform. Images can be imported using the `UUID`(ext_id in V4 API context).  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_images_v2" "import_image"{}
+
+// execute this command in cli, UUID can be fetched using the datasource ex: data "nutanix_images" "fetch_images"{}
+terraform import nutanix_images_v2.import_image <UUID>
+```
+
 See detailed information in [Nutanix Create Image V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Images/operation/createImage)

@@ -1064,3 +1064,338 @@ func testAccClusterResourceAssociateCategoriesConfig(r int) string {
 		}
 	`, r)
 }
+
+func testAcc3NodeClustersConfig(clusterName string) string {
+	return fmt.Sprintf(`
+
+data "nutanix_clusters_v2" "clusters" {}
+
+locals {
+  pc_ext_id = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] == "PRISM_CENTRAL"
+  ][0]
+  config   = (jsondecode(file("%[2]s")))
+  clusters = local.config.clusters
+}
+
+
+############################ cluster with 3 nodes
+
+## check if the nodes is un configured or not
+resource "nutanix_clusters_discover_unconfigured_nodes_v2" "cluster-nodes" {
+  ext_id       = local.pc_ext_id
+  address_type = "IPV4"
+  ip_filter_list {
+    ipv4 {
+      value = local.clusters.nodes[0].cvm_ip
+    }
+  }
+  ip_filter_list {
+    ipv4 {
+      value = local.clusters.nodes[1].cvm_ip
+    }
+  }
+  ip_filter_list {
+    ipv4 {
+      value = local.clusters.nodes[2].cvm_ip
+    }
+  }
+  depends_on = [data.nutanix_clusters_v2.clusters]
+
+  ## check if the 3 nodes are un configured or not
+  lifecycle {
+    postcondition {
+      condition     = length(self.unconfigured_nodes) == 3
+      error_message = "The nodes are not unconfigured"
+    }
+  }
+}
+
+
+resource "nutanix_cluster_v2" "cluster-3nodes" {
+  name   = "%[1]s"
+  dryrun = false
+  nodes {
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = local.clusters.nodes[0].cvm_ip
+        }
+      }
+    }
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = local.clusters.nodes[1].cvm_ip
+        }
+      }
+    }
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = local.clusters.nodes[2].cvm_ip
+        }
+      }
+    }
+  }
+  config {
+    cluster_function = local.clusters.config.cluster_functions
+    cluster_arch     = local.clusters.config.cluster_arch
+    fault_tolerance_state {
+      domain_awareness_level          = "NODE"
+    }
+  }
+
+  provisioner "local-exec" {
+    command = "ssh-keygen -f ~/.ssh/known_hosts -R ${local.clusters.nodes[1].cvm_ip};   sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[1].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[1].username} password=${local.clusters.nodes[1].password}'"
+
+    on_failure = continue
+  }
+
+  lifecycle {
+    ignore_changes = [links, categories, config.0.cluster_function]
+  }
+
+  depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.cluster-nodes]
+}
+`, clusterName, filepath)
+}
+
+func clusterRegistrationConfig() string {
+	return `
+
+## we need to register on of 3 nodes cluster to pc
+resource "nutanix_pc_registration_v2" "nodes-registration" {
+  pc_ext_id = local.pc_ext_id
+  remote_cluster {
+    aos_remote_cluster_spec {
+      remote_cluster {
+        address {
+          ipv4 {
+            value = local.clusters.nodes[1].cvm_ip
+          }
+        }
+        credentials {
+          authentication {
+            username = local.clusters.nodes[1].username
+            password = local.clusters.nodes[1].password
+          }
+        }
+      }
+    }
+  }
+  depends_on = [nutanix_cluster_v2.cluster-3nodes]
+
+  provisioner "local-exec" {
+    command    = " sleep 5s"
+    on_failure = continue
+  }
+}
+  `
+}
+
+func testAccExpandClustersConfig(clusterName string) string {
+	return fmt.Sprintf(`
+
+data "nutanix_clusters_v2" "clusters" {}
+
+locals {
+  pc_ext_id = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] == "PRISM_CENTRAL"
+  ][0]
+  config   = (jsondecode(file("%[2]s")))
+  clusters = local.config.clusters
+}
+
+
+############################ cluster with 3 nodes
+
+## check if the nodes is un configured or not
+resource "nutanix_clusters_discover_unconfigured_nodes_v2" "cluster-nodes" {
+  ext_id       = local.pc_ext_id
+  address_type = "IPV4"
+  ip_filter_list {
+    ipv4 {
+      value = local.clusters.nodes[0].cvm_ip
+    }
+  }
+  ip_filter_list {
+    ipv4 {
+      value = local.clusters.nodes[1].cvm_ip
+    }
+  }
+  ip_filter_list {
+    ipv4 {
+      value = local.clusters.nodes[2].cvm_ip
+    }
+  }
+  depends_on = [data.nutanix_clusters_v2.clusters]
+
+  ## check if the 3 nodes are un configured or not
+  lifecycle {
+    postcondition {
+      condition     = length(self.unconfigured_nodes) == 3
+      error_message = "The nodes are not unconfigured"
+    }
+  }
+}
+
+
+resource "nutanix_cluster_v2" "cluster-3nodes" {
+  name   = "%[1]s"
+  dryrun = false
+  nodes {
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = local.clusters.nodes[0].cvm_ip
+        }
+      }
+    }
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = local.clusters.nodes[1].cvm_ip
+        }
+      }
+    }
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = local.clusters.nodes[2].cvm_ip
+        }
+      }
+    }
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = local.clusters.nodes[3].cvm_ip
+        }
+      }
+      should_skip_host_networking   = false
+      should_skip_pre_expand_checks = true
+    }
+  }
+  config {
+    cluster_function = local.clusters.config.cluster_functions
+    cluster_arch     = local.clusters.config.cluster_arch
+    fault_tolerance_state {
+      domain_awareness_level          = "NODE"
+    }
+  }
+
+  provisioner "local-exec" {
+    command = "ssh-keygen -f ~/.ssh/known_hosts -R ${local.clusters.nodes[1].cvm_ip};   sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[1].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[1].username} password=${local.clusters.nodes[1].password}'"
+
+    on_failure = continue
+  }
+
+  lifecycle {
+    ignore_changes = [links, categories, config.0.cluster_function]
+  }
+
+  depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.cluster-nodes]
+}
+`, clusterName, filepath)
+}
+
+func testAccRemoveNodeClustersConfig(clusterName string) string {
+	return fmt.Sprintf(`
+
+data "nutanix_clusters_v2" "clusters" {}
+
+locals {
+  pc_ext_id = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] == "PRISM_CENTRAL"
+  ][0]
+  config   = (jsondecode(file("%[2]s")))
+  clusters = local.config.clusters
+}
+
+
+############################ cluster with 3 nodes
+
+## check if the nodes is un configured or not
+resource "nutanix_clusters_discover_unconfigured_nodes_v2" "cluster-nodes" {
+  ext_id       = local.pc_ext_id
+  address_type = "IPV4"
+  ip_filter_list {
+    ipv4 {
+      value = local.clusters.nodes[0].cvm_ip
+    }
+  }
+  ip_filter_list {
+    ipv4 {
+      value = local.clusters.nodes[1].cvm_ip
+    }
+  }
+  ip_filter_list {
+    ipv4 {
+      value = local.clusters.nodes[2].cvm_ip
+    }
+  }
+  depends_on = [data.nutanix_clusters_v2.clusters]
+
+  ## check if the 3 nodes are un configured or not
+  lifecycle {
+    postcondition {
+      condition     = length(self.unconfigured_nodes) == 3
+      error_message = "The nodes are not unconfigured"
+    }
+  }
+}
+
+
+resource "nutanix_cluster_v2" "cluster-3nodes" {
+  name   = "%[1]s"
+  dryrun = false
+  nodes {
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = local.clusters.nodes[0].cvm_ip
+        }
+      }
+    }
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = local.clusters.nodes[2].cvm_ip
+        }
+      }
+    }
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = local.clusters.nodes[3].cvm_ip
+        }
+      }
+      should_skip_host_networking   = false
+      should_skip_pre_expand_checks = true
+    }
+  }
+  config {
+    cluster_function = local.clusters.config.cluster_functions
+    cluster_arch     = local.clusters.config.cluster_arch
+    fault_tolerance_state {
+      domain_awareness_level          = "NODE"
+    }
+  }
+
+  provisioner "local-exec" {
+    command = "ssh-keygen -f ~/.ssh/known_hosts -R ${local.clusters.nodes[1].cvm_ip};   sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[1].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[1].username} password=${local.clusters.nodes[1].password}'"
+
+    on_failure = continue
+  }
+
+  lifecycle {
+    ignore_changes = [links, categories, config.0.cluster_function]
+  }
+
+  depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.cluster-nodes]
+}
+`, clusterName, filepath)
+}

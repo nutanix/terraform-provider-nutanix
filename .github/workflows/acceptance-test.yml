@@ -37,8 +37,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25"
-          check-latest: true # Ensures the latest patch of Go 1.25 is installed
+          go-version: "1.25.3"
+          check-latest: true # Ensures the latest patch of Go 1.25.3 is installed
           cache: true # Enables module caching
 
       - name: Verify Go Installation
@@ -121,57 +121,83 @@ jobs:
       - name: Acceptance test cases
         id: test-execution
         run: |
-          echo "tests_executed=tests_execution_not_successful" >> $GITHUB_OUTPUT
-          args="${{ github.event.client_payload.slash_command.args }}"
-          providers=(${args})
-          index=0
-          n=${#providers[@]}
-          runFlag=""
-          for provider in $args
-          do
-              if [ "$provider" = "foundation" ]
-                  then
-                      runFlag+="TestAccFoundation*"
-              elif [ "$provider" = "foundation_central" ]
-                  then
-                      runFlag+="TestAccFC*"
-              elif [ "$provider" = "karbon" ]
-                  then
-                      runFlag+="TestAccKarbon*"
-              elif [ "$provider" = "v3" ]
-                  then
-                      runFlag+="TestAccNutanix*"
-              elif [ "$provider" = "v4" ]
-                  then
-                      runFlag+="TestAccV2Nutanix*"
-              elif [ "$provider" = "lcm" ]
-                  then
-                      runFlag+="TestAccV2NutanixLcm*"
-              elif [ "$provider" = "era" ]
-                  then
-                      runFlag+="TestAccEra*"
-              else
-                  echo "running individual testcase/package"
-                  runFlag+="$provider"
-              fi
-              if [ $index -lt $((n-1)) ]
-                  then
-                      runFlag+="|"
-              fi
-              index=$((index+1))
-          done
-          export TESTARGS="-run=${runFlag}"
-          echo "TESTARGS = $TESTARGS"
-          echo "==> Setup Foundation Config"
-          echo '${{ secrets.FOUNDATION_CONFIG }}' > test_foundation_config.json
-          echo "==> Setup PC Config"
-          echo '${{ secrets.PC_CONFIG }}' > test_config.json
-          echo "==> Setup V4 Config"
-          echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
-          echo "==> Running testcases..."
-          TF_LOG="ERROR" TF_ACC=1  GOTRACEBACK=all go test ./... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count | tee test_output.log
+              echo "tests_executed=tests_execution_not_successful" >> $GITHUB_OUTPUT
+              args="${{ github.event.client_payload.slash_command.args }}"
+              providers=(${args})
+              index=0
+              n=${#providers[@]}
+              runFlag=""
+              for provider in $args
+              do 
+                  if [ "$provider" = "foundation" ]
+                      then 
+                          runFlag+="TestAccFoundation*"
+                  elif [ "$provider" = "foundation_central" ]
+                      then
+                          runFlag+="TestAccFC*"
+                  elif [ "$provider" = "karbon" ]
+                      then
+                          runFlag+="TestAccKarbon*"
+                  elif [ "$provider" = "v3" ]
+                      then
+                          runFlag+="TestAccNutanix*"
+                  elif [ "$provider" = "v4" ]
+                      then
+                          runFlag+="TestAccV2Nutanix*"
+                  elif [ "$provider" = "lcm" ]
+                      then
+                          runFlag+="TestAccV2NutanixLcm*"
+                  elif [ "$provider" = "era" ]
+                      then
+                          runFlag+="TestAccEra*"
+                  else
+                      echo "running individual testcase/package"
+                      runFlag+="$provider"
+                  fi
+                  if [ $index -lt $((n-1)) ]
+                      then
+                          runFlag+="|"
+                  fi
+                  index=$((index+1))
+              done
+             
+              echo "==> Setup Foundation Config"
+              echo '${{ secrets.FOUNDATION_CONFIG }}' > test_foundation_config.json
+              echo "==> Setup PC Config"
+              echo '${{ secrets.PC_CONFIG }}' > test_config.json
+              echo "==> Setup V4 Config"
+              echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
+              echo "==> Running testcases..."
+              package_path="./..."  # default if no -p argument is passed
 
-          set +e  # Ignore failures
+              # Extract `-p <package>` argument from the slash command, if provided
+              for arg in $args; do
+                  if [[ "$arg" == "-p" ]]; then
+                      next_is_package=true
+                      continue
+                  fi
+                  if [[ "$next_is_package" == true ]]; then
+                      package_path="./nutanix/services/$arg"
+                      next_is_package=false
+                      echo "📦 Running tests only in package: $package_path"
+                      break
+                  fi
+              done
+
+              # If -p was provided, ignore runFlag since it contains arg polluted by '-p'
+              if [[ "$package_path" != "./..." ]]; then
+                  # Package provided → run all tests in that package
+                  TESTARGS="-run=."
+              else
+                  # No package provided → run only the tests specified in runFlag
+                  TESTARGS="-run=${runFlag}"
+              fi
+
+               echo "TESTARGS = $TESTARGS"  
+
+              TF_LOG="ERROR" TF_ACC=1 GOTRACEBACK=all go test "$package_path" -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count | tee test_output.log
+              
+              set +e  # Ignore failures
 
           # Ensure log file exists
           if [ ! -f test_output.log ]; then

@@ -113,4 +113,16 @@ The following attributes are exported:
 - `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
 - `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 
+## Import
+
+This helps to manage existing entities which are not created through terraform. VPC can be imported using the `UUID`. (ext_id in v4 terms). eg,
+
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_vpc_v2" "import_vpc" {}
+
+// execute this command in cli
+terraform import nutanix_vpc_v2.import_vpc <UUID>
+```
+
 See detailed information in [Nutanix VPC v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0).
