@@ -15,6 +15,7 @@ Represents the Cluster entity. Provides the basic infrastructure for compute, st
 
 -> **Note:**: Cluster resource supports add/remove node operations. However, these operations require cluster to be registered with Prism Central.
 
+-> **Note:**: The cluster resource supports associate and de-associate operations for categories, meaning you can attach or detach categories to a cluster using Terraform.
 
 ## Example Usage:
 
