@@ -125,3 +125,4 @@ issues:
       # interfacer lint on `filter` func suggests lint changes that dont compile
       # Details: linter suggests to convert `body` param to io.Reader since we don't use Close method, but return type requires
       ## io.ReadCloser thus failing to compile
+

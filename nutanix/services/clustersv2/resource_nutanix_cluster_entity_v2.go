@@ -688,17 +688,6 @@ func ResourceNutanixClusterV2() *schema.Resource {
 }
 
 func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Validate forbidden fields at creation
-	if v, ok := d.GetOk("nodes.0.node_list.0.node_params"); ok && len(v.([]interface{})) > 0 {
-		return diag.Errorf("parameter 'node_params' can only be used during update operations")
-	}
-	if v, ok := d.GetOk("nodes.0.node_list.0.config_params"); ok && len(v.([]interface{})) > 0 {
-		return diag.Errorf("parameter 'config_params' can only be used during update operations")
-	}
-	if v, ok := d.GetOk("nodes.0.node_list.0.remove_node_params"); ok && len(v.([]interface{})) > 0 {
-		return diag.Errorf("parameter 'remove_node_params' can only be used during update operations")
-	}
-
 	conn := meta.(*conns.Client).ClusterAPI
 	body := config.NewCluster()
 	var dryRun *bool
@@ -748,7 +737,7 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the cluster to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
@@ -822,6 +811,7 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 			log.Printf("[DEBUG] ResourceNutanixClusterV2Update : error while fetching cluster : %v", err)
 			return diag.Errorf("error while fetching cluster : %v: Please register the cluster to Prism Central if not.", err)
 		}
+		log.Printf("[DEBUG] ResourceNutanixClusterV2Update : error while fetching cluster : %v", err)
 	}
 
 	log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster found, extID : %s", d.Id())
@@ -939,10 +929,10 @@ func ResourceNutanixClusterV2Delete(ctx context.Context, d *schema.ResourceData,
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the cluster to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -1667,7 +1657,7 @@ func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta int
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -1775,7 +1765,7 @@ func expandClusterWithNewNode(ctx context.Context, d *schema.ResourceData, meta 
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -1839,7 +1829,7 @@ func fetchNetworkDetailsForNodes(ctx context.Context, d *schema.ResourceData, me
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the  node to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "QUEUED"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),

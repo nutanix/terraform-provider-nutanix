@@ -26,6 +26,9 @@ func ResourceNutanixTemplatesV2() *schema.Resource {
 		ReadContext:   ResourceNutanixTemplatesV2Read,
 		UpdateContext: ResourceNutanixTemplatesV2Update,
 		DeleteContext: ResourceNutanixTemplatesV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -242,12 +245,14 @@ func ResourceNutanixTemplatesV2Create(ctx context.Context, d *schema.ResourceDat
 func ResourceNutanixTemplatesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 	tempVersionSpecData := d.Get("template_version_spec").([]interface{})
+	log.Printf("[DEBUG] tempVersionSpecData: %v", tempVersionSpecData)
 	resp, err := conn.TemplatesAPIInstance.GetTemplateById(utils.StringPtr(d.Id()))
 	if err != nil {
 		return diag.Errorf("error while fetching template : %v", err)
 	}
 	getResp := resp.Data.GetValue().(vmmContent.Template)
-
+	aJSON, _ := json.MarshalIndent(getResp, "", "  ")
+	log.Printf("[DEBUG] Get Template call: %s", string(aJSON))
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
@@ -290,7 +295,7 @@ func ResourceNutanixTemplatesV2Read(ctx context.Context, d *schema.ResourceData,
 	// version source not returned in API response, so set the value from the config
 	// this logic to ignore changes on terraform plan when there is no change in version source
 	// if there is a change in version source, then terraform plan will show the change
-	if tempVersionSpecData != nil {
+	if len(tempVersionSpecData) > 0 {
 		if versionSource, ok := tempVersionSpecData[0].(map[string]interface{})["version_source"]; ok {
 			tempVersionSpecFlattened := d.Get("template_version_spec").([]interface{})[0].(map[string]interface{})
 			tempVersionSpecFlattened["version_source"] = versionSource
