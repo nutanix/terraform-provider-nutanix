@@ -29,14 +29,14 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:   testAccClusterResourceMinimumConfig(name),
+				Config:   testAccClusterResourceMinimumConfig(name, ""),
 				PlanOnly: false,
 			},
 			{
 				PreConfig: func() {
 					time.Sleep(10 * time.Second) // 10-second delay
 				},
-				Config: testAccClusterResourceMinimumConfig(name),
+				Config: testAccClusterResourceMinimumConfig(name, ""),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameCluster, "name", name),
 					resource.TestCheckResourceAttr(resourceNameCluster, "dryrun", "false"),
@@ -44,6 +44,20 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.number_of_nodes", "1"),
 					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
 					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
+				),
+			},
+			// Step 3: Associate categories to the cluster and check on list cluster data source for categories
+			{
+				Config: testAccClusterResourceMinimumConfig(name, "nutanix_category_v2.cat-1.id, nutanix_category_v2.cat-2.id, nutanix_category_v2.cat-3.id"),
+				Check: resource.ComposeTestCheckFunc(
+					// Check categories count on the resource itself (TypeSet)
+					resource.TestCheckResourceAttr(resourceNameCluster, "categories.#", "3"),
+					// Check categories on the resource (order-independent check)
+					checkCategories(resourceNameCluster, "categories", []string{
+						"nutanix_category_v2.cat-1",
+						"nutanix_category_v2.cat-2",
+						"nutanix_category_v2.cat-3",
+					}),
 				),
 			},
 		},
@@ -330,10 +344,47 @@ var clusterConfig = fmt.Sprintf(`
 	  clusters = local.config.clusters
 	}`, filepath)
 
-func testAccClusterResourceMinimumConfig(name string) string {
+func testAccClusterResourceMinimumConfig(name string, categories string) string {
 	return fmt.Sprintf(`
 		# cluster config
 		%[1]s
+
+		# create a new category
+		resource "nutanix_category_v2" "cat-1" {
+			key         = "test-cat1-key-%[2]s"
+			value       = "test-cat1-value-%[2]s"
+			description = "first category for cluster"
+			# Delay 5 minutes before destroying the resource to make sure that synced data is deleted
+			provisioner "local-exec" {
+				command    = "sleep 300"
+				when       = destroy
+				on_failure = continue
+			}
+		}
+
+		resource "nutanix_category_v2" "cat-2" {
+			key         = "test-cat2-key-%[2]s"
+			value       = "test-cat2-value-%[2]s"
+			description = "second category for cluster"
+			# Delay 5 minutes before destroying the resource to make sure that synced data is deleted
+			provisioner "local-exec" {
+				command    = "sleep 300"
+				when       = destroy
+				on_failure = continue
+			}
+		}
+
+		resource "nutanix_category_v2" "cat-3" {
+			key         = "test-cat3-key-%[2]s"
+			value       = "test-cat3-value-%[2]s"
+			description = "third category for cluster"
+			# Delay 5 minutes before destroying the resource to make sure that synced data is deleted
+			provisioner "local-exec" {
+				command    = "sleep 300"
+				when       = destroy
+				on_failure = continue
+			}
+		}
 
 		# check if the nodes is un configured or not
 		resource "nutanix_clusters_discover_unconfigured_nodes_v2" "test-discover-cluster-node" {
@@ -376,6 +427,8 @@ func testAccClusterResourceMinimumConfig(name string) string {
 			}
 		  }
 
+		  # associate categories to the cluster
+		  categories = [%[3]s]
 		  provisioner "local-exec" {
 			command = "ssh-keygen -f '~/.ssh/known_hosts' -R '${local.clusters.nodes[0].cvm_ip}';  sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[0].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}' "
 
@@ -383,10 +436,11 @@ func testAccClusterResourceMinimumConfig(name string) string {
 		  }
           # Set lifecycle to ignore changes
 		  lifecycle {
-			ignore_changes = [network.0.smtp_server.0.server.0.password,  links, categories, config.0.cluster_function]
+			ignore_changes = [network.0.smtp_server.0.server.0.password,  links, config.0.cluster_function]
 		  }
 		  depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node]
 		}
+
 
 
 		# register the cluster to pc
@@ -412,7 +466,7 @@ func testAccClusterResourceMinimumConfig(name string) string {
 		  depends_on = [nutanix_cluster_v2.test]
 		}
 
-`, clusterConfig, name)
+`, clusterConfig, name, categories)
 }
 
 func testAccClusterResourceAllConfig(name string) string {
