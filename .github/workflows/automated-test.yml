@@ -1,4 +1,4 @@
-name: "PreChecks"
+name: 'PreChecks'
 
 on: [push, pull_request]
 
