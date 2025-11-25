@@ -48,6 +48,7 @@ func ResourceNutanixStoragePoliciesV2() *schema.Resource {
 			"compression_spec": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"compression_state": {
@@ -61,6 +62,7 @@ func ResourceNutanixStoragePoliciesV2() *schema.Resource {
 			"encryption_spec": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"encryption_state": {
@@ -73,7 +75,7 @@ func ResourceNutanixStoragePoliciesV2() *schema.Resource {
 			},
 			"qos_spec": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"throttled_iops": {
@@ -86,6 +88,7 @@ func ResourceNutanixStoragePoliciesV2() *schema.Resource {
 			"fault_tolerance_spec": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"replication_factor": {
@@ -120,26 +123,27 @@ func ResourceNutanixStoragePoliciesV2Create(ctx context.Context, d *schema.Resou
 		}
 	}
 
-	if v, ok := d.GetOk("compression_spec"); ok {
-		body.CompressionSpec = buildCompressionSpec(v.([]interface{})[0].(map[string]interface{}))
+	if compressionSpec, ok := d.GetOk("compression_spec"); ok && len(compressionSpec.([]interface{})) > 0 {
+		body.CompressionSpec = buildCompressionSpec(compressionSpec.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("encryption_spec"); ok {
-		body.EncryptionSpec = buildEncryptionSpec(v.([]interface{})[0].(map[string]interface{}))
+	if encryptionSpec, ok := d.GetOk("encryption_spec"); ok && len(encryptionSpec.([]interface{})) > 0 {
+		body.EncryptionSpec = buildEncryptionSpec(encryptionSpec.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("qos_spec"); ok {
-		body.QosSpec = buildQosSpec(v.([]interface{})[0].(map[string]interface{}))
+	if qosSpec, ok := d.GetOk("qos_spec"); ok && len(qosSpec.([]interface{})) > 0 {
+		body.QosSpec = buildQosSpec(qosSpec.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("fault_tolerance_spec"); ok {
-		body.FaultToleranceSpec = buildFaultToleranceSpec(v.([]interface{})[0].(map[string]interface{}))
+	if faultToleranceSpec, ok := d.GetOk("fault_tolerance_spec"); ok && len(faultToleranceSpec.([]interface{})) > 0 {
+		body.FaultToleranceSpec = buildFaultToleranceSpec(faultToleranceSpec.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if policyType, ok := d.GetOk("policy_type"); ok {
 		body.PolicyType = buildPolicyType(policyType.(string))
 	}
-
+	aJSON, _ := json.MarshalIndent(body, "", "  ")
+	log.Printf("[DEBUG] Create Storage Policy Payload: %s", string(aJSON))
 	res, err := conn.StoragePolicies.CreateStoragePolicy(body)
 	if err != nil {
 		return diag.Errorf("error while creating Storage Policy: %v", err)
@@ -243,7 +247,16 @@ func ResourceNutanixStoragePoliciesV2Update(ctx context.Context, d *schema.Resou
 func ResourceNutanixStoragePoliciesV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataPoliciesAPI
 
-	res, err := conn.StoragePolicies.DeleteStoragePolicyById(utils.StringPtr(d.Id()))
+	// Fetch the e-tag
+	resp, err := conn.StoragePolicies.GetStoragePolicyById(utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while fetching Storage Policy: %v", err)
+	}
+	etagValue := conn.StoragePolicies.ApiClient.GetEtag(resp)
+	args := make(map[string]interface{})
+	args["If-Match"] = utils.StringPtr(etagValue)
+
+	res, err := conn.StoragePolicies.DeleteStoragePolicyById(utils.StringPtr(d.Id()), args)
 	if err != nil {
 		return diag.Errorf("error while deleting Storage Policy: %v", err)
 	}
@@ -361,7 +374,7 @@ func waitForTaskCompletion(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("error waiting for Storage Policy (%s) to %s: %s", utils.StringValue(taskUUID), operation, errWaitTask)
 	}
 
-	log.Printf("[DEBUG] Storage Policy (%s) %s successfully", utils.StringValue(taskUUID), operation)
+	log.Printf("[DEBUG] Storage Policy (%s) %s is successful", d.Id(), operation)
 	if operation == "delete" {
 		return nil
 	}
