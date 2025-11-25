@@ -12,9 +12,11 @@ import (
 )
 
 const (
-	resourceNameCluster              = "nutanix_cluster_v2.test"
-	resourceNameDiscoverUnConfigNode = "nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node"
-	resourceNameClusterRegistration  = "nutanix_pc_registration_v2.node-registration"
+	resourceNameCluster                    = "nutanix_cluster_v2.test"
+	resourceNameDiscoverUnConfigNode       = "nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node"
+	resourceNameClusterRegistration        = "nutanix_pc_registration_v2.node-registration"
+	dataSourceNameClusterData              = "data.nutanix_cluster_v2.cluster"
+	dataSourceNameGetClusterCategoriesData = "data.nutanix_clusters_v2.get-cluster-categories"
 )
 
 func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T) {
@@ -48,12 +50,40 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 			},
 			// Step 3: Associate categories to the cluster and check on list cluster data source for categories
 			{
-				Config: testAccClusterResourceMinimumConfig(name, "nutanix_category_v2.cat-1.id, nutanix_category_v2.cat-2.id, nutanix_category_v2.cat-3.id"),
+				Config: testAccClusterResourceMinimumConfig(name, "nutanix_category_v2.cat-1.id, nutanix_category_v2.cat-2.id, nutanix_category_v2.cat-3.id") +
+					`				
+					# get the cluster data
+					data "nutanix_cluster_v2" "cluster" {
+						ext_id = nutanix_cluster_v2.test.id
+					}
+
+					# get the clusters data from the data source
+					data "nutanix_clusters_v2" "get-cluster-categories" {
+						filter = "name eq '${nutanix_cluster_v2.test.name}'"
+					}
+				`,
 				Check: resource.ComposeTestCheckFunc(
 					// Check categories count on the resource itself (TypeSet)
 					resource.TestCheckResourceAttr(resourceNameCluster, "categories.#", "3"),
 					// Check categories on the resource (order-independent check)
 					checkCategories(resourceNameCluster, "categories", []string{
+						"nutanix_category_v2.cat-1",
+						"nutanix_category_v2.cat-2",
+						"nutanix_category_v2.cat-3",
+					}),
+					// Check categories count on the data source
+					resource.TestCheckResourceAttr(dataSourceNameClusterData, "categories.#", "3"),
+					// Check categories on the data source (order-independent check)
+					checkCategories(dataSourceNameClusterData, "categories", []string{
+						"nutanix_category_v2.cat-1",
+						"nutanix_category_v2.cat-2",
+						"nutanix_category_v2.cat-3",
+					}),
+
+					// Check categories count on the data source
+					resource.TestCheckResourceAttr(dataSourceNameGetClusterCategoriesData, "cluster_entities.0.categories.#", "3"),
+					// Check categories on the data source (order-independent check)
+					checkCategories(dataSourceNameGetClusterCategoriesData, "cluster_entities.0.categories", []string{
 						"nutanix_category_v2.cat-1",
 						"nutanix_category_v2.cat-2",
 						"nutanix_category_v2.cat-3",
@@ -465,7 +495,6 @@ func testAccClusterResourceMinimumConfig(name string, categories string) string 
 		  }
 		  depends_on = [nutanix_cluster_v2.test]
 		}
-
 `, clusterConfig, name, categories)
 }
 
