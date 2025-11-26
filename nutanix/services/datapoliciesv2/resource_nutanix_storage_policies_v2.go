@@ -75,7 +75,8 @@ func ResourceNutanixStoragePoliciesV2() *schema.Resource {
 			},
 			"qos_spec": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"throttled_iops": {
@@ -131,17 +132,42 @@ func ResourceNutanixStoragePoliciesV2Create(ctx context.Context, d *schema.Resou
 		body.EncryptionSpec = buildEncryptionSpec(encryptionSpec.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if qosSpec, ok := d.GetOk("qos_spec"); ok && len(qosSpec.([]interface{})) > 0 {
-		body.QosSpec = buildQosSpec(qosSpec.([]interface{})[0].(map[string]interface{}))
-	}
-
 	if faultToleranceSpec, ok := d.GetOk("fault_tolerance_spec"); ok && len(faultToleranceSpec.([]interface{})) > 0 {
 		body.FaultToleranceSpec = buildFaultToleranceSpec(faultToleranceSpec.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if policyType, ok := d.GetOk("policy_type"); ok {
-		body.PolicyType = buildPolicyType(policyType.(string))
+	if qosSpec, ok := d.GetOk("qos_spec"); ok && len(qosSpec.([]interface{})) > 0 {
+		body.QosSpec = buildQosSpec(qosSpec.([]interface{})[0].(map[string]interface{}))
 	}
+
+	// Helper function to check if a spec is SYSTEM_DERIVED safely
+	isSystemDerived := func(spec interface{ GetName() string }) bool {
+		if spec == nil {
+			return false
+		}
+		return spec.GetName() == "SYSTEM_DERIVED"
+	}
+
+	// Check each spec safely
+	compressionDerived, encryptionDerived, replicationDerived := true, true, true
+	if body.CompressionSpec != nil {
+		compressionDerived = isSystemDerived(body.CompressionSpec.CompressionState)
+	}
+	if body.EncryptionSpec != nil {
+		encryptionDerived = isSystemDerived(body.EncryptionSpec.EncryptionState)
+	}
+	if body.FaultToleranceSpec != nil {
+		replicationDerived = isSystemDerived(body.FaultToleranceSpec.ReplicationFactor)
+	}
+
+	// Are all system-derived? Only check those that exist
+	allSystemDerived := compressionDerived && encryptionDerived && replicationDerived
+
+	// Validate qos_spec presence
+	if allSystemDerived && body.QosSpec == nil {
+		return diag.Errorf("qos_spec must be provided when compression_state, encryption_state, and replication_factor are all SYSTEM_DERIVED")
+	}
+
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Create Storage Policy Payload: %s", string(aJSON))
 	res, err := conn.StoragePolicies.CreateStoragePolicy(body)
