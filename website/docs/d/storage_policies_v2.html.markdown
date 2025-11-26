@@ -51,3 +51,6 @@ The `storage_policies` contains list of Storage Policy objects. Each Storage Pol
 * `fault_tolerance_spec`:- Fault Tolerance parameters for the entities.
   * `replication_factor`:- Replication factor value.
 * `policy_type`:- Indicates whether the policy is user-created or system-created. Valid values: `"USER"`, `"SYSTEM"`.
+
+
+See detailed information in [Nutanix Get Storage Policies v4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.1#tag/StoragePolicies/operation/listStoragePolicies).
