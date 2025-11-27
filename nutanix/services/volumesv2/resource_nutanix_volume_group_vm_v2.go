@@ -96,15 +96,9 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Create(ctx context.Context, d *
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Attach Vm to Volume Group Task Details: %s", string(aJSON))
 
-	var uuid *string
-	for _, entity := range taskDetails.EntitiesAffected {
-		if entity.Rel != nil && utils.StringValue(entity.Rel) == utils.RelEntityTypeVolumeGroup {
-			uuid = entity.ExtId
-			break
-		}
-	}
-	if uuid == nil {
-		return diag.Errorf("Volume group UUID not found in entities affected")
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeVolumeGroup, "Volume group")
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(utils.StringValue(uuid))
@@ -166,15 +160,9 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Delete(ctx context.Context, d *
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Detach Vm from Volume Group Task Details: %s", string(aJSON))
 
-	var uuid *string
-	for _, entity := range taskDetails.EntitiesAffected {
-		if entity.Rel != nil && utils.StringValue(entity.Rel) == utils.RelEntityTypeVolumeGroup {
-			uuid = entity.ExtId
-			break
-		}
-	}
-	if uuid == nil {
-		return diag.Errorf("Volume group UUID not found in entities affected")
+	_, err = common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeVolumeGroup, "Volume group")
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	return nil

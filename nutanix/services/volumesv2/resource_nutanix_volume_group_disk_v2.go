@@ -190,15 +190,9 @@ func ResourceNutanixVolumeGroupDiskV2Create(ctx context.Context, d *schema.Resou
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Volume Disk Task Details: %s", string(aJSON))
 
-	var uuid *string
-	for _, entity := range taskDetails.EntitiesAffected {
-		if entity.Rel != nil && utils.StringValue(entity.Rel) == utils.RelEntityTypeVolumeGroupDisk {
-			uuid = entity.ExtId
-			break
-		}
-	}
-	if uuid == nil {
-		return diag.Errorf("Volume disk UUID not found in entities affected")
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeVolumeGroupDisk, "Volume disk")
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId(utils.StringValue(uuid))
