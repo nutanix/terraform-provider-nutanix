@@ -52,7 +52,7 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 			// Create cluster profile and associate with cluster with dryrun true
 			{
 				PreConfig: func() {
-					fmt.Println("Creating cluster profile and associating with cluster")
+					fmt.Println("Creating cluster profile and associating with cluster, dryrun true")
 				},
 				Config: testAccClusterResourceMinimumConfig(name) + testAccClusterProfileResourceConfig("tf-first-cluster-profile", "true"),
 				Check: resource.ComposeTestCheckFunc(
@@ -66,7 +66,7 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 			// Create cluster profile and associate with cluster with dryrun false
 			{
 				PreConfig: func() {
-					fmt.Println("Creating cluster profile and associating with cluster")
+					fmt.Println("Creating cluster profile and associating with cluster, dryrun false")
 				},
 				Config: testAccClusterResourceMinimumConfig(name) + testAccClusterProfileResourceConfig("tf-first-cluster-profile", "false"),
 				Check: resource.ComposeTestCheckFunc(
