@@ -3,6 +3,7 @@ package common
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -197,5 +198,11 @@ func ExtractEntityUUIDFromTask(task prismConfig.Task, entityType string, resourc
 			return entity.ExtId, nil
 		}
 	}
+	// Debug log the entities affected
+	log.Printf("[DEBUG] No matching entity found for entity type: %s", entityType)
+	aJSON, _ := json.MarshalIndent(task.EntitiesAffected, "", "  ")
+	log.Printf("[DEBUG] Entities Affected: %s", string(aJSON))
+
+	// If no matching entity is found, return an error
 	return nil, fmt.Errorf("%s UUID not found in entities affected", resourceName)
 }
