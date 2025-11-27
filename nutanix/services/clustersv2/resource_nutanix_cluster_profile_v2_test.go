@@ -289,7 +289,7 @@ func TestAccNutanixClusterProfileV2_fetchCPWrongExtID(t *testing.T) {
 		CheckDestroy: testAccCheckClusterProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:`
+				Config: `
 					data "nutanix_cluster_profile_v2" "test" {
 						ext_id = "00000000-0000-0000-0000-000000000000"
 					}

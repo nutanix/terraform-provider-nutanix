@@ -20,7 +20,7 @@ import (
 func ResourceNutanixClusterProfileAssociationV2() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: ResourceNutanixClusterProfileAssociationV2Create,
-		ReadContext: ResourceNutanixClusterProfileAssociationV2Read,
+		ReadContext:   ResourceNutanixClusterProfileAssociationV2Read,
 		UpdateContext: ResourceNutanixClusterProfileAssociationV2Update,
 		DeleteContext: ResourceNutanixClusterProfileAssociationV2Delete,
 		Schema: map[string]*schema.Schema{
