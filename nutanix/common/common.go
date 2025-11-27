@@ -49,7 +49,7 @@ func TaskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 	return func() (interface{}, string, error) {
 		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
 		if err != nil {
-			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
+			return "", "", fmt.Errorf("error while polling prism task: %v", err)
 		}
 
 		// get the group results
@@ -186,4 +186,16 @@ func InterfaceToSlice(v interface{}) []interface{} {
 		// single element provided
 		return []interface{}{v}
 	}
+}
+
+// ExtractEntityUUIDFromTask extracts the UUID of an entity from task details based on the entity type.
+// It searches through the EntitiesAffected list and returns the ExtId of the first entity matching the specified entityType.
+// Returns an error if no matching entity is found.
+func ExtractEntityUUIDFromTask(task prismConfig.Task, entityType string, resourceName string) (*string, error) {
+	for _, entity := range task.EntitiesAffected {
+		if entity.Rel != nil && utils.StringValue(entity.Rel) == entityType {
+			return entity.ExtId, nil
+		}
+	}
+	return nil, fmt.Errorf("%s UUID not found in entities affected", resourceName)
 }
