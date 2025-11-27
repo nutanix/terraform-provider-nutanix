@@ -12,6 +12,7 @@ import (
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -112,11 +113,11 @@ func ResourceNutanixRestorePcCreate(ctx context.Context, d *schema.ResourceData,
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the task to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -133,18 +134,13 @@ func ResourceNutanixRestorePcCreate(ctx context.Context, d *schema.ResourceData,
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Restore PC task details: %s", string(aJSON))
 
-	entityAffected := taskDetails.EntitiesAffected
-
-	// extract the PC UUID from the task response
-	for _, entity := range entityAffected {
-		if utils.StringValue(entity.Name) == "prism_central" && utils.StringValue(entity.Rel) == "prism:config:domain_manager" {
-			uuid := entity.ExtId
-			d.SetId(*uuid)
-			return nil
-		}
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeDomainManager,
+		"Restored Domain Manager")
+	if err != nil {
+		return diag.Errorf("error while extracting domain manager UUID from task response: %s", err)
 	}
-
-	return diag.Errorf("error while fetching restored PC UUID From task response: %s", err)
+	d.SetId(*uuid)
+	return nil
 }
 
 func ResourceNutanixRestorePcRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
