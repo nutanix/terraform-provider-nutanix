@@ -3,7 +3,6 @@ package storagecontainersv2
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
@@ -16,7 +15,7 @@ import (
 	clsPrismConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -298,11 +297,11 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the task to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -311,15 +310,20 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while fetching storage container UUID : %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Storage Container Task Details: %s", string(aJSON))
+
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeStorageContainer, "Storage container")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(utils.StringValue(uuid))
 
 	// Delay/sleep for 2 Minute, replication factor is not updated immediately
 	time.Sleep(timeSleep)
@@ -538,17 +542,25 @@ func ResourceNutanixStorageContainersV2Update(ctx context.Context, d *schema.Res
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the task to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for storage container (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
+
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching storage container update task : %v", err)
+	}
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Storage Container Update Task Details: %s", string(aJSON))
 
 	// delay/sleep for 1 Minute, replication factor is not updated immediately
 	time.Sleep(timePeriod)
@@ -573,12 +585,12 @@ func ResourceNutanixStorageContainersV2Delete(ctx context.Context, d *schema.Res
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the task to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -650,49 +662,6 @@ func resourceSchemaForFqdnValue() *schema.Schema {
 			},
 		},
 	}
-}
-
-func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
-		// encodeUUID := data + ":" + taskUUID
-		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-		if err != nil {
-			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
-		}
-
-		// get the group results
-
-		v := vresp.Data.GetValue().(prismConfig.Task)
-
-		if getTaskStatus(v.Status) == "CANCELED" || getTaskStatus(v.Status) == "FAILED" {
-			return v, getTaskStatus(v.Status),
-				fmt.Errorf("error_detail: %s, progress_message: %d", utils.StringValue(v.ErrorMessages[0].Message), utils.IntValue(v.ProgressPercentage))
-		}
-		return v, getTaskStatus(v.Status), nil
-	}
-}
-
-func getTaskStatus(pr *prismConfig.TaskStatus) string {
-	const two, three, five, six, seven = 2, 3, 5, 6, 7
-	if pr != nil {
-		if *pr == prismConfig.TaskStatus(six) {
-			return "FAILED"
-		}
-		if *pr == prismConfig.TaskStatus(seven) {
-			return "CANCELED"
-		}
-		if *pr == prismConfig.TaskStatus(two) {
-			return "QUEUED"
-		}
-		if *pr == prismConfig.TaskStatus(three) {
-			return "RUNNING"
-		}
-		if *pr == prismConfig.TaskStatus(five) {
-			return "SUCCEEDED"
-		}
-	}
-	return "UNKNOWN"
 }
 
 func expandIPv4Address(pr interface{}) *clsCommonConfig.IPv4Address {
