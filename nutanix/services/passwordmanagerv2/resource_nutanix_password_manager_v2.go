@@ -176,4 +176,3 @@ func resourceNutanixPasswordManagerV2Delete(ctx context.Context, d *schema.Resou
 	log.Printf("[DEBUG] Deleting Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))
 	return nil
 }
-
