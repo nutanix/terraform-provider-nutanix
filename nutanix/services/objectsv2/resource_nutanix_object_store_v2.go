@@ -3,7 +3,6 @@ package objectstoresv2
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
@@ -18,7 +17,6 @@ import (
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -267,11 +265,11 @@ func ResourceNutanixObjectsV2Create(ctx context.Context, d *schema.ResourceData,
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the task to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -286,7 +284,10 @@ func ResourceNutanixObjectsV2Create(ctx context.Context, d *schema.ResourceData,
 		taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 
 		// Get created object store extID from TASK API
-		objectStoreExtID := taskDetails.EntitiesAffected[0].ExtId
+		objectStoreExtID, extractErr := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeObjects, "Object store")
+		if extractErr != nil {
+			return diag.FromErr(extractErr)
+		}
 
 		log.Printf("[DEBUG] object store extID: %s", utils.StringValue(objectStoreExtID))
 
@@ -311,11 +312,14 @@ func ResourceNutanixObjectsV2Create(ctx context.Context, d *schema.ResourceData,
 
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] deploy object store task details: %s", string(aJSON))
+	log.Printf("[DEBUG] Object Store Create Task Details: %s", string(aJSON))
 
 	// Get created object store extID from TASK API
-	objectStoreExtID := taskDetails.EntitiesAffected[0].ExtId
-	d.SetId(*objectStoreExtID)
+	objectStoreExtID, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeObjects, "Object store")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(utils.StringValue(objectStoreExtID))
 
 	return ResourceNutanixObjectsV2Read(ctx, d, meta)
 }
@@ -424,11 +428,11 @@ func ResourceNutanixObjectsV2Update(ctx context.Context, d *schema.ResourceData,
 	TaskRef := resp.Data.GetValue().(objectPrismConfig.TaskReference)
 	taskUUID := TaskRef.ExtId
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the task to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
@@ -440,7 +444,7 @@ func ResourceNutanixObjectsV2Update(ctx context.Context, d *schema.ResourceData,
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Object store Update task details: %s", string(aJSON))
+	log.Printf("[DEBUG] Object Store Update Task Details: %s", string(aJSON))
 
 	return ResourceNutanixObjectsV2Read(ctx, d, meta)
 }
@@ -466,11 +470,11 @@ func ResourceNutanixObjectsV2Delete(ctx context.Context, d *schema.ResourceData,
 	TaskRef := resp.Data.GetValue().(objectPrismConfig.TaskReference)
 	taskUUID := TaskRef.ExtId
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the object store to be deleted
+	// Wait for the task to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
@@ -482,7 +486,7 @@ func ResourceNutanixObjectsV2Delete(ctx context.Context, d *schema.ResourceData,
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Object store delete task details: %s", string(aJSON))
+	log.Printf("[DEBUG] Object Store Delete Task Details: %s", string(aJSON))
 
 	return nil
 }
@@ -678,47 +682,4 @@ func expandState(state string) *config.State {
 	}
 
 	return &stateEnum
-}
-
-// func to check pc task status, and return the task status or error message
-func taskStateRefreshPrismTaskGroupFunc(client *prism.Client, taskUUID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		taskResp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-
-		if err != nil {
-			return "", "", fmt.Errorf("error while polling prism task: %v", err)
-		}
-
-		// get the group results
-		v := taskResp.Data.GetValue().(prismConfig.Task)
-
-		if getTaskStatus(v.Status) == "CANCELED" || getTaskStatus(v.Status) == "FAILED" {
-			return v, getTaskStatus(v.Status),
-				fmt.Errorf("error_detail: %s, progress_message: %d", utils.StringValue(v.ErrorMessages[0].Message), utils.IntValue(v.ProgressPercentage))
-		}
-		return v, getTaskStatus(v.Status), nil
-	}
-}
-
-// func to flatten the task status to string
-func getTaskStatus(pr *prismConfig.TaskStatus) string {
-	if pr != nil {
-		const QUEUED, RUNNING, SUCCEEDED, FAILED, CANCELED = 2, 3, 5, 6, 7
-		if *pr == prismConfig.TaskStatus(FAILED) {
-			return "FAILED"
-		}
-		if *pr == prismConfig.TaskStatus(CANCELED) {
-			return "CANCELED"
-		}
-		if *pr == prismConfig.TaskStatus(QUEUED) {
-			return "QUEUED"
-		}
-		if *pr == prismConfig.TaskStatus(RUNNING) {
-			return "RUNNING"
-		}
-		if *pr == prismConfig.TaskStatus(SUCCEEDED) {
-			return "SUCCEEDED"
-		}
-	}
-	return "UNKNOWN"
 }
