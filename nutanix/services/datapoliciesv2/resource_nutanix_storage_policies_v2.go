@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	import3 "github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/common/v1/response"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/datapolicies/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
@@ -217,9 +218,10 @@ func ResourceNutanixStoragePoliciesV2Read(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("error while reading Storage Policy: %v", err)
 	}
 	body := resp.Data.GetValue().(import1.StoragePolicy)
+	metadata := resp.Metadata
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Read Storage Policy Response: %s", string(aJSON))
-	return commonReadStateStoragePolicy(d, body)
+	return commonReadStateStoragePolicy(d, body, metadata)
 }
 
 func ResourceNutanixStoragePoliciesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -357,7 +359,7 @@ func buildEncryptionSpec(specMap map[string]interface{}) *import1.EncryptionSpec
 func buildQosSpec(specMap map[string]interface{}) *import1.QosSpec {
 	qosSpec := &import1.QosSpec{}
 	if throttledIops, ok := specMap["throttled_iops"]; ok {
-		throttledIopsInt := int(throttledIops.(int))
+		throttledIopsInt := throttledIops.(int)
 		qosSpec.ThrottledIops = &throttledIopsInt
 	}
 	return qosSpec
@@ -373,15 +375,6 @@ func buildFaultToleranceSpec(specMap map[string]interface{}) *import1.FaultToler
 		}
 	}
 	return faultToleranceSpec
-}
-
-func buildPolicyType(policyTypeStr string) *import1.PolicyType {
-	var pt import1.PolicyType
-	err := pt.UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, policyTypeStr)))
-	if err == nil {
-		return pt.Ref()
-	}
-	return nil
 }
 
 func waitForTaskCompletion(ctx context.Context, d *schema.ResourceData, meta interface{}, res interface{}, operation string) diag.Diagnostics {
@@ -408,7 +401,7 @@ func waitForTaskCompletion(ctx context.Context, d *schema.ResourceData, meta int
 	return ResourceNutanixStoragePoliciesV2Read(ctx, d, meta)
 }
 
-func commonReadStateStoragePolicy(d *schema.ResourceData, res import1.StoragePolicy) diag.Diagnostics {
+func commonReadStateStoragePolicy(d *schema.ResourceData, res import1.StoragePolicy, metadata *import3.ApiResponseMetadata) diag.Diagnostics {
 	if res.ExtId != nil {
 		if err := d.Set("ext_id", *res.ExtId); err != nil {
 			return diag.FromErr(err)
@@ -449,13 +442,13 @@ func commonReadStateStoragePolicy(d *schema.ResourceData, res import1.StoragePol
 			return diag.FromErr(err)
 		}
 	}
-	if res.Links != nil {
-		if err := d.Set("links", flattenLinks(res.Links)); err != nil {
+	if res.TenantId != nil {
+		if err := d.Set("tenant_id", res.TenantId); err != nil {
 			return diag.FromErr(err)
 		}
 	}
-	if res.TenantId != nil {
-		if err := d.Set("tenant_id", res.TenantId); err != nil {
+	if metadata.Links != nil {
+		if err := d.Set("links", flattenLinks(metadata.Links)); err != nil {
 			return diag.FromErr(err)
 		}
 	}

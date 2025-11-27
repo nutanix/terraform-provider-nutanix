@@ -100,8 +100,9 @@ func dataSourceNutanixStoragePolicyV2Read(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("No Storage Policy found with the given ext_id: %v", d.Get("ext_id").(string))
 	}
 	body := resp.Data.GetValue().(import1.StoragePolicy)
+	metadata := resp.Metadata
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Get Storage Policy Response: %s", string(aJSON))
 	d.SetId(*body.ExtId)
-	return commonReadStateStoragePolicy(d, body)
+	return commonReadStateStoragePolicy(d, body, metadata)
 }

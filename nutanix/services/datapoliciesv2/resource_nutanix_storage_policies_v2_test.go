@@ -47,7 +47,7 @@ func TestAccV2NutanixStoragePolicyResource_Basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testStoragePolicyResourceConfig(name) + testStoragePoliciesDatasourceConfig(),
+				Config: testStoragePolicyResourceConfig(name) + testStoragePoliciesDatasourceConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceNameStoragePolicies, "storage_policies.#"),
 					checkAttributeLength(dataSourceNameStoragePolicies, "storage_policies", 1),
@@ -58,6 +58,7 @@ func TestAccV2NutanixStoragePolicyResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceNameStoragePolicies, "storage_policies.0.qos_spec.0.throttled_iops", "1000"),
 					resource.TestCheckResourceAttr(dataSourceNameStoragePolicies, "storage_policies.0.fault_tolerance_spec.0.replication_factor", "THREE"),
 					resource.TestCheckResourceAttr(dataSourceNameStoragePolicies, "storage_policies.0.policy_type", "USER"),
+					resource.TestCheckResourceAttr(dataSourceNameStoragePolicies, "total_available_results", "1"),
 				),
 			},
 		},
@@ -274,7 +275,7 @@ func TestAccV2NutanixStoragePolicyResource_InvalidCompressionState(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				Config:      testStoragePolicyResourceWithInvalidCompressionStateConfig(name),
-				ExpectError: regexp.MustCompile("expected compression_state to be one of"),
+				ExpectError: regexp.MustCompile("got INVALID_STATE"),
 			},
 		},
 	})
@@ -290,7 +291,7 @@ func TestAccV2NutanixStoragePolicyResource_InvalidThrottledIops(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testStoragePolicyResourceWithInvalidThrottledIopsConfig(name),
-				ExpectError: regexp.MustCompile("throttled_iops must be at least 100"),
+				ExpectError: regexp.MustCompile("Numeric instance is lower than the required minimum"),
 			},
 		},
 	})
@@ -503,12 +504,13 @@ data "nutanix_storage_policy_v2" "test" {
 `
 }
 
-func testStoragePoliciesDatasourceConfig() string {
-	return `
+func testStoragePoliciesDatasourceConfig(name string) string {
+	return fmt.Sprintf(`
 
 data "nutanix_storage_policies_v2" "test" {
+	filter = "name eq '%s'"
 	depends_on = [nutanix_storage_policy_v2.test]
 }
 
-`
+`, name)
 }

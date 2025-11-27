@@ -39,6 +39,10 @@ func DataSourceNutanixStoragePoliciesV2() *schema.Resource {
 				Computed: true,
 				Elem:     DataSourceNutanixStoragePolicyV2(),
 			},
+			"total_available_results": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -93,6 +97,11 @@ func dataSourceNutanixStoragePoliciesV2Read(ctx context.Context, d *schema.Resou
 	getResp := resp.Data.GetValue().([]import1.StoragePolicy)
 	if err := d.Set("storage_policies", flattenStoragePolicies(getResp)); err != nil {
 		return diag.FromErr(err)
+	}
+	if resp.Metadata != nil && resp.Metadata.TotalAvailableResults != nil {
+		if err := d.Set("total_available_results", *resp.Metadata.TotalAvailableResults); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	d.SetId(utils.GenUUID())
 	return nil

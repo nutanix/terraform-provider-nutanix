@@ -143,7 +143,7 @@ func flattenLinks(links []response.ApiLink) []map[string]interface{} {
 		}
 		return linkList
 	}
-	return nil
+	return []map[string]interface{}{}
 }
 
 func flattenReplicationLocations(replicationLocations []config.ReplicationLocation) []map[string]interface{} {
