@@ -30,6 +30,7 @@ const (
 	RelEntityTypeStoragePolicy        = "datapolicies:config:storage-policy"
 	RelEntityTypeKMS                  = "security:encryption:key-management-server"
 	RelEntityTypeClusterProfile       = "clustermgmt:config:cluster-profile"
+	RelEntityTypeDomainManager        = "prism:config:domain_manager"
 )
 
 // CompletionDetailsName constants - Completion details name for the task entities affected
