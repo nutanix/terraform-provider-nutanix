@@ -91,5 +91,15 @@ The following attributes are exported:
 * `created_by`: created by.
 * `is_system_defined`: Service Group is system defined or not.
 
+## Import
+
+This helps to manage existing entities which are not created through terraform. Service Groups can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_service_groups_v2" "import_service_group" {}
+
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_service_groups_v2" "fetch_sg"{}
+terraform import nutanix_service_groups_v2.import_service_group <UUID>
+```
 
 See detailed information in [Nutanix Service Groups V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0#tag/ServiceGroups/operation/createServiceGroup).

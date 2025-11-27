@@ -58,7 +58,7 @@ func TestAccV2NutanixOvaDatasource_GetOvaDetails(t *testing.T) {
 func testOvasDatasourceConfigGetOvaDetails() string {
 	return `
 data "nutanix_ova_v2" "test" {
-   ext_id = nutanix_ovas_v2.test.id
+   ext_id = nutanix_ova_v2.test.id
 }
 `
 }

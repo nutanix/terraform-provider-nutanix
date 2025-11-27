@@ -298,11 +298,33 @@ func extractNodeFlags(d *schema.ResourceData, node config.NodeListItemReference)
 			controllerIPs := common.InterfaceToSlice(itemMap["controller_vm_ip"])
 			for _, ipBlock := range controllerIPs {
 				ipMap, _ := ipBlock.(map[string]interface{})
-				ipv4List := common.InterfaceToSlice(ipMap["ipv4"])
-				for _, ipv4 := range ipv4List {
-					ipv4Map, _ := ipv4.(map[string]interface{})
-					if node.ControllerVmIp != nil &&
-						ipv4Map["value"].(string) == utils.StringValue(node.ControllerVmIp.Ipv4.Value) {
+
+				var ipList []interface{}
+				var nodeIP string
+
+				// Determine which IP family to use
+				if node.ControllerVmIp != nil {
+					if node.ControllerVmIp.Ipv4 != nil {
+						ipList = common.InterfaceToSlice(ipMap["ipv4"])
+						nodeIP = utils.StringValue(node.ControllerVmIp.Ipv4.Value)
+					} else if node.ControllerVmIp.Ipv6 != nil {
+						ipList = common.InterfaceToSlice(ipMap["ipv6"])
+						nodeIP = utils.StringValue(node.ControllerVmIp.Ipv6.Value)
+					}
+				}
+
+				// Skip if no IPs available
+				if len(ipList) == 0 || nodeIP == "" {
+					continue
+				}
+
+				// Check if any IP matches the node's CVM IP
+				for _, ip := range ipList {
+					ipMapItem, ok := ip.(map[string]interface{})
+					if !ok {
+						continue
+					}
+					if v, ok := ipMapItem["value"].(string); ok && v == nodeIP {
 						if v, ok := itemMap["should_skip_add_node"].(bool); ok {
 							flags.ShouldSkipAddNode = v
 						}
@@ -312,7 +334,6 @@ func extractNodeFlags(d *schema.ResourceData, node config.NodeListItemReference)
 						if v, ok := itemMap["should_skip_pre_expand_checks"].(bool); ok {
 							flags.ShouldSkipPreExpandChecks = v
 						}
-						// break after matching this node
 						break
 					}
 				}

@@ -25,6 +25,9 @@ func ResourceNutanixOvaV2() *schema.Resource {
 		ReadContext:   ResourceNutanixOvaV2Read,
 		UpdateContext: ResourceNutanixOvaV2Update,
 		DeleteContext: ResourceNutanixOvaV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

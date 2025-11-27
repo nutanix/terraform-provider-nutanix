@@ -48,7 +48,7 @@ resource "nutanix_virtual_machine_v2" "vm-example" {
 }
 
 # Create Ova from the VM
-resource "nutanix_ovas_v2" "ov-vm-example" {
+resource "nutanix_ova_v2" "ov-vm-example" {
   name = "tf-ova-vm-example"
   source {
     ova_vm_source {
@@ -59,7 +59,7 @@ resource "nutanix_ovas_v2" "ov-vm-example" {
 }
 
 resource "nutanix_ova_vm_deploy_v2" "vm-from-ova" {
-  ext_id = nutanix_ovas_v2.ov-vm-example.id
+  ext_id = nutanix_ova_v2.ov-vm-example.id
   override_vm_config {
     name              = "${nutanix_virtual_machine_v2.vm-example.name}-from-ova"
     memory_size_bytes = 8 * 1024 * 1024 * 1024 # 8 GiB

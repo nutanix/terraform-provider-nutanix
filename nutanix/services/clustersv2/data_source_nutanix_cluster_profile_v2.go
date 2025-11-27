@@ -32,6 +32,54 @@ func DatasourceNutanixClusterProfileV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"create_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_update_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created_by": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_updated_by": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"cluster_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"drifted_cluster_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"clusters": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"is_compliant": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"last_synced_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"config_drifts": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"allowed_overrides": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -105,6 +153,15 @@ func DatasourceNutanixClusterProfileV2() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"tenant_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"links": common.LinksSchema(),
 						"is_enabled": {
 							Type:     schema.TypeBool,
 							Computed: true,
@@ -114,6 +171,15 @@ func DatasourceNutanixClusterProfileV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"ext_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"tenant_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"links": common.LinksSchema(),
 									"username": {
 										Type:     schema.TypeString,
 										Computed: true,
@@ -158,6 +224,15 @@ func DatasourceNutanixClusterProfileV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"ext_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"tenant_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"links": common.LinksSchema(),
 									"address": {
 										Type:     schema.TypeList,
 										Computed: true,
@@ -206,6 +281,15 @@ func DatasourceNutanixClusterProfileV2() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"tenant_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"links": common.LinksSchema(),
 						"server_name": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -301,7 +385,28 @@ func DatasourceNutanixClusterProfileV2Read(ctx context.Context, d *schema.Resour
 	if err := d.Set("name", clusterProfile.Name); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("description", clusterProfile.Description); err != nil {
+	if err := d.Set("cluster_count", utils.IntValue(clusterProfile.ClusterCount)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("drifted_cluster_count", utils.IntValue(clusterProfile.DriftedClusterCount)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("clusters", flattenClusterProfileClusterList(clusterProfile.Clusters)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("create_time", utils.TimeStringValue(clusterProfile.CreateTime)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("last_update_time", utils.TimeStringValue(clusterProfile.LastUpdateTime)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("created_by", utils.StringValue(clusterProfile.CreatedBy)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("last_updated_by", utils.StringValue(clusterProfile.LastUpdatedBy)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", utils.StringValue(clusterProfile.Description)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("allowed_overrides", common.FlattenEnumValueList(clusterProfile.AllowedOverrides)); err != nil {
@@ -331,4 +436,33 @@ func DatasourceNutanixClusterProfileV2Read(ctx context.Context, d *schema.Resour
 
 	d.SetId(utils.StringValue(clusterProfile.ExtId))
 	return nil
+}
+
+func flattenClusterProfileClusterList(managedClusters []config.ManagedCluster) interface{} {
+	if len(managedClusters) == 0 {
+		return nil
+	}
+
+	clusters := make([]map[string]interface{}, 0, len(managedClusters))
+
+	for _, mc := range managedClusters {
+		clusterMap := make(map[string]interface{})
+
+		if mc.ExtId != nil {
+			clusterMap["ext_id"] = utils.StringValue(mc.ExtId)
+		}
+		if mc.IsCompliant != nil {
+			clusterMap["is_compliant"] = utils.BoolValue(mc.IsCompliant)
+		}
+		if mc.LastSyncedTime != nil {
+			clusterMap["last_synced_time"] = utils.TimeStringValue(mc.LastSyncedTime)
+		}
+		if mc.ConfigDrifts != nil {
+			clusterMap["config_drifts"] = common.FlattenEnumValueList(mc.ConfigDrifts)
+		}
+
+		clusters = append(clusters, clusterMap)
+	}
+
+	return clusters
 }

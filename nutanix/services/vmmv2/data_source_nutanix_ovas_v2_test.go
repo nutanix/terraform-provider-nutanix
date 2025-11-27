@@ -93,7 +93,7 @@ data "nutanix_ovas_v2" "test" {}
 func testOvasDatasourceConfigFilterOvasByName() string {
 	return `
 data "nutanix_ovas_v2" "test" {
-	filter = "name eq '${nutanix_ovas_v2.test.name}'"
+	filter = "name eq '${nutanix_ova_v2.test.name}'"
 }
 `
 }
@@ -102,7 +102,7 @@ func testOvasDatasourceConfigLimit() string {
 	return `
 data "nutanix_ovas_v2" "test" {
 	limit = 1
-	depends_on = [nutanix_ovas_v2.test]
+	depends_on = [nutanix_ova_v2.test]
 }
 `
 }

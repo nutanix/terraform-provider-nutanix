@@ -430,7 +430,7 @@ func Provider() *schema.Provider {
 			"nutanix_vm_clone_v2":                             vmmv2.ResourceNutanixVMCloneV2(),
 			"nutanix_vm_gc_update_v2":                         vmmv2.ResourceNutanixVMGCUpdateV2(),
 			"nutanix_images_v2":                               vmmv2.ResourceNutanixImageV4(),
-			"nutanix_ovas_v2":                                 vmmv2.ResourceNutanixOvaV2(),
+			"nutanix_ova_v2":                                  vmmv2.ResourceNutanixOvaV2(),
 			"nutanix_ova_vm_deploy_v2":                        vmmv2.ResourceNutanixOvaVMDeploymentV2(),
 			"nutanix_ova_download_v2":                         vmmv2.ResourceNutanixOvaDownloadV2(),
 			"nutanix_vm_network_device_assign_ip_v2":          vmmv2.ResourceNutanixVmsNetworkDeviceAssignIPV2(),

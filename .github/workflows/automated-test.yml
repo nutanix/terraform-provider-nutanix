@@ -1,4 +1,4 @@
-name: "PreChecks"
+name: 'PreChecks'
 
 on: [push, pull_request]
 
@@ -13,7 +13,7 @@ jobs:
       - name: ⚙️ Set up Go 🐹
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25"
+          go-version: "1.25.3"
 
       - name: 🧹 Code Lint
         run: make tools && make lint
