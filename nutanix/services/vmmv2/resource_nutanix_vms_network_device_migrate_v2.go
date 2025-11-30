@@ -72,23 +72,6 @@ func ResourceNutanixVmsNetworkDeviceMigrateV2() *schema.Resource {
 }
 
 func ResourceNutanixVmsNetworkDeviceMigrateV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return migrateNicCommon(ctx, d, meta, true)
-}
-
-func ResourceNutanixVmsNetworkDeviceMigrateV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
-}
-
-func ResourceNutanixVmsNetworkDeviceMigrateV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return migrateNicCommon(ctx, d, meta, false)
-}
-
-func ResourceNutanixVmsNetworkDeviceMigrateV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
-}
-
-// migrateNicCommon encapsulates the common NIC migration logic to avoid duplication.
-func migrateNicCommon(ctx context.Context, d *schema.ResourceData, meta interface{}, setID bool) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
 	vmExtID := d.Get("vm_ext_id")
@@ -129,7 +112,7 @@ func migrateNicCommon(ctx context.Context, d *schema.ResourceData, meta interfac
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the task to complete
+	// Wait for the VM to be available
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
@@ -141,7 +124,6 @@ func migrateNicCommon(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("error waiting for nic (%s) to migrate: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
-	// Get UUID from TASK API
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while fetching vm UUID : %v", err)
@@ -150,8 +132,76 @@ func migrateNicCommon(ctx context.Context, d *schema.ResourceData, meta interfac
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Migrate NIC Task Details: %s", string(aJSON))
 
-	if setID {
-		d.SetId(resource.UniqueId())
+	d.SetId(resource.UniqueId())
+	return nil
+}
+
+func ResourceNutanixVmsNetworkDeviceMigrateV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return nil
+}
+
+func ResourceNutanixVmsNetworkDeviceMigrateV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).VmmAPI
+
+	vmExtID := d.Get("vm_ext_id")
+	extID := d.Get("ext_id")
+	body := config.MigrateNicConfig{}
+
+	if subnet, ok := d.GetOk("subnet"); ok {
+		body.Subnet = expandSubnetReference(subnet)
 	}
+	if migrateType, ok := d.GetOk("migrate_type"); ok && len(migrateType.(string)) > 0 {
+		const two, three = 2, 3
+		subMap := map[string]interface{}{
+			"ASSIGN_IP":  two,
+			"RELEASE_IP": three,
+		}
+		pVal := subMap[migrateType.(string)]
+		p := config.MigrateNicType(pVal.(int))
+		body.MigrateType = &p
+	}
+
+	readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(vmExtID.(string)))
+	if err != nil {
+		return diag.Errorf("error while reading vm : %v", err)
+	}
+	// Extract E-Tag Header
+	args := make(map[string]interface{})
+	args["If-Match"] = getEtagHeader(readResp, conn)
+
+	resp, err := conn.VMAPIInstance.MigrateNicById(utils.StringPtr(vmExtID.(string)), utils.StringPtr(extID.(string)), &body, args)
+	if err != nil {
+		return diag.Errorf("error while migrate nic : %v", err)
+	}
+
+	TaskRef := resp.Data.GetValue().(import1.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the VM to be available
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for nic (%s) to migrate: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
+
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching vm UUID : %v", err)
+	}
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Migrate NIC Task Details: %s", string(aJSON))
+
+	d.SetId(resource.UniqueId())
+	return nil
+}
+
+func ResourceNutanixVmsNetworkDeviceMigrateV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
