@@ -3,6 +3,7 @@ package vmmv2
 import (
 	"context"
 	"encoding/json"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,6 +13,7 @@ import (
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	import7 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/images/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -167,11 +169,11 @@ func ResourceNutanixImagePlacementV2Create(ctx context.Context, d *schema.Resour
 	// calling group API to poll for completion of task
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the ImagePlacement to be available
+	// Wait for the task to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -180,8 +182,7 @@ func ResourceNutanixImagePlacementV2Create(ctx context.Context, d *schema.Resour
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -193,10 +194,16 @@ func ResourceNutanixImagePlacementV2Create(ctx context.Context, d *schema.Resour
 		errorMessage := errorList[0].(map[string]interface{})
 		return diag.Errorf("error while fetching Image placement policy UUID : %v", errorMessage["message"])
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Image Placement Policy Task Details: %s", string(aJSON))
+
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeImagePlacementPolicy, "Image placement policy")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(utils.StringValue(uuid))
 	return ResourceNutanixImagePlacementV2Read(ctx, d, meta)
 }
 
@@ -321,12 +328,12 @@ func ResourceNutanixImagePlacementV2Update(ctx context.Context, d *schema.Resour
 		// calling group API to poll for completion of task
 
 		taskconn := meta.(*conns.Client).PrismAPI
-		// Wait for the ImagePlacement to be available
+		// Wait for the task to complete
 		stateConf := &resource.StateChangeConf{
 			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 			Target:  []string{"SUCCEEDED"},
-			Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-			Timeout: d.Timeout(schema.TimeoutCreate),
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutUpdate),
 		}
 
 		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -365,11 +372,11 @@ func suspendAction(ctx context.Context, conn *vmm.Client, d *schema.ResourceData
 	// calling group API to poll for completion of task
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the ImagePlacement to be available
+	// Wait for the task to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -408,11 +415,11 @@ func resumeAction(ctx context.Context, conn *vmm.Client, d *schema.ResourceData,
 	// calling group API to poll for completion of task
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the ImagePlacement to be available
+	// Wait for the task to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -450,12 +457,12 @@ func ResourceNutanixImagePlacementV2Delete(ctx context.Context, d *schema.Resour
 	// calling group API to poll for completion of task
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the ImagePlacement to be available
+	// Wait for the task to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {

@@ -16,6 +16,7 @@ import (
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -1534,11 +1535,11 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
+	// Wait for the task to complete
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -1547,20 +1548,20 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		return diag.Errorf("error while fetching vm UUID : %v", err)
+		return diag.Errorf("error while fetching VM UUID : %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Virtual Machine Create Task Details: %s", string(aJSON))
+
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeVM, "Virtual Machine")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(utils.StringValue(uuid))
 
 	// read VM
 
@@ -1589,12 +1590,12 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	}
 	powertaskUUID := PowerTaskRef.ExtId
 
-	// Wait for the VM to be available
+	// Wait for the task to complete
 	powerStateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(powertaskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(powertaskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := powerStateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -1603,7 +1604,7 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 
 	// If power state is ON, then wait for the VM to be available
 	if d.Get("power_state") == "ON" {
-		// Wait for the VM to be available
+		// Wait for the task to complete
 		waitIPConf := &resource.StateChangeConf{
 			Pending:    []string{"WAITING"},
 			Target:     []string{"AVAILABLE"},
@@ -1822,12 +1823,12 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		taskUUID := TaskRef.ExtId
 
 		taskconn := meta.(*conns.Client).PrismAPI
-		// Wait for the VM to be available
+		// Wait for the task to complete
 		stateConf := &resource.StateChangeConf{
-			Pending: []string{"QUEUED", "RUNNING"},
+			Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 			Target:  []string{"SUCCEEDED"},
-			Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-			Timeout: d.Timeout(schema.TimeoutCreate),
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutUpdate),
 		}
 
 		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -1864,12 +1865,12 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				taskUUID := TaskRef.ExtId
 
 				taskconn := meta.(*conns.Client).PrismAPI
-				// Wait for the VM to be available
+				// Wait for the task to complete
 				stateConf := &resource.StateChangeConf{
-					Pending: []string{"QUEUED", "RUNNING"},
+					Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 					Target:  []string{"SUCCEEDED"},
-					Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-					Timeout: d.Timeout(schema.TimeoutCreate),
+					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+					Timeout: d.Timeout(schema.TimeoutDelete),
 				}
 
 				if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -1916,12 +1917,12 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				taskUUID := TaskRef.ExtId
 
 				taskconn := meta.(*conns.Client).PrismAPI
-				// Wait for the VM to be available
+				// Wait for the task to complete
 				stateConf := &resource.StateChangeConf{
-					Pending: []string{"QUEUED", "RUNNING"},
+					Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 					Target:  []string{"SUCCEEDED"},
-					Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-					Timeout: d.Timeout(schema.TimeoutCreate),
+					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+					Timeout: d.Timeout(schema.TimeoutUpdate),
 				}
 
 				if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -1951,11 +1952,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				taskUUID := TaskRef.ExtId
 
 				taskconn := meta.(*conns.Client).PrismAPI
-				// Wait for the VM to be available
+				// Wait for the task to complete
 				stateConf := &resource.StateChangeConf{
-					Pending: []string{"QUEUED", "RUNNING"},
+					Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 					Target:  []string{"SUCCEEDED"},
-					Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 					Timeout: d.Timeout(schema.TimeoutCreate),
 				}
 
@@ -1993,12 +1994,12 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				taskUUID := TaskRef.ExtId
 
 				taskconn := meta.(*conns.Client).PrismAPI
-				// Wait for the VM to be available
+				// Wait for the task to complete
 				stateConf := &resource.StateChangeConf{
-					Pending: []string{"QUEUED", "RUNNING"},
+					Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 					Target:  []string{"SUCCEEDED"},
-					Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-					Timeout: d.Timeout(schema.TimeoutCreate),
+					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+					Timeout: d.Timeout(schema.TimeoutDelete),
 				}
 
 				if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -2029,12 +2030,12 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				taskUUID := TaskRef.ExtId
 
 				taskconn := meta.(*conns.Client).PrismAPI
-				// Wait for the VM to be available
+				// Wait for the task to complete
 				stateConf := &resource.StateChangeConf{
-					Pending: []string{"QUEUED", "RUNNING"},
+					Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 					Target:  []string{"SUCCEEDED"},
-					Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-					Timeout: d.Timeout(schema.TimeoutCreate),
+					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+					Timeout: d.Timeout(schema.TimeoutUpdate),
 				}
 
 				if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -2063,11 +2064,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				taskUUID := TaskRef.ExtId
 
 				taskconn := meta.(*conns.Client).PrismAPI
-				// Wait for the VM to be available
+				// Wait for the task to complete
 				stateConf := &resource.StateChangeConf{
-					Pending: []string{"QUEUED", "RUNNING"},
+					Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 					Target:  []string{"SUCCEEDED"},
-					Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 					Timeout: d.Timeout(schema.TimeoutCreate),
 				}
 
@@ -2102,11 +2103,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				taskUUID := TaskRef.ExtId
 
 				taskconn := meta.(*conns.Client).PrismAPI
-				// Wait for the VM to be available
+				// Wait for the task to complete
 				stateConf := &resource.StateChangeConf{
-					Pending: []string{"QUEUED", "RUNNING"},
+					Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 					Target:  []string{"SUCCEEDED"},
-					Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 					Timeout: d.Timeout(schema.TimeoutCreate),
 				}
 
@@ -2139,12 +2140,12 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				taskUUID := TaskRef.ExtId
 
 				taskconn := meta.(*conns.Client).PrismAPI
-				// Wait for the VM to be available
+				// Wait for the task to complete
 				stateConf := &resource.StateChangeConf{
-					Pending: []string{"QUEUED", "RUNNING"},
+					Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 					Target:  []string{"SUCCEEDED"},
-					Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-					Timeout: d.Timeout(schema.TimeoutCreate),
+					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+					Timeout: d.Timeout(schema.TimeoutDelete),
 				}
 
 				if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -2181,12 +2182,12 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				taskUUID := TaskRef.ExtId
 
 				taskconn := meta.(*conns.Client).PrismAPI
-				// Wait for the VM to be available
+				// Wait for the task to complete
 				stateConf := &resource.StateChangeConf{
-					Pending: []string{"QUEUED", "RUNNING"},
+					Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 					Target:  []string{"SUCCEEDED"},
-					Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-					Timeout: d.Timeout(schema.TimeoutCreate),
+					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+					Timeout: d.Timeout(schema.TimeoutDelete),
 				}
 
 				if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -2217,12 +2218,12 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				taskUUID := TaskRef.ExtId
 
 				taskconn := meta.(*conns.Client).PrismAPI
-				// Wait for the VM to be available
+				// Wait for the task to complete
 				stateConf := &resource.StateChangeConf{
-					Pending: []string{"QUEUED", "RUNNING"},
+					Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 					Target:  []string{"SUCCEEDED"},
-					Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-					Timeout: d.Timeout(schema.TimeoutCreate),
+					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+					Timeout: d.Timeout(schema.TimeoutUpdate),
 				}
 
 				if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -2251,11 +2252,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				taskUUID := TaskRef.ExtId
 
 				taskconn := meta.(*conns.Client).PrismAPI
-				// Wait for the VM to be available
+				// Wait for the task to complete
 				stateConf := &resource.StateChangeConf{
-					Pending: []string{"QUEUED", "RUNNING"},
+					Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 					Target:  []string{"SUCCEEDED"},
-					Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 					Timeout: d.Timeout(schema.TimeoutCreate),
 				}
 
@@ -2291,11 +2292,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				taskUUID := TaskRef.ExtId
 
 				taskconn := meta.(*conns.Client).PrismAPI
-				// Wait for the VM to be available
+				// Wait for the task to complete
 				stateConf := &resource.StateChangeConf{
-					Pending: []string{"QUEUED", "RUNNING"},
+					Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 					Target:  []string{"SUCCEEDED"},
-					Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 					Timeout: d.Timeout(schema.TimeoutCreate),
 				}
 
@@ -2327,12 +2328,12 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				taskUUID := TaskRef.ExtId
 
 				taskconn := meta.(*conns.Client).PrismAPI
-				// Wait for the VM to be available
+				// Wait for the task to complete
 				stateConf := &resource.StateChangeConf{
-					Pending: []string{"QUEUED", "RUNNING"},
+					Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 					Target:  []string{"SUCCEEDED"},
-					Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-					Timeout: d.Timeout(schema.TimeoutCreate),
+					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+					Timeout: d.Timeout(schema.TimeoutDelete),
 				}
 
 				if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -2368,12 +2369,12 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 			taskUUID := TaskRef.ExtId
 
 			taskconn := meta.(*conns.Client).PrismAPI
-			// Wait for the VM to be available
+			// Wait for the task to complete
 			stateConf := &resource.StateChangeConf{
-				Pending: []string{"QUEUED", "RUNNING"},
+				Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 				Target:  []string{"SUCCEEDED"},
-				Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-				Timeout: d.Timeout(schema.TimeoutCreate),
+				Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+				Timeout: d.Timeout(schema.TimeoutDelete),
 			}
 
 			if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -2403,11 +2404,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 			taskUUID := TaskRef.ExtId
 
 			taskconn := meta.(*conns.Client).PrismAPI
-			// Wait for the VM to be available
+			// Wait for the task to complete
 			stateConf := &resource.StateChangeConf{
-				Pending: []string{"QUEUED", "RUNNING"},
+				Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 				Target:  []string{"SUCCEEDED"},
-				Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+				Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 				Timeout: d.Timeout(schema.TimeoutCreate),
 			}
 
@@ -2463,12 +2464,12 @@ func ResourceNutanixVirtualMachineV2Delete(ctx context.Context, d *schema.Resour
 	// calling group API to poll for completion of task
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
+	// Wait for the task to complete
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -3368,11 +3369,11 @@ func callForPowerOffVM(ctx context.Context, conn *vmm.Client, d *schema.Resource
 
 	prismConn := meta.(*conns.Client).PrismAPI
 
-	// Wait for the VM to be available
+	// Wait for the task to complete
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -3412,12 +3413,12 @@ func callForPowerOnVM(ctx context.Context, conn *vmm.Client, d *schema.ResourceD
 
 	prismConn := meta.(*conns.Client).PrismAPI
 
-	// Wait for the VM to be available
+	// Wait for the task to complete
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
