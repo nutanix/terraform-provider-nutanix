@@ -16,9 +16,16 @@ provider "nutanix" {
   insecure = true
 }
 
+# Create categories
+resource "nutanix_category_v2" "production-category" {
+  key         = "environment"
+  value       = "production"
+  description = "Production environment category"
+}
+
 resource "nutanix_storage_policy_v2" "example" {
   # Required: Storage Policy name (max 64 characters, must be unique)
-  name = "my-storage-policy"
+  name = "storage-policy-production"
 
   # Optional: Compression specification
   compression_spec {
@@ -50,21 +57,7 @@ resource "nutanix_storage_policy_v2" "example" {
   }
 
   # Optional: List of category external IDs (0-20 items), 
-  # Apply policy to specific categories
-  # Each ID must be a valid UUID format
-  # Category external IDs can be fetched from the data source "nutanix_categories_v2"
-  # Example:
-  # data "nutanix_categories_v2" "category-list" {
-  #   filter = "key eq 'category_key'"
-  # }
-  # category_ext_ids = [
-  #   data.nutanix_categories_v2.category-list.categories.0.ext_id,
-  #   data.nutanix_categories_v2.category-list.categories.1.ext_id
-  # ]
-  category_ext_ids = [
-    "4d552748-e119-540a-b06c-3c6f0d213fa2",
-    "5e663859-f220-651b-c17d-4d7f0e324fb3"
-  ]
+  category_ext_ids = [nutanix_category_v2.production-category.ext_id]
 }
 
 
