@@ -30,7 +30,7 @@ func DataSourceNutanixStoragePolicyV2() *schema.Resource {
 				Computed: true,
 			},
 			"category_ext_ids": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},

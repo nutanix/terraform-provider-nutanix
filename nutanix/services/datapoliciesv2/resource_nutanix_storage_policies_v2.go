@@ -15,6 +15,7 @@ import (
 	import2 "github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -42,7 +43,7 @@ func ResourceNutanixStoragePoliciesV2() *schema.Resource {
 				Required: true,
 			},
 			"category_ext_ids": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
@@ -119,10 +120,7 @@ func ResourceNutanixStoragePoliciesV2Create(ctx context.Context, d *schema.Resou
 	}
 
 	if categoryExtIds, ok := d.GetOk("category_ext_ids"); ok {
-		body.CategoryExtIds = []string{}
-		for _, id := range categoryExtIds.([]interface{}) {
-			body.CategoryExtIds = append(body.CategoryExtIds, id.(string))
-		}
+		body.CategoryExtIds = common.ExpandListOfString(categoryExtIds.(*schema.Set).List())
 	}
 
 	if compressionSpec, ok := d.GetOk("compression_spec"); ok && len(compressionSpec.([]interface{})) > 0 {
@@ -180,11 +178,11 @@ func ResourceNutanixStoragePoliciesV2Create(ctx context.Context, d *schema.Resou
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
+	// Wait for the Storage Policy to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -239,10 +237,7 @@ func ResourceNutanixStoragePoliciesV2Update(ctx context.Context, d *schema.Resou
 		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
 	}
 	if d.HasChange("category_ext_ids") {
-		updateSpec.CategoryExtIds = []string{}
-		for _, id := range d.Get("category_ext_ids").([]interface{}) {
-			updateSpec.CategoryExtIds = append(updateSpec.CategoryExtIds, id.(string))
-		}
+		updateSpec.CategoryExtIds = common.ExpandListOfString(d.Get("category_ext_ids").(*schema.Set).List())
 	}
 	if d.HasChange("compression_spec") {
 		updateSpec.CompressionSpec = buildCompressionSpec(d.Get("compression_spec").([]interface{})[0].(map[string]interface{}))
@@ -383,9 +378,9 @@ func waitForTaskCompletion(ctx context.Context, d *schema.ResourceData, meta int
 
 	taskconn := meta.(*conns.Client).PrismAPI
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
