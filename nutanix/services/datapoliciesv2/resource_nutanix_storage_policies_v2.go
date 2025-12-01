@@ -120,7 +120,8 @@ func ResourceNutanixStoragePoliciesV2Create(ctx context.Context, d *schema.Resou
 	}
 
 	if categoryExtIds, ok := d.GetOk("category_ext_ids"); ok {
-		body.CategoryExtIds = common.ExpandListOfString(categoryExtIds.(*schema.Set).List())
+		categoriesList := common.InterfaceToSlice(categoryExtIds)
+		body.CategoryExtIds = common.ExpandListOfString(categoriesList)
 	}
 
 	if compressionSpec, ok := d.GetOk("compression_spec"); ok && len(compressionSpec.([]interface{})) > 0 {
@@ -237,7 +238,8 @@ func ResourceNutanixStoragePoliciesV2Update(ctx context.Context, d *schema.Resou
 		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
 	}
 	if d.HasChange("category_ext_ids") {
-		updateSpec.CategoryExtIds = common.ExpandListOfString(d.Get("category_ext_ids").(*schema.Set).List())
+		categoriesList := common.InterfaceToSlice(d.Get("category_ext_ids"))
+		updateSpec.CategoryExtIds = common.ExpandListOfString(categoriesList)
 	}
 	if d.HasChange("compression_spec") {
 		updateSpec.CompressionSpec = buildCompressionSpec(d.Get("compression_spec").([]interface{})[0].(map[string]interface{}))
