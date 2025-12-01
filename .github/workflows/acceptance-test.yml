@@ -25,7 +25,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
         with:
-          ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
+          ref: "refs/pull/${{ github.event.client_payload.pull_request.number }}/merge"
 
       - name: Remove Cached Go Versions
         run: |
@@ -37,9 +37,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.20'
-          check-latest: true  # Ensures the latest patch of Go 1.20 is installed
-          cache: true  # Enables module caching
+          go-version: "1.25.3"
+          check-latest: true # Ensures the latest patch of Go 1.25.3 is installed
+          cache: true # Enables module caching
 
       - name: Verify Go Installation
         run: |
@@ -74,7 +74,7 @@ jobs:
           set -e  # Exit on error
           TERRAFORM_VERSION="1.10.5"
           curl -fsSL -o terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
-          
+
           if [ ! -f terraform.zip ]; then
             echo "Terraform zip file not found!"
             exit 1
@@ -160,8 +160,7 @@ jobs:
                   fi
                   index=$((index+1))
               done
-              export TESTARGS="-run=${runFlag}"
-              echo "TESTARGS = $TESTARGS"
+             
               echo "==> Setup Foundation Config"
               echo '${{ secrets.FOUNDATION_CONFIG }}' > test_foundation_config.json
               echo "==> Setup PC Config"
@@ -169,7 +168,34 @@ jobs:
               echo "==> Setup V4 Config"
               echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
               echo "==> Running testcases..."
-              TF_LOG="ERROR" TF_ACC=1  GOTRACEBACK=all go test ./... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count | tee test_output.log
+              package_path="./..."  # default if no -p argument is passed
+
+              # Extract `-p <package>` argument from the slash command, if provided
+              for arg in $args; do
+                  if [[ "$arg" == "-p" ]]; then
+                      next_is_package=true
+                      continue
+                  fi
+                  if [[ "$next_is_package" == true ]]; then
+                      package_path="./nutanix/services/$arg"
+                      next_is_package=false
+                      echo "📦 Running tests only in package: $package_path"
+                      break
+                  fi
+              done
+
+              # If -p was provided, ignore runFlag since it contains arg polluted by '-p'
+              if [[ "$package_path" != "./..." ]]; then
+                  # Package provided → run all tests in that package
+                  TESTARGS="-run=."
+              else
+                  # No package provided → run only the tests specified in runFlag
+                  TESTARGS="-run=${runFlag}"
+              fi
+
+               echo "TESTARGS = $TESTARGS"  
+
+              TF_LOG="ERROR" TF_ACC=1 GOTRACEBACK=all go test "$package_path" -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count | tee test_output.log
               
               set +e  # Ignore failures
 

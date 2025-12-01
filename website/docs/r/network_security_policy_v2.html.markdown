@@ -131,4 +131,15 @@ The following attributes are exported:
 - `last_update_time`: last updated time
 - `creation_time`: creation time of NSP
 
+## Import
+
+This helps to manage existing entities which are not created through terraform. Network Security Policy can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_network_security_policy_v2" "import_nsp" {}
+
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_network_security_policies_v2" "list-nsps"{}
+terraform import nutanix_network_security_policy_v2.import_nsp <UUID>
+```
+
 See detailed information in [Nutanix Security Policy v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0#tag/NetworkSecurityPolicies/operation/createNetworkSecurityPolicy).
