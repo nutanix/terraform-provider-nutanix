@@ -12,10 +12,9 @@ Represents the Cluster entity. Provides the basic infrastructure for compute, st
 
 -> **Recommendations:** It is recommended to create and register the cluster with Prism Central as part of the same workflow. Cluster updates, importing, and destruction through Terraform are supported only when the cluster is registered with Prism Central. To register a cluster with Prism Central use Terraform resource nutanix_pc_registration_v2.
 
-
 -> **Note:**: Cluster resource supports add/remove node operations. However, these operations require cluster to be registered with Prism Central.
 
--> **Note:**: The cluster resource supports associate and de-associate operations for categories, meaning you can attach or detach categories to a cluster using Terraform.
+-> **Note:**: TThe cluster resource supports both associating and disassociating categories, allowing you to attach or detach categories on a cluster through Terraform.
 
 ## Example Usage:
 

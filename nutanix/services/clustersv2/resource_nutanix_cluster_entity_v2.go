@@ -720,7 +720,9 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if categories, ok := d.GetOk("categories"); ok {
-		categoriesListStr := common.ExpandListOfString(categories.([]interface{}))
+		// Convert to slice - handles both TypeList and TypeSet
+		categoriesList := common.InterfaceToSlice(categories)
+		categoriesListStr := common.ExpandListOfString(categoriesList)
 		body.Categories = categoriesListStr
 	}
 
