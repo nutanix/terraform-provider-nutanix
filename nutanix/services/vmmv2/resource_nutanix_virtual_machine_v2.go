@@ -147,7 +147,7 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 				Computed: true,
 			},
 			"categories": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -159,6 +159,15 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 						},
 					},
 				},
+				Set: schema.HashResource(&schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ext_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				}),
 			},
 			"project": {
 				Type:     schema.TypeList,
@@ -2345,7 +2354,9 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 	if d.HasChange("categories") {
 		oldCategories, newCategories := d.GetChange("categories")
-		newAddedCategories, oldDeletedCategories, _ := diffConfig(oldCategories.([]interface{}), newCategories.([]interface{}))
+		oldCategoriesList := common.InterfaceToSlice(oldCategories)
+		newCategoriesList := common.InterfaceToSlice(newCategories)
+		newAddedCategories, oldDeletedCategories, _ := diffConfig(oldCategoriesList, newCategoriesList)
 
 		if len(oldDeletedCategories) > 0 {
 			body := config.DisassociateVmCategoriesParams{}
@@ -3613,7 +3624,7 @@ func prepareVMConfigFromMap(m map[string]interface{}) *config.Vm {
 		body.BiosUuid = utils.StringPtr(bios.(string))
 	}
 	if categories, ok := m["categories"]; ok {
-		body.Categories = expandCategoryReference(categories.([]interface{}))
+		body.Categories = expandCategoryReference(common.InterfaceToSlice(categories))
 	}
 	if project, ok := m["project"]; ok {
 		body.Project = expandProjectReference(project.([]interface{}))
