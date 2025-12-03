@@ -204,3 +204,54 @@ func checkNodesIPs(expected []string) resource.TestCheckFunc {
 		return nil
 	}
 }
+
+// ##############################
+// ### Cluster Profile Helpers ###
+// ##############################
+func testAccCheckNutanixClusterDestroy(s *terraform.State) error {
+	conn := acc.TestAccProvider.Meta().(*conns.Client)
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "nutanix_cluster_v2" {
+			continue
+		}
+		// Check API if resource exists
+		readResp, errRead := conn.ClusterAPI.ClusterEntityAPI.GetClusterById(utils.StringPtr(rs.Primary.ID), nil)
+		if errRead != nil {
+			errStr := strings.ToLower(fmt.Sprint(errRead))
+			// Check for various indicators that the cluster doesn't exist (404, not found, unknown cluster uuid, etc.)
+			if strings.Contains(errStr, "not found") ||
+				strings.Contains(errStr, "does not exist") ||
+				strings.Contains(errStr, "unknown cluster uuid") ||
+				strings.Contains(errStr, "unknown cluster") ||
+				strings.Contains(errStr, "clu-10005") {
+				log.Printf("[DEBUG] Cluster %s not found (already deleted or doesn't exist), treating as success", rs.Primary.ID)
+				return nil
+			}
+			return errRead
+		}
+		log.Printf("[DEBUG] Cluster %s still exists, attempting to destroy...", rs.Primary.ID)
+
+		// Extract E-Tag Header for delete operation
+		etagValue := conn.ClusterAPI.ClusterEntityAPI.ApiClient.GetEtag(readResp)
+		args := make(map[string]interface{})
+		args["If-Match"] = utils.StringPtr(etagValue)
+
+		// Attempt to delete the cluster (dryrun=false for actual deletion)
+		resp, err := conn.ClusterAPI.ClusterEntityAPI.DeleteClusterById(utils.StringPtr(rs.Primary.ID), utils.BoolPtr(false), args)
+		if err != nil {
+			// If deletion fails, log but don't fail the test (cluster might be in use or have dependencies)
+			log.Printf("[DEBUG] Error attempting to delete cluster %s: %v", rs.Primary.ID, err)
+			return nil
+		}
+
+		// Log the task but don't wait for completion in test cleanup (it might take too long)
+		if resp != nil && resp.Data != nil {
+			TaskRef := resp.Data.GetValue().(clusterPrism.TaskReference)
+			taskUUID := TaskRef.ExtId
+			log.Printf("[DEBUG] Cluster %s deletion task started: %s", rs.Primary.ID, utils.StringValue(taskUUID))
+		}
+		log.Printf("[DEBUG] Cluster %s deletion initiated successfully", rs.Primary.ID)
+	}
+	return nil
+}

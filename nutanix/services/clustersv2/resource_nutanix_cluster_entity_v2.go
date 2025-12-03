@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -30,6 +31,97 @@ const (
 	CANCELED = "CANCELLED"
 )
 
+// customizeClusterProfileExtIDDiff forces Terraform to detect changes when cluster_profile_ext_id
+// is explicitly set to empty or removed from config. This is needed because computed+optional
+// attributes may not trigger HasChange when going from a value to empty.
+func customizeClusterProfileExtIDDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	// Get old and new values using GetChange (old from state, new from config)
+	oldValRaw, newValRaw := d.GetChange("cluster_profile_ext_id")
+	oldValStr := ""
+	newValStr := ""
+	if oldValRaw != nil {
+		oldValStr = oldValRaw.(string)
+	}
+	if newValRaw != nil {
+		newValStr = newValRaw.(string)
+	}
+
+	// If old and new are the same, no change needed
+	if oldValStr == newValStr {
+		log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: cluster_profile_ext_id is the same")
+		return nil
+	}
+
+	// If there's no old value, nothing to disassociate
+	if oldValStr == "" {
+		log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: cluster_profile_ext_id is empty")
+		return nil
+	}
+
+	// Check if the attribute was explicitly set to empty or removed from config
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		// Config is null/unknown, can't determine - but if newValStr is empty and oldValStr is not,
+		// it means we're going from a value to empty, so force the diff
+		if newValStr == "" && oldValStr != "" {
+			log.Printf("[DEBUG] CustomizeDiff: cluster_profile_ext_id changed to empty (config unknown), forcing diff. Old: '%s'", oldValStr)
+			if err := d.SetNew("cluster_profile_ext_id", ""); err != nil {
+				log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: error setting new cluster_profile_ext_id: %v", err)
+				return err
+			}
+			return nil
+		}
+		return nil
+	}
+
+	configMap := rawConfig.AsValueMap()
+	val, exists := configMap["cluster_profile_ext_id"]
+
+	// Case 1: Attribute was removed from config (exists in state but not in config)
+	if !exists && oldValStr != "" {
+		log.Printf("[DEBUG] CustomizeDiff: cluster_profile_ext_id removed from config, forcing diff. Old: '%s'", oldValStr)
+		// Force a diff by setting new value to empty
+		if err := d.SetNew("cluster_profile_ext_id", ""); err != nil {
+			log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: error setting new cluster_profile_ext_id: %v", err)
+			return err
+		}
+		log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: cluster_profile_ext_id set to empty")
+		return nil
+	}
+
+	// Case 2: Attribute exists in config - check if it's explicitly set to empty
+	if exists && !val.IsNull() && val.IsKnown() {
+		if val.Type().Equals(cty.String) {
+			strVal := val.AsString()
+			if strVal == "" && oldValStr != "" {
+				log.Printf("[DEBUG] CustomizeDiff: cluster_profile_ext_id explicitly set to empty, forcing diff. Old: '%s'", oldValStr)
+				// Force a diff by setting new value to empty
+				if err := d.SetNew("cluster_profile_ext_id", ""); err != nil {
+					log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: error setting new cluster_profile_ext_id: %v", err)
+					return err
+				}
+				log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: cluster_profile_ext_id set to empty")
+				return nil
+			}
+		}
+	}
+
+	// Case 3: HasChange detected a change, but we need to ensure empty string is explicitly set
+	// when going from non-empty to empty (this handles computed values that might be empty)
+	if d.HasChange("cluster_profile_ext_id") && newValStr == "" && oldValStr != "" {
+		log.Printf("[DEBUG] CustomizeDiff: cluster_profile_ext_id changed from non-empty to empty, forcing explicit empty string. Old: '%s'", oldValStr)
+		if err := d.SetNew("cluster_profile_ext_id", ""); err != nil {
+			log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: error setting new cluster_profile_ext_id: %v", err)
+			return err
+		}
+		log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: cluster_profile_ext_id set to empty")
+		return nil
+	}
+
+	log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: cluster_profile_ext_id no change needed")
+	return nil
+}
+
 func ResourceNutanixClusterV2() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: ResourceNutanixClusterV2Create,
@@ -39,6 +131,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: clusterImportFunc,
 		},
+		CustomizeDiff: customizeClusterProfileExtIDDiff,
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -671,7 +764,19 @@ func ResourceNutanixClusterV2() *schema.Resource {
 			},
 			"cluster_profile_ext_id": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Suppress diff if both old and new are empty (treat empty string and nil as equivalent)
+					oldTrimmed := strings.TrimSpace(old)
+					newTrimmed := strings.TrimSpace(new)
+					log.Printf("[DEBUG] cluster_profile_ext_id DiffSuppressFunc: oldTrimmed: %s, newTrimmed: %s", oldTrimmed, newTrimmed)
+					if oldTrimmed == "" && newTrimmed == "" {
+						return true
+					}
+					// Otherwise, let Terraform handle the diff normally
+					return false
+				},
 			},
 			"backup_eligibility_score": {
 				Type:     schema.TypeInt,
@@ -822,6 +927,18 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 			return diags
 		}
 		nodeChanges = true
+	}
+
+	// === Handle Cluster Profile association update ===
+	// Check if cluster_profile_ext_id changed or was explicitly set to empty
+	// For computed+optional attributes, we need to check both HasChange and if it was explicitly set to empty
+	hasChange := d.HasChange("cluster_profile_ext_id")
+	isExplicitlySetToEmpty := isClusterProfileExtIDExplicitlySetToEmpty(d)
+
+	if hasChange || isExplicitlySetToEmpty {
+		if diags := handleClusterProfileAssociationUpdate(ctx, d, meta, conn, expand); diags.HasError() {
+			return diags
+		}
 	}
 
 	// === Handle other Cluster field changes ===
@@ -1579,6 +1696,157 @@ func handleNodeChanges(ctx context.Context, d *schema.ResourceData, meta interfa
 	if len(changed) > 0 {
 		b, _ := json.MarshalIndent(changed, "", "  ")
 		log.Printf("[DEBUG] Nodes changed (informational only): %s", string(b))
+	}
+
+	return nil
+}
+
+// isClusterProfileExtIDExplicitlySetToEmpty checks if cluster_profile_ext_id was explicitly set to empty string in the config
+// or removed from the config entirely. This is needed because for computed+optional attributes, Terraform may not detect
+// a change from a value to empty or when the attribute is removed.
+func isClusterProfileExtIDExplicitlySetToEmpty(d *schema.ResourceData) bool {
+	// Check if there's a current value in state (meaning we might be changing from non-empty to empty/removed)
+	currentVal := d.Get("cluster_profile_ext_id").(string)
+	if currentVal == "" {
+		// No current value, so nothing to disassociate
+		return false
+	}
+
+	// Get the raw config to check if the attribute exists and what its value is
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		// Config is null/unknown, can't determine if attribute was removed
+		return false
+	}
+
+	configMap := rawConfig.AsValueMap()
+	val, exists := configMap["cluster_profile_ext_id"]
+
+	if !exists {
+		// Attribute not in config at all (removed from config)
+		log.Printf("[DEBUG] cluster_profile_ext_id removed from config, current value in state: '%s'", currentVal)
+		return true
+	}
+
+	// Attribute exists in config - check if it's explicitly set to empty string
+	if !val.IsNull() && val.IsKnown() {
+		// Check if it's a string type and get its value
+		if val.Type().Equals(cty.String) {
+			strVal := val.AsString()
+			if strVal == "" {
+				// Explicitly set to empty string
+				log.Printf("[DEBUG] cluster_profile_ext_id explicitly set to empty in config, current value in state: '%s'", currentVal)
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func handleClusterProfileAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}, conn *clusters.Client, expand *string) diag.Diagnostics {
+	log.Printf("[DEBUG] Handling cluster profile association update for cluster: %s", d.Id())
+
+	// Get old and new cluster profile ext IDs
+	oldProfileExtIDRaw, newProfileExtIDRaw := d.GetChange("cluster_profile_ext_id")
+	oldProfileExtID := ""
+	newProfileExtID := ""
+	if oldProfileExtIDRaw != nil {
+		oldProfileExtID = oldProfileExtIDRaw.(string)
+	}
+	if newProfileExtIDRaw != nil {
+		newProfileExtID = newProfileExtIDRaw.(string)
+	}
+
+	// Check if the attribute was explicitly set to empty or removed from config
+	// This is needed because GetChange might return the computed value instead of empty
+	// when the attribute is removed or set to empty in the config
+	if isClusterProfileExtIDExplicitlySetToEmpty(d) {
+		log.Printf("[DEBUG] cluster_profile_ext_id was explicitly set to empty or removed, treating new value as empty string")
+		newProfileExtID = ""
+	}
+
+	log.Printf("[DEBUG] Cluster profile association change - old: '%s', new: '%s'", oldProfileExtID, newProfileExtID)
+
+	clusterUUID := d.Id()
+	taskconn := meta.(*conns.Client).PrismAPI
+
+	// Build cluster reference for this cluster
+	clusterRef := config.ClusterReference{
+		Uuid: utils.StringPtr(clusterUUID),
+	}
+	clustersRef := []config.ClusterReference{clusterRef}
+
+	ClusterReferenceListSpec := &config.ClusterReferenceListSpec{
+		Clusters: clustersRef,
+	}
+
+	// Disassociate from old profile if it was set and is different from new
+	if oldProfileExtID != "" && oldProfileExtID != newProfileExtID {
+		log.Printf("[DEBUG] Disassociating cluster %s from cluster profile %s", clusterUUID, oldProfileExtID)
+		disassociateResp, disassociateErr := conn.ClusterProfilesAPI.DisassociateClusterFromClusterProfile(utils.StringPtr(oldProfileExtID), ClusterReferenceListSpec)
+		if disassociateErr != nil {
+			return diag.Errorf("error disassociating cluster from cluster profile: %v", disassociateErr)
+		}
+
+		TaskRef := disassociateResp.Data.GetValue().(import1.TaskReference)
+		taskUUID := TaskRef.ExtId
+
+		// Wait for the disassociation task to complete
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutUpdate),
+		}
+
+		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+			return diag.Errorf("error waiting for cluster profile (%s) to disassociate: %s", utils.StringValue(taskUUID), errWaitTask)
+		}
+
+		log.Printf("[DEBUG] Cluster profile disassociation task %s completed", utils.StringValue(taskUUID))
+		// Get Task Details
+		taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		if err != nil {
+			return diag.Errorf("error while fetching cluster profile disassociation task UUID : %v", err)
+		}
+		taskDetails := taskResp.Data.GetValue().(import2.Task)
+		aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+		log.Printf("[DEBUG] Disassociate Cluster Profile Task Details: %s", string(aJSON))
+	}
+
+	// Associate with new profile if it's set and different from old
+	if newProfileExtID != "" && newProfileExtID != oldProfileExtID {
+		log.Printf("[DEBUG] Associating cluster %s with cluster profile %s", clusterUUID, newProfileExtID)
+		associateResp, associateErr := conn.ClusterProfilesAPI.ApplyClusterProfile(utils.StringPtr(newProfileExtID), ClusterReferenceListSpec, utils.BoolPtr(false))
+		if associateErr != nil {
+			return diag.Errorf("error associating cluster to cluster profile: %v", associateErr)
+		}
+
+		TaskRef := associateResp.Data.GetValue().(import1.TaskReference)
+		taskUUID := TaskRef.ExtId
+
+		// Wait for the association task to complete
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutUpdate),
+		}
+
+		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+			return diag.Errorf("error waiting for cluster profile (%s) to associate: %s", utils.StringValue(taskUUID), errWaitTask)
+		}
+		log.Printf("[DEBUG] Cluster profile association task %s completed", utils.StringValue(taskUUID))
+
+		// Get Task Details
+		taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		if err != nil {
+			return diag.Errorf("error while fetching cluster profile association task UUID : %v", err)
+		}
+		taskDetails := taskResp.Data.GetValue().(import2.Task)
+		aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+		log.Printf("[DEBUG] Associate Cluster Profile Task Details: %s", string(aJSON))
 	}
 
 	return nil
