@@ -1,5 +1,4 @@
 // Package common provides common utilities for the Nutanix Terraform provider.
-// Package common provides common utilities for the Nutanix Terraform provider.
 package common
 
 import (
@@ -30,7 +29,6 @@ func ExpandListOfString(list []interface{}) []string {
 	return stringListStr
 }
 
-// IsExplicitlySet defined to determine whether a particular key (or configuration attribute) within a Terraform resource configuration has been explicitly set by the user.
 // IsExplicitlySet defined to determine whether a particular key (or configuration attribute) within a Terraform resource configuration has been explicitly set by the user.
 // Returns a Boolean (true or false). true indicates that the key was explicitly set with a non-null value; false implies it was either not set, is unknown, or explicitly set to null.
 func IsExplicitlySet(d *schema.ResourceData, key string) bool {
