@@ -187,26 +187,3 @@ func InterfaceToSlice(v interface{}) []interface{} {
 		return []interface{}{v}
 	}
 }
-
-func TaskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-		if err != nil {
-			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
-		}
-
-		// get the group results
-
-		v := vresp.Data.GetValue().(prismConfig.Task)
-
-		if getTaskStatus(v.Status) == "CANCELED" || getTaskStatus(v.Status) == "FAILED" {
-			return v, getTaskStatus(v.Status),
-				fmt.Errorf("error_detail: %s, progress_message: %d", utils.StringValue(v.ErrorMessages[0].Message), utils.IntValue(v.ProgressPercentage))
-		}
-		return v, getTaskStatus(v.Status), nil
-	}
-}
-
-func getTaskStatus(pr *prismConfig.TaskStatus) string {
-	return pr.GetName()
-}
