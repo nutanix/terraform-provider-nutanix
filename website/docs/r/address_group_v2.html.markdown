@@ -12,14 +12,29 @@ Create an Address Group
 
 ## Example Usage
 
-``` hcl
-resource "nutanix_address_groups_v2" "addr_group"{
-    name = "{{ name }}"
-    description = "{{ desc }}"
-    ipv4_addresses{
-        value = "10.0.0.0"
-        prefix_length = 24
-    }
+```hcl
+# Create Address group with ipv4 addresses
+resource "nutanix_address_groups_v2" "ipv4-address" {
+  name        = "address_group_ipv4_address"
+  description = "address group description"
+  ipv4_addresses {
+    value         = "10.0.0.0"
+    prefix_length = 24
+  }
+  ipv4_addresses {
+    value         = "172.0.0.0"
+    prefix_length = 24
+  }
+}
+
+# Create Address group. with ip range
+resource "nutanix_address_groups_v2" "ip-ranges" {
+  name        = "address_group_ip_ranges"
+  description = "address group description"
+  ip_ranges {
+    start_ip = "10.0.0.1"
+    end_ip   = "10.0.0.10"
+  }
 }
 ```
 
@@ -50,9 +65,18 @@ The following attributes are exported:
 
 * `ext_id`: address group uuid.
 * `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
-* `tenant_id`: A globally unique identifier that represents the tenant that owns this entity. 
+* `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
 * `policy_references`: Reference to policy associated with Address Group.
 * `created_by`: created by.
 
+## Import
 
-See detailed information in [Nutanix Address Groups V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0).
+This helps to manage existing entities which are not created through terraform. Address Group can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_address_groups_v2" "addr_groups" {}
+
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_address_groups_v2" "fetch_addr_groups"{}
+terraform import nutanix_address_groups_v2.addr_groups <UUID>
+
+See detailed information in [Nutanix Address Group V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0#tag/AddressGroups/operation/createAddressGroup).

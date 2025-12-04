@@ -12,8 +12,19 @@ Provides a datasource to retrieve all User(s).
 
 ## Example Usage
 
-``` hcl
-data "nutanix_users_v2" "users"{}
+```hcl
+# list all users
+data "nutanix_users_v2" "list-users"{}
+
+
+data "nutanix_users_v2" "filtered-users" {
+  filter = "username eq 'username-example'"
+}
+
+# list users of user_type SERVICE_ACCOUNT
+data "nutanix_users_v2" "list_service_account" {
+	filter = "userType eq Schema.Enums.UserType'SERVICE_ACCOUNT'"
+}
 ```
 
 ##  Argument Reference
@@ -45,7 +56,7 @@ The following arguments are supported:
     * lastUpdatedTime
     * userType
     * username
-* `select` : A URL query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the \$select must conform to the OData V4.01 URL conventions. If a \$select expression consists of a single select item that is an asterisk (i.e., *), then all properties on the matching resource will be returned. following fields: 
+* `select` : A URL query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the \$select must conform to the OData V4.01 URL conventions. If a \$select expression consists of a single select item that is an asterisk (i.e., *), then all properties on the matching resource will be returned. following fields:
     * additionalAttributes
     * bucketsAccessKeys
     * createdBy
@@ -76,7 +87,7 @@ The following attributes are exported:
 
 ### User Groups
 
-The users  attribute element contains the following attributes:
+The `users`  attribute element contains the following attributes:
 
 * `tenant_id` - A globally unique identifier that represents the tenant that owns this entity. The system automatically assigns it, and it and is immutable from an API consumer perspective (some use cases may cause this Id to change - For instance, a use case may require the transfer of ownership of the entity, but these cases are handled automatically on the server).
 * `ext_id` - The External Identifier of the User Group.
@@ -95,6 +106,7 @@ Type of the User.
 * `is_force_reset_password`: - Flag to force the User to reset password.
 * `additional_attributes`: -  Any additional attribute for the User.
 * `status`: - Status of the User. `ACTIVE`: Denotes that the local User is active. `INACTIVE`: Denotes that the local User is inactive and needs to be reactivated.
+* `description`: - Description of the user.
 * `buckets_access_keys`: - Bucket Access Keys for the User.
 * `last_login_time`: - Last successful logged in time for the User.
 * `created_time`: - Creation time of the User.

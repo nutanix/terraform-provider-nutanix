@@ -154,6 +154,22 @@ func DataSourceNutanixImage() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"data_source_reference": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"architecture": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -224,6 +240,16 @@ func dataSourceNutanixImageRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("state", utils.StringValue(resp.Status.State))
 	d.Set("image_type", resp.Status.Resources.ImageType)
 	d.Set("source_uri", resp.Spec.Resources.SourceURI)
+
+	dataSrcRef := make(map[string]string)
+	if ref := resp.Status.Resources.DataSourceReference; ref != nil {
+		dataSrcRef["uuid"] = utils.StringValue(ref.UUID)
+		dataSrcRef["kind"] = utils.StringValue(ref.Kind)
+	}
+	if err := d.Set("data_source_reference", []interface{}{dataSrcRef}); err != nil {
+		return diag.FromErr(err)
+	}
+
 	d.Set("size_bytes", utils.Int64Value(resp.Status.Resources.SizeBytes))
 
 	uriList := make([]string, 0, len(resp.Status.Resources.RetrievalURIList))
@@ -242,6 +268,16 @@ func dataSourceNutanixImageRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err := d.Set("checksum", checksum); err != nil {
+		return diag.FromErr(err)
+	}
+
+	version := make(map[string]string)
+	if resp.Status.Resources.Version != nil {
+		version["product_name"] = utils.StringValue(resp.Status.Resources.Version.ProductName)
+		version["product_version"] = utils.StringValue(resp.Status.Resources.Version.ProductVersion)
+	}
+
+	if err := d.Set("version", version); err != nil {
 		return diag.FromErr(err)
 	}
 

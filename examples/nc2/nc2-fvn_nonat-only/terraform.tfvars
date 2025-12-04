@@ -1,0 +1,3 @@
+
+NUTANIX_WAIT_TIMEOUT    = 10
+

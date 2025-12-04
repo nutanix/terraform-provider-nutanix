@@ -18,14 +18,18 @@ variable "pe_password" {
   type = string
 }
 
-variable "cvm_ip" {
+variable "node_ip" {
   type = string
 }
 
-variable "new_username" {
+variable "username" {
   type = string
 }
 
-variable "new_password" {
+variable "password" {
   type = string
+}
+
+variable "nodes_ip" {
+  type = list(string)
 }

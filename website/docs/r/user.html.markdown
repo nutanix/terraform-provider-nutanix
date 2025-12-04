@@ -12,7 +12,7 @@ Provides a resource to create a user based on the input parameters.
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_user" "user" {
 	directory_service_user {
 		user_principal_name = "test-user@ntnxlab.local"
@@ -24,7 +24,7 @@ resource "nutanix_user" "user" {
 ```
 
 
-``` hcl
+```hcl
 resource "nutanix_user" "user" {
 	identity_provider_user {
 		username = "username"

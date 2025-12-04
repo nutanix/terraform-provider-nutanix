@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_cluster_entity_v2"
-sidebar_current: "docs-nutanix-resource-cluster-entity"
+sidebar_current: "docs-nutanix-resource-cluster-entity-v2"
 description: |-
    Provides the basic infrastructure for compute, storage and networking.
 ---
@@ -10,16 +10,24 @@ description: |-
 
 Represents the Cluster entity. Provides the basic infrastructure for compute, storage and networking. This includes the operations that can be carried out on cluster and its subresources - host (node), rsyslog servers etc and actions that can be performed on cluster - add a node, remove a node, attach categories.
 
-## Example Usage
+-> **Recommendations:** It is recommended to create and register the cluster with Prism Central as part of the same workflow. Cluster updates, importing, and destruction through Terraform are supported only when the cluster is registered with Prism Central. To register a cluster with Prism Central use Terraform resource nutanix_pc_registration_v2.
+
+
+-> **Note:**: Cluster resource supports add/remove node operations. However, these operations require cluster to be registered with Prism Central.
+
+
+## Example Usage:
+
+### Example 1: 1 Node Cluster Creation Example
 
 ```hcl
 resource "nutanix_cluster_v2" "cluster"{
-  name = "terraform-test-cluster"
+  name = "cluster-example"
   nodes {
     node_list {
       controller_vm_ip {
         ipv4 {
-          value = "<controller_vm_ip_ipv4>"
+          value = "10.xx.xx.xx"
         }
       }
     }
@@ -35,30 +43,30 @@ resource "nutanix_cluster_v2" "cluster"{
   network {
     external_address {
       ipv4 {
-        value = "<external_address_ipv4>"
+        value = "10.xx.xx.xx"
       }
     }
     external_data_services_ip {
       ipv4 {
-        value = "<external_data_services_ip_ipv4>"
+        value = "10.xx.xx.xx"
       }
     }
     ntp_server_ip_list {
       fqdn {
-        value = "<ntp_server_ip_list_fqdn_0>"
+        value = "ntp.server.nutanix.com"
       }
     }
     ntp_server_ip_list {
       fqdn {
-        value = "<ntp_server_ip_list_fqdn_1>"
+        value = "ntp.server_1.nutanix.com"
       }
-    }   
+    }
     smtp_server {
       email_address = "example.ex@exmple.com"
       server {
         ip_address {
           ipv4 {
-            value = "<smtp_server_ip_ipv4>"
+            value = "10.xx.xx.xx"
           }
         }
         port     = 123
@@ -71,6 +79,61 @@ resource "nutanix_cluster_v2" "cluster"{
 }
 ```
 
+### Example 2: 3 Node Cluster Creation Example and Adding Nodes Example
+
+```hcl
+resource "nutanix_cluster_v2" "cluster-3nodes" {
+  name   = "tf-cluster-3nodes"
+  dryrun = false
+  nodes {
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = "10.00.00.1"
+        }
+      }
+    }
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = "10.00.00.2"
+        }
+      }
+    }
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = "10.00.00.3"
+        }
+      }
+    }
+
+    ## after creating and registering the cluster with prism central,
+    ## to add another node to the cluster, uncomment the following block
+    # node_list {
+    #   controller_vm_ip {
+    #     ipv4 {
+    #       value = "10.00.00.4"
+    #     }
+    #   }
+    #   should_skip_host_networking   = false
+    #   should_skip_pre_expand_checks = true
+    # }
+  }
+  config {
+    cluster_function = local.clusters.config.cluster_functions
+    cluster_arch     = local.clusters.config.cluster_arch
+    fault_tolerance_state {
+      domain_awareness_level = "NODE"
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [links, categories, config.0.cluster_function]
+  }
+}
+```
+
 
 ## Argument Reference
 
@@ -78,7 +141,7 @@ The following arguments are supported:
 > after creating the cluster, you need to register the cluster with prism central to be able to use it.
 * `dryrun`: - (Optional) parameter that allows long-running operations to execute in a dry-run mode providing ability to identify trouble spots and system failures without performing the actual operation. Additionally this mode also offers a summary snapshot of the resultant system in order to better understand how things fit together. The operation runs in dry-run mode only if the provided value is true.
 * `name`: - (Required) The name for the vm.
-* `nodes`: - (Optional) The reference to a node.
+* `nodes`: - (Optional) The reference to a node and remove node parameters.
 * `config`: - (Optional) Cluster configuration details.
 * `network`: - (Optional) Network details of a cluster.
 * `upgrade_status`: - (Optional) The reference to a project.
@@ -98,25 +161,38 @@ The following arguments are supported:
 
 The nodes attribute supports the following:
 * `node_list`: - (Optional) List of nodes in a cluster.
+* `remove_node_params`: - (Optional) Parameters for removing nodes. Supports:
+
+#### remove_node_params Attributes
+* `should_skip_remove`: - (Optional, default false) Skip remove operation for the node.
+* `should_skip_prechecks`: - (Optional, default false) Skip remove prechecks.
+* `extra_params`: - (Optional) Extra parameters for removing nodes. Supports:
+  * `should_skip_upgrade_check`: - (Optional, default false) Skip upgrade check during node removal.
+  * `skip_space_check`: - (Optional, default false) Skip space check during node removal.
+  * `should_skip_add_check`:- (Optional, default false) Skip add check during node removal.
 
 ### Node List
 
 The nodes attribute supports the following:
 * `controller_vm_ip`: - (Required) An unique address that identifies a device on the internet or a local network in IPv4 or IPv6 format.
 * `host_ip`: - (Optional) An unique address that identifies a device on the internet or a local network in IPv4 or IPv6 format.
+* `should_skip_host_networking`: - (Optional, default false) Flag to indicate if host networking needs to be skipped during node addition.
+* `should_skip_pre_expand_checks`: - (Optional, default false) Flag to indicate if pre expand checks needs to be skipped during node addition.
+* `should_skip_add_node`: - (Optional, default false) Flag to indicate if add node operation needs to be skipped during node addition.
+
 
 ### Controller VM IP
 
 The controller_vm_ip attribute supports the following:
 
-* `ipv4`: - (Optional) ip adresss params.
+* `ipv4`: - (Optional) ip address params.
 * `ipv6`: - (Optional) Ip address params.
 
 ### Host IP
 
 The host_ip attribute supports the following:
 
-* `ipv4`: - (Optional) ip adresss params.
+* `ipv4`: - (Optional) ip address params.
 * `ipv6`: - (Optional) Ip address params.
 
 ### Config
@@ -124,16 +200,16 @@ The host_ip attribute supports the following:
 The config attribute supports the following:
 
 * `build_info`: - (Optional) Build information details.
-* `cluster_function`: - (Optional) Cluster function. This is part of payload for cluster 
+* `cluster_function`: - (Optional) Cluster function. This is part of payload for cluster
   create operation only (allowed enum values for creation are AOS, ONE_NODE & TWO_NODE only).
     Valid values are:
      - "AOS"
-     - "PRISM_CENTRAL"	
-     - "CLOUD_DATA_GATEWAY"	
-     - "AFS"	
-     - "ONE_NODE"	
-     - "TWO_NODE"	
-     - "ANALYTICS_PLATFORM"	
+     - "PRISM_CENTRAL"
+     - "CLOUD_DATA_GATEWAY"
+     - "AFS"
+     - "ONE_NODE"
+     - "TWO_NODE"
+     - "ANALYTICS_PLATFORM"
 * `authorized_public_key_list`: - (Optional) Public ssh key details. This is part of payload for cluster update operation only.
 * `redundancy_factor`: - (Optional) Redundancy factor of a cluster. This is part of payload for both cluster create & update operations.
 * `cluster_arch`: - (Optional) Cluster arch.
@@ -153,7 +229,7 @@ The config attribute supports the following:
     Valid values are:
      - "DISABLED"	Disabled encryption status.
      - "ENABLED"	Enabled encryption status.
-* `pulse_status`: - (Optional) Pulse status for a cluster.
+* `pulse_status`: - (Optional) Pulse status for a cluster. `supported only for update operations and not available during creation.`
 
 ### Build info
 
@@ -214,21 +290,21 @@ The pulse_status attribute supports the following:
 
 The external_address attribute supports the following:
 
-* `ipv4`: - (Optional) ip adresss params.
+* `ipv4`: - (Optional) ip address params.
 * `ipv6`: - (Optional) Ip address params.
 
 ### External Data Services IP
 
 The external_data_services_ip attribute supports the following:
 
-* `ipv4`: - (Optional) ip adresss params.
+* `ipv4`: - (Optional) ip address params.
 * `ipv6`: - (Optional) Ip address params.
 
 ### Name Server IP List
 
 The name_server_ip_list attribute supports the following:
 
-* `ipv4`: - (Optional) ip adresss params.
+* `ipv4`: - (Optional) ip address params.
 * `ipv6`: - (Optional) Ip address params.
 * `fqdn`: - (Optional) A fully qualified domain name that specifies its exact location in the tree hierarchy of the Domain Name System.
 
@@ -236,7 +312,7 @@ The name_server_ip_list attribute supports the following:
 
 The ntp_server_ip_list attribute supports the following:
 
-* `ipv4`: - (Optional) ip adresss params.
+* `ipv4`: - (Optional) ip address params.
 * `ipv6`: - (Optional) Ip address params.
 * `fqdn`: - (Optional) A fully qualified domain name that specifies its exact location in the tree hierarchy of the Domain Name System.
 
@@ -267,7 +343,7 @@ The server attribute supports the following:
 
 The ip_address attribute supports the following:
 
-* `ipv4`: - (Optional) ip adresss params.
+* `ipv4`: - (Optional) ip address params.
 * `ipv6`: - (Optional) Ip address params.
 * `fqdn`: - (Optional) A fully qualified domain name that specifies its exact location in the tree hierarchy of the Domain Name System.
 
@@ -275,7 +351,7 @@ The ip_address attribute supports the following:
 
 The masquerading_ip attribute supports the following:
 
-* `ipv4`: - (Optional) ip adresss params.
+* `ipv4`: - (Optional) ip address params.
 * `ipv6`: - (Optional) Ip address params.
 
 ### Management Server
@@ -294,7 +370,7 @@ The management_server attribute supports the following:
 
 The ip attribute supports the following:
 
-* `ipv4`: - (Optional) ip adresss params.
+* `ipv4`: - (Optional) ip address params.
 * `ipv6`: - (Optional) Ip address params.
 
 ### Backplane
@@ -360,4 +436,33 @@ The ipv6 attribute supports the following:
 * `prefix_length`: - (Optional) The prefix length of the network to which this host IPv4 address belongs.
 * `value`: - (Required) Ip address.
 
-See detailed information in [Nutanix Cluster Entity V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0).
+## Import
+
+This helps to manage existing entities which are not created through terraform. Clusters can be imported using the `UUID`.  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_cluster_v2" "import_cluster" {}
+
+// execute this command in cli
+terraform import nutanix_cluster_v2.import_cluster <UUID>
+```
+
+## What happens when you do terraform destroy for nutanix_clusters_v2?  First thing, inorder to destroy the cluster from Terraform it need to be registered.
+```
+1. Internally, It deregisters the cluster and its nodes from Prism Central
+
+* The cluster and all its member nodes are gracefully deregistered from Prism Central.
+
+* This ensures the cluster is no longer visible in the PC inventory or associated with any management plane workflows.
+
+2. Remove the clustering configuration on each node
+
+* Once deregistration completes, teardown of the cluster configuration on each node begins.
+
+* This effectively disbands the cluster, converting all participating nodes back into standalone (unconfigured) nodes.
+
+* At this stage, the nodes no longer share storage, network, or management metadata — they’re ready to be re-clustered or repurposed.
+
+```
+
+See detailed information in [Nutanix Create Cluster V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/Clusters/operation/createCluster).

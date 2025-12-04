@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	fc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -98,6 +99,36 @@ func ResourceNutanixFCImageCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
+						},
+					},
+				},
+			},
+			"hypervisor_isos": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"hyperv_sku": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"url": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"hyperv_product_key": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"sha256sum": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"hypervisor_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"kvm", "hyperv", "esx"}, false),
 						},
 					},
 				},
@@ -233,6 +264,10 @@ func ResourceNutanixFCImageCluster() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
+						},
+						"server_configuration_data": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
@@ -468,6 +503,14 @@ func ResourceNutanixFCImageCluster() *schema.Resource {
 					},
 				},
 			},
+			"fc_api_key_uuid": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"server_configuration_data": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"cluster_status": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -673,20 +716,20 @@ func expandNetworklist(pr interface{}) []string {
 	return c
 }
 
-func expandHyperVisorIsoDetails(d *schema.ResourceData) *fc.HypervisorIsoDetails {
-	hid := fc.HypervisorIsoDetails{}
-	resourceData, ok := d.GetOk("hypervisor_iso_details")
-	if !ok {
+func expandHyperVisorIsoDetails(config interface{}) *[]fc.HypervisorIsoDetails {
+	if config.([]interface{}) == nil && len(config.([]interface{})) == 0 {
 		return nil
 	}
-	settingsMap := resourceData.([]interface{})[0].(map[string]interface{})
-
+	settingsMap := config.([]interface{})[0].(map[string]interface{})
+	hid := fc.HypervisorIsoDetails{}
 	hid.HypervSku = utils.StringPtr(settingsMap["hyperv_sku"].(string))
 	hid.URL = utils.StringPtr(settingsMap["url"].(string))
 	hid.HypervProductKey = utils.StringPtr(settingsMap["hyperv_product_key"].(string))
 	hid.Sha256sum = utils.StringPtr(settingsMap["sha256sum"].(string))
-
-	return &hid
+	hid.HypervisorType = utils.StringPtr(settingsMap["hypervisor_type"].(string))
+	var hypervisorIsos []fc.HypervisorIsoDetails
+	hypervisorIsos = append(hypervisorIsos, hid)
+	return &hypervisorIsos
 }
 
 func expandNodesList(d *schema.ResourceData) []*fc.Node {
@@ -767,6 +810,17 @@ func expandNodesList(d *schema.ResourceData) []*fc.Node {
 			}
 			node.HardwareAttributesOverride = mapData
 		}
+
+		if serverConfigurationData, ok := nodeSettings["server_configuration_data"]; ok {
+			if serverConfigurationData, ok := serverConfigurationData.(string); ok {
+				// Convert json string to map[string]interface{}
+				var mapData map[string]interface{}
+				if err := json.Unmarshal([]byte(serverConfigurationData), &mapData); err != nil {
+					log.Printf("Error unmarshalling server_configuration_data: %v", err)
+				}
+				node.ServerConfigurationData = mapData
+			}
+		}
 		nodeList = append(nodeList, &node)
 	}
 
@@ -830,15 +884,45 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 		req.SkipClusterCreation = skipClusterCreation.(bool)
 	}
 
+	if hypervisorIsos, ok := d.GetOk("hypervisor_isos"); ok {
+		h := expandHyperVisorIsoDetails(hypervisorIsos)
+		if h != nil {
+			req.HypervisorIsos = h
+		}
+	}
+
+	if hypervisorIsos, ok := d.GetOk("hypervisor_iso_details"); ok {
+		h := expandHyperVisorIsoDetails(hypervisorIsos)
+		if h != nil {
+			req.HypervisorIsoDetails = &(*h)[0]
+		}
+	}
+
+	if serverConfigurationData, ok := d.GetOk("server_configuration_data"); ok {
+		if serverConfigurationData, ok := serverConfigurationData.(string); ok {
+			// Convert json string to map[string]interface{}
+			var mapData map[string]interface{}
+			if err := json.Unmarshal([]byte(serverConfigurationData), &mapData); err != nil {
+				log.Printf("Error unmarshalling server_configuration_data: %v", err)
+			}
+			req.ServerConfigurationData = mapData
+		}
+	}
+
+	if fcAPIKeyUUID, ok := d.GetOk("fc_api_key_uuid"); ok {
+		req.FcMetadata = &fc.FcMetadata{
+			APIKeyUUID: utils.StringPtr(fcAPIKeyUUID.(string)),
+		}
+	}
+
 	req.CommonNetworkSettings = expandCommonNetworkSettings(d)
-	req.HypervisorIsoDetails = expandHyperVisorIsoDetails(d)
 	req.NodesList = expandNodesList(d)
 
 	// Poll to Check whether Nodes are Available for Imaging - Node Detail GET Call
 	for _, vv := range req.NodesList {
 		stateConfig := &resource.StateChangeConf{
 			Pending: []string{"STATE_DISCOVERING", "STATE_UNAVAILABLE"},
-			Target:  []string{"STATE_AVAILABLE", "STATE_IMAGING"},
+			Target:  []string{"STATE_AVAILABLE", "STATE_IMAGING", "STATE_ONBOARDED"},
 			Refresh: foundationCentralPollingNode(ctx, conn, *vv.ImagedNodeUUID),
 			Timeout: NodePollTimeout,
 			Delay:   DelayTimeNodeAvailability,
@@ -848,7 +932,7 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 			return diag.Errorf("error waiting for node (%s) to be available: %v", *vv.CvmIP, err)
 		}
 		if progress, ok := infos.(*fc.ImagedNodeDetails); ok {
-			if !(*progress.Available) {
+			if !(*progress.Available) && *progress.NodeState != "STATE_ONBOARDED" {
 				return diag.Errorf("Current Node Available Status: (%s). Node is not available to image or already be a part of cluster", *progress.NodeState)
 			}
 		}

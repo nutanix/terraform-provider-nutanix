@@ -10,6 +10,7 @@ import (
 )
 
 const datasourceNameUser = "data.nutanix_user_v2.test"
+const datasourceNameServiceAccount = "data.nutanix_user_v2.get_service_account"
 
 func TestAccV2NutanixUserDatasource_Basic(t *testing.T) {
 	r := acctest.RandInt()
@@ -18,6 +19,8 @@ func TestAccV2NutanixUserDatasource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
+		// using V3 API to delete user
+		CheckDestroy: testAccCheckNutanixUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testUserDatasourceV4Config(filepath, name),
@@ -38,6 +41,27 @@ func TestAccV2NutanixUserDatasource_Basic(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixUserDatasourceServiceAccount(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-service-account-%d", r)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() {},
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testServiceAccountDataSourceV4Config(name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceNameServiceAccount, "username", name),
+					resource.TestCheckResourceAttr(datasourceNameServiceAccount, "description", "test service account tf"),
+					resource.TestCheckResourceAttr(datasourceNameServiceAccount, "email_id", "terraform_plugin@domain.com"),
+					resource.TestCheckResourceAttr(datasourceNameServiceAccount, "user_type", "SERVICE_ACCOUNT"),
+				),
+			},
+		},
+	})
+}
+
 func testUserDatasourceV4Config(filepath, name string) string {
 	return fmt.Sprintf(`
 
@@ -45,7 +69,7 @@ func testUserDatasourceV4Config(filepath, name string) string {
 			config = (jsondecode(file("%[1]s")))
 			users = local.config.iam.users
 		}
-		
+
 		resource "nutanix_users_v2" "test" {
 			username = "%[2]s"
 			first_name = "first-name-%[2]s"
@@ -57,15 +81,28 @@ func testUserDatasourceV4Config(filepath, name string) string {
 			display_name = "display-name-%[2]s"
 			password = local.users.password
 			user_type = "LOCAL"
-			status = "ACTIVE"  
-			force_reset_password = local.users.force_reset_password   
+			status = "ACTIVE"
+			force_reset_password = local.users.force_reset_password
 		}
-		
+
 		data "nutanix_user_v2" "test" {
 			ext_id = nutanix_users_v2.test.id
 			depends_on = [nutanix_users_v2.test]
-		}			
+		}
+	`, filepath, name)
+}
 
-		
+func testServiceAccountDataSourceV4Config(name string) string {
+	return fmt.Sprintf(`
+	resource "nutanix_users_v2" "service_account" {
+		username = "%[2]s"
+		description = "test service account tf"
+		email_id = "terraform_plugin@domain.com"
+		user_type = "SERVICE_ACCOUNT"
+	}
+
+	data "nutanix_user_v2" "get_service_account" {
+		ext_id = nutanix_users_v2.service_account.id
+	}
 	`, filepath, name)
 }

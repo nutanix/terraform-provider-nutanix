@@ -13,8 +13,8 @@ Fetches the cluster entity details identified by {extId}.
 ## Example Usage
 
 ```hcl
-data "nutanix_cluster_v2" "cluster"{
-  ext_id = "<YOUR-CLUSTER-ID>"
+data "nutanix_cluster_v2" "get-cluster"{
+  ext_id = "c2c249b0-98a0-43fa-9ff6-dcde578d3936"
 }
 ```
 
@@ -84,7 +84,7 @@ The `config` attributes supports the following:
     - "ESX".
     - "HYPERV".
     - "XEN".
-    - "NATIVEHOST".  
+    - "NATIVEHOST".
 * `cluster_function`: - Cluster function. This is part of payload for cluster
   create operation only (allowed enum values for creation are AOS, ONE_NODE & TWO_NODE only).
   Valid values are:
@@ -322,4 +322,4 @@ The `fqdn` attribute supports the following:
 
 * `value`: - The fully qualified domain name of the host.
 
-See detailed information in [Nutanix Cluster V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0).
+See detailed information in [Nutanix Get Cluster V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/Clusters/operation/getClusterById).

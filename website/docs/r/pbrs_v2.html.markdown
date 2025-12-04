@@ -11,64 +11,31 @@ description: |-
 Create a Routing Policy.
 
 
-## Example 
+## Example
 
 ```hcl
-    resource "nutanix_pbr_v2" "pbr-1"{
-      name = "{{ name }}"
-      description = "{{ desc }}"
-      vpc_ext_id = "{{ vpc uuid }}"
-      priority = 14
-      policies{
-        policy_match{
-          source{
-            address_type = "ANY"
-          }
-          destination{
-            address_type = "ANY"
-          }
-          protocol_type = "UDP"
-        }
-        policy_action{
-          action_type  = "PERMIT"
-        }
-      }
-	  }
 
-
-    resource "nutanix_pbr_v2" "pbr-2" {
-      name = "{{ name }}"
-      description = "{{ desc }}"
-      vpc_ext_id = "{{ vpc uuid }}"
-      priority = 11
-      policies{
-        policy_match{
-          source{
-            address_type = "EXTERNAL"
-          }
-          destination{
-            address_type = "SUBNET"
-            subnet_prefix{
-              ipv4{
-                ip{
-                  value= "10.10.10.0"
-                  prefix_length = 24
-                }
-              }
-            }
-          }
-          protocol_type = "ANY"
-        }
-        policy_action{
-          action_type  = "FORWARD"
-          nexthop_ip_address{
-            ipv4{
-              value = "10.10.10.10"
-            }
-          }
-        }
+# create PBR with vpc name with any source or destination or protocol with permit action
+resource "nutanix_pbr_v2" "any-source-destination"{
+  name        = "routing_policy_any_source_destination"
+  description = "routing policy with any source and destination"
+  vpc_ext_id  = "ba250e3e-1db1-4950-917f-a9e2ea35b8e3"
+  priority    = 11
+  policies {
+    policy_match {
+      source {
+        address_type = "ANY"
       }
+      destination {
+        address_type = "ANY"
+      }
+      protocol_type = "UDP"
     }
+    policy_action {
+      action_type = "PERMIT"
+    }
+  }
+}
 ```
 
 ## Argument Reference
@@ -96,7 +63,7 @@ The following arguments are supported:
 * `protocol_parameters`: (Optional) Protocol Params Object.
 
 ### policy_match.source, policy_match.destination
-* `address_type`: (Required) Address Type. Acceptable values are "SUBNET", "EXTERNAL", "ANY" . 
+* `address_type`: (Required) Address Type. Acceptable values are "SUBNET", "EXTERNAL", "ANY" .
 * `subnet_prefix`: (Optional) Subnet Prefix
 
 ### subnet_prefix
@@ -109,9 +76,9 @@ The following arguments are supported:
 
 
 ### protocol_parameters
-* `layer_four_protocol_object`: (Optional) Layer Four Protocol Object. 
+* `layer_four_protocol_object`: (Optional) Layer Four Protocol Object.
 * `icmp_object`: (Optional) ICMP object
-* `protocol_number_object`: (Optional) Protocol Number Object. 
+* `protocol_number_object`: (Optional) Protocol Number Object.
 
 ### layer_four_protocol_object
 * `source_port_ranges`: (Optional) Start and end port ranges object.
@@ -137,7 +104,7 @@ The following arguments are supported:
 
 ### reroute_params
 * `service_ip`: (Optional) An unique address that identifies a device on the internet or a local network in IPv4 or IPv6 format.
-* `reroute_fallback_action`: (Optional) Type of fallback action in reroute case when service VM is down. Acceptable values are "PASSTHROUGH", "NO_ACTION", "ALLOW", "DENY". 
+* `reroute_fallback_action`: (Optional) Type of fallback action in reroute case when service VM is down. Acceptable values are "PASSTHROUGH", "NO_ACTION", "ALLOW", "DENY".
 * `ingress_service_ip`: (Optional) An unique address that identifies a device on the internet or a local network in IPv4 or IPv6 format.
 * `egress_service_ip`: (Optional) An unique address that identifies a device on the internet or a local network in IPv4 or IPv6 format.
 
@@ -158,5 +125,11 @@ The following attributes are exported:
 * `metadata`: Metadata associated with this resource.
 * `vpc`: VPC name for projections
 
+## Import
+This helps to manage existing entities which are not created through terraform. Routing Policy can be imported using the `UUID`.  eg,
+
+`
+terraform import nutanix_pbr_v2.pbr_import <UUID>
+`
 
 See detailed information in [Nutanix Routing Policy v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0).

@@ -120,63 +120,16 @@ func TestAccV2NutanixVpcResource_WithTransitType(t *testing.T) {
 
 func testVpcConfig(name, desc string, vlanID int) string {
 	return fmt.Sprintf(`
-	
-	data "nutanix_clusters" "clusters" {}
+
+	data "nutanix_clusters_v2" "clusters" {}
 
 	locals {
-		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+		cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
 	}
-	
-	resource "nutanix_subnet_v2" "test" {
-		name = "terraform-test-subnet-vpc"
-		description = "test subnet description"
-		cluster_reference = local.cluster0
-		subnet_type = "VLAN"
-		network_id = %[3]d 
-		is_external = true
-		ip_config {
-			ipv4 {
-				ip_subnet {
-					ip {
-						value = "192.168.0.0"
-					}
-					prefix_length = 24
-				}
-				default_gateway_ip {
-					value = "192.168.0.1"
-				}
-				pool_list{
-					start_ip {
-						value = "192.168.0.20"
-					}
-					end_ip {
-						value = "192.168.0.30"
-					}
-				}
-			}
-		}
-		depends_on = [data.nutanix_clusters.clusters]
-	}
-	resource "nutanix_vpc_v2" "test" {
-		name =  "%[1]s"
-		description = "%[2]s"
-		external_subnets{
-		  subnet_reference = nutanix_subnet_v2.test.id
-		}
-		depends_on = [nutanix_subnet_v2.test]
-	}
-`, name, desc, vlanID)
-}
 
-func testVpcConfigWithExtRoutablePrefix(name, desc string, vlanID int) string {
-	return fmt.Sprintf(`
-	
-	data "nutanix_clusters" "clusters" {}
-
-	locals {
-		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
-	}
-	
 	resource "nutanix_subnet_v2" "test" {
 		name = "terraform-test-subnet-vpc"
 		description = "test subnet description"
@@ -205,7 +158,60 @@ func testVpcConfigWithExtRoutablePrefix(name, desc string, vlanID int) string {
 				}
 			}
 		}
-		depends_on = [data.nutanix_clusters.clusters]
+		depends_on = [data.nutanix_clusters_v2.clusters]
+	}
+	resource "nutanix_vpc_v2" "test" {
+		name =  "%[1]s"
+		description = "%[2]s"
+		external_subnets{
+		  subnet_reference = nutanix_subnet_v2.test.id
+		}
+		depends_on = [nutanix_subnet_v2.test]
+	}
+`, name, desc, vlanID)
+}
+
+func testVpcConfigWithExtRoutablePrefix(name, desc string, vlanID int) string {
+	return fmt.Sprintf(`
+
+	data "nutanix_clusters_v2" "clusters" {}
+
+	locals {
+		cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
+	}
+
+	resource "nutanix_subnet_v2" "test" {
+		name = "terraform-test-subnet-vpc"
+		description = "test subnet description"
+		cluster_reference = local.cluster0
+		subnet_type = "VLAN"
+		network_id = %[3]d
+		is_external = true
+		ip_config {
+			ipv4 {
+				ip_subnet {
+					ip {
+						value = "192.168.0.0"
+					}
+					prefix_length = 24
+				}
+				default_gateway_ip {
+					value = "192.168.0.1"
+				}
+				pool_list{
+					start_ip {
+						value = "192.168.0.20"
+					}
+					end_ip {
+						value = "192.168.0.30"
+					}
+				}
+			}
+		}
+		depends_on = [data.nutanix_clusters_v2.clusters]
 	}
 	resource "nutanix_vpc_v2" "test" {
 		name =  "%[1]s"
@@ -241,13 +247,16 @@ func testVpcConfigWithExtRoutablePrefix(name, desc string, vlanID int) string {
 
 func testVpcConfigWithDHCP(name, desc string, vlanID int) string {
 	return fmt.Sprintf(`
-	
-	data "nutanix_clusters" "clusters" {}
+
+	data "nutanix_clusters_v2" "clusters" {}
 
 	locals {
-		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+		cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
 	}
-	
+
 	resource "nutanix_subnet_v2" "test" {
 	 	name              = "terraform-test-subnet-vpc"
 	  	description       = "test subnet description"
@@ -276,7 +285,7 @@ func testVpcConfigWithDHCP(name, desc string, vlanID int) string {
 			  }
 			}
 		  }
-		  depends_on = [data.nutanix_clusters.clusters]
+		  depends_on = [data.nutanix_clusters_v2.clusters]
 		}
 		resource "nutanix_vpc_v2" "test" {
 		  name        = "%[1]s"
@@ -296,7 +305,7 @@ func testVpcConfigWithDHCP(name, desc string, vlanID int) string {
 			  }
 			}
 		  }
-		
+
 		  externally_routable_prefixes {
 			ipv4 {
 			  ip {
@@ -314,13 +323,16 @@ func testVpcConfigWithDHCP(name, desc string, vlanID int) string {
 
 func testVpcConfigWithTransitType(name, desc string, vlanID int) string {
 	return fmt.Sprintf(`
-	
-	data "nutanix_clusters" "clusters" {}
+
+	data "nutanix_clusters_v2" "clusters" {}
 
 	locals {
-		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+		cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
 	}
-	
+
 	resource "nutanix_subnet_v2" "test" {
 		name = "terraform-test-subnet-vpc"
 		description = "test subnet description"
@@ -349,7 +361,7 @@ func testVpcConfigWithTransitType(name, desc string, vlanID int) string {
 				}
 			}
 		}
-		depends_on = [data.nutanix_clusters.clusters]
+		depends_on = [data.nutanix_clusters_v2.clusters]
 	}
 	resource "nutanix_vpc_v2" "test" {
 		name =  "%[1]s"

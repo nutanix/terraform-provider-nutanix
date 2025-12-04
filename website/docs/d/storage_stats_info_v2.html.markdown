@@ -14,13 +14,13 @@ Provides a datasource to Fetches the stats information of the Storage Container 
 ## Example Usage
 
 ```hcl
-    data "nutanix_storage_container_stats_info_v2" "test"{
-        ext_id = "{storage_container_ext_id}"
-        start_time = "2024-08-01T00:00:00Z"
-        end_time = "2024-08-30T00:00:00Z" 
-        sampling_interval = 1
-        stat_type = "SUM"
-    }
+data "nutanix_storage_container_stats_info_v2" "example"{
+   ext_id = "1891fd3a-1ef7-4947-af56-9ee4b973c6fd"
+   start_time = "2024-08-01T00:00:00Z"
+   end_time = "2024-08-30T00:00:00Z"
+   sampling_interval = 1
+   stat_type = "SUM"
+}
 ```
 
 ## Argument Reference
@@ -32,7 +32,7 @@ The following arguments are supported:
 * `end_time`: (Required) storage container UUID
 * `sampling_interval`: (Optional) storage container UUID
 * `stat_type`: (Optional) storage container UUID
-    * available values: 
+    * available values:
         * `AVG`: - Aggregation indicating mean or average of all values.
         * `MIN`: - Aggregation containing lowest of all values.
         * `MAX`: - 	Aggregation containing highest of all values.
@@ -45,7 +45,7 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `ext_id`: - the storage container uuid
-* `tenant_id`: - A globally unique identifier that represents the tenant that owns this entity. 
+* `tenant_id`: - A globally unique identifier that represents the tenant that owns this entity.
 * `links`: - A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 * `container_ext_id`: - the storage container uuid
 * `controller_num_iops`: - Number of I/O per second.
@@ -88,4 +88,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix Storage Containers v4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0).
+See detailed information in [Nutanix Get Stats for a Storage Container v4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/StorageContainers/operation/getStorageContainerStats).

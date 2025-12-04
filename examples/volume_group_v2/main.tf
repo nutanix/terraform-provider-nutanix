@@ -44,16 +44,21 @@ provider "nutanix" {
   insecure = true
 }
 
-
 #pull cluster data
 data "nutanix_clusters_v2" "clusters" {}
 
 #pull desired cluster data from setup
 locals {
-  cluster1 = [
+  cluster_ext_id = [
     for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
     cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
   ][0]
+}
+
+
+data "nutanix_storage_containers_v2" "sg" {
+  filter = "clusterExtId eq '${local.cluster_ext_id}'"
+  limit  = 1
 }
 
 ##########################
@@ -61,18 +66,18 @@ locals {
 ##########################
 
 
-# create a volume group 
-resource "nutanix_volume_group_v2" "volume_group_example" {
-  name                               = var.volume_group_name
-  description                        = "Test Create Volume group with spec"
+# create a volume group
+resource "nutanix_volume_group_v2" "vg-example-1" {
+  name                               = "volume-group-example-001235"
+  description                        = "Create Volume group with spec"
   should_load_balance_vm_attachments = false
-  sharing_status                     = var.volume_group_sharing_status
-  target_name                        = "volumegroup-test-001234"
+  sharing_status                     = "SHARED"
+  target_name                        = "volumegroup-test-001235"
   created_by                         = "example"
-  cluster_reference                  = local.cluster1
+  cluster_reference                  = local.cluster_ext_id
   iscsi_features {
     enabled_authentications = "CHAP"
-    target_secret           = var.volume_group_target_secret
+    target_secret           = "pass.1234567890"
   }
 
   storage_features {
@@ -81,55 +86,6 @@ resource "nutanix_volume_group_v2" "volume_group_example" {
     }
   }
   usage_type = "USER"
-  is_hidden  = false
-
-  # ignore changes to target_secret, target secret will not be returned in terraform plan output 
-  lifecycle {
-    ignore_changes = [
-      iscsi_features[0].target_secret
-    ]
-  }
-}
-
-
-
-# create a volume group with attachement_type , protocol and disks
-resource "nutanix_volume_group_v2" "volume_group_example" {
-  name                               = var.volume_group_name
-  description                        = "Test Create Volume group with spec"
-  should_load_balance_vm_attachments = false
-  sharing_status                     = var.volume_group_sharing_status
-  target_name                        = "volumegroup-test-001234"
-  created_by                         = "example"
-  cluster_reference                  = local.cluster1
-  iscsi_features {
-    enabled_authentications = "CHAP"
-    target_secret           = var.volume_group_target_secret
-  }
-
-  storage_features {
-    flash_mode {
-      is_enabled = true
-    }
-  }
-  usage_type = "USER"
-  attachment_type = "DIRECT"
-  protocol = "ISCSI"
-  disks {
-    disk_size_bytes = 10 * 1024 * 1024 * 1024
-    index = 1
-    disk_data_source_reference {
-      name        = "vg-disk-%[1]s"
-      ext_id      = "<storage_container_uuid>"
-      entity_type = "STORAGE_CONTAINER"
-      uris        = ["uri1","uri2"]
-    }
-    disk_storage_features {
-      flash_mode {
-        is_enabled = false
-      }
-    }
-  }
   is_hidden  = false
 
   # ignore changes to target_secret, target secret will not be returned in terraform plan output
@@ -141,18 +97,76 @@ resource "nutanix_volume_group_v2" "volume_group_example" {
 }
 
 
+
+# create a volume group with attachment_type , protocol and disks
+resource "nutanix_volume_group_v2" "vg-example-2" {
+  name                               = "volume-group-example-001236"
+  description                        = "Create Volume group with spec"
+  should_load_balance_vm_attachments = false
+  sharing_status                     = "SHARED"
+  target_name                        = "volumegroup-example-001236"
+  created_by                         = "example"
+  cluster_reference                  = local.cluster_ext_id
+  iscsi_features {
+    enabled_authentications = "CHAP"
+    target_secret           = "pass.1234567890"
+  }
+
+  storage_features {
+    flash_mode {
+      is_enabled = true
+    }
+  }
+  usage_type      = "USER"
+  attachment_type = "DIRECT"
+  protocol        = "ISCSI"
+  disks {
+    disk_size_bytes = 10 * 1024 * 1024 * 1024
+    index           = 1
+    disk_data_source_reference {
+      name        = "vg-disk-example"
+      ext_id      = data.nutanix_storage_containers_v2.sg.storage_containers[0].ext_id
+      entity_type = "STORAGE_CONTAINER"
+      uris        = ["uri1", "uri2"]
+    }
+    disk_storage_features {
+      flash_mode {
+        is_enabled = false
+      }
+    }
+  }
+  is_hidden = false
+
+  # ignore changes to target_secret, target secret will not be returned in terraform plan output
+  lifecycle {
+    ignore_changes = [
+      iscsi_features[0].target_secret
+    ]
+  }
+}
+
+# create a volume group with minimum required fields
+resource "nutanix_volume_group_v2" "vg-example-3" {
+  name              = "volume-group-example-001237"
+  cluster_reference = local.cluster_ext_id
+}
+
 ##########################
 ### Data Sources
 ##########################
 
+# list all volume groups
+data "nutanix_volume_groups_v2" "volume-groups" {
+  depends_on = [nutanix_volume_group_v2.vg-example-1, nutanix_volume_group_v2.vg-example-2]
+}
 # pull all volume groups
-data "nutanix_volume_groups_v2" "vgs_example" {
-  filter = "startswith(name, 'value')"
-  limit  = 2
+data "nutanix_volume_groups_v2" "filter-volume-groups" {
+  filter = "name eq '${nutanix_volume_group_v2.vg-example-1.name}'"
+  limit  = 1
   page   = 0
 }
 
 # pull a specific volume group
 data "nutanix_volume_group_v2" "vg_example" {
-  ext_id = nutanix_volume_group_v2.volume_group_example.id
+  ext_id = nutanix_volume_group_v2.vg-example-1.id
 }

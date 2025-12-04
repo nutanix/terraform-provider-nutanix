@@ -90,10 +90,17 @@ func DatasourceNutanixHostEntitiesV2Read(ctx context.Context, d *schema.Resource
 	if err != nil {
 		return diag.Errorf("error while fetching host entities : %v", err)
 	}
-	getResp := resp.Data.GetValue().([]import1.Host)
 
-	if err := d.Set("host_entities", flattenHostEntities(getResp)); err != nil {
-		return diag.FromErr(err)
+	if resp.Data == nil {
+		if err := d.Set("host_entities", []map[string]interface{}{}); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		getResp := resp.Data.GetValue().([]import1.Host)
+
+		if err := d.Set("host_entities", flattenHostEntities(getResp)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId(resource.UniqueId())

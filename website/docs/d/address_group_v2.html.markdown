@@ -12,11 +12,10 @@ Get an Address Group by ExtID
 
 ## Example Usage
 
-``` hcl
-
-  data "nutanix_address_group_v2" "addr_group"{
-    ext_id = "{{ address_group uuid }}"
-  }
+```hcl
+data "nutanix_address_group_v2" "get-addr-group"{
+  ext_id = "0005b3b0-0b3b-4b3b-8b3b-0b3b3b3b3b3b"
+}
 ```
 
 
@@ -52,4 +51,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix Service Group v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0).
+See detailed information in [Nutanix Address Group v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0#tag/AddressGroups/operation/getAddressGroupById).

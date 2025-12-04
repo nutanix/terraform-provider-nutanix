@@ -13,35 +13,24 @@ Get a dictionary of cluster networks and available uplinks on the given nodes. T
 ## Example Usage
 
 ```hcl
-data "nutanix_clusters_unconfigured_node_networks_v2" "example"{
-  ext_id = "<YOUR-CLUSTER-ID>"
-  node_list{
-    node_uuid = "<NODE-UUID>"
-    block_id = "<BLOCK-ID>"
-    node_position = "<NODE-POSITION>"
-    hypervisor_type = "KVM"
-    is_robo_mixed_hypervisor = false
-    hypervisor_version = "5.15.0"
-    nos_version = "5.15.0"
-    is_compute_only = false   
+# ## fetch Network info for unconfigured node
+resource "nutanix_clusters_unconfigured_node_networks_v2" "node-network-info" {
+  ext_id       = "0005b6b0-0b0b-0000-0000-000000000000"
+  request_type = "expand_cluster"
+  node_list {
     cvm_ip {
       ipv4 {
-        value = "10.0.0.1"
+        value = "10.73.23.55"
       }
     }
     hypervisor_ip {
       ipv4 {
-        value = "10.0.0.2"
-      }
-    }
-    ipmi_ip {
-      ipv4 {
-        value = "10.0.0.3"
+        value = "10.33.44.12"
       }
     }
   }
-  request_type = "<REQUEST-TYPE>"
 }
+
 ```
 
 ## Argument Reference
@@ -122,4 +111,4 @@ The `uplink_list` attribute supports the following:
 * `name`: - Interface name.
 * `mac`: - MAC address.
 
-See detailed information in [Nutanix Cluster V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0).
+See detailed information in [Nutanix Network Information of Unconfigured Nodes V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/Clusters/operation/fetchNodeNetworkingDetails).

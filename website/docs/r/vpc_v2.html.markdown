@@ -13,28 +13,54 @@ Provides Nutanix resource to create VPC.
 ## Example
 
 ```hcl
-resource "nutanix_vpc_v2" "vpc"{
-	name =  "{{name of vpc }}"
-	description = "{{ desc of vpc }}"
-	external_subnets{
-		subnet_reference = "{{ subnet uuid }}"
-		external_ips{
-		ipv4{
-			value = "{{ ip v4 address }}"
-			prefix_length = 32
-		}
-		}
-	}
-	externally_routable_prefixes{
-		ipv4{
-		ip{
-			value = "{{ ipv4 address }}"
-			prefix_length = 32
-		}
-		prefix_length = 16
-		}
-	}
+resource "nutanix_vpc_v2" "vpc" {
+  name        = "vpc-example"
+  description = "VPC for example"
+  external_subnets {
+    subnet_reference = "a8fe48c4-f0d3-49c7-a017-efc30dd8fb2b"
+  }
 }
+
+# creating VPC with external routable prefixes
+resource "nutanix_vpc_v2" "external-vpc-routable-vpc" {
+  name        = "tf-vpc-example"
+  description = "VPC "
+  external_subnets {
+    subnet_reference = "a8fe48c4-f0d3-49c7-a017-efc30dd8fb2b"
+    external_ips {
+      ipv4 {
+        value         = "192.168.0.24"
+        prefix_length = 32
+      }
+    }
+    external_ips {
+      ipv4 {
+        value         = "192.168.0.25"
+        prefix_length = 32
+      }
+    }
+  }
+  externally_routable_prefixes {
+    ipv4 {
+      ip {
+        value         = "172.30.0.0"
+        prefix_length = 32
+      }
+      prefix_length = 16
+    }
+  }
+}
+
+// creating VPC with transit type
+resource "nutanix_vpc_v2" "transit-vpc" {
+  name        = "vpc-transit"
+  description = "VPC for transit type"
+  external_subnets {
+    subnet_reference = "a8fe48c4-f0d3-49c7-a017-efc30dd8fb2b"
+  }
+  vpc_type = "TRANSIT"
+}
+
 ```
 
 ## Argument Reference
@@ -59,6 +85,9 @@ The following arguments are supported:
 
 - `subnet_reference`: (Required) External subnet reference.
 - `external_ips`: (Optional) List of IP Addresses used for SNAT, if NAT is enabled on the external subnet. If NAT is not enabled, this specifies the IP address of the VPC port connected to the external gateway.
+- `gateway_nodes`: (Optional) List of gateway nodes that can be used for external connectivity.
+- `active_gateway_node`: (Optional) Maximum number of active gateway nodes for the VPC external subnet association.
+
 
 ### external_ips
 
@@ -83,5 +112,17 @@ The following attributes are exported:
 - `metadata`: The vpc kind metadata.
 - `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
 - `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
+
+## Import
+
+This helps to manage existing entities which are not created through terraform. VPC can be imported using the `UUID`. (ext_id in v4 terms). eg,
+
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_vpc_v2" "import_vpc" {}
+
+// execute this command in cli
+terraform import nutanix_vpc_v2.import_vpc <UUID>
+```
 
 See detailed information in [Nutanix VPC v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0).

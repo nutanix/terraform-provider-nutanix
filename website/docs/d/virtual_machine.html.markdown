@@ -89,7 +89,6 @@ The following attributes are exported:
 * `disk_list` Disks attached to the VM.
 * `metadata`: - The vm kind metadata.
 * `state`: - The state of the vm.
-* `ip_address`: - An IP address.
 * `host_reference`: - Reference to a host.
 * `hypervisor_type`: - The hypervisor type for the hypervisor the VM is hosted on.
 

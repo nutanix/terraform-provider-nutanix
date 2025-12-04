@@ -7,20 +7,24 @@ description: |-
 
 ---
 
-# nutanix_routes_v2
+# nutanix_route_tables_v2
 
 Provides Nutanix datasource to List route tables.
 
 ## Example Usage
 
-``` hcl
+```hcl
 
-    data "nutanix_route_tables_v2" "all-tables"{}
+data "nutanix_route_tables_v2" "all-tables"{}
 
 
-    data "nutanix_route_tables_v2" "route-tables-with-filter"{
-        filter = "vpcReference eq '<vpc_uuid>'"
-    }
+data "nutanix_route_tables_v2" "route-tables-with-filter"{
+  filter = "vpcReference eq 'f4b4b3b4-4b4b-4b4b-4b4b-4b4b4b4b4b4b'"
+}
+
+data "nutanix_route_tables_v2" "route-tables-with-orderby" {
+  order_by = "vpcReference"
+}
 
 ```
 
@@ -40,6 +44,12 @@ The following arguments are supported:
 
 ## Attribute Reference
 The following attributes are exported:
+
+* `route_tables`: A list of route tables.
+
+### Route Tables
+The `route_tables` object contains the following attributes:
+
 * `ext_id`: Route UUID
 * `tenant_id`: A globally unique identifier that represents the tenant that owns this entity
 * `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
@@ -56,4 +66,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix Route Tables v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0).
+See detailed information in [Nutanix Route Tables v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/RouteTables).

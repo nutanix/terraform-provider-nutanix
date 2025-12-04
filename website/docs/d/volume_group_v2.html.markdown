@@ -14,14 +14,8 @@ Query the Volume Group identified by {extId}.
 ## Example Usage
 
 ```hcl
-
-resource "nutanix_volume_group_v2" "vg"{
-  name                               = "test_volume_group"
-  cluster_reference                  = local.cluster1
-}
-
 data "nutanix_volume_group_v2" "volume_group"{
-  ext_id = resource.nutanix_volume_group_v2.test.id
+  ext_id = "d09aeec9-5bb7-4bfd-9717-a051178f6e7c"
 }
 
 ```
@@ -78,4 +72,4 @@ The flash mode features attribute supports the following:
 
 * `is_enabled`: - Indicates whether the flash mode is enabled for the Volume Group.
 
-See detailed information in [Nutanix Volumes v4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.0).
+See detailed information in [Nutanix Get Volume Group v4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.0#tag/VolumeGroups/operation/getVolumeGroupById).

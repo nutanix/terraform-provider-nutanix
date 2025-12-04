@@ -68,6 +68,22 @@ func TestAccV2NutanixCategoriesDataSource_WithLimit(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixCategoriesDataSource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCategoriesDataSourceConfigWithInvalidFilter(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameCategories, "categories.#"),
+					resource.TestCheckResourceAttr(datasourceNameCategories, "categories.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCategoriesDataSourceConfig() string {
 	return (`
 		data "nutanix_categories_v2" "test" { }
@@ -95,6 +111,14 @@ func testAccCategoriesDataSourceConfigWithLimit() string {
 	return (`
 		data "nutanix_categories_v2" "test" {
 			limit = 2
+		}
+	`)
+}
+
+func testAccCategoriesDataSourceConfigWithInvalidFilter() string {
+	return (`
+		data "nutanix_categories_v2" "test" {
+			filter = "key eq 'invalid'"
 		}
 	`)
 }

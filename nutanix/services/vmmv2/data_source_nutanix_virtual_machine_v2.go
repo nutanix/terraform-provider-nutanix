@@ -125,6 +125,18 @@ func DatasourceNutanixVirtualMachineV4() *schema.Resource {
 					},
 				},
 			},
+			"project": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"ownership_info": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -564,6 +576,57 @@ func DatasourceNutanixVirtualMachineV4() *schema.Resource {
 													},
 												},
 											},
+										},
+									},
+									"boot_device": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"boot_device_disk": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"disk_address": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"bus_type": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"index": {
+																			Type:     schema.TypeInt,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"boot_device_nic": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"mac_address": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"boot_order": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
 										},
 									},
 								},
@@ -1129,6 +1192,11 @@ func DatasourceNutanixVirtualMachineV4() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"tenant_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"links": schemaForLinks(),
 						"mode": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -1319,6 +1387,9 @@ func DatasourceNutanixVirtualMachineV4Read(ctx context.Context, d *schema.Resour
 		return diag.FromErr(err)
 	}
 	if err := d.Set("categories", flattenCategoryReference(getResp.Categories)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project", flattenProjectReference(getResp.Project)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("ownership_info", flattenOwnershipInfo(getResp.OwnershipInfo)); err != nil {
@@ -1787,12 +1858,51 @@ func flattenOneOfVMBootConfig(pr *config.OneOfVmBootConfig) []map[string]interfa
 
 		uefiObj["is_secure_boot_enabled"] = uefiVals.IsSecureBootEnabled
 		uefiObj["nvram_device"] = flattenNvramDevice(uefiVals.NvramDevice)
-
+		uefiObj["boot_device"] = flattenOneOfUefiBootBootDevice(uefiVals.BootDevice)
+		uefiObj["boot_order"] = flattenBootDeviceType(uefiVals.BootOrder)
 		uefiObjList = append(uefiObjList, uefiObj)
 		uefiBootCfg["uefi_boot"] = uefiObjList
 		uefiBootCfgList = append(uefiBootCfgList, uefiBootCfg)
 
 		return uefiBootCfgList
+	}
+	return nil
+}
+
+func flattenOneOfUefiBootBootDevice(bootDevice *config.OneOfUefiBootBootDevice) []map[string]interface{} {
+	if bootDevice != nil {
+		deviceDisk := make(map[string]interface{})
+		deviceDiskList := make([]map[string]interface{}, 0)
+		deviceNic := make(map[string]interface{})
+		deviceNicList := make([]map[string]interface{}, 0)
+
+		if *bootDevice.ObjectType_ == "vmm.v4.ahv.config.BootDeviceDisk" {
+			deviceDiskObj := make(map[string]interface{})
+			deviceDiskObjList := make([]map[string]interface{}, 0)
+			deviceDiskVal := bootDevice.GetValue().(config.BootDeviceDisk)
+
+			if deviceDiskVal.DiskAddress != nil {
+				deviceDiskObj["disk_address"] = flattenDiskAddress(deviceDiskVal.DiskAddress)
+			}
+
+			deviceDiskObjList = append(deviceDiskObjList, deviceDiskObj)
+
+			deviceDisk["boot_device_disk"] = deviceDiskObjList
+			deviceDiskList = append(deviceDiskList, deviceDisk)
+			return deviceDiskList
+		}
+		deviceNicObj := make(map[string]interface{})
+		deviceNicObjList := make([]map[string]interface{}, 0)
+		deviceNicVal := bootDevice.GetValue().(config.BootDeviceNic)
+
+		deviceNicObj["mac_address"] = deviceNicVal.MacAddress
+		deviceNicObjList = append(deviceNicObjList, deviceNicObj)
+
+		deviceNic["boot_device_nic"] = deviceNicObjList
+
+		deviceNicList = append(deviceNicList, deviceNic)
+
+		return deviceNicList
 	}
 	return nil
 }
@@ -2778,6 +2888,19 @@ func flattenAPILink(pr []response.ApiLink) []interface{} {
 			links[k] = link
 		}
 		return links
+	}
+	return nil
+}
+
+func flattenProjectReference(project *config.ProjectReference) []map[string]interface{} {
+	if project != nil {
+		prjList := make([]map[string]interface{}, 0)
+		prj := make(map[string]interface{})
+		if project.ExtId != nil {
+			prj["ext_id"] = utils.StringValue(project.ExtId)
+		}
+		prjList = append(prjList, prj)
+		return prjList
 	}
 	return nil
 }

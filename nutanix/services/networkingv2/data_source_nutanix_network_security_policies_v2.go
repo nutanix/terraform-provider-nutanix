@@ -150,7 +150,7 @@ func DataSourceNutanixNetworkSecurityPoliciesV2() *schema.Resource {
 																			Computed: true,
 																		},
 																		"prefix_length": {
-																			Type:     schema.TypeString,
+																			Type:     schema.TypeInt,
 																			Computed: true,
 																		},
 																	},
@@ -166,7 +166,7 @@ func DataSourceNutanixNetworkSecurityPoliciesV2() *schema.Resource {
 																			Computed: true,
 																		},
 																		"prefix_length": {
-																			Type:     schema.TypeString,
+																			Type:     schema.TypeInt,
 																			Computed: true,
 																		},
 																	},
@@ -441,6 +441,20 @@ func DataSourceNutanixNetworkSecurityPoliciesV2Read(ctx context.Context, d *sche
 	resp, err := conn.NetworkingSecurityInstance.ListNetworkSecurityPolicies(page, limit, filter, orderBy, selects)
 	if err != nil {
 		return diag.Errorf("error while fetching network security policy: %v", err)
+	}
+
+	if resp.Data == nil {
+		if err := d.Set("network_policies", []map[string]interface{}{}); err != nil {
+			return diag.FromErr(err)
+		}
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No data found.",
+			Detail:   "The API returned an empty list of network security policies.",
+		}}
 	}
 
 	getResp := resp.Data.GetValue().([]import1.NetworkSecurityPolicy)

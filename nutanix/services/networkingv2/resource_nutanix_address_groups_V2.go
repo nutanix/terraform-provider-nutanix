@@ -20,6 +20,9 @@ func ResourceNutanixAddressGroupsV2() *schema.Resource {
 		ReadContext:   ResourceNutanixAddressGroupsV2Read,
 		UpdateContext: ResourceNutanixAddressGroupsV2Update,
 		DeleteContext: ResourceNutanixAddressGroupsV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -189,7 +192,7 @@ func ResourceNutanixAddressGroupsV2Read(ctx context.Context, d *schema.ResourceD
 
 func ResourceNutanixAddressGroupsV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
-	updateInput := &import1.AddressGroup{}
+
 	resp, err := conn.AddressGroupAPIInstance.GetAddressGroupById(utils.StringPtr(d.Id()))
 	if err != nil {
 		return diag.Errorf("error while fetching address group : %v", err)
@@ -197,7 +200,7 @@ func ResourceNutanixAddressGroupsV2Update(ctx context.Context, d *schema.Resourc
 
 	getResp := resp.Data.GetValue().(import1.AddressGroup)
 
-	updateInput = &getResp
+	updateInput := &getResp
 
 	if d.HasChange("name") {
 		updateInput.Name = utils.StringPtr(d.Get("name").(string))
@@ -273,13 +276,18 @@ func expandIPv4AddressList(pr []interface{}) []config.IPv4Address {
 			val := v.(map[string]interface{})
 			ip := config.IPv4Address{}
 
-			if vals, ok := val["value"]; ok {
-				ip.Value = utils.StringPtr(vals.(string))
+			if v, ok := val["value"]; ok {
+				if s, ok2 := v.(string); ok2 && len(s) > 0 {
+					ip.Value = utils.StringPtr(s)
+				}
 			}
 
-			if prefix, ok := val["prefix_length"]; ok {
-				ip.PrefixLength = utils.IntPtr(prefix.(int))
+			if p, ok := val["prefix_length"]; ok {
+				if n, ok2 := p.(int); ok2 {
+					ip.PrefixLength = utils.IntPtr(n)
+				}
 			}
+
 			ipv4s[k] = ip
 		}
 		return ipv4s
@@ -307,48 +315,3 @@ func expandIPv4Range(pr []interface{}) []import1.IPv4Range {
 	}
 	return nil
 }
-
-// func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
-//	return func() (interface{}, string, error) {
-//		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID))
-//
-//		if err != nil {
-//			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
-//		}
-//
-//		// get the group results
-//
-//		v := vresp.Data.GetValue().(import2.Task)
-//
-//		if getTaskStatusMicroSeg(v.Status) == "CANCELED" || getTaskStatusMicroSeg(v.Status) == "FAILED" {
-//			return v, getTaskStatusMicroSeg(v.Status),
-//				fmt.Errorf("error_detail: %s, progress_message: %d", utils.StringValue(v.ErrorMessages[0].Message), utils.IntValue(v.ProgressPercentage))
-//		}
-//		return v, getTaskStatusMicroSeg(v.Status), nil
-//	}
-//}
-//
-//func getTaskStatusMicroSeg(pr *import2.TaskStatus) string {
-//	if pr != nil {
-//		const two, three, four, five, six, seven = 2, 3, 4, 5, 6, 7
-//		if *pr == import2.TaskStatus(two) {
-//			return "QUEUED"
-//		}
-//		if *pr == import2.TaskStatus(three) {
-//			return "RUNNING"
-//		}
-//		if *pr == import2.TaskStatus(four) {
-//			return "CANCELING"
-//		}
-//		if *pr == import2.TaskStatus(five) {
-//			return "SUCCEEDED"
-//		}
-//		if *pr == import2.TaskStatus(six) {
-//			return "FAILED"
-//		}
-//		if *pr == import2.TaskStatus(seven) {
-//			return "CANCELED"
-//		}
-//	}
-//	return "UNKNOWN"
-//}

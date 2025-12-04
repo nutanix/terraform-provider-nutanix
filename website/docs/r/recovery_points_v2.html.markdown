@@ -12,17 +12,17 @@ Create a new recovery point.
 
 ## Example Usage
 
-``` hcl
-  # create RP with Vm Rp
-  resource "nutanix_recovery_points_v2" "rp-example"{
-    name                = "terraform-test-recovery-point"
-    expiration_time     = "2024-09-17T09:20:42Z"
-    status              = "COMPLETE"
-    recovery_point_type = "APPLICATION_CONSISTENT"
-    vm_recovery_points {
-      vm_ext_id = "<Vm-uuid-1>"
-    }
+```hcl
+# create RP with Vm Rp
+resource "nutanix_recovery_points_v2" "rp-example"{
+  name                = "terraform-test-recovery-point"
+  expiration_time     = "2024-09-17T09:20:42Z"
+  status              = "COMPLETE"
+  recovery_point_type = "APPLICATION_CONSISTENT"
+  vm_recovery_points {
+    vm_ext_id = "ab520e1d-4950-1db1-917f-a9e2ea35b8e3"
   }
+}
 
 ```
 
@@ -144,4 +144,4 @@ The links attribute supports the following:
 * `object_type`: value: `dataprotection.v4.common.VssProperties`
 
 
-See detailed information in [Nutanix Recovery Point V4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.0).
+See detailed information in [Nutanix Recovery Point V4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.0#tag/RecoveryPoints/operation/createRecoveryPoint).

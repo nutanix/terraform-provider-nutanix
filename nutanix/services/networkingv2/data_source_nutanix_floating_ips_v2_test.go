@@ -39,7 +39,7 @@ func TestAccV2NutanixFloatingIPsDataSource_WithFilter(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFipsDataSourceConfig(name, desc),
+				Config: testAccFipsDataSourceWithFilterConfig(name, desc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameFIPps, "floating_ips.#"),
 					resource.TestCheckResourceAttr(datasourceNameFIPps, "floating_ips.#", "1"),
@@ -55,15 +55,34 @@ func TestAccV2NutanixFloatingIPsDataSource_WithFilter(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixFloatingIPsDataSource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFipsDataSourceWithInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameFIPps, "floating_ips.#"),
+					resource.TestCheckResourceAttr(datasourceNameFIPps, "floating_ips.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccFipsDataSourceConfig(name, desc string) string {
 	return fmt.Sprintf(`
 
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
 		}
-		
+
 		resource "nutanix_subnet_v2" "test" {
 			name = "terraform-test-subnet-floating-ip"
 			description = "test subnet description"
@@ -110,12 +129,15 @@ func testAccFipsDataSourceConfig(name, desc string) string {
 func testAccFipsDataSourceWithFilterConfig(name, desc string) string {
 	return fmt.Sprintf(`
 
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+		cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
 		}
-		
+
 		resource "nutanix_subnet_v2" "test" {
 			name = "terraform-test-subnet-floating-ip"
 			description = "test subnet description"
@@ -158,4 +180,12 @@ func testAccFipsDataSourceWithFilterConfig(name, desc string) string {
 			]
 		}
 	`, name, desc)
+}
+
+func testAccFipsDataSourceWithInvalidFilterConfig() string {
+	return `
+		data "nutanix_floating_ips_v2" "test" {
+			filter = "name eq 'invalid_name'"
+		}
+	`
 }

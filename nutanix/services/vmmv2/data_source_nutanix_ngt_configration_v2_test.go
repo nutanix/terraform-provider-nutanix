@@ -12,7 +12,7 @@ const datasourceNameNGTConfiguration = "data.nutanix_ngt_configuration_v2.test"
 
 func TestAccV2NutanixNGTConfigurationDatasource_GetNGTConfigurationForVM(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			// get NGT configuration for the VM
@@ -36,7 +36,7 @@ func TestAccV2NutanixNGTConfigurationDatasource_GetNGTConfigurationForVM(t *test
 
 func TestAccV2NutanixNGTConfigurationV4Datasource_GetNGTConfigurationForVM_NGTNotInstalled(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{

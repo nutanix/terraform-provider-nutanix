@@ -96,19 +96,19 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 	//setting required values which will be common for all nodes
 	ipmiUser, ok := d.GetOk("ipmi_user")
 	if !ok {
-		return diag.Errorf(getRequiredErrorMessage("ipmi_user"))
+		return diag.Errorf("%s", getRequiredErrorMessage("ipmi_user"))
 	}
 	ipmiPass, ok := d.GetOk("ipmi_password")
 	if !ok {
-		return diag.Errorf(getRequiredErrorMessage("ipmi_password"))
+		return diag.Errorf("%s", getRequiredErrorMessage("ipmi_password"))
 	}
 	ipmiNetmask, ok := d.GetOk("ipmi_netmask")
 	if !ok {
-		return diag.Errorf(getRequiredErrorMessage("ipmi_netmask"))
+		return diag.Errorf("%s", getRequiredErrorMessage("ipmi_netmask"))
 	}
 	ipmiGateway, ok := d.GetOk("ipmi_gateway")
 	if !ok {
-		return diag.Errorf(getRequiredErrorMessage("ipmi_gateway"))
+		return diag.Errorf("%s", getRequiredErrorMessage("ipmi_gateway"))
 	}
 	inpSpec.IpmiUser = ipmiUser.(string)
 	inpSpec.IpmiPassword = ipmiPass.(string)
@@ -118,7 +118,7 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 	// get blocks details
 	b, ok := d.GetOk("blocks")
 	if !ok {
-		return diag.Errorf(getRequiredErrorMessage("blocks"))
+		return diag.Errorf("%s", getRequiredErrorMessage("blocks"))
 	}
 	// create struct for blocks
 	blocks := b.([]interface{})
@@ -185,7 +185,7 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 			return diags
 		}
 		// incase there is no error details
-		return diag.Errorf(resp.Error.Message)
+		return diag.Errorf("%s", resp.Error.Message)
 	}
 
 	if setErr := d.Set("ipmi_user", resp.IpmiUser); setErr != nil {

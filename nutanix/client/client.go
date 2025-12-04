@@ -178,7 +178,7 @@ func NewBaseClient(credentials *Credentials, absolutePath string, isHTTP bool) (
 func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body interface{}) (*http.Request, error) {
 	// check if client exists or not
 	if c.client == nil {
-		return nil, fmt.Errorf(c.ErrorMsg)
+		return nil, fmt.Errorf("%s", c.ErrorMsg)
 	}
 
 	rel, errp := url.Parse(c.AbsolutePath + urlStr)
@@ -219,7 +219,7 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 func (c *Client) NewUnAuthRequest(ctx context.Context, method, urlStr string, body interface{}) (*http.Request, error) {
 	// check if client exists or not
 	if c.client == nil {
-		return nil, fmt.Errorf(c.ErrorMsg)
+		return nil, fmt.Errorf("%s", c.ErrorMsg)
 	}
 
 	rel, err := url.Parse(c.AbsolutePath + urlStr)
@@ -251,7 +251,7 @@ func (c *Client) NewUnAuthRequest(ctx context.Context, method, urlStr string, bo
 func (c *Client) NewUnAuthFormEncodedRequest(ctx context.Context, method, urlStr string, body map[string]string) (*http.Request, error) {
 	// check if client exists or not
 	if c.client == nil {
-		return nil, fmt.Errorf(c.ErrorMsg)
+		return nil, fmt.Errorf("%s", c.ErrorMsg)
 	}
 
 	rel, err := url.Parse(c.AbsolutePath + urlStr)
@@ -283,7 +283,7 @@ func (c *Client) NewUnAuthFormEncodedRequest(ctx context.Context, method, urlStr
 func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, fileReader *os.File) (*http.Request, error) {
 	// check if client exists or not
 	if c.client == nil {
-		return nil, fmt.Errorf(c.ErrorMsg)
+		return nil, fmt.Errorf("%s", c.ErrorMsg)
 	}
 	rel, errp := url.Parse(c.AbsolutePath + urlStr)
 	if errp != nil {
@@ -322,7 +322,7 @@ func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, fi
 func (c *Client) NewUnAuthUploadRequest(ctx context.Context, method, urlStr string, fileReader *os.File) (*http.Request, error) {
 	// check if client exists or not
 	if c.client == nil {
-		return nil, fmt.Errorf(c.ErrorMsg)
+		return nil, fmt.Errorf("%s", c.ErrorMsg)
 	}
 	rel, errp := url.Parse(c.AbsolutePath + urlStr)
 	if errp != nil {
@@ -363,7 +363,7 @@ func (c *Client) OnRequestCompleted(rc RequestCompletionCallback) {
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error {
 	// check if client exists or not
 	if c.client == nil {
-		return fmt.Errorf(c.ErrorMsg)
+		return fmt.Errorf("%s", c.ErrorMsg)
 	}
 
 	req = req.WithContext(ctx)
@@ -418,7 +418,7 @@ func searchSlice(slice []string, key string) bool {
 func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interface{}, filters []*AdditionalFilter, baseSearchPaths []string) error {
 	// check if client exists or not
 	if c.client == nil {
-		return fmt.Errorf(c.ErrorMsg)
+		return fmt.Errorf("%s", c.ErrorMsg)
 	}
 	req = req.WithContext(ctx)
 	resp, err := c.client.Do(req)
@@ -546,7 +546,11 @@ func CheckResponse(r *http.Response) error {
 	}
 
 	if c == http.StatusBadRequest {
-		return fmt.Errorf("bad Request")
+		bodyBytes, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			return fmt.Errorf("bad Request: failed to read body: %w", err)
+		}
+		return fmt.Errorf("bad Request: %s", string(bodyBytes))
 	}
 
 	buf, err := ioutil.ReadAll(r.Body)

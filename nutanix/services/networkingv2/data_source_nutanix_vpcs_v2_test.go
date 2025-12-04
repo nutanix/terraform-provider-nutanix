@@ -73,15 +73,34 @@ func TestAccV2NutanixVpcsDataSource_WithFilter(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixVpcsDataSource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcsDataSourceWithInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameVPCs, "vpcs.#"),
+					resource.TestCheckResourceAttr(datasourceNameVPCs, "vpcs.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccVpcsDataSourceConfig(name, desc string) string {
 	return fmt.Sprintf(`
 
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
 		}
-		
+
 		resource "nutanix_subnet_v2" "test" {
 			name = "terraform-test-subnet-vpc"
 			description = "test subnet description"
@@ -110,7 +129,7 @@ func testAccVpcsDataSourceConfig(name, desc string) string {
 					}
 				}
 			}
-			depends_on = [data.nutanix_clusters.clusters]
+			depends_on = [data.nutanix_clusters_v2.clusters]
 		}
 		resource "nutanix_vpc_v2" "rtest" {
 			name =  "%[1]s"
@@ -128,4 +147,12 @@ func testAccVpcsDataSourceConfig(name, desc string) string {
 			]
 		}
 	`, name, desc)
+}
+
+func testAccVpcsDataSourceWithInvalidFilterConfig() string {
+	return `
+		data "nutanix_vpcs_v2" "test" {
+			filter = "name eq 'invalid_name'"
+		}
+	`
 }

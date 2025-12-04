@@ -12,13 +12,13 @@ External identifier of the replicated recovery point can be found in the task co
 
 ## Example Usage
 
-``` hcl
-  # replicate RP 
-  resource "nutanix_recovery_point_replicate_v2" "rp-example"{
-    ext_id         = <recovery-point-uuid>
-    cluster_ext_id = "<cluster-uuid>"
-    pc_ext_id      = "<pc-uuid>"
-  }
+```hcl
+# replicate RP
+resource "nutanix_recovery_point_replicate_v2" "rp-replicate" {
+  ext_id         = "150a7ed0-9d05-4f35-a060-16dac4c835d0"
+  cluster_ext_id = "1cefd0f5-6d38-4c9b-a07c-bdd2db004224"
+  pc_ext_id      = "8a938cc5-282b-48c4-81be-de22de145d07"
+}
 
 ```
 
@@ -32,7 +32,7 @@ The following arguments are supported:
 * `ext_id`: -(Required) The external identifier that can be used to retrieve the recovery point using its URL.
 * `cluster_ext_id`: -(Required) External identifier of the cluster.
 * `pc_ext_id`: -(Required) External identifier of the Prism Central.
-  
+
 
 ## Attribute Reference
 
@@ -43,4 +43,4 @@ The following attributes are exported:
 * `pc_ext_id`: - External identifier of the Prism Central.
 * `replicated_rp_ext_id`: - External identifier of replicated recovery point.
 
-See detailed information in [Nutanix Recovery Point V4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.0).
+See detailed information in [Nutanix Replicate a Recovery Point V4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.0#tag/RecoveryPoints/operation/replicateRecoveryPoint).

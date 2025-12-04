@@ -23,7 +23,7 @@ func TestAccV2NutanixRecoveryPointReplicateResource_basic(t *testing.T) {
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -31,8 +31,8 @@ func TestAccV2NutanixRecoveryPointReplicateResource_basic(t *testing.T) {
 					testRecoveryPointReplicateResourceConfig(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPointReplicate, "ext_id"),
-					resource.TestCheckResourceAttr(resourceNameRecoveryPointReplicate, "pc_ext_id", testVars.DataProtection.PcExtID),
-					resource.TestCheckResourceAttr(resourceNameRecoveryPointReplicate, "cluster_ext_id", testVars.DataProtection.ClusterExtID),
+					resource.TestCheckResourceAttr(resourceNameRecoveryPointReplicate, "pc_ext_id", testVars.AvailabilityZone.PcExtID),
+					resource.TestCheckResourceAttr(resourceNameRecoveryPointReplicate, "cluster_ext_id", testVars.AvailabilityZone.ClusterExtID),
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPointReplicate, "replicated_rp_ext_id"),
 				),
 			},
@@ -44,8 +44,8 @@ func testRecoveryPointReplicateResourceConfig(name, expirationTime string) strin
 	return testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTime) + `
 	resource "nutanix_recovery_point_replicate_v2" "test" {
 	  ext_id         = nutanix_recovery_points_v2.test.id
-	  cluster_ext_id = local.data_protection.cluster_ext_id
-	  pc_ext_id      = local.data_protection.pc_ext_id
+	  cluster_ext_id = local.availability_zone.cluster_ext_id
+	  pc_ext_id      = local.availability_zone.pc_ext_id
 	  depends_on     = [nutanix_recovery_points_v2.test]
 	}`
 }

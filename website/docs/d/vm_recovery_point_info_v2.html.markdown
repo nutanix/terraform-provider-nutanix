@@ -1,29 +1,31 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_recovery_point_v2"
-sidebar_current: "docs-nutanix-recovery-point-v2"
+page_title: "NUTANIX: nutanix_vm_recovery_point_info_v2"
+sidebar_current: "docs-nutanix-datasource-vm-recovery-point-info-v2"
 description: |-
-  Provides a datasource to get a single Recovery Point corresponding to the extId.
+  Provides a datasource to Query the VM recovery point identified by ex_id.
 ---
 
-# nutanix_recovery_point_v2
+# nutanix_vm_recovery_point_info_v2
 
-Get a single recovery point  corresponding to the extId.
+Get the VM recovery point identified by ex_id.
 
 ## Example Usage
 
 ```hcl
-    data "nutanix_vm_recovery_point_info_v2" "example"{
-        recovery_point_ext_id = "<recovery_point_uuid>"
-        ext_id = "<vm_recovery_point_uuid>"
-    }
+# vm recovery point details
+data "nutanix_vm_recovery_point_info_v2" "rp-vm-info" {
+  recovery_point_ext_id = "af1070f7-c946-49da-9b17-e337e06e0a18"
+  ext_id                = "85ac418e-c847-45ab-9816-40a3c4de148c"
+}
+
 ```
 
 ## Argument Reference
 
 The following arguments are supported:
 
-* `ext_id`: (Required) The external identifier that can be used to retrieve the recovery point using its URL.
+* `recovery_point_ext_id`: (Required) The external identifier that can be used to retrieve the recovery point using its URL.
 * `ext_id`: (Required) The external identifier that can be used to identify a VM recovery point.
 
 
@@ -40,7 +42,7 @@ The following attributes are exported:
 * `vm_ext_id`: VM external identifier which is captured as a part of this recovery point.
 * `vm_categories`: Category key-value pairs associated with the VM at the time of recovery point creation. The category key and value are separated by '/'. For example, a category with key 'dept' and value 'hr' is displayed as 'dept/hr'.
 * `application_consistent_properties`: User-defined application-consistent properties for the recovery point.
-* 
+*
 ### Links
 The links attribute supports the following:
 
@@ -65,4 +67,4 @@ The links attribute supports the following:
 * `object_type`: value: `dataprotection.v4.common.VssProperties`
 
 
-See detailed information in [Nutanix Recovery Point V4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.0).
+See detailed information in [Nutanix Get Vm Recovery Point V4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.0#tag/RecoveryPoints/operation/getVmRecoveryPointById).

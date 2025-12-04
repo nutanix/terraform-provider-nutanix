@@ -12,14 +12,13 @@ List all the service Groups.
 
 ## Example Usage
 
-``` hcl
+```hcl
+data "nutanix_recovery_points_v2" "recovery_points"{ }
 
-    data "nutanix_recovery_points_v2" "recovery_points"{ }
 
-
-    data "nutanix_recovery_points_v2" "example"{
-        filter = "name eq 'recovery_point_001'"
-    }
+data "nutanix_recovery_points_v2" "filtered_recovery_points" {
+  filter = "name eq 'recovery_point_001'"
+}
 
 ```
 
@@ -44,8 +43,8 @@ The following arguments are supported:
   * The orderby can be applied to the following fields:
     * `creationTime`
     * `expirationTime`
-    * `name`    
-    * `ownerExtId`   
+    * `name`
+    * `ownerExtId`
 * `select`: (Optional) A URL query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the $select must conform to the OData V4.01 URL conventions
   * The select can be applied to the following fields:
     * `creationTime`
@@ -59,8 +58,12 @@ The following arguments are supported:
     * `MST`
 
 ## Attribute Reference
-
 The following attributes are exported:
+
+* `recovery_points`: List of recovery points.
+
+## Recovery Points
+The `recovery_points` attribute contains list of recovery points. Each recovery point contains the following attributes:
 
 * `ext_id`: recovery point UUID
 * `tenant_id`: A globally unique identifier that represents the tenant that owns this entity
@@ -137,4 +140,4 @@ The links attribute supports the following:
 * `object_type`: value: `dataprotection.v4.common.VssProperties`
 
 
-See detailed information in [Nutanix Recovery Point V4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.0).
+See detailed information in [Nutanix List Recovery Points V4](http://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.0#tag/RecoveryPoints/operation/listRecoveryPoints).

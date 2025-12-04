@@ -13,36 +13,16 @@ Provides a Nutanix Virtual Machine resource to Migrate a nic.
 ## Example Usage
 
 ```hcl
-data "nutanix_virtual_machines_v2" "vms"{}
-
-data "nutanix_subnets_v2" "subnets"{ }
-
-resource "nutanix_vm_network_device_v2" "nic"{
-    vm_ext_id = data.nutanix_virtual_machines_v2.vms.0.data.ext_id
-    network_info {
-        nic_type = "DIRECT_NIC"
-        subnet {
-            ext_id = data.nutanix_subnets_v2.subnets.subnets.0.ext_id
-        }
-        ipv4_config {
-            should_assign_ip = true
-            ip_address {
-                value = "10.10.10.10"
-                prefix_length = 32
-            }
-        }
-    }
-}
 
 resource "nutanix_vm_network_device_migrate_v2" "migrate"{
-    vm_ext_id = resource.nutanix_virtual_machine_v2.vms.0.data.ext_id
-    ext_id    = resource.nutanix_vm_network_device_v2.nic.ext_id
+    vm_ext_id = "246f6e8a-ff05-4057-af6b-b1fd23a46d7d" # VM UUID
+    ext_id    = "eb0157e7-4a87-4ba6-ac8f-62cfe6251b8b" # Vm NIC Device UUID
     subnet {
-        ext_id = data.nutanix_subnets_v2.subnets.subnets.0.ext_id
+        ext_id = "6085d3ba-99ce-41fa-9866-e5d5babb62c7" # Subnet UUID
     }
     migrate_type = "ASSIGN_IP"
     ip_address {
-        value = "10.10.10.11"
+        value = "10.10.10.11" # IP Address
         prefix_length = 32
     }
 }
@@ -75,4 +55,4 @@ The ip_address attribute supports the following:
 * `prefix_length`: - (Optional) The prefix length of the network to which this host IPv4 address belongs.
 * `value`: - Ip address.
 
-See detailed information in [Nutanix Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).
+See detailed information in [Nutanix Migrate NIC to another Subnet for VM V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Vm/operation/migrateNicById).

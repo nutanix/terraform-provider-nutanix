@@ -3,7 +3,7 @@ layout: "nutanix"
 page_title: "NUTANIX: nutanix_vm_revert_v2"
 sidebar_current: "docs-nutanix-resource-vm-revert-v2"
 description: |-
-  This operation Revert VM identified by {extId}. 
+  This operation Revert VM identified by {extId}.
 ---
 
 # nutanix_vm_revert_v2
@@ -12,11 +12,11 @@ This operation Revert VM identified by {extId}. This does an in-place VM restore
 
 ## Example Usage
 
-``` hcl
-# revert Vm  
+```hcl
+# revert Vm
 resource "nutanix_vm_revert_v2" "example"{
-  ext_id = "<VM_UUID>"
-  vm_recovery_point_ext_id = "<Vm_Recovery_Point_UUID>"
+  ext_id = "8a938cc5-282b-48c4-81be-de22de145d07"
+  vm_recovery_point_ext_id = "c2c249b0-98a0-43fa-9ff6-dcde578d3936"
 }
 
 ```
@@ -39,4 +39,4 @@ The following attributes are exported:
 * `status`: - The status of the Revert operation.
 
 
-See detailed information in [Nutanix VMM V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).
+See detailed information in [Nutanix Revert VM V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Vm/operation/revertVm).

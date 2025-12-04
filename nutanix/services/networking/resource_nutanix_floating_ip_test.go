@@ -15,7 +15,7 @@ import (
 const resourceNameFloatingIP = "nutanix_floating_ip.acctest-managed"
 
 func TestAccNutanixFloatingIP_basic(t *testing.T) {
-	r := randIntBetween(31, 40)
+	r := randIntBetween(171, 180)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
@@ -32,7 +32,7 @@ func TestAccNutanixFloatingIP_basic(t *testing.T) {
 }
 
 func TestAccNutanixFloatingIP_Update(t *testing.T) {
-	r := randIntBetween(31, 40)
+	r := randIntBetween(181, 190)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
@@ -57,7 +57,7 @@ func TestAccNutanixFloatingIP_Update(t *testing.T) {
 }
 
 func TestAccNutanixFloatingIP_WithVPCUUID(t *testing.T) {
-	r := randIntBetween(31, 40)
+	r := randIntBetween(191, 200)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
@@ -85,7 +85,7 @@ func TestAccNutanixFloatingIP_WithVPCUUID(t *testing.T) {
 }
 
 func TestAccNutanixFloatingIP_WithVPCName(t *testing.T) {
-	r := randIntBetween(35, 50)
+	r := randIntBetween(201, 210)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
@@ -104,7 +104,7 @@ func TestAccNutanixFloatingIP_WithVPCName(t *testing.T) {
 }
 
 func TestAccNutanixFloatingIP_WithSubnetName(t *testing.T) {
-	r := randIntBetween(35, 50)
+	r := randIntBetween(211, 220)
 	vpcName := fmt.Sprintf("acctest-vpc-%d", r)
 	subnetName := fmt.Sprintf("acctest-subnet-%d", r)
 	updatedSubnetName := fmt.Sprintf("acctest-subnet-updated-%d", r)
@@ -158,14 +158,14 @@ func testAccNutanixFloatingIPConfig(r int) string {
 	return fmt.Sprintf(`
 
 	data "nutanix_clusters" "clusters" {}
-	
+
 	locals {
 		cluster1 = [
 		for cluster in data.nutanix_clusters.clusters.entities :
 		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 		][0]
 	}
-	
+
 	resource "nutanix_subnet" "sub-test" {
 		cluster_uuid = local.cluster1
 		name        = "acctest-managed-%[1]d"
@@ -189,14 +189,14 @@ func testAccNutanixFloatingIPConfigUpdate(r int) string {
 	return fmt.Sprintf(`
 
 	data "nutanix_clusters" "clusters" {}
-	
+
 	locals {
 		cluster1 = [
 		for cluster in data.nutanix_clusters.clusters.entities :
 		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 		][0]
 	}
-	
+
 	resource "nutanix_subnet" "sub-test" {
 		cluster_uuid = local.cluster1
 		name        = "acctest-managed-%[1]d"
@@ -212,18 +212,18 @@ func testAccNutanixFloatingIPConfigUpdate(r int) string {
 
 	resource "nutanix_vpc" "test-vpc" {
 		name = "acctest-vpc-%[1]d"
-	  
-	  
+
+
 		external_subnet_reference_uuid = [
 		  resource.nutanix_subnet.sub-test.id
 		]
-	  
+
 		common_domain_name_server_ip_list{
 				ip = "8.8.8.9"
 		}
-	  
+
 		externally_routable_prefix_list{
-		  ip=  "172.31.0.0"
+		  ip=  "172.37.0.0"
 		  prefix_length= 16
 		}
 	  }
@@ -240,14 +240,14 @@ func testAccNutanixFloatingIPConfigWithVpcUUID(r int) string {
 	return fmt.Sprintf(`
 
 	data "nutanix_clusters" "clusters" {}
-	
+
 	locals {
 		cluster1 = [
 		for cluster in data.nutanix_clusters.clusters.entities :
 		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 		][0]
 	}
-	
+
 	resource "nutanix_subnet" "sub-test" {
 		cluster_uuid = local.cluster1
 		name        = "acctest-managed-%[1]d"
@@ -263,18 +263,18 @@ func testAccNutanixFloatingIPConfigWithVpcUUID(r int) string {
 
 	resource "nutanix_vpc" "test-vpc" {
 		name = "acctest-vpc-%[1]d"
-	  
-	  
+
+
 		external_subnet_reference_uuid = [
 		  resource.nutanix_subnet.sub-test.id
 		]
-	  
+
 		common_domain_name_server_ip_list{
 				ip = "8.8.8.9"
 		}
-	  
+
 		externally_routable_prefix_list{
-		  ip=  "172.31.0.0"
+		  ip=  "172.38.0.0"
 		  prefix_length= 16
 		}
 	  }
@@ -291,14 +291,14 @@ func testAccNutanixFloatingIPConfigWithVpcName(r int) string {
 	return fmt.Sprintf(`
 
 	data "nutanix_clusters" "clusters" {}
-	
+
 	locals {
 		cluster1 = [
 		for cluster in data.nutanix_clusters.clusters.entities :
 		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 		][0]
 	}
-	
+
 	resource "nutanix_subnet" "sub-test" {
 		cluster_uuid = local.cluster1
 		name        = "acctest-managed-%[1]d"
@@ -314,18 +314,18 @@ func testAccNutanixFloatingIPConfigWithVpcName(r int) string {
 
 	resource "nutanix_vpc" "test-vpc" {
 		name = "acctest-vpc-%[1]d"
-	  
-	  
+
+
 		external_subnet_reference_uuid = [
 		  resource.nutanix_subnet.sub-test.id
 		]
-	  
+
 		common_domain_name_server_ip_list{
 				ip = "8.8.8.9"
 		}
-	  
+
 		externally_routable_prefix_list{
-		  ip=  "172.31.0.0"
+		  ip=  "172.39.0.0"
 		  prefix_length= 16
 		}
 	}
@@ -346,14 +346,14 @@ func testAccNutanixFloatingIPConfigWithSubnetName(r int) string {
 	return fmt.Sprintf(`
 
 	data "nutanix_clusters" "clusters" {}
-	
+
 	locals {
 		cluster1 = [
 		for cluster in data.nutanix_clusters.clusters.entities :
 		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 		][0]
 	}
-	
+
 	resource "nutanix_subnet" "sub-test" {
 		cluster_uuid = local.cluster1
 		name        = "acctest-subnet-%[1]d"
@@ -369,18 +369,18 @@ func testAccNutanixFloatingIPConfigWithSubnetName(r int) string {
 
 	resource "nutanix_vpc" "test-vpc" {
 		name = "acctest-vpc-%[1]d"
-	  
-	  
+
+
 		external_subnet_reference_uuid = [
 		  resource.nutanix_subnet.sub-test.id
 		]
-	  
+
 		common_domain_name_server_ip_list{
 				ip = "8.8.8.9"
 		}
-	  
+
 		externally_routable_prefix_list{
-		  ip=  "172.31.0.0"
+		  ip=  "172.40.0.0"
 		  prefix_length= 16
 		}
 	}
@@ -401,14 +401,14 @@ func testAccNutanixFloatingIPConfigWithSubnetNameUpdated(r int) string {
 	return fmt.Sprintf(`
 
 	data "nutanix_clusters" "clusters" {}
-	
+
 	locals {
 		cluster1 = [
 		for cluster in data.nutanix_clusters.clusters.entities :
 		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 		][0]
 	}
-	
+
 	resource "nutanix_subnet" "sub-test" {
 		cluster_uuid = local.cluster1
 		name        = "acctest-subnet-updated-%[1]d"
@@ -424,18 +424,18 @@ func testAccNutanixFloatingIPConfigWithSubnetNameUpdated(r int) string {
 
 	resource "nutanix_vpc" "test-vpc" {
 		name = "acctest-vpc-updated-%[1]d"
-	  
-	  
+
+
 		external_subnet_reference_uuid = [
 		  resource.nutanix_subnet.sub-test.id
 		]
-	  
+
 		common_domain_name_server_ip_list{
 				ip = "8.8.8.9"
 		}
-	  
+
 		externally_routable_prefix_list{
-		  ip=  "172.31.0.0"
+		  ip=  "172.41.0.0"
 		  prefix_length= 16
 		}
 	}

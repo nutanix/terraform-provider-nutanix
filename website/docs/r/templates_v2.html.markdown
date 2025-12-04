@@ -10,50 +10,50 @@ description: |-
 
 Create a Template from the given VM identifier. A Template stores the VM configuration and disks from the source VM.
 
-## Example 
+## Example
 
 ```hcl
-  resource "nutanix_template_v2" "temp-1"{
-      template_name = "{{ template name }}"
-      template_description = "{{ template description }}"
-      template_version_spec{
-          version_source{
-              template_vm_reference{
-                  ext_id =  "{{ vm uuid }}"
-                  guest_customization {
-                      config {
-                        sysprep {
-                          sysprep_script {
-                            custom_key_values {
-                              key_value_pairs {
-                                name = "locale"
-                                value {
-                                  string = "en-PS"
-                                }
+resource "nutanix_template_v2" "temp-1"{
+    template_name = "example_template"
+    template_description = "create example template"
+    template_version_spec{
+        version_source{
+            template_vm_reference{
+                ext_id =  "1cefd0f5-6d38-4c9b-a07c-bdd2db004224"
+                guest_customization {
+                    config {
+                      sysprep {
+                        sysprep_script {
+                          custom_key_values {
+                            key_value_pairs {
+                              name = "locale"
+                              value {
+                                string = "en-PS"
                               }
                             }
                           }
                         }
                       }
-                  }
-              }
-          }
-      }
-  }
+                    }
+                }
+            }
+        }
+    }
+}
 # to update template and override the existing configuration, we will use template_version_reference
   resource "nutanix_template_v2" "temp-1"{
-    template_name = "{{ template name }}"
-    template_description = "{{ template description }}"
+    template_name = "example_template"
+    template_description = "create example template"
     template_version_spec {
       version_name        = "2.0.0"
       version_description = "updating version from initial to 2.0.0"
       is_active_version   = true
       version_source {
         template_vm_reference {
-          ext_id = "<VM_UUID>"
+          ext_id = "8a938cc5-282b-48c4-81be-de22de145d07"
         }
         template_version_reference {
-          version_id = "<TEMPLATE_VERSION_UUID>"
+          version_id = "ab520e1d-4950-1db1-917f-a9e2ea35b8e3"
         override_vm_config {
           name                 = "tf-test-vm-2.0.0"
           memory_size_bytes    = 3 * 1024 * 1024 * 1024 # 3 GB
@@ -103,7 +103,7 @@ The template_version_spec block supports the following:
 * `version_name`: (Optional) The user defined name of a Template Version. Version name `Required` when updating a Template Version.
 * `version_description`: (Optional) The user defined description of a Template Version. Version description `Required` when updating a Template Version.
 * `vm_spec`: (Optional) Specification for a VM.
-* `version_source`: (Required) Source of the created Template Version. The source can either be a VM when creating a new Template Version or an existing Version within a Template when creating a new Version. Either `template_vm_reference` or `template_version_reference` . 
+* `version_source`: (Required) Source of the created Template Version. The source can either be a VM when creating a new Template Version or an existing Version within a Template when creating a new Version. Either `template_vm_reference` or `template_version_reference` .
 * `version_source_discriminator`: (Optional) Source type of the template version created. It can be either a VM or a template version.
 * `is_active_version`: (Optional) Default: `true`  Specify whether to mark the template version as active or not. The newly created version during template creation, update, or guest OS update is set to active by default unless specified otherwise.
 * `is_gc_override_enabled`: (Optional) Allow or disallow overriding guest customization during template deployment.
@@ -119,7 +119,7 @@ The template_version_spec block supports the following:
 
 ### version_source.template_version_reference
 
-* `version_id`: (Optional) The identifier of a Template Version. by default it will be the latest version of the template. 
+* `version_id`: (Optional) The identifier of a Template Version. by default it will be the latest version of the template.
 * `override_vm_config`: (Required) Overrides specification for VM create from a Template.
 
 ### vm_spec
@@ -340,6 +340,15 @@ The template_version_spec block supports the following:
 * `cloud_init_script.user_data`: (Optional) user data object
 * `cloud_init_script.custom_keys`: (Optional) The list of the individual KeyValuePair elements.
 
+## Import
 
+This helps to manage existing entities which are not created through terraform. Templates can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_template_v2" "import_template" {}
 
-See detailed information in [Nutanix Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_templates_v2" "fetch_templates"{}
+terraform import nutanix_template_v2.import_template <UUID>
+```
+
+See detailed information in [Nutanix Create Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Templates/operation/createTemplate).

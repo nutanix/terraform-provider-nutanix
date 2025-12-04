@@ -200,23 +200,32 @@ func DatasourceNutanixVolumeDisksV2Read(ctx context.Context, d *schema.ResourceD
 		selects = nil
 	}
 
-	// get the volume groups response
+	// get the volume disks response
 	resp, err := conn.VolumeAPIInstance.ListVolumeDisksByVolumeGroupId(utils.StringPtr(volumeGroupExtID.(string)), page, limit, filter, orderBy, selects)
 	if err != nil {
 		return diag.Errorf("error while fetching Disks attached to the volume group : %v", err)
 	}
-	// extract the volume groups data from the response
+	// extract the volume disks data from the response
 	if resp.Data == nil {
 		if err := d.Set("disks", make([]interface{}, 0)); err != nil {
 			return diag.FromErr(err)
 		}
-	} else {
-		getResp := resp.Data.GetValue().([]volumesClient.VolumeDisk)
-		// set the volume groups data in the terraform resource
-		if err := d.Set("disks", flattenDisksEntities(getResp)); err != nil {
-			return diag.FromErr(err)
-		}
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No data found.",
+			Detail:   "The API returned an empty list of volume disks.",
+		}}
 	}
+
+	getResp := resp.Data.GetValue().([]volumesClient.VolumeDisk)
+	// set the volume groups data in the terraform resource
+	if err := d.Set("disks", flattenDisksEntities(getResp)); err != nil {
+		return diag.FromErr(err)
+	}
+
 	d.SetId(resource.UniqueId())
 	return nil
 }

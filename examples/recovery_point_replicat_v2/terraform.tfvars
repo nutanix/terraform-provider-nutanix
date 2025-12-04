@@ -2,4 +2,7 @@
 nutanix_username = "admin"
 nutanix_password = "password"
 nutanix_endpoint = "10.xx.xx.xx"
-nutanix_port = 9440
+nutanix_port     = 9440
+
+remote_cluster_uuid = "value"
+remote_pc_uuid      = "value"

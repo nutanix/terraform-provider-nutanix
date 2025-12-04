@@ -54,12 +54,28 @@ func TestAccV2NutanixServiceGroupsDataSource_WithFilter(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixServiceGroupsDataSource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceGrpsDataSourceWithInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameServiceGroups, "service_groups.#"),
+					resource.TestCheckResourceAttr(datasourceNameServiceGroups, "service_groups.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccServiceGrpsDataSourceConfig(name, desc string) string {
 	return fmt.Sprintf(`
 
 		resource "nutanix_service_groups_v2" "test" {
 			name  = "%[1]s"
-			description = "%[2]s"  
+			description = "%[2]s"
 			tcp_services {
 				start_port = "232"
 				end_port = "232"
@@ -83,7 +99,7 @@ func testAccServiceGrpsDataSourceWithFilterConfig(name, desc string) string {
 
 		resource "nutanix_service_groups_v2" "test" {
 			name  = "%[1]s"
-			description = "%[2]s"  
+			description = "%[2]s"
 			tcp_services {
 				start_port = "232"
 				end_port = "232"
@@ -101,4 +117,16 @@ func testAccServiceGrpsDataSourceWithFilterConfig(name, desc string) string {
 			]
 		}
 	`, name, desc)
+}
+
+func testAccServiceGrpsDataSourceWithInvalidFilterConfig() string {
+	return `
+
+
+
+		data "nutanix_service_groups_v2" "test" {
+			filter = "name eq 'invalid_filter'"
+
+		}
+	`
 }

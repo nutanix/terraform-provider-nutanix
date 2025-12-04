@@ -20,7 +20,7 @@ func TestAccV2NutanixNGTInstallationResource_InstallNGTWithRebootPreferenceSetTo
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -72,7 +72,7 @@ func TestAccV2NutanixNGTInstallationResource_InstallNGTWithRebootPreferenceSetTo
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -106,7 +106,7 @@ func TestAccV2NutanixNGTInstallationResource_InstallNGTWithRebootPreferenceSetTo
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -151,7 +151,7 @@ func TestAccV2NutanixNGTInstallationResource_UpdateNGT(t *testing.T) {
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -233,7 +233,7 @@ func testNGTInstallationResourceConfigIMMEDIATEReboot() string {
 		credential {
 			username = local.vmm.ngt.credential.username
 			password = local.vmm.ngt.credential.password
-		}		
+		}
 		reboot_preference {
 			schedule_type = "IMMEDIATE"
 		}
@@ -260,7 +260,7 @@ func testNGTInstallationResourceUpdateConfig(capabilities, isEnabled string) str
 }
 
 func testNGTInstallationResourceConfigSKIPReboot() string {
-	return `	
+	return `
 	resource "nutanix_ngt_installation_v2" "test" {
 		ext_id = nutanix_virtual_machine_v2.ngt-vm.id
 		credential {
@@ -303,7 +303,7 @@ func testNGTInstallationResourceWithoutVMExtIDConfig() string {
 			reboot_preference {
 				schedule_type = "IMMEDIATE"
 			}
-			capablities = ["VSS_SNAPSHOT"]		
+			capablities = ["VSS_SNAPSHOT"]
 		}`
 }
 
@@ -311,7 +311,7 @@ func testNGTInstallationResourceWithoutVMExtIDConfig() string {
 func testPreEnvConfig(vmName string, r int) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
-		
+
 		locals {
 		  clusterUUID = [
 			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
@@ -325,20 +325,15 @@ func testPreEnvConfig(vmName string, r int) string {
 		  filter = "name eq '${local.vmm.image_name}'"
 		}
 
-		data "nutanix_image" "ngt-image" {
-		  image_name = local.vmm.image_name		
-		}
-		
-		
 		data "nutanix_storage_containers_v2" "ngt-sc" {
 		  filter = "clusterExtId eq '${local.clusterUUID}'"
 		  limit = 1
 		}
-		
+
 		data "nutanix_subnets_v2" "subnet" {
 		 filter = "name eq '${local.vmm.subnet_name}'"
-		} 			
-		
+		}
+
 		resource "nutanix_virtual_machine_v2" "ngt-vm" {
 		  name                 = "%[3]s"
 		  description          = "vm to test ngt installation"
@@ -348,7 +343,7 @@ func testPreEnvConfig(vmName string, r int) string {
 		  cluster {
 			ext_id = local.clusterUUID
 		  }
-		
+
 		  disks {
 			disk_address {
 			  bus_type = "SCSI"
@@ -367,14 +362,14 @@ func testPreEnvConfig(vmName string, r int) string {
 			  }
 			}
 		  }
-		
+
 		  cd_roms {
 			disk_address {
 			  bus_type = "IDE"
 			  index    = 0
 			}
 		  }
-		
+
 		  nics {
 			network_info {
 			  nic_type = "NORMAL_NIC"
@@ -384,7 +379,7 @@ func testPreEnvConfig(vmName string, r int) string {
 			  vlan_mode = "ACCESS"
 			}
 		  }
-		
+
 		  boot_config {
 			legacy_boot {
 			  boot_order = ["CDROM", "DISK", "NETWORK"]
@@ -395,10 +390,10 @@ func testPreEnvConfig(vmName string, r int) string {
 		  lifecycle {
 			ignore_changes = [guest_tools]
 		  }
-		
+
 		  depends_on = [data.nutanix_clusters_v2.clusters, data.nutanix_images_v2.ngt-image, data.nutanix_storage_containers_v2.ngt-sc]
 		}
-			
+
 `, filepath, r, vmName)
 }
 

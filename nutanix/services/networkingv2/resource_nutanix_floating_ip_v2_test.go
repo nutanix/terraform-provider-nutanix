@@ -93,12 +93,15 @@ func TestAccV2NutanixFloatingIPResource_WithPrivateIpAssociation(t *testing.T) {
 
 func testFloatingIPv2Config(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+		cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
 		}
-		
+
 		resource "nutanix_subnet_v2" "test" {
 			name = "terraform-test-subnet-floating-ip"
 			description = "test subnet description"
@@ -161,6 +164,11 @@ func testFloatingIPv2ConfigWithVMNic(name, desc string) string {
 			name = "%[1]s"
 			description = "%[2]s"
 			external_subnet_reference = data.nutanix_subnets_v2.test.subnets.0.ext_id
+			floating_ip {
+				ipv4 {
+					value = "10.44.3.206"
+				}
+			}
 			association{
 				vm_nic_association{
 					vm_nic_reference = data.nutanix_virtual_machines_v2.test.vms.0.nics.0.ext_id
@@ -172,12 +180,15 @@ func testFloatingIPv2ConfigWithVMNic(name, desc string) string {
 
 func testFloatingIPv2ConfigWithPrivateIP(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
 		}
-		
+
 		resource "nutanix_subnet_v2" "test" {
 			name = "terraform-test-subnet-floating-ip"
 			description = "test subnet description"
@@ -206,7 +217,7 @@ func testFloatingIPv2ConfigWithPrivateIP(name, desc string) string {
 					}
 				}
 			}
-			depends_on = [data.nutanix_clusters.clusters]
+			depends_on = [data.nutanix_clusters_v2.clusters]
 		}
 
 		resource "nutanix_vpc_v2" "test" {
@@ -228,7 +239,7 @@ func testFloatingIPv2ConfigWithPrivateIP(name, desc string) string {
 						prefix_length = 32
 					}
 				}
-			}	
+			}
 			depends_on = [nutanix_subnet_v2.test]
 		}
 

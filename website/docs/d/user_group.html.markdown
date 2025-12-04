@@ -12,7 +12,7 @@ Provides a datasource to retrieve a user group based on the input parameters.
 
 ## Example Usage
 
-``` hcl
+```hcl
 
 //Retrieve by UUID
 data "nutanix_user_group" "usergroup" {

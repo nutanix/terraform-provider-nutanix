@@ -23,7 +23,7 @@ func TestAccV2NutanixRecoveryPointsDatasource_Basic(t *testing.T) {
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -48,7 +48,7 @@ func TestAccV2NutanixRecoveryPointsDatasource_WithFilter(t *testing.T) {
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -78,7 +78,7 @@ func TestAccV2NutanixRecoveryPointsDatasource_WithLimit(t *testing.T) {
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -86,6 +86,21 @@ func TestAccV2NutanixRecoveryPointsDatasource_WithLimit(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceNameRecoveryPoints, "recovery_points.#", "1"),
 					resource.TestCheckResourceAttrSet(datasourceNameRecoveryPoints, "recovery_points.0.ext_id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccV2NutanixRecoveryPointsDatasource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testRecoveryPointsDatasourceConfigWithInvalidFilter(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceNameRecoveryPoints, "recovery_points.#", "0"),
 				),
 			},
 		},
@@ -150,4 +165,13 @@ func testRecoveryPointsDatasourceConfigWithLimit(name, expirationTime string) st
 	}
 
 `, name, expirationTime)
+}
+
+func testRecoveryPointsDatasourceConfigWithInvalidFilter() string {
+	return `
+	data "nutanix_recovery_points_v2" "test"{
+		filter = "name eq 'invalid_filter'"
+	}
+
+`
 }

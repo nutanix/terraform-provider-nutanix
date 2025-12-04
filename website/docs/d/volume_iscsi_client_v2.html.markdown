@@ -15,8 +15,8 @@ Fetches the iSCSI client details identified by {extId}.
 ## Example Usage
 
 ```hcl
-data "nutanix_volume_iscsi_client_v2" "example"{  
-   ext_id = var.iscsi_client_ext_id
+data "nutanix_volume_iscsi_client_v2" "example"{
+  ext_id = "be0e4630-23da-4b9c-a76b-f24fd64b46b6"
  }
 ```
 
@@ -86,4 +86,4 @@ The attached_targets attribute supports the following:
 
 
 
-See detailed information in [Nutanix Volumes V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.0).
+See detailed information in [Nutanix Get iSCSI Client V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.0#tag/IscsiClients/operation/getIscsiClientById).

@@ -12,9 +12,9 @@ Provides a datasource to View a User.
 
 ## Example Usage
 
-``` hcl
-data "nutanix_user_v2" "user"{
-    ext_id = "<user ext Id>"
+```hcl
+data "nutanix_user_v2" "get-user"{
+  ext_id = "d3a3232a-9055-4740-b54f-b21a33524565"
 }
 ```
 
@@ -45,6 +45,7 @@ Type of the User.
 * `is_force_reset_password`: - Flag to force the User to reset password.
 * `additional_attributes`: -  Any additional attribute for the User.
 * `status`: - Status of the User. `ACTIVE`: Denotes that the local User is active. `INACTIVE`: Denotes that the local User is inactive and needs to be reactivated.
+* `description`: - Description of the user.
 * `buckets_access_keys`: - Bucket Access Keys for the User.
 * `last_login_time`: - Last successful logged in time for the User.
 * `created_time`: - Creation time of the User.

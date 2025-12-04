@@ -5,11 +5,18 @@
         <li<%= sidebar_current("docs-home") %>>
             <a href="/docs/providers/index.html">All Providers</a>
         </li>
-        
+
         <li<%= sidebar_current("docs-nutanix-index") %>>
             <a href="/docs/providers/nutanix/index.html">Nutanix Provider</a>
         </li>
-        
+        <li<%= sidebar_current("docs-nutanix-guides") %>>
+            <a href="#">Guides</a>
+            <ul class="nav nav-visible">
+                <li<%= sidebar_current("docs-nutanix-guides-v1-to-v2-migration-guide") %>>
+                    <a href="/docs/providers/nutanix/guides/v1_to_v2_migration_guide.html">Migration Guide: V1 to V2 Resources</a>
+                </li>
+            </ul>
+        </li>
         <li<%= sidebar_current("docs-nutanix-datasource") %>>
             <a href="#">Data Sources</a>
             <ul class="nav nav-visible">
@@ -247,11 +254,36 @@
                 <li<%= sidebar_current("docs-nutanix-datasource-authorization-policy-v2") %>>
                     <a href="/docs/providers/nutanix/d/nutanix_authorization_policy_v2.html">nutanix_authorization_policy_v2</a>
                 </li>
+                <%# Prism V2: Datasources under prism-v2 %>
                 <li<%= sidebar_current("docs-nutanix-datasource-categories-v2") %>>
                     <a href="/docs/providers/nutanix/d/nutanix_categories_v2.html">nutanix_categories_v2</a>
                 </li>
                 <li<%= sidebar_current("docs-nutanix-datasource-category-v2") %>>
                     <a href="/docs/providers/nutanix/d/nutanix_category_v2.html">nutanix_category_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-datasource-pcs-v2") %>>
+                    <a href="/docs/providers/nutanix/d/nutanix_pcs_v2.html">nutanix_pcs_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-datasource-pc-v2") %>>
+                    <a href="/docs/providers/nutanix/d/nutanix_pc_v2.html">nutanix_pc_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-datasource-restorable-pcs-v2") %>>
+                    <a href="/docs/providers/nutanix/d/nutanix_restorable_pcs_v2.html">nutanix_restorable_pcs_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-datasource-pc-restore-points-v2") %>>
+                    <a href="/docs/providers/nutanix/d/nutanix_pc_restore_points_v2.html">nutanix_pc_restore_points_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-datasource-restore-point-v2") %>>
+                    <a href="/docs/providers/nutanix/d/nutanix_pc_restore_point_v2.html">nutanix_pc_restore_point_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-datasource-pc-backup-targets-v2") %>>
+                    <a href="/docs/providers/nutanix/d/nutanix_pc_backup_targets_v2.html">nutanix_pc_backup_targets_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-datasource-pc-backup-target-v2") %>>
+                    <a href="/docs/providers/nutanix/d/nutanix_pc_backup_target_v2.html">nutanix_pc_backup_target_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-datasource-pc-restore-source-v2") %>>
+                    <a href="/docs/providers/nutanix/d/nutanix_pc_restore_source_v2.html">nutanix_pc_restore_source_v2</a>
                 </li>
                 <li<%= sidebar_current("docs-nutanix-datasource-cluster-v2") %>>
                     <a href="/docs/providers/nutanix/d/nutanix_cluster_v2.html">nutanix_cluster_v2</a>
@@ -316,11 +348,25 @@
                 <li<%= sidebar_current("docs-nutanix-datasource-pe-pc-entity-v2") %>>
                     <a href="/docs/providers/nutanix/d/nutanix_pe_pc_entity_v2.html">nutanix_pe_pc_entity_v2</a>
                 </li>
+                <%# Dataprotection V2: Datasources under dataprotectionv2 %>
                 <li<%= sidebar_current("docs-nutanix-recovery-point-v2") %>>
                     <a href="/docs/providers/nutanix/d/nutanix_recovery_point_v2.html">nutanix_recovery_point_v2</a>
                 </li>
                 <li<%= sidebar_current("docs-nutanix-datasource-recovery-points-v2") %>>
                     <a href="/docs/providers/nutanix/d/nutanix_recovery_points_v2.html">nutanix_recovery_points_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-datasource-vm-recovery-point-info-v2") %>>
+                    <a href="/docs/providers/nutanix/d/nutanix_vm_recovery_point_info_v2.html">nutanix_vm_recovery_point_info_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-datasource-protected-resource-v2") %>>
+                    <a href="/docs/providers/nutanix/d/nutanix_protected_resource_v2.html">nutanix_protected_resource_v2</a>
+                </li>
+                <%# Datapolicy V2: Datasources under datapoliciesv2 %>
+                <li<%= sidebar_current("docs-nutanix-datasource-protection-policy-v2") %>>
+                    <a href="/docs/providers/nutanix/d/nutanix_protection_policy_v2.html">nutanix_protection_policy_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-datasource-protection-policies-v2") %>>
+                    <a href="/docs/providers/nutanix/d/nutanix_protection_policies_v2.html">nutanix_protection_policies_v2</a>
                 </li>
                 <li<%= sidebar_current("docs-nutanix-datasource-role-v2") %>>
                     <a href="/docs/providers/nutanix/d/nutanix_role_v2.html">nutanix_role_v2</a>
@@ -424,6 +470,19 @@
                 <li<%= sidebar_current("docs-nutanix-datasource-vpcs-v2") %>>
                     <a href="/docs/providers/nutanix/d/nutanix_vpcs_v2.html">nutanix_vpcs_v2</a>
                 </li>
+                <%# LCM V2: Datasources under lcmv2 %>
+                <li<%= sidebar_current("docs-nutanix-datasource-lcm-status-v2") %>>
+                    <a href="/docs/providers/nutanix/d/nutanix_lcm_status_v2.html">nutanix_lcm_status_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-datasource-lcm-entity-v2") %>>
+                    <a href="/docs/providers/nutanix/d/nutanix_lcm_entity_v2.html">nutanix_lcm_entity_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-datasource-lcm-entities-v2") %>>
+                    <a href="/docs/providers/nutanix/d/nutanix_lcm_entities_v2.html">nutanix_lcm_entities_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-datasource-lcm-config-v2") %>>
+                    <a href="/docs/providers/nutanix/d/nutanix_lcm_config_v2.html">nutanix_lcm_config_v2</a>
+                </li>
             </ul>
         </li>
 
@@ -492,6 +551,9 @@
                 </li>
                 <li<%= sidebar_current("docs-nutanix-resource-foundation-central-image-cluster") %>>
                     <a href="/docs/providers/nutanix/r/foundation_central_image_cluster.html">nutanix_foundation_central_image_cluster</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-foundation-central-onboard-nodes") %>>
+                    <a href="/docs/providers/nutanix/r/foundation_central_onboard_nodes.html">nutanix_foundation_central_onboard_nodes</a>
                 </li>
                 <li<%= sidebar_current("docs-nutanix-resource-floating-ip") %>>
                     <a href="/docs/providers/nutanix/r/floating_ip.html">nutanix_floating_ip</a>
@@ -580,8 +642,27 @@
                 <li<%= sidebar_current("docs-nutanix-resource-authorization-policy-v2") %>>
                     <a href="/docs/providers/nutanix/r/authorization_policy_v2.html">authorization_policy_v2</a>
                 </li>
+                <%#  Prism V2: resources under prismv2 %>
                 <li<%= sidebar_current("docs-nutanix-resource-category-v2") %>>
                     <a href="/docs/providers/nutanix/r/nutanix_category_v2.html">nutanix_category_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-pc-backup-target-v2") %>>
+                    <a href="/docs/providers/nutanix/r/nutanix_pc_backup_target_v2.html">nutanix_pc_backup_target_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-pc-restore-source-v2") %>>
+                    <a href="/docs/providers/nutanix/r/nutanix_pc_restore_source_v2.html">nutanix_pc_restore_source_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-pc-restore-v2") %>>
+                    <a href="/docs/providers/nutanix/r/nutanix_pc_restore_v2.html">nutanix_pc_restore_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-pc-deploy-v2") %>>
+                    <a href="/docs/providers/nutanix/r/nutanix_pc_deploy_v2.html">nutanix_pc_deploy_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-pc-registration-v2") %>>
+                    <a href="/docs/providers/nutanix/r/nutanix_pc_registration_v2.html">nutanix_pc_registration_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-pc-unregistration-v2") %>>
+                    <a href="/docs/providers/nutanix/r/nutanix_pc_unregistration_v2.html">nutanix_pc_unregistration_v2</a>
                 </li>
                 <li<%= sidebar_current("docs-nutanix-resource-nutanix-cluster-add-node-v2") %>>
                     <a href="/docs/providers/nutanix/r/nutanix_cluster_add_node_v2.html">nutanix_cluster_add_node_v2</a>
@@ -625,17 +706,25 @@
                 <li<%= sidebar_current("docs-nutanix-resource-pbr-v2") %>>
                     <a href="/docs/providers/nutanix/r/nutanix_pbr_v2.html">nutanix_pbr_v2</a>
                 </li>
-                <li<%= sidebar_current("docs-nutanix-resource-pe-pc-registration-v2") %>>
-                    <a href="/docs/providers/nutanix/r/nutanix_pc_registration_v2.html">nutanix_pc_registration_v2</a>
-                </li>
-                <li<%= sidebar_current("docs-nutanix-resource-recovery-point-replicate-v2") %>>
-                    <a href="/docs/providers/nutanix/r/nutanix_recovery_point_replicate_v2.html">nutanix_recovery_point_replicate_v2</a>
-                </li>
-                <li<%= sidebar_current("docs-nutanix-resource-recovery-point-replicate-v2") %>>
-                    <a href="/docs/providers/nutanix/r/nutanix_recovery_point_replicate_v2.html">nutanix_recovery_point_replicate_v2</a>
-                </li>
-                 <li<%= sidebar_current("docs-nutanix-resource-recovery-points-v2") %>>
+                <%# Dataprotection V2: resources under dataprotectionv2 %>
+                <li<%= sidebar_current("docs-nutanix-resource-recovery-points-v2") %>>
                     <a href="/docs/providers/nutanix/r/nutanix_recovery_points_v2.html">nutanix_recovery_points_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-recovery-point-replicate-v2") %>>
+                    <a href="/docs/providers/nutanix/r/nutanix_recovery_point_replicate_v2.html">nutanix_recovery_point_replicate_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-recovery-point-restore-v2") %>>
+                    <a href="/docs/providers/nutanix/r/nutanix_recovery_point_restore_v2.html">nutanix_recovery_point_restore_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-promote-protected-resource-v2") %>>
+                    <a href="/docs/providers/nutanix/r/nutanix_promote_protected_resource_v2.html">nutanix_promote_protected_resource_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-restore-protected-resource-v2") %>>
+                    <a href="/docs/providers/nutanix/r/nutanix_restore_protected_resource_v2.html">nutanix_restore_protected_resource_v2</a>
+                </li>
+                <%# Datapolicy V2: resources under datapoliciesv2%>
+                <li<%= sidebar_current("docs-nutanix-resource-protection-policy-v2") %>>
+                    <a href="/docs/providers/nutanix/r/nutanix_protection_policy_v2.html">nutanix_protection_policy_v2</a>
                 </li>
                 <li<%= sidebar_current("docs-nutanix-resource-roles-v2) %>>
                     <a href="/docs/providers/nutanix/r/nutanix_roles_v2.html">nutanix_roles_v2</a>
@@ -677,10 +766,7 @@
                     <a href="/docs/providers/nutanix/r/nutanix_vm_network_device_assign_ip_v2.html">nutanix_vm_network_device_assign_ip_v2</a>
                 </li>
                 <li<%= sidebar_current("docs-nutanix-resource-vm-network-device-migrate-v2") %>>
-                    <a href="/docs/providers/nutanix/r/nutanix_vm_network_device_v2.html">nutanix_vm_network_device_v2</a>
-                </li>
-                <li<%= sidebar_current("docs-nutanix-resource-vm-network-device-v2") %>>
-                    <a href="/docs/providers/nutanix/r/nutanix_vm_network_device_v2.html">nutanix_vm_network_device_v2</a>
+                    <a href="/docs/providers/nutanix/r/virtual_machine_network_device_migrate_v2.html">nutanix_vm_network_device_migrate_v2</a>
                 </li>
                 <li<%= sidebar_current("docs-nutanix-resource-virtual-machine-v2") %>>
                     <a href="/docs/providers/nutanix/r/nutanix_virtual_machine_v2.html">nutanix_virtual_machine_v2</a>
@@ -708,6 +794,19 @@
                 </li>
                 <li<%= sidebar_current("docs-nutanix-resource-vpc-v2") %>>
                     <a href="/docs/providers/nutanix/r/nutanix_vpc_v2.html">nutanix_vpc_v2</a>
+                </li>
+                <%# LCM V2: resources under lcmv2 %>
+                <li<%= sidebar_current("docs-nutanix-resource-lcm-perform-inventory-v2") %>>
+                    <a href="/docs/providers/nutanix/r/nutanix_lcm_perform_inventory_v2.html">nutanix_lcm_perform_inventory_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-lcm-prechecks-v2") %>>
+                    <a href="/docs/providers/nutanix/r/nutanix_lcm_prechecks_v2.html">nutanix_lcm_prechecks_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-lcm-upgrade-v2") %>>
+                    <a href="/docs/providers/nutanix/r/nutanix_lcm_upgrade_v2.html">nutanix_lcm_upgrade_v2</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-lcm-config-v2") %>>
+                    <a href="/docs/providers/nutanix/r/nutanix_lcm_config_v2.html">nutanix_lcm_config_v2</a>
                 </li>
             </ul>
         </li>

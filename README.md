@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Cloud Platform.
 
-NOTE: The latest version of the Nutanix provider is [v2.0.0](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.0.0).
+NOTE: The latest version of the Nutanix provider is [v2.3.4](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.3.4).
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 
@@ -22,25 +22,42 @@ Modules based on Terraform Nutanix Provider can be found here : [Modules](https:
 * [Go](https://golang.org/doc/install) 1.17+ (to build the provider plugin)
 * This provider uses [SDKv2](https://www.terraform.io/plugin/sdkv2/sdkv2-intro) from release 1.3.0
 
+## Introducing Nutanix Terraform Provider Version v2.3.4
 
-### Introducing Nutanix Terraform Provider Version 2.0.0
-We're excited to announce the release of Nutanix Terraform Provider Version 2.0.0! This major update brings significant improvements to your infrastructure management experience:
- 
-- Built on the latest v4 APIs/SDKs: Leveraging the power of Nutanix v4 APIs/SDKs, this version offers enhanced functionality and better integration with the latest Nutanix features.
-- Expanded Resource Coverage:  Discover new resources and data sources, enabling you to model and manage a broader spectrum of Nutanix infrastructure components within your Terraform configurations.
-- Version Suffix: To easily distinguish resources and data sources specific to version 2.0.0, they are marked with the *_v2 suffix.
+We're excited to announce the release of Nutanix Terraform Provider Version 2.3.4!
+
+### What's New in v2.3.4
+
+- **Enhancements:**
+  - Support for Ejecting ISO from CD-ROM [\#1006](https://github.com/nutanix/terraform-provider-nutanix/issues/1006)
+
+- **Fixed Bugs:**
+   - Subnet entity is not saved in Terraform State due to plugin crash [\#894](https://github.com/nutanix/terraform-provider-nutanix/issues/894)
 
 
 ### Software Requirements
-The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.0.0, ensure your Nutanix environment meets the following software requirements:
-- AOS Version: AOS 7.0 or later
-- Prism Central Version: pc 2024.3 or later
+The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.3.0, ensure your Nutanix environment meets the following software requirements:
+- Self Service version: 4.2.0 (Required only for running Self Service based resource and data source)
+- AOS Version: 7.3 or later
+- Prism Central Version: pc 7.3 or later
+- Nutanix Terraform Provider Version: 2.3.4
 
 
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
-| 2.0.0   |  7.0  | pc2024.3 or later  | ndb v2.7, nke v2.8, foundation v5.7 | Yes |
+| 2.3.4 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.3.3 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.3.2 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.3.1 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.3.0 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.2.3 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
+| 2.2.2 (⚠️ Deprecated/Invalid) | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
+| 2.2.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
+| 2.2.0 | | | Self Service v4.1.0 | yes |
+| 2.1.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
+| 2.1.0 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
+| 2.0.0 | 7.0 | pc2024.3 or later  | ndb v2.7, nke v2.8, foundation v5.7 | Yes |
 | 1.9.5 | | pc2023.1.0.2 | ndb v2.5.1.1, v2.5.1,  v2.5 |  Yes |
 | 1.9.4 | | pc2023, pc2023.1.0.2, pc2023.1.0.1 |  | Yes |
 | 1.9.3 | | pc2023.1.0.1 | | No |
@@ -158,6 +175,9 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | nutanix_image |nutanix_images_v2 |
 | - | nutanix_image_placement_policy_v2 |
 | nutanix_virtual_machine | nutanix_virtual_machine_v2 |
+| - | nutanix_ova_v2 |
+| - | nutanix_ova_vm_deploy_v2 |
+| - | nutanix_ova_download_v2 |
 | - | nutanix_vm_clone_v2 |
 | - | nutanix_vm_cdrom_insert_eject_v2 |
 | - | nutanix_vm_shutdown_action_v2 |
@@ -217,6 +237,29 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | nutanix_ndb_stretched_vlan | - |
 | nutanix_ndb_clone_refresh | - |
 | nutanix_ndb_cluster | - |
+| - | nutanix_pc_deploy_v2 |
+| - | nutanix_pc_backup_target_v2 |
+| - | nutanix_pc_restore_source_v2 |
+| - | nutanix_pc_restore_v2 |
+| - | nutanix_pc_unregistration_v2 |
+| - | nutanix_promote_protected_resource_v2 |
+| - | nutanix_restore_protected_resource_v2 |
+| - | nutanix_protection_policy_v2 |
+| - | nutanix_lcm_perform_inventory_v2 |
+| - | nutanix_lcm_prechecks_v2 |
+| - | nutanix_lcm_upgrade_v2 |
+| - | nutanix_lcm_config_v2 |
+| nutanix_self_service_app_provision | - |
+| nutanix_self_service_app_patch | - |
+| nutanix_self_service_app_recovery_point | - |
+| nutanix_self_service_app_custom_action | - |
+| nutanix_self_service_app_restore | - |
+| - | nutanix_user_key_v2 |
+| - | nutanix_user_key_revoke_v2 |
+| - | nutanix_object_store_v2 |
+| - | nutanix_object_store_certificate_v2 |
+| - | nutanix_password_change_request_v2 |
+
 
 
 ## Data Sources
@@ -261,6 +304,8 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | - | nutanix_images_v2 |
 | nutanix_virtual_machine | nutanix_virtual_machine_v2 |
 | - | nutanix_virtual_machines_v2 |
+| - | nutanix_ova_v2 |
+| - | nutanix_ovas_v2 |
 | - | nutanix_template_v2 |
 | - | nutanix_templates_v2 |
 | - | nutanix_ngt_configuration_v2 |
@@ -327,10 +372,36 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | nutanix_ndb_dbserver | - |
 | nutanix_ndb_dbservers | - |
 | nutanix_ndb_network_available_ips | - |
+| - | nutanix_pc_v2 |
+| - | nutanix_pcs_v2 |
+| - | nutanix_restorable_pcs_v2 |
+| - | nutanix_pc_restore_points_v2 |
+| - | nutanix_pc_restore_point_v2 |
+| - | nutanix_pc_backup_target_v2 |
+| - | nutanix_pc_backup_targets_v2 |
+| - | nutanix_pc_restore_source_v2
+| - | nutanix_protected_resource_v2 |
+| - | nutanix_protection_policy_v2 |
+| - | nutanix_protection_policies_v2 |
+| - | nutanix_lcm_status_v2 |
+| - | nutanix_lcm_entities_v2 |
+| - | nutanix_lcm_entity_v2 |
+| - | nutanix_lcm_config_v2 |
+| nutanix_self_service_app | - |
+| nutanix_blueprint_runtime_editables | - |
+| nutanix_self_service_snapshot_policy_list | - |
+| nutanix_self_service_app_snapshots | - |
+| - | nutanix_user_keys_v2 |
+| - | nutanix_user_key_v2 |
+| - | nutanix_object_store_v2 |
+| - | nutanix_object_stores_v2 |
+| - | nutanix_certificate_v2 |
+| - | nutanix_certificates_v2 |
+| - | nutanix_system_user_passwords_v2 |
 
 
 
-## Developing the provider 
+## Developing the provider
 
 The Nutanix Provider for Terraform is the work of many contributors. We appreciate your help!
 
@@ -342,7 +413,7 @@ The Nutanix Provider for Terraform is the work of many contributors. We apprecia
 
 -> **Note:** We now have a brand new developer-centric Support Program designed for organizations that require a deeper level of developer support to manage their Nutanix environment and build applications quickly and efficiently. As part of this new Advanced API/SDK Support Program, you will get access to trusted technical advisors who specialize in developer tools including Nutanix Terraform Provider and receive support for your unique development needs and custom integration queries. Visit our Support Portal - [Premium Add-On Support Programs](https://www.nutanix.com/support-services/product-support/premium-support-programs) to learn more about this program.
 
-Contributions to open-source Nutanix Terraform Provider repository will continue to leverage a community-supported model. Visit https://portal.nutanix.com/kb/13424  for more details. 
+Customers not taking advantage of the  Advanced API/SDK Support Program will continue to receive the support through our standard, community-supported model. This community model also provides support for contributions to the open-sourceNutanix Terraform Provider repository .Visit https://portal.nutanix.com/kb/13424   for more details.
 
 
 ## Community

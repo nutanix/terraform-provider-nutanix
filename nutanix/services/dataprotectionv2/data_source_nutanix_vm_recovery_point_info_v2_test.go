@@ -12,7 +12,7 @@ import (
 
 const datasourceNameVMRecoveryPoint = "data.nutanix_vm_recovery_point_info_v2.test"
 
-func TestAccNutanixVmRecoveryPointV2Datasource_VmRecoveryPoint(t *testing.T) {
+func TestAccV2NutanixVmRecoveryPointDatasource_VmRecoveryPoint(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-recovery-point-%d", r)
 	vmName := fmt.Sprintf("tf-test-rp-vm-%d", r)
@@ -23,7 +23,7 @@ func TestAccNutanixVmRecoveryPointV2Datasource_VmRecoveryPoint(t *testing.T) {
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -39,7 +39,7 @@ func TestAccNutanixVmRecoveryPointV2Datasource_VmRecoveryPoint(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmRecoveryPointV2Datasource_VmRecoveryPointWithAppConsProps(t *testing.T) {
+func TestAccV2NutanixVmRecoveryPointDatasource_VmRecoveryPointWithAppConsProps(t *testing.T) {
 	t.Skip("Skipping this test case as it is failing due to missing app consistent properties in get request")
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-recovery-point-%d", r)
@@ -51,7 +51,7 @@ func TestAccNutanixVmRecoveryPointV2Datasource_VmRecoveryPointWithAppConsProps(t
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -72,7 +72,7 @@ func TestAccNutanixVmRecoveryPointV2Datasource_VmRecoveryPointWithAppConsProps(t
 }
 
 func testVMRecoveryPointDatasourceConfigWithVMRecoveryPoint(name, expirationTime string) string {
-	return testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTime) + `	
+	return testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTime) + `
 	data "nutanix_vm_recovery_point_info_v2" "test" {
 	  recovery_point_ext_id = nutanix_recovery_points_v2.test.ext_id
 	  ext_id                = nutanix_recovery_points_v2.test.vm_recovery_points[0].ext_id

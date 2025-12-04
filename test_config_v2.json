@@ -30,6 +30,11 @@
       "name": ""
     }
   },
+  "availability_zone": {
+    "pc_ext_id": "",
+    "cluster_ext_id": "",
+    "remote_pc_ip": ""
+  },
   "iam": {
     "roles": {
       "display_name": "",
@@ -126,6 +131,7 @@
     "image_url": "",
     "subnet_name": "",
     "assigned_ip": "",
+    "unattend_xml": "",
     "subnet": {
       "network_id": 534,
       "ip": "",
@@ -160,10 +166,6 @@
         "prefix_length": 32
       }
     }
-  },
-  "data_protection": {
-    "pc_ext_id": "",
-    "cluster_ext_id": ""
   },
   "clusters": {
     "pe_username": "",
@@ -215,12 +217,7 @@
       "iscsi_ip": "",
       "iscsi_ip1": "",
       "dns_servers": ["", ""],
-      "ntp_servers": [
-        "",
-        "",
-        "",
-        ""
-      ],
+      "ntp_servers": ["", "", "", ""],
       "smtp_server": {
         "ip": "",
         "port": 25,
@@ -237,5 +234,70 @@
       "username": "",
       "password": ""
     }
+  },
+  "data_policies": {
+    "domain_manager_ext_id": ""
+  },
+  "prism": {
+    "deploy_pc": {
+      "pe_ip": "",
+      "version": "",
+      "network_id": "",
+      "default_gateway": "",
+      "subnet_mask": "",
+      "ip_range": {
+        "begin": "",
+        "end": ""
+      },
+      "name_servers": [
+        "",
+        ""
+      ],
+      "ntp_servers": [
+        "",
+        "",
+        "",
+        ""
+      ]
+    },
+    "unregister": {
+      "pc_ext_id": ""
+    },
+    "bucket": {
+      "name": "",
+      "region": "",
+      "access_key": "",
+      "secret_key": ""
+    },
+    "restore_source": {
+      "pe_ip": "",
+      "ssh_user": "",
+      "ssh_password": ""
+    },
+    "pc_restore":{
+      "username": "",
+      "password": "",
+      "skip_pc_restore_test": false
+    }
+  },
+  "data_protection": {
+    "local_cluster_pe": "",
+    "local_cluster_vip": "",
+    "remote_cluster_pe": "",
+    "remote_cluster_vip": ""
+  },
+  "lcm": {
+    "entity_model": "",
+    "entity_model_version": ""
+  },
+  "object_store": {
+    "ssh_pc_username": "",
+    "ssh_pc_password": "",
+    "subnet_name": "",
+    "bucket_name": "",
+    "domain": "",
+    "public_network_ips":[""],
+    "storage_network_dns_ip": "",
+    "storage_network_vip": ""
   }
 }

@@ -6,15 +6,16 @@ description: |-
     This operation retrieves a Directory Service
 ---
 
-# nutanix_pbr
+# nutanix_directory_service_v2
 
 Provides a datasource to retrieve all Directory Service(s).
 
 ## Example Usage
 
-``` hcl
-data "nutanix_directory_service_v2" "example"{
-    ext_id = "directory service ext id"
+```hcl
+# Get a Directory Service.
+data "nutanix_directory_service_v2" "get-active-directory" {
+  ext_id = "8a938cc5-282b-48c4-81be-de22de145d07"
 }
 ```
 
@@ -74,4 +75,4 @@ The user_group_configuration attribute supports the following:
 * `group_member_attribute_value`: - User attribute value that will be used in group entity to associate User to the group.
 
 
-See detailed information in [Nutanix Directory Services v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0).
+See detailed information in [Nutanix Get Directory Service v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/DirectoryServices/operation/getDirectoryServiceById).

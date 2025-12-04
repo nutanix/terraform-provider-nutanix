@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -173,14 +175,16 @@ func ResourceNutanixImage() *schema.Resource {
 				},
 			},
 			"source_uri": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"source_path", "data_source_reference"},
 			},
 			"source_path": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"source_uri", "data_source_reference"},
 			},
 			"version": {
 				Type:     schema.TypeMap,
@@ -188,6 +192,27 @@ func ResourceNutanixImage() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
+				},
+			},
+			"data_source_reference": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"source_uri", "source_path"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"uuid": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$`), "must be a valid UUID"),
+						},
+					},
 				},
 			},
 			"architecture": {
@@ -407,12 +432,21 @@ func resourceNutanixImageRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("error setting retrieval_uri_list for image UUID(%s), %s", d.Id(), err)
 	}
 
-	if err := d.Set("cluster_references", flattenArrayOfReferenceValues(resp.Status.Resources.InitialPlacementRefList)); err != nil {
+	if err = d.Set("cluster_references", flattenArrayOfReferenceValues(resp.Status.Resources.InitialPlacementRefList)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("current_cluster_reference_list", flattenArrayOfReferenceValues(resp.Status.Resources.CurrentClusterReferenceList)); err != nil {
+	if err = d.Set("current_cluster_reference_list", flattenArrayOfReferenceValues(resp.Status.Resources.CurrentClusterReferenceList)); err != nil {
 		return diag.FromErr(err)
+	}
+
+	dataSrcRef := make(map[string]string)
+	if ref := resp.Status.Resources.DataSourceReference; ref != nil {
+		dataSrcRef["uuid"] = utils.StringValue(ref.UUID)
+		dataSrcRef["kind"] = utils.StringValue(ref.Kind)
+	}
+	if err = d.Set("data_source_reference", []interface{}{dataSrcRef}); err != nil {
+		return diag.Errorf("error setting data_source_reference for image UUID(%s), %s", d.Id(), err)
 	}
 
 	return nil
@@ -476,6 +510,28 @@ func resourceNutanixImageUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("Checksum update is not allowed. Previous checksum algorithm is %s and value is %s", *res.Checksum.ChecksumAlgorithm, *res.Checksum.ChecksumValue)
 	}
 
+	if d.HasChange("version") {
+		version := d.Get("version")
+		versionResource := &v3.ImageVersionResources{}
+
+		versionMap := version.(map[string]interface{})
+		productName, productNameOk := versionMap["product_name"]
+		productVersion, productVersionOk := versionMap["product_version"]
+		if productNameOk {
+			if productName.(string) == "" {
+				return diag.Errorf("'product_name' is not given")
+			}
+			versionResource.ProductName = utils.StringPtr(productName.(string))
+		}
+		if productVersionOk {
+			if productVersion.(string) == "" {
+				return diag.Errorf("'product_version' is not given")
+			}
+			versionResource.ProductVersion = utils.StringPtr(productVersion.(string))
+		}
+
+		spec.Resources.Version = versionResource
+	}
 	request.Metadata = metadata
 	request.Spec = spec
 
@@ -543,6 +599,8 @@ func resourceNutanixImageDelete(ctx context.Context, d *schema.ResourceData, met
 func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 	cs, csok := d.GetOk("checksum")
 	checks := &v3.Checksum{}
+	version, versionOk := d.GetOk("version")
+	versionResource := &v3.ImageVersionResources{}
 	su, suok := d.GetOk("source_uri")
 	sp, spok := d.GetOk("source_path")
 	var furi string
@@ -568,6 +626,11 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 		// set source uri
 	}
 
+	if datasourceref, refok := d.GetOk("data_source_reference"); refok && len(datasourceref.([]interface{})) > 0 {
+		datasourceref := datasourceref.([]interface{})[0].(map[string]interface{})
+		image.DataSourceReference = validateRef(datasourceref)
+	}
+
 	if csok {
 		checksum := cs.(map[string]interface{})
 		ca, caok := checksum["checksum_algorithm"]
@@ -588,6 +651,25 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 		image.Checksum = checks
 	}
 
+	if versionOk {
+		versionMap := version.(map[string]interface{})
+		productName, productNameOk := versionMap["product_name"]
+		productVersion, productVersionOk := versionMap["product_version"]
+
+		if productNameOk {
+			if productName.(string) == "" {
+				return fmt.Errorf("'product_name' is not given")
+			}
+			versionResource.ProductName = utils.StringPtr(productName.(string))
+		}
+		if productVersionOk {
+			if productVersion.(string) == "" {
+				return fmt.Errorf("'product_version' is not given")
+			}
+			versionResource.ProductVersion = utils.StringPtr(productVersion.(string))
+		}
+		image.Version = versionResource
+	}
 	// List of clusters where image is requested to be placed at time of creation
 	if refs, refsok := d.GetOk("cluster_references"); refsok && len(refs.([]interface{})) > 0 {
 		image.InitialPlacementRefList = validateArrayRefValues(refs, "cluster")
@@ -741,6 +823,31 @@ func resourceNutanixImageInstanceResourceV0() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
+				},
+			},
+			"data_source_reference": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"kind": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"uuid": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$`), "must be a valid UUID"),
+						},
+					},
 				},
 			},
 			"architecture": {

@@ -3,11 +3,10 @@ layout: "nutanix"
 page_title: "NUTANIX: nutanix_category_v2"
 sidebar_current: "docs-nutanix-datasource-category-v2"
 description: |-
-  Fetch details of a category with the given external identifier.
----
+  Create, Update and Delete category (key - value pair).
 
 # nutanix_category_v2
-Fetch a category
+Create, Update and Delete category (key - value pair).
 
 
 ## Example
@@ -19,7 +18,7 @@ resource "nutanix_category_v2" "example" {
   value       = "category_example_value"
   description = "category example description"
 }
-    
+
 ```
 
 
@@ -31,7 +30,7 @@ The following arguments are supported:
 
   - A string of maxlength of 64
   - Character at the start cannot be `$`
-  - Character `/` is not allowed anywhere. 
+  - Character `/` is not allowed anywhere.
 
   It is a mandatory field in the payload of `createCategory` and `updateCategoryById` APIs.
   This field can't be updated through `updateCategoryById` API.
@@ -39,7 +38,7 @@ The following arguments are supported:
 
   - A string of maxlength of 64
   - Character at the start cannot be `$`
-  - Character `/` is not allowed anywhere. 
+  - Character `/` is not allowed anywhere.
 
   It is a mandatory field in the payload of `createCategory` and `updateCategoryById` APIs.
   This field can't be updated through `updateCategoryById` API.
@@ -81,7 +80,7 @@ This field will not be present by default in listCategories API, unless the para
 The results present under this field contain the UUIDs of the entities and policies of various kinds associated with the category.
 This field will be ignored, if given in the payload of updateCategoryById or createCategory APIs.
 This field will not be present by default in listCategories or getCategoryById APIs, unless the parameter $expand=detailedAssociations is present in the URL.
-* `tenant_id`: A globally unique identifier that represents the tenant that owns this entity. 
+* `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
 * `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 
 
@@ -91,33 +90,33 @@ This field will not be present by default in listCategories or getCategoryById A
    Valid values are:
      - `APP`:  A resource of type application.
      - `PROTECTION_RULE`:  A policy or rule of type protection rule.
-     - `IMAGE_RATE_LIMIT`: A resource of type rate limit.  
-     - `MH_VM`: A resource of type Virtual Machine. 
+     - `IMAGE_RATE_LIMIT`: A resource of type rate limit.
+     - `MH_VM`: A resource of type Virtual Machine.
      - `BLUEPRINT`:  A resource of type blueprint.
      - `HOST`:  A resource representing the underlying host, the machine hosting the hypervisors and VMs.
      - `IMAGE`:  A resource of type image.
      - `VM_VM_ANTI_AFFINITY_POLICY`:  A policy of type VM-VM anti-affinity; This policy decides that the specified set of VMs are running on different hosts.
-     - `ACCESS_CONTROL_POLICY`: A policy or rule of type access control policy or ACP; the rules that decide authorization of users to access an API.  
-     - `VM_HOST_AFFINITY_POLICY`: A policy of type VM host affinity; The policy decides the affinity between a set of VMs to be run only a specified set of hosts 
+     - `ACCESS_CONTROL_POLICY`: A policy or rule of type access control policy or ACP; the rules that decide authorization of users to access an API.
+     - `VM_HOST_AFFINITY_POLICY`: A policy of type VM host affinity; The policy decides the affinity between a set of VMs to be run only a specified set of hosts
      - `NGT_POLICY`:  A policy or rule of type NGT policy.
      - `RECOVERY_PLAN`:  A policy or rule of type recovery plan.
-     - `MARKETPLACE_ITEM`: A resource of type marketplace item. 
+     - `MARKETPLACE_ITEM`: A resource of type marketplace item.
      - `CLUSTER`:  A resource of type cluster, usually refers to a PE cluster.
      - `NETWORK_SECURITY_RULE`:  A rule of type network security.
      - `HOST_NIC`:  A resource of type Physical NIC.
      - `ACTION_RULE`:  A policy of type Playbook.
      - `VOLUMEGROUP`:  A resource of type volume group.
      - `REPORT`:  A resource of type report.
-     - `STORAGE_POLICY`: A policy or rule of type storage policy. 
+     - `STORAGE_POLICY`: A policy or rule of type storage policy.
      - `BUNDLE`:  A resource of type bundle.
-     - `QOS_POLICY`: A policy or rule of type QoS policy. 
+     - `QOS_POLICY`: A policy or rule of type QoS policy.
      - `SUBNET`:  A resource of type network subnets.
-     - `VM`: A resource of type Virtual Machine. 
+     - `VM`: A resource of type Virtual Machine.
      - `NETWORK_SECURITY_POLICY`:  A policy of type network security.
      - `POLICY_SCHEMA`:  Policies like user-defined-alerts.
      - `IMAGE_PLACEMENT_POLICY`:  A policy of type image placement.
 * `resource_group`: An enum denoting the resource group.
-Resources can be organized into either an entity or a policy. 
+Resources can be organized into either an entity or a policy.
   Valid values are:
      - `POLICY`:  A ResourceGroup denoting a nutanix policy like VM host affinity policy, image placement policy, access control policy, and so on.<br> A category is generally associated with many entities.<br> The policy which is associated with this category, is then applied to those entities which are also associated with the same category.
      - `ENTITY`: A ResourceGroup denoting a nutanix entity like VM, cluster, host, image, and so on.<br> A category is generally associated with many entities.<br> A policy is then applied to these entities through the category.
@@ -129,37 +128,49 @@ Resources can be organized into either an entity or a policy.
    Valid values are:
      - `APP`:  A resource of type application.
      - `PROTECTION_RULE`:  A policy or rule of type protection rule.
-     - `IMAGE_RATE_LIMIT`: A resource of type rate limit.  
-     - `MH_VM`: A resource of type Virtual Machine. 
+     - `IMAGE_RATE_LIMIT`: A resource of type rate limit.
+     - `MH_VM`: A resource of type Virtual Machine.
      - `BLUEPRINT`:  A resource of type blueprint.
      - `HOST`:  A resource representing the underlying host, the machine hosting the hypervisors and VMs.
      - `IMAGE`:  A resource of type image.
      - `VM_VM_ANTI_AFFINITY_POLICY`:  A policy of type VM-VM anti-affinity; This policy decides that the specified set of VMs are running on different hosts.
-     - `ACCESS_CONTROL_POLICY`: A policy or rule of type access control policy or ACP; the rules that decide authorization of users to access an API.  
-     - `VM_HOST_AFFINITY_POLICY`: A policy of type VM host affinity; The policy decides the affinity between a set of VMs to be run only a specified set of hosts 
+     - `ACCESS_CONTROL_POLICY`: A policy or rule of type access control policy or ACP; the rules that decide authorization of users to access an API.
+     - `VM_HOST_AFFINITY_POLICY`: A policy of type VM host affinity; The policy decides the affinity between a set of VMs to be run only a specified set of hosts
      - `NGT_POLICY`:  A policy or rule of type NGT policy.
      - `RECOVERY_PLAN`:  A policy or rule of type recovery plan.
-     - `MARKETPLACE_ITEM`: A resource of type marketplace item. 
+     - `MARKETPLACE_ITEM`: A resource of type marketplace item.
      - `CLUSTER`:  A resource of type cluster, usually refers to a PE cluster.
      - `NETWORK_SECURITY_RULE`:  A rule of type network security.
      - `HOST_NIC`:  A resource of type Physical NIC.
      - `ACTION_RULE`:  A policy of type Playbook.
      - `VOLUMEGROUP`:  A resource of type volume group.
      - `REPORT`:  A resource of type report.
-     - `STORAGE_POLICY`: A policy or rule of type storage policy. 
+     - `STORAGE_POLICY`: A policy or rule of type storage policy.
      - `BUNDLE`:  A resource of type bundle.
-     - `QOS_POLICY`: A policy or rule of type QoS policy. 
+     - `QOS_POLICY`: A policy or rule of type QoS policy.
      - `SUBNET`:  A resource of type network subnets.
-     - `VM`: A resource of type Virtual Machine. 
+     - `VM`: A resource of type Virtual Machine.
      - `NETWORK_SECURITY_POLICY`:  A policy of type network security.
      - `POLICY_SCHEMA`:  Policies like user-defined-alerts.
      - `IMAGE_PLACEMENT_POLICY`:  A policy of type image placement.
 * `resource_group`: An enum denoting the resource group.
-Resources can be organized into either an entity or a policy. 
+Resources can be organized into either an entity or a policy.
   Valid values are:
      - `POLICY`:  A ResourceGroup denoting a nutanix policy like VM host affinity policy, image placement policy, access control policy, and so on.<br> A category is generally associated with many entities.<br> The policy which is associated with this category, is then applied to those entities which are also associated with the same category.
-     - `ENTITY`: A ResourceGroup denoting a nutanix entity like VM, cluster, host, image, and so on.<br> A category is generally associated with many entities.<br> A policy is then applied to these entities through the category. 
+     - `ENTITY`: A ResourceGroup denoting a nutanix entity like VM, cluster, host, image, and so on.<br> A category is generally associated with many entities.<br> A policy is then applied to these entities through the category.
 * `resource_id`: The UUID of the entity or policy associated with the particular category.
 
+## Import
+This helps to manage existing entities which are not created through terraform. Category (key - value pair) can be imported using the `UUID` (ext_id in v4 terms).  eg,
 
-See detailed information in [Nutanix Category v4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0).
+`
+terraform import nutanix_category_v2.<resource_name> <UUID>
+`
+
+Note: 
+We have two resources separately for category key (nutanix_category_key) and value (nutanix_category_key). Using v4 API, `nutanix_category_v2` represents category key value pair as one entity. 
+
+Please use datasources (nutanix_categories_v2) to fetch uuids (ext_id) of all category key valye pairs to import them.
+
+
+See detailed information in [Nutanix Create Category v4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/Categories/operation/createCategory).

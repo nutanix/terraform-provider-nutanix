@@ -12,9 +12,9 @@ Provides a datasource to View a SAML Identity Provider.
 
 ## Example Usage
 
-``` hcl
+```hcl
 data "nutanix_saml_identity_provider_v2" "idp"{
-  ext_id = <"SAML extID">
+  ext_id = "a2a8650a-358a-4791-90c9-7a8b6e2989d6"
 }
 ```
 
@@ -39,7 +39,7 @@ The following attributes are exported:
 * `custom_attr`: - SAML assertions for list of custom attribute elements.
 * `entity_issuer`: - It will be used as Issuer in SAML authnRequest.
 * `is_signed_authn_req_enabled`: - Flag indicating signing of SAML authnRequests.
-* `created_time`: - Creation time of the SAML Identity Provider. 
+* `created_time`: - Creation time of the SAML Identity Provider.
 * `last_updated_time`: - Last updated time of the SAML Identity Provider.
 * `created_by`: - User or Service who created the SAML Identity Provider.
 
@@ -60,8 +60,8 @@ The idp_metadata attribute supports the following:
 * `logout_url`: - Logout URL of the Identity provider.
 * `error_url`: - Error URL of the Identity provider.
 * `certificate`: - Certificate for verification.
-* `name_id_policy_format`: - Name ID Policy format. 
-  * supported values: 
+* `name_id_policy_format`: - Name ID Policy format.
+  * supported values:
     * `emailAddress`: -  Uses email address as NameID format
     * `encrypted`: -  Uses encrypted as NameID format.
     * `unspecified`: -  NameID format is left to individual implementations.
@@ -72,4 +72,4 @@ The idp_metadata attribute supports the following:
     * `persistent`: -  Uses persistent name identifier as NameID format.
     * `entity`: -  Uses identifier of an entity as NameID format.
 
-See detailed information in [Nutanix SAML Identity Providers v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0).
+See detailed information in [Nutanix Get SAML identity provider v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/SAMLIdentityProviders/operation/getSamlIdentityProviderById).

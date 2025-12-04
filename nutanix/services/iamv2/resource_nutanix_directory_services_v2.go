@@ -2,14 +2,7 @@ package iamv2
 
 import (
 	"context"
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/base64"
 	"encoding/json"
-	"errors"
-	"io"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -19,14 +12,15 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-var password string
-
 func ResourceNutanixDirectoryServicesV2() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: ResourceNutanixDirectoryServicesV2Create,
 		ReadContext:   ResourceNutanixDirectoryServicesV2Read,
 		UpdateContext: ResourceNutanixDirectoryServicesV2Update,
 		DeleteContext: ResourceNutanixDirectoryServicesV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -62,8 +56,9 @@ func ResourceNutanixDirectoryServicesV2() *schema.Resource {
 							Required: true,
 						},
 						"password": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:      schema.TypeString,
+							Sensitive: true,
+							Required:  true,
 						},
 					},
 				},
@@ -214,7 +209,7 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 	}
 
 	aJSON, _ := json.MarshalIndent(input, "", " ")
-	log.Println("[DEBUG] Directory Service JSON: ", string(aJSON))
+	log.Println("[DEBUG] Directory Service create payload: ", string(aJSON))
 
 	resp, err := conn.DirectoryServiceAPIInstance.CreateDirectoryService(input)
 	if err != nil {
@@ -264,7 +259,7 @@ func ResourceNutanixDirectoryServicesV2Read(ctx context.Context, d *schema.Resou
 	if err := d.Set("directory_type", flattenDirectoryType(getResp.DirectoryType)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("service_account", flattenDsServiceAccount(getResp.ServiceAccount)); err != nil {
+	if err := d.Set("service_account", flattenDsServiceAccountForResource(getResp.ServiceAccount)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -313,25 +308,41 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 
 	updatedSpec = readResp.Data.GetValue().(import1.DirectoryService)
 
-	serviceAccount := &import1.DsServiceAccount{}
+	// service account required for update
+	// expand service account from row config as it required for update and
+	// password is saved as sensitive value
+	rawConfig := d.GetRawConfig()
+	configMap := rawConfig.AsValueMap()
 
-	sa, ok := d.GetOk("service_account")
-	if !ok {
-		return diag.Errorf("service_account is required")
-	}
-	if d.HasChange("service_account") {
-		sa = expandDsServiceAccount(d.Get("service_account"))
-	}
-	username := sa.([]interface{})[0].(map[string]interface{})["username"]
-	decryptedPass, err := decrypt(password, "NUTANIX!123_DS#SA")
-	if err != nil {
-		panic(err)
+	val, exists := configMap["service_account"]
+	if !exists || val.IsNull() || !val.IsKnown() {
+		return diag.Errorf("service_account is missing or unknown")
 	}
 
-	serviceAccount.Password = utils.StringPtr(decryptedPass)
-	serviceAccount.Username = utils.StringPtr(username.(string))
+	if !val.Type().IsTupleType() && !val.Type().IsListType() {
+		return diag.Errorf("service_account is not a list")
+	}
 
-	updatedSpec.ServiceAccount = serviceAccount
+	serviceAccounts := make([]interface{}, 0)
+
+	// Extract each element from the list
+	for _, item := range val.AsValueSlice() {
+		if item.IsNull() || !item.IsKnown() || !item.Type().IsObjectType() {
+			continue
+		}
+
+		account := make(map[string]interface{})
+		for key, value := range item.AsValueMap() {
+			if value.IsNull() || !value.IsKnown() {
+				continue
+			}
+			account[key] = value.AsString()
+		}
+
+		serviceAccounts = append(serviceAccounts, account)
+	}
+
+	updatedSpec.ServiceAccount = expandDsServiceAccount(serviceAccounts)
 
 	if d.HasChange("name") {
 		updatedSpec.Name = utils.StringPtr(d.Get("name").(string))
@@ -385,6 +396,9 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 		updatedSpec.WhiteListedGroups = whitelistedGrpListStr
 	}
 
+	aJSON, _ := json.MarshalIndent(updatedSpec, "", " ")
+	log.Println("[DEBUG] Directory Service update payload: ", string(aJSON))
+
 	updatedResp, err := conn.DirectoryServiceAPIInstance.UpdateDirectoryServiceById(utils.StringPtr(d.Id()), &updatedSpec, headers)
 	if err != nil {
 		return diag.Errorf("error while updating directory services: %v", err)
@@ -422,7 +436,7 @@ func ResourceNutanixDirectoryServicesV2Delete(ctx context.Context, d *schema.Res
 }
 
 func expandDsServiceAccount(pr interface{}) *import1.DsServiceAccount {
-	if pr != nil {
+	if pr != nil && len(pr.([]interface{})) > 0 {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
 
@@ -434,73 +448,9 @@ func expandDsServiceAccount(pr interface{}) *import1.DsServiceAccount {
 		if user, ok := val["username"]; ok {
 			ds.Username = utils.StringPtr(user.(string))
 		}
-		encryptedPass, err := encrypt(utils.StringValue(ds.Password), "NUTANIX!123_DS#SA")
-		if err != nil {
-			panic(err)
-		}
-		password = encryptedPass
 		return ds
 	}
 	return nil
-}
-
-func generateKey(passphrase string) []byte {
-	key := sha256.Sum256([]byte(passphrase))
-	return key[:]
-}
-
-func encrypt(plainText, passphrase string) (string, error) {
-	key := generateKey(passphrase)
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", err
-	}
-
-	aesGCM, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", err
-	}
-
-	nonce := make([]byte, aesGCM.NonceSize())
-	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		return "", err
-	}
-
-	cipherText := aesGCM.Seal(nonce, nonce, []byte(plainText), nil)
-	return base64.StdEncoding.EncodeToString(cipherText), nil
-}
-
-func decrypt(cipherText, passphrase string) (string, error) {
-	key := generateKey(passphrase)
-
-	encData, err := base64.StdEncoding.DecodeString(cipherText)
-	if err != nil {
-		return "", err
-	}
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", err
-	}
-
-	aesGCM, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", err
-	}
-
-	nonceSize := aesGCM.NonceSize()
-	if len(encData) < nonceSize {
-		return "", errors.New("ciphertext too short")
-	}
-
-	nonce, cipherTextBytes := encData[:nonceSize], encData[nonceSize:]
-	plainText, err := aesGCM.Open(nil, nonce, cipherTextBytes, nil)
-	if err != nil {
-		return "", err
-	}
-
-	return string(plainText), nil
 }
 
 func expandOpenLdapConfig(pr interface{}) *import1.OpenLdapConfig {
@@ -563,6 +513,22 @@ func expandUserGroupConfiguration(pr interface{}) *import1.UserGroupConfiguratio
 			usrGrp.GroupMemberAttributeValue = utils.StringPtr(grpAttrVal.(string))
 		}
 		return usrGrp
+	}
+	return nil
+}
+
+func flattenDsServiceAccountForResource(pr *import1.DsServiceAccount) []map[string]interface{} {
+	if pr != nil {
+		accs := make([]map[string]interface{}, 0)
+		acc := make(map[string]interface{})
+
+		// password is not returned in the response
+		// so we are using the password from the configuration as it required for update
+		acc["username"] = pr.Username
+		acc["password"] = pr.Password
+
+		accs = append(accs, acc)
+		return accs
 	}
 	return nil
 }

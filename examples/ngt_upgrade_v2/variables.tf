@@ -11,9 +11,6 @@ variable "nutanix_endpoint" {
 variable "nutanix_port" {
   type = string
 }
-variable "username" {
-  type = string
-}
-variable "password" {
+variable "vm_name" {
   type = string
 }

@@ -7,18 +7,18 @@ description: |-
 
 ---
 
-# nutanix_routes_v2
+# nutanix_route_table_v2
 
 Provides Nutanix datasource Get the route table for the specified extId.
 
 
 ## Example Usage
 
-``` hcl
+```hcl
 
-    data "nutanix_route_table_v2" "route-table"{
-        ext_id = "<route_table_uuid>"
-    }
+data "nutanix_route_table_v2" "get-route-table"{
+  ext_id = "ad7692ff-50f8-4a47-b3c9-fd5a3462d455"
+}
 
 ```
 
@@ -46,4 +46,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix Route Tables v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0).
+See detailed information in [Nutanix Get Route Table v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/RouteTables/operation/getRouteTableById).

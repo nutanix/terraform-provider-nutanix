@@ -12,11 +12,10 @@ Provides a datasource to retrieve a user group based on the External Identifier 
 
 ## Example Usage
 
-``` hcl
+```hcl
 
-//Retrieve by ext_id
-data "nutanix_user_group_v2" "usergroup"{
-	ext_id = "<External Identifier of the User Group.>"
+data "nutanix_user_group_v2" "get-ug"{
+	ext_id = "a2a8650a-358a-4791-90c9-7a8b6e2989d6"
 }
 
 ```
@@ -53,4 +52,4 @@ The links attribute supports the following:
 * `rel`: - A name that identifies the relationship of the link to the object that is returned by the URL. The unique value of "self" identifies the URL for the object.
 
 
-See detailed information in [Nutanix User Groups v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0).
+See detailed information in [Nutanix Get User Group v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/UserGroups/operation/getUserGroupById).

@@ -16,6 +16,25 @@ provider "nutanix" {
   insecure = true
 }
 
+data "nutanix_clusters_v2" "clusters" {}
+
+locals {
+  cluster_ext_id = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+  ][0]
+}
+
+resource "nutanix_virtual_machine_v2" "vm" {
+  name                 = "vm-example"
+  description          = "create vm example"
+  num_cores_per_socket = 1
+  num_sockets          = 1
+  cluster {
+    ext_id = local.cluster_ext_id
+  }
+  power_state = "OFF"
+}
 
 # Create a new Template from done only using vm reference
 resource "nutanix_template_v2" "example-1" {
@@ -24,7 +43,7 @@ resource "nutanix_template_v2" "example-1" {
   template_version_spec {
     version_source {
       template_vm_reference {
-        ext_id = "<VM_UUID>"
+        ext_id = nutanix_virtual_machine_v2.vm.id
       }
     }
   }
@@ -37,26 +56,11 @@ resource "nutanix_template_v2" "example-2" {
   template_version_spec {
     version_source {
       template_vm_reference {
-        ext_id = "<VM_UUID>"
+        ext_id = nutanix_virtual_machine_v2.vm.id
       }
     }
   }
-  guest_customization {
-    config {
-      sysprep {
-        sysprep_script {
-          custom_key_values {
-            key_value_pairs {
-              name = "locale"
-              value {
-                string = "en-PS"
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+
 }
 
 # for updating the existing template, we can use template_version_reference or template_vm_reference, only one of them
@@ -71,11 +75,11 @@ resource "nutanix_template_v2" "example-1" {
     is_active_version   = true
     version_source {
       template_vm_reference {
-        ext_id = "<VM_UUID>"
+        ext_id = nutanix_virtual_machine_v2.vm.id
       }
       template_version_reference {
         # if version id is not provided, it will use the latest version of the template by default
-        version_id = "<TEMPLATE_VERSION_UUID>"
+        #version_id = "<TEMPLATE_VERSION_UUID>"
         override_vm_config {
           name                 = "tf-test-vm-2.0.0"
           memory_size_bytes    = 3 * 1024 * 1024 * 1024 # 3 GB
@@ -108,8 +112,18 @@ resource "nutanix_template_v2" "example-1" {
 }
 
 
-# to update template and override the existing configuration, we will use template_vm_reference
+resource "nutanix_virtual_machine_v2" "vm-2" {
+  name                 = "vm-example-2"
+  description          = "create vm example"
+  num_cores_per_socket = 1
+  num_sockets          = 1
+  cluster {
+    ext_id = local.cluster_ext_id
+  }
+  power_state = "OFF"
+}
 
+# to update template and override the existing configuration, we will use template_vm_reference
 resource "nutanix_template_v2" "example-1" {
   template_name        = "tf-example-template"
   template_description = "test create template from vm using terraform"
@@ -119,7 +133,7 @@ resource "nutanix_template_v2" "example-1" {
     is_active_version   = true
     version_source {
       template_vm_reference {
-        ext_id = "<New_VM_UUID>"
+        ext_id = nutanix_virtual_machine_v2.vm-2.id
       }
     }
   }

@@ -16,6 +16,7 @@ import (
 	vmmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	vmmContent "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -25,6 +26,9 @@ func ResourceNutanixTemplatesV2() *schema.Resource {
 		ReadContext:   ResourceNutanixTemplatesV2Read,
 		UpdateContext: ResourceNutanixTemplatesV2Update,
 		DeleteContext: ResourceNutanixTemplatesV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -128,7 +132,14 @@ func ResourceNutanixTemplatesV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"category_ext_ids": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"tenant_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -192,6 +203,9 @@ func ResourceNutanixTemplatesV2Create(ctx context.Context, d *schema.ResourceDat
 	if createdBy, ok := d.GetOk("created_by"); ok && len(createdBy.([]interface{})) > 0 {
 		body.CreatedBy = expandTemplateUser(createdBy)
 	}
+	if categoryExtIDs, ok := d.GetOk("category_ext_ids"); ok {
+		body.CategoryExtIds = common.ExpandListOfString(categoryExtIDs.([]interface{}))
+	}
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Template create request body :\n %s", string(aJSON))
@@ -231,12 +245,14 @@ func ResourceNutanixTemplatesV2Create(ctx context.Context, d *schema.ResourceDat
 func ResourceNutanixTemplatesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 	tempVersionSpecData := d.Get("template_version_spec").([]interface{})
+	log.Printf("[DEBUG] tempVersionSpecData: %v", tempVersionSpecData)
 	resp, err := conn.TemplatesAPIInstance.GetTemplateById(utils.StringPtr(d.Id()))
 	if err != nil {
 		return diag.Errorf("error while fetching template : %v", err)
 	}
 	getResp := resp.Data.GetValue().(vmmContent.Template)
-
+	aJSON, _ := json.MarshalIndent(getResp, "", "  ")
+	log.Printf("[DEBUG] Get Template call: %s", string(aJSON))
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
@@ -279,7 +295,7 @@ func ResourceNutanixTemplatesV2Read(ctx context.Context, d *schema.ResourceData,
 	// version source not returned in API response, so set the value from the config
 	// this logic to ignore changes on terraform plan when there is no change in version source
 	// if there is a change in version source, then terraform plan will show the change
-	if tempVersionSpecData != nil {
+	if len(tempVersionSpecData) > 0 {
 		if versionSource, ok := tempVersionSpecData[0].(map[string]interface{})["version_source"]; ok {
 			tempVersionSpecFlattened := d.Get("template_version_spec").([]interface{})[0].(map[string]interface{})
 			tempVersionSpecFlattened["version_source"] = versionSource
@@ -290,6 +306,9 @@ func ResourceNutanixTemplatesV2Read(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 	log.Printf("[DEBUG] template_version_spec : %v", d.Get("template_version_spec"))
+	if err := d.Set("category_ext_ids", getResp.CategoryExtIds); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
@@ -2625,7 +2644,7 @@ func expandTemplateUnattendXML(unattendXML interface{}) *vmmConfig.Unattendxml {
 		unattendXMLData := unattendXML.([]interface{})
 
 		if len(unattendXMLData) > 0 {
-			if value, ok := unattendXMLData[0].(map[string]interface{})["unattend_xml"]; ok {
+			if value, ok := unattendXMLData[0].(map[string]interface{})["value"]; ok {
 				unattendXMLObj.Value = utils.StringPtr(value.(string))
 			}
 		}

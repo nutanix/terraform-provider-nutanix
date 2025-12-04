@@ -143,7 +143,7 @@ func DatasourceNutanixVolumeGroupV2Read(ctx context.Context, d *schema.ResourceD
 
 	resp, err := conn.VolumeAPIInstance.GetVolumeGroupById(utils.StringPtr(extID.(string)))
 	if err != nil {
-		return diag.Errorf("error while fetching volume : %v", err)
+		return diag.Errorf("error while fetching Volume Group : %v", err)
 	}
 
 	getResp := resp.Data.GetValue().(volumesClient.VolumeGroup)

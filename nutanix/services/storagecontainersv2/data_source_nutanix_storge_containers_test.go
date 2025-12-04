@@ -76,6 +76,21 @@ func TestAccV2NutanixStorageContainersDataSource_WithLimit(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixStorageContainersDataSource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testStorageContainersV4DatasourceV4WithInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameStorageContainersV4, "storage_containers.#"),
+					resource.TestCheckResourceAttr(datasourceNameStorageContainersV4, "storage_containers.#", "0"),
+				),
+			},
+		},
+	})
+}
 func testStorageContainersV4DatasourceV4Config() string {
 	return `
 	data "nutanix_storage_containers_v2" "test"{}
@@ -93,9 +108,9 @@ func testStorageContainersV4DatasourceV4WithFilterConfig(filepath, name string) 
 				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 			config = (jsondecode(file("%[1]s")))
-			storage_container = local.config.storage_container			
+			storage_container = local.config.storage_container
 		}
-		
+
 		resource "nutanix_storage_containers_v2" "test" {
 			name = "%[2]s"
 			cluster_ext_id = local.cluster
@@ -136,9 +151,9 @@ func testStorageContainersV4DatasourceV4WithLimitConfig(filepath, name string) s
 				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 			config = (jsondecode(file("%[1]s")))
-			storage_container = local.config.storage_container			
+			storage_container = local.config.storage_container
 		}
-		
+
 		resource "nutanix_storage_containers_v2" "test" {
 			name = "%[2]s"
 			cluster_ext_id = local.cluster
@@ -166,4 +181,12 @@ func testStorageContainersV4DatasourceV4WithLimitConfig(filepath, name string) s
 			depends_on = [nutanix_storage_containers_v2.test]
 		}
 	`, filepath, name)
+}
+
+func testStorageContainersV4DatasourceV4WithInvalidFilterConfig() string {
+	return `
+	data "nutanix_storage_containers_v2" "test" {
+		filter = "name eq 'invalid-name'"
+	}
+	`
 }

@@ -11,17 +11,16 @@ Attaches iSCSI initiator to a Volume Group identified by {extId}.
 
 ## Example Usage
 
-``` hcl
-resource "nutanix_volume_group_v2" "vg"{
-  name                               = "test_volume_group"
-  cluster_reference                  = "<Cluster uuid>"
-}
+```hcl
+
+#list iscsi clients
+data "nutanix_volume_iscsi_clients_v2" "list-iscsi-clients"{}
 
 # attach iscsi client to the volume group
 resource "nutanix_volume_group_iscsi_clients_v2" "vg_iscsi_example"{
-  vg_ext_id            = nutanix_volume_group_v2.test.id
-  ext_id               = var.vg_iscsi_ext_id
-  iscsi_initiator_name = var.vg_iscsi_initiator_name
+  vg_ext_id            = "1cdb5b48-fb2c-41b6-b751-b504117ee3e2"
+  ext_id               = data.nutanix_volume_iscsi_clients_v2.list-iscsi-clients.iscsi_clients.0.ext_id
+  iscsi_initiator_name = data.nutanix_volume_iscsi_clients_v2.list-iscsi-clients.iscsi_clients.0.iscsi_initiator_name
 }
 ```
 
@@ -30,7 +29,7 @@ The following arguments are supported:
 
 
 * `vg_ext_id`: -(Required) The external identifier of the volume group.
-* `ext_id`: -(Required) A globally unique identifier of an instance that is suitable for external consumption. 
+* `ext_id`: -(Required) A globally unique identifier of an instance that is suitable for external consumption.
 * `iscsi_initiator_name`: -iSCSI initiator name. During the attach operation, exactly one of iscsiInitiatorName and iscsiInitiatorNetworkId must be specified. This field is immutable.
 * `iscsi_initiator_network_id`: - An unique address that identifies a device on the internet or a local network in IPv4/IPv6 format or a Fully Qualified Domain Name.
 * `client_secret`: -(Optional) iSCSI initiator client secret in case of CHAP authentication. This field should not be provided in case the authentication type is not set to CHAP.
@@ -67,4 +66,4 @@ The fqdn attribute supports the following:
 * `value`: - The fully qualified domain name.
 
 
-See detailed information in [Nutanix Volumes V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.0).
+See detailed information in [Nutanix Attach an iSCSI Client to Volume Group V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.0#tag/VolumeGroups/operation/attachIscsiClient).

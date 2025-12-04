@@ -1,5 +1,5 @@
 
-#variable definations
+#variable definitions
 variable "nutanix_username" {
   type = string
 }
@@ -21,4 +21,10 @@ variable "subnet_name" {
 variable "disk_sizes" {
   type    = list(string)
   default = [1024, 2048]
+}
+variable "image_name" {
+  type = string
+}
+variable "unattend_xml_path" {
+  type = string
 }

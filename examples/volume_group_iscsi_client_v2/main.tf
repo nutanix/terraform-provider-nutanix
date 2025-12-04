@@ -43,13 +43,12 @@ provider "nutanix" {
   insecure = true
 }
 
-
 #pull cluster data
 data "nutanix_clusters_v2" "clusters" {}
 
 #pull desired cluster data from setup
 locals {
-  cluster1 = [
+  cluster_ext_id = [
     for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
     cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
   ][0]
@@ -60,18 +59,18 @@ locals {
 ##########################
 
 
-# create a volume group 
-resource "nutanix_volume_group_v2" "volume_group_example" {
-  name                               = var.volume_group_name
-  description                        = "Test Create Volume group with spec"
+# create a volume group
+resource "nutanix_volume_group_v2" "vg-example-1" {
+  name                               = "volume-group-example-001235"
+  description                        = "Create Volume group with spec"
   should_load_balance_vm_attachments = false
-  sharing_status                     = var.volume_group_sharing_status
-  target_name                        = "volumegroup-test-001234"
+  sharing_status                     = "SHARED"
+  target_name                        = "volumegroup-test-001235"
   created_by                         = "example"
-  cluster_reference                  = local.cluster1
+  cluster_reference                  = local.cluster_ext_id
   iscsi_features {
     enabled_authentications = "CHAP"
-    target_secret           = var.volume_group_target_secret
+    target_secret           = "pass.1234567890"
   }
 
   storage_features {
@@ -82,7 +81,7 @@ resource "nutanix_volume_group_v2" "volume_group_example" {
   usage_type = "USER"
   is_hidden  = false
 
-  # ignore changes to target_secret, target secret will not be returned in terraform plan output 
+  # ignore changes to target_secret, target secret will not be returned in terraform plan output
   lifecycle {
     ignore_changes = [
       iscsi_features[0].target_secret
@@ -90,9 +89,12 @@ resource "nutanix_volume_group_v2" "volume_group_example" {
   }
 }
 
+#list iscsi clients
+data "nutanix_volume_iscsi_clients_v2" "list-iscsi-clients"{}
+
 # attach iscsi client to the volume group
-resource "nutanix_volume_group_iscsi_client_v2" "vg_iscsi_example" {
-  vg_ext_id            = resource.nutanix_volume_group_v2.volume_group_example.id
-  ext_id               = var.vg_iscsi_ext_id
-  iscsi_initiator_name = var.vg_iscsi_initiator_name
+resource "nutanix_volume_group_iscsi_client_v2" "vg_iscsi_example"{
+  vg_ext_id            = nutanix_volume_group_v2.vg-example-1.id
+  ext_id               = data.nutanix_volume_iscsi_clients_v2.list-iscsi-clients.iscsi_clients.0.ext_id
+  iscsi_initiator_name = data.nutanix_volume_iscsi_clients_v2.list-iscsi-clients.iscsi_clients.0.iscsi_initiator_name
 }

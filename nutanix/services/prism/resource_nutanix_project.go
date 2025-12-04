@@ -201,7 +201,7 @@ func ResourceNutanixProject() *schema.Resource {
 				},
 			},
 			"subnet_reference_list": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -221,6 +221,10 @@ func ResourceNutanixProject() *schema.Resource {
 							Computed: true,
 						},
 					},
+				},
+				Set: func(v interface{}) int {
+					m := v.(map[string]interface{})
+					return schema.HashString(m["uuid"].(string))
 				},
 			},
 			"external_network_list": {
@@ -754,6 +758,7 @@ func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, m
 	uuid := ""
 	taskUUID := ""
 	// if use project internal flag is set ,  we will use projects_internal API
+	//nolint:staticcheck
 	if _, ok := d.GetOkExists("use_project_internal"); ok {
 		req := &v3.ProjectInternalIntentInput{
 			Spec:       expandProjectInternalSpec(d, meta),
@@ -895,7 +900,7 @@ func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).API
-
+	//nolint:staticcheck
 	if _, ok := d.GetOkExists("use_project_internal"); ok {
 		project, err := conn.V3.GetProjectInternal(ctx, d.Id())
 		if err != nil {
@@ -1049,7 +1054,7 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	uuid := ""
 	taskUUID := ""
-
+	//nolint:staticcheck
 	if _, ok := d.GetOkExists("use_project_internal"); ok {
 		request := &v3.ProjectInternalIntentInput{}
 		spec := &v3.ProjectInternalSpec{}
@@ -1112,7 +1117,7 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 			projDetails.Resources.ExternalUserGroupReferenceList = expandReferenceSet(d, "external_user_group_reference_list")
 		}
 		if d.HasChange("subnet_reference_list") {
-			projDetails.Resources.SubnetReferenceList = expandReferenceList(d, "subnet_reference_list")
+			projDetails.Resources.SubnetReferenceList = expandReferenceSet(d, "subnet_reference_list")
 		}
 		if d.HasChange("external_network_list") {
 			projDetails.Resources.ExternalNetworkList = expandReferenceList(d, "external_network_list")
@@ -1196,7 +1201,7 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 			project.Spec.Resources.ExternalUserGroupReferenceList = expandReferenceSet(d, "external_user_group_reference_list")
 		}
 		if d.HasChange("subnet_reference_list") {
-			project.Spec.Resources.SubnetReferenceList = expandReferenceList(d, "subnet_reference_list")
+			project.Spec.Resources.SubnetReferenceList = expandReferenceSet(d, "subnet_reference_list")
 		}
 		if d.HasChange("external_network_list") {
 			project.Spec.Resources.ExternalNetworkList = expandReferenceList(d, "external_network_list")
@@ -1277,7 +1282,7 @@ func expandProjectSpec(d *schema.ResourceData) *v3.ProjectSpec {
 			DefaultSubnetReference:         expandReferenceList(d, "default_subnet_reference")[0],
 			UserReferenceList:              expandReferenceSet(d, "user_reference_list"),
 			ExternalUserGroupReferenceList: expandReferenceSet(d, "external_user_group_reference_list"),
-			SubnetReferenceList:            expandReferenceList(d, "subnet_reference_list"),
+			SubnetReferenceList:            expandReferenceSet(d, "subnet_reference_list"),
 			ExternalNetworkList:            expandReferenceList(d, "external_network_list"),
 		},
 	}
@@ -1368,7 +1373,7 @@ func expandProjectDetails(d *schema.ResourceData) *v3.ProjectDetails {
 			DefaultSubnetReference:         expandReferenceList(d, "default_subnet_reference")[0],
 			UserReferenceList:              expandReferenceSet(d, "user_reference_list"),
 			ExternalUserGroupReferenceList: expandReferenceSet(d, "external_user_group_reference_list"),
-			SubnetReferenceList:            expandReferenceList(d, "subnet_reference_list"),
+			SubnetReferenceList:            expandReferenceSet(d, "subnet_reference_list"),
 			ExternalNetworkList:            expandReferenceList(d, "external_network_list"),
 			TunnelReferenceList:            expandReferenceList(d, "tunnel_reference_list"),
 			ClusterReferenceList:           expandReferenceList(d, "cluster_reference_list"),
@@ -1731,6 +1736,7 @@ func expandCreateAcp(pr []interface{}, d *schema.ResourceData, projectUUID strin
 
 				// check for project collaboration. default is set to true
 				pcCollab := true
+				//nolint:staticcheck
 				if pc, ok1 := d.GetOkExists("enable_collab"); ok1 {
 					pcCollab = pc.(bool)
 				}
@@ -1795,6 +1801,7 @@ func UpdateExpandAcpRM(pr []interface{}, res *v3.ProjectInternalIntentResponse, 
 
 				// check for project collaboration. default is set to true
 				pcCollab := true
+				//nolint:staticcheck
 				if pc, ok1 := d.GetOkExists("enable_collab"); ok1 {
 					pcCollab = pc.(bool)
 				}

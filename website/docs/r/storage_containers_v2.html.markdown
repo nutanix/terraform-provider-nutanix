@@ -14,26 +14,26 @@ Provides Nutanix resource to create VPC.
 ## Example
 
 ```hcl
-    data "nutanix_storage_containers_v2" "test"{ 
-        name = "{{name of storage container }}"
-        logical_advertised_capacity_bytes = 1073741824000
-        logical_explicit_reserved_capacity_bytes = 32
-        replication_factor = 1
-        nfs_whitelist_addresses {
-            ipv4  {
-                value = "{{ ipv4 address }}"
-                prefix_length = 32
-            }
+resource "nutanix_storage_containers_v2" "storage-container"{
+    name = "example-storage-container"
+    logical_advertised_capacity_bytes = 1073741824000
+    logical_explicit_reserved_capacity_bytes = 32
+    replication_factor = 1
+    nfs_whitelist_addresses {
+        ipv4  {
+            value = "192.168.15.0"
+            prefix_length = 32
         }
-        erasure_code = "OFF"
-        is_inline_ec_enabled = false
-        has_higher_ec_fault_domain_preference = false
-        cache_deduplication = "OFF"
-        on_disk_dedup = "OFF"
-        is_compression_enabled = true
-        is_internal = false
-        is_software_encryption_enabled = false
     }
+    erasure_code = "OFF"
+    is_inline_ec_enabled = false
+    has_higher_ec_fault_domain_preference = false
+    cache_deduplication = "OFF"
+    on_disk_dedup = "OFF"
+    is_compression_enabled = true
+    is_internal = false
+    is_software_encryption_enabled = false
+}
 ```
 
 ## Argument Reference
@@ -66,7 +66,7 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `ext_id`: - the storage container uuid
-* `tenant_id`: - A globally unique identifier that represents the tenant that owns this entity. 
+* `tenant_id`: - A globally unique identifier that represents the tenant that owns this entity.
 * `links`: - A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 
 * `container_ext_id`: - the storage container ext id
@@ -114,5 +114,16 @@ The following attributes are exported:
 * `value`: value of fqdn address
 
 
+## Import
 
-See detailed information in [Nutanix Storage Containers v4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0).
+This helps to manage existing entities which are not created through terraform. Storage Container can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_storage_containers_v2" "import_sc" {}
+
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_storage_containers_v2" "fetch_sc"{}
+terraform import nutanix_storage_containers_v2.import_sc <UUID>
+```
+
+
+See detailed information in [Nutanix Create Storage Containers v4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/StorageContainers/operation/createStorageContainer).

@@ -13,8 +13,8 @@ Retrieve the image details for the provided external identifier.
 ## Example
 
 ```hcl
-data "nutanix_image_v2" "image"{
-    ext_id = {{ ext_id of image }}
+data "nutanix_image_v2" "get-image"{
+    ext_id = "0005a7b1-0b3b-4b3b-8b3b-0b3b4b3b4b3b"
 }
 
 ```
@@ -60,4 +60,4 @@ The following attributes are exported:
 * `enforced_cluster_ext_ids`: List of cluster external identifiers for the enforced placement policy.
 * `conflicting_policy_ext_ids`: List of image placement policy external identifier that conflict with the current one.
 
-See detailed information in [Nutanix Image](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0)
+See detailed information in [Nutanix Get Image](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Images/operation/getImageById)

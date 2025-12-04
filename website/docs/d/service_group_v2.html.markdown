@@ -12,11 +12,10 @@ Get an service Group by ExtID
 
 ## Example Usage
 
-``` hcl
-
-  data "nutanix_service_group_v2" "service_group" {
-    ext_id = {{ service_group uuid }}
-  }
+```hcl
+data "nutanix_service_group_v2" "service_group" {
+  ext_id = "07167778-266d-4052-9992-f30cbfd52e83"
+}
 ```
 
 
@@ -39,7 +38,7 @@ The following attributes are exported:
 * `policy_references`: Reference to policy associated with Service Group.
 * `created_by`: created by.
 * `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
-* `tenant_id`: A globally unique identifier that represents the tenant that owns this entity. 
+* `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
 
 
 ### tcp_services, udp_services
@@ -51,4 +50,4 @@ The following attributes are exported:
 * `code`: Icmp service Code. Ignore this field if Code has to be ANY
 * `is_all_allowed`: Set this field to true if both Type and Code is ANY.
 
-See detailed information in [Nutanix service Group v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0).
+See detailed information in [Nutanix Get Service Group v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0#tag/ServiceGroups/operation/getServiceGroupById).

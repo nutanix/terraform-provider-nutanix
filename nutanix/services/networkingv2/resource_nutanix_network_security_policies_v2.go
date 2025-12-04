@@ -14,6 +14,7 @@ import (
 	import4 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -25,6 +26,9 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 		ReadContext:   ResourceNutanixNetworkSecurityPolicyV2Read,
 		UpdateContext: ResourceNutanixNetworkSecurityPolicyV2Update,
 		DeleteContext: ResourceNutanixNetworkSecurityPolicyV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -142,7 +146,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 																Computed: true,
 															},
 															"prefix_length": {
-																Type:     schema.TypeString,
+																Type:     schema.TypeInt,
 																Optional: true,
 																Computed: true,
 															},
@@ -161,7 +165,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 																Computed: true,
 															},
 															"prefix_length": {
-																Type:     schema.TypeString,
+																Type:     schema.TypeInt,
 																Optional: true,
 																Computed: true,
 															},
@@ -472,7 +476,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 		spec.Scope = &p
 	}
 	if vpcRef, ok := d.GetOk("vpc_reference"); ok {
-		spec.VpcReferences = expandStringList(vpcRef.([]interface{}))
+		spec.VpcReferences = common.ExpandListOfString(vpcRef.([]interface{}))
 	}
 
 	aJSON, _ := json.MarshalIndent(spec, "", "  ")
@@ -524,13 +528,13 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 	}
 	getResp := resp.Data.GetValue().(import1.NetworkSecurityPolicy)
 
-	if err := d.Set("name", getResp.Name); err != nil {
+	if err := d.Set("name", utils.StringValue(getResp.Name)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("type", flattenSecurityPolicyType(getResp.Type)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("description", getResp.Description); err != nil {
+	if err := d.Set("description", utils.StringValue(getResp.Description)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("state", flattenPolicyState(getResp.State)); err != nil {
@@ -578,16 +582,16 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 		}
 	}
 
-	if err := d.Set("is_ipv6_traffic_allowed", getResp.IsIpv6TrafficAllowed); err != nil {
+	if err := d.Set("is_ipv6_traffic_allowed", utils.BoolValue(getResp.IsIpv6TrafficAllowed)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("is_hitlog_enabled", getResp.IsHitlogEnabled); err != nil {
+	if err := d.Set("is_hitlog_enabled", utils.BoolValue(getResp.IsHitlogEnabled)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("scope", flattenSecurityPolicyScope(getResp.Scope)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("vpc_reference", getResp.VpcReferences); err != nil {
+	if err := d.Set("vpc_reference", utils.StringSlice(getResp.VpcReferences)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("secured_groups", utils.StringSlice(getResp.SecuredGroups)); err != nil {
@@ -605,16 +609,16 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 			return diag.FromErr(err)
 		}
 	}
-	if err := d.Set("is_system_defined", getResp.IsSystemDefined); err != nil {
+	if err := d.Set("is_system_defined", utils.BoolValue(getResp.IsSystemDefined)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("created_by", getResp.CreatedBy); err != nil {
+	if err := d.Set("created_by", utils.StringValue(getResp.CreatedBy)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+	if err := d.Set("ext_id", utils.StringValue(getResp.ExtId)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
+	if err := d.Set("tenant_id", utils.StringValue(getResp.TenantId)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("links", flattenLinksMicroSeg(getResp.Links)); err != nil {
@@ -685,7 +689,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema
 		updatedSpec.Scope = &p
 	}
 	if d.HasChange("vpc_reference") {
-		updatedSpec.VpcReferences = expandStringList(d.Get("vpc_reference").([]interface{}))
+		updatedSpec.VpcReferences = common.ExpandListOfString(d.Get("vpc_reference").([]interface{}))
 	}
 
 	aJSON, _ := json.MarshalIndent(updatedSpec, "", "  ")
@@ -791,10 +795,10 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 			isoVal := isoI[0].(map[string]interface{})
 
 			if firstIso, ok := isoVal["first_isolation_group"]; ok && len(firstIso.([]interface{})) > 0 {
-				iso.FirstIsolationGroup = expandStringList(firstIso.([]interface{}))
+				iso.FirstIsolationGroup = common.ExpandListOfString(firstIso.([]interface{}))
 			}
 			if secIso, ok := isoVal["second_isolation_group"]; ok && len(secIso.([]interface{})) > 0 {
-				iso.SecondIsolationGroup = expandStringList(secIso.([]interface{}))
+				iso.SecondIsolationGroup = common.ExpandListOfString(secIso.([]interface{}))
 			}
 			policyRules.SetValue(*iso)
 		}
@@ -806,7 +810,7 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 			appVal := appI[0].(map[string]interface{})
 
 			if secGroup, ok := appVal["secured_group_category_references"]; ok && len(secGroup.([]interface{})) > 0 {
-				app.SecuredGroupCategoryReferences = expandStringList(secGroup.([]interface{}))
+				app.SecuredGroupCategoryReferences = common.ExpandListOfString(secGroup.([]interface{}))
 			}
 			if srcAllow, ok := appVal["src_allow_spec"]; ok && len(srcAllow.(string)) > 0 {
 				const two, three = 2, 3
@@ -829,10 +833,10 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 				app.DestAllowSpec = &p
 			}
 			if srcCatRef, ok := appVal["src_category_references"]; ok && len(srcCatRef.([]interface{})) > 0 {
-				app.SrcCategoryReferences = expandStringList(srcCatRef.([]interface{}))
+				app.SrcCategoryReferences = common.ExpandListOfString(srcCatRef.([]interface{}))
 			}
 			if destCatRef, ok := appVal["dest_category_references"]; ok && len(destCatRef.([]interface{})) > 0 {
-				app.DestCategoryReferences = expandStringList(destCatRef.([]interface{}))
+				app.DestCategoryReferences = common.ExpandListOfString(destCatRef.([]interface{}))
 			}
 			if srcSubnet, ok := appVal["src_subnet"]; ok && len(srcSubnet.([]interface{})) > 0 {
 				app.SrcSubnet = expandIPv4AddressMicroseg(srcSubnet)
@@ -841,13 +845,13 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 				app.DestSubnet = expandIPv4AddressMicroseg(destSubnet)
 			}
 			if srcAddGrpRef, ok := appVal["src_address_group_references"]; ok && len(srcAddGrpRef.([]interface{})) > 0 {
-				app.SrcAddressGroupReferences = expandStringList(srcAddGrpRef.([]interface{}))
+				app.SrcAddressGroupReferences = common.ExpandListOfString(srcAddGrpRef.([]interface{}))
 			}
 			if destAddGrpRef, ok := appVal["dest_address_group_references"]; ok && len(destAddGrpRef.([]interface{})) > 0 {
-				app.DestAddressGroupReferences = expandStringList(destAddGrpRef.([]interface{}))
+				app.DestAddressGroupReferences = common.ExpandListOfString(destAddGrpRef.([]interface{}))
 			}
 			if serviceGrpRef, ok := appVal["service_group_references"]; ok && len(serviceGrpRef.([]interface{})) > 0 {
-				app.ServiceGroupReferences = expandStringList(serviceGrpRef.([]interface{}))
+				app.ServiceGroupReferences = common.ExpandListOfString(serviceGrpRef.([]interface{}))
 			}
 			if allProto, ok := appVal["is_all_protocol_allowed"]; ok {
 				app.IsAllProtocolAllowed = utils.BoolPtr(allProto.(bool))
@@ -875,7 +879,7 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 			intraVal := intraI[0].(map[string]interface{})
 
 			if secGroup, ok := intraVal["secured_group_category_references"]; ok && len(secGroup.([]interface{})) > 0 {
-				intra.SecuredGroupCategoryReferences = expandStringList(secGroup.([]interface{}))
+				intra.SecuredGroupCategoryReferences = common.ExpandListOfString(secGroup.([]interface{}))
 			}
 			if secGroupAction, ok := intraVal["secured_group_action"]; ok && len(secGroupAction.(string)) > 0 {
 				const two, three = 2, 3
@@ -961,7 +965,7 @@ func expandIsolationGroup(isolationGroup []interface{}) []import1.IsolationGroup
 			iso := import1.IsolationGroup{}
 
 			if groupCat, ok := val["group_category_references"]; ok && len(groupCat.([]interface{})) > 0 {
-				iso.GroupCategoryReferences = expandStringList(groupCat.([]interface{}))
+				iso.GroupCategoryReferences = common.ExpandListOfString(groupCat.([]interface{}))
 			}
 			isolations[k] = iso
 		}
@@ -975,20 +979,35 @@ func expandIsolationGroup(isolationGroup []interface{}) []import1.IsolationGroup
 }
 
 func expandIPv4AddressMicroseg(pr interface{}) *config.IPv4Address {
-	if pr != nil {
-		ipv4 := &config.IPv4Address{}
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
-
-		if value, ok := val["value"]; ok {
-			ipv4.Value = utils.StringPtr(value.(string))
-		}
-		if prefix, ok := val["prefix_length"]; ok {
-			ipv4.PrefixLength = utils.IntPtr(prefix.(int))
-		}
-		return ipv4
+	if pr == nil {
+		return nil
 	}
-	return nil
+
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
+	}
+
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+
+	ipv4 := &config.IPv4Address{}
+
+	if v, ok := valMap["value"]; ok {
+		if s, ok2 := v.(string); ok2 {
+			ipv4.Value = utils.StringPtr(s)
+		}
+	}
+
+	if p, ok := valMap["prefix_length"]; ok {
+		if n, ok2 := p.(int); ok2 {
+			ipv4.PrefixLength = utils.IntPtr(n)
+		}
+	}
+
+	return ipv4
 }
 
 func indexOf(slice []string, target string) int {

@@ -70,6 +70,22 @@ func TestAccV2NutanixIdentityProvidersDatasource_WithLimit(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixIdentityProvidersDatasource_WithInvalidFilter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testIdentityProvidersDatasourceWithInvalidFilterConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameIdentityProviders, "identity_providers.#"),
+					resource.TestCheckResourceAttr(datasourceNameIdentityProviders, "identity_providers.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testIdentityProvidersDatasourceConfig(filepath string) string {
 	return fmt.Sprintf(`
 	locals{
@@ -83,15 +99,15 @@ func testIdentityProvidersDatasourceConfig(filepath string) string {
 		email_attribute = local.identity_providers.email_attr
 		groups_attribute = local.identity_providers.groups_attr
 		groups_delim = local.identity_providers.groups_delim
-		idp_metadata_xml = local.identity_providers.idp_metadata_xml
+		idp_metadata_xml = file("%[2]s") # xml content
 		entity_issuer = local.identity_providers.entity_issuer
-		is_signed_authn_req_enabled = local.identity_providers.is_signed_authn_req_enabled	
+		is_signed_authn_req_enabled = local.identity_providers.is_signed_authn_req_enabled
 		custom_attributes = local.identity_providers.custom_attributes
 	}
 	data "nutanix_saml_identity_providers_v2" "test"{
 		depends_on = [ resource.nutanix_saml_identity_providers_v2.test ]
 	}
-	`, filepath)
+	`, filepath, xmlFilePath)
 }
 
 func testIdentityProvidersDatasourceWithFilterConfig(filepath string) string {
@@ -108,18 +124,18 @@ func testIdentityProvidersDatasourceWithFilterConfig(filepath string) string {
 		email_attribute = local.identity_providers.email_attr
 		groups_attribute = local.identity_providers.groups_attr
 		groups_delim = local.identity_providers.groups_delim
-		idp_metadata_xml = local.identity_providers.idp_metadata_xml
+		idp_metadata_xml = file("%[2]s") # xml content
 		entity_issuer = local.identity_providers.entity_issuer
-		is_signed_authn_req_enabled = local.identity_providers.is_signed_authn_req_enabled	
+		is_signed_authn_req_enabled = local.identity_providers.is_signed_authn_req_enabled
 		custom_attributes = local.identity_providers.custom_attributes
 	}
 
 	data "nutanix_saml_identity_providers_v2" "test" {
 		filter = "extId eq '${resource.nutanix_saml_identity_providers_v2.test.id}'"
-		depends_on = [ resource.nutanix_saml_identity_providers_v2.test ]	
+		depends_on = [ resource.nutanix_saml_identity_providers_v2.test ]
 	}
-	
-	`, filepath)
+
+	`, filepath, xmlFilePath)
 }
 
 func testIdentityProvidersDatasourceWithLimitConfig(filepath string) string {
@@ -128,22 +144,30 @@ func testIdentityProvidersDatasourceWithLimitConfig(filepath string) string {
 			config = (jsondecode(file("%s")))
 			identity_providers = local.config.iam.identity_providers
 		}
-		
+
 		resource "nutanix_saml_identity_providers_v2" "test" {
 			name = local.identity_providers.name
 			username_attribute = local.identity_providers.username_attr
 			email_attribute = local.identity_providers.email_attr
 			groups_attribute = local.identity_providers.groups_attr
 			groups_delim = local.identity_providers.groups_delim
-			idp_metadata_xml = local.identity_providers.idp_metadata_xml
+			idp_metadata_xml = file("%[2]s") # xml content
 			entity_issuer = local.identity_providers.entity_issuer
-			is_signed_authn_req_enabled = local.identity_providers.is_signed_authn_req_enabled	
+			is_signed_authn_req_enabled = local.identity_providers.is_signed_authn_req_enabled
 			custom_attributes = local.identity_providers.custom_attributes
 		}
 
 		data "nutanix_saml_identity_providers_v2" "test" {
 			limit      = 1
-			depends_on = [ resource.nutanix_saml_identity_providers_v2.test ]	
+			depends_on = [ resource.nutanix_saml_identity_providers_v2.test ]
 		}
-	`, filepath)
+	`, filepath, xmlFilePath)
+}
+
+func testIdentityProvidersDatasourceWithInvalidFilterConfig() string {
+	return `
+	data "nutanix_saml_identity_providers_v2" "test" {
+		filter = "extId eq 'invalid_filter'"
+	}
+	`
 }

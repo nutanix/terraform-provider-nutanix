@@ -12,7 +12,9 @@ import (
 	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -22,6 +24,9 @@ func ResourceNutanixSubnetV2() *schema.Resource {
 		ReadContext:   ResourceNutanixSubnetV2Read,
 		UpdateContext: ResourceNutanixSubnetV2Update,
 		DeleteContext: ResourceNutanixSubnetV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Optional: true,
@@ -455,11 +460,8 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	inputSpec := import1.Subnet{}
-	subnetName := ""
-	subnetType := ""
 	if name, nok := d.GetOk("name"); nok {
 		inputSpec.Name = utils.StringPtr(name.(string))
-		subnetName = name.(string)
 	}
 	if desc, ok := d.GetOk("description"); ok {
 		inputSpec.Description = utils.StringPtr(desc.(string))
@@ -474,7 +476,6 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 
 		p := import1.SubnetType(pVal.(int))
 		inputSpec.SubnetType = &p
-		subnetType = subType.(string)
 	}
 
 	if networkID, ok := d.GetOk("network_id"); ok {
@@ -493,11 +494,13 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	if vpcRef, ok := d.GetOk("vpc_reference"); ok {
 		inputSpec.VpcReference = utils.StringPtr(vpcRef.(string))
 	}
-	if isNat, ok := d.GetOk("is_nat_enabled"); ok {
-		inputSpec.IsNatEnabled = utils.BoolPtr(isNat.(bool))
+	if common.IsExplicitlySet(d, "is_nat_enabled") {
+		isNat := d.Get("is_nat_enabled").(bool)
+		inputSpec.IsNatEnabled = utils.BoolPtr(isNat)
 	}
-	if isExt, ok := d.GetOk("is_external"); ok {
-		inputSpec.IsExternal = utils.BoolPtr(isExt.(bool))
+	if common.IsExplicitlySet(d, "is_external") {
+		isExt := d.Get("is_external").(bool)
+		inputSpec.IsExternal = utils.BoolPtr(isExt)
 	}
 	if reservedIPAdd, ok := d.GetOk("reserved_ip_addresses"); ok {
 		inputSpec.ReservedIpAddresses = expandIPAddress(reservedIPAdd.([]interface{}))
@@ -532,10 +535,12 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	if ipUsage, ok := d.GetOk("ip_usage"); ok {
 		inputSpec.IpUsage = expandIPUsage(ipUsage)
 	}
-
 	if ipConfig, ok := d.GetOk("ip_config"); ok {
 		inputSpec.IpConfig = expandIPConfig(ipConfig.([]interface{}))
 	}
+
+	aJSON, _ := json.MarshalIndent(inputSpec, "", " ")
+	log.Printf("[DEBUG] Subnet create payload : %s", string(aJSON))
 
 	resp, err := conn.SubnetAPIInstance.CreateSubnet(&inputSpec)
 	if err != nil {
@@ -559,30 +564,24 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for subnet (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-	// Get UUID from TASK API, Entities not present in Task API
 
-	// resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-	// if err != nil {
-	// 	return diag.Errorf("error while fetching subnet UUID : %v", err)
-	// }
-	// rUUID := resourceUUID.Data.GetValue().(import2.Task)
-
-	// uuid := rUUID.EntitiesAffected[0].ExtId
-
-	// Fetch UUID based on Vlan id and vlan Name
-
-	readResp, err := conn.SubnetAPIInstance.ListSubnets(nil, nil, nil, nil, nil, nil)
+	// Get UUID from TASK API
+	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching subnets : %v", err)
+		return diag.Errorf("error while fetching task details : %v", err)
 	}
-
-	getAllSubnetResp := readResp.Data.GetValue().([]import1.Subnet)
-
-	for _, subnet := range getAllSubnetResp {
-		if (utils.StringValue(subnet.Name) == subnetName) && (flattenSubnetType(subnet.SubnetType) == subnetType) {
-			d.SetId(*subnet.ExtId)
+	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+	var subnetExtID *string
+	for _, entity := range rUUID.EntitiesAffected {
+		if utils.StringValue(entity.Rel) == "networking:config:subnet" {
+			subnetExtID = entity.ExtId
 			break
 		}
+	}
+	if subnetExtID != nil {
+		d.SetId(*subnetExtID)
+	} else {
+		return diag.Errorf("error while fetching subnet ExtId : subnet entity not found in EntitiesAffected")
 	}
 	return ResourceNutanixSubnetV2Read(ctx, d, meta)
 }
@@ -841,7 +840,7 @@ func expandDhcpOptions(pr []interface{}) *import1.DhcpOptions {
 			dhcpOps.DomainName = utils.StringPtr(dn.(string))
 		}
 		if searchDomain, ok := val["search_domains"]; ok && len(searchDomain.([]interface{})) > 0 {
-			dhcpOps.SearchDomains = expandStringList(searchDomain.([]interface{}))
+			dhcpOps.SearchDomains = common.ExpandListOfString(searchDomain.([]interface{}))
 		}
 		if tftp, ok := val["tftp_server_name"]; ok && len(tftp.(string)) > 0 {
 			dhcpOps.TftpServerName = utils.StringPtr(tftp.(string))
@@ -877,37 +876,67 @@ func expandIPAddress(pr []interface{}) []config.IPAddress {
 }
 
 func expandIPv4Address(pr interface{}) *config.IPv4Address {
-	if pr != nil {
-		ipv4 := &config.IPv4Address{}
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
-
-		if value, ok := val["value"]; ok && len(value.(string)) > 0 {
-			ipv4.Value = utils.StringPtr(value.(string))
-		}
-		if prefix, ok := val["prefix_length"]; ok {
-			ipv4.PrefixLength = utils.IntPtr(prefix.(int))
-		}
-		return ipv4
+	if pr == nil {
+		return nil
 	}
-	return nil
+
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
+	}
+
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+
+	ipv4 := &config.IPv4Address{}
+
+	if v, ok := valMap["value"]; ok {
+		if s, ok2 := v.(string); ok2 && len(s) > 0 {
+			ipv4.Value = utils.StringPtr(s)
+		}
+	}
+
+	if p, ok := valMap["prefix_length"]; ok {
+		if n, ok2 := p.(int); ok2 {
+			ipv4.PrefixLength = utils.IntPtr(n)
+		}
+	}
+
+	return ipv4
 }
 
 func expandIPv6Address(pr interface{}) *config.IPv6Address {
-	if pr != nil {
-		ipv6 := &config.IPv6Address{}
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
-
-		if value, ok := val["value"]; ok && len(value.(string)) > 0 {
-			ipv6.Value = utils.StringPtr(value.(string))
-		}
-		if prefix, ok := val["prefix_length"]; ok {
-			ipv6.PrefixLength = utils.IntPtr(prefix.(int))
-		}
-		return ipv6
+	if pr == nil {
+		return nil
 	}
-	return nil
+
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
+	}
+
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+
+	ipv6 := &config.IPv6Address{}
+
+	if v, ok := valMap["value"]; ok {
+		if s, ok2 := v.(string); ok2 && len(s) > 0 {
+			ipv6.Value = utils.StringPtr(s)
+		}
+	}
+
+	if p, ok := valMap["prefix_length"]; ok {
+		if n, ok2 := p.(int); ok2 {
+			ipv6.PrefixLength = utils.IntPtr(n)
+		}
+	}
+
+	return ipv6
 }
 
 func expandVirtualSwitch(pr interface{}) *import1.VirtualSwitch {
@@ -1008,39 +1037,63 @@ func expandHost(pr []interface{}) []import1.Host {
 }
 
 func expandIPv4Subnet(pr interface{}) *import1.IPv4Subnet {
-	if pr != nil {
-		ipv4Subs := &import1.IPv4Subnet{}
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
-
-		if ip, ok := val["ip"]; ok {
-			ipv4Subs.Ip = expandIPv4Address(ip)
-		}
-		if prefix, ok := val["prefix_length"]; ok {
-			ipv4Subs.PrefixLength = utils.IntPtr(prefix.(int))
-		}
-
-		return ipv4Subs
+	if pr == nil {
+		return nil
 	}
-	return nil
+
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
+	}
+
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+
+	ipv4Subs := &import1.IPv4Subnet{}
+
+	if ip, ok := valMap["ip"]; ok {
+		ipv4Subs.Ip = expandIPv4Address(ip)
+	}
+
+	if prefix, ok := valMap["prefix_length"]; ok {
+		if n, ok2 := prefix.(int); ok2 {
+			ipv4Subs.PrefixLength = utils.IntPtr(n)
+		}
+	}
+
+	return ipv4Subs
 }
 
 func expandIPv6Subnet(pr interface{}) *import1.IPv6Subnet {
-	if pr != nil {
-		ipv6Subs := &import1.IPv6Subnet{}
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
-
-		if ip, ok := val["ip"]; ok {
-			ipv6Subs.Ip = expandIPv6Address(ip)
-		}
-		if prefix, ok := val["prefix_length"]; ok {
-			ipv6Subs.PrefixLength = utils.IntPtr(prefix.(int))
-		}
-
-		return ipv6Subs
+	if pr == nil {
+		return nil
 	}
-	return nil
+
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
+	}
+
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+
+	ipv6Subs := &import1.IPv6Subnet{}
+
+	if ip, ok := valMap["ip"]; ok {
+		ipv6Subs.Ip = expandIPv6Address(ip)
+	}
+
+	if prefix, ok := valMap["prefix_length"]; ok {
+		if n, ok2 := prefix.(int); ok2 {
+			ipv6Subs.PrefixLength = utils.IntPtr(n)
+		}
+	}
+
+	return ipv6Subs
 }
 
 func expandVpc(pr interface{}) *import1.Vpc {
@@ -1112,7 +1165,7 @@ func expandExternalSubnet(pr []interface{}) []import1.ExternalSubnet {
 				sub.ExternalIps = expandIPAddress(extips.([]interface{}))
 			}
 			if gatewayNodes, ok := val["gateway_nodes"]; ok && len(gatewayNodes.([]interface{})) > 0 {
-				sub.GatewayNodes = expandStringList(gatewayNodes.([]interface{}))
+				sub.GatewayNodes = common.ExpandListOfString(gatewayNodes.([]interface{}))
 			}
 			if activeGatewayNode, ok := val["active_gateway_node"]; ok && len(activeGatewayNode.([]interface{})) > 0 {
 				sub.ActiveGatewayNodes = expandGatewayNodeReference(activeGatewayNode)
@@ -1165,39 +1218,67 @@ func expandIPAddressMap(pr interface{}) *config.IPAddress {
 }
 
 func expandIPv4AddressMap(pr interface{}) *config.IPv4Address {
-	if pr != nil {
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
-
-		ipv4Add := &config.IPv4Address{}
-
-		if value, ok := val["value"]; ok {
-			ipv4Add.Value = utils.StringPtr(value.(string))
-		}
-		if prefix, ok := val["prefix_length"]; ok {
-			ipv4Add.PrefixLength = utils.IntPtr(prefix.(int))
-		}
-		return ipv4Add
+	if pr == nil {
+		return nil
 	}
-	return nil
+
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
+	}
+
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+
+	ipv4Add := &config.IPv4Address{}
+
+	if v, ok := valMap["value"]; ok {
+		if s, ok2 := v.(string); ok2 {
+			ipv4Add.Value = utils.StringPtr(s)
+		}
+	}
+
+	if p, ok := valMap["prefix_length"]; ok {
+		if n, ok2 := p.(int); ok2 {
+			ipv4Add.PrefixLength = utils.IntPtr(n)
+		}
+	}
+
+	return ipv4Add
 }
 
 func expandIPv6AddressMap(pr interface{}) *config.IPv6Address {
-	if pr != nil {
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
-
-		ipv6Add := &config.IPv6Address{}
-
-		if value, ok := val["value"]; ok {
-			ipv6Add.Value = utils.StringPtr(value.(string))
-		}
-		if prefix, ok := val["prefix_length"]; ok {
-			ipv6Add.PrefixLength = utils.IntPtr(prefix.(int))
-		}
-		return ipv6Add
+	if pr == nil {
+		return nil
 	}
-	return nil
+
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
+	}
+
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+
+	ipv6Add := &config.IPv6Address{}
+
+	if v, ok := valMap["value"]; ok {
+		if s, ok2 := v.(string); ok2 {
+			ipv6Add.Value = utils.StringPtr(s)
+		}
+	}
+
+	if p, ok := valMap["prefix_length"]; ok {
+		if n, ok2 := p.(int); ok2 {
+			ipv6Add.PrefixLength = utils.IntPtr(n)
+		}
+	}
+
+	return ipv6Add
 }
 
 func expandIPSubnet(pr []interface{}) []import1.IPSubnet {
@@ -1348,18 +1429,6 @@ func expandIPv6Pool(pr []interface{}) []import1.IPv6Pool {
 			pools[k] = pool
 		}
 		return pools
-	}
-	return nil
-}
-
-func expandStringList(pr []interface{}) []string {
-	if len(pr) > 0 {
-		strList := make([]string, len(pr))
-
-		for k, v := range pr {
-			strList[k] = v.(string)
-		}
-		return strList
 	}
 	return nil
 }

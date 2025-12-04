@@ -13,21 +13,24 @@ Provides a resource to Create a SAML Identity Provider.
 ## Example Usage
 
 ```hcl
-    resource "nutanix_saml_identity_providers_v2" "idp"{
-      idp_metadata {
-        entity_id = "<entity_id>"
-        login_url = "<login_url>"
-        logout_url = "<logout_url>"
-        error_url = "<error_url>"
-        certificate = "<certificate>"
-        name_id_policy_format = "<name_id_policy_format>  "
-      }
-      name = "<name>"
-      username_attribute = "<username_attr>"
-      email_attribute = "<email_attr>"
-      entity_issuer = "<entity_issuer>"
-      is_signed_authn_req_enabled = "<is_signed_authn_req_enabled>"
-    }
+resource "nutanix_saml_identity_providers_v2" "idp" {
+  name                        = "example_idp_name"
+  idp_metadata {
+    entity_id = "entity_id"
+    login_url = "login_url"
+    logout_url = "logout_url"
+    error_url = "error_url"
+    certificate = "certificate"
+  }
+  username_attribute          = "username"
+  email_attribute             = "email"
+  groups_attribute            = "groups"
+  groups_delim                = "," # such as ',' or ';'
+  idp_metadata_xml            = "<IDENTITY_PROVIDER_METADATA_XML content>"
+  entity_issuer               = "entity_issuer_issuer"
+  is_signed_authn_req_enabled = true
+  custom_attributes           = ["custom1", "custom2"]
+}
 ```
 
 ##  Argument Reference
@@ -56,8 +59,8 @@ The idp_metadata attribute supports the following:
 * `logout_url`: -(Optional) Logout URL of the Identity provider.
 * `error_url`: - (Optional) Error URL of the Identity provider.
 * `certificate`: -(Required) Certificate for verification.
-* `name_id_policy_format`: -(Optional) Name ID Policy format. 
-  * supported values: 
+* `name_id_policy_format`: -(Optional) Name ID Policy format.
+  * supported values:
     * `emailAddress`: -  Uses email address as NameID format
     * `encrypted`: -  Uses encrypted as NameID format.
     * `unspecified`: -  NameID format is left to individual implementations.
@@ -83,7 +86,7 @@ The following attributes are exported:
 * `custom_attr`: - SAML assertions for list of custom attribute elements.
 * `entity_issuer`: - It will be used as Issuer in SAML authnRequest.
 * `is_signed_authn_req_enabled`: - Flag indicating signing of SAML authnRequests.
-* `created_time`: - Creation time of the SAML Identity Provider. 
+* `created_time`: - Creation time of the SAML Identity Provider.
 * `last_updated_time`: - Last updated time of the SAML Identity Provider.
 * `created_by`: - User or Service who created the SAML Identity Provider.
 
@@ -104,8 +107,8 @@ The idp_metadata attribute supports the following:
 * `logout_url`: - Logout URL of the Identity provider.
 * `error_url`: - Error URL of the Identity provider.
 * `certificate`: - Certificate for verification.
-* `name_id_policy_format`: - Name ID Policy format. 
-  * supported values: 
+* `name_id_policy_format`: - Name ID Policy format.
+  * supported values:
     * `emailAddress`: -  Uses email address as NameID format
     * `encrypted`: -  Uses encrypted as NameID format.
     * `unspecified`: -  NameID format is left to individual implementations.
@@ -115,5 +118,20 @@ The idp_metadata attribute supports the following:
     * `kerberos`: -  	Uses kerberos principal name as NameID format.
     * `persistent`: -  Uses persistent name identifier as NameID format.
     * `entity`: -  Uses identifier of an entity as NameID format.
+
+
+
+## Import
+
+This helps to manage existing entities which are not created through terraform. SAML Identity Provider can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_saml_identity_providers_v2" "import_saml_idp" {}
+
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_saml_identity_providers_v2" "fetch_saml_idps"{}
+terraform import nutanix_saml_identity_providers_v2.import_saml_idp <UUID>
+```
+
 
 See detailed information in [Nutanix SAML Identity Providers v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0).

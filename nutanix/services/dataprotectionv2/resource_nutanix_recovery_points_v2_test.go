@@ -31,7 +31,7 @@ func TestAccV2NutanixRecoveryPointsResource_VmRecoveryPoints2(t *testing.T) {
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -64,7 +64,7 @@ func TestAccV2NutanixRecoveryPointsResource_VmRecoveryPointsWithAppConsProps(t *
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -96,7 +96,7 @@ func TestAccV2NutanixRecoveryPointsResource_VmRecoveryPointsWithMultipleVms(t *t
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -126,7 +126,7 @@ func TestAccV2NutanixRecoveryPointsResource_VolumeGroupRecoveryPoints(t *testing
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -154,7 +154,7 @@ func TestAccV2NutanixRecoveryPointsResource_VolumeGroupRecoveryPointsWithMultipl
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -184,7 +184,7 @@ func TestAccV2NutanixRecoveryPointsResource_RecoveryPointWithMultipleVmAndVGs(t 
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -220,7 +220,7 @@ func TestAccV2NutanixRecoveryPointsResource_UpdateExpirationTime(t *testing.T) {
 	expirationTimeUpdateFormatted := expirationTimeUpdate.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -262,7 +262,7 @@ func testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTime s
 			expiration_time = "%[2]s"
 			recovery_point_type = "APPLICATION_CONSISTENT"
 			status = "COMPLETE"
-			vm_ext_id = nutanix_virtual_machine_v2.test-1.id 
+			vm_ext_id = nutanix_virtual_machine_v2.test-1.id
 		}
 	}`, name, expirationTime)
 }
@@ -276,10 +276,10 @@ func testRecoveryPointsResourceConfigWithVMRecoveryPointsWithMultipleVms(name, e
 		status              = "COMPLETE"
 		recovery_point_type = "CRASH_CONSISTENT"
 		vm_recovery_points {
-			vm_ext_id = nutanix_virtual_machine_v2.test-1.id 
+			vm_ext_id = nutanix_virtual_machine_v2.test-1.id
 		}
 		vm_recovery_points {
-			vm_ext_id = nutanix_virtual_machine_v2.test-2.id 
+			vm_ext_id = nutanix_virtual_machine_v2.test-2.id
 		}
 	}`, name, expirationTime)
 }
@@ -293,14 +293,14 @@ func testRecoveryPointsResourceConfigWithVMRecoveryPointsWithAppConsProps(name, 
 		status              = "COMPLETE"
 		recovery_point_type = "APPLICATION_CONSISTENT"
 		vm_recovery_points {
-			vm_ext_id = nutanix_virtual_machine_v2.test-1.id 
+			vm_ext_id = nutanix_virtual_machine_v2.test-1.id
 			application_consistent_properties {
 				  backup_type               = "FULL_BACKUP"
 				  should_include_writers    = true
 				  writers                   = ["0f95b402-67aa-431c-9eab-bf0907a99345", "0f95b402-67aa-431c-9eab-bf0907a99346"]
 				  should_store_vss_metadata = true
 				  object_type = "dataprotection.v4.common.VssProperties"
-			}  
+			}
 		}
 	}`, name, expirationTime)
 }
@@ -315,7 +315,7 @@ func testRecoveryPointsResourceConfigWithVolumeGroupRecoveryPoints(name, expirat
 		recovery_point_type = "CRASH_CONSISTENT"
 		volume_group_recovery_points {
 			volume_group_ext_id = nutanix_volume_group_v2.test-1.id
-		}			
+		}
 	}`, name, expirationTime)
 }
 
@@ -330,10 +330,10 @@ func testRecoveryPointsResourceConfigWithVolumeGroupRecoveryPointsWithMultipleVG
 		recovery_point_type = "CRASH_CONSISTENT"
 		volume_group_recovery_points {
 			volume_group_ext_id = nutanix_volume_group_v2.test-1.id
-		}	
+		}
 		volume_group_recovery_points {
 			volume_group_ext_id = nutanix_volume_group_v2.test-2.id
-		}			
+		}
 	}`, name, expirationTime)
 }
 
@@ -348,17 +348,17 @@ func testRecoveryPointsResourceConfigWithVolumeGroupRecoveryPointsWithMultipleVM
 		status              = "COMPLETE"
 		recovery_point_type = "CRASH_CONSISTENT"
         vm_recovery_points {
-			vm_ext_id = nutanix_virtual_machine_v2.test-1.id 
+			vm_ext_id = nutanix_virtual_machine_v2.test-1.id
 		}
 		vm_recovery_points {
-			vm_ext_id = nutanix_virtual_machine_v2.test-2.id 
+			vm_ext_id = nutanix_virtual_machine_v2.test-2.id
 		}
 		volume_group_recovery_points {
 			volume_group_ext_id = nutanix_volume_group_v2.test-1.id
-		}	
+		}
 		volume_group_recovery_points {
 			volume_group_ext_id = nutanix_volume_group_v2.test-2.id
-		}			
+		}
 	}`, name, expirationTime)
 }
 
@@ -377,7 +377,7 @@ func testAccVolumeGroup1ResourceConfig(name, desc string) string {
 		name                               = "%[1]s"
 		description                        = "%[2]s"
 		should_load_balance_vm_attachments = false
-		sharing_status                     = "SHARED"		
+		sharing_status                     = "SHARED"
 		created_by 						   = "admin"
 		cluster_reference                  = local.cluster_id
 		iscsi_features {
@@ -396,7 +396,7 @@ func testAccVolumeGroup1ResourceConfig(name, desc string) string {
 			  iscsi_features[0].target_secret
 			]
 		}
-	  }	  
+	  }
 	`, name, desc)
 }
 
@@ -407,7 +407,7 @@ func testAccVolumeGroup2ResourceConfig(name, desc string) string {
 		name                               = "%[1]s"
 		description                        = "%[2]s"
 		should_load_balance_vm_attachments = false
-		sharing_status                     = "SHARED"		
+		sharing_status                     = "SHARED"
 		created_by 						   = "admin"
 		cluster_reference                  = local.cluster_id
 		iscsi_features {
@@ -426,6 +426,6 @@ func testAccVolumeGroup2ResourceConfig(name, desc string) string {
 			  iscsi_features[0].target_secret
 			]
 		}
-	  }	  
+	  }
 	`, name, desc)
 }

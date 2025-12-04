@@ -36,12 +36,15 @@ func TestAccV2NutanixPbrDataSource_Basic(t *testing.T) {
 
 func testAccPbrDataSourceConfig(name, desc string) string {
 	return fmt.Sprintf(`
-	data "nutanix_clusters" "clusters" {}
+	data "nutanix_clusters_v2" "clusters" {}
 
 	locals {
-		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+		cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
 	}
-	
+
 	resource "nutanix_subnet_v2" "test" {
 		name = "terraform-test-subnet-vpc_%[1]s"
 		description = "test subnet description"
@@ -70,7 +73,7 @@ func testAccPbrDataSourceConfig(name, desc string) string {
 				}
 			}
 		}
-		depends_on = [data.nutanix_clusters.clusters]
+		depends_on = [data.nutanix_clusters_v2.clusters]
 	}
 	resource "nutanix_vpc_v2" "test" {
 		name =  "pbr_vpc_%[1]s"

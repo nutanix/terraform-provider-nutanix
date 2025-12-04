@@ -50,7 +50,7 @@ data "nutanix_clusters_v2" "clusters" {}
 
 #pull desired cluster data from setup
 locals {
-  cluster1 = [
+  cluster_ext_id = [
     for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
     cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
   ][0]
@@ -61,18 +61,18 @@ locals {
 ##########################
 
 
-# create a volume group 
+# create a volume group
 resource "nutanix_volume_group_v2" "volume_group_example" {
-  name                               = var.volume_group_name
-  description                        = "Test Create Volume group with spec"
+  name                               = "volume-group-example-001234"
+  description                        = "Create Volume group with spec example"
   should_load_balance_vm_attachments = false
-  sharing_status                     = var.volume_group_sharing_status
+  sharing_status                     = "SHARED"
   target_name                        = "volumegroup-test-001234"
   created_by                         = "example"
-  cluster_reference                  = local.cluster1
+  cluster_reference                  = local.cluster_ext_id
   iscsi_features {
     enabled_authentications = "CHAP"
-    target_secret           = var.volume_group_target_secret
+    target_secret           = "pass.1234567890"
   }
 
   storage_features {
@@ -83,12 +83,17 @@ resource "nutanix_volume_group_v2" "volume_group_example" {
   usage_type = "USER"
   is_hidden  = false
 
-  # ignore changes to target_secret, target secert will not be returned in terraform plan output 
+  # ignore changes to target_secret, target secret will not be returned in terraform plan output
   lifecycle {
     ignore_changes = [
       iscsi_features[0].target_secret
     ]
   }
+}
+
+data "nutanix_storage_containers_v2" "sg" {
+  filter = "clusterExtId eq '${local.cluster_ext_id}'"
+  limit  = 1
 }
 
 # create a volume group disk, and attach it to the volume group
@@ -104,7 +109,7 @@ resource "nutanix_volume_group_disk_v2" "disk_example" {
 
   disk_data_source_reference {
     name        = "disk1"
-    ext_id      = var.disk_data_source_reference_ext_id
+    ext_id      = data.nutanix_storage_containers_v2.sg.storage_containers[0].ext_id
     entity_type = "STORAGE_CONTAINER"
     uris        = ["uri1", "uri2"]
   }
@@ -130,13 +135,13 @@ resource "nutanix_volume_group_disk_v2" "disk_example" {
 
 # pull all disks in a volume group
 data "nutanix_volume_group_disks_v2" "vg_disks_example" {
-  volume_group_ext_id = resource.nutanix_volume_group_v2.volume_group_example.id
-  filter              = "startswith(storageContainerId, 'value')"
+  volume_group_ext_id = nutanix_volume_group_v2.volume_group_example.id
+  filter              = "startswith(storageContainerId, '${nutanix_volume_group_disk_v2.disk_example.disk_data_source_reference.0.ext_id}')"
   limit               = 2
 }
 
 # pull a specific disk in a volume group
 data "nutanix_volume_group_disk_v2" "vg_disk_example" {
-  ext_id              = var.volume_group_disk_ext_id
-  volume_group_ext_id = var.volume_group_ext_id
+  ext_id              = nutanix_volume_group_disk_v2.disk_example.id
+  volume_group_ext_id = nutanix_volume_group_v2.volume_group_example.id
 }

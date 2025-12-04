@@ -12,19 +12,50 @@ Create an service Group
 
 ## Example Usage
 
-``` hcl
-resource "nutanix_service_groups_v2" "service-group"{
-	name = "{{ name }}"
-	description = "{{ desc }}"
-	tcp_services {
-		start_port = "232"
-		end_port = "232"
-	}
-	udp_services {
-		start_port = "232"
-		end_port = "232"
-	}
+```hcl
+
+# Add Service  group. with TCP and UDP
+resource "nutanix_service_groups_v2" "tcp-udp-service" {
+  name        = "service_group_tcp_udp"
+  description = "service group description"
+  tcp_services {
+    start_port = "232"
+    end_port   = "232"
+  }
+  udp_services {
+    start_port = "232"
+    end_port   = "232"
+  }
 }
+
+# service group with ICMP
+resource "nutanix_service_groups_v2" "icmp-service" {
+  name        = "service_group_icmp"
+  description = "service group description"
+  icmp_services {
+    type = 8
+    code = 0
+  }
+}
+
+# service group with All TCP, UDP and ICMP
+resource "nutanix_service_groups_v2" "all-service" {
+  name        = "service_group_udp_tcp_icmp"
+  description = "service group description"
+  tcp_services {
+    start_port = "232"
+    end_port   = "232"
+  }
+  udp_services {
+    start_port = "232"
+    end_port   = "232"
+  }
+  icmp_services {
+    type = 8
+    code = 0
+  }
+}
+
 ```
 
 
@@ -55,10 +86,20 @@ The following attributes are exported:
 
 * `ext_id`: address group uuid.
 * `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
-* `tenant_id`: A globally unique identifier that represents the tenant that owns this entity. 
+* `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
 * `policy_references`: Reference to policy associated with Address Group.
 * `created_by`: created by.
 * `is_system_defined`: Service Group is system defined or not.
 
+## Import
 
-See detailed information in [Nutanix Address Groups V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0).
+This helps to manage existing entities which are not created through terraform. Service Groups can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_service_groups_v2" "import_service_group" {}
+
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_service_groups_v2" "fetch_sg"{}
+terraform import nutanix_service_groups_v2.import_service_group <UUID>
+```
+
+See detailed information in [Nutanix Service Groups V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0#tag/ServiceGroups/operation/createServiceGroup).

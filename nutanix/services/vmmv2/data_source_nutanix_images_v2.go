@@ -246,6 +246,21 @@ func DatasourceNutanixImagesV4Read(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return diag.Errorf("error while fetching images : %v", err)
 	}
+
+	if resp.Data == nil {
+		if err := d.Set("images", make([]interface{}, 0)); err != nil {
+			return diag.FromErr(err)
+		}
+
+		d.SetId(utils.GenUUID())
+
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No data found.",
+			Detail:   "The API returned an empty list of images.",
+		}}
+	}
+
 	getResp := resp.Data.GetValue().([]import5.Image)
 
 	if err := d.Set("images", flattenImagesEntities(getResp)); err != nil {

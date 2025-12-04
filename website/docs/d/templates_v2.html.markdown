@@ -13,7 +13,15 @@ List Templates with details like name, description, VM configuration, etc. This 
 ## Example
 
 ```hcl
-    data "nutanix_templates_v2" "templates"{}
+# List all templates
+data "nutanix_templates_v2" "list-templates"{}
+
+# List templates with filter, page and limit
+data "nutanix_templates_v2" "filtered-templates"{
+    filter="startswith(templateName,'template_name')"
+    page=0
+    limit=10
+}
 ```
 
 ## Argument Reference
@@ -22,12 +30,29 @@ The following arguments are supported:
 
 * `page`: A URL query parameter that specifies the page number of the result set. It must be a positive integer between 0 and the maximum number of pages that are available for that resource. Any number out of this range might lead to no results. Default is 0.
 * `limit`: A URL query parameter that specifies the total number of records returned in the result set. Must be a positive integer between 1 and 100. Any number out of this range will lead to a validation error. If the limit is not provided, a default value of 50 records will be returned in the result set.
-* `filter`: A URL query parameter that allows clients to filter a collection of resources. The expression specified with $filter is evaluated for each resource in the collection, and only items where the expression evaluates to true are included in the response. Expression specified with the $filter must conform to the OData V4.01 URL conventions.
-* `order_by`: A URL query parameter that allows clients to specify the sort criteria for the returned list of objects. Resources can be sorted in ascending order using asc or descending order using desc. If asc or desc are not specified, the resources will be sorted in ascending order by default.
-* `templates`: List of all templates. 
+* `filter`: A URL query parameter that allows clients to filter a collection of resources. The expression specified with \$filter is evaluated for each resource in the collection, and only items where the expression evaluates to true are included in the response. Expression specified with the \$filter must conform to the OData V4.01 URL conventions. For example, filter '\$filter=name eq 'karbon-ntnx-1.0' would filter the result on cluster name 'karbon-ntnx1.0', filter '\$filter=startswith(name, 'C')' would filter on cluster name starting with 'C'. The filter can be applied to the following fields:
+    - templateName
+* `order_by`: A URL query parameter that allows clients to specify the sort criteria for the returned list of objects. Resources can be sorted in ascending order using asc or descending order using desc. If asc or desc are not specified, the resources will be sorted in ascending order by default. For example, '\$orderby=templateName desc' would get all templates sorted by templateName in descending order. The orderby can be applied to the following fields:
+    - templateName
+    - updateTime
+* `select`: A URL query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the $select must conform to the OData V4.01 URL conventions. If a $select expression consists of a single select item that is an asterisk (i.e., *), then all properties on the matching resource will be returned. The select can be applied to the following fields:
+    - createTime
+    - createdBy
+    - guestUpdateStatus
+    - templateDescription
+    - templateName
+    - templateVersionSpec
+    - updateTime
+    - updatedBy
+## Attribute Reference
+The following attributes are exported:
+* `templates`: List of all templates.
 
-## templates
+## Templates
+The `templates` object is a list of all templates. Each template has the following attributes:
 
+* `tenant_id` - A globally unique identifier that represents the tenant that owns this entity. The system automatically assigns it, and it and is immutable from an API consumer perspective (some use cases may cause this Id to change - For instance, a use case may require the transfer of ownership of the entity, but these cases are handled automatically on the server).
+* `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 * `ext_id`: A globally unique identifier of an instance that is suitable for external consumption.
 * `template_name`: The user defined name of a Template.
 * `template_description`: The user defined description of a Template.
@@ -36,10 +61,18 @@ The following arguments are supported:
 * `create_time`: Time when the Template was created.
 * `update_time`: Time when the Template was last updated.
 * `created_by`: Information of the User.
-* `last_updated_by`: Information of the User.
+* `updated_by`: Information of the User.
 
 
-### template_version_spec
+### Links
+The `links` attribute supports the following:
+
+* `href`: - The URL at which the entity described by the link can be accessed.
+* `rel`: - A name that identifies the relationship of the link to the object that is returned by the URL. The unique value of "self" identifies the URL for the object.
+
+
+### Template Version Spec
+The `template_version_spec` attribute supports the following:
 
 * `ext_id`: A globally unique identifier of an instance that is suitable for external consumption.
 * `version_name`: The user defined name of a Template Version.
@@ -99,35 +132,59 @@ Status of a Guest Update.
 * `protection_policy_state`: Status of protection policy applied to this VM.
 
 
-### source
-* `entity_type`: Entity Type of source
-* `ext_id`: The globally unique identifier of a VM. It should be of type UUID.
+### Source
 
-### ownership_info
-* `owner`: Owner reference
-* `owner.ext_id`: The globally unique identifier of a VM owner.
+The `source` attribute supports the following:
 
-### host
-* `ext_id`: The globally unique identifier of a host.
+* `entity_type`: Reference to an entity from which the VM should be cloned or created. Values are:
+  - VM_RECOVERY_POINT: Reference to the recovery point entity from which the VM should be cloned or created.
+  - VM: Reference to an entity from which the VM should be cloned or created.
+* `ext_id`: A globally unique identifier of a VM of type UUID.
 
-### cluster
-* `ext_id`: The globally unique identifier of a cluster.
+### Categories
+The `categories` attribute supports the following:
 
-### guest_customization
+* `ext_id`: A globally unique identifier of a VM category of type UUID.
+
+### Ownership Info
+The `ownership_info` attribute supports the following:
+
+* `owner`: Reference to the owner.
+* `owner.ext_id`: A globally unique identifier of a VM owner type UUID.
+
+### Host
+The `host` attribute supports the following:
+
+* `ext_id`: A globally unique identifier of a host of type UUID.
+
+### Cluster
+The `cluster` attribute supports the following:
+
+* `ext_id`: The globally unique identifier of a cluster type UUID.
+
+### Availability Zone
+The `availability_zone` attribute supports the following:
+
+* `ext_id`: The globally unique identifier of an availability zone type UUID.
+
+### Guest Customization
+The `guest_customization` attribute supports the following:
+
 * `config`: The Nutanix Guest Tools customization settings.
 
 * `config.sysprep`: Sysprep config
 * `config.cloud_init`: CloudInit Config
 
 
-### config.sysprep
+
+#### config.sysprep
 * `install_type`: Indicates whether the guest will be freshly installed using this unattend configuration, or this unattend configuration will be applied to a pre-prepared image. Default is 'PREPARED'.
 * `sysprep_script`: Object either UnattendXml or CustomKeyValues
 * `sysprep_script.unattend_xml`: xml object
 * `sysprep_script.custom_key_values`: The list of the individual KeyValuePair elements.
 
 
-### config.cloud_init
+#### config.cloud_init
 * `datasource_type`: Type of datasource. Default: CONFIG_DRIVE_V2
 * `metadata`: The contents of the meta_data configuration for cloud-init. This can be formatted as YAML or JSON. The value must be base64 encoded.
 * `cloud_init_script`: The script to use for cloud-init.
@@ -135,8 +192,9 @@ Status of a Guest Update.
 * `cloud_init_script.custom_keys`: The list of the individual KeyValuePair elements.
 
 
+### Guest Tools
+The `guest_tools` attribute supports the following:
 
-### guest_tools
 * `version`: Version of Nutanix Guest Tools installed on the VM.
 * `is_installed`: Indicates whether Nutanix Guest Tools is installed on the VM or not.
 * `is_iso_inserted`: Indicates whether Nutanix Guest Tools ISO is inserted or not.
@@ -148,12 +206,13 @@ Status of a Guest Update.
 * `is_enabled`: Indicates whether Nutanix Guest Tools is enabled or not.
 * `capabilities`: The list of the application names that are enabled on the guest VM.
 
+### Boot Config
+The `boot_config` attribute supports the following:
 
-### boot_config
 * `legacy_boot`: LegacyBoot config Object
 * `uefi_boot`: UefiBoot config Object
 
-### boot_config.legacy_boot
+#### boot_config.legacy_boot
 * `boot_device`: Boot Device object
 * `boot_device.boot_device_disk`: Disk address.
 * `boot_device.boot_device_disk.disk_address.bus_type`: Bus type for the device
@@ -165,12 +224,12 @@ Status of a Guest Update.
 * `boot_order`: Indicates the order of device types in which the VM should try to boot from. If the boot device order is not provided the system will decide an appropriate boot device order.
 
 
-### boot_config.uefi_boot
+#### boot_config.uefi_boot
 * `is_secure_boot_enabled`: Indicate whether to enable secure boot or not
 * `nvram_device`: Configuration for NVRAM to be presented to the VM.
 * `nvram_device.backing_storage_info`: Storage provided by Nutanix ADSF
 
-### nvram_device.backing_storage_info
+##### nvram_device.backing_storage_info
 * `disk_ext_id`: The globally unique identifier of a VM disk. It should be of type UUID.
 * `disk_size_bytes`: Size of the disk in Bytes
 * `storage_container`: This reference is for disk level storage container preference. This preference specifies the storage container to which this disk belongs.
@@ -179,26 +238,31 @@ Status of a Guest Update.
 * `data_source`: A reference to a disk or image that contains the contents of a disk.
 * `is_migration_in_progress`: Indicates if the disk is undergoing migration to another container.
 
+### VTPM Config
+The `vtpm_config` attribute supports the following:
 
-### vtpm_config
 * `is_vtpm_enabled`: Indicates whether the virtual trusted platform module is enabled for the Guest OS or not.
 * `version`: Virtual trusted platform module version.
 
+### APC Config
+The `apc_config` attribute supports the following:
 
-### apc_config
 * `is_apc_enabled`: If enabled, the selected CPU model will be retained across live and cold migrations of the VM.
 * `cpu_model`: CPU model associated with the VM if Advanced Processor Compatibility(APC) is enabled. If APC is enabled and no CPU model is explicitly set, a default baseline CPU model is picked by the system. See the APC documentation for more information
 * `cpu_model.ext_id`: The globally unique identifier of the CPU model associated with the VM.
 * `cpu_model.name`: Name of the CPU model associated with the VM.
 
 
-### storage_config
+### Storage Config
+The `storage_config` attribute supports the following:
+
 * `is_flash_mode_enabled`: Indicates whether the virtual disk is pinned to the hot tier or not.
 * `qos_config`: QoS parameters to be enforced.
 * `qos_config.throttled_iops`: Throttled IOPS for the governed entities. The block size for the I/O is 32 kB.
 
+### Disks
+The `disks` attribute supports the following:
 
-### disks
 * `ext_id`: A globally unique identifier of an instance that is suitable for external consumption.
 * `disk_address`: Disk address.
 * `disk_address.bus_type`: Bus type for the device. The acceptable values are: SCSI, IDE, PCI, SATA, SPAPR (only PPC).
@@ -208,33 +272,43 @@ Status of a Guest Update.
 * `backing_info.adfs_volume_group_reference`: Volume Group Reference
 * `backing_info.adfs_volume_group_reference.volume_group_ext_id`: The globally unique identifier of an ADSF volume group. It should be of type UUID.
 
-### backing_info.vm_disk
+
+#### backing_info.vm_disk
 * `disk_ext_id`: The globally unique identifier of a VM disk. It should be of type UUID.
 * `disk_size_bytes`: Size of the disk in Bytes
 * `storage_container`: This reference is for disk level storage container preference. This preference specifies the storage container to which this disk belongs.
+* `storage_container.ext_id`: A globally unique identifier of a VM disk container. It should be of type UUID.
 * `storage_config`: Storage configuration for VM disks
 * `storage_config.is_flash_mode_enabled`: Indicates whether the virtual disk is pinned to the hot tier or not.
 * `data_source`: A reference to a disk or image that contains the contents of a disk.
 * `is_migration_in_progress`: Indicates if the disk is undergoing migration to another container.
 
-### backing_info.vm_disk.data_source
+#### backing_info.vm_disk.data_source
 * `reference`: Reference to image or vm disk
-* `image_reference`: Image Reference
-* `image_reference.image_ext_id`: The globally unique identifier of an image. It should be of type UUID.
-* `vm_disk_reference`: Vm Disk Reference
-* `vm_disk_reference.disk_ext_id`:  The globally unique identifier of a VM disk. It should be of type UUID.
-* `vm_disk_reference.disk_address`: Disk address.
-* `vm_disk_reference.vm_reference`: This is a reference to a VM.
+* `reference.image_reference`: Image Reference
+* `reference.image_reference.image_ext_id`: The globally unique identifier of an image. It should be of type UUID.
+* `reference.vm_disk_reference`: Vm Disk Reference
+* `reference.vm_disk_reference.disk_ext_id`:  The globally unique identifier of a VM disk. It should be of type UUID.
+* `reference.vm_disk_reference.disk_address`: Disk address.
+* `reference.vm_disk_reference.disk_address.bus_type`: Bus type for the device. The acceptable values are: SCSI, IDE, PCI, SATA, SPAPR (only PPC).
+* `reference.vm_disk_reference.disk_address.index`: Device index on the bus. This field is ignored unless the bus details are specified.
+* `reference.vm_disk_reference.vm_reference`: This is a reference to a VM.
+* `reference.vm_disk_reference.vm_reference.ext_id`: A globally unique identifier of a VM of type UUID.
 
 
-### cd_roms
+
+### CD-ROMs
+The `cd_roms` attribute supports the following:
+
 * `ext_id`: A globally unique identifier of an instance that is suitable for external consumption.
 * `disk_address`: Virtual Machine disk (VM disk).
 * `backing_info`: Storage provided by Nutanix ADSF
 * `iso_type`: Type of ISO image inserted in CD-ROM
 
 
-### nics
+### NICs
+The `nics` attribute supports the following:
+
 * `ext_id`: A globally unique identifier of an instance that is suitable for external consumption
 * `backing_info`: Defines a NIC emulated by the hypervisor
 * `network_info`: Network information for a NIC.
@@ -246,14 +320,33 @@ Status of a Guest Update.
 * `num_queues`: The number of Tx/Rx queue pairs for this NIC
 
 ### nics.network_info
-* `nic_type`: NIC type. Defaults to NORMAL_NIC.
+* `nic_type`: NIC type. Defaults to NORMAL_NIC. The acceptable values are: SPAN_DESTINATION_NIC, NORMAL_NIC, DIRECT_NIC, NETWORK_FUNCTION_NIC.
 * `network_function_chain`: The network function chain associates with the NIC. Only valid if nic_type is NORMAL_NIC.
-* `network_function_nic_type`: The type of this Network function NIC. Defaults to INGRESS.
-* `subnet`: Network identifier for this adapter. Only valid if nic_type is NORMAL_NIC or DIRECT_NIC
-* `vlan_mode`: all the virtual NICs are created in ACCESS mode, which permits only one VLAN per virtual network. TRUNKED mode allows multiple VLANs on a single VM NIC for network-aware user VMs.
+* `network_function_chain.ext_id`: The globally unique identifier of a network function chain. It should be of type UUID.
+* `network_function_nic_type`: The type of this Network function NIC. Defaults to INGRESS.  values are: TAP, EGRESS, INGRESS.
+* `subnet`: Network identifier for this adapter. Only valid if nic_type is NORMAL_NIC or DIRECT_NIC.
+* `subnet.ext_id`: The globally unique identifier of a subnet of type UUID.
+* `vlan_mode`: all the virtual NICs are created in ACCESS mode, which permits only one VLAN per virtual network. TRUNKED mode allows multiple VLANs on a single VM NIC for network-aware user VMs. values are: ACCESS, TRUNKED.
 * `trunked_vlans`: List of networks to trunk if VLAN mode is marked as TRUNKED. If empty and VLAN mode is set to TRUNKED, all the VLANs are trunked.
 * `should_allow_unknown_macs`: Indicates whether an unknown unicast traffic is forwarded to this NIC or not. This is applicable only for the NICs on the overlay subnets.
 * `ipv4_config`: The IP address configurations.
+* `ipv4_info`: The runtime IP address information of the NIC.
+
+#### nics.ipv4_config
+* `should_assign_ip`: If set to true (default value), an IP address must be assigned to the VM NIC - either the one explicitly specified by the user or allocated automatically by the IPAM service by not specifying the IP address. If false, then no IP assignment is required for this VM NIC.
+* `ip_address`: The IP address of the NIC.
+* `secondary_ip_address_list`: Secondary IP addresses for the NIC.
+
+##### ip_address, secondary_ip_address_list
+* `value`: The IPv4 address of the host.
+* `prefix_length`: The prefix length of the IP address.
+
+#### nics.ipv4_info
+* `learned_ip_addresses`: The list of IP addresses learned by the NIC.
+
+##### learned_ip_addresses
+* `value`: The IPv4 address of the host.
+* `prefix_length`: The prefix length of the IP address.
 
 ### gpus
 * `ext_id`: A globally unique identifier of an instance that is suitable for external consumption.
@@ -306,4 +399,4 @@ Status of a Guest Update.
 
 
 
-See detailed information in [Nutanix Templates V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).
+See detailed information in [Nutanix List Templates V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Templates/operation/listTemplates).

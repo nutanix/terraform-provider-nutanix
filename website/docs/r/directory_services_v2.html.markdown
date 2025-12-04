@@ -12,16 +12,23 @@ Provides a resource to Create a Directory Service.
 
 ## Example Usage
 
-``` hcl
-resource "nutanix_directory_services_v2" "example"{
-  name = "directory services name"
+```hcl
+# Add Directory Service .
+resource "nutanix_directory_services_v2" "active-directory" {
+  name           = "example_active_directory"
+  url            = "ldap://10.xx.xx.xx:xxxx"
+  directory_type = "ACTIVE_DIRECTORY"
+  domain_name    = "nutanix.com"
   service_account {
-    username = "service account username"
-    password = "service account password"
+    username = "username"
+    password = "password"
   }
-  directory_type = "directory type"
-  domain_name = "domain name"
-  url = "URL for the Directory Service"
+  white_listed_groups = ["example"]
+  lifecycle {
+    ignore_changes = [
+      service_account.0.password,
+    ]
+  }
 }
 ```
 
@@ -127,4 +134,14 @@ The user_group_configuration attribute supports the following:
 * `group_member_attribute_value`: - User attribute value that will be used in group entity to associate User to the group.
 
 
-See detailed information in [Nutanix Directory Services v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0).
+## Import
+
+This helps to manage existing entities which are not created through terraform. Directory Services can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_directory_services_v2" "import_dir_service" {}
+
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_directory_services_v2" "fetch_dirs"{}
+terraform import nutanix_directory_services_v2.import_dir_service <UUID>
+```
+See detailed information in [Nutanix Directory Services v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/DirectoryServices/operation/createDirectoryService).

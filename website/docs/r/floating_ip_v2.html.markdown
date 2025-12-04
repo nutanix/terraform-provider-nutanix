@@ -10,31 +10,32 @@ description: |-
 
 Provides Nutanix resource to create Floating IPs.
 
-## Example
+##  Example1 :  create Floating IP with External Subnet
 
 ```hcl
 
-    resource "nutanix_floating_ip_v2" "example-1"{
-        name = "{{ name }}"
-        description = "{{ desc }}"
-        external_subnet_reference = "{{ ext subnet uuid }}"
-    }
+# create Floating IP with External Subnet UUID
+resource "nutanix_floating_ip_v2" "fip-ext-subnet"{
+  name                      = "example-fip"
+  description               = "example fip  description"
+  external_subnet_reference = "ba250e3e-1db1-4950-917f-a9e2ea35b8e3"
+}
 
-    resource "nutanix_floating_ip_v2" "example-2"{
-        name = "{{ name }}"
-        description = "{{ desc }}"
-        external_subnet_reference = "{{ ext subnet uuid }}"
-        association{
-            private_ip_association{
-                vpc_reference = "{{ vpc uuid }}"
-                private_ip{
-                    ipv4{
-                        value = "{{ ip address }}"
-                    }
-                }
-            }
-        }
+```
+
+## Example2 :  create Floating IP with External Subnet with vm association
+
+```hcl
+resource "nutanix_floating_ip_v2" "fip-ext-subnet-vm"{
+  name                      = "example-fip"
+  description               = "example fip  description"
+  external_subnet_reference = "ba250e3e-1db1-4950-917f-a9e2ea35b8e3"
+  association {
+    vm_nic_association {
+      vm_nic_reference = "31e4b3b1-4b3b-4b3b-4b3b-4b3b4b3b4b3b"
     }
+  }
+}
 ```
 
 ## Argument Reference
@@ -81,4 +82,15 @@ The following attributes are exported:
 - `vpc`: Networking common base object
 - `vm_nic`: Virtual NIC for projections
 
-See detailed information in [Nutanix Floating IP v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0).
+## Import
+
+This helps to manage existing entities which are not created through terraform. Floating IPs can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_floating_ip_v2" "floating_ip"{}
+
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_floating_ips_v2" "fetch_fips"{}
+terraform import nutanix_floating_ip_v2.floating_ip <UUID>
+```
+
+See detailed information in [Nutanix Floating IP v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/FloatingIps/operation/createFloatingIp).

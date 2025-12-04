@@ -11,3 +11,17 @@ variable "nutanix_endpoint" {
 variable "nutanix_port" {
   type = string
 }
+variable "cvm_ip" {
+  type = string
+}
+variable "username" {
+  type = string
+}
+
+variable "password" {
+  type = string
+}
+
+variable "cluster_ext_id" {
+  type = string
+}

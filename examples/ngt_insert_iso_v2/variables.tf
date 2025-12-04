@@ -11,3 +11,15 @@ variable "nutanix_endpoint" {
 variable "nutanix_port" {
   type = string
 }
+variable "image_name" {
+  type = string
+}
+variable "subnet_name" {
+  type = string
+}
+variable "username" {
+  type = string
+}
+variable "password" {
+  type = string
+}
