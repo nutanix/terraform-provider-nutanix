@@ -28,6 +28,7 @@ func TestAccV2NutanixVpcDataSource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(datasourceNameVPC, "links.#"),
 					resource.TestCheckResourceAttrSet(datasourceNameVPC, "snat_ips.#"),
 					resource.TestCheckResourceAttrSet(datasourceNameVPC, "external_subnets.#"),
+					resource.TestCheckResourceAttr(datasourceNameVPC, "vpc_type", "TRANSIT"),
 				),
 			},
 		},
@@ -82,6 +83,7 @@ func testAccVpcDataSourceConfig(name, desc string) string {
 			external_subnets{
 			  subnet_reference = nutanix_subnet_v2.test.id
 			}
+			vpc_type = "TRANSIT"
 			depends_on = [nutanix_subnet_v2.test]
 		}
 

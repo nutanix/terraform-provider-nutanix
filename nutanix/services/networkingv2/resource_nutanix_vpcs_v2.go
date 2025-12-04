@@ -2,6 +2,8 @@ package networkingv2
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -34,10 +36,12 @@ func ResourceNutanixVPCsV2() *schema.Resource {
 			},
 			"description": {
 				Type:     schema.TypeString,
+				Computed: true,
 				Optional: true,
 			},
 			"vpc_type": {
 				Type:         schema.TypeString,
+				Computed:     true,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"REGULAR", "TRANSIT"}, false),
 			},
@@ -183,6 +187,7 @@ func ResourceNutanixVPCsV2() *schema.Resource {
 			},
 			"metadata": {
 				Type:     schema.TypeList,
+				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: DatasourceMetadataSchemaV2(),
@@ -211,6 +216,9 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 
 	inputSpec := import1.Vpc{}
 
+	if metadata, ok := d.GetOk("metadata"); ok {
+		inputSpec.Metadata = expandMetadata(metadata.([]interface{}))
+	}
 	if name, ok := d.GetOk("name"); ok {
 		inputSpec.Name = utils.StringPtr(name.(string))
 	}
@@ -244,6 +252,9 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 	if externallyRoutablePrefixes, ok := d.GetOk("externally_routable_prefixes"); ok {
 		inputSpec.ExternallyRoutablePrefixes = expandIPSubnet(externallyRoutablePrefixes.([]interface{}))
 	}
+
+	aJSON, _ := json.MarshalIndent(inputSpec, "", " ")
+	log.Printf("[DEBUG] VPC create payload : %s", string(aJSON))
 
 	resp, err := conn.VpcAPIInstance.CreateVpc(&inputSpec)
 	if err != nil {
@@ -303,7 +314,9 @@ func ResourceNutanixVPCsV2Read(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("description", getResp.Description); err != nil {
 		return diag.FromErr(err)
 	}
-
+	if err := d.Set("vpc_type", getResp.VpcType.GetName()); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
