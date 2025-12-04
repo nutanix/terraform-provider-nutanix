@@ -1,7 +1,6 @@
 package security
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/api"
@@ -23,9 +22,8 @@ func NewSecurityClient(credentials client.Credentials) (*Client, error) {
 
 		port, err := strconv.Atoi(credentials.Port)
 		if err != nil {
-			return nil, fmt.Errorf("invalid port: %w", err)
+			pcClient.Port = 9440
 		}
-
 		pcClient.Host = credentials.Endpoint
 		pcClient.Password = credentials.Password
 		pcClient.Username = credentials.Username
