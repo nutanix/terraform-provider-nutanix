@@ -3,11 +3,10 @@ layout: "nutanix"
 page_title: "NUTANIX: nutanix_category_v2"
 sidebar_current: "docs-nutanix-datasource-category-v2"
 description: |-
-  Fetch details of a category with the given external identifier.
----
+  Create, Update and Delete category (key - value pair).
 
 # nutanix_category_v2
-Fetch a category
+Create, Update and Delete category (key - value pair).
 
 
 ## Example
@@ -160,6 +159,18 @@ Resources can be organized into either an entity or a policy.
      - `POLICY`:  A ResourceGroup denoting a nutanix policy like VM host affinity policy, image placement policy, access control policy, and so on.<br> A category is generally associated with many entities.<br> The policy which is associated with this category, is then applied to those entities which are also associated with the same category.
      - `ENTITY`: A ResourceGroup denoting a nutanix entity like VM, cluster, host, image, and so on.<br> A category is generally associated with many entities.<br> A policy is then applied to these entities through the category.
 * `resource_id`: The UUID of the entity or policy associated with the particular category.
+
+## Import
+This helps to manage existing entities which are not created through terraform. Category (key - value pair) can be imported using the `UUID` (ext_id in v4 terms).  eg,
+
+`
+terraform import nutanix_category_v2.<resource_name> <UUID>
+`
+
+Note: 
+We have two resources separately for category key (nutanix_category_key) and value (nutanix_category_key). Using v4 API, `nutanix_category_v2` represents category key value pair as one entity. 
+
+Please use datasources (nutanix_categories_v2) to fetch uuids (ext_id) of all category key valye pairs to import them.
 
 
 See detailed information in [Nutanix Create Category v4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/Categories/operation/createCategory).

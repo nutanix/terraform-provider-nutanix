@@ -19,4 +19,7 @@ const (
 	listAppProtectionPolicyAPI    = "/blueprints/%s/app_profile/%s/config_spec/%s/app_protection_policies/list" // uses Blueprint UUID, App UUID, Config UUID
 	listAppRecoveryPointsAPI      = "/apps/%s/recovery_groups/list"                                             // uses App UUID
 	deleteRecoveryPointsAPI       = "/apps/%s/recovery_group_delete"                                            // uses App UUID
+
+	// Accounts API
+	listAccountsAPI = "/accounts/list"
 )

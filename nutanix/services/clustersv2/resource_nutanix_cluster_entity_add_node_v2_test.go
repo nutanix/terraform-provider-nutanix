@@ -62,8 +62,8 @@ func TestAccV2NutanixClusterAddNodeResource_Basic(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					t.Log("Sleeping for 5 Minute before removing the node")
-					time.Sleep(5 * time.Minute)
+					t.Log("Sleeping for 10 Minute before removing the node")
+					time.Sleep(10 * time.Minute)
 				},
 				Config: testAccClustersConfig(clusterName) + testAccAddNodeToClusterConfig(),
 				Check: resource.ComposeTestCheckFunc(
@@ -158,7 +158,7 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
   }
 
   provisioner "local-exec" {
-    command = "ssh-keygen -f '~/.ssh/known_hosts' -R '${local.clusters.nodes[0].cvm_ip}';  sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[1].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[1].username} password=${local.clusters.nodes[1].password}'"
+    command = "ssh-keygen -f ~/.ssh/known_hosts -R ${local.clusters.nodes[1].cvm_ip};   sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[1].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[1].username} password=${local.clusters.nodes[1].password}'"
 
     on_failure = continue
   }
@@ -228,7 +228,7 @@ resource "nutanix_clusters_discover_unconfigured_nodes_v2" "cluster-node" {
       error_message = "The node ${local.clusters.nodes[3].cvm_ip} is configured"
     }
   }
-  depends_on = [nutanix_pc_registration_v2 .nodes-registration]
+  depends_on = [nutanix_pc_registration_v2.nodes-registration]
 }
 
 ## fetch Network info for unconfigured node

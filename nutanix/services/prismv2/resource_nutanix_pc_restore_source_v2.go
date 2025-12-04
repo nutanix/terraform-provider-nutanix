@@ -20,6 +20,9 @@ func ResourceNutanixRestoreSourceV2() *schema.Resource {
 		ReadContext:   ResourceNutanixRestoreSourceV2Read,
 		UpdateContext: ResourceNutanixRestoreSourceV2Update,
 		DeleteContext: ResourceNutanixRestoreSourceV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"location": {
 				Type:     schema.TypeList,

@@ -26,6 +26,9 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 		ReadContext:   ResourceNutanixNetworkSecurityPolicyV2Read,
 		UpdateContext: ResourceNutanixNetworkSecurityPolicyV2Update,
 		DeleteContext: ResourceNutanixNetworkSecurityPolicyV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -525,13 +528,13 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 	}
 	getResp := resp.Data.GetValue().(import1.NetworkSecurityPolicy)
 
-	if err := d.Set("name", getResp.Name); err != nil {
+	if err := d.Set("name", utils.StringValue(getResp.Name)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("type", flattenSecurityPolicyType(getResp.Type)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("description", getResp.Description); err != nil {
+	if err := d.Set("description", utils.StringValue(getResp.Description)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("state", flattenPolicyState(getResp.State)); err != nil {
@@ -579,16 +582,16 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 		}
 	}
 
-	if err := d.Set("is_ipv6_traffic_allowed", getResp.IsIpv6TrafficAllowed); err != nil {
+	if err := d.Set("is_ipv6_traffic_allowed", utils.BoolValue(getResp.IsIpv6TrafficAllowed)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("is_hitlog_enabled", getResp.IsHitlogEnabled); err != nil {
+	if err := d.Set("is_hitlog_enabled", utils.BoolValue(getResp.IsHitlogEnabled)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("scope", flattenSecurityPolicyScope(getResp.Scope)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("vpc_reference", getResp.VpcReferences); err != nil {
+	if err := d.Set("vpc_reference", utils.StringSlice(getResp.VpcReferences)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("secured_groups", utils.StringSlice(getResp.SecuredGroups)); err != nil {
@@ -606,16 +609,16 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 			return diag.FromErr(err)
 		}
 	}
-	if err := d.Set("is_system_defined", getResp.IsSystemDefined); err != nil {
+	if err := d.Set("is_system_defined", utils.BoolValue(getResp.IsSystemDefined)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("created_by", getResp.CreatedBy); err != nil {
+	if err := d.Set("created_by", utils.StringValue(getResp.CreatedBy)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+	if err := d.Set("ext_id", utils.StringValue(getResp.ExtId)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
+	if err := d.Set("tenant_id", utils.StringValue(getResp.TenantId)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("links", flattenLinksMicroSeg(getResp.Links)); err != nil {
@@ -976,20 +979,35 @@ func expandIsolationGroup(isolationGroup []interface{}) []import1.IsolationGroup
 }
 
 func expandIPv4AddressMicroseg(pr interface{}) *config.IPv4Address {
-	if pr != nil {
-		ipv4 := &config.IPv4Address{}
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
-
-		if value, ok := val["value"]; ok {
-			ipv4.Value = utils.StringPtr(value.(string))
-		}
-		if prefix, ok := val["prefix_length"]; ok {
-			ipv4.PrefixLength = utils.IntPtr(prefix.(int))
-		}
-		return ipv4
+	if pr == nil {
+		return nil
 	}
-	return nil
+
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
+	}
+
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+
+	ipv4 := &config.IPv4Address{}
+
+	if v, ok := valMap["value"]; ok {
+		if s, ok2 := v.(string); ok2 {
+			ipv4.Value = utils.StringPtr(s)
+		}
+	}
+
+	if p, ok := valMap["prefix_length"]; ok {
+		if n, ok2 := p.(int); ok2 {
+			ipv4.PrefixLength = utils.IntPtr(n)
+		}
+	}
+
+	return ipv4
 }
 
 func indexOf(slice []string, target string) int {

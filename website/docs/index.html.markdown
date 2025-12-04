@@ -12,22 +12,19 @@ The provider is used to interact with the many resources and data sources suppor
 
 Use the navigation on the left to read about the available resources and data sources this provider can use.
 
-### Introducing Nutanix Terraform Provider Version 2.2.1
-We're excited to announce the release of Nutanix Terraform Provider Version 2.2.1! This update brings significant enhancements and bug fixes to your infrastructure management experience:
- 
-- This is a minor release that includes enhancements and bug fixes, aimed at improving stability and reliability.
 
-### Introducing Nutanix Terraform Provider Version 2.2.0
-We're excited to announce the release of Nutanix Terraform Provider Version 2.2.0! This major update brings significant improvements to your infrastructure management experience:
- 
-- It will allow you to interact with Self Service API. With this new plugin support you will be able to launch a Single VM Blueprint to create an Application in Self Service and perform some Day 2 actions like updating application, creating snapshot/restore etc.
+## Introducing Nutanix Terraform Provider Version v2.3.4
 
-### Introducing Nutanix Terraform Provider Version 2.1.0
-We're excited to announce the release of Nutanix Terraform Provider Version 2.1.0! This major update brings significant improvements to your infrastructure management experience:
- 
-- Built on the latest v4 APIs/SDKs: Leveraging the power of Nutanix v4 APIs/SDKs, this version offers enhanced functionality and better integration with the latest Nutanix features.
-- Expanded Resource Coverage:  Discover new resources and data sources, enabling you to model and manage a broader spectrum of Nutanix infrastructure components within your Terraform configurations.
-- <b>Version Suffix: Modules built based on v4 PC/PE GA sdks are marked with the *_v2 suffix.</b>
+We're excited to announce the release of Nutanix Terraform Provider Version 2.3.4!
+
+### What's New in v2.3.4
+
+- **Enhancements:**
+  - Support for Ejecting ISO from CD-ROM [\#1006](https://github.com/nutanix/terraform-provider-nutanix/issues/1006)
+
+- **Fixed Bugs:**
+   - Subnet entity is not saved in Terraform State due to plugin crash [\#894](https://github.com/nutanix/terraform-provider-nutanix/issues/894)
+
 
 ~> **Important Notice:** Upcoming Deprecation of Legacy Nutanix Terraform Provider Resources. Starting with the Nutanix Terraform Provider release planned for Q4-CY2026, legacy resources which are based on v0.8,v1,v2 and v3 APIs will be deprecated and no longer supported. For more information, visit [Legacy API Deprecation Announcement](https://portal.nutanix.com/page/documents/eol/list?type=announcement) [Legacy API Deprecation - FAQs](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA0VO0000005rgP0AQ). Nutanix strongly encourages you to migrate your scripts and applications to the latest v2 version of the Nutanix Terraform Provider resources, which are built on our v4 APIs/SDKs. By adopting the latest v2 version based on v4 APIs and SDKs, our users can leverage the enhanced capabilities and latest innovations from Nutanix. We understand that this transition may require some effort, and we are committed to supporting you throughout the process. Please refer to our documentation and support channels for guidance and assistance.
 
@@ -40,6 +37,13 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
+| 2.3.4 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.3.3 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.3.2 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.3.1 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.3.0 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.2.3 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
+| 2.2.2 (⚠️ Deprecated/Invalid) | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.0 | | | Self Service  v4.1.0 | yes | 
 | 2.1.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
@@ -84,6 +88,9 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | nutanix_image |nutanix_images_v2 |
 | - | nutanix_image_placement_policy_v2 |
 | nutanix_virtual_machine | nutanix_virtual_machine_v2 |
+| - | nutanix_ova_v2 |
+| - | nutanix_ova_vm_deploy_v2 |
+| - | nutanix_ova_download_v2 |
 | - | nutanix_vm_clone_v2 |
 | - | nutanix_vm_cdrom_insert_eject_v2 |
 | - | nutanix_vm_shutdown_action_v2 |
@@ -160,7 +167,11 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | nutanix_self_service_app_recovery_point | - |
 | nutanix_self_service_app_custom_action | - |
 | nutanix_self_service_app_restore | - |
-
+| - | nutanix_user_key_v2 |
+| - | nutanix_user_key_revoke_v2 |
+| - | nutanix_object_store_v2 |
+| - | nutanix_object_store_certificate_v2 |
+| - | nutanix_password_change_request_v2 |
 
 ## Data Sources
 
@@ -204,6 +215,8 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_images_v2 |
 | nutanix_virtual_machine | nutanix_virtual_machine_v2 |
 | - | nutanix_virtual_machines_v2 |
+| - | nutanix_ova_v2 |
+| - | nutanix_ovas_v2 |
 | - | nutanix_template_v2 |
 | - | nutanix_templates_v2 |
 | - | nutanix_ngt_configuration_v2 |
@@ -289,6 +302,13 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | nutanix_blueprint_runtime_editables | - |
 | nutanix_self_service_snapshot_policy_list | - |
 | nutanix_self_service_app_snapshots | - |
+| - | nutanix_user_keys_v2 |
+| - | nutanix_user_key_v2 |
+| - | nutanix_object_store_v2 |
+| - | nutanix_object_stores_v2 |
+| - | nutanix_certificate_v2 |
+| - | nutanix_certificates_v2 |
+| - | nutanix_system_user_passwords_v2 |
 
 ## Example Usage
 

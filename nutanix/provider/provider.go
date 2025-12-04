@@ -23,6 +23,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networkingv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/nke"
+	objectstoresv2 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/objectsv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/passwordmanagerv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prismv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/selfservice"
@@ -269,6 +271,8 @@ func Provider() *schema.Provider {
 			"nutanix_users_v2":                                iamv2.DatasourceNutanixUsersV2(),
 			"nutanix_authorization_policy_v2":                 iamv2.DatasourceNutanixAuthorizationPolicyV2(),
 			"nutanix_authorization_policies_v2":               iamv2.DatasourceNutanixAuthorizationPoliciesV2(),
+			"nutanix_user_keys_v2":                            iamv2.DatasourceNutanixUserKeysV2(),
+			"nutanix_user_key_v2":                             iamv2.DatasourceNutanixUserKeyV2(),
 			"nutanix_storage_container_v2":                    storagecontainersv2.DatasourceNutanixStorageContainerV2(),
 			"nutanix_storage_containers_v2":                   storagecontainersv2.DatasourceNutanixStorageContainersV2(),
 			"nutanix_storage_container_stats_info_v2":         storagecontainersv2.DatasourceNutanixStorageStatsInfoV2(),
@@ -296,6 +300,8 @@ func Provider() *schema.Provider {
 			"nutanix_protection_policies_v2":                  datapoliciesv2.DatasourceNutanixProtectionPoliciesV2(),
 			"nutanix_image_v2":                                vmmv2.DatasourceNutanixImageV4(),
 			"nutanix_images_v2":                               vmmv2.DatasourceNutanixImagesV4(),
+			"nutanix_ova_v2":                                  vmmv2.DatasourceNutanixOvaV2(),
+			"nutanix_ovas_v2":                                 vmmv2.DatasourceNutanixOvasV2(),
 			"nutanix_virtual_machine_v2":                      vmmv2.DatasourceNutanixVirtualMachineV4(),
 			"nutanix_virtual_machines_v2":                     vmmv2.DatasourceNutanixVirtualMachinesV4(),
 			"nutanix_template_v2":                             vmmv2.DatasourceNutanixTemplateV2(),
@@ -305,12 +311,17 @@ func Provider() *schema.Provider {
 			"nutanix_image_placement_policies_v2":             vmmv2.DatasourceNutanixImagePlacementsV4(),
 			"nutanix_cluster_v2":                              clustersv2.DatasourceNutanixClusterEntityV2(),
 			"nutanix_clusters_v2":                             clustersv2.DatasourceNutanixClusterEntitiesV2(),
+			"nutanix_system_user_passwords_v2":                passwordmanagerv2.DataSourceNutanixPasswordManagersV2(),
 			"nutanix_host_v2":                                 clustersv2.DatasourceNutanixHostEntityV2(),
 			"nutanix_hosts_v2":                                clustersv2.DatasourceNutanixHostEntitiesV2(),
 			"nutanix_lcm_status_v2":                           lcmv2.DatasourceNutanixLcmStatusV2(),
 			"nutanix_lcm_entities_v2":                         lcmv2.DatasourceNutanixLcmEntitiesV2(),
 			"nutanix_lcm_entity_v2":                           lcmv2.DatasourceNutanixLcmEntityV2(),
 			"nutanix_lcm_config_v2":                           lcmv2.DatasourceNutanixLcmConfigV2(),
+			"nutanix_object_store_v2":                         objectstoresv2.DatasourceNutanixObjectStoreV2(),
+			"nutanix_object_stores_v2":                        objectstoresv2.DatasourceNutanixObjectStoresV2(),
+			"nutanix_certificate_v2":                          objectstoresv2.DatasourceNutanixObjectStoreCertificateV2(),
+			"nutanix_certificates_v2":                         objectstoresv2.DatasourceNutanixObjectStoreCertificatesV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
@@ -335,6 +346,7 @@ func Provider() *schema.Provider {
 			"nutanix_foundation_image":                        foundation.ResourceNutanixFoundationImage(),
 			"nutanix_foundation_central_image_cluster":        foundationCentral.ResourceNutanixFCImageCluster(),
 			"nutanix_foundation_central_api_keys":             foundationCentral.ResourceNutanixFCAPIKeys(),
+			"nutanix_foundation_central_onboard_nodes":        foundationCentral.ResourceNutanixFCOnboardNodes(),
 			"nutanix_vpc":                                     networking.ResourceNutanixVPC(),
 			"nutanix_pbr":                                     networking.ResourceNutanixPbr(),
 			"nutanix_floating_ip":                             networking.ResourceNutanixFloatingIP(),
@@ -382,6 +394,8 @@ func Provider() *schema.Provider {
 			"nutanix_users_v2":                                iamv2.ResourceNutanixUserV2(),
 			"nutanix_authorization_policy_v2":                 iamv2.ResourceNutanixAuthPoliciesV2(),
 			"nutanix_saml_identity_providers_v2":              iamv2.ResourceNutanixSamlIdpV2(),
+			"nutanix_user_key_v2":                             iamv2.ResourceNutanixUserKeyV2(),
+			"nutanix_user_key_revoke_v2":                      iamv2.ResourceNutanixUserRevokeKeyV2(),
 			"nutanix_storage_containers_v2":                   storagecontainersv2.ResourceNutanixStorageContainersV2(),
 			"nutanix_category_v2":                             prismv2.ResourceNutanixCategoriesV2(),
 			"nutanix_pc_deploy_v2":                            prismv2.ResourceNutanixDeployPcV2(),
@@ -414,6 +428,9 @@ func Provider() *schema.Provider {
 			"nutanix_vm_clone_v2":                             vmmv2.ResourceNutanixVMCloneV2(),
 			"nutanix_vm_gc_update_v2":                         vmmv2.ResourceNutanixVMGCUpdateV2(),
 			"nutanix_images_v2":                               vmmv2.ResourceNutanixImageV4(),
+			"nutanix_ova_v2":                                  vmmv2.ResourceNutanixOvaV2(),
+			"nutanix_ova_vm_deploy_v2":                        vmmv2.ResourceNutanixOvaVMDeploymentV2(),
+			"nutanix_ova_download_v2":                         vmmv2.ResourceNutanixOvaDownloadV2(),
 			"nutanix_vm_network_device_assign_ip_v2":          vmmv2.ResourceNutanixVmsNetworkDeviceAssignIPV2(),
 			"nutanix_vm_network_device_migrate_v2":            vmmv2.ResourceNutanixVmsNetworkDeviceMigrateV2(),
 			"nutanix_image_placement_policy_v2":               vmmv2.ResourceNutanixImagePlacementV2(),
@@ -421,10 +438,13 @@ func Provider() *schema.Provider {
 			"nutanix_cluster_add_node_v2":                     clustersv2.ResourceNutanixClusterAddNodeV2(),
 			"nutanix_clusters_discover_unconfigured_nodes_v2": clustersv2.ResourceNutanixClusterDiscoverUnconfiguredNodesV2(),
 			"nutanix_clusters_unconfigured_node_networks_v2":  clustersv2.ResourceNutanixClusterUnconfiguredNodeNetworkV2(),
+			"nutanix_password_change_request_v2":              passwordmanagerv2.ResourceNutanixPasswordManagerV2(),
 			"nutanix_lcm_perform_inventory_v2":                lcmv2.ResourceNutanixLcmPerformInventoryV2(),
 			"nutanix_lcm_prechecks_v2":                        lcmv2.ResourceNutanixPreChecksV2(),
 			"nutanix_lcm_upgrade_v2":                          lcmv2.ResourceLcmUpgradeV2(),
 			"nutanix_lcm_config_v2":                           lcmv2.ResourceNutanixLcmConfigV2(),
+			"nutanix_object_store_v2":                         objectstoresv2.ResourceNutanixObjectStoresV2(),
+			"nutanix_object_store_certificate_v2":             objectstoresv2.ResourceNutanixObjectStoreCertificateV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

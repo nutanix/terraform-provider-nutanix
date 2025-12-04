@@ -90,7 +90,7 @@ func DatasourceNutanixTemplatesV2Read(ctx context.Context, d *schema.ResourceDat
 
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
-			Summary:  "🫙 No Data found",
+			Summary:  "🫙 No data found.",
 			Detail:   "The API returned an empty list of templates.",
 		}}
 	}
@@ -128,6 +128,7 @@ func flattenTemplatesEntities(pr []import5.Template) []interface{} {
 			}
 			temp["created_by"] = flattenTemplateUser(v.CreatedBy)
 			temp["updated_by"] = flattenTemplateUser(v.UpdatedBy)
+			temp["category_ext_ids"] = v.CategoryExtIds
 
 			temps[k] = temp
 		}

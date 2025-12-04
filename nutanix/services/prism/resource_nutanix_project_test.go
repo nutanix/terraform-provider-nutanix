@@ -436,12 +436,12 @@ func testAccNutanixProjectInternalConfig(subnetName, name, description, category
 
 			subnet_reference_list{
 				kind="subnet"
-				name="nutanix_subnet.subnet.name"
+				name=nutanix_subnet.subnet.name
 				uuid=nutanix_subnet.subnet.metadata.uuid
 			}
 			subnet_reference_list{
 				kind="subnet"
-				name="nutanix_subnet.overlay-subnet.name"
+				name=nutanix_subnet.overlay-subnet.name
 				uuid=nutanix_subnet.overlay-subnet.id
 			}
 			cluster_reference_list{

@@ -29,6 +29,7 @@ type Service interface {
 	RecoveryPointsList(ctx context.Context, appUUID string, input *RecoveryPointsListInput) (*RecoveryPointsListResponse, error)
 	GetAppProtectionPolicyList(ctx context.Context, bpUUID string, appUUID string, configUUID string, policyListInput *PolicyListInput) (*PolicyListResponse, error)
 	RecoveryPointsDelete(ctx context.Context, appUUID string, input *ActionInput) (*AppTaskResponse, error)
+	ListAccounts(ctx context.Context, filter *AccountsListInput) (*AccountsListResponse, error)
 }
 
 func (op Operations) ProvisionBlueprint(ctx context.Context, bpUUID string, input *BlueprintProvisionInput) (*AppProvisionTaskOutput, error) {
@@ -238,4 +239,19 @@ func (op Operations) RecoveryPointsDelete(ctx context.Context, appUUID string, i
 	}
 
 	return appResponse, op.client.Do(ctx, req, appResponse)
+}
+
+// ListAccounts lists the accounts available in the Nutanix environment.
+func (op Operations) ListAccounts(ctx context.Context, filter *AccountsListInput) (*AccountsListResponse, error) {
+	path := listAccountsAPI
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, filter)
+
+	accResponse := new(AccountsListResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return accResponse, op.client.Do(ctx, req, accResponse)
 }

@@ -112,3 +112,15 @@ resource "nutanix_ngt_insert_iso_v2" "insert-iso" {
   capablities    = ["VSS_SNAPSHOT"]
   is_config_only = true
 }
+
+
+# Eject the NGT ISO, can be done in three ways:
+# 1. By setting `action = "eject"` → triggers eject operation explicitly.
+# 2. By deleting this resource → automatically ejects the NGT ISO.
+# 3. NGT installation automatically ejects the NGT ISO after installation.
+# resource "nutanix_ngt_insert_iso_v2" "insert-iso" {
+#   ext_id         = nutanix_virtual_machine_v2.ngt-vm.id
+#   capablities    = ["VSS_SNAPSHOT"]
+#   is_config_only = true
+#   action         = "eject"
+# }

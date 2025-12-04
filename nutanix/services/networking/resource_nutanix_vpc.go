@@ -16,8 +16,9 @@ import (
 )
 
 const (
-	VpcDelayTime  = 2 * time.Second
-	VpcMinTimeout = 5 * time.Second
+	VpcDelayTime     = 2 * time.Second
+	VpcMinTimeout    = 5 * time.Second
+	VpcDeleteTimeout = 1 * time.Minute
 )
 
 func ResourceNutanixVPC() *schema.Resource {
@@ -189,7 +190,7 @@ func resourceNutanixVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	// Wait for the VPC to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
+		Pending:    []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
@@ -332,7 +333,7 @@ func resourceNutanixVPCUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	// Wait for the VPC to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
+		Pending:    []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
@@ -360,10 +361,10 @@ func resourceNutanixVPCDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"DELETE_PENDING", "RUNNING"},
+		Pending:    []string{"DELETE_PENDING", "RUNNING", "QUEUED"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
+		Timeout:    VpcDeleteTimeout,
 		Delay:      VpcDelayTime,
 		MinTimeout: VpcMinTimeout,
 	}

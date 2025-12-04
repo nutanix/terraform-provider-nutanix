@@ -806,7 +806,7 @@ func resourceNutanixVirtualMachineRead(ctx context.Context, d *schema.ResourceDa
 	if err = d.Set("parent_reference", flattenReferenceValues(resp.Status.Resources.ParentReference)); err != nil {
 		return diag.Errorf("error setting parent_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
-
+	//nolint:staticcheck
 	if uha, ok := d.GetOkExists("use_hot_add"); ok {
 		useHotAdd = uha.(bool)
 	}
@@ -1386,7 +1386,7 @@ func changePowerState(ctx context.Context, conn *v3.Client, id string, powerStat
 
 	// Check Power State
 	stateConfVM := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
+		Pending:    []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:     []string{"COMPLETE"},
 		Refresh:    taskVMStateRefreshFunc(conn, id, powerState),
 		Timeout:    vmTimeout,

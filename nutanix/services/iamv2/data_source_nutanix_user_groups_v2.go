@@ -39,42 +39,7 @@ func DatasourceNutanixUserGroupsV2() *schema.Resource {
 			"user_groups": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ext_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"group_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"idp_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"distinguished_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"created_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_updated_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"created_by": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
+				Elem:     DatasourceNutanixUserGroupV2(),
 			},
 		},
 	}
@@ -135,7 +100,7 @@ func DatasourceNutanixUserGroupsV4Read(ctx context.Context, d *schema.ResourceDa
 
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
-			Summary:  "🫙 No Data found",
+			Summary:  "🫙 No data found.",
 			Detail:   "The API returned an empty list of user groups.",
 		}}
 	}
@@ -149,34 +114,43 @@ func DatasourceNutanixUserGroupsV4Read(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func flattenUserGroupEntities(pr []import1.UserGroup) []interface{} {
-	if len(pr) > 0 {
-		ugs := make([]interface{}, len(pr))
+func flattenUserGroupEntities(userGroups []import1.UserGroup) []interface{} {
+	if len(userGroups) > 0 {
+		ugs := make([]interface{}, len(userGroups))
 
-		for k, v := range pr {
+		for k, userGroup := range userGroups {
 			ug := make(map[string]interface{})
 
-			if v.Name != nil {
-				ug["name"] = v.Name
+			if userGroup.TenantId != nil {
+				ug["tenant_id"] = userGroup.TenantId
 			}
-			if v.DistinguishedName != nil {
-				ug["distinguished_name"] = v.DistinguishedName
+			if userGroup.ExtId != nil {
+				ug["ext_id"] = userGroup.ExtId
 			}
-			if v.IdpId != nil {
-				ug["idp_id"] = v.IdpId
+			if userGroup.Links != nil {
+				ug["links"] = flattenLinks(userGroup.Links)
 			}
-			if v.GroupType != nil {
-				ug["group_type"] = flattenGroupType(v.GroupType)
+			if userGroup.GroupType != nil {
+				ug["group_type"] = flattenGroupType(userGroup.GroupType)
 			}
-
-			ug["created_by"] = v.CreatedBy
-
-			if v.CreatedTime != nil {
-				t := v.CreatedTime
+			if userGroup.IdpId != nil {
+				ug["idp_id"] = userGroup.IdpId
+			}
+			if userGroup.Name != nil {
+				ug["name"] = userGroup.Name
+			}
+			if userGroup.DistinguishedName != nil {
+				ug["distinguished_name"] = userGroup.DistinguishedName
+			}
+			if userGroup.CreatedBy != nil {
+				ug["created_by"] = userGroup.CreatedBy
+			}
+			if userGroup.CreatedTime != nil {
+				t := userGroup.CreatedTime
 				ug["created_time"] = t.String()
 			}
-			if v.LastUpdatedTime != nil {
-				t := v.LastUpdatedTime
+			if userGroup.LastUpdatedTime != nil {
+				t := userGroup.LastUpdatedTime
 				ug["last_updated_time"] = t.String()
 			}
 

@@ -9,7 +9,14 @@
         <li<%= sidebar_current("docs-nutanix-index") %>>
             <a href="/docs/providers/nutanix/index.html">Nutanix Provider</a>
         </li>
-
+        <li<%= sidebar_current("docs-nutanix-guides") %>>
+            <a href="#">Guides</a>
+            <ul class="nav nav-visible">
+                <li<%= sidebar_current("docs-nutanix-guides-v1-to-v2-migration-guide") %>>
+                    <a href="/docs/providers/nutanix/guides/v1_to_v2_migration_guide.html">Migration Guide: V1 to V2 Resources</a>
+                </li>
+            </ul>
+        </li>
         <li<%= sidebar_current("docs-nutanix-datasource") %>>
             <a href="#">Data Sources</a>
             <ul class="nav nav-visible">
@@ -544,6 +551,9 @@
                 </li>
                 <li<%= sidebar_current("docs-nutanix-resource-foundation-central-image-cluster") %>>
                     <a href="/docs/providers/nutanix/r/foundation_central_image_cluster.html">nutanix_foundation_central_image_cluster</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-foundation-central-onboard-nodes") %>>
+                    <a href="/docs/providers/nutanix/r/foundation_central_onboard_nodes.html">nutanix_foundation_central_onboard_nodes</a>
                 </li>
                 <li<%= sidebar_current("docs-nutanix-resource-floating-ip") %>>
                     <a href="/docs/providers/nutanix/r/floating_ip.html">nutanix_floating_ip</a>

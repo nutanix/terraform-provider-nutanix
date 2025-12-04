@@ -22,7 +22,7 @@ data "nutanix_pbr_v2" "get-pbr"{
 
 The following arguments are supported:
 
-- `pbr_uuid`: (Required) pbr UUID
+- `ext_id`: (Required) pbr UUID
 
 ## Attribute Reference
 

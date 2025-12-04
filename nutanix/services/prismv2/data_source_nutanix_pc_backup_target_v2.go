@@ -169,10 +169,6 @@ func DatasourceNutanixBackupTargetV2Read(ctx context.Context, d *schema.Resource
 }
 
 func flattenClusterLocation(location management.ClusterLocation) []map[string]interface{} {
-	if &location == nil {
-		return nil
-	}
-
 	clusterLocation := make([]map[string]interface{}, 0)
 	clusterLocationMap := make(map[string]interface{})
 	clusterLocationMap["config"] = flattenClusterReference(location.Config)
@@ -226,10 +222,6 @@ func flattenBackupTargetLocation(location *management.OneOfBackupTargetLocation)
 }
 
 func flattenObjectStoreLocation(objectStoreLocation management.ObjectStoreLocation) []map[string]interface{} {
-	if &objectStoreLocation == nil {
-		return nil
-	}
-
 	objectStoreLocationMap := make(map[string]interface{})
 	objectStoreLocationMap["provider_config"] = flattenProviderConfig(objectStoreLocation.ProviderConfig)
 	objectStoreLocationMap["backup_policy"] = flattenBackupPolicy(objectStoreLocation.BackupPolicy)
@@ -240,15 +232,18 @@ func flattenObjectStoreLocation(objectStoreLocation management.ObjectStoreLocati
 	return objectStoreLocationList
 }
 
-func flattenProviderConfig(providerConfig *management.AWSS3Config) []map[string]interface{} {
+func flattenProviderConfig(providerConfig *management.OneOfObjectStoreLocationProviderConfig) []map[string]interface{} {
 	if providerConfig == nil {
 		return nil
 	}
 
 	providerConfigMap := make(map[string]interface{})
-	providerConfigMap["bucket_name"] = providerConfig.BucketName
-	providerConfigMap["region"] = providerConfig.Region
-	providerConfigMap["credentials"] = flattenAccessKeyCredentials(providerConfig.Credentials)
+
+	awsConfig := providerConfig.GetValue().(management.AWSS3Config)
+
+	providerConfigMap["bucket_name"] = awsConfig.BucketName
+	providerConfigMap["region"] = awsConfig.Region
+	providerConfigMap["credentials"] = flattenAccessKeyCredentials(awsConfig.Credentials)
 
 	providerConfigList := make([]map[string]interface{}, 0)
 	providerConfigList = append(providerConfigList, providerConfigMap)

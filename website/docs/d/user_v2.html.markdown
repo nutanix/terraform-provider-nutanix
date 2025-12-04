@@ -45,6 +45,7 @@ Type of the User.
 * `is_force_reset_password`: - Flag to force the User to reset password.
 * `additional_attributes`: -  Any additional attribute for the User.
 * `status`: - Status of the User. `ACTIVE`: Denotes that the local User is active. `INACTIVE`: Denotes that the local User is inactive and needs to be reactivated.
+* `description`: - Description of the user.
 * `buckets_access_keys`: - Bucket Access Keys for the User.
 * `last_login_time`: - Last successful logged in time for the User.
 * `created_time`: - Creation time of the User.

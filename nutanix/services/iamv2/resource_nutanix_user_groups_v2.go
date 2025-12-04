@@ -18,6 +18,9 @@ func ResourceNutanixUserGroupsV2() *schema.Resource {
 		ReadContext:   ResourceNutanixUserGroupsV4Read,
 		UpdateContext: ResourceNutanixUserGroupsV4Update,
 		DeleteContext: ResourceNutanixUserGroupsV4Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -36,10 +39,12 @@ func ResourceNutanixUserGroupsV2() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"distinguished_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"created_time": {
 				Type:     schema.TypeString,
@@ -101,7 +106,9 @@ func ResourceNutanixUserGroupsV4Read(ctx context.Context, d *schema.ResourceData
 	}
 
 	getResp := resp.Data.GetValue().(import1.UserGroup)
-
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("group_type", flattenGroupType(getResp.GroupType)); err != nil {
 		return diag.FromErr(err)
 	}

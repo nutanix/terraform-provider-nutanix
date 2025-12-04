@@ -126,4 +126,16 @@ The `backup_policy` argument supports the following:
 
 - `rpo_in_minutes`: -(Required) RPO interval in minutes at which the backup will be taken. The Value should be in the range of 60 to 1440.
 
+## Import
+
+This helps to manage existing entities which are not created through terraform. Restore source can be imported using the `UUID`. (ext_id in v4 terms).  eg,
+
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_pc_restore_source_v2" "import_restore_source" {}
+
+// execute this command
+terraform import nutanix_pc_restore_source_v2.import_restore_source <UUID>
+```
+
 See detailed information in [Nutanix Restore Source V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createRestoreSource).

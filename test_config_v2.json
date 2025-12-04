@@ -289,5 +289,15 @@
   "lcm": {
     "entity_model": "",
     "entity_model_version": ""
+  },
+  "object_store": {
+    "ssh_pc_username": "",
+    "ssh_pc_password": "",
+    "subnet_name": "",
+    "bucket_name": "",
+    "domain": "",
+    "public_network_ips":[""],
+    "storage_network_dns_ip": "",
+    "storage_network_vip": ""
   }
 }

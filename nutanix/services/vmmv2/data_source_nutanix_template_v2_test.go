@@ -50,7 +50,7 @@ func testTemplateDatasourceConfig(name, desc, tempName, tempDesc string) string 
 			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 		}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "%[1]s"
 			description =  "%[2]s"
@@ -66,7 +66,7 @@ func testTemplateDatasourceConfig(name, desc, tempName, tempDesc string) string 
 			template_description = "%[4]s"
 			template_version_spec{
 				version_description = "Created from VM: %[1]s"
-				version_source{				
+				version_source{
 					template_vm_reference{
 						ext_id = nutanix_virtual_machine_v2.test.id
 					}
