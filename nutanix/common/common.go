@@ -232,5 +232,5 @@ func HashStringItem(v interface{}) int {
 	if !ok {
 		return 0
 	}
-	return int(crc32.ChecksumIEEE([]byte(fmt.Sprintf("%s-", str))))
+	return int(crc32.ChecksumIEEE(fmt.Appendf(nil, "%s-", str)))
 }

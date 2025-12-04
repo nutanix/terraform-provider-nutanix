@@ -747,9 +747,10 @@ func ResourceNutanixClusterV2() *schema.Resource {
 				Computed: true,
 			},
 			"categories": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
+				Set:      common.HashStringItem,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -824,7 +825,9 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if categories, ok := d.GetOk("categories"); ok {
-		categoriesListStr := common.ExpandListOfString(categories.([]interface{}))
+		// Convert to slice - handles both TypeList and TypeSet
+		categoriesList := common.InterfaceToSlice(categories)
+		categoriesListStr := common.ExpandListOfString(categoriesList)
 		body.Categories = categoriesListStr
 	}
 
@@ -927,6 +930,13 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 			return diags
 		}
 		nodeChanges = true
+	}
+
+	// === Handle Category Association Changes ===
+	if d.HasChange("categories") {
+		if diags := handleCategoryAssociationChanges(ctx, d, meta, conn, expand); diags.HasError() {
+			return diags
+		}
 	}
 
 	// === Handle Cluster Profile association update ===
@@ -1876,14 +1886,35 @@ func handleClusterFieldUpdate(d *schema.ResourceData) (config.Cluster, bool) {
 		hasChanges = true
 		updateSpec.ContainerName = utils.StringPtr(d.Get("container_name").(string))
 	}
-	if d.HasChange("categories") {
-		hasChanges = true
-		categories := d.Get("categories").([]interface{})
-		updateSpec.Categories = common.ExpandListOfString(categories)
-	}
+	// Note: categories are handled separately via handleCategoryAssociationChanges
+	// Categories should use Associate/Disassociate APIs, not UpdateClusterById
 
 	log.Printf("[DEBUG] handleClusterFieldUpdate: hasChanges=%v", hasChanges)
 	return updateSpec, hasChanges
+}
+
+// handleCategoryAssociationChanges handles category association and disassociation changes
+// Categories should be managed via Associate/Disassociate APIs, not through UpdateClusterById
+func handleCategoryAssociationChanges(ctx context.Context, d *schema.ResourceData, meta interface{}, conn *clusters.Client, expand *string) diag.Diagnostics {
+	// Get cluster ext_id - use d.Id() if available, otherwise try to get from state
+	clusterExtID := d.Id()
+	if clusterExtID == "" {
+		// Try to get from ext_id field
+		if extID, ok := d.GetOk("ext_id"); ok {
+			clusterExtID = extID.(string)
+		}
+		if clusterExtID == "" {
+			return diag.Errorf("cluster ext_id is required for category operations")
+		}
+	}
+
+	log.Printf("[DEBUG] Handling category association changes for cluster: %s", clusterExtID)
+
+	// Get old and new category values
+	oldCategoriesRaw, newCategoriesRaw := d.GetChange("categories")
+
+	// Use shared function to handle category updates
+	return UpdateClusterCategories(ctx, d, meta, clusterExtID, oldCategoriesRaw, newCategoriesRaw)
 }
 
 func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta interface{},
@@ -2263,7 +2294,19 @@ func clusterRead(d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	if err := d.Set("upgrade_status", flattenUpgradeStatus(getResp.UpgradeStatus)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("categories", getResp.Categories); err != nil {
+	// Convert categories from API response to Terraform schema format (schema.Set)
+	// The API returns []string, which needs to be converted to schema.Set for TypeSet schema
+	categoriesList := make([]interface{}, 0)
+	if len(getResp.Categories) > 0 {
+		for _, category := range getResp.Categories {
+			if category != "" {
+				categoriesList = append(categoriesList, category)
+			}
+		}
+	}
+	// Create a schema.Set from the list using the same hash function as the schema
+	categoriesSet := schema.NewSet(common.HashStringItem, categoriesList)
+	if err := d.Set("categories", categoriesSet); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("vm_count", getResp.VmCount); err != nil {

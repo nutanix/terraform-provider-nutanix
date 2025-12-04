@@ -1,15 +1,12 @@
 package clustersv2_test
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	clusterPrism "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -18,128 +15,6 @@ import (
 )
 
 const timeout = 3 * time.Minute
-
-func associateCategoryToCluster() resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		log.Println("Associating category with cluster")
-		conn := acc.TestAccProvider.Meta().(*conns.Client)
-		client := conn.ClusterAPI.ClusterEntityAPI
-
-		clusterExtID := ""
-		categoryExtID := ""
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type == "nutanix_cluster_v2" {
-				clusterExtID = rs.Primary.ID
-			}
-			if rs.Type == "nutanix_category_v2" {
-				categoryExtID = rs.Primary.ID
-			}
-		}
-
-		if clusterExtID == "" || categoryExtID == "" {
-			return fmt.Errorf("cluster or category not found in state")
-		}
-
-		log.Printf("[DEBUG] Associating category: %s to cluster: %s", categoryExtID, clusterExtID)
-
-		body := config.NewCategoryEntityReferences()
-
-		body.Categories = append(body.Categories, categoryExtID)
-
-		aJSON, _ := json.MarshalIndent(body, "", "  ")
-		log.Printf("[DEBUG] Category body: %s", aJSON)
-
-		resp, err := client.AssociateCategoriesToCluster(utils.StringPtr(clusterExtID), body)
-		if err != nil {
-			return fmt.Errorf("error associating category to cluster: %v", err)
-		}
-
-		TaskRef := resp.Data.GetValue().(clusterPrism.TaskReference)
-		taskUUID := TaskRef.ExtId
-
-		taskconn := conn.PrismAPI
-		// Wait for the backup target to be deleted
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-			Target:  []string{"SUCCEEDED"},
-			Refresh: taskStateRefreshPrismTaskGroupFunc(utils.StringValue(taskUUID)),
-			Timeout: timeout,
-		}
-
-		if _, taskErr := stateConf.WaitForState(); taskErr != nil {
-			return fmt.Errorf("error waiting for category association task to complete: %s", taskErr)
-		}
-
-		_, err = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-		if err != nil {
-			return fmt.Errorf("error while fetching Category Association Task Details: %s", err)
-		}
-
-		return nil
-	}
-}
-
-func disassociateCategoryFromCluster() resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		log.Println("Disassociating category from cluster")
-		conn := acc.TestAccProvider.Meta().(*conns.Client)
-		client := conn.ClusterAPI.ClusterEntityAPI
-
-		clusterExtID := ""
-		categoryExtID := ""
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type == "nutanix_cluster_v2" {
-				clusterExtID = rs.Primary.ID
-			}
-			if rs.Type == "nutanix_category_v2" {
-				categoryExtID = rs.Primary.ID
-			}
-		}
-
-		if clusterExtID == "" || categoryExtID == "" {
-			return fmt.Errorf("cluster or category not found in state")
-		}
-
-		log.Printf("[DEBUG] Disassociating category: %s from cluster: %s", categoryExtID, clusterExtID)
-
-		body := config.NewCategoryEntityReferences()
-
-		body.Categories = append(body.Categories, categoryExtID)
-
-		aJSON, _ := json.MarshalIndent(body, "", "  ")
-		log.Printf("[DEBUG] Category body: %s", aJSON)
-
-		resp, err := client.DisassociateCategoriesFromCluster(utils.StringPtr(clusterExtID), body)
-		if err != nil {
-			return fmt.Errorf("error disassociating category from cluster: %v", err)
-		}
-
-		TaskRef := resp.Data.GetValue().(clusterPrism.TaskReference)
-		taskUUID := TaskRef.ExtId
-
-		taskconn := conn.PrismAPI
-		// Wait for the backup target to be deleted
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-			Target:  []string{"SUCCEEDED"},
-			Refresh: taskStateRefreshPrismTaskGroupFunc(utils.StringValue(taskUUID)),
-			Timeout: timeout,
-		}
-
-		if _, taskErr := stateConf.WaitForState(); taskErr != nil {
-			return fmt.Errorf("error waiting for category disassociation task to complete: %s", taskErr)
-		}
-
-		_, err = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-		if err != nil {
-			return fmt.Errorf("error while fetching Category Disassociation Task Details: %s", err)
-		}
-
-		return nil
-	}
-}
 
 // helper function to check the delete task
 func taskStateRefreshPrismTaskGroupFunc(taskUUID string) resource.StateRefreshFunc {
@@ -151,7 +26,7 @@ func taskStateRefreshPrismTaskGroupFunc(taskUUID string) resource.StateRefreshFu
 		vresp, err := conn.PrismAPI.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
 
 		if err != nil {
-			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
+			return "", "", fmt.Errorf("error while polling prism task: %v", err)
 		}
 
 		// get the group results
@@ -203,6 +78,156 @@ func checkNodesIPs(expected []string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+// ##############################
+// ### Category Helpers ###
+// ##############################
+// checkCategories verifies that all expected category IDs are present in the resource,
+// regardless of their order. It accepts category resource names and gets their IDs from state.
+func checkCategories(resourceName, categoriesPath string, expectedCategoryResourceNames []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource %s not found in state", resourceName)
+		}
+
+		attrs := rs.Primary.Attributes
+
+		// Get the count of categories
+		countKey := categoriesPath + ".#"
+		countStr, ok := attrs[countKey]
+		if !ok {
+			return fmt.Errorf("category count not found at %s", countKey)
+		}
+
+		var count int
+		fmt.Sscanf(countStr, "%d", &count)
+
+		// Collect categories by index
+		categories := make([]string, 0, count)
+		for i := 0; i < count; i++ {
+			key := fmt.Sprintf("%s.%d", categoriesPath, i)
+			if catID, ok := attrs[key]; ok {
+				categories = append(categories, catID)
+			}
+		}
+
+		// Get expected category IDs from state
+		expectedCategoryIDs := make([]string, 0, len(expectedCategoryResourceNames))
+		for _, catResourceName := range expectedCategoryResourceNames {
+			catRS, ok := s.RootModule().Resources[catResourceName]
+			if !ok {
+				return fmt.Errorf("category resource %s not found in state", catResourceName)
+			}
+			expectedCategoryIDs = append(expectedCategoryIDs, catRS.Primary.ID)
+		}
+
+		// Check that the count matches
+		if len(categories) != len(expectedCategoryIDs) {
+			return fmt.Errorf("category count mismatch: expected %d, got %d in %s: %v", len(expectedCategoryIDs), len(categories), categoriesPath, categories)
+		}
+
+		// Check if all expected category IDs are present
+		for _, expectedID := range expectedCategoryIDs {
+			found := false
+			for _, catID := range categories {
+				if catID == expectedID {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return fmt.Errorf("expected category ID %s not found in %s: %v", expectedID, categoriesPath, categories)
+			}
+		}
+
+		return nil
+	}
+}
+
+// helper function to check if the cluster is destroyed
+func testAccCheckNutanixClusterDestroy(s *terraform.State) error {
+	conn := acc.TestAccProvider.Meta().(*conns.Client)
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "nutanix_cluster_v2" {
+			continue
+		}
+
+		readResp, err := conn.ClusterAPI.ClusterEntityAPI.GetClusterById(utils.StringPtr(rs.Primary.ID), nil)
+		if err == nil {
+			// delete the cluster
+			//extract etag from read response
+			args := make(map[string]interface{})
+			etagValue := conn.ClusterAPI.ClusterEntityAPI.ApiClient.GetEtag(readResp)
+			args["If-Match"] = utils.StringPtr(etagValue)
+
+			deleteResp, err := conn.ClusterAPI.ClusterEntityAPI.DeleteClusterById(utils.StringPtr(rs.Primary.ID), utils.BoolPtr(false), args)
+			if err != nil {
+				return err
+			}
+			TaskRef := deleteResp.Data.GetValue().(clusterPrism.TaskReference)
+			taskUUID := TaskRef.ExtId
+
+			taskconn := conn.PrismAPI
+			// Wait for the cluster to be deleted
+			stateConf := &resource.StateChangeConf{
+				Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+				Target:  []string{"SUCCEEDED"},
+				Refresh: taskStateRefreshPrismTaskGroupFunc(utils.StringValue(taskUUID)),
+				Timeout: timeout,
+			}
+
+			if _, taskErr := stateConf.WaitForState(); taskErr != nil {
+				return fmt.Errorf("error waiting for cluster deletion task to complete: %s", taskErr)
+			}
+
+			_, err = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+			if err != nil {
+				return fmt.Errorf("error while fetching Cluster Deletion Task Details: %s", err)
+			}
+
+			return nil
+		}
+	}
+
+	return nil
+}
+
+// helper function to check if categories and cluster categories association are destroyed
+func testAccCheckNutanixClusterCategoriesDestroy(s *terraform.State) error {
+	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	categoryClient := conn.PrismAPI.CategoriesAPIInstance
+
+	// Collect all category IDs that should be destroyed
+	var categoryIDs []string
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type == "nutanix_category_v2" {
+			categoryIDs = append(categoryIDs, rs.Primary.ID)
+		}
+	}
+
+	// Check if categories still exist
+	for _, categoryID := range categoryIDs {
+		_, err := categoryClient.GetCategoryById(utils.StringPtr(categoryID), nil)
+		if err == nil {
+			// Category still exists, try to delete it
+			fmt.Printf("[DEBUG] Category still exists, attempting to delete: %s\n", categoryID)
+			_, deleteErr := categoryClient.DeleteCategoryById(utils.StringPtr(categoryID))
+			if deleteErr != nil {
+				return fmt.Errorf("error: Category %s still exists and could not be deleted: %v", categoryID, deleteErr)
+			}
+			fmt.Printf("[DEBUG] Category deleted: %s\n", categoryID)
+		} else if !strings.Contains(err.Error(), "not found") && !strings.Contains(err.Error(), "ENTITY_NOT_FOUND") {
+			// If it's not a "not found" error, return it
+			return fmt.Errorf("error checking if category %s exists: %v", categoryID, err)
+		}
+		// If category is not found, that's expected - it's been destroyed
+	}
+
+	return nil
 }
 
 // ##############################
