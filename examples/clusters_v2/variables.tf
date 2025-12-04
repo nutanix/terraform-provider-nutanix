@@ -29,3 +29,7 @@ variable "username" {
 variable "password" {
   type = string
 }
+
+variable "nodes_ip" {
+  type = list(string)
+}

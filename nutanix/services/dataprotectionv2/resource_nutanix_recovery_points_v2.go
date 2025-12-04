@@ -27,6 +27,9 @@ func ResourceNutanixRecoveryPointsV2() *schema.Resource {
 		ReadContext:   ResourceNutanixRecoveryPointsV2Read,
 		UpdateContext: ResourceNutanixRecoveryPointsV2Update,
 		DeleteContext: ResourceNutanixRecoveryPointsV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,

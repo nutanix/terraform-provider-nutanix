@@ -119,7 +119,7 @@ func flattenKeysEntities(data []import3.Key) []map[string]interface{} {
 			"last_updated_time": flattenTime(item.LastUpdatedTime),
 			"assigned_to":       item.AssignedTo,
 			"last_used_time":    flattenTime(item.LastUsedTime),
-			"key_details":       item.KeyDetails,
+			"key_details":       flattenKeyDetails(item.KeyDetails),
 		}
 		flattened = append(flattened, entry)
 	}

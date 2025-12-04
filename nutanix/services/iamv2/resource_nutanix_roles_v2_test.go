@@ -22,6 +22,7 @@ func TestAccV2NutanixRolesResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameRoles, "client_name"),
 					resource.TestCheckResourceAttr(resourceNameRoles, "display_name", testVars.Iam.Roles.DisplayName),
 					resource.TestCheckResourceAttr(resourceNameRoles, "description", testVars.Iam.Roles.Description),
+					resource.TestCheckResourceAttrSet(resourceNameRoles, "ext_id"),
 				),
 			},
 			// update role

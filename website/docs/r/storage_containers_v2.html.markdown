@@ -114,5 +114,16 @@ The following attributes are exported:
 * `value`: value of fqdn address
 
 
+## Import
+
+This helps to manage existing entities which are not created through terraform. Storage Container can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_storage_containers_v2" "import_sc" {}
+
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_storage_containers_v2" "fetch_sc"{}
+terraform import nutanix_storage_containers_v2.import_sc <UUID>
+```
+
 
 See detailed information in [Nutanix Create Storage Containers v4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/StorageContainers/operation/createStorageContainer).

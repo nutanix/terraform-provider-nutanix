@@ -21,7 +21,7 @@ func TestNewFoundationCentralClient(t *testing.T) {
 	}
 	_, err := NewFoundationCentralClient(cred)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%s", err.Error())
 	}
 
 	// verify missing client scenario
@@ -35,7 +35,7 @@ func TestNewFoundationCentralClient(t *testing.T) {
 	}
 	FcClient2, err2 := NewFoundationCentralClient(cred2)
 	if err2 != nil {
-		t.Errorf(err2.Error())
+		t.Errorf("%s", err2.Error())
 	}
 
 	if FcClient2.client.ErrorMsg == "" {

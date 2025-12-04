@@ -650,99 +650,26 @@ func flattenIPv4AddressMicroSegList(pr *config.IPv4Address) []interface{} {
 	return nil
 }
 
-func flattenAllowType(pr *import1.AllowType) string {
-	const two, three = 2, 3
-	if pr != nil {
-		if *pr == import1.AllowType(two) {
-			return "ALL"
-		}
-		if *pr == import1.AllowType(three) {
-			return "NONE"
-		}
-	}
-	return "UNKNOWN"
+func flattenAllowType(allowType *import1.AllowType) string {
+	return allowType.GetName()
 }
 
-func flattenPolicyState(pr *import1.SecurityPolicyState) string {
-	const two, three, four = 2, 3, 4
-	if pr != nil {
-		if *pr == import1.SecurityPolicyState(two) {
-			return "SAVE"
-		}
-		if *pr == import1.SecurityPolicyState(three) {
-			return "MONITOR"
-		}
-		if *pr == import1.SecurityPolicyState(four) {
-			return "ENFORCE"
-		}
-	}
-	return "UNKNOWN"
+func flattenPolicyState(securityPolicyState *import1.SecurityPolicyState) string {
+	return securityPolicyState.GetName()
 }
 
-func flattenRuleType(pr *import1.RuleType) string {
-	const two, three, four, five, six = 2, 3, 4, 5, 6
-	if pr != nil {
-		if *pr == import1.RuleType(two) {
-			return "QUARANTINE"
-		}
-		if *pr == import1.RuleType(three) {
-			return "TWO_ENV_ISOLATION"
-		}
-		if *pr == import1.RuleType(four) {
-			return "APPLICATION"
-		}
-		if *pr == import1.RuleType(five) {
-			return "INTRA_GROUP"
-		}
-		if *pr == import1.RuleType(six) {
-			return "MULTI_ENV_ISOLATION"
-		}
-	}
-	return "UNKNOWN"
+func flattenRuleType(ruleType *import1.RuleType) string {
+	return ruleType.GetName()
 }
 
-func flattenSecurityPolicyType(pr *import1.SecurityPolicyType) string {
-	const two, three, four = 2, 3, 4
-	if pr != nil {
-		if *pr == import1.SecurityPolicyType(two) {
-			return "QUARANTINE"
-		}
-		if *pr == import1.SecurityPolicyType(three) {
-			return "ISOLATION"
-		}
-		if *pr == import1.SecurityPolicyType(four) {
-			return "APPLICATION"
-		}
-	}
-	return "UNKNOWN"
+func flattenSecurityPolicyType(securityPolicyType *import1.SecurityPolicyType) string {
+	return securityPolicyType.GetName()
 }
 
-func flattenSecurityPolicyScope(pr *import1.SecurityPolicyScope) string {
-	if pr != nil {
-		const two, three, four = 2, 3, 4
-		if *pr == import1.SecurityPolicyScope(two) {
-			return "ALL_VLAN"
-		}
-		if *pr == import1.SecurityPolicyScope(three) {
-			return "ALL_VPC"
-		}
-		if *pr == import1.SecurityPolicyScope(four) {
-			return "VPC_LIST"
-		}
-	}
-	return "UNKNOWN"
+func flattenSecurityPolicyScope(securityPolicyScope *import1.SecurityPolicyScope) string {
+	return securityPolicyScope.GetName()
 }
 
-func flattenIntraEntityGroupRuleAction(pr *import1.IntraEntityGroupRuleAction) string {
-	if pr != nil {
-		const two, three = 2, 3
-
-		if *pr == import1.IntraEntityGroupRuleAction(two) {
-			return "ALLOW"
-		}
-		if *pr == import1.IntraEntityGroupRuleAction(three) {
-			return "DENY"
-		}
-	}
-	return "UNKNOWN"
+func flattenIntraEntityGroupRuleAction(intraEntityGroupRuleAction *import1.IntraEntityGroupRuleAction) string {
+	return intraEntityGroupRuleAction.GetName()
 }

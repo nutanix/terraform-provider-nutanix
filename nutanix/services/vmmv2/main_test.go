@@ -36,6 +36,7 @@ type TestConfig struct {
 			Mode     string `json:"mode"`
 			Vendor   string `json:"vendor"`
 		} `json:"gpus"`
+		OvaURL string `json:"ova_url"`
 	} `json:"vmm"`
 }
 

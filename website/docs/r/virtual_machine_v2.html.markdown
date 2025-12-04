@@ -32,6 +32,9 @@ resource "nutanix_virtual_machine_v2" "vm-2"{
     cluster {
         ext_id = "1cefd0f5-6d38-4c9b-a07c-bdd2db004224"
     }
+    project {
+    ext_id = "2defe0f5-6e48-4c9b-b07c-bdd2dc004225"
+    }
     disks{
         disk_address{
             bus_type = "SCSI"
@@ -59,6 +62,9 @@ resource "nutanix_virtual_machine_v2" "vm-3" {
   num_sockets          = 1
   cluster {
     ext_id = "1cefd0f5-6d38-4c9b-a07c-bdd2db004224"
+  }
+  project {
+    ext_id = "2defe0f5-6e48-4c9b-b07c-bdd2dc004225"
   }
 
   disks {
@@ -166,6 +172,7 @@ The following arguments are supported:
 * `generation_uuid`: (Optional) Generation UUID of the VM. It should be of type UUID.
 * `bios_uuid`: (Optional) BIOS UUID of the VM. It should be of type UUID.
 * `categories`: (Optional) Categories for the VM.
+* `project`: (Optional) Reference to a project.
 * `ownership_info`: Ownership information for the VM.
 * `host`: Reference to the host, the VM is running on.
 * `cluster`: (Required) Reference to a cluster.
@@ -201,6 +208,12 @@ The `categories` attribute supports the following:
 
 * `ext_id`: A globally unique identifier of a VM category of type UUID.
 
+### Project
+The `project` attribute supports the following:
+
+* `ext_id`: The globally unique identifier of an instance of type UUID.
+
+
 ### Ownership Info
 The `ownership_info` attribute supports the following:
 
@@ -213,6 +226,8 @@ The `host` attribute supports the following:
 * `ext_id`: A globally unique identifier of a host of type UUID.
 
 ### Cluster
+> 💡Cluster automatic selection is supported.
+
 The `cluster` attribute supports the following:
 
 * `ext_id`: The globally unique identifier of a cluster type UUID.

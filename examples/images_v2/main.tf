@@ -94,6 +94,24 @@ resource "nutanix_images_v2" "image-vm-disk" {
 }
 
 
+# Create image using object lite source
+resource "nutanix_images_v2" "object-liteStore-img" {
+  name        = "image-object-lite-example"
+  description = "Image created from object store"
+  type        = "DISK_IMAGE"
+  source {
+    object_lite_source {
+      key = var.lite_source_key
+    }
+  }
+  lifecycle {
+    ignore_changes = [
+      source
+    ]
+  }
+}
+
+
 # pull all images
 data "nutanix_images_v2" "image-list" {
   depends_on = [nutanix_images_v2.example-1, nutanix_images_v2.image-vm-disk]
@@ -114,5 +132,5 @@ data "nutanix_images_v2" "images-paginated" {
 
 # get image by id
 data "nutanix_image_v2" "image-by-id" {
-  ext_id     = nutanix_images_v2.example-1.id
+  ext_id = nutanix_images_v2.example-1.id
 }

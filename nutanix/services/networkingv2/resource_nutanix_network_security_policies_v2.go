@@ -26,6 +26,9 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 		ReadContext:   ResourceNutanixNetworkSecurityPolicyV2Read,
 		UpdateContext: ResourceNutanixNetworkSecurityPolicyV2Update,
 		DeleteContext: ResourceNutanixNetworkSecurityPolicyV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -976,20 +979,35 @@ func expandIsolationGroup(isolationGroup []interface{}) []import1.IsolationGroup
 }
 
 func expandIPv4AddressMicroseg(pr interface{}) *config.IPv4Address {
-	if pr != nil {
-		ipv4 := &config.IPv4Address{}
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
-
-		if value, ok := val["value"]; ok {
-			ipv4.Value = utils.StringPtr(value.(string))
-		}
-		if prefix, ok := val["prefix_length"]; ok {
-			ipv4.PrefixLength = utils.IntPtr(prefix.(int))
-		}
-		return ipv4
+	if pr == nil {
+		return nil
 	}
-	return nil
+
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
+	}
+
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+
+	ipv4 := &config.IPv4Address{}
+
+	if v, ok := valMap["value"]; ok {
+		if s, ok2 := v.(string); ok2 {
+			ipv4.Value = utils.StringPtr(s)
+		}
+	}
+
+	if p, ok := valMap["prefix_length"]; ok {
+		if n, ok2 := p.(int); ok2 {
+			ipv4.PrefixLength = utils.IntPtr(n)
+		}
+	}
+
+	return ipv4
 }
 
 func indexOf(slice []string, target string) int {

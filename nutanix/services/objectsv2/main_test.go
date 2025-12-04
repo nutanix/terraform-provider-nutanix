@@ -15,6 +15,7 @@ import (
 
 type TestConfig struct {
 	ObjectStore struct {
+		ImgURL              string   `json:"img_url"`
 		SubnetName          string   `json:"subnet_name"`
 		BucketName          string   `json:"bucket_name"`
 		Domain              string   `json:"domain"`

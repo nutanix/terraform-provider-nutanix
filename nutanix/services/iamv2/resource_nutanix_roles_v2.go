@@ -18,6 +18,9 @@ func ResourceNutanixRolesV2() *schema.Resource {
 		ReadContext:   ResourceNutanixRolesV4Read,
 		UpdateContext: ResourceNutanixRolesV4Update,
 		DeleteContext: ResourceNutanixRolesV4Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Description: "ExtId for the Role.",
@@ -34,6 +37,7 @@ func ResourceNutanixRolesV2() *schema.Resource {
 				Description: "Description of the Role.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 			},
 			"client_name": {
 				Description: "Client that created the entity.",
@@ -208,6 +212,9 @@ func ResourceNutanixRolesV4Read(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("display_name", getResp.DisplayName); err != nil {

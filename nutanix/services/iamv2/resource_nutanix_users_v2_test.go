@@ -32,7 +32,6 @@ func TestAccV2NutanixUsersResource_LocalActiveUser(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameUsers, "display_name", "display-name-"+name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "user_type", "LOCAL"),
 					resource.TestCheckResourceAttr(resourceNameUsers, "first_name", "first-name-"+name),
-					resource.TestCheckResourceAttr(resourceNameUsers, "middle_initial", "middle-initial-"+name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "last_name", "last-name-"+name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "email_id", testVars.Iam.Users.EmailID),
 					resource.TestCheckResourceAttr(resourceNameUsers, "status", "ACTIVE"),
@@ -47,7 +46,6 @@ func TestAccV2NutanixUsersResource_LocalActiveUser(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameUsers, "display_name", fmt.Sprintf("%s_updated", "display-name-"+name)),
 					resource.TestCheckResourceAttr(resourceNameUsers, "user_type", "LOCAL"),
 					resource.TestCheckResourceAttr(resourceNameUsers, "first_name", fmt.Sprintf("%s_updated", "first-name-"+name)),
-					resource.TestCheckResourceAttr(resourceNameUsers, "middle_initial", fmt.Sprintf("%s_updated", "middle-initial-"+name)),
 					resource.TestCheckResourceAttr(resourceNameUsers, "last_name", fmt.Sprintf("%s_updated", "last-name-"+name)),
 					resource.TestCheckResourceAttr(resourceNameUsers, "email_id", fmt.Sprintf("updated_%s", testVars.Iam.Users.EmailID)),
 				),
@@ -81,6 +79,43 @@ func TestAccV2NutanixUsersResource_AlreadyExistsUser(t *testing.T) {
 			{
 				Config:      testLocalActiveUserResourceConfig(filepath, name) + testLocalUserAlreadyExistsResourceConfig(filepath, name),
 				ExpectError: regexp.MustCompile("user already exists with given username"),
+			},
+		},
+	})
+}
+
+func TestAccV2NutanixUsersResource_LocalActiveUserMiniConfig(t *testing.T) {
+	r := acctest.RandIntRange(1, 999)
+	name := fmt.Sprintf("tf-test-user-%d", r)
+	password := fmt.Sprintf("Password.%d", r)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		// using V3 API to delete user
+		CheckDestroy: testAccCheckNutanixUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testLocalActiveUserResourceMiniConfig(name, password, "mini"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameUsers, "ext_id"),
+					resource.TestCheckResourceAttr(resourceNameUsers, "username", name),
+					resource.TestCheckResourceAttr(resourceNameUsers, "user_type", "LOCAL"),
+					resource.TestCheckResourceAttr(resourceNameUsers, "first_name", "fn-mini"),
+					resource.TestCheckResourceAttr(resourceNameUsers, "last_name", "ln-mini"),
+					resource.TestCheckResourceAttr(resourceNameUsers, "status", "ACTIVE"),
+				),
+			},
+			// test update
+			{
+				Config: testLocalActiveUserResourceMiniConfig(name, password+"@123", "mini_updated"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameUsers, "ext_id"),
+					resource.TestCheckResourceAttr(resourceNameUsers, "username", name),
+					resource.TestCheckResourceAttr(resourceNameUsers, "user_type", "LOCAL"),
+					resource.TestCheckResourceAttr(resourceNameUsers, "first_name", "fn-mini_updated"),
+					resource.TestCheckResourceAttr(resourceNameUsers, "last_name", "ln-mini_updated"),
+				),
 			},
 		},
 	})
@@ -230,7 +265,7 @@ func TestAccV2NutanixUsersResource_WithNoUserType(t *testing.T) {
 	})
 }
 
-func TestAccv2NutanixUsersResource_ServiceAccountDuplicateName(t *testing.T) {
+func TestAccV2NutanixUsersResource_ServiceAccountDuplicateName(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-service-account-%d", r)
 	resource.Test(t, resource.TestCase{
@@ -245,7 +280,7 @@ func TestAccv2NutanixUsersResource_ServiceAccountDuplicateName(t *testing.T) {
 	})
 }
 
-func TestAccv2NutanixUsersResource_ServiceAccountCreate(t *testing.T) {
+func TestAccV2NutanixUsersResource_ServiceAccountCreate(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-service-account-%d", r)
 	description := "test service account tf"
@@ -290,7 +325,6 @@ func testLocalActiveUserResourceConfig(filepath, name string) string {
 	resource "nutanix_users_v2" "test" {
 		username = "%[2]s"
 		first_name = "first-name-%[2]s"
-		middle_initial = "middle-initial-%[2]s"
 		last_name = "last-name-%[2]s"
 		email_id = local.users.email_id
 		locale = local.users.locale
@@ -314,7 +348,6 @@ func testLocalActiveUserResourceUpdateConfig(filepath, name string) string {
 	resource "nutanix_users_v2" "test" {
 		username = "%[2]s"
 		first_name = "first-name-%[2]s_updated"
-		middle_initial = "middle-initial-%[2]s_updated"
 		last_name = "last-name-%[2]s_updated"
 		email_id = "updated_${local.users.email_id}"
 		locale = local.users.locale
@@ -503,4 +536,15 @@ func testServiceAccountCreateResourceConfig(name string, description string) str
 		user_type = "SERVICE_ACCOUNT"
 	}
 	`, name, description)
+}
+
+func testLocalActiveUserResourceMiniConfig(name, password, suffix string) string {
+	return fmt.Sprintf(`
+	resource "nutanix_users_v2" "test" {
+		username = "%[1]s"
+		first_name = "fn-%[3]s"
+		last_name = "ln-%[3]s"
+		password = "%[2]s"
+		user_type = "LOCAL"
+	}`, name, password, suffix)
 }

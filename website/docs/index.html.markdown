@@ -13,18 +13,17 @@ The provider is used to interact with the many resources and data sources suppor
 Use the navigation on the left to read about the available resources and data sources this provider can use.
 
 
-## Introducing Nutanix Terraform Provider Version v2.3.0
+## Introducing Nutanix Terraform Provider Version v2.3.4
 
-We're excited to announce the release of Nutanix Terraform Provider Version 2.3.0! This major update brings new features for automating your Nutanix infrastructure.
+We're excited to announce the release of Nutanix Terraform Provider Version 2.3.4!
 
-### What's New in v2.3.0
+### What's New in v2.3.4
 
-- **Built on v4.1 APIs/SDKs**  
-  This release is built on the latest Nutanix v4 APIs and SDKs, providing improved performance, stability, and alignment with the newest platform capabilities.
+- **Enhancements:**
+  - Support for Ejecting ISO from CD-ROM [\#1006](https://github.com/nutanix/terraform-provider-nutanix/issues/1006)
 
-- **New Resource Support**
-  - **Objects**: Automate Nutanix Objects (S3-compatible storage) management for scalable storage use cases.
-  - **Service Accounts**: Manage service accounts directly through Terraform.
+- **Fixed Bugs:**
+   - Subnet entity is not saved in Terraform State due to plugin crash [\#894](https://github.com/nutanix/terraform-provider-nutanix/issues/894)
 
 
 ~> **Important Notice:** Upcoming Deprecation of Legacy Nutanix Terraform Provider Resources. Starting with the Nutanix Terraform Provider release planned for Q4-CY2026, legacy resources which are based on v0.8,v1,v2 and v3 APIs will be deprecated and no longer supported. For more information, visit [Legacy API Deprecation Announcement](https://portal.nutanix.com/page/documents/eol/list?type=announcement) [Legacy API Deprecation - FAQs](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA0VO0000005rgP0AQ). Nutanix strongly encourages you to migrate your scripts and applications to the latest v2 version of the Nutanix Terraform Provider resources, which are built on our v4 APIs/SDKs. By adopting the latest v2 version based on v4 APIs and SDKs, our users can leverage the enhanced capabilities and latest innovations from Nutanix. We understand that this transition may require some effort, and we are committed to supporting you throughout the process. Please refer to our documentation and support channels for guidance and assistance.
@@ -38,7 +37,13 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
+| 2.3.4 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.3.3 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.3.2 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.3.1 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.0 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
+| 2.2.3 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
+| 2.2.2 (⚠️ Deprecated/Invalid) | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
 | 2.2.0 | | | Self Service  v4.1.0 | yes | 
 | 2.1.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
@@ -83,6 +88,9 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | nutanix_image |nutanix_images_v2 |
 | - | nutanix_image_placement_policy_v2 |
 | nutanix_virtual_machine | nutanix_virtual_machine_v2 |
+| - | nutanix_ova_v2 |
+| - | nutanix_ova_vm_deploy_v2 |
+| - | nutanix_ova_download_v2 |
 | - | nutanix_vm_clone_v2 |
 | - | nutanix_vm_cdrom_insert_eject_v2 |
 | - | nutanix_vm_shutdown_action_v2 |
@@ -163,7 +171,7 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_user_key_revoke_v2 |
 | - | nutanix_object_store_v2 |
 | - | nutanix_object_store_certificate_v2 |
-
+| - | nutanix_password_change_request_v2 |
 
 ## Data Sources
 
@@ -207,6 +215,8 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_images_v2 |
 | nutanix_virtual_machine | nutanix_virtual_machine_v2 |
 | - | nutanix_virtual_machines_v2 |
+| - | nutanix_ova_v2 |
+| - | nutanix_ovas_v2 |
 | - | nutanix_template_v2 |
 | - | nutanix_templates_v2 |
 | - | nutanix_ngt_configuration_v2 |
@@ -298,6 +308,7 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_object_stores_v2 |
 | - | nutanix_certificate_v2 |
 | - | nutanix_certificates_v2 |
+| - | nutanix_system_user_passwords_v2 |
 
 ## Example Usage
 

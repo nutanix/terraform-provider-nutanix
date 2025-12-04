@@ -180,7 +180,7 @@ func dataSourceNutanixUserKeyV2Create(ctx context.Context, d *schema.ResourceDat
 	if err := d.Set("last_used_time", flattenTime(keyConfig.LastUsedTime)); err != nil {
 		return diag.Errorf("error while setting last_used_time: %v", err)
 	}
-	if err := d.Set("key_details", keyConfig.KeyDetails); err != nil {
+	if err := d.Set("key_details", flattenKeyDetails(keyConfig.KeyDetails)); err != nil {
 		return diag.Errorf("error while setting key_details: %v", err)
 	}
 	d.SetId(*keyConfig.ExtId)

@@ -15,6 +15,7 @@ import (
 )
 
 var diskSizeBytes int64 = 5368709120
+var updatedDiskSizeBytes int64 = 10737418240
 
 func testAccCheckResourceAttrListNotEmpty(resourceName, attrName, subAttr string) resource.TestCheckFunc {
 	log.Printf("[DEBUG] testAccCheckResourceAttrNotEmpty ###############################")
@@ -137,7 +138,7 @@ func testAccVolumeGroupResourceConfig(name, desc string) string {
 	`, filepath, name, desc)
 }
 
-func testAccVolumeGroupDiskResourceConfig(name, desc string) string {
+func testAccVolumeGroupDiskResourceConfig(name, desc string, diskSizeBytes int) string {
 	return fmt.Sprintf(`	  
 
       data "nutanix_storage_containers_v2" "test" {

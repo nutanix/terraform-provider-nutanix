@@ -119,4 +119,19 @@ The idp_metadata attribute supports the following:
     * `persistent`: -  Uses persistent name identifier as NameID format.
     * `entity`: -  Uses identifier of an entity as NameID format.
 
+
+
+## Import
+
+This helps to manage existing entities which are not created through terraform. SAML Identity Provider can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_saml_identity_providers_v2" "import_saml_idp" {}
+
+// execute the below command. UUID can be fetched using datasource. Example: data "nutanix_saml_identity_providers_v2" "fetch_saml_idps"{}
+terraform import nutanix_saml_identity_providers_v2.import_saml_idp <UUID>
+```
+
+
 See detailed information in [Nutanix SAML Identity Providers v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0).

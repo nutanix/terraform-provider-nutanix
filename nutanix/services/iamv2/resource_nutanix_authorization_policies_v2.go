@@ -46,6 +46,7 @@ func ResourceNutanixAuthPoliciesV2() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"client_name": {
 				Type:     schema.TypeString,
@@ -60,6 +61,7 @@ func ResourceNutanixAuthPoliciesV2() *schema.Resource {
 						"reserved": {
 							Type:             schema.TypeString,
 							Optional:         true,
+							Computed:         true,
 							DiffSuppressFunc: SuppressEquivalentAuthPolicyDiffs,
 							StateFunc: func(v interface{}) string {
 								log.Printf("[DEBUG] StateFunc value: %v\n", v)
@@ -119,6 +121,7 @@ func ResourceNutanixAuthPoliciesV2() *schema.Resource {
 			"authorization_policy_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"PREDEFINED_READ_ONLY", "SERVICE_DEFINED_READ_ONLY",
 					"PREDEFINED_UPDATE_IDENTITY_ONLY", "SERVICE_DEFINED", "USER_DEFINED",
@@ -184,7 +187,7 @@ func ResourceNutanixAuthPoliciesV2Create(ctx context.Context, d *schema.Resource
 
 	d.Set("ext_id", *getResp.ExtId)
 	d.SetId(*getResp.ExtId)
-	return nil
+	return ResourceNutanixAuthPoliciesV2Read(ctx, d, meta)
 }
 
 func ResourceNutanixAuthPoliciesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -197,6 +200,9 @@ func ResourceNutanixAuthPoliciesV2Read(ctx context.Context, d *schema.ResourceDa
 	}
 	getResp := resp.Data.GetValue().(import1.AuthorizationPolicy)
 
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("display_name", getResp.DisplayName); err != nil {
 		return diag.FromErr(err)
 	}
@@ -352,7 +358,7 @@ func expandIdentityFilter(identities []interface{}) ([]import1.IdentityFilter, e
 				log.Printf("[DEBUG] expandIdentityFilter val type : %v\n", reflect.TypeOf(val))
 				reserved, err := deserializeJSONStringToMap(val.(string))
 				if err != nil {
-					return nil, fmt.Errorf(err.Error())
+					return nil, fmt.Errorf("%s", err.Error())
 				}
 				log.Printf("[DEBUG] expandIdentityFilter reserved : %v\n", reserved)
 				filter.Reserved_ = reserved
@@ -389,7 +395,7 @@ func expandEntityFilter(entities []interface{}) ([]import1.EntityFilter, error) 
 				log.Printf("[DEBUG] expandEntityFilter val type : %v\n", reflect.TypeOf(val))
 				reserved, err := deserializeJSONStringToMap(val.(string))
 				if err != nil {
-					return nil, fmt.Errorf(err.Error())
+					return nil, fmt.Errorf("%s", err.Error())
 				}
 				log.Printf("[DEBUG] expandEntityFilter reserved : %v\n", reserved)
 				filter.Reserved_ = reserved
