@@ -16,11 +16,13 @@ import (
 
 // NestedField represents a field with nested structure support
 type NestedField struct {
-	Name     string        `json:"name"`
-	Type     string        `json:"type"`
-	Tag      string        `json:"tag,omitempty"`
-	IsStruct bool          `json:"is_struct,omitempty"`
-	Fields   []NestedField `json:"fields,omitempty"` // Nested fields if this is a struct type
+	Name        string        `json:"name"`
+	Type        string        `json:"type"`
+	Tag         string        `json:"tag,omitempty"`
+	IsStruct    bool          `json:"is_struct,omitempty"`
+	Fields      []NestedField `json:"fields,omitempty"`       // Nested fields if this is a struct type
+	ImportAlias string        `json:"import_alias,omitempty"` // e.g., "import1", "import2" if type uses an import
+	ImportPath  string        `json:"import_path,omitempty"`  // Full import path for the alias
 }
 
 // APIRequestResponseStruct combines API method with its request and response structs
@@ -46,10 +48,18 @@ type APIMethodInfo struct {
 
 // NestedStruct represents a struct with nested field structure
 type NestedStruct struct {
-	Name   string        `json:"name"`
-	Type   string        `json:"type"`
-	File   string        `json:"file,omitempty"`
-	Fields []NestedField `json:"fields"`
+	Name        string        `json:"name"`
+	Type        string        `json:"type"`
+	File        string        `json:"file,omitempty"`
+	Fields      []NestedField `json:"fields"`
+	ImportAlias string        `json:"import_alias,omitempty"` // e.g., "import1", "import2" if type uses an import
+	ImportPath  string        `json:"import_path,omitempty"`  // Full import path for the alias
+}
+
+// ImportMapping represents an import alias and its path
+type ImportMapping struct {
+	Alias string `json:"alias"` // e.g., "import1", "import2"
+	Path  string `json:"path"`  // e.g., "github.com/nutanix/ntnx-api-golang-clients/monitoring-go-client/v4/models/monitoring/v4/common"
 }
 
 // OutputData is the unified output structure
@@ -61,9 +71,10 @@ type OutputData struct {
 
 // Internal structures for extraction
 type structInfo struct {
-	name   string
-	fields []fieldInfo
-	file   string
+	name    string
+	fields  []fieldInfo
+	file    string
+	imports map[string]string // import alias -> import path for this file
 }
 
 type fieldInfo struct {
@@ -131,6 +142,56 @@ func shouldIgnoreField(fieldName string) bool {
 	return false
 }
 
+// shouldIgnoreMethod checks if a method should be ignored based on its name
+func shouldIgnoreMethod(methodName string) bool {
+	ignoredMethods := map[string]bool{
+		"UnmarshalJSON": true,
+		"MarshalJSON":   true,
+		"SetValue":      true,
+		"GetValue":      true,
+		"SetData":       true,
+		"GetData":       true,
+	}
+	return ignoredMethods[methodName]
+}
+
+// extractImportAliasFromType extracts import alias from a type string
+// e.g., "import1.Parameter" -> "import1", "[]import2.ApiLink" -> "import2"
+func extractImportAliasFromType(typeStr string) string {
+	// Match pattern like "import1.Type" or "[]import2.Type" or "*import3.Type"
+	re := regexp.MustCompile(`import\d+`)
+	matches := re.FindString(typeStr)
+	return matches
+}
+
+// collectUsedImports recursively collects all import aliases used in a NestedStruct
+func collectUsedImports(struct_ *NestedStruct, usedImports map[string]bool) {
+	if struct_ == nil {
+		return
+	}
+
+	// Check the struct type itself
+	if alias := extractImportAliasFromType(struct_.Type); alias != "" {
+		usedImports[alias] = true
+	}
+
+	// Recursively check all fields
+	for _, field := range struct_.Fields {
+		// Check field type
+		if alias := extractImportAliasFromType(field.Type); alias != "" {
+			usedImports[alias] = true
+		}
+		// Recursively check nested fields
+		if len(field.Fields) > 0 {
+			nestedStruct := &NestedStruct{
+				Type:   field.Type,
+				Fields: field.Fields,
+			}
+			collectUsedImports(nestedStruct, usedImports)
+		}
+	}
+}
+
 // extractBaseTypeName extracts the base type name from complex types (pointers, slices, etc.)
 func extractBaseTypeName(typeStr string) string {
 	// Remove pointer
@@ -166,11 +227,22 @@ func buildNestedStruct(structName string, structsMap map[string]structInfo, visi
 		return nil
 	}
 
+	// Check if the struct type itself uses an import
+	importAlias := extractImportAliasFromType(structName)
+	importPath := ""
+	if importAlias != "" && structInfo.imports != nil {
+		if path, exists := structInfo.imports[importAlias]; exists {
+			importPath = path
+		}
+	}
+
 	nestedStruct := &NestedStruct{
-		Name:   structName,
-		Type:   structName,
-		File:   structInfo.file,
-		Fields: []NestedField{},
+		Name:        structName,
+		Type:        structName,
+		File:        structInfo.file,
+		Fields:      []NestedField{},
+		ImportAlias: importAlias,
+		ImportPath:  importPath,
 	}
 
 	for _, field := range structInfo.fields {
@@ -189,12 +261,24 @@ func buildNestedStruct(structName string, structsMap map[string]structInfo, visi
 			nestedFields = nestedFieldStruct.Fields
 		}
 
+		// Extract import information if the field type uses an import
+		// Use the imports from the file where this struct is defined
+		importAlias := extractImportAliasFromType(field.typ)
+		importPath := ""
+		if importAlias != "" && structInfo.imports != nil {
+			if path, exists := structInfo.imports[importAlias]; exists {
+				importPath = path
+			}
+		}
+
 		nestedField := NestedField{
-			Name:     field.name,
-			Type:     field.typ,
-			Tag:      field.tag,
-			IsStruct: isStruct,
-			Fields:   nestedFields,
+			Name:        field.name,
+			Type:        field.typ,
+			Tag:         field.tag,
+			IsStruct:    isStruct,
+			Fields:      nestedFields,
+			ImportAlias: importAlias,
+			ImportPath:  importPath,
 		}
 
 		nestedStruct.Fields = append(nestedStruct.Fields, nestedField)
@@ -237,6 +321,35 @@ func findResponseType(returns []string) string {
 	return ""
 }
 
+// extractImportsFromFile extracts import statements from a Go file
+func extractImportsFromFile(fset *token.FileSet, file *ast.File) map[string]string {
+	imports := make(map[string]string)
+
+	for _, imp := range file.Imports {
+		importPath := strings.Trim(imp.Path.Value, `"`)
+		alias := ""
+
+		if imp.Name != nil {
+			// Use explicit alias if provided
+			alias = imp.Name.Name
+		} else {
+			// Extract alias from path (last component)
+			parts := strings.Split(importPath, "/")
+			if len(parts) > 0 {
+				alias = parts[len(parts)-1]
+			}
+		}
+
+		// Only track imports that look like import aliases (import1, import2, import3, etc.)
+		// Match pattern like "import1", "import2", "import4", etc.
+		if matched, _ := regexp.MatchString(`^import\d+$`, alias); matched {
+			imports[alias] = importPath
+		}
+	}
+
+	return imports
+}
+
 func extractFromPackage(packageDir string) (map[string]structInfo, []methodInfo, error) {
 	fset := token.NewFileSet()
 	structsMap := make(map[string]structInfo)
@@ -261,6 +374,9 @@ func extractFromPackage(packageDir string) (map[string]structInfo, []methodInfo,
 			return nil
 		}
 
+		// Extract imports from this file - store per file
+		fileImports := extractImportsFromFile(fset, file)
+
 		relPath, _ := filepath.Rel(packageDir, path)
 
 		ast.Inspect(file, func(n ast.Node) bool {
@@ -268,9 +384,10 @@ func extractFromPackage(packageDir string) (map[string]structInfo, []methodInfo,
 			case *ast.TypeSpec:
 				if st, ok := x.Type.(*ast.StructType); ok {
 					structInfo := structInfo{
-						name:   x.Name.Name,
-						fields: []fieldInfo{},
-						file:   relPath,
+						name:    x.Name.Name,
+						fields:  []fieldInfo{},
+						file:    relPath,
+						imports: fileImports, // Store imports for this specific file
 					}
 
 					if st.Fields != nil {
@@ -301,6 +418,11 @@ func extractFromPackage(packageDir string) (map[string]structInfo, []methodInfo,
 				}
 			case *ast.FuncDecl:
 				if x.Recv != nil && len(x.Recv.List) > 0 {
+					// Skip ignored methods
+					if shouldIgnoreMethod(x.Name.Name) {
+						return true
+					}
+
 					recvType := ""
 					if ident, ok := x.Recv.List[0].Type.(*ast.Ident); ok {
 						recvType = ident.Name
@@ -370,6 +492,105 @@ func filterAPIMethods(methods []methodInfo) []methodInfo {
 	return apiMethods
 }
 
+// filterByReceiverAndKeyword filters API methods and related structs based on receiver and/or keyword
+// When receiver is provided, only includes methods where the receiver exactly matches
+// When keyword is provided (and receiver is not), filters by keyword matching method name only
+// When neither is provided, returns everything
+func filterByReceiverAndKeyword(apiMethods []methodInfo, structsMap map[string]structInfo, receiver, keyword string) ([]methodInfo, map[string]structInfo) {
+	// If neither receiver nor keyword is provided, return everything
+	if receiver == "" && keyword == "" {
+		return apiMethods, structsMap
+	}
+
+	var filteredMethods []methodInfo
+	usedStructs := make(map[string]bool)
+
+	if receiver != "" {
+		// If receiver is provided, match exactly by receiver
+		receiverLower := strings.ToLower(receiver)
+		for _, method := range apiMethods {
+			// Normalize receiver by removing pointer prefix and converting to lowercase
+			receiverNormalized := strings.ToLower(strings.TrimPrefix(method.receiver, "*"))
+
+			// Only include if receiver exactly matches
+			if receiverNormalized == receiverLower {
+				filteredMethods = append(filteredMethods, method)
+
+				// Mark related structs as used
+				requestType := findRequestType(method.params)
+				if requestType != "" {
+					baseRequestType := extractBaseTypeName(requestType)
+					usedStructs[baseRequestType] = true
+				}
+
+				responseType := findResponseType(method.returns)
+				if responseType != "" {
+					baseResponseType := extractBaseTypeName(responseType)
+					usedStructs[baseResponseType] = true
+				}
+			}
+		}
+	} else {
+		// If only keyword is provided, match by keyword in method name only
+		keywordLower := strings.ToLower(keyword)
+		for _, method := range apiMethods {
+			methodNameLower := strings.ToLower(method.name)
+
+			// Only check if method name contains keyword
+			if strings.Contains(methodNameLower, keywordLower) {
+				filteredMethods = append(filteredMethods, method)
+
+				// Mark related structs as used
+				requestType := findRequestType(method.params)
+				if requestType != "" {
+					baseRequestType := extractBaseTypeName(requestType)
+					usedStructs[baseRequestType] = true
+				}
+
+				responseType := findResponseType(method.returns)
+				if responseType != "" {
+					baseResponseType := extractBaseTypeName(responseType)
+					usedStructs[baseResponseType] = true
+				}
+			}
+		}
+	}
+
+	// Filter structs map to only include used structs and their dependencies
+	filteredStructsMap := make(map[string]structInfo)
+	visitedStructs := make(map[string]bool)
+
+	var collectStructDependencies func(structName string)
+	collectStructDependencies = func(structName string) {
+		if visitedStructs[structName] {
+			return
+		}
+		visitedStructs[structName] = true
+
+		structInfo, exists := structsMap[structName]
+		if !exists {
+			return
+		}
+
+		filteredStructsMap[structName] = structInfo
+
+		// Recursively collect dependencies
+		for _, field := range structInfo.fields {
+			baseType := extractBaseTypeName(field.typ)
+			if baseType != "" && baseType != structName {
+				collectStructDependencies(baseType)
+			}
+		}
+	}
+
+	// Collect all used structs and their dependencies
+	for structName := range usedStructs {
+		collectStructDependencies(structName)
+	}
+
+	return filteredMethods, filteredStructsMap
+}
+
 func buildAPIRequestResponseList(apiMethods []methodInfo, structsMap map[string]structInfo) []APIRequestResponseStruct {
 	var result []APIRequestResponseStruct
 
@@ -397,6 +618,20 @@ func buildAPIRequestResponseList(apiMethods []methodInfo, structsMap map[string]
 			baseRequestType := extractBaseTypeName(requestType)
 			visited := make(map[string]bool)
 			requestStruct = buildNestedStruct(baseRequestType, structsMap, visited)
+			// Set import info for the struct itself if it uses an import
+			// Need to find which file defines this struct to get its imports
+			if requestStruct != nil {
+				importAlias := extractImportAliasFromType(requestType)
+				if importAlias != "" {
+					// Find the struct in structsMap to get its file's imports
+					if structInfo, exists := structsMap[baseRequestType]; exists && structInfo.imports != nil {
+						if path, exists := structInfo.imports[importAlias]; exists {
+							requestStruct.ImportAlias = importAlias
+							requestStruct.ImportPath = path
+						}
+					}
+				}
+			}
 		}
 
 		// Find response type
@@ -406,6 +641,20 @@ func buildAPIRequestResponseList(apiMethods []methodInfo, structsMap map[string]
 			baseResponseType := extractBaseTypeName(responseType)
 			visited := make(map[string]bool)
 			responseStruct = buildNestedStruct(baseResponseType, structsMap, visited)
+			// Set import info for the struct itself if it uses an import
+			// Need to find which file defines this struct to get its imports
+			if responseStruct != nil {
+				importAlias := extractImportAliasFromType(responseType)
+				if importAlias != "" {
+					// Find the struct in structsMap to get its file's imports
+					if structInfo, exists := structsMap[baseResponseType]; exists && structInfo.imports != nil {
+						if path, exists := structInfo.imports[importAlias]; exists {
+							responseStruct.ImportAlias = importAlias
+							responseStruct.ImportPath = path
+						}
+					}
+				}
+			}
 		}
 
 		result = append(result, APIRequestResponseStruct{
@@ -420,8 +669,10 @@ func buildAPIRequestResponseList(apiMethods []methodInfo, structsMap map[string]
 
 func main() {
 	packageFlag := flag.String("package", "", "Go package path with optional version (e.g., github.com/nutanix/ntnx-api-golang-clients/monitoring-go-client/v4@v4.1.1)")
-	outputDirFlag := flag.String("output-dir", "./sdk_extract_output", "Output directory for extracted information")
+	outputDirFlag := flag.String("output-dir", "code_gen/sdk_extract_output", "Output directory for extracted information")
 	apiPackageFlag := flag.String("api-package", "", "Specific API package to extract")
+	receiverFlag := flag.String("receiver", "", "Optional receiver type to filter extraction (only extract APIs/methods with matching receiver)")
+	keywordFlag := flag.String("keyword", "", "Optional keyword to filter extraction (only extract APIs/methods matching this keyword, used if receiver is not provided)")
 	flag.Parse()
 
 	if *packageFlag == "" {
@@ -497,8 +748,33 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Also extract structs from models directory if it exists (to get their imports)
+	modelsDir := filepath.Join(filepath.Dir(packageDir), "models")
+	if fileExists(modelsDir) {
+		fmt.Printf("Extracting structs from models directory...\n")
+		modelStructs, _, err := extractFromPackage(modelsDir)
+		if err == nil {
+			// Merge model structs into structsMap (they have their own imports)
+			for name, info := range modelStructs {
+				structsMap[name] = info
+			}
+		}
+	}
+
 	// Filter API methods
 	apiMethods := filterAPIMethods(methods)
+
+	// Apply receiver/keyword filter if provided
+	if *receiverFlag != "" || *keywordFlag != "" {
+		if *receiverFlag != "" {
+			fmt.Printf("Filtering by receiver: %s\n", *receiverFlag)
+		} else {
+			fmt.Printf("Filtering by keyword: %s\n", *keywordFlag)
+		}
+		apiMethods, structsMap = filterByReceiverAndKeyword(apiMethods, structsMap, *receiverFlag, *keywordFlag)
+		fmt.Printf("  Filtered to %d API methods\n", len(apiMethods))
+		fmt.Printf("  Filtered to %d structs\n", len(structsMap))
+	}
 
 	// Build unified structure
 	fmt.Printf("Building API request/response structures...\n")
