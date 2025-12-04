@@ -23,7 +23,7 @@ func NewEraClient(credentials client.Credentials) (*Client, error) {
 
 	// check if all required fields are present. Else create an empty client
 	if credentials.NdbUsername != "" && credentials.NdbPassword != "" && credentials.NdbEndpoint != "" {
-		credentials.URL = fmt.Sprintf(credentials.NdbEndpoint)
+		credentials.URL = fmt.Sprintf("%s", credentials.NdbEndpoint)
 		credentials.Password = credentials.NdbPassword
 		credentials.Username = credentials.NdbUsername
 
