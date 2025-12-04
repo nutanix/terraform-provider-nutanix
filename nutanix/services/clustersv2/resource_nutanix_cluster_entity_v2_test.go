@@ -3,6 +3,7 @@ package clustersv2_test
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 )
 
 const (
-	resourceNameCluster              = "nutanix_cluster_v2.test"
+	clusterResourceName              = "nutanix_cluster_v2.test"
 	resourceNameDiscoverUnConfigNode = "nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node"
 	resourceNameClusterRegistration  = "nutanix_pc_registration_v2.node-registration"
 )
@@ -24,26 +25,81 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-cluster-%d", r)
 
+	clusterProfileResourceName := "nutanix_cluster_profile_v2.test"
+	clusterProfileDataSourceName := "data.nutanix_cluster_profile_v2.test"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
+		CheckDestroy: resource.ComposeTestCheckFunc(
+			testAccCheckNutanixClusterDestroy,
+			testAccCheckClusterProfileDestroy,
+		),
 		Steps: []resource.TestStep{
 			{
-				Config:   testAccClusterResourceMinimumConfig(name),
+				PreConfig: func() {
+					fmt.Println("Step 1: Plan the cluster with minimum config")
+				},
+				Config:   testAccClusterResourceMinimumConfig(name, ""),
 				PlanOnly: false,
 			},
 			{
 				PreConfig: func() {
-					time.Sleep(10 * time.Second) // 10-second delay
+					fmt.Println("Step 2: Create the cluster with minimum config")
 				},
-				Config: testAccClusterResourceMinimumConfig(name),
+				Config: testAccClusterResourceMinimumConfig(name, ""),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameCluster, "name", name),
-					resource.TestCheckResourceAttr(resourceNameCluster, "dryrun", "false"),
-					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
-					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.number_of_nodes", "1"),
-					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
-					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
+					resource.TestCheckResourceAttr(clusterResourceName, "name", name),
+					resource.TestCheckResourceAttr(clusterResourceName, "dryrun", "false"),
+					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
+					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.number_of_nodes", "1"),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
+				),
+			},
+			// Create cluster profile and associate with cluster
+			{
+				PreConfig: func() {
+					fmt.Println("Step 3: Associating the cluster profile with the cluster")
+				},
+				Config: testAccClusterResourceMinimumConfig(name, "cluster_profile_ext_id = nutanix_cluster_profile_v2.test.id") + testAccClusterProfileResourceConfig("tf-first-cluster-profile"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(clusterProfileResourceName, "name", "tf-first-cluster-profile"),
+					resource.TestCheckResourceAttrSet(clusterProfileResourceName, "ext_id"),
+					resource.TestCheckResourceAttrPair(clusterProfileResourceName, "id", clusterProfileDataSourceName, "ext_id"),
+					resource.TestCheckResourceAttrPair(clusterProfileResourceName, "name", clusterProfileDataSourceName, "name"),
+				),
+			},
+			// Get Cluster Profile Details
+			{
+				PreConfig: func() {
+					fmt.Println("Step 5: Getting the cluster profile details")
+				},
+				Config: testAccClusterResourceMinimumConfig(name, "cluster_profile_ext_id = nutanix_cluster_profile_v2.test.id") + testAccClusterProfileResourceConfig("tf-first-cluster-profile"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(clusterProfileResourceName, "name", "tf-first-cluster-profile"),
+					resource.TestCheckResourceAttr(clusterProfileDataSourceName, "clusters.#", "1"),
+					resource.TestCheckResourceAttrPair(clusterProfileDataSourceName, "clusters.0.ext_id", clusterResourceName, "id"),
+				),
+			},
+			// de-associate the cluster profile from the cluster
+			{
+				PreConfig: func() {
+					fmt.Println("Step 4: De-associating the cluster profile from the cluster")
+				},
+				Config: testAccClusterResourceMinimumConfig(name, "") + testAccClusterProfileResourceConfig("tf-first-cluster-profile"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(clusterResourceName, "cluster_profile_ext_id", ""),
+				),
+			},
+			// Get Cluster Profile Details after de-association
+			{
+				PreConfig: func() {
+					fmt.Println("Step 6: Getting the cluster profile details after de-association")
+				},
+				Config: testAccClusterResourceMinimumConfig(name, "") + testAccClusterProfileResourceConfig("tf-first-cluster-profile"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(clusterProfileDataSourceName, "clusters.#", "0"),
 				),
 			},
 		},
@@ -58,8 +114,9 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 	name := fmt.Sprintf("tf-test-cluster-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:   testAccClusterResourceAllConfig(name),
@@ -80,17 +137,17 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameDiscoverUnConfigNode, "unconfigured_nodes.0.hypervisor_type"),
 
 					// check the cluster is created with minimum config
-					resource.TestCheckResourceAttr(resourceNameCluster, "name", name),
-					resource.TestCheckResourceAttr(resourceNameCluster, "dryrun", "false"),
-					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
-					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.number_of_nodes", "1"),
-					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
-					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.external_address.0.ipv4.0.value", testVars.Clusters.Network.VirtualIP),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.ntp_server_ip_list.0.fqdn.0.value", testVars.Clusters.Network.NTPServers[0]),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.ntp_server_ip_list.1.fqdn.0.value", testVars.Clusters.Network.NTPServers[1]),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.ntp_server_ip_list.2.fqdn.0.value", testVars.Clusters.Network.NTPServers[2]),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.ntp_server_ip_list.3.fqdn.0.value", testVars.Clusters.Network.NTPServers[3]),
+					resource.TestCheckResourceAttr(clusterResourceName, "name", name),
+					resource.TestCheckResourceAttr(clusterResourceName, "dryrun", "false"),
+					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
+					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.number_of_nodes", "1"),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.external_address.0.ipv4.0.value", testVars.Clusters.Network.VirtualIP),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.0.fqdn.0.value", testVars.Clusters.Network.NTPServers[0]),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.1.fqdn.0.value", testVars.Clusters.Network.NTPServers[1]),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.2.fqdn.0.value", testVars.Clusters.Network.NTPServers[2]),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.3.fqdn.0.value", testVars.Clusters.Network.NTPServers[3]),
 
 					resource.TestCheckResourceAttrSet(resourceNameClusterRegistration, "pc_ext_id"),
 					resource.TestCheckResourceAttr(resourceNameClusterRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.address.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
@@ -105,25 +162,25 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 				},
 				Config: testAccClusterResourceUpdateConfig(name+"-updated", "true"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameCluster, "name", name+"-updated"),
-					resource.TestCheckResourceAttr(resourceNameCluster, "dryrun", "false"),
-					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
-					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.number_of_nodes", "1"),
-					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
-					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
-					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.pulse_status.0.is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.pulse_status.0.pii_scrubbing_level", "DEFAULT"),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.external_address.0.ipv4.0.value", testVars.Clusters.Network.VirtualIP),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.external_data_services_ip.0.ipv4.0.value", testVars.Clusters.Network.IscsiIP),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.ntp_server_ip_list.0.fqdn.0.value", testVars.Clusters.Network.NTPServers[0]),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.ntp_server_ip_list.1.fqdn.0.value", testVars.Clusters.Network.NTPServers[1]),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.ntp_server_ip_list.2.fqdn.0.value", testVars.Clusters.Network.NTPServers[2]),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.ntp_server_ip_list.3.fqdn.0.value", testVars.Clusters.Network.NTPServers[3]),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.email_address", testVars.Clusters.Network.SMTPServer.EmailAddress),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.server.0.ip_address.0.ipv4.0.value", testVars.Clusters.Network.SMTPServer.IP),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.server.0.port", strconv.Itoa(testVars.Clusters.Network.SMTPServer.Port)),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.server.0.username", testVars.Clusters.Network.SMTPServer.Username),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.type", testVars.Clusters.Network.SMTPServer.Type),
+					resource.TestCheckResourceAttr(clusterResourceName, "name", name+"-updated"),
+					resource.TestCheckResourceAttr(clusterResourceName, "dryrun", "false"),
+					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
+					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.number_of_nodes", "1"),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.pulse_status.0.is_enabled", "true"),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.pulse_status.0.pii_scrubbing_level", "DEFAULT"),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.external_address.0.ipv4.0.value", testVars.Clusters.Network.VirtualIP),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.external_data_services_ip.0.ipv4.0.value", testVars.Clusters.Network.IscsiIP),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.0.fqdn.0.value", testVars.Clusters.Network.NTPServers[0]),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.1.fqdn.0.value", testVars.Clusters.Network.NTPServers[1]),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.2.fqdn.0.value", testVars.Clusters.Network.NTPServers[2]),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.3.fqdn.0.value", testVars.Clusters.Network.NTPServers[3]),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.email_address", testVars.Clusters.Network.SMTPServer.EmailAddress),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.ip_address.0.ipv4.0.value", testVars.Clusters.Network.SMTPServer.IP),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.port", strconv.Itoa(testVars.Clusters.Network.SMTPServer.Port)),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.username", testVars.Clusters.Network.SMTPServer.Username),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.type", testVars.Clusters.Network.SMTPServer.Type),
 
 					// check on list cluster data source for categories
 					resource.TestCheckResourceAttr(dataSourceNameClusters, "cluster_entities.0.categories.#", "1"),
@@ -138,24 +195,24 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 				},
 				Config: testAccClusterResourceUpdateConfig(name+"-updated", "false"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameCluster, "name", name+"-updated"),
-					resource.TestCheckResourceAttr(resourceNameCluster, "dryrun", "false"),
-					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
-					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.number_of_nodes", "1"),
-					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
-					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
-					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.pulse_status.0.is_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.external_address.0.ipv4.0.value", testVars.Clusters.Network.VirtualIP),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.external_data_services_ip.0.ipv4.0.value", testVars.Clusters.Network.IscsiIP),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.ntp_server_ip_list.0.fqdn.0.value", testVars.Clusters.Network.NTPServers[0]),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.ntp_server_ip_list.1.fqdn.0.value", testVars.Clusters.Network.NTPServers[1]),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.ntp_server_ip_list.2.fqdn.0.value", testVars.Clusters.Network.NTPServers[2]),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.ntp_server_ip_list.3.fqdn.0.value", testVars.Clusters.Network.NTPServers[3]),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.email_address", testVars.Clusters.Network.SMTPServer.EmailAddress),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.server.0.ip_address.0.ipv4.0.value", testVars.Clusters.Network.SMTPServer.IP),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.server.0.port", strconv.Itoa(testVars.Clusters.Network.SMTPServer.Port)),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.server.0.username", testVars.Clusters.Network.SMTPServer.Username),
-					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.type", testVars.Clusters.Network.SMTPServer.Type),
+					resource.TestCheckResourceAttr(clusterResourceName, "name", name+"-updated"),
+					resource.TestCheckResourceAttr(clusterResourceName, "dryrun", "false"),
+					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
+					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.number_of_nodes", "1"),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.pulse_status.0.is_enabled", "false"),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.external_address.0.ipv4.0.value", testVars.Clusters.Network.VirtualIP),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.external_data_services_ip.0.ipv4.0.value", testVars.Clusters.Network.IscsiIP),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.0.fqdn.0.value", testVars.Clusters.Network.NTPServers[0]),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.1.fqdn.0.value", testVars.Clusters.Network.NTPServers[1]),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.2.fqdn.0.value", testVars.Clusters.Network.NTPServers[2]),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.3.fqdn.0.value", testVars.Clusters.Network.NTPServers[3]),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.email_address", testVars.Clusters.Network.SMTPServer.EmailAddress),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.ip_address.0.ipv4.0.value", testVars.Clusters.Network.SMTPServer.IP),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.port", strconv.Itoa(testVars.Clusters.Network.SMTPServer.Port)),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.username", testVars.Clusters.Network.SMTPServer.Username),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.type", testVars.Clusters.Network.SMTPServer.Type),
 				),
 			},
 		},
@@ -173,8 +230,9 @@ func TestAccV2NutanixClusterResource_ExpandCluster(t *testing.T) {
 	clusterName := fmt.Sprintf("tf-3node-cluster-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixClusterDestroy,
 		Steps: []resource.TestStep{
 			// step 1: create cluster with 3 nodes
 			{
@@ -229,7 +287,6 @@ func TestAccV2NutanixClusterResource_ExpandCluster(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
 				),
 			},
-
 			// step 4: remove node from cluster by reducing to 3 nodes and updating the name
 			{
 				PreConfig: func() {
@@ -267,7 +324,20 @@ var clusterConfig = fmt.Sprintf(`
 	  clusters = local.config.clusters
 	}`, filepath)
 
-func testAccClusterResourceMinimumConfig(name string) string {
+func testAccClusterResourceMinimumConfig(name, clusterProfileExtID string) string {
+	// Build the cluster_profile_ext_id line - always include it to ensure Terraform detects changes
+	var clusterProfileExtIDLine string
+	if clusterProfileExtID == "" {
+		// Explicitly set to empty string to ensure Terraform detects the change from non-empty to empty
+		clusterProfileExtIDLine = "cluster_profile_ext_id = \"\""
+	} else if strings.HasPrefix(clusterProfileExtID, "cluster_profile_ext_id =") {
+		// Already a full line, use as-is
+		clusterProfileExtIDLine = clusterProfileExtID
+	} else {
+		// Just the value part (e.g., "nutanix_cluster_profile_v2.test.id")
+		clusterProfileExtIDLine = fmt.Sprintf("cluster_profile_ext_id = %s", clusterProfileExtID)
+	}
+
 	return fmt.Sprintf(`
 		# cluster config
 		%[1]s
@@ -313,6 +383,8 @@ func testAccClusterResourceMinimumConfig(name string) string {
 			}
 		  }
 
+		  %[3]s
+
 		  provisioner "local-exec" {
 			command = "ssh-keygen -f '~/.ssh/known_hosts' -R '${local.clusters.nodes[0].cvm_ip}';  sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[0].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}' "
 
@@ -349,7 +421,7 @@ func testAccClusterResourceMinimumConfig(name string) string {
 		  depends_on = [nutanix_cluster_v2.test]
 		}
 
-`, clusterConfig, name)
+`, clusterConfig, name, clusterProfileExtIDLine)
 }
 
 func testAccClusterResourceAllConfig(name string) string {
@@ -964,4 +1036,111 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
   depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.cluster-nodes]
 }
 `, clusterName, filepath)
+}
+
+func testAccClusterProfileResourceConfig(name string) string {
+	return fmt.Sprintf(`
+resource "nutanix_cluster_profile_v2" "test" {
+  name = "%s"
+  description = "Example First Cluster Profile created via Terraform"
+  allowed_overrides = ["NTP_SERVER_CONFIG", "SNMP_SERVER_CONFIG"]
+
+  name_server_ip_list {
+    ipv4 { value = "240.29.254.180" }
+    ipv6 { value = "1a7d:9a64:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
+  }
+
+  ntp_server_ip_list {
+    ipv4 { value = "240.29.254.180" }
+    ipv6 { value = "1a7d:9a64:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
+    fqdn { value = "ntp.example.com" }
+  }
+
+  smtp_server {
+    email_address = "email@example.com"
+    type = "SSL"
+    server {
+      ip_address {
+        ipv4 { value = "240.29.254.180" }
+        ipv6 { value = "1a7d:9a64:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
+        fqdn { value = "smtp.example.com" }
+      }
+      port     = 587
+      username = "example_user"
+      password = "example_password"
+    }
+  }
+
+  nfs_subnet_white_list = ["10.110.106.45/255.255.255.255"]
+
+  snmp_config {
+    is_enabled = true
+    users {
+      username  = "snmpuser1"
+      auth_type = "MD5"
+      auth_key  = "Test_SNMP_user_authentication_key"
+      priv_type = "DES"
+      priv_key  = "Test_SNMP_user_encryption_key"
+    }
+    transports {
+      protocol = "UDP"
+      port     = 21
+    }
+    traps {
+      address {
+        ipv4 {
+					value         = "240.29.254.180"
+					prefix_length = 24
+				}
+        ipv6 { value = "1a7d:9a64:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
+      }
+      username         = "trapuser"
+      protocol         = "UDP"
+      port             = 59
+      should_inform    = false
+      engine_id        = "0x1234567890abcdef12"
+      version          = "V2"
+      receiver_name    = "trap-receiver"
+      community_string = "snmp-server community public RO 192.168.1.0 255.255.255.0"
+    }
+  }
+
+  rsyslog_server_list {
+    server_name      = "testServer1"
+    port             = 29
+    network_protocol = "UDP"
+    ip_address {
+      ipv4 { value = "240.29.254.180" }
+      ipv6 { value = "1a7d:9a64:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
+    }
+    modules {
+      name                     = "CASSANDRA"
+      log_severity_level       = "EMERGENCY"
+      should_log_monitor_files = true
+    }
+    modules {
+      name                     = "CURATOR"
+      log_severity_level       = "ERROR"
+      should_log_monitor_files = false
+    }
+  }
+
+  pulse_status {
+    is_enabled          = false
+    pii_scrubbing_level = "DEFAULT"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      smtp_server.0.server.0.password,
+      snmp_config.0.users.0.auth_key,
+      snmp_config.0.users.0.priv_key
+    ]
+  }
+}
+
+data "nutanix_cluster_profile_v2" "test" {
+  ext_id = nutanix_cluster_profile_v2.test.id
+}
+`, name)
 }

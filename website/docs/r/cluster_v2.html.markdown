@@ -15,6 +15,7 @@ Represents the Cluster entity. Provides the basic infrastructure for compute, st
 
 -> **Note:**: Cluster resource supports add/remove node operations. However, these operations require cluster to be registered with Prism Central.
 
+**Note:**: The cluster resource supports both associating and disassociating cluster profile, allowing you to attach or detach cluster profile on a cluster through Terraform. However, these operations require cluster to be registered with Prism Central.
 
 ## Example Usage:
 
@@ -157,6 +158,8 @@ The following arguments are supported:
      - "SCHEDULED"	The cluster upgrade is in scheduled state.
 * `container_name`: - (Optional) The name of the default container created as part of cluster creation. This is part of payload for cluster create operation only.
 * `categories`: - (Optional) The reference to a project.
+* `cluster_profile_ext_id`: - (Optional) The reference to a cluster profile.
+
 ### Nodes
 
 The nodes attribute supports the following:

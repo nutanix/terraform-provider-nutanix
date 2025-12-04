@@ -4,6 +4,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"hash/crc32"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -28,6 +29,40 @@ func ExpandListOfString(list []interface{}) []string {
 	return stringListStr
 }
 
+// DiffStringSets compares two string slices and returns the added and removed items.
+// added contains items that are in newSet but not in oldSet.
+// removed contains items that are in oldSet but not in newSet.
+func DiffStringSets(oldSet, newSet []string) (added, removed []string) {
+	// Create maps for easier lookup
+	oldSetMap := make(map[string]bool, len(oldSet))
+	for _, item := range oldSet {
+		oldSetMap[item] = true
+	}
+
+	newSetMap := make(map[string]bool, len(newSet))
+	for _, item := range newSet {
+		newSetMap[item] = true
+	}
+
+	// Find items to add (in new but not in old)
+	added = make([]string, 0)
+	for _, item := range newSet {
+		if !oldSetMap[item] {
+			added = append(added, item)
+		}
+	}
+
+	// Find items to remove (in old but not in new)
+	removed = make([]string, 0)
+	for _, item := range oldSet {
+		if !newSetMap[item] {
+			removed = append(removed, item)
+		}
+	}
+
+	return added, removed
+}
+
 // IsExplicitlySet defined to determine whether a particular key (or configuration attribute) within a Terraform resource configuration has been explicitly set by the user.
 // Returns a Boolean (true or false). true indicates that the key was explicitly set with a non-null value; false implies it was either not set, is unknown, or explicitly set to null.
 func IsExplicitlySet(d *schema.ResourceData, key string) bool {
@@ -49,7 +84,7 @@ func TaskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 	return func() (interface{}, string, error) {
 		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
 		if err != nil {
-			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
+			return "", "", fmt.Errorf("error while polling prism task: %v", err)
 		}
 
 		// get the group results
@@ -186,4 +221,16 @@ func InterfaceToSlice(v interface{}) []interface{} {
 		// single element provided
 		return []interface{}{v}
 	}
+}
+
+// HashStringItem returns a hash for a string value to ensure uniqueness in schema.TypeSet
+func HashStringItem(v interface{}) int {
+	if v == nil {
+		return 0
+	}
+	str, ok := v.(string)
+	if !ok {
+		return 0
+	}
+	return int(crc32.ChecksumIEEE([]byte(fmt.Sprintf("%s-", str))))
 }
