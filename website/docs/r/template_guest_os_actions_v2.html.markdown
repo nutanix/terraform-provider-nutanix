@@ -1,12 +1,12 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_template_version_v4"
+page_title: "NUTANIX: nutanix_template_version_v2"
 sidebar_current: "docs-nutanix-resource-template-version-v2"
 description: |-
   Performs Guest OS actions on given template.
 ---
 
-# nutanix_template_version_v4
+# nutanix_template_version_v2
 
 Performs Guest OS actions on given template. It Initiates, Completes and Cancels the Guest OS operation.
 
