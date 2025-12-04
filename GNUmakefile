@@ -12,6 +12,8 @@ test: fmtcheck
 	go test --tags=unit $(TEST) -timeout=30s -parallel=4
 
 testacc: fmtcheck
+	@echo "==> Running testcases..."
+	@echo "TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=count"
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=count
 
 fmt:
@@ -20,20 +22,37 @@ fmt:
 	goimports -w ./client
 	goimports -w ./utils
 
+
 fmtcheck:
+	@echo "Running fmtcheck"
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
+	@echo "fmtcheck done"
 
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
 lint: fmtcheck
 	@echo "==> Checking source code against linters..."
+	@GOGC=30 golangci-lint cache clean
 	@GOGC=30 golangci-lint run --timeout=30m
 
 tools:
-	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
-	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	GO111MODULE=on go install github.com/mitchellh/gox
+	@echo "make: Installing tools..."
+# 	GO111MODULE=on go install github.com/YakDriver/tfproviderdocs
+	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell@latest
+	GO111MODULE=on go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+	GO111MODULE=on go install github.com/hashicorp/copywrite@latest
+	GO111MODULE=on go install github.com/hashicorp/go-changelog/cmd/changelog-build@latest
+	GO111MODULE=on go install github.com/katbyte/terrafmt@latest
+	GO111MODULE=on go install github.com/pavius/impi/cmd/impi@latest
+	GO111MODULE=on go install github.com/rhysd/actionlint/cmd/actionlint@latest
+	GO111MODULE=on go install github.com/terraform-linters/tflint@latest
+	GO111MODULE=on go install golang.org/x/tools/cmd/stringer@latest
+	GO111MODULE=on go install mvdan.cc/gofumpt@latest
+
+# 	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
+# 	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.2
+# 	GO111MODULE=on go install github.com/mitchellh/gox
 
 vet:
 	@echo "go vet ."

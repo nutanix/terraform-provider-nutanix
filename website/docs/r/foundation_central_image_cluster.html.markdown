@@ -12,7 +12,7 @@ Image Nodes and Create a cluster out of nodes registered with Foundation Central
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_foundation_central_image_cluster" "img2"{
   cluster_name = "test-FC"
   cluster_external_ip = "<CLUSTER-IP>"
@@ -87,6 +87,12 @@ resource "nutanix_foundation_central_image_cluster" "img2"{
     }
     aos_package_url="<URL>"
 
+    // required for deploying AOS >= v6.8
+    hypervisor_isos{
+      url="<hypervisor-installer-link>"
+      sha256sum="<hypervisor-installer-checksum>"
+      hypervisor_type = "kvm"
+    }
     //pass true to skip cluster creation
     skip_cluster_creation = true
 
@@ -102,7 +108,8 @@ The following arguments are supported:
 
 * `cluster_external_ip`: External management ip of the cluster.
 * `common_network_settings`: Common network settings across the nodes in the cluster. 
-* `hypervisor_iso_details`: Details of the hypervisor iso.
+* `hypervisor_iso_details`: Details of the hypervisor iso. (Deprecated)
+* `hypervisor_isos`: Details of the hypervisor iso. Required for deploying node with AOS >= 6.8
 * `storage_node_count`: Number of storage only nodes in the cluster. AHV iso for storage node will be taken from aos package.
 * `redundancy_factor`: Redundancy factor of the cluster.
 * `cluster_name`: Name of the cluster.
@@ -111,6 +118,15 @@ The following arguments are supported:
 * `aos_package_sha256sum`: Sha256sum of AOS package.
 * `timezone`: Timezone to be set on the cluster.
 * `nodes_list`: List of details of nodes out of which the cluster needs to be created.
+* `fc_api_key_uuid`: UUID of the FC API key to be used in the imaging process. Required only for imaging via a hardware manager like Cisco Intersight managed UCS nodes. 
+* `server_configuration_data`: JSON-encoded server configuration data for cluster. Required only for imaging via a hardware manager like Cisco Intersight managed UCS nodes. Example:
+    ```
+    server_configuration_data = jsonencode({
+      intersight_data = {
+        organization = "default"
+      }
+    })
+    ```
 
 ### common network settings
 * `cvm_dns_servers`: List of dns servers for the cvms in the cluster.
@@ -123,6 +139,13 @@ The following arguments are supported:
 * `url`: (Required) URL to download hypervisor iso. Required only if imaging is needed. 
 * `hyperv_product_key`: Product key for hyperv isos. Required only if the hypervisor type is hyperv and product key is mandatory (ex: for volume license).
 * `sha256sum`: sha256sum of the hypervisor iso.
+
+### hypervisor isos
+* `hyperv_sku`: SKU of hyperv to be installed if hypervisor_type is hyperv.
+* `url`: (Required) URL to download hypervisor iso. Required only if imaging is needed. 
+* `hyperv_product_key`: Product key for hyperv isos. Required only if the hypervisor type is hyperv and product key is mandatory (ex: for volume license).
+* `sha256sum`: sha256sum of the hypervisor iso.
+* `hypervisor_type`: Hypervisor type. Only supports "kvm", "esx" and "hyperv"
 
 ### node list
 * `cvm_gateway`: Gateway of the cvm.
@@ -143,6 +166,24 @@ The following arguments are supported:
 * `hypervisor_ip`: IP address to be set for the hypervisor on the node.
 * `use_existing_network_settings`: Decides whether to use the existing network settings for the node. If True, the existing network settings of the node will be used during cluster creation. If False, then client must provide new network settings. If all nodes are booted in phoenix, this field is, by default, considered to be False.
 * `ipmi_gateway`: Gateway of the ipmi.
+* `server_configuration_data`: JSON-encoded server configuration data for node. Required only for imaging via a hardware manager like Cisco Intersight managed UCS nodes. Example:
+
+    ```
+    server_configuration_data = jsonencode({
+        intersight_data = {
+          uuid_pool_name = ""
+          imc_settings = {
+            out_of_band_settings = {
+              ip_pool_name = "test-vlan-pool"
+            }
+          }
+          vnic_settings = {
+            mac_pool_name = "test-mac-pool"
+            vlans         = "16"
+          }
+        }
+      })
+    ```
 
 
 ## Attributes Reference
@@ -160,4 +201,4 @@ Incase of error in any individual node or cluster, terraform will error our afte
 * `Update` : - Resource will trigger new resource create call for any kind of update in resource config.
 * `delete` : - Resource will be deleted from Foundation Central deployment history. For Actual Cluster delete , manually destroy the cluster.   
 
-See detailed information in [Nutanix Foundation Central Create a Cluster](https://www.nutanix.dev/api_references/foundation-central/#/b3A6MjIyMjI3NDE-request-to-create-a-cluster).
+See detailed information in [Nutanix Foundation Central Create a Cluster](https://www.nutanix.dev/api_references/foundation-central/#/cba507f282927-request-to-create-a-cluster).

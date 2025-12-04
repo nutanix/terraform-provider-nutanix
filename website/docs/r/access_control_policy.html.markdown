@@ -12,7 +12,7 @@ Provides a resource to create an access control policy based on the input parame
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_access_control_policy" "test" {
 	name        = "NAME OF ACCESS CONTROL POLICY"
 	description = "DESCRIPTION OF THE ACCESS CONTROL POLICY"
@@ -161,4 +161,4 @@ The `project_reference`, `owner_reference`, `role_reference` attributes supports
 
 For `user_reference_list` and `user_group_reference_list` are the same as reference but used as array.
 
-See detailed information in [Nutanix Access Control Policies](https://www.nutanix.dev/reference/prism_central/v3/api/access-control-policies/).
+See detailed information in [Nutanix Access Control Policies](https://www.nutanix.dev/api_references/prism-central-v3/#/f3bc322961d79-create-a-new-access-control-policy).

@@ -12,7 +12,7 @@ Provides a datasource to retrieve list of address groups.
 
 ## Example Usage
 
-``` hcl
+```hcl
   data "nutanix_address_groups" "addr_groups" {}
 ```
 
@@ -44,7 +44,6 @@ The following attributes are exported as list:
 
 The following attributes are exported:
 
-* `uuid`:- (ReadOnly) UUID of the address group
 * `name`:- (ReadOnly) Name of the address group
 * `description`:- (ReadOnly) Description of the address group
 * `ip_address_block_list`: - (ReadOnly) list of IP address blocks with their prefix length
@@ -64,4 +63,4 @@ The following attributes are exported as list:
 * `uuid`: - (ReadOnly) UUID of associated policy
 
 
-See detailed information in [Nutanix Address Group List](https://www.nutanix.dev/reference/prism_central/v3/api/address-groups/postaddressgroupslist).
+See detailed information in [Nutanix Address Group List](https://www.nutanix.dev/api_references/prism-central-v3/#/7504287ad168d-address-groups-lists).

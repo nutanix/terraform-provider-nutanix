@@ -12,7 +12,7 @@ Describes a Role.
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_role" "test" {
 	name        = "NAME"
 	description = "DESCRIPTION"
@@ -82,4 +82,4 @@ The `project_reference`, `owner_reference` attributes supports the following:
 
 For `permission_reference_list` are the same as reference but used as array.
 
-See detailed information in [Nutanix Roles](https://www.nutanix.dev/reference/prism_central/v3/api/roles/).
+See detailed information in [Nutanix Roles](https://www.nutanix.dev/api_references/prism-central-v3/#/ec08f6cda56f0-get-a-role).

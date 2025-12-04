@@ -420,4 +420,4 @@ The `project_reference`, `owner_reference`, `availability_zone_reference`, `clus
 * `name`: - the name(Optional).
 * `uuid`: - the UUID(Required).
 
-See detailed information in [Nutanix Network Security Rule](https://www.nutanix.dev/reference/prism_central/v3/api/network-security-rules/postnetworksecurityrules/).
+See detailed information in [Nutanix Network Security Rule](https://www.nutanix.dev/api_references/prism-central-v3/#/8e7c7fb305664-create-a-new-network-security-rule).

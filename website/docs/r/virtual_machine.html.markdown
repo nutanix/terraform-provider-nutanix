@@ -78,8 +78,8 @@ The following arguments are supported:
 * `num_vcpus_per_socket`: - (Optional) Number of vCPUs per socket.
 * `num_sockets`: - (Optional) Number of vCPU sockets.
 * `gpu_list`: - (Optional) GPUs attached to the VM.
-* `parent_referece`: - (Optional) Reference to an entity that the VM cloned from.
-* `memory_size_mib`: - (Optional) Memory size in MiB.
+* `parent_reference`: - (Optional) Reference to an entity that the VM cloned from.
+* `memory_size_mib`: - (Optional) Memory size in MiB. On updating memory to powered ON VMs should only be done in 1GB increments. 
 * `boot_device_order_list`: - (Optional) Indicates the order of device types in which VM should try to boot from. If boot device order is not provided the system will decide appropriate boot device order.
 * `boot_device_disk_address`: - (Optional) Address of disk to boot from.
 * `boot_device_mac_address`: - (Optional) MAC address of nic to boot from.
@@ -91,7 +91,7 @@ The following arguments are supported:
 * `guest_customization_cloud_init_custom_key_values`: - (Optional) Generic key value pair used for custom attributes in cloud init.
 * `guest_customization_is_overridable`: - (Optional) Flag to allow override of customization by deployer.
 * `guest_customization_sysprep`: - (Optional) VM guests may be customized at boot time using one of several different methods. Currently, cloud-init w/ ConfigDriveV2 (for Linux VMs) and Sysprep (for Windows VMs) are supported. Only ONE OF sysprep or cloud_init should be provided. Note that guest customization can currently only be set during VM creation. Attempting to change it after creation will result in an error. Additional properties can be specified. For example - in the context of VM template creation if \"override_script\" is set to \"True\" then the deployer can upload their own custom script.
-* `guest_customization_sysrep_custom_key_values`: - (Optional) Generic key value pair used for custom attributes in sysrep.
+* `guest_customization_sysprep_custom_key_values`: - (Optional) Generic key value pair used for custom attributes in sysprep.
 * `should_fail_on_script_failure`: - (Optional)  Extra configs related to power state transition. Indicates whether to abort ngt shutdown/reboot if script fails.
 * `enable_script_exec`: - (Optional) Extra configs related to power state transition. Indicates whether to execute set script before ngt shutdown/reboot.
 * `power_state_mechanism`: - (Optional) Indicates the mechanism guiding the VM power state transition. Currently used for the transition to \"OFF\" state. Power state mechanism (ACPI/GUEST/HARD).
@@ -111,7 +111,6 @@ The disk_list attribute supports the following:
 * `disk_size_mib` - Size of the disk in MiB. Must match the size specified in 'disk_size_bytes' - rounded up to the nearest MiB - when that field is present.
 * `device_properties` - Properties to a device.
 * `data_source_reference` - Reference to a data source.
-* `volume_group_reference` - Reference to a volume group.
 
 The disk_size (the disk size_mib and the disk_size_bytes attributes) is only honored by creating an empty disk. When you are creating from an image, the size is ignored and the disk becomes the size of the image from which it was cloned. In VM creation, you can't set either disk size_mib or disk_size_bytes when you set data_source_reference but, you can update the disk_size after creation (second apply).
 
@@ -242,10 +241,17 @@ The categories attribute supports the following:
 
 ### Reference
 
-The `project_reference`, `owner_reference`, `availability_zone_reference`, `network_function_chain_reference`, `data_source_reference`, `volume_group_reference` attributes supports the following:
+The `project_reference`, `owner_reference`, `availability_zone_reference`, `network_function_chain_reference`, `data_source_reference` attributes supports the following:
 
 * `kind`: - The kind name (Default value: project)(Required).
 * `name`: - the name(Optional).
 * `uuid`: - the UUID(Required).
 
-See detailed information in [Nutanix Virtual Machine](http://developer.nutanix.com/reference/prism_central/v3/#vms).
+See detailed information in [Nutanix Virtual Machine](https://www.nutanix.dev/api_references/prism-central-v3/#/78eec1e3c0224-create-a-new-vm).
+
+## Import
+Nutanix Virtual machines can be imported using the `UUID` eg,
+
+`
+terraform import nutanix_virtual_machine.vm01 0F75E6A7-55FB-44D9-A50D-14AD72E2CF7C
+`

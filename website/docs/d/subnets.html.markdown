@@ -14,6 +14,12 @@ Describes a list of subnets
 
 ```hcl
 data "nutanix_subnets" "subnets" {}
+
+data "nutanix_subnets" "test" {
+    metadata {
+        filter = "name==vlan0_test_2"
+    }
+}
 ```
 
 ## Attribute Reference
@@ -82,4 +88,4 @@ attributes supports the following:
 
 Note: `cluster_reference`, `subnet_reference` does not support the attribute `name`
 
-See detailed information in [Nutanix Subnets](https://www.nutanix.dev/reference/prism_central/v3/api/subnets/postsubnetslist/).
+See detailed information in [Nutanix Subnets](https://www.nutanix.dev/api_references/prism-central-v3/#/30ce5964c8d60-get-a-list-of-existing-subnets).

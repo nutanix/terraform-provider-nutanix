@@ -76,4 +76,4 @@ The following attributes are exported:
 * `message_list`: List of messages for the client based on process state.
 
 
-See detailed information in [Nutanix Foundation Central Get the details of a cluster](https://www.nutanix.dev/api_references/foundation-central/#/b3A6MjIyMjI3MzA-get-the-details-of-a-cluster).
+See detailed information in [Nutanix Foundation Central Get the details of a cluster](https://www.nutanix.dev/api_references/foundation-central/#/52a237a955f44-get-the-details-of-a-cluster).

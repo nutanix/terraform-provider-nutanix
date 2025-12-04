@@ -163,9 +163,9 @@ The following arguments are supported:
 * `enable_collab` - (Optional) flag to allow collaboration of projects. (Use with project_internal flag)
 
 ### Resource Domain
-* `resource_domain` - (Required) The status for a resource domain (limits and values)
+* `resource_domain` - (Optional) The status for a resource domain (limits and values)
 * `resource_domain.resources` - (Required) Array of the utilization/limit for resource types
-* `resource_domain.resources.#.limit` - (Required) The resource consumption limit (unspecified is unlimited)
+* `resource_domain.resources.#.limit` - (Required) The resource consumption limit.
 * `resource_domain.resources.#.resource_type` - (Required) The type of resource (for example storage, CPUs)
 
 ### Account Reference List
@@ -362,4 +362,4 @@ The `project_reference`, `owner_reference` attributes supports the following:
 
 Note: Few attributes which are added to support ACPs for Project are dependent on PC version. Features such as VPC, Cluster Reference requires pc2022.4 while Tunnel Reference requires pc2022.6 . 
 
-See detailed information in [Nutanix Project](https://www.nutanix.dev/reference/prism_central/v3/api/projects/postprojects/).
+See detailed information in [Nutanix Project](https://www.nutanix.dev/api_references/prism-central-v3/#/8411486d42e4a-create-a-new-project).

@@ -12,7 +12,7 @@ Provides a datasource to retrieve a user group based on the input parameters.
 
 ## Example Usage
 
-``` hcl
+```hcl
 
 //Retrieve by UUID
 data "nutanix_user_group" "usergroup" {
@@ -94,4 +94,4 @@ The `project_reference`, `owner_reference`, `role_reference` `directory_service_
 
 For `access_control_policy_reference_list` and `project_reference_list` are the same as reference but used as list.
 
-See detailed information in [Nutanix Users](https://www.nutanix.dev/reference/prism_central/v3/api/user-groups/).
+See detailed information in [Nutanix Users](https://www.nutanix.dev/api_references/prism-central-v3/#/ec9f993c00b11-get-a-existing-user-group).

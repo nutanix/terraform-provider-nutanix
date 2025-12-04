@@ -12,7 +12,7 @@ Provides a resource to add a User group to the system..
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_user_groups" "user_grp" {
 	directory_service_user_group{
 		distinguished_name = "<distinguished name for the user group>"
@@ -21,7 +21,7 @@ resource "nutanix_user_groups" "user_grp" {
 ```
 
 
-``` hcl
+```hcl
 resource "nutanix_user_groups" "user_grp" {
 	saml_user_group{
     name = "<name of saml group>"
@@ -70,3 +70,5 @@ The metadata attribute exports the following:
 * `spec_hash`: - Hash of the spec. This will be returned from server.
 * `name`: - subnet name.
 * `should_force_translate`: - Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
+
+See detailed information in [Nutanix User Groups](https://www.nutanix.dev/api_references/prism-central-v3/#/2fb233cea33f8-add-a-user-group).

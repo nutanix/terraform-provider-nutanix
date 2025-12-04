@@ -89,4 +89,6 @@ The `vpc_reference`  attributes supports the following:
 
 * `kind`: - The kind name (Default value: project).
 * `name`: - the name.
-* `uud`: - the UUID.
+* `uuid`: - the UUID.
+
+See detailed information in [Nutanix Policy Based Routing](https://www.nutanix.dev/api_references/prism-central-v3/#/3506dc2d5ec27-get-a-existing-routing-policy).

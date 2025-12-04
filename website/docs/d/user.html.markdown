@@ -12,7 +12,7 @@ Provides a datasource to retrieve a user based on the input parameters.
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_user" "user" {
 	directory_service_user {
 		user_principal_name = "test-user@ntnxlab.local"
@@ -24,12 +24,12 @@ resource "nutanix_user" "user" {
 
 //Retrieve by UUID
 data "nutanix_user" "user" {
-	uuid = nutanix_user.user.id
+	user_id = nutanix_user.user.id
 }
 
 //Retrieve by Name
 data "nutanix_user" "userbyname" {
-	name = nutanix_user.user.name
+	user_name = nutanix_user.user.name
 }
 ```
 
@@ -105,4 +105,4 @@ The `project_reference`, `owner_reference`, `role_reference` `directory_service_
 
 For `access_control_policy_reference_list` and `project_reference_list` are the same as reference but used as list.
 
-See detailed information in [Nutanix Users](https://www.nutanix.dev/reference/prism_central/v3/api/users/).
+See detailed information in [Nutanix User](https://www.nutanix.dev/api_references/prism-central-v3/#/ecd7af99958eb-get-a-existing-user).

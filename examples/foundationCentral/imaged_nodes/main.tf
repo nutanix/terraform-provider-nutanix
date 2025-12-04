@@ -26,6 +26,7 @@ output "img1"{
 // datasource to Get the details of a single node given its UUID.
 data "nutanix_foundation_central_imaged_node_details" "imgdet"{
     imaged_node_uuid = "<imaged_node_uuid>"
+}
 
 output "imgdetails"{
     value = data.nutanix_foundation_central_imaged_node_details.imgdet

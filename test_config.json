@@ -45,6 +45,7 @@
         }
     ],
     "node_os_version": "",
+    "kubernetes_version": "",
     "ad_rule_target": {
         "name": "",
         "values": ""
@@ -59,7 +60,26 @@
             "cluster_uuid":""
         }
     },
-    "ssh_key":""
+    "ssh_key":"",
+    "ndb":{
+        "register_cluster_info":{
+            "cluster_ip": "",
+            "username": "",
+            "password":"",
+            "strorage_container":"",
+            "dns":"",
+            "ntp":"",
+            "static_ip":"",
+            "gateway":"",
+            "subnet_mask":"" 
+        },
+        "test_static_network":""
+    },
+    "self_service": {
+        "bp_name_with_snapshot_config": "",
+        "bp_name": "",
+        "app_name_with_snapshot_config": ""
+    }
 }
 
 

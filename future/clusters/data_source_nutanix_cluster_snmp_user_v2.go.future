@@ -1,0 +1,148 @@
+package clusters
+
+import (
+	"context"
+	"fmt"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clustersv2"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
+
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+func DatasourceNutanixClusterSNMPUserV2() *schema.Resource {
+	return &schema.Resource{
+		ReadContext: DatasourceNutanixClusterSNMPUserV2Read,
+		Schema: map[string]*schema.Schema{
+			"cluster_ext_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"ext_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"expand": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"links": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"href": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"rel": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"username": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"auth_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"auth_key": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"priv_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"priv_key": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+		},
+	}
+}
+
+func DatasourceNutanixClusterSNMPUserV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).ClusterAPI
+	var expand *string
+	extID := d.Get("ext_id")
+
+	if expandf, ok := d.GetOk("expand"); ok {
+		expand = utils.StringPtr(expandf.(string))
+	} else {
+		expand = nil
+	}
+	resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(extID.(string)), expand)
+	if err != nil {
+		return diag.Errorf("error while fetching cluster entity : %v", err)
+	}
+
+	getResp := resp.Data.GetValue().(import1.SnmpUser)
+
+	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("links", clustersv2.flattenLinks(getResp.Links)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("username", getResp.Username); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("auth_type", flattenAuthType(getResp.AuthType)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("auth_key", getResp.AuthKey); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("priv_type", flattenPrivType(getResp.PrivType)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("priv_key", getResp.PrivKey); err != nil {
+		return diag.FromErr(err)
+	}
+	fmt.Println(resp)
+
+	d.SetId(*getResp.ExtId)
+	return nil
+}
+
+func flattenAuthType(pr *import1.SnmpAuthType) string {
+	if pr != nil {
+
+		const two, three = 2, 3
+
+		if *pr == import1.SnmpAuthType(two) {
+			return "MD5"
+		}
+		if *pr == import1.SnmpAuthType(three) {
+			return "SHA"
+		}
+	}
+	return "UNKNOWN"
+}
+
+func flattenPrivType(pr *import1.SnmpPrivType) string {
+	if pr != nil {
+
+		const two, three = 2, 3
+
+		if *pr == import1.SnmpPrivType(two) {
+			return "DES"
+		}
+		if *pr == import1.SnmpPrivType(three) {
+			return "AES"
+		}
+	}
+	return "UNKNOWN"
+}

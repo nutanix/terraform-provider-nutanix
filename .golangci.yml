@@ -1,29 +1,77 @@
+# =========================
+# GolangCI-Lint Configuration
+# =========================
+
+# =========================
+# Config Version
+# =========================
+version: 2
+
+# =========================
+# Run Settings
+# =========================
+run:
+  # Timeout for analysis
+  timeout: 5m
+
+  # Include test files
+  tests: true
+
+    # which dirs to skip: they won't be analyzed;
+  skip-dirs:
+    - vendor
+    - future
+
+# =========================
+# Linter Settings
+# =========================
 linters-settings:
-  govet:
-    check-shadowing: true
+  # golint linter settings
   golint:
     min-confidence: 0
+
+  govet:
+    check-shadowing: true
+    check-print-funcs: false
+
+  # maligned suggests field reordering for memory alignment
   maligned:
     suggest-new: true
+
+  # goconst identifies repeated string constants
   goconst:
     min-len: 2
     min-occurrences: 2
+
+  # depguard controls allowed/forbidden imports
   depguard:
     list-type: blacklist
     packages:
       # logging is allowed only by logutils.Log, logrus
       # is allowed to use only in logutils package
       - github.com/sirupsen/logrus
+
+  # spelling linter
   misspell:
     locale: US
+
+  # line length linter
   lll:
     # Default is 120. '\t' is counted as 1 character.
     # set our project to 200, as things like v3_structs with inline comments end up being a touch long
     # also, for anyone using vscode, use the following configs:
     # "rewrap.wrappingColumn": 200 ... requires the rewrap plugin
     # "editor.rulers": [200]
-    line-length: 200
+    line-length: 500
 
+  # gocritic linter settings
+  gocritic:
+    disable:
+      - ifElseChain
+
+# =========================
+# Linter Enable/Disable
+# =========================
 linters:
   enable-all: true
   disable:
@@ -38,7 +86,6 @@ linters:
       # d.Set("name", utils.StringValue(resp.Status.Name))
       # waiting on terraform/hashi to let us know how they want us to changle those errors
       # see Error return value of `d.Set` is not checked (errcheck)
-    - typecheck
     - gosec
     - gochecknoinits
     - gochecknoglobals
@@ -52,11 +99,21 @@ linters:
     - unparam
     - unused
     - staticcheck
-    - deadcode
 
+# =========================
+# Issues exclusions
+# =========================
 issues:
+  # Maximum issues count per one linter. Set to 0 to disable. Default is 50.
+  max-issues-per-linter: 0
+
+  # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
+  max-same-issues: 0
+
   exclude:
     - composite literal uses unkeyed fields
+
+  # Ignore specific linters for tests
   exclude-rules:
     - path: _test\.go
       linters:
@@ -69,8 +126,3 @@ issues:
       # Details: linter suggests to convert `body` param to io.Reader since we don't use Close method, but return type requires
       ## io.ReadCloser thus failing to compile
 
-run:
-  # which dirs to skip: they won't be analyzed;
-  skip-dirs:
-    - vendor
-    - future

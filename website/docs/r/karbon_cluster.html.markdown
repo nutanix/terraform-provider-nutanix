@@ -65,6 +65,61 @@ resource "nutanix_karbon_cluster" "example_cluster" {
 
 ```
 
+
+### resource to create karbon cluster with timeouts
+```hcl
+resource "nutanix_karbon_cluster" "example_cluster" {
+  name       = "example_cluster"
+  version    = "1.18.15-1"
+  storage_class_config {
+    reclaim_policy = "Delete"
+    volumes_config {
+      file_system                = "ext4"
+      flash_mode                 = false
+      password                   = "my_pe_pw"
+      prism_element_cluster_uuid = "my_pe_cluster_uuid"
+      storage_container          = "my_storage_container_name"
+      username                   = "my_pe_username"
+    }
+  }
+  cni_config {
+    node_cidr_mask_size = 24
+    pod_ipv4_cidr       = "172.20.0.0/16"
+    service_ipv4_cidr   = "172.19.0.0/16"
+  }
+  worker_node_pool {
+    node_os_version = "ntnx-1.0"
+    num_instances   = 1
+    ahv_config {
+      network_uuid               = "my_subnet_id"
+      prism_element_cluster_uuid = "my_pe_cluster_uuid"
+    }
+  }
+  etcd_node_pool {
+    node_os_version = "ntnx-1.0"
+    num_instances   = 1
+    ahv_config {
+      network_uuid               = "my_subnet_id"
+      prism_element_cluster_uuid = "my_pe_cluster_uuid"
+    }
+  }
+  master_node_pool {
+    node_os_version = "ntnx-1.0"
+    num_instances   = 1
+    ahv_config {
+      network_uuid               = "my_subnet_id"
+      prism_element_cluster_uuid = "my_pe_cluster_uuid"
+    }
+  }
+  timeouts {
+    create = "1h"
+    update = "30m"
+    delete = "10m"
+	}
+}
+```
+
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -153,6 +208,8 @@ The `etcd_node_pool`, `master_node_pool`, `worker_node_pool` attribute supports 
 * `calico_config.ip_pool_config`: - (Optional) List of IP pools to be configured/managed by calico.
 * `calico_config.ip_pool_config.cidr`: - (Optional) IP range to use for this pool, it should fall within pod cidr.
 
+* `timeouts`: timeouts can customize the default timeout on CRUD functions with default timeouts. Supports "h", "m" or "s" . 
+
 **Note:** Updates to this attribute forces new resource creation.
 
-See detailed information in [Nutanix Karbon Cluster](https://www.nutanix.dev/reference/karbon/api-reference/cluster/).
+See detailed information in [Nutanix Karbon Cluster](https://www.nutanix.dev/api_references/nke/#/895c7a174c68b-create-a-new-kubernetes-cluster).

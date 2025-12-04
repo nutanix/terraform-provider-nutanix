@@ -12,7 +12,7 @@ Provides a resource to create a subnet based on the input parameters. A subnet i
 
 ## Example Usage
 
-``` hcl
+```hcl
 data "nutanix_clusters" "clusters" {
   metadata = {
     length = 2
@@ -55,17 +55,22 @@ resource "nutanix_subnet" "next-iac-managed" {
 * `owner_reference`: - (Optional) The reference to a user.
 * `project_reference`: - (Optional) The reference to a project.
 * `vswitch_name`: - (Optional).
-* `subnet_type`: - (Optional).
+* `subnet_type`: - (Optional). Valid Types are ["VLAN", "OVERLAY"]
 * `default_gateway_ip`: - (Optional) Default gateway IP address.
 * `prefix_length`: - (Optional).
 * `subnet_ip`: - (Optional) Subnet IP address.
 * `dhcp_server_address`: - (Optional) Host address.
 * `dhcp_server_address_port`: - (Optional) Port Number.
+* `ip_config_pool_list_ranges`: -(Optional) Range of IPs.
 * `dhcp_options`: - (Optional) Spec for defining DHCP options.
-* `dhcp_domain_search_list`: - (Optional).
+* `dhcp_domain_search_list`: - (Optional).The DNS domain search list .
 * `ip_config_pool_list_ranges`: - (Optional) Range of IPs (example: 10.0.0.9 10.0.0.19).
-* `vlan_id`: - (Optional).
+* `dhcp_domain_name_server_list`: - (Optional). List of Domain Name Server addresses .
+* `vlan_id`: - (Optional). For VLAN subnet.
 * `network_function_chain_reference`: - (Optional) The reference to a network_function_chain.
+* `vpc_reference_uuid`: (Optional) VPC reference uuid
+* `is_external`: - (Optional) Whether the subnet is external subnet or not.
+* `enable_nat`: - (Optional) Whether NAT should be performed for VPCs attaching to the subnet. This field is supported only for external subnets. NAT is enabled by default on external subnets.
 
 ## Attributes Reference
 
@@ -106,4 +111,4 @@ attributes supports the following:
 
 Note: `subnet_reference` does not support the attribute `name`
 
-See detailed information in [Nutanix Subnet](http://developer.nutanix.com/reference/prism_central/v3/#definitions-subnet_resources).
+See detailed information in [Nutanix Subnet](https://www.nutanix.dev/api_references/prism-central-v3/#/0cc5a30420b29-create-a-new-subnet).

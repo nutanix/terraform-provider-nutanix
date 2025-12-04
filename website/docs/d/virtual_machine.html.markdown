@@ -81,7 +81,7 @@ The following attributes are exported:
 * `guest_customization_is_overridable`: - Flag to allow override of customization by deployer.
 * `guest_customization_cloud_init_custom_key_values`: - Generic key value pair used for custom attributes in cloud init.
 * `guest_customization_sysprep`: - VM guests may be customized at boot time using one of several different methods. Currently, cloud-init w/ ConfigDriveV2 (for Linux VMs) and Sysprep (for Windows VMs) are supported. Only ONE OF sysprep or cloud_init should be provided. Note that guest customization can currently only be set during VM creation. Attempting to change it after creation will result in an error. Additional properties can be specified. For example - in the context of VM template creation if \"override_script\" is set to \"True\" then the deployer can upload their own custom script.
-* `guest_customization_sysrep_custom_key_values`: - Generic key value pair used for custom attributes in sysrep.
+* `guest_customization_sysprep_custom_key_values`: - Generic key value pair used for custom attributes in sysprep.
 * `should_fail_on_script_failure`: -  Extra configs related to power state transition. Indicates whether to abort ngt shutdown/reboot if script fails.
 * `enable_script_exec`: - Extra configs related to power state transition. Indicates whether to execute set script before ngt shutdown/reboot.
 * `power_state_mechanism`: - Indicates the mechanism guiding the VM power state transition. Currently used for the transition to \"OFF\" state. Power state mechanism (ACPI/GUEST/HARD).
@@ -89,7 +89,6 @@ The following attributes are exported:
 * `disk_list` Disks attached to the VM.
 * `metadata`: - The vm kind metadata.
 * `state`: - The state of the vm.
-* `ip_address`: - An IP address.
 * `host_reference`: - Reference to a host.
 * `hypervisor_type`: - The hypervisor type for the hypervisor the VM is hosted on.
 
@@ -224,6 +223,6 @@ The `project_reference`, `owner_reference`, `availability_zone_reference`, `netw
 
 * `kind`: - The kind name (Default value: project).
 * `name`: - the name.
-* `uud`: - the UUID.
+* `uuid`: - the UUID.
 
-See detailed information in [Nutanix Virtual Machine](http://developer.nutanix.com/reference/prism_central/v3/#vms).
+See detailed information in [Nutanix Virtual Machine](https://www.nutanix.dev/api_references/prism-central-v3/#/1602a9bd46e70-get-an-existing-vm).

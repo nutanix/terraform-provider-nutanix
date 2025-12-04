@@ -68,4 +68,6 @@ The `vpc_reference`, `vm_nic_reference`, `external_subnet_reference` attributes 
 
 * `kind`: - The kind name (Default value: project).
 * `name`: - the name.
-* `uud`: - the UUID.
+* `uuid`: - the UUID.
+
+See detailed information in [Nutanix Floating IPs](https://www.nutanix.dev/api_references/prism-central-v3/#/5f65d87a3d014-get-a-list-of-existing-floating-i-ps).

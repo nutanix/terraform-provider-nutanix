@@ -1,0 +1,303 @@
+{
+  "pre_env": {
+    "ngt_image": {
+      "name": "",
+      "url": ""
+    },
+    "external_nat_subnet": {
+      "name": "",
+      "network_id": 208,
+      "network_ip": "",
+      "prefix_length": 27,
+      "default_gateway_ip": "",
+      "start_ip": "",
+      "end_ip": ""
+    },
+    "overlay_subnet": {
+      "name": "",
+      "network_ip": "",
+      "prefix_length": 24,
+      "default_gateway_ip": ""
+    },
+    "integration_vm": {
+      "name": "",
+      "ip_address": ""
+    },
+    "volume_group": {
+      "name": ""
+    },
+    "ngt_vm": {
+      "name": ""
+    }
+  },
+  "availability_zone": {
+    "pc_ext_id": "",
+    "cluster_ext_id": "",
+    "remote_pc_ip": ""
+  },
+  "iam": {
+    "roles": {
+      "display_name": "",
+      "description": ""
+    },
+    "users": {
+      "name": "",
+      "idp_id": "",
+      "directory_service_id": "",
+      "directory_service_username": "",
+      "email_id": "",
+      "locale": "",
+      "region": "",
+      "password": "",
+      "force_reset_password": true
+    },
+    "user_groups": {
+      "name": "",
+      "saml_name": "",
+      "distinguished_name": ""
+    },
+    "auth_policies": {
+      "display_name": "",
+      "description": "",
+      "authorization_policy_type": "",
+      "identities": [
+        "{\"user\":{\"uuid\":{\"anyof\":[\"00000000-0000-0000-0000-000000000000\"]}}}"
+      ],
+      "entities": [
+        "{\"images\":{\"*\":{\"eq\":\"*\"}}}",
+        "{\"marketplace_item\":{\"owner_uuid\":{\"eq\":\"SELF_OWNED\"}}}"
+      ]
+    },
+    "identity_providers": {
+      "idp_metadata_url": "",
+      "idp_metadata_xml": "",
+      "idp_metadata": {
+        "entity_id": "",
+        "login_url": "",
+        "logout_url": "",
+        "error_url": "",
+        "certificate": "",
+        "name_id_policy_format": ""
+      },
+      "name": "",
+      "username_attr": "",
+      "email_attr": "",
+      "groups_attr": "",
+      "groups_delim": "",
+      "entity_issuer": "",
+      "is_signed_authn_req_enabled": true,
+      "custom_attributes": ["custom1", "custom2"]
+    },
+    "directory_services": {
+      "name": "",
+      "url": "",
+      "domain_name": "",
+      "service_account": {
+        "username": "",
+        "password": ""
+      },
+      "open_ldap_configuration": {
+        "user_configuration": {
+          "user_object_class": "",
+          "user_search_base": "",
+          "username_attribute": ""
+        },
+        "user_group_configuration": {
+          "group_object_class": "",
+          "group_search_base": "",
+          "group_member_attribute": "",
+          "group_member_attribute_value": ""
+        }
+      },
+      "group_search_type": "",
+      "white_listed_groups": ["test", "test_updated"]
+    }
+  },
+  "networking": {
+    "subnets": {
+      "project_id": "",
+      "vlan_id": 999,
+      "network_ip": "",
+      "network_prefix": 27,
+      "gateway_ip": "",
+      "dhcp": {
+        "start_ip": "",
+        "end_ip": ""
+      }
+    }
+  },
+  "vmm": {
+    "image_name": "",
+    "image_url": "",
+    "subnet_name": "",
+    "assigned_ip": "",
+    "unattend_xml": "",
+    "subnet": {
+      "network_id": 534,
+      "ip": "",
+      "prefix": 24,
+      "gateway_ip": "",
+      "dhcp_ip": "",
+      "start_ip": "",
+      "end_ip": ""
+    },
+    "ngt": {
+      "credential": {
+        "username": "",
+        "password": ""
+      }
+    },
+    "gpus": [
+      {
+        "device_id": 0,
+        "mode": "",
+        "vendor": ""
+      }
+    ]
+  },
+  "storage_container": {
+    "name": "",
+    "logical_advertised_capacity_bytes": 1073741824000,
+    "logical_explicit_reserved_capacity_bytes": 20,
+    "replication_factor": 1,
+    "nfs_whitelist_addresses": {
+      "ipv4": {
+        "value": "",
+        "prefix_length": 32
+      }
+    }
+  },
+  "clusters": {
+    "pe_username": "",
+    "pe_password": "",
+    "nodes": [
+      {
+        "cvm_ip": "",
+        "username": "",
+        "password": ""
+      },
+      {
+        "cvm_ip": "",
+        "username": "",
+        "password": ""
+      },
+      {
+        "cvm_ip": "",
+        "username": "",
+        "password": ""
+      },
+      {
+        "cvm_ip": "",
+        "username": "",
+        "password": ""
+      },
+      {
+        "cvm_ip": "",
+        "username": "",
+        "password": ""
+      }
+    ],
+    "config": {
+      "cluster_functions": [""],
+      "auth_public_keys": [
+        {
+          "name": "",
+          "key": ""
+        }
+      ],
+      "redundancy_factor": 1,
+      "cluster_arch": "",
+      "fault_tolerance_state": {
+        "domain_awareness_level": "",
+        "desired_cluster_fault_tolerance": ""
+      }
+    },
+    "network": {
+      "virtual_ip": "",
+      "iscsi_ip": "",
+      "iscsi_ip1": "",
+      "dns_servers": ["", ""],
+      "ntp_servers": ["", "", "", ""],
+      "smtp_server": {
+        "ip": "",
+        "port": 25,
+        "username": "",
+        "password": "",
+        "type": "",
+        "email_address": ""
+      }
+    },
+    "pc_ext_id": "",
+    "remote_cluster": {
+      "ext_id": "",
+      "ip": "",
+      "username": "",
+      "password": ""
+    }
+  },
+  "data_policies": {
+    "domain_manager_ext_id": ""
+  },
+  "prism": {
+    "deploy_pc": {
+      "pe_ip": "",
+      "version": "",
+      "network_id": "",
+      "default_gateway": "",
+      "subnet_mask": "",
+      "ip_range": {
+        "begin": "",
+        "end": ""
+      },
+      "name_servers": [
+        "",
+        ""
+      ],
+      "ntp_servers": [
+        "",
+        "",
+        "",
+        ""
+      ]
+    },
+    "unregister": {
+      "pc_ext_id": ""
+    },
+    "bucket": {
+      "name": "",
+      "region": "",
+      "access_key": "",
+      "secret_key": ""
+    },
+    "restore_source": {
+      "pe_ip": "",
+      "ssh_user": "",
+      "ssh_password": ""
+    },
+    "pc_restore":{
+      "username": "",
+      "password": "",
+      "skip_pc_restore_test": false
+    }
+  },
+  "data_protection": {
+    "local_cluster_pe": "",
+    "local_cluster_vip": "",
+    "remote_cluster_pe": "",
+    "remote_cluster_vip": ""
+  },
+  "lcm": {
+    "entity_model": "",
+    "entity_model_version": ""
+  },
+  "object_store": {
+    "ssh_pc_username": "",
+    "ssh_pc_password": "",
+    "subnet_name": "",
+    "bucket_name": "",
+    "domain": "",
+    "public_network_ips":[""],
+    "storage_network_dns_ip": "",
+    "storage_network_vip": ""
+  }
+}

@@ -12,7 +12,7 @@ Provides a resource to create a service group based on the input parameters.
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_service_group" "test" {
 		name = "test_service_gp"
 		description = "this is service group"
@@ -71,4 +71,4 @@ The udp_port_range_list attribute supports the following:
 * `start_port`: - (Optional) Start Port (Int)
 * `end_port` - (Optional) End Port (Int)
 
-See detailed information in [Nutanix Service Groups](https://www.nutanix.dev/reference/prism_central/v3/api/service-groups/postservicegroups).
+See detailed information in [Nutanix Service Groups](https://www.nutanix.dev/api_references/prism-central-v3/#/38492a5cb53e2-create-a-new-service-group).

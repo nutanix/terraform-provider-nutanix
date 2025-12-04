@@ -67,10 +67,10 @@ resource "nutanix_vpc" "vpc" {
 The following arguments are supported:
 
 * `name` - (Required) The name for the VPC.
-* `external_subnet_reference_uuid` - (Required) List of external subnets uuid attached to this VPC. Should not be used with external_subnet_reference_name. 
-* `external_subnet_reference_name` - (Required) List of external subnets name attached to this VPC. Should not be used with external_subnet_reference_uuid. 
-* `externally_routable_prefix_list` - (Optional) List Externally Routable IP Addresses. Required when external subnet with NoNAT is used. 
-* `common_domain_name_server_ip_list` - (Optional) List of domain name server IPs. 
+* `external_subnet_reference_uuid` - (Optional) List of external subnets uuid attached to this VPC. Should not be used with external_subnet_reference_name.
+* `external_subnet_reference_name` - (Optional) List of external subnets name attached to this VPC. Should not be used with external_subnet_reference_uuid.
+* `externally_routable_prefix_list` - (Optional) List Externally Routable IP Addresses. Required when external subnet with NoNAT is used.
+* `common_domain_name_server_ip_list` - (Optional) List of domain name server IPs.
 
 ## externally_routable_prefix_list
 Externally Routable IP Addresses
@@ -104,3 +104,5 @@ The metadata attribute exports the following:
 * `spec_hash`: - Hash of the spec. This will be returned from server.
 * `name`: - subnet name.
 * `should_force_translate`: - Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
+
+See detailed information in [Nutanix VPC](https://www.nutanix.dev/api_references/prism-central-v3/#/1b537be26b12f-create-a-new-vpc).

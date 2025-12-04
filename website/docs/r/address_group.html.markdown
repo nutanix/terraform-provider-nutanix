@@ -12,7 +12,7 @@ Provides a resource to create a address group based on the input parameters.
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_address_group" "test_address" {
 	name = "test"
 	description = "test address groups resource"
@@ -41,4 +41,4 @@ The ip_address_block_list argument supports the following:
 * `ip`: - (Required) IP of the address block
 * `prefix_length`: - (Required) Prefix length of address block in int
 
-See detailed information in [Nutanix Address Groups](https://www.nutanix.dev/reference/prism_central/v3/api/address-groups/postaddressgroups).
+See detailed information in [Nutanix Address Groups](https://www.nutanix.dev/api_references/prism-central-v3/#/5ccef53a546a4-create-a-new-address-group).

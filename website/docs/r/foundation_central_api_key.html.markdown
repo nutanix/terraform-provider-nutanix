@@ -12,7 +12,7 @@ Provides a resource to create a new API key for nodes registration with Foundati
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_foundation_central_api_keys" "new_api_key" {
 	alias = "<NAME-FOR-API-KEY>"
 }
@@ -36,4 +36,4 @@ The following attributes are exported:
 * `current_time`: Current time of Foundation Central.
 
 
-See detailed information in [Nutanix Foundation Central Create an API Key](https://www.nutanix.dev/api_references/foundation-central/#/b3A6MjIyMjI3MzM-create-an-api-key).
+See detailed information in [Nutanix Foundation Central Create an API Key](https://www.nutanix.dev/api_references/foundation-central/#/c2e963769f299-create-an-api-key).

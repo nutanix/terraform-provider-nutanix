@@ -1,0 +1,32 @@
+package pe_pc_registration_v2_test
+
+import (
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+
+	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
+)
+
+const datasourceNamePcEntities = "data.nutanix_cluster_pc_registration_entities_v2.test"
+
+func TestAccNutanixPcEntitiesV4Datasource_Basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testPCEntitiesDatasourceV4Config(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNamePcEntities, "pc_entities.#"),
+				),
+			},
+		},
+	})
+}
+
+func testPCEntitiesDatasourceV4Config() string {
+	return `
+	data "nutanix_cluster_pc_registration_entities_v2" "test"{}
+	`
+}
