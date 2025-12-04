@@ -441,7 +441,6 @@ func Provider() *schema.Provider {
 			"nutanix_clusters_discover_unconfigured_nodes_v2": clustersv2.ResourceNutanixClusterDiscoverUnconfiguredNodesV2(),
 			"nutanix_clusters_unconfigured_node_networks_v2":  clustersv2.ResourceNutanixClusterUnconfiguredNodeNetworkV2(),
 			"nutanix_cluster_profile_v2":                      clustersv2.ResourceNutanixClusterProfileV2(),
-			"nutanix_cluster_profile_association_v2":          clustersv2.ResourceNutanixClusterProfileAssociationV2(),
 			"nutanix_password_change_request_v2":              passwordmanagerv2.ResourceNutanixPasswordManagerV2(),
 			"nutanix_lcm_perform_inventory_v2":                lcmv2.ResourceNutanixLcmPerformInventoryV2(),
 			"nutanix_lcm_prechecks_v2":                        lcmv2.ResourceNutanixPreChecksV2(),
