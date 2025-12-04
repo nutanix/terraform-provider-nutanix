@@ -381,8 +381,6 @@ func resourceNutanixUserV2Read(ctx context.Context, d *schema.ResourceData, meta
 func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	updateSpec := &import1.User{}
-
 	// get Resp
 	getResp, er := conn.UsersAPIInstance.GetUserById(utils.StringPtr(d.Id()))
 	if er != nil {
@@ -391,7 +389,7 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 
 	getUserResp := getResp.Data.GetValue().(import1.User)
 
-	updateSpec = &getUserResp
+	updateSpec := &getUserResp
 
 	// validation on update spec
 	// Note: user read response has "" as default value for  middleInitial, emailId, displayName.

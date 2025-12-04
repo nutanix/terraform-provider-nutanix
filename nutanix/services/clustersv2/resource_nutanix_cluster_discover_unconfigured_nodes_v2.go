@@ -15,6 +15,7 @@ import (
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -37,12 +38,7 @@ func ResourceNutanixClusterDiscoverUnconfiguredNodesV2() *schema.Resource {
 			"ip_filter_list": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForValuePrefixLength(),
-						"ipv6": SchemaForValuePrefixLength(),
-					},
-				},
+				Elem:     common.SchemaForIPList(false),
 			},
 			"uuid_filter_list": {
 				Type:     schema.TypeList,
@@ -132,12 +128,7 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 			"cvm_ip": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForValuePrefixLength(),
-						"ipv6": SchemaForValuePrefixLength(),
-					},
-				},
+				Elem:     common.SchemaForIPList(false),
 			},
 			"foundation_version": {
 				Type:     schema.TypeString,
@@ -150,12 +141,7 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 			"hypervisor_ip": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForValuePrefixLengthResource(),
-						"ipv6": SchemaForValuePrefixLengthResource(),
-					},
-				},
+				Elem:     common.SchemaForIPList(false),
 			},
 			"hypervisor_type": {
 				Type:     schema.TypeString,
@@ -172,12 +158,7 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 			"ipmi_ip": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForValuePrefixLengthResource(),
-						"ipv6": SchemaForValuePrefixLengthResource(),
-					},
-				},
+				Elem:     common.SchemaForIPList(false),
 			},
 			"is_secure_booted": {
 				Type:     schema.TypeBool,
@@ -278,7 +259,7 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
