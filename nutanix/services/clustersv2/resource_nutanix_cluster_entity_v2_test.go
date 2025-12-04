@@ -15,7 +15,7 @@ import (
 const (
 	clusterResourceName                    = "nutanix_cluster_v2.test"
 	resourceNameDiscoverUnConfigNode       = "nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node"
-	resourceNameClusterRegistration        = "nutanix_pc_registration_v2.node-registration"
+	clusterResourceNameRegistration        = "nutanix_pc_registration_v2.node-registration"
 	dataSourceNameClusterData              = "data.nutanix_cluster_v2.cluster"
 	dataSourceNameGetClusterCategoriesData = "data.nutanix_clusters_v2.get-cluster-categories"
 )
@@ -42,15 +42,14 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 				PreConfig: func() {
 					fmt.Println("Step 1: Plan the cluster with minimum config")
 				},
-				Config:   testAccClusterResourceMinimumConfig(name, ""),
+				Config:   testAccClusterResourceMinimumConfig(name, "", ""),
 				PlanOnly: false,
 			},
 			{
 				PreConfig: func() {
 					fmt.Println("Step 2: Create the cluster with minimum config")
 				},
-				Config: testAccClusterResourceMinimumConfig(name, ""),
-				Config: testAccClusterResourceMinimumConfig(name, ""),
+				Config: testAccClusterResourceMinimumConfig(name, "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(clusterResourceName, "name", name),
 					resource.TestCheckResourceAttr(clusterResourceName, "dryrun", "false"),
@@ -65,65 +64,24 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 				PreConfig: func() {
 					fmt.Println("Step 3: Associating the cluster profile with the cluster")
 				},
-				Config: testAccClusterResourceMinimumConfig(name, "cluster_profile_ext_id = nutanix_cluster_profile_v2.test.id") + testAccClusterProfileResourceConfig("tf-first-cluster-profile"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(clusterProfileResourceName, "name", "tf-first-cluster-profile"),
-					resource.TestCheckResourceAttrSet(clusterProfileResourceName, "ext_id"),
-					resource.TestCheckResourceAttrPair(clusterProfileResourceName, "id", clusterProfileDataSourceName, "ext_id"),
-					resource.TestCheckResourceAttrPair(clusterProfileResourceName, "name", clusterProfileDataSourceName, "name"),
-				),
-			},
-			// Get Cluster Profile Details
-			{
-				PreConfig: func() {
-					fmt.Println("Step 5: Getting the cluster profile details")
-				},
-				Config: testAccClusterResourceMinimumConfig(name, "cluster_profile_ext_id = nutanix_cluster_profile_v2.test.id") + testAccClusterProfileResourceConfig("tf-first-cluster-profile"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(clusterProfileResourceName, "name", "tf-first-cluster-profile"),
-					resource.TestCheckResourceAttr(clusterProfileDataSourceName, "clusters.#", "1"),
-					resource.TestCheckResourceAttrPair(clusterProfileDataSourceName, "clusters.0.ext_id", clusterResourceName, "id"),
-				),
-			},
-			// de-associate the cluster profile from the cluster
-			{
-				PreConfig: func() {
-					fmt.Println("Step 4: De-associating the cluster profile from the cluster")
-				},
-				Config: testAccClusterResourceMinimumConfig(name, "") + testAccClusterProfileResourceConfig("tf-first-cluster-profile"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(clusterResourceName, "cluster_profile_ext_id", ""),
-				),
-			},
-			// Get Cluster Profile Details after de-association
-			{
-				PreConfig: func() {
-					fmt.Println("Step 6: Getting the cluster profile details after de-association")
-				},
-				Config: testAccClusterResourceMinimumConfig(name, "") + testAccClusterProfileResourceConfig("tf-first-cluster-profile"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(clusterProfileDataSourceName, "clusters.#", "0"),
-				),
-			},
-			// Step 3: Associate categories to the cluster and check on list cluster data source for categories
-			{
-				Config: testAccClusterResourceMinimumConfig(name, "nutanix_category_v2.cat-1.id, nutanix_category_v2.cat-2.id, nutanix_category_v2.cat-3.id") +
+				Config: testAccClusterResourceMinimumConfig(name, "cluster_profile_ext_id = nutanix_cluster_profile_v2.test.id", "nutanix_category_v2.cat-1.id, nutanix_category_v2.cat-2.id, nutanix_category_v2.cat-3.id") +
+					testAccClusterProfileResourceConfig("tf-first-cluster-profile") +
 					`				
-					# get the cluster data
-					data "nutanix_cluster_v2" "cluster" {
-						ext_id = nutanix_cluster_v2.test.id
-					}
+				 # get the cluster data
+				 data "nutanix_cluster_v2" "cluster" {
+					 ext_id = nutanix_cluster_v2.test.id
+				 }
 
-					# get the clusters data from the data source
-					data "nutanix_clusters_v2" "get-cluster-categories" {
-						filter = "name eq '${nutanix_cluster_v2.test.name}'"
-					}
-				`,
+				 # get the clusters data from the data source
+				 data "nutanix_clusters_v2" "get-cluster-categories" {
+					 filter = "name eq '${nutanix_cluster_v2.test.name}'"
+				 }
+			 `,
 				Check: resource.ComposeTestCheckFunc(
 					// Check categories count on the resource itself (TypeSet)
-					resource.TestCheckResourceAttr(resourceNameCluster, "categories.#", "3"),
+					resource.TestCheckResourceAttr(clusterResourceName, "categories.#", "3"),
 					// Check categories on the resource (order-independent check)
-					checkCategories(resourceNameCluster, "categories", []string{
+					checkCategories(clusterResourceName, "categories", []string{
 						"nutanix_category_v2.cat-1",
 						"nutanix_category_v2.cat-2",
 						"nutanix_category_v2.cat-3",
@@ -145,6 +103,62 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 						"nutanix_category_v2.cat-2",
 						"nutanix_category_v2.cat-3",
 					}),
+
+					resource.TestCheckResourceAttr(clusterProfileResourceName, "name", "tf-first-cluster-profile"),
+					resource.TestCheckResourceAttrSet(clusterProfileResourceName, "ext_id"),
+					resource.TestCheckResourceAttrPair(clusterProfileResourceName, "id", clusterProfileDataSourceName, "ext_id"),
+					resource.TestCheckResourceAttrPair(clusterProfileResourceName, "name", clusterProfileDataSourceName, "name"),
+				),
+			},
+			// Get Cluster Profile Details
+			{
+				PreConfig: func() {
+					fmt.Println("Step 5: Getting the cluster profile details")
+				},
+				Config: testAccClusterResourceMinimumConfig(name, "cluster_profile_ext_id = nutanix_cluster_profile_v2.test.id", "") + testAccClusterProfileResourceConfig("tf-first-cluster-profile"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(clusterProfileResourceName, "name", "tf-first-cluster-profile"),
+					resource.TestCheckResourceAttr(clusterProfileDataSourceName, "clusters.#", "1"),
+					resource.TestCheckResourceAttrPair(clusterProfileDataSourceName, "clusters.0.ext_id", clusterResourceName, "id"),
+				),
+			},
+			// de-associate the cluster profile from the cluster
+			{
+				PreConfig: func() {
+					fmt.Println("Step 4: De-associating the cluster profile from the cluster")
+				},
+				Config: testAccClusterResourceMinimumConfig(name, "", "") + testAccClusterProfileResourceConfig("tf-first-cluster-profile") +
+					`				
+					# get the cluster data
+					data "nutanix_cluster_v2" "cluster" {
+						ext_id = nutanix_cluster_v2.test.id
+					}
+				`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(clusterResourceName, "cluster_profile_ext_id", ""),
+					resource.TestCheckResourceAttr(clusterResourceName, "categories.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceNameClusterData, "categories.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceNameGetClusterCategoriesData, "cluster_entities.0.categories.#", "0"),
+				),
+			},
+			// Get Cluster Profile Details after de-association
+			{
+				PreConfig: func() {
+					fmt.Println("Step 6: Getting the cluster profile details after de-association")
+				},
+				Config: testAccClusterResourceMinimumConfig(name, "", "") + testAccClusterProfileResourceConfig("tf-first-cluster-profile") +
+					`				
+					# get the cluster data
+					data "nutanix_cluster_v2" "cluster" {
+						ext_id = nutanix_cluster_v2.test.id
+					}
+				`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(clusterProfileDataSourceName, "clusters.#", "0"),
+					resource.TestCheckResourceAttr(clusterResourceName, "cluster_profile_ext_id", ""),
+					resource.TestCheckResourceAttr(clusterResourceName, "categories.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceNameClusterData, "categories.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceNameGetClusterCategoriesData, "cluster_entities.0.categories.#", "0"),
 				),
 			},
 		},
@@ -196,9 +210,9 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.2.fqdn.0.value", testVars.Clusters.Network.NTPServers[2]),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.3.fqdn.0.value", testVars.Clusters.Network.NTPServers[3]),
 
-					resource.TestCheckResourceAttrSet(resourceNameClusterRegistration, "pc_ext_id"),
-					resource.TestCheckResourceAttr(resourceNameClusterRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.address.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
-					resource.TestCheckResourceAttr(resourceNameClusterRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.credentials.0.authentication.0.username", testVars.Clusters.Nodes[0].Username),
+					resource.TestCheckResourceAttrSet(clusterResourceNameRegistration, "pc_ext_id"),
+					resource.TestCheckResourceAttr(clusterResourceNameRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.address.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
+					resource.TestCheckResourceAttr(clusterResourceNameRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.credentials.0.authentication.0.username", testVars.Clusters.Nodes[0].Username),
 				),
 			},
 			// ############################################## Associate categories with cluster ##############################################
@@ -227,7 +241,7 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 				Config: testAccClusterResourceAllConfig(name) + testAccClusterResourceAssociateCategoriesConfig(r),
 				Check: resource.ComposeTestCheckFunc(
 					// check on cluster resource for categories (order-independent)
-					checkCategories(resourceNameCluster, "categories", []string{
+					checkCategories(clusterResourceName, "categories", []string{
 						"nutanix_category_v2.cat-1",
 						"nutanix_category_v2.cat-2",
 						"nutanix_category_v2.cat-3",
@@ -261,9 +275,9 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 			// Step 7: Check if categories are disassociated from cluster, resource check for categories
 			{
 				Config: testAccClusterResourceAllConfig(name),
-				Taint:  []string{resourceNameCluster},
+				Taint:  []string{clusterResourceName},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameCluster, "categories.#", "0"),
+					resource.TestCheckResourceAttr(clusterResourceName, "categories.#", "0"),
 				),
 			},
 			// ############################################## Update cluster config ##############################################
@@ -297,7 +311,6 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					// check on list cluster data source for categories
 					resource.TestCheckResourceAttr(dataSourceNameClusters, "cluster_entities.0.categories.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceNameClusters, "cluster_entities.0.categories.0", "nutanix_category_v2.test", "id"),
-					disassociateCategoryFromCluster(),
 				),
 			},
 			// Step 9: Disable the cluster pulse status and check on cluster resource for config
