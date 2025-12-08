@@ -52,6 +52,12 @@ type TestConfig struct {
 			Username string `json:"username"`
 			Password string `json:"password"`
 		} `json:"remote_cluster"`
+		SSLCertificate struct {
+			Passphrase        string `json:"passphrase"`
+			PrivateKey        string `json:"private_key"`
+			PublicCertificate string `json:"public_certificate"`
+			CaChain           string `json:"ca_chain"`
+		} `json:"ssl_certificate"`
 	} `json:"clusters"`
 }
 

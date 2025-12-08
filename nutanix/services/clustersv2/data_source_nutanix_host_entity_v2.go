@@ -317,7 +317,7 @@ func DatasourceNutanixHostEntityV2Read(ctx context.Context, d *schema.ResourceDa
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
+	if err := d.Set("links", common.FlattenLinks(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("host_name", getResp.HostName); err != nil {

@@ -3,12 +3,12 @@ layout: "nutanix"
 page_title: "NUTANIX: nutanix_storage_containers_v2"
 sidebar_current: "docs-nutanix-resource-storage-containers-v2"
 description: |-
-  Create Virtual Private Cloud .
+  Create Storage Containers
 ---
 
 # nutanix_storage_containers_v2
 
-Provides Nutanix resource to create VPC.
+Provides Nutanix resource to create Storage Containers
 
 
 ## Example
