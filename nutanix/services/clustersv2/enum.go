@@ -218,7 +218,7 @@ var (
 	RsyslogNetworkProtocolStrings  = common.EnumToStrings(RsyslogNetworkProtocols)
 	RsyslogModuleNameStrings       = common.EnumToStrings(RsyslogModuleNames)
 	RsyslogLogSeverityLevelStrings = common.EnumToStrings(RsyslogLogSeverityLevels)
-	PrivateKeyAlgorithmStrings      = common.EnumToStrings(PrivateKeyAlgorithms)
+	PrivateKeyAlgorithmStrings     = common.EnumToStrings(PrivateKeyAlgorithms)
 )
 
 // Generate maps of enum names to enum values for use in resource expansion
@@ -238,7 +238,7 @@ var (
 	OperationModeMap            = common.EnumToMap(OperationModes)
 	EncryptionStatusMap         = common.EnumToMap(EncryptionStatuses)
 
-	UpgradeStatusMap       = common.EnumToMap(UpgradeStatuses)
+	UpgradeStatusMap = common.EnumToMap(UpgradeStatuses)
 
 	// Cluster Profiles
 	AllowedOverridesMap        = common.EnumToMap(AllowedOverrides)
@@ -249,5 +249,5 @@ var (
 	RsyslogNetworkProtocolMap  = common.EnumToMap(RsyslogNetworkProtocols)
 	RsyslogModuleNameMap       = common.EnumToMap(RsyslogModuleNames)
 	RsyslogLogSeverityLevelMap = common.EnumToMap(RsyslogLogSeverityLevels)
-	PrivateKeyAlgorithmMap = common.EnumToMap(PrivateKeyAlgorithms)
+	PrivateKeyAlgorithmMap     = common.EnumToMap(PrivateKeyAlgorithms)
 )
