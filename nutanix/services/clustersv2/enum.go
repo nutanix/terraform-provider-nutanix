@@ -103,6 +103,18 @@ var (
 		config.UPGRADESTATUS_CANCELLED, //nolint:misspell
 		config.UPGRADESTATUS_SCHEDULED,
 	}
+
+	PrivateKeyAlgorithms = []config.PrivateKeyAlgorithm{
+		config.PRIVATEKEYALGORITHM_JKS,
+		config.PRIVATEKEYALGORITHM_PKCS12,
+		config.PRIVATEKEYALGORITHM_RSA_2048,
+		config.PRIVATEKEYALGORITHM_RSA_4096,
+		config.PRIVATEKEYALGORITHM_RSA_PUBLIC,
+		config.PRIVATEKEYALGORITHM_KRB_KEYTAB,
+		config.PRIVATEKEYALGORITHM_ECDSA_256,
+		config.PRIVATEKEYALGORITHM_ECDSA_384,
+		config.PRIVATEKEYALGORITHM_ECDSA_521,
+	}
 )
 
 // ############################
@@ -206,6 +218,7 @@ var (
 	RsyslogNetworkProtocolStrings  = common.EnumToStrings(RsyslogNetworkProtocols)
 	RsyslogModuleNameStrings       = common.EnumToStrings(RsyslogModuleNames)
 	RsyslogLogSeverityLevelStrings = common.EnumToStrings(RsyslogLogSeverityLevels)
+	PrivateKeyAlgorithmStrings      = common.EnumToStrings(PrivateKeyAlgorithms)
 )
 
 // Generate maps of enum names to enum values for use in resource expansion
@@ -224,7 +237,8 @@ var (
 	KeyManagementServerTypeMap  = common.EnumToMap(KeyManagementServerTypes)
 	OperationModeMap            = common.EnumToMap(OperationModes)
 	EncryptionStatusMap         = common.EnumToMap(EncryptionStatuses)
-	UpgradeStatusMap            = common.EnumToMap(UpgradeStatuses)
+
+	UpgradeStatusMap       = common.EnumToMap(UpgradeStatuses)
 
 	// Cluster Profiles
 	AllowedOverridesMap        = common.EnumToMap(AllowedOverrides)
@@ -235,4 +249,5 @@ var (
 	RsyslogNetworkProtocolMap  = common.EnumToMap(RsyslogNetworkProtocols)
 	RsyslogModuleNameMap       = common.EnumToMap(RsyslogModuleNames)
 	RsyslogLogSeverityLevelMap = common.EnumToMap(RsyslogLogSeverityLevels)
+	PrivateKeyAlgorithmMap = common.EnumToMap(PrivateKeyAlgorithms)
 )

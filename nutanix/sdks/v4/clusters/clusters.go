@@ -14,6 +14,7 @@ type Client struct {
 	StorageContainersAPI *api.StorageContainersApi
 	PasswordManagerAPI   *api.PasswordManagerApi
 	ClusterProfilesAPI   *api.ClusterProfilesApi
+	SSLCertificateAPI    *api.SSLCertificateApi
 }
 
 func NewClustersClient(credentials client.Credentials) (*Client, error) {
@@ -41,6 +42,7 @@ func NewClustersClient(credentials client.Credentials) (*Client, error) {
 		StorageContainersAPI: api.NewStorageContainersApi(baseClient),
 		PasswordManagerAPI:   api.NewPasswordManagerApi(baseClient),
 		ClusterProfilesAPI:   api.NewClusterProfilesApi(baseClient),
+		SSLCertificateAPI:    api.NewSSLCertificateApi(baseClient),
 	}
 
 	return f, nil

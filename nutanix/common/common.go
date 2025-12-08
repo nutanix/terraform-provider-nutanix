@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"hash/crc32"
 	"log"
+	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -233,4 +234,68 @@ func HashStringItem(v interface{}) int {
 		return 0
 	}
 	return int(crc32.ChecksumIEEE(fmt.Appendf(nil, "%s-", str)))
+}
+
+// FlattenLinks is a generic function that flattens a slice of ApiLink types into a slice of maps.
+// It works with any ApiLink type that has Href and Rel fields (accessed via reflection).
+// This function replaces duplicate flattenLinks implementations across different service packages.
+// The function accepts any slice type where each element has Href and Rel fields (typically *string pointers).
+func FlattenLinks(links interface{}) []map[string]interface{} {
+	if links == nil {
+		return nil
+	}
+
+	// Use reflection to handle any slice type
+	val := reflect.ValueOf(links)
+	if val.Kind() != reflect.Slice {
+		return nil
+	}
+
+	if val.Len() == 0 {
+		return nil
+	}
+
+	linkList := make([]map[string]interface{}, val.Len())
+
+	for i := 0; i < val.Len(); i++ {
+		link := val.Index(i).Interface()
+		linkMap := make(map[string]interface{})
+
+		// Use reflection to access Href and Rel fields
+		linkVal := reflect.ValueOf(link)
+		if linkVal.Kind() == reflect.Ptr {
+			if linkVal.IsNil() {
+				continue
+			}
+			linkVal = linkVal.Elem()
+		}
+
+		// Get Href field
+		hrefField := linkVal.FieldByName("Href")
+		if hrefField.IsValid() {
+			if hrefField.Kind() == reflect.Ptr {
+				if !hrefField.IsNil() {
+					linkMap["href"] = hrefField.Elem().Interface()
+				}
+			} else {
+				linkMap["href"] = hrefField.Interface()
+			}
+		}
+
+		// Get Rel field
+		relField := linkVal.FieldByName("Rel")
+		if relField.IsValid() {
+			if relField.Kind() == reflect.Ptr {
+				if !relField.IsNil() {
+					linkMap["rel"] = relField.Elem().Interface()
+				}
+			} else {
+				linkMap["rel"] = relField.Interface()
+			}
+		}
+
+		linkList[i] = linkMap
+	}
+
+	return linkList
 }
