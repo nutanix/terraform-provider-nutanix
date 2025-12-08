@@ -8,7 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func CheckAttributeMinLength(resourceName, attribute string, minLength int) resource.TestCheckFunc {
+// checkAttributeLength checks the length of an attribute and make sure it is greater than or equal to minLength
+// simply used to check the length of a list returned by List data sources
+func CheckAttributeLength(resourceName, attribute string, minLength int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -34,6 +36,8 @@ func CheckAttributeMinLength(resourceName, attribute string, minLength int) reso
 	}
 }
 
+// CheckAttributeLengthEqual checks the length of an attribute and makes sure it is equal to expectedLength
+// simply used to check the length of a list returned by List data sources
 func CheckAttributeLengthEqual(resourceName, attribute string, expectedLength int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]

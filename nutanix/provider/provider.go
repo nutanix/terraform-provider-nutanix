@@ -27,6 +27,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/passwordmanagerv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prismv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/securityv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/selfservice"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/storagecontainersv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/vmm"
@@ -326,6 +327,7 @@ func Provider() *schema.Provider {
 			"nutanix_object_stores_v2":                        objectstoresv2.DatasourceNutanixObjectStoresV2(),
 			"nutanix_certificate_v2":                          objectstoresv2.DatasourceNutanixObjectStoreCertificateV2(),
 			"nutanix_certificates_v2":                         objectstoresv2.DatasourceNutanixObjectStoreCertificatesV2(),
+			"nutanix_stigs_v2":                                securityv2.DatasourceNutanixStigsControlsV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
