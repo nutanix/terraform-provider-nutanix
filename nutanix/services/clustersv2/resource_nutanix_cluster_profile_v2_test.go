@@ -107,7 +107,7 @@ func TestAccNutanixClusterProfileV2_basic(t *testing.T) {
 
 					// Data source checks
 					// List checks
-					common.CheckAttributeMinLength(dataSourceNameList, "cluster_profiles", 2),
+					common.CheckAttributeLength(dataSourceNameList, "cluster_profiles", 2),
 					resource.TestCheckResourceAttrSet(dataSourceNameList, "cluster_profiles.0.ext_id"),
 					resource.TestCheckResourceAttrSet(dataSourceNameList, "cluster_profiles.1.ext_id"),
 					// Filter checks

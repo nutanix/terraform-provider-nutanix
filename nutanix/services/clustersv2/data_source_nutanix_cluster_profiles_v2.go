@@ -113,7 +113,7 @@ func flattenClusterProfiles(clusterProfiles []import1.ClusterProfile) []map[stri
 	for _, clusterProfile := range clusterProfiles {
 		clusterMap := map[string]interface{}{
 			"tenant_id":             clusterProfile.TenantId,
-			"links":                 flattenLinks(clusterProfile.Links),
+			"links":                 common.FlattenLinks(clusterProfile.Links),
 			"ext_id":                utils.StringValue(clusterProfile.ExtId),
 			"name":                  utils.StringValue(clusterProfile.Name),
 			"description":           utils.StringValue(clusterProfile.Description),

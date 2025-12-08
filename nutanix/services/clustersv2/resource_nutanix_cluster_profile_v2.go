@@ -494,7 +494,7 @@ func ResourceNutanixClusterProfileV2Read(ctx context.Context, d *schema.Resource
 	if err := d.Set("ext_id", clusterProfile.ExtId); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("links", flattenLinks(clusterProfile.Links)); err != nil {
+	if err := d.Set("links", common.FlattenLinks(clusterProfile.Links)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("name", clusterProfile.Name); err != nil {
@@ -933,7 +933,7 @@ func flattenSnmpConfig(snmpConfig *config.SnmpConfig) interface{} {
 
 	// Flatten links
 	if snmpConfig.Links != nil {
-		links := flattenLinks(snmpConfig.Links)
+		links := common.FlattenLinks(snmpConfig.Links)
 		m["links"] = links
 	}
 	// Flatten is_enabled
@@ -948,7 +948,7 @@ func flattenSnmpConfig(snmpConfig *config.SnmpConfig) interface{} {
 			user := map[string]interface{}{
 				"ext_id":    utils.StringValue(u.ExtId),
 				"tenant_id": utils.StringValue(u.TenantId),
-				"links":     flattenLinks(u.Links),
+				"links":     common.FlattenLinks(u.Links),
 				"username":  u.Username,
 				"auth_type": common.FlattenPtrEnum(u.AuthType),
 				"auth_key":  utils.StringValue(u.AuthKey),
@@ -980,7 +980,7 @@ func flattenSnmpConfig(snmpConfig *config.SnmpConfig) interface{} {
 			trap := map[string]interface{}{
 				"ext_id":           utils.StringValue(tr.ExtId),
 				"tenant_id":        utils.StringValue(tr.TenantId),
-				"links":            flattenLinks(tr.Links),
+				"links":            common.FlattenLinks(tr.Links),
 				"username":         tr.Username,
 				"protocol":         common.FlattenPtrEnum(tr.Protocol),
 				"port":             utils.IntValue(tr.Port),
@@ -1016,7 +1016,7 @@ func flattenRsyslogServerList(rsyslogServers []config.RsyslogServer) interface{}
 		s := map[string]interface{}{
 			"ext_id":           utils.StringValue(srv.ExtId),
 			"tenant_id":        utils.StringValue(srv.TenantId),
-			"links":            flattenLinks(srv.Links),
+			"links":            common.FlattenLinks(srv.Links),
 			"server_name":      utils.StringValue(srv.ServerName),
 			"port":             utils.IntValue(srv.Port),
 			"network_protocol": common.FlattenPtrEnum(srv.NetworkProtocol),

@@ -376,7 +376,7 @@ func DatasourceNutanixClusterProfileV2Read(ctx context.Context, d *schema.Resour
 	if err := d.Set("tenant_id", clusterProfile.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("links", flattenLinks(clusterProfile.Links)); err != nil {
+	if err := d.Set("links", common.FlattenLinks(clusterProfile.Links)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("ext_id", clusterProfile.ExtId); err != nil {
