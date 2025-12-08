@@ -78,6 +78,11 @@ func TestAccV2NutanixKeyManagementServerResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameKeyManagementServer, "access_information.0.truncated_client_secret"),
 				),
 			},
+			// test update with wrong access information
+			{
+				Config:      testKMSResourceInvalidAccessInfoConfig(updatedName),
+				ExpectError: regexp.MustCompile("error waiting for kms to be updated:"),
+			},
 		},
 	})
 }

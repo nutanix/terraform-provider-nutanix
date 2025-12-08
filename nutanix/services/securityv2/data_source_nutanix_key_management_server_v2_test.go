@@ -3,6 +3,7 @@ package securityv2_test
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -53,10 +54,35 @@ func TestAccV2NutanixKeyManagementServerDatasource_Basic(t *testing.T) {
 	})
 }
 
+// TestAccV2NutanixKeyManagementServerDatasource_InvalidExtID tests the error handling when
+// a non-existent KMS ext_id is provided to the datasource.
+func TestAccV2NutanixKeyManagementServerDatasource_InvalidExtID(t *testing.T) {
+	invalidExtID := "ab414ed6-7d97-4f7a-b98f-fcba7cac3b8c"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testKMSDatasourceInvalidExtIDConfig(invalidExtID),
+				ExpectError: regexp.MustCompile(fmt.Sprintf("KMS %s does not exist", invalidExtID)),
+			},
+		},
+	})
+}
+
 func testKMSdatasourceFetchConfig() string {
 	return `
 data "nutanix_key_management_server_v2" "test" {
   ext_id = nutanix_key_management_server_v2.test.id
 }
 `
+}
+
+func testKMSDatasourceInvalidExtIDConfig(extID string) string {
+	return fmt.Sprintf(`
+data "nutanix_key_management_server_v2" "test" {
+  ext_id = "%s"
+}
+`, extID)
 }
