@@ -268,14 +268,10 @@ func ResourceNutanixKeyManagementServerV2Update(ctx context.Context, d *schema.R
 				}
 			}
 			// client_id
-			if !d.HasChange("access_information.0.client_id") {
-				if configClientId != "" {
-					accessInfo.ClientId = utils.StringPtr(configClientId)
-				}
-			} else if accessInfo.ClientId != nil && utils.StringValue(accessInfo.ClientId) == "" {
-				if configClientId != "" {
-					accessInfo.ClientId = utils.StringPtr(configClientId)
-				}
+			if !d.HasChange("access_information.0.client_id") && configClientId != "" {
+				accessInfo.ClientId = utils.StringPtr(configClientId)
+			} else if accessInfo.ClientId != nil && utils.StringValue(accessInfo.ClientId) == "" && configClientId != "" {
+				accessInfo.ClientId = utils.StringPtr(configClientId)
 			}
 			updateSpec.AccessInformation = accessInfo
 		}
