@@ -3,12 +3,13 @@ layout: "nutanix"
 page_title: "NUTANIX: nutanix_key_management_server_v2"
 sidebar_current: "docs-nutanix-datasource-key-management_server_v2"
 description: |-
-  Provides a Nutanix Key Management Server datasource to get details of a key management server by ext_id
+  Provides a Nutanix Key Management Server datasource to get details of a key management server by ext_id. A Key Management Server (KMS) is a centralized system that securely generates, stores, and manages cryptographic keys used for data encryption. When data-at-rest encryption is enabled on Nutanix clusters, KMS ensures that encryption keys are protected and accessible only to authorized entities, providing an additional layer of security for sensitive data.
 ---
 
 # nutanix_key_management_server_v2
 
-Fetches the details of a key management server identified by its unique identifier.
+Fetches the details of a key management server identified by its unique identifier (ext_id).  
+
 
 ## Example
 
