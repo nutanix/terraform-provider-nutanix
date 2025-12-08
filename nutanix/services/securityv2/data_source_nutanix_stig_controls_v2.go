@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/models/common/v1/response"
 	"github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/models/security/v4/report"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -210,24 +209,4 @@ func flattenSTIGs(stigsData []report.Stig) []map[string]interface{} {
 		}
 	}
 	return stigsList
-}
-
-func flattenLinks(links []response.ApiLink) []interface{} {
-	if len(links) > 0 {
-		flattenedLinks := make([]interface{}, len(links))
-
-		for k, v := range links {
-			link := make(map[string]interface{})
-
-			if v.Href != nil {
-				link["href"] = v.Href
-			}
-			if v.Rel != nil {
-				link["rel"] = v.Rel
-			}
-			flattenedLinks[k] = link
-		}
-		return flattenedLinks
-	}
-	return make([]interface{}, 0)
 }
