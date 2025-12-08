@@ -3,12 +3,16 @@ layout: "nutanix"
 page_title: "NUTANIX: nutanix_stigs_v2"
 sidebar_current: "docs-nutanix-datasource-stigs-v2"
 description: |-
-  Provides a Nutanix STIGS datasource to Get the STIG controls details
+   Provides a Nutanix STIGS datasource to Get the STIG controls details. A Security Technical Implementation Guide (STIG) is a cybersecurity methodology for standardizing security protocols within networks, servers, computers, and logical designs to enhance overall security. These guides, when implemented, enhance security for software, hardware, and physical and logical architectures to further reduce vulnerabilities. This datasource retrieves Security Technical Implementation Guide (STIG) control details for each cluster.
 ---
 
 # nutanix_stigs_v2
 
-Fetch the STIG controls details for STIG rules on each cluster.
+A Security Technical Implementation Guide (STIG) is a cybersecurity methodology for standardizing security protocols within networks, servers, computers, and logical designs to enhance overall security. These guides, when implemented, enhance security for software, hardware, and physical and logical architectures to further reduce vulnerabilities.
+
+This datasource retrieves Security Technical Implementation Guide (STIG) control details for each cluster. Each STIG record represents a specific rule or control evaluated against one or more clusters, containing metadata such as rule ID, severity, compliance status, and remediation guidance.
+
+This datasource uses Prism Central (PC) v4 APIs based SDKs.
 
 ## Example
 
