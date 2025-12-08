@@ -4,6 +4,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"hash/crc32"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -186,4 +187,16 @@ func InterfaceToSlice(v interface{}) []interface{} {
 		// single element provided
 		return []interface{}{v}
 	}
+}
+
+// HashStringItem returns a hash for a string value to ensure uniqueness in schema.TypeSet
+func HashStringItem(v interface{}) int {
+	if v == nil {
+		return 0
+	}
+	str, ok := v.(string)
+	if !ok {
+		return 0
+	}
+	return int(crc32.ChecksumIEEE(fmt.Appendf(nil, "%s-", str)))
 }
