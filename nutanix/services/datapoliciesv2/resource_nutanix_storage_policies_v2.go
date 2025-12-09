@@ -192,19 +192,20 @@ func ResourceNutanixStoragePoliciesV2Create(ctx context.Context, d *schema.Resou
 	}
 
 	// Get UUID from TASK API
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		return diag.Errorf("error while fetching vm UUID : %v", err)
+		return diag.Errorf("error while fetching Storage Policy task: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Create Storage Policy Task Details: %s", string(aJSON))
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
+	// Extract UUID from task using entity type constant
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeStoragePolicy, "Storage policy")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(utils.StringValue(uuid))
 
 	return ResourceNutanixStoragePoliciesV2Read(ctx, d, meta)
 }
@@ -390,7 +391,15 @@ func waitForTaskCompletion(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("error waiting for Storage Policy (%s) to %s: %s", utils.StringValue(taskUUID), operation, errWaitTask)
 	}
 
-	log.Printf("[DEBUG] Storage Policy (%s) %s is successful", d.Id(), operation)
+	// Get task details for logging
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching Storage Policy %s task: %v", operation, err)
+	}
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Storage Policy %s Task Details: %s", operation, string(aJSON))
+
 	if operation == "delete" {
 		return nil
 	}
