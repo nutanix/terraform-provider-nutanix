@@ -243,6 +243,48 @@ func ExtractEntityUUIDFromTask(task prismConfig.Task, entityType string, resourc
 	return nil, fmt.Errorf("%s UUID not found in entities affected", resourceName)
 }
 
+// ExtractCompletionDetailFromTask extracts a value from task completion details based on the completion detail name.
+// It searches through the CompletionDetails list and returns the value of the first entry matching the specified name.
+// Use constants from utils package (e.g., utils.CompletionDetailsNameRecoveryPoint, utils.CompletionDetailsNameProtectionPolicy).
+// Returns an error if no matching completion detail is found.
+func ExtractCompletionDetailFromTask(task prismConfig.Task, completionDetailName string, resourceName string) (string, error) {
+	for _, detail := range task.CompletionDetails {
+		if utils.StringValue(detail.Name) == completionDetailName {
+			if detail.Value != nil {
+				return detail.Value.GetValue().(string), nil
+			}
+		}
+	}
+	// Debug log the completion details
+	log.Printf("[DEBUG] No matching completion detail found for name: %s", completionDetailName)
+	aJSON, _ := json.MarshalIndent(task.CompletionDetails, "", "  ")
+	log.Printf("[DEBUG] Completion Details: %s", string(aJSON))
+
+	// If no matching completion detail is found, return an error
+	return "", fmt.Errorf("%s not found in task completion details", resourceName)
+}
+
+// ExtractAllCompletionDetailsFromTask extracts all values from task completion details based on the completion detail name.
+// It searches through the CompletionDetails list and returns all values matching the specified name.
+// Use constants from utils package (e.g., utils.CompletionDetailsNameVMExtIDs, utils.CompletionDetailsNameVGExtIDs).
+// Returns an empty slice if no matching completion details are found.
+func ExtractAllCompletionDetailsFromTask(task prismConfig.Task, completionDetailName string) []string {
+	values := make([]string, 0)
+	for _, detail := range task.CompletionDetails {
+		if utils.StringValue(detail.Name) == completionDetailName {
+			if detail.Value != nil {
+				values = append(values, detail.Value.GetValue().(string))
+			}
+		}
+	}
+	if len(values) == 0 {
+		log.Printf("[DEBUG] No matching completion detail found for name: %s", completionDetailName)
+		aJSON, _ := json.MarshalIndent(task.CompletionDetails, "", "  ")
+		log.Printf("[DEBUG] Completion Details: %s", string(aJSON))
+	}
+	return values
+}
+
 // HashStringItem returns a hash for a string value to ensure uniqueness in schema.TypeSet
 func HashStringItem(v interface{}) int {
 	if v == nil {

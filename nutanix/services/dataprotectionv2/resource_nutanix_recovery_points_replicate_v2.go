@@ -91,9 +91,12 @@ func ResourceNutanixRecoveryPointReplicateV2Create(ctx context.Context, d *schem
 	log.Printf("[DEBUG] Replicate Recovery Point Task Details: %s", string(aJSON))
 
 	// Set the UUID of the replicated recovery point from completion details
-	uuid := taskDetails.CompletionDetails[0].Value
-	d.SetId(uuid.GetValue().(string))
-	d.Set("replicated_rp_ext_id", uuid.GetValue().(string))
+	uuid, err := common.ExtractCompletionDetailFromTask(taskDetails, utils.CompletionDetailsNameRecoveryPoint, "Recovery point")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(uuid)
+	d.Set("replicated_rp_ext_id", uuid)
 
 	return ResourceNutanixRecoveryPointReplicateV2Read(ctx, d, meta)
 }

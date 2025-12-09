@@ -95,7 +95,10 @@ func ResourceNutanixRevertVMRecoveryPointV2Create(ctx context.Context, d *schema
 		return diag.FromErr(err)
 	}
 
-	uuid := taskDetails.CompletionDetails[0].Value.GetValue().(string)
+	uuid, err := common.ExtractCompletionDetailFromTask(taskDetails, utils.CompletionDetailsNameVMExtIDs, "VM")
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	d.SetId(uuid)
 
 	return ResourceNutanixRevertVMRecoveryPointV2Read(ctx, d, meta)

@@ -138,31 +138,18 @@ func ResourceNutanixRecoveryPointRestoreV2Create(ctx context.Context, d *schema.
 
 	// Extract VM and Volume Group ExtIds from completion details
 	vmExtIds := make([]string, 0)
-	volumeGroupExtIds := make([]string, 0)
-	for _, entity := range taskDetails.CompletionDetails {
-		if utils.StringValue(entity.Name) == utils.CompletionDetailsNameVMExtIDs {
-			vmIDs := entity.Value.GetValue().(string)
-			vmExtIds = strings.Split(vmIDs, ",")
-		} else if utils.StringValue(entity.Name) == utils.CompletionDetailsNameVGExtIDs {
-			vgIDs := entity.Value.GetValue().(string)
-			volumeGroupExtIds = strings.Split(vgIDs, ",")
-		}
+	vgExtIds := make([]string, 0)
+	vmExtIdsStrs := common.ExtractAllCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameVMExtIDs)
+	for _, vmExtIdsStr := range vmExtIdsStrs {
+		vmExtIds = append(vmExtIds, strings.Split(vmExtIdsStr, ",")...)
 	}
-	err = d.Set("vm_ext_ids", vmExtIds)
-	if err != nil {
-		return diag.Errorf("error while setting vm_ext_ids: %v", err)
+	vgExtIdsStrs := common.ExtractAllCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameVGExtIDs)
+	for _, vgExtIdsStr := range vgExtIdsStrs {
+		vgExtIds = append(vgExtIds, strings.Split(vgExtIdsStr, ",")...)
 	}
-	err = d.Set("volume_group_ext_ids", volumeGroupExtIds)
-	if err != nil {
-		return diag.Errorf("error while setting volume_group_ext_ids: %v", err)
-	}
-
-	// Extract UUID from entities affected
-	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeRecoveryPoint, "Recovery point")
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	d.SetId(utils.StringValue(uuid))
+	d.Set("vm_ext_ids", vmExtIds)
+	d.Set("volume_group_ext_ids", vgExtIds)
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 
 	return nil
 }
