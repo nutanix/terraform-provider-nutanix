@@ -67,7 +67,7 @@ func ResourceNutanixUnregisterClusterV2Create(ctx context.Context, d *schema.Res
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the task to complete
+	// Wait for the cluster unregistration to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
@@ -76,12 +76,12 @@ func ResourceNutanixUnregisterClusterV2Create(ctx context.Context, d *schema.Res
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for cluster unregister task to complete: %s", err)
+		return diag.Errorf("error waiting for cluster unregistration (%s) to complete: %s", utils.StringValue(taskUUID), err)
 	}
 
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching task details : %v", err)
+		return diag.Errorf("error while fetching cluster unregistration task (%s): %v", utils.StringValue(taskUUID), err)
 	}
 
 	taskDetails := taskResp.Data.GetValue().(config.Task)

@@ -112,27 +112,30 @@ func ResourceNutanixVmsNetworkDeviceMigrateV2Create(ctx context.Context, d *sche
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
+	// Wait for the NIC migration to complete
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for nic (%s) to migrate: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for NIC migration (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
+	// Get UUID from TASK API
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching vm UUID : %v", err)
+		return diag.Errorf("error while fetching NIC migration task (%s): %v", utils.StringValue(taskUUID), err)
 	}
 	taskDetails := taskResp.Data.GetValue().(import2.Task)
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Migrate NIC Task Details: %s", string(aJSON))
+	log.Printf("[DEBUG] Create NIC Migration Task Details: %s", string(aJSON))
 
-	d.SetId(resource.UniqueId())
+	// This is an action resource that does not maintain state.
+	// The resource ID is set to the task ExtId for traceability.
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 	return nil
 }
 
@@ -178,27 +181,30 @@ func ResourceNutanixVmsNetworkDeviceMigrateV2Update(ctx context.Context, d *sche
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
+	// Wait for the NIC migration to complete
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for nic (%s) to migrate: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for NIC migration (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
+	// Get UUID from TASK API
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching vm UUID : %v", err)
+		return diag.Errorf("error while fetching NIC migration task (%s): %v", utils.StringValue(taskUUID), err)
 	}
 	taskDetails := taskResp.Data.GetValue().(import2.Task)
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Migrate NIC Task Details: %s", string(aJSON))
+	log.Printf("[DEBUG] Update NIC Migration Task Details: %s", string(aJSON))
 
-	d.SetId(resource.UniqueId())
+	// This is an action resource that does not maintain state.
+	// The resource ID is set to the task ExtId for traceability.
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 	return nil
 }
 

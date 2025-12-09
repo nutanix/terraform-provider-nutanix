@@ -287,27 +287,24 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Create(ctx context.Context, 
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the  node to be available
+	// Wait for the fetch node networking details operation to complete
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "QUEUED"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for  node (%s) to add: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for fetch node networking details (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
 	// Get UUID from TASK API
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching task : %v", err)
+		return diag.Errorf("error while fetching node networking details task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
-
-	bJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Fetch Network Info Task Details: %s", string(bJSON))
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Fetch Node Networking Details Task Details: %s", string(aJSON))
 
 	uuid := strings.Split(utils.StringValue(taskDetails.ExtId), "=:")[1]
 
@@ -330,8 +327,8 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Create(ctx context.Context, 
 		return diag.FromErr(err)
 	}
 
-	aJSON, _ = json.MarshalIndent(networkDetailsResp, "", " ")
-	log.Printf("[DEBUG] fetching Task Response for Unconfigured Nodes Task Details: %s\n", string(aJSON))
+	bJSON, _ := json.MarshalIndent(networkDetailsResp, "", "  ")
+	log.Printf("[DEBUG] Fetch Task Response for Node Networking Details: %s", string(bJSON))
 
 	d.SetId(utils.StringValue(taskDetails.ExtId))
 	return nil

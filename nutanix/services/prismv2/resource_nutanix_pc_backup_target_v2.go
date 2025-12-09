@@ -241,7 +241,7 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the task to complete
+	// Wait for the backup target to be created
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
@@ -250,12 +250,12 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for backup target to be created: %s", err)
+		return diag.Errorf("error waiting for backup target (%s) to be created: %s", utils.StringValue(taskUUID), err)
 	}
 
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching backup target task details: %s", err)
+		return diag.Errorf("error while fetching backup target create task (%s): %s", utils.StringValue(taskUUID), err)
 	}
 
 	taskDetails := taskResp.Data.GetValue().(config.Task)
@@ -482,12 +482,12 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for backup target to be updated: %s", err)
+		return diag.Errorf("error waiting for backup target (%s) to be updated: %s", utils.StringValue(taskUUID), err)
 	}
 
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching backup target Task Details: %s", err)
+		return diag.Errorf("error while fetching backup target update task (%s): %s", utils.StringValue(taskUUID), err)
 	}
 
 	taskDetails := taskResp.Data.GetValue().(config.Task)
@@ -531,12 +531,12 @@ func ResourceNutanixBackupTargetV2Delete(ctx context.Context, d *schema.Resource
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for backup target to be deleted: %s", err)
+		return diag.Errorf("error waiting for backup target (%s) to be deleted: %s", utils.StringValue(taskUUID), err)
 	}
 
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching delete backup target task details: %s", err)
+		return diag.Errorf("error while fetching backup target delete task (%s): %s", utils.StringValue(taskUUID), err)
 	}
 
 	taskDetails := taskResp.Data.GetValue().(config.Task)

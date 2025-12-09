@@ -2,11 +2,14 @@ package vmmv2
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	import5 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -53,9 +56,12 @@ func ResourceNutanixTemplateActionsV2() *schema.Resource {
 
 func ResourceNutanixTemplateActionsV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
+	taskconn := meta.(*conns.Client).PrismAPI
 
 	extID := d.Get("ext_id").(string)
 	action := d.Get("action").(string)
+
+	var taskUUID *string
 
 	if action == "initiate" {
 		versionID := d.Get("version_id").(string)
@@ -67,19 +73,18 @@ func ResourceNutanixTemplateActionsV2Create(ctx context.Context, d *schema.Resou
 			return diag.FromErr(err)
 		}
 		TaskRef := resp.Data.GetValue().(import1.TaskReference)
-		taskUUID := TaskRef.ExtId
+		taskUUID = TaskRef.ExtId
 
-		taskconn := meta.(*conns.Client).PrismAPI
-		// Wait for the task to complete
+		// Wait for the guest OS update to be initiated
 		stateConf := &resource.StateChangeConf{
-			Pending: []string{"QUEUED", "RUNNING"},
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 			Target:  []string{"SUCCEEDED"},
 			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 			Timeout: d.Timeout(schema.TimeoutCreate),
 		}
 
 		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-			return diag.Errorf("error waiting for template (%s) to initiate updating Guest OS: %s", utils.StringValue(taskUUID), errWaitTask)
+			return diag.Errorf("error waiting for guest OS update initiation (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 		}
 	}
 
@@ -98,19 +103,18 @@ func ResourceNutanixTemplateActionsV2Create(ctx context.Context, d *schema.Resou
 			return diag.FromErr(err)
 		}
 		TaskRef := resp.Data.GetValue().(import1.TaskReference)
-		taskUUID := TaskRef.ExtId
+		taskUUID = TaskRef.ExtId
 
-		taskconn := meta.(*conns.Client).PrismAPI
-		// Wait for the task to complete
+		// Wait for the guest OS update to complete
 		stateConf := &resource.StateChangeConf{
-			Pending: []string{"QUEUED", "RUNNING"},
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 			Target:  []string{"SUCCEEDED"},
 			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 			Timeout: d.Timeout(schema.TimeoutCreate),
 		}
 
 		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-			return diag.Errorf("error waiting for template(%s) to complete updating Guest OS: %s", utils.StringValue(taskUUID), errWaitTask)
+			return diag.Errorf("error waiting for guest OS update completion (%s) to finish: %s", utils.StringValue(taskUUID), errWaitTask)
 		}
 	}
 
@@ -120,23 +124,33 @@ func ResourceNutanixTemplateActionsV2Create(ctx context.Context, d *schema.Resou
 			return diag.FromErr(err)
 		}
 		TaskRef := resp.Data.GetValue().(import1.TaskReference)
-		taskUUID := TaskRef.ExtId
+		taskUUID = TaskRef.ExtId
 
-		taskconn := meta.(*conns.Client).PrismAPI
-		// Wait for the task to complete
+		// Wait for the guest OS update to be cancelled
 		stateConf := &resource.StateChangeConf{
-			Pending: []string{"QUEUED", "RUNNING"},
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 			Target:  []string{"SUCCEEDED"},
 			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 			Timeout: d.Timeout(schema.TimeoutCreate),
 		}
 
 		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-			return diag.Errorf("error waiting for template(%s) to cancel updating Guest OS: %s", utils.StringValue(taskUUID), errWaitTask)
+			return diag.Errorf("error waiting for guest OS update cancellation (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 		}
 	}
 
-	d.SetId(resource.UniqueId())
+	// Get UUID from TASK API
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching template guest OS action task (%s): %v", utils.StringValue(taskUUID), err)
+	}
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Template Guest OS Action (%s) Task Details: %s", action, string(aJSON))
+
+	// This is an action resource that does not maintain state.
+	// The resource ID is set to the task ExtId for traceability.
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 	return nil
 }
 

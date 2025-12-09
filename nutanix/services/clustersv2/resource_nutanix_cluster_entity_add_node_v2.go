@@ -495,28 +495,26 @@ func ResourceNutanixClusterAddNodeV2Create(ctx context.Context, d *schema.Resour
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the  node to be available
+	// Wait for the node to be added
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for  node (%s) to add: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for node (%s) to add: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
 	// Get UUID from TASK API
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching  node UUID : %v", err)
+		return diag.Errorf("error while fetching add node task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(import2.Task)
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Add Node Response: %s", string(aJSON))
+	log.Printf("[DEBUG] Add Node Task Details: %s", string(aJSON))
 
-	d.SetId(utils.StringValue(taskDetails.ExtId))	
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 	return nil
 }
 
@@ -574,31 +572,28 @@ func ResourceNutanixClusterAddNodeV2Delete(ctx context.Context, d *schema.Resour
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the node to be available
+	// Wait for the node to be removed
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		taskResp, _ := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 		taskDetails := taskResp.Data.GetValue().(import2.Task)
-		aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-		log.Printf("[ERROR] Error Remove Node Task Details : %s", string(aJSON))
-		return diag.Errorf("error waiting for  node (%s) to Remove: %s", utils.StringValue(taskUUID), errWaitTask)
+		aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+		log.Printf("[ERROR] Remove Node Task Details: %s", string(aJSON))
+		return diag.Errorf("error waiting for node (%s) to remove: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
 	// Get UUID from TASK API
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching  node UUID : %v", err)
+		return diag.Errorf("error while fetching remove node task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(import2.Task)
-
-	bJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Remove Node Task Details : %s", string(bJSON))
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Remove Node Task Details: %s", string(aJSON))
 	return nil
 }
 

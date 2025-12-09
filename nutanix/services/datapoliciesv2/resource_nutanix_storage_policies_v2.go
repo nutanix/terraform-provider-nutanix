@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -179,22 +180,20 @@ func ResourceNutanixStoragePoliciesV2Create(ctx context.Context, d *schema.Resou
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Storage Policy to be available
+	// Wait for the storage policy to be created
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Storage Policy (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for storage policy (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
 	// Get UUID from TASK API
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Storage Policy task: %v", err)
+		return diag.Errorf("error while fetching storage policy task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
@@ -380,31 +379,50 @@ func waitForTaskCompletion(ctx context.Context, d *schema.ResourceData, meta int
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
+
+	// Determine timeout based on operation
+	var timeout time.Duration
+	switch operation {
+	case "update":
+		timeout = d.Timeout(schema.TimeoutUpdate)
+	case "delete":
+		timeout = d.Timeout(schema.TimeoutDelete)
+	default:
+		timeout = d.Timeout(schema.TimeoutCreate)
+	}
+
+	// Wait for the storage policy to be updated/deleted
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: timeout,
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Storage Policy (%s) to %s: %s", utils.StringValue(taskUUID), operation, errWaitTask)
+		return diag.Errorf("error waiting for storage policy (%s) to %s: %s", utils.StringValue(taskUUID), operation, errWaitTask)
 	}
-
-	// Get task details for logging
+	// Get UUID from TASK API
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Storage Policy %s task: %v", operation, err)
+		return diag.Errorf("error while fetching storage policy %s task: %v", operation, err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Storage Policy %s Task Details: %s", operation, string(aJSON))
+	log.Printf("[DEBUG] %s Storage Policy Task Details: %s", capitalizeFirst(operation), string(aJSON))
 
 	if operation == "delete" {
 		return nil
 	}
 
 	return ResourceNutanixStoragePoliciesV2Read(ctx, d, meta)
+}
+
+// capitalizeFirst capitalizes the first letter of a string
+func capitalizeFirst(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	return string(s[0]-32) + s[1:]
 }
 
 func commonReadStateStoragePolicy(d *schema.ResourceData, res import1.StoragePolicy, metadata *import3.ApiResponseMetadata) diag.Diagnostics {

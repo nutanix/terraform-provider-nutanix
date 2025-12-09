@@ -185,8 +185,8 @@ func ResourceNutanixAuthPoliciesV2Create(ctx context.Context, d *schema.Resource
 
 	log.Printf("[DEBUG] Creating Authorization Policy Return")
 
-	d.Set("ext_id", *getResp.ExtId)
-	d.SetId(*getResp.ExtId)
+	d.Set("ext_id", utils.StringValue(getResp.ExtId))
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return ResourceNutanixAuthPoliciesV2Read(ctx, d, meta)
 }
 

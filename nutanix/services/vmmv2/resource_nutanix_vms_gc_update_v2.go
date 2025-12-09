@@ -204,23 +204,22 @@ func ResourceNutanixVMGCUpdateV2Create(ctx context.Context, d *schema.ResourceDa
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the task to complete
+	// Wait for the guest customization to complete
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for virtual Machine (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for guest customization (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
-
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching vm UUID : %v", err)
+		return diag.Errorf("error while fetching guest customization task (%s): %v", utils.StringValue(taskUUID), err)
 	}
 
 	taskDetails := taskResp.Data.GetValue().(import2.Task)
@@ -228,7 +227,9 @@ func ResourceNutanixVMGCUpdateV2Create(ctx context.Context, d *schema.ResourceDa
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Update GC Task Details: %s", string(aJSON))
 
-	d.SetId(resource.UniqueId())
+	// This is an action resource that does not maintain state.
+	// The resource ID is set to the task ExtId for traceability.
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 
 	return nil
 }

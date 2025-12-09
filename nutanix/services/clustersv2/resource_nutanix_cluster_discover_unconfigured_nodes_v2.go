@@ -255,27 +255,24 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Nodes Trap to be available
+	// Wait for the discover unconfigured nodes operation to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Unconfigured Nodes (%s) to fetch: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for unconfigured nodes (%s) to discover: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
 	// Get UUID from TASK API
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Unconfigured Nodes UUID : %v", err)
+		return diag.Errorf("error while fetching discover unconfigured nodes task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(import2.Task)
-
-	jsonBody, _ := json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] fetching Unconfigured Nodes resourceUUID : %s", string(jsonBody))
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Discover Unconfigured Nodes Task Details: %s", string(aJSON))
 
 	uuid := strings.Split(utils.StringValue(taskDetails.ExtId), "=:")[1]
 
@@ -298,8 +295,8 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 		return diag.FromErr(err)
 	}
 
-	aJSON, _ = json.MarshalIndent(unconfiguredNodesResp, "", " ")
-	log.Printf("[DEBUG] fetching Task Response for Unconfigured Nodes Task Details: %s\n", string(aJSON))
+	bJSON, _ := json.MarshalIndent(unconfiguredNodesResp, "", "  ")
+	log.Printf("[DEBUG] Fetch Task Response for Unconfigured Nodes: %s", string(bJSON))
 
 	// Set the ID
 	d.SetId(utils.StringValue(taskDetails.ExtId))

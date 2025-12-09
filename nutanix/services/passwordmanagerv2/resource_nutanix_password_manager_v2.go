@@ -108,56 +108,61 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 					return diag.Errorf("error while fetching task by ID %s: %v", utils.StringValue(taskUUID), taskErr)
 				}
 
+				// Wait for the password change to complete
 				stateConf := &resource.StateChangeConf{
-					Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+					Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 					Target:  []string{"SUCCEEDED"},
 					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, newPrismClient, utils.StringValue(taskUUID)),
 					Timeout: d.Timeout(schema.TimeoutCreate),
 				}
 
 				if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-					return diag.Errorf("Change Password Request failed for ext_id %s with error %s", utils.StringValue(extID), errWaitTask)
+					return diag.Errorf("error waiting for password change (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 				}
 
 				// Get task details for logging
 				taskResp, err := newPrismClient.TaskRefAPI.GetTaskById(taskUUID, nil)
-				if err == nil {
-					taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
-					aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-					log.Printf("[DEBUG] Password Manager Task Details: %s", string(aJSON))
+				if err != nil {
+					return diag.Errorf("error while fetching password change task: %v", err)
 				}
+				taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+				aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+				log.Printf("[DEBUG] Create Password Manager Task Details: %s", string(aJSON))
 
-				// set the resource id to random uuid
-				d.SetId(utils.GenUUID())
+				// This is an action resource that does not maintain state.
+				// The resource ID is set to the task ExtId for traceability.
+				d.SetId(utils.StringValue(taskDetails.ExtId))
 				return resourceNutanixPasswordManagerV2Read(ctx, d, meta)
 			}
 			return diag.Errorf("error while fetching task by ID %s: %v", utils.StringValue(taskUUID), taskErr)
 		}
 	}
 
-	// the password change is not for the user configured in the provider configuration
-	// Wait for the task to complete
+	// The password change is not for the user configured in the provider configuration
+	// Wait for the password change to complete
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("Change Password Request failed for ext_id %s with error %s", utils.StringValue(extID), errWaitTask)
+		return diag.Errorf("error waiting for password change (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get task details for logging
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-	if err == nil {
-		taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
-		aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-		log.Printf("[DEBUG] Password Manager Task Details: %s", string(aJSON))
+	if err != nil {
+		return diag.Errorf("error while fetching password change task: %v", err)
 	}
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Create Password Manager Task Details: %s", string(aJSON))
 
-	// set the resource id to random uuid
-	d.SetId(utils.GenUUID())
+	// This is an action resource that does not maintain state.
+	// The resource ID is set to the task ExtId for traceability.
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 	return resourceNutanixPasswordManagerV2Read(ctx, d, meta)
 }
 

@@ -1436,7 +1436,7 @@ func ResourceNutanixVMCloneV2Create(ctx context.Context, d *schema.ResourceData,
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the task to complete
+	// Wait for the VM to be cloned
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
@@ -1445,20 +1445,22 @@ func ResourceNutanixVMCloneV2Create(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for virtual Machine (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for VM clone (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching vm UUID : %v", err)
+		return diag.Errorf("error while fetching VM clone task (%s): %v", utils.StringValue(taskUUID), err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
 
-	uuid := rUUID.EntitiesAffected[1].ExtId
+	aJSON, _ := json.MarshalIndent(taskDetails, "", " ")
+	log.Printf("[DEBUG] Clone VM Task Details: %s", string(aJSON))
 
-	d.SetId(*uuid)
+	// The cloned VM is the second entity (index 1) in EntitiesAffected
+	uuid := taskDetails.EntitiesAffected[1].ExtId
+	d.SetId(utils.StringValue(uuid))
 
 	return ResourceNutanixVMCloneV2Read(ctx, d, meta)
 }
@@ -1627,7 +1629,7 @@ func ResourceNutanixVMCloneV2Read(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[INFO] Successfully read cloned vm with ext_id %s", d.Id())
-	d.SetId(*getResp.ExtId)
+	d.SetId(utils.StringValue(getResp.ExtId))
 
 	return nil
 }

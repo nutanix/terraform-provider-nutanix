@@ -166,10 +166,8 @@ func ResourceNutanixImagePlacementV2Create(ctx context.Context, d *schema.Resour
 	TaskRef := resp.Data.GetValue().(import1.TaskReference)
 	taskUUID := TaskRef.ExtId
 
-	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the task to complete
+	// Wait for the image placement policy to be created
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
@@ -192,7 +190,7 @@ func ResourceNutanixImagePlacementV2Create(ctx context.Context, d *schema.Resour
 		data := errordata["data"].(map[string]interface{})
 		errorList := data["error"].([]interface{})
 		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching Image placement policy UUID : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching image placement policy create task (%s): %v", utils.StringValue(taskUUID), errorMessage["message"])
 	}
 	taskDetails := taskResp.Data.GetValue().(import2.Task)
 
@@ -325,10 +323,8 @@ func ResourceNutanixImagePlacementV2Update(ctx context.Context, d *schema.Resour
 		TaskRef := updateResp.Data.GetValue().(import1.TaskReference)
 		taskUUID := TaskRef.ExtId
 
-		// calling group API to poll for completion of task
-
 		taskconn := meta.(*conns.Client).PrismAPI
-		// Wait for the task to complete
+		// Wait for the image placement policy to be updated
 		stateConf := &resource.StateChangeConf{
 			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 			Target:  []string{"SUCCEEDED"},
@@ -369,26 +365,17 @@ func suspendAction(ctx context.Context, conn *vmm.Client, d *schema.ResourceData
 	TaskRef := resp.Data.GetValue().(import1.TaskReference)
 	taskUUID := TaskRef.ExtId
 
-	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the task to complete
+	// Wait for the image placement policy to be suspended
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for image placement policy (%s) to suspend: %s", utils.StringValue(taskUUID), errWaitTask)
-	}
-
-	// Get UUID from TASK API
-
-	_, err = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-	if err != nil {
-		return diag.Errorf("error while fetching Image placement policy UUID : %v", err)
 	}
 
 	return nil
@@ -412,27 +399,19 @@ func resumeAction(ctx context.Context, conn *vmm.Client, d *schema.ResourceData,
 	TaskRef := resp.Data.GetValue().(import1.TaskReference)
 	taskUUID := TaskRef.ExtId
 
-	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the task to complete
+	// Wait for the image placement policy to be resumed
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for image placement policy (%s) to resume: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
-	// Get UUID from TASK API
-
-	_, err = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-	if err != nil {
-		return diag.Errorf("error while fetching Image placement policy UUID : %v", err)
-	}
 	return nil
 }
 
@@ -454,10 +433,8 @@ func ResourceNutanixImagePlacementV2Delete(ctx context.Context, d *schema.Resour
 	TaskRef := resp.Data.GetValue().(import1.TaskReference)
 	taskUUID := TaskRef.ExtId
 
-	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the task to complete
+	// Wait for the image placement policy to be deleted
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},

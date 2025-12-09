@@ -297,7 +297,7 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the task to complete
+	// Wait for the storage container to be created
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
@@ -306,18 +306,17 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for storage container (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for storage container (%s) to be created: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching storage container UUID : %v", err)
+		return diag.Errorf("error while fetching storage container create task (%s): %v", utils.StringValue(taskUUID), err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
-
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Storage Container Task Details: %s", string(aJSON))
+	log.Printf("[DEBUG] Create Storage Container Task Details: %s", string(aJSON))
 
 	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeStorageContainer, "Storage container")
 	if err != nil {
@@ -337,7 +336,7 @@ func ResourceNutanixStorageContainersV2Read(ctx context.Context, d *schema.Resou
 
 	resp, err := conn.StorageContainersAPI.GetStorageContainerById(utils.StringPtr(d.Id()))
 	if err != nil {
-		return diag.Errorf("error while fetching Storage Container : %v", err)
+		return diag.Errorf("error while fetching storage container: %v", err)
 	}
 
 	getResp := resp.Data.GetValue().(clustermgmtConfig.StorageContainer)
@@ -542,7 +541,7 @@ func ResourceNutanixStorageContainersV2Update(ctx context.Context, d *schema.Res
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the task to complete
+	// Wait for the storage container to be updated
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
@@ -551,12 +550,12 @@ func ResourceNutanixStorageContainersV2Update(ctx context.Context, d *schema.Res
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for storage container (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for storage container (%s) to be updated: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching storage container update task : %v", err)
+		return diag.Errorf("error while fetching storage container update task (%s): %v", utils.StringValue(taskUUID), err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
@@ -578,14 +577,14 @@ func ResourceNutanixStorageContainersV2Delete(ctx context.Context, d *schema.Res
 
 	resp, err := conn.StorageContainersAPI.DeleteStorageContainerById(utils.StringPtr(d.Id()), utils.BoolPtr(ignoreSmallFiles))
 	if err != nil {
-		return diag.Errorf("error while Deleting storage containers : %v", err)
+		return diag.Errorf("error while deleting storage container: %v", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(clsPrismConfig.TaskReference)
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the task to complete
+	// Wait for the storage container to be deleted
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
@@ -594,8 +593,18 @@ func ResourceNutanixStorageContainersV2Delete(ctx context.Context, d *schema.Res
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for storage container (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for storage container (%s) to be deleted: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
+
+	// Get task details for logging
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching storage container delete task (%s): %v", utils.StringValue(taskUUID), err)
+	}
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Delete Storage Container Task Details: %s", string(aJSON))
+
 	return nil
 }
 

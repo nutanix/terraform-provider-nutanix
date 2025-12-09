@@ -3,7 +3,6 @@ package dataprotectionv2
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"sort"
 	"time"
@@ -17,7 +16,7 @@ import (
 	dataprtotectionPrismConfig "github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
+	commonUtils "github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -359,35 +358,34 @@ func ResourceNutanixRecoveryPointsV2Create(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error while creating recovery point: %v", err)
 	}
 
-	TaskRef := resp.Data.GetValue().(dataprtotectionPrismConfig.TaskReference)
-	taskUUID := TaskRef.ExtId
+	taskRef := resp.Data.GetValue().(dataprtotectionPrismConfig.TaskReference)
+	taskUUID := taskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the recovery point to be created
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: commonUtils.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for recovery point: (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for recovery point (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching recovery point UUID : %v", err)
+		return diag.Errorf("error while fetching recovery point task: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 
-	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Create Recovery Point Task Details: %v", string(aJSON))
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Create Recovery Point Task Details: %s", string(aJSON))
 
-	uuid := rUUID.CompletionDetails[0].Value
-
+	// Extract UUID from completion details
+	uuid := taskDetails.CompletionDetails[0].Value
 	d.SetId(uuid.GetValue().(string))
 
 	return ResourceNutanixRecoveryPointsV2Read(ctx, d, meta)
@@ -529,16 +527,15 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error while updating recovery point: %v", err)
 	}
 
-	TaskRef := resp.Data.GetValue().(dataprtotectionPrismConfig.TaskReference)
-	taskUUID := TaskRef.ExtId
+	taskRef := resp.Data.GetValue().(dataprtotectionPrismConfig.TaskReference)
+	taskUUID := taskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
-
+	// Wait for the recovery point to be updated
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: commonUtils.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
@@ -547,15 +544,14 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 	}
 
 	// Get UUID from TASK API
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching recovery point UUID : %v", err)
+		return diag.Errorf("error while fetching recovery point task: %v", err)
 	}
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
-
-	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Update Recovery Point Task Details: %v", string(aJSON))
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Update Recovery Point Task Details: %s", string(aJSON))
 
 	return ResourceNutanixRecoveryPointsV2Read(ctx, d, meta)
 }
@@ -568,23 +564,30 @@ func ResourceNutanixRecoveryPointsV2Delete(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error while deleting recovery point: %v", err)
 	}
 
-	TaskRef := resp.Data.GetValue().(dataprtotectionPrismConfig.TaskReference)
-
-	taskUUID := TaskRef.ExtId
+	taskRef := resp.Data.GetValue().(dataprtotectionPrismConfig.TaskReference)
+	taskUUID := taskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-
-	// Wait for the cluster to be available
+	// Wait for the recovery point to be deleted
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: commonUtils.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for recovery point (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
+
+	// Get task details for logging
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching recovery point delete task: %v", err)
+	}
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Delete Recovery Point Task Details: %s", string(aJSON))
 
 	return nil
 }
@@ -728,49 +731,6 @@ func expandWritersList(writers []interface{}) []string {
 		return writersList
 	}
 	return nil
-}
-
-func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
-		// encodeUUID := data + ":" + taskUUID
-		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-		if err != nil {
-			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
-		}
-
-		// get the group results
-
-		v := vresp.Data.GetValue().(prismConfig.Task)
-
-		if getTaskStatus(v.Status) == "CANCELED" || getTaskStatus(v.Status) == "FAILED" {
-			return v, getTaskStatus(v.Status),
-				fmt.Errorf("error_detail: %s, progress_message: %d", utils.StringValue(v.ErrorMessages[0].Message), utils.IntValue(v.ProgressPercentage))
-		}
-		return v, getTaskStatus(v.Status), nil
-	}
-}
-
-func getTaskStatus(pr *prismConfig.TaskStatus) string {
-	if pr != nil {
-		const two, three, five, six, seven = 2, 3, 5, 6, 7
-		if *pr == prismConfig.TaskStatus(six) {
-			return "FAILED"
-		}
-		if *pr == prismConfig.TaskStatus(seven) {
-			return "CANCELED"
-		}
-		if *pr == prismConfig.TaskStatus(two) {
-			return "QUEUED"
-		}
-		if *pr == prismConfig.TaskStatus(three) {
-			return "RUNNING"
-		}
-		if *pr == prismConfig.TaskStatus(five) {
-			return "SUCCEEDED"
-		}
-	}
-	return "UNKNOWN"
 }
 
 // Function to remove a Vm recovery Point with a specific Ext Id from the slice

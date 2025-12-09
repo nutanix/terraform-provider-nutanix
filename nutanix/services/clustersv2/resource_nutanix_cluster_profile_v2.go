@@ -448,15 +448,13 @@ func ResourceNutanixClusterProfileV2Create(ctx context.Context, d *schema.Resour
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for cluster profile (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
-	// Get Task Details
+	// Get UUID from TASK API
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching cluster profile task details: %v", err)
+		return diag.Errorf("error while fetching cluster profile task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(import2.Task)
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
@@ -668,15 +666,13 @@ func ResourceNutanixClusterProfileV2Update(ctx context.Context, d *schema.Resour
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for cluster profile (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
-	// Get Task Details
+	// Get UUID from TASK API
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching cluster profile UUID : %v", err)
+		return diag.Errorf("error while fetching cluster profile task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(import2.Task)
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
@@ -706,11 +702,10 @@ func ResourceNutanixClusterProfileV2Delete(ctx context.Context, d *schema.Resour
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for cluster profile (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
-	// Get Task Details
+	// Get UUID from TASK API
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching cluster profile UUID : %v", err)
+		return diag.Errorf("error while fetching cluster profile delete task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(import2.Task)
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")

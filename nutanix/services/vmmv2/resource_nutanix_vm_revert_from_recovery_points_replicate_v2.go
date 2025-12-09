@@ -70,7 +70,7 @@ func ResourceNutanixRevertVMRecoveryPointV2Create(ctx context.Context, d *schema
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the task to complete
+	// Wait for the VM to be reverted
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
@@ -79,19 +79,17 @@ func ResourceNutanixRevertVMRecoveryPointV2Create(ctx context.Context, d *schema
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for vm: (%s) to revert: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for VM revert (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
-
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching revert vm UUID : %v", err)
+		return diag.Errorf("error while fetching VM revert task (%s): %v", utils.StringValue(taskUUID), err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
-
-	aJSON, _ := json.Marshal(taskDetails)
-	log.Printf("[DEBUG] revert vm task Details: %v", string(aJSON))
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Revert VM Task Details: %s", string(aJSON))
 
 	if err = d.Set("status", common.FlattenPtrEnum(taskDetails.Status)); err != nil {
 		return diag.FromErr(err)

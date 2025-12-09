@@ -3,7 +3,6 @@ package datapoliciesv2
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"reflect"
 	"sort"
@@ -18,8 +17,6 @@ import (
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	commonUtils "github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
-	prismSdk "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
-
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -117,30 +114,27 @@ func ResourceNutanixProtectionPoliciesV2Create(ctx context.Context, d *schema.Re
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the protection policy to be created
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: commonUtils.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Protection Policy (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for protection policy (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
 	// Get UUID from TASK API
-
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Protection Policy Task : %v", err)
+		return diag.Errorf("error while fetching protection policy task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Create Protection Policy Task Response Details: %s", string(aJSON))
+	log.Printf("[DEBUG] Create Protection Policy Task Details: %s", string(aJSON))
 
+	// Extract UUID from completion details
 	uuid := taskDetails.CompletionDetails[0].Value.GetValue().(string)
-
 	d.SetId(uuid)
 
 	return ResourceNutanixProtectionPoliciesV2Read(ctx, d, meta)
@@ -234,27 +228,24 @@ func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.Re
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the protection policy to be updated
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: commonUtils.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Protection Policy (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for protection policy (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
 	// Get UUID from TASK API
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Protection Policy Task : %v", err)
+		return diag.Errorf("error while fetching protection policy task: %v", err)
 	}
-
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Update Protection Policy Task Response Details: %s", string(aJSON))
+	log.Printf("[DEBUG] Update Protection Policy Task Details: %s", string(aJSON))
 
 	return ResourceNutanixProtectionPoliciesV2Read(ctx, d, meta)
 }
@@ -270,27 +261,24 @@ func ResourceNutanixProtectionPoliciesV2Delete(ctx context.Context, d *schema.Re
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the protection policy to be deleted
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: commonUtils.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Protection Policy (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for protection policy (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
 	// Get UUID from TASK API
-
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while deleting Protection Policy Task : %v", err)
+		return diag.Errorf("error while fetching protection policy delete task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Delete Protection Policy Task Response Details: %s", string(aJSON))
+	log.Printf("[DEBUG] Delete Protection Policy Task Details: %s", string(aJSON))
 
 	return nil
 }
@@ -693,49 +681,6 @@ func expandSnapshotIntervalType(snapshotIntervalType string) *config.SnapshotInt
 		return &p
 	}
 	return nil
-}
-
-func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prismSdk.Client, taskUUID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
-		// encodeUUID := data + ":" + taskUUID
-		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-		if err != nil {
-			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
-		}
-
-		// get the group results
-
-		v := vresp.Data.GetValue().(prismConfig.Task)
-
-		if getTaskStatus(v.Status) == "CANCELED" || getTaskStatus(v.Status) == "FAILED" {
-			return v, getTaskStatus(v.Status),
-				fmt.Errorf("error_detail: %s, progress_message: %d", utils.StringValue(v.ErrorMessages[0].Message), utils.IntValue(v.ProgressPercentage))
-		}
-		return v, getTaskStatus(v.Status), nil
-	}
-}
-
-func getTaskStatus(pr *prismConfig.TaskStatus) string {
-	const two, three, five, six, seven = 2, 3, 5, 6, 7
-	if pr != nil {
-		if *pr == prismConfig.TaskStatus(six) {
-			return "FAILED"
-		}
-		if *pr == prismConfig.TaskStatus(seven) {
-			return "CANCELED"
-		}
-		if *pr == prismConfig.TaskStatus(two) {
-			return "QUEUED"
-		}
-		if *pr == prismConfig.TaskStatus(three) {
-			return "RUNNING"
-		}
-		if *pr == prismConfig.TaskStatus(five) {
-			return "SUCCEEDED"
-		}
-	}
-	return "UNKNOWN"
 }
 
 func categoryIdsDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {

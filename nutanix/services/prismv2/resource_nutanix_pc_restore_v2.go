@@ -113,7 +113,7 @@ func ResourceNutanixRestorePcCreate(ctx context.Context, d *schema.ResourceData,
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the task to complete
+	// Wait for the PC to be restored
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
@@ -122,24 +122,23 @@ func ResourceNutanixRestorePcCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for restore PC task to complete: %s", err)
+		return diag.Errorf("error waiting for PC (%s) to be restored: %s", utils.StringValue(taskUUID), err)
 	}
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching task details : %v", err)
+		return diag.Errorf("error while fetching PC restore task (%s): %v", utils.StringValue(taskUUID), err)
 	}
-
-	taskDetails := resourceUUID.Data.GetValue().(config.Task)
+	taskDetails := taskResp.Data.GetValue().(config.Task)
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Restore PC task details: %s", string(aJSON))
+	log.Printf("[DEBUG] Restore PC Task Details: %s", string(aJSON))
 
 	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeDomainManager,
 		"Restored Domain Manager")
 	if err != nil {
 		return diag.Errorf("error while extracting domain manager UUID from task response: %s", err)
 	}
-	d.SetId(*uuid)
+	d.SetId(utils.StringValue(uuid))
 	return nil
 }
 

@@ -308,7 +308,7 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the task to complete
+	// Wait for the PC registration to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
@@ -317,17 +317,16 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for PC registration to complete: %v", err)
+		return diag.Errorf("error waiting for PC registration (%s) to complete: %v", utils.StringValue(taskUUID), err)
 	}
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching PC Register task with id %s : %v", *taskUUID, err)
+		return diag.Errorf("error while fetching PC registration task (%s): %v", utils.StringValue(taskUUID), err)
 	}
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
-
-	aJSON, _ = json.Marshal(rUUID)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] PC Registration Task Details: %s", string(aJSON))
 
 	d.SetId(pcExtID)
