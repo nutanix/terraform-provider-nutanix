@@ -5,7 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"hash/crc32"
 	"log"
+	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -27,6 +29,40 @@ func ExpandListOfString(list []interface{}) []string {
 		stringListStr = append(stringListStr, v.(string))
 	}
 	return stringListStr
+}
+
+// DiffStringSets compares two string slices and returns the added and removed items.
+// added contains items that are in newSet but not in oldSet.
+// removed contains items that are in oldSet but not in newSet.
+func DiffStringSets(oldSet, newSet []string) (added, removed []string) {
+	// Create maps for easier lookup
+	oldSetMap := make(map[string]bool, len(oldSet))
+	for _, item := range oldSet {
+		oldSetMap[item] = true
+	}
+
+	newSetMap := make(map[string]bool, len(newSet))
+	for _, item := range newSet {
+		newSetMap[item] = true
+	}
+
+	// Find items to add (in new but not in old)
+	added = make([]string, 0)
+	for _, item := range newSet {
+		if !oldSetMap[item] {
+			added = append(added, item)
+		}
+	}
+
+	// Find items to remove (in old but not in new)
+	removed = make([]string, 0)
+	for _, item := range oldSet {
+		if !newSetMap[item] {
+			removed = append(removed, item)
+		}
+	}
+
+	return added, removed
 }
 
 // IsExplicitlySet defined to determine whether a particular key (or configuration attribute) within a Terraform resource configuration has been explicitly set by the user.
@@ -205,4 +241,78 @@ func ExtractEntityUUIDFromTask(task prismConfig.Task, entityType string, resourc
 
 	// If no matching entity is found, return an error
 	return nil, fmt.Errorf("%s UUID not found in entities affected", resourceName)
+// HashStringItem returns a hash for a string value to ensure uniqueness in schema.TypeSet
+func HashStringItem(v interface{}) int {
+	if v == nil {
+		return 0
+	}
+	str, ok := v.(string)
+	if !ok {
+		return 0
+	}
+	return int(crc32.ChecksumIEEE(fmt.Appendf(nil, "%s-", str)))
+}
+
+// FlattenLinks is a generic function that flattens a slice of ApiLink types into a slice of maps.
+// It works with any ApiLink type that has Href and Rel fields (accessed via reflection).
+// This function replaces duplicate flattenLinks implementations across different service packages.
+// The function accepts any slice type where each element has Href and Rel fields (typically *string pointers).
+func FlattenLinks(links interface{}) []map[string]interface{} {
+	if links == nil {
+		return nil
+	}
+
+	// Use reflection to handle any slice type
+	val := reflect.ValueOf(links)
+	if val.Kind() != reflect.Slice {
+		return nil
+	}
+
+	if val.Len() == 0 {
+		return nil
+	}
+
+	linkList := make([]map[string]interface{}, val.Len())
+
+	for i := 0; i < val.Len(); i++ {
+		link := val.Index(i).Interface()
+		linkMap := make(map[string]interface{})
+
+		// Use reflection to access Href and Rel fields
+		linkVal := reflect.ValueOf(link)
+		if linkVal.Kind() == reflect.Ptr {
+			if linkVal.IsNil() {
+				continue
+			}
+			linkVal = linkVal.Elem()
+		}
+
+		// Get Href field
+		hrefField := linkVal.FieldByName("Href")
+		if hrefField.IsValid() {
+			if hrefField.Kind() == reflect.Ptr {
+				if !hrefField.IsNil() {
+					linkMap["href"] = hrefField.Elem().Interface()
+				}
+			} else {
+				linkMap["href"] = hrefField.Interface()
+			}
+		}
+
+		// Get Rel field
+		relField := linkVal.FieldByName("Rel")
+		if relField.IsValid() {
+			if relField.Kind() == reflect.Ptr {
+				if !relField.IsNil() {
+					linkMap["rel"] = relField.Elem().Interface()
+				}
+			} else {
+				linkMap["rel"] = relField.Interface()
+			}
+		}
+
+		linkList[i] = linkMap
+	}
+
+	return linkList
 }
