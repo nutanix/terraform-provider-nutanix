@@ -441,7 +441,7 @@ func ResourceNutanixClusterProfileV2Create(ctx context.Context, d *schema.Resour
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the cluster profile to be created
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
@@ -456,13 +456,19 @@ func ResourceNutanixClusterProfileV2Create(ctx context.Context, d *schema.Resour
 	// Get Task Details
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching cluster UUID : %v", err)
+		return diag.Errorf("error while fetching cluster profile task details: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(import2.Task)
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Create Cluster Profile Task Details: %s", string(aJSON))
 
-	d.SetId(utils.StringValue(taskDetails.EntitiesAffected[0].ExtId))
+	// Get UUID from TASK API using entity type constant
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeClusterProfile, "Cluster profile")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(utils.StringValue(uuid))
 
 	return ResourceNutanixClusterProfileV2Read(ctx, d, meta)
 }

@@ -300,32 +300,31 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Create(ctx context.Context, 
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while fetching task : %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 
-	bJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	bJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Fetch Network Info Task Details: %s", string(bJSON))
 
-	uuid := strings.Split(utils.StringValue(rUUID.ExtId), "=:")[1]
+	uuid := strings.Split(utils.StringValue(taskDetails.ExtId), "=:")[1]
 
-	const networkingDetails = 3
+	networkingDetails := config.TASKRESPONSETYPE_NETWORKING_DETAILS
 	taskResponseType := config.TaskResponseType(networkingDetails)
 	networkDetailsResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr)
 	}
 
-	taskResp := networkDetailsResp.Data.GetValue().(config.TaskResponse)
+	networkDetailsTaskResp := networkDetailsResp.Data.GetValue().(config.TaskResponse)
 
-	if *taskResp.TaskResponseType != config.TaskResponseType(networkingDetails) {
+	if *networkDetailsTaskResp.TaskResponseType != config.TaskResponseType(networkingDetails) {
 		return diag.Errorf("error while fetching Task Response for Network Detail Nodes : %v", "task response type mismatch")
 	}
 
-	nodeNetworkDetails := taskResp.Response.GetValue().(config.NodeNetworkingDetails)
+	nodeNetworkDetails := networkDetailsTaskResp.Response.GetValue().(config.NodeNetworkingDetails)
 
 	if err := d.Set("nodes_networking_details", flattenNodesNetworkDetails(nodeNetworkDetails)); err != nil {
 		return diag.FromErr(err)
@@ -334,7 +333,7 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Create(ctx context.Context, 
 	aJSON, _ = json.MarshalIndent(networkDetailsResp, "", " ")
 	log.Printf("[DEBUG] fetching Task Response for Unconfigured Nodes Task Details: %s\n", string(aJSON))
 
-	d.SetId(utils.GenUUID())
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 	return nil
 }
 

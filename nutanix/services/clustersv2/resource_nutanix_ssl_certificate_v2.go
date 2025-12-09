@@ -129,7 +129,7 @@ func ResourceNutanixSSLCertificateV2Create(ctx context.Context, d *schema.Resour
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] SSL certificate update task details: %s", string(aJSON))
 
-	d.SetId(resource.UniqueId())
+	d.SetId(utils.StringValue(taskUUID))
 
 	return ResourceNutanixSSLCertificateV2Read(ctx, d, meta)
 }

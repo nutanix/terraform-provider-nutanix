@@ -856,18 +856,23 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while fetching cluster UUID : %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
-	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Create Cluster Task Response Details: %s", string(aJSON))
 
-	randomID := utils.GenUUID()
-
-	d.SetId(randomID)
+	// Set the resource ID to the task UUID for the following reasons:
+	// 1. The cluster creation is an asynchronous operation - the cluster exists but It is not yet available for read operations.
+	// 2. Using the task UUID (instead of a random ID) provides traceability - it allows
+	//    correlation between the Terraform resource and the actual cluster creation task.
+	// 3. The Read function will later retrieve the actual cluster ext_id by querying
+	//    clusters by name once the cluster is registered with Prism Central.
+	// 4. This allows for better error handling and recovery - if the cluster creation fails,
+	//    the task UUID can be used to troubleshoot the issue.
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 
 	return nil
 }
@@ -993,6 +998,13 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 	if _, errWait := stateConf.WaitForStateContext(ctx); errWait != nil {
 		return diag.Errorf("error waiting for cluster update task (%s): %s", utils.StringValue(taskUUID), errWait)
 	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching cluster update task : %v", err)
+	}
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Cluster update task details: %s", string(aJSON))
 
 	log.Printf("[DEBUG] Cluster update completed successfully")
 	time.Sleep(1 * time.Minute)
@@ -1065,6 +1077,13 @@ func ResourceNutanixClusterV2Delete(ctx context.Context, d *schema.ResourceData,
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for cluster (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching cluster delete task : %v", err)
+	}
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Cluster delete task details: %s", string(aJSON))
 	return nil
 }
 
@@ -1968,13 +1987,13 @@ func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// Get UUID from TASK API
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while fetching  node UUID : %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
 
-	bJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	bJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("cluster update: remove node task details : %s", string(bJSON))
 	return nil
 }
@@ -2072,14 +2091,13 @@ func expandClusterWithNewNode(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while fetching  node UUID : %v", err)
 	}
-
-	aJSON, _ = json.Marshal(resourceUUID)
-	log.Printf("[DEBUG] Add Node Response: %s", string(aJSON))
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Add Node Task Details: %s", string(aJSON))
 	return nil
 }
 
@@ -2139,32 +2157,31 @@ func fetchNetworkDetailsForNodes(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while fetching task : %v", err), nil
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
 
-	bJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	bJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Fetch Network Info Task Details: %s", string(bJSON))
 
-	uuid := strings.Split(utils.StringValue(rUUID.ExtId), "=:")[1]
+	uuid := strings.Split(utils.StringValue(taskDetails.ExtId), "=:")[1]
 
-	const networkingDetails = 3
+	const networkingDetails = config.TASKRESPONSETYPE_NETWORKING_DETAILS
 	taskResponseType := config.TaskResponseType(networkingDetails)
 	networkDetailsTaskResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr), nil
 	}
 
-	taskResp := networkDetailsTaskResp.Data.GetValue().(config.TaskResponse)
+	unconfiguredNodesTaskResp := networkDetailsTaskResp.Data.GetValue().(config.TaskResponse)
 
-	if *taskResp.TaskResponseType != config.TaskResponseType(networkingDetails) {
+	if *unconfiguredNodesTaskResp.TaskResponseType != config.TaskResponseType(networkingDetails) {
 		return diag.Errorf("error while fetching Task Response for Network Detail Nodes : %v", "task response type mismatch"), nil
 	}
 
-	nodeNetworkDetails := taskResp.Response.GetValue().(config.NodeNetworkingDetails)
+	nodeNetworkDetails := unconfiguredNodesTaskResp.Response.GetValue().(config.NodeNetworkingDetails)
 
 	aJSON, _ = json.MarshalIndent(networkDetailsTaskResp, "", " ")
 	log.Printf("[DEBUG] fetching Network Details for Node to be added task details: %s", string(aJSON))
@@ -2212,31 +2229,31 @@ func discoverUnconfiguredNode(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("error waiting for Unconfigured Nodes (%s) to fetch: %s", utils.StringValue(taskUUID), errWaitTask), nil
 	}
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while fetching Unconfigured Nodes UUID : %v", err), nil
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+	rUUID := taskResp.Data.GetValue().(import2.Task)
 
-	jsonBody, _ := json.MarshalIndent(resourceUUID, "", "  ")
+	jsonBody, _ := json.MarshalIndent(taskResp, "", "  ")
 	log.Printf("[DEBUG] fetching Unconfigured Nodes resourceUUID : %s", string(jsonBody))
 
 	uuid := strings.Split(utils.StringValue(rUUID.ExtId), "=:")[1]
 
-	const unconfiguredNodes = 2
+	const unconfiguredNodes = config.TASKRESPONSETYPE_UNCONFIGURED_NODES
 	taskResponseType := config.TaskResponseType(unconfiguredNodes)
 	unconfiguredNodesResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr), nil
 	}
 
-	taskResp := unconfiguredNodesResp.Data.GetValue().(config.TaskResponse)
+	unconfiguredNodesTaskResp := unconfiguredNodesResp.Data.GetValue().(config.TaskResponse)
 
-	if *taskResp.TaskResponseType != config.TaskResponseType(unconfiguredNodes) {
+	if *unconfiguredNodesTaskResp.TaskResponseType != config.TaskResponseType(unconfiguredNodes) {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", "task response type mismatch"), nil
 	}
 
-	unconfiguredNodeDetails := taskResp.Response.GetValue().(config.UnconfigureNodeDetails)
+	unconfiguredNodeDetails := unconfiguredNodesTaskResp.Response.GetValue().(config.UnconfigureNodeDetails)
 
 	aJSON, _ = json.MarshalIndent(unconfiguredNodeDetails, "", " ")
 	log.Printf("[DEBUG] cluster expand: unconfigured node details: %s", string(aJSON))

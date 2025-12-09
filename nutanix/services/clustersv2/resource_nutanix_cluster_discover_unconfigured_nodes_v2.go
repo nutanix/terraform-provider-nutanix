@@ -268,32 +268,31 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while fetching Unconfigured Nodes UUID : %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
 
-	jsonBody, _ := json.MarshalIndent(resourceUUID, "", "  ")
+	jsonBody, _ := json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] fetching Unconfigured Nodes resourceUUID : %s", string(jsonBody))
 
-	uuid := strings.Split(utils.StringValue(rUUID.ExtId), "=:")[1]
+	uuid := strings.Split(utils.StringValue(taskDetails.ExtId), "=:")[1]
 
-	const unconfiguredNodes = 2
+	const unconfiguredNodes = config.TASKRESPONSETYPE_UNCONFIGURED_NODES
 	taskResponseType := config.TaskResponseType(unconfiguredNodes)
 	unconfiguredNodesResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr)
 	}
 
-	taskResp := unconfiguredNodesResp.Data.GetValue().(config.TaskResponse)
+	unconfiguredNodesTaskResp := unconfiguredNodesResp.Data.GetValue().(config.TaskResponse)
 
-	if *taskResp.TaskResponseType != config.TaskResponseType(unconfiguredNodes) {
+	if *unconfiguredNodesTaskResp.TaskResponseType != config.TaskResponseType(unconfiguredNodes) {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", "task response type mismatch")
 	}
 
-	unconfiguredNodeDetails := taskResp.Response.GetValue().(config.UnconfigureNodeDetails)
+	unconfiguredNodeDetails := unconfiguredNodesTaskResp.Response.GetValue().(config.UnconfigureNodeDetails)
 
 	if err := d.Set("unconfigured_nodes", flattenUnconfiguredNodes(unconfiguredNodeDetails.NodeList)); err != nil {
 		return diag.FromErr(err)
@@ -303,7 +302,7 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 	log.Printf("[DEBUG] fetching Task Response for Unconfigured Nodes Task Details: %s\n", string(aJSON))
 
 	// Set the ID
-	d.SetId(uuid)
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 
 	return nil
 }
