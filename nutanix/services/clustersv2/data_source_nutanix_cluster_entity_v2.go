@@ -589,7 +589,7 @@ func DatasourceNutanixClusterEntityV2Read(ctx context.Context, d *schema.Resourc
 		return diag.FromErr(err)
 	}
 
-	d.SetId(*getResp.ExtId)
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return nil
 }
 

@@ -103,6 +103,6 @@ func dataSourceNutanixStoragePolicyV2Read(ctx context.Context, d *schema.Resourc
 	metadata := resp.Metadata
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Get Storage Policy Response: %s", string(aJSON))
-	d.SetId(*body.ExtId)
+	d.SetId(utils.StringValue(body.ExtId))
 	return commonReadStateStoragePolicy(d, body, metadata)
 }

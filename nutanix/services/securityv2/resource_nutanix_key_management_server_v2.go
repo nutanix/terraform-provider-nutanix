@@ -125,40 +125,37 @@ func ResourceNutanixKeyManagementServerV2Create(ctx context.Context, d *schema.R
 
 	// calling group API to poll for completion of task
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Key Management Server to be available
+	// Wait for the key management server to be created
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for kms to be created: %s", errWaitTask)
+		return diag.Errorf("error waiting for key management server (%s) to be created: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Key Management Server Task UUID : %v", err)
+		return diag.Errorf("error while fetching key management server create task (%s): %v", utils.StringValue(taskUUID), err)
 	}
 	taskDetailsValue, ok := taskResp.Data.GetValue().(prismConfig.Task)
 	if !ok {
 		return diag.Errorf("error: unexpected response type from task API, expected Task")
 	}
 	taskDetails := taskDetailsValue
-
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] create key management server task details: %s", aJSON)
+	log.Printf("[DEBUG] Create Key Management Server Task Details: %s", string(aJSON))
 
-	if len(taskDetails.EntitiesAffected) == 0 {
-		return diag.Errorf("error: task completed but no entities affected found in task response")
+	// Extract UUID from task using entity type constant
+	kmsExtID, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeKMS, "Key management server")
+	if err != nil {
+		return diag.FromErr(err)
 	}
-	kmsExtID := taskDetails.EntitiesAffected[0].ExtId
-	if kmsExtID == nil {
-		return diag.Errorf("error: task completed but entity ext_id is nil")
-	}
-	d.SetId(*kmsExtID)
+	d.SetId(utils.StringValue(kmsExtID))
 	return ResourceNutanixKeyManagementServerV2Read(ctx, d, meta)
 }
 
@@ -293,17 +290,26 @@ func ResourceNutanixKeyManagementServerV2Update(ctx context.Context, d *schema.R
 
 	// calling group API to poll for completion of task
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the kms to be available
+	// Wait for the key management server to be updated
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for kms (%s) to updated: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for key management server (%s) to be updated: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
+
+	// Get task details for logging
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching key management server update task (%s): %v", utils.StringValue(taskUUID), err)
+	}
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Update Key Management Server Task Details: %s", string(aJSON))
 
 	return ResourceNutanixKeyManagementServerV2Read(ctx, d, meta)
 }
@@ -324,17 +330,27 @@ func ResourceNutanixKeyManagementServerV2Delete(ctx context.Context, d *schema.R
 
 	// calling group API to poll for completion of task
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Delete task to be complete
+	// Wait for the key management server to be deleted
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for kms (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for key management server (%s) to be deleted: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
+
+	// Get task details for logging
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching key management server delete task (%s): %v", utils.StringValue(taskUUID), err)
+	}
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Delete Key Management Server Task Details: %s", string(aJSON))
+
 	return nil
 }
 

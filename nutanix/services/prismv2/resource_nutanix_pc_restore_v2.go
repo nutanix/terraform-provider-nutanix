@@ -12,6 +12,7 @@ import (
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -112,39 +113,33 @@ func ResourceNutanixRestorePcCreate(ctx context.Context, d *schema.ResourceData,
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the PC to be restored
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for restore PC task to complete: %s", err)
+		return diag.Errorf("error waiting for PC (%s) to be restored: %s", utils.StringValue(taskUUID), err)
 	}
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching task details : %v", err)
+		return diag.Errorf("error while fetching PC restore task (%s): %v", utils.StringValue(taskUUID), err)
 	}
-
-	taskDetails := resourceUUID.Data.GetValue().(config.Task)
+	taskDetails := taskResp.Data.GetValue().(config.Task)
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Restore PC task details: %s", string(aJSON))
+	log.Printf("[DEBUG] Restore PC Task Details: %s", string(aJSON))
 
-	entityAffected := taskDetails.EntitiesAffected
-
-	// extract the PC UUID from the task response
-	for _, entity := range entityAffected {
-		if utils.StringValue(entity.Name) == "prism_central" && utils.StringValue(entity.Rel) == "prism:config:domain_manager" {
-			uuid := entity.ExtId
-			d.SetId(*uuid)
-			return nil
-		}
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeDomainManager,
+		"Restored Domain Manager")
+	if err != nil {
+		return diag.Errorf("error while extracting domain manager UUID from task response: %s", err)
 	}
-
-	return diag.Errorf("error while fetching restored PC UUID From task response: %s", err)
+	d.SetId(utils.StringValue(uuid))
+	return nil
 }
 
 func ResourceNutanixRestorePcRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

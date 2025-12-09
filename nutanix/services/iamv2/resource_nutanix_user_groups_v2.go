@@ -114,7 +114,7 @@ func ResourceNutanixUserGroupsV4Create(ctx context.Context, d *schema.ResourceDa
 	}
 
 	getResp := resp.Data.GetValue().(import1.UserGroup)
-	d.SetId(*getResp.ExtId)
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return ResourceNutanixUserGroupsV4Read(ctx, d, meta)
 }
 

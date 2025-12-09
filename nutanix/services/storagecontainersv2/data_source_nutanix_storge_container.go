@@ -252,7 +252,7 @@ func DatasourceNutanixStorageContainerV2Read(ctx context.Context, d *schema.Reso
 		return diag.FromErr(err)
 	}
 
-	d.SetId(*getResp.ContainerExtId)
+	d.SetId(utils.StringValue(getResp.ContainerExtId))
 	return nil
 }
 

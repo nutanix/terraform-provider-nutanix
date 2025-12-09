@@ -16,6 +16,7 @@ import (
 	vmmPrism "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	vmmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -244,31 +245,34 @@ func ResourceNutanixNGTInstallationV4Create(ctx context.Context, d *schema.Resou
 	TaskRef := installResp.Data.GetValue().(vmmPrism.TaskReference)
 	taskUUID := TaskRef.ExtId
 
-	// calling group API to poll for completion of task
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
+	// Wait for the NGT to be installed
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for NGT (%s) to install : %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for NGT installation (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while installing gest tools  : %v", err)
+		return diag.Errorf("error while fetching NGT installation task (%s): %v", utils.StringValue(taskUUID), err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
+	taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
+	aJSON, _ = json.MarshalIndent(taskDetails, "", " ")
+	log.Printf("[DEBUG] NGT Installation Task Details: %s", string(aJSON))
 
-	d.SetId(*uuid)
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeVM, "VM")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(utils.StringValue(uuid))
 
 	// Delay/sleep for 1 Minute
 	time.Sleep(1 * time.Minute)
@@ -385,17 +389,16 @@ func ResourceNutanixNGTInstallationV4Update(ctx context.Context, d *schema.Resou
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-
-	// Wait for the VM to be available
+	// Wait for the NGT to be updated
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for template (%s) to update gest tools: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for NGT update (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	return ResourceNutanixNGTInstallationV4Read(ctx, d, meta)
@@ -423,31 +426,17 @@ func ResourceNutanixNGTInstallationV4Delete(ctx context.Context, d *schema.Resou
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-
-	// Wait for the VM to be available
+	// Wait for the NGT to be uninstalled
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for NGT (%s) to uninstall : %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for NGT uninstallation (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
-	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-	if err != nil {
-		return diag.Errorf("error while uninstalling gest tools, in Get UUID from TASK API  : %v", err)
-	}
-
-	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
-	uuid := rUUID.EntitiesAffected[0].ExtId
-
-	d.SetId(*uuid)
 
 	return nil
-	//return ResourceNutanixNGTInstallationV4Read(ctx, d, meta)
 }
