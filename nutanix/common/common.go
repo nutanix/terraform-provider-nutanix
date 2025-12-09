@@ -241,6 +241,8 @@ func ExtractEntityUUIDFromTask(task prismConfig.Task, entityType string, resourc
 
 	// If no matching entity is found, return an error
 	return nil, fmt.Errorf("%s UUID not found in entities affected", resourceName)
+}
+
 // HashStringItem returns a hash for a string value to ensure uniqueness in schema.TypeSet
 func HashStringItem(v interface{}) int {
 	if v == nil {
