@@ -16,6 +16,7 @@ import (
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -1971,7 +1972,18 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 	if d.HasChange("nics") {
 		oldNic, newNic := d.GetChange("nics")
-		newAddedNic, oldDeletedNic, updatedNic := diffConfig(oldNic.([]interface{}), newNic.([]interface{}))
+		aJSON, _ := json.MarshalIndent(common.InterfaceToSlice(oldNic), "", "  ")
+		log.Println("[DEBUG] oldNic raw config:", string(aJSON))
+		aJSON, _ = json.MarshalIndent(common.InterfaceToSlice(newNic), "", "  ")
+		log.Println("[DEBUG] newNic raw config:", string(aJSON))
+		newAddedNic, oldDeletedNic, updatedNic := diffConfig(common.InterfaceToSlice(oldNic), common.InterfaceToSlice(newNic))
+
+		aJSON, _ = json.MarshalIndent(newAddedNic, "", "  ")
+		log.Println("[DEBUG] newAddedNic diff config:", string(aJSON))
+		aJSON, _ = json.MarshalIndent(oldDeletedNic, "", "  ")
+		log.Println("[DEBUG] oldDeletedNic diff config:", string(aJSON))
+		aJSON, _ = json.MarshalIndent(updatedNic, "", "  ")
+		log.Println("[DEBUG] updatedNic diff config:", string(aJSON))
 
 		if len(oldDeletedNic) > 0 {
 			for _, nic := range oldDeletedNic {
@@ -2023,6 +2035,10 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				// // Extract E-Tag Header
 				args := make(map[string]interface{})
 				args["If-Match"] = getEtagHeader(ReadVMResp, conn)
+
+				log.Printf("[DEBUG] updating nic: %+v", *nicExtID)
+				aJSON, _ := json.MarshalIndent(nicInput, "", "  ")
+				log.Printf("[DEBUG] update nic payload: %s", string(aJSON))
 
 				resp, err := conn.VMAPIInstance.UpdateNicById(utils.StringPtr(d.Id()), nicExtID, &nicInput, args)
 				if err != nil {
@@ -3468,7 +3484,10 @@ func diffConfig(oldValue []interface{}, newValue []interface{}) ([]interface{}, 
 		if oldMap["ext_id"] != "" {
 			for _, newItem := range newValue {
 				if oldMap["ext_id"] == newItem.(map[string]interface{})["ext_id"] {
-					updated = append(updated, newItem)
+					// Only add to updated if the items are actually different
+					if !reflect.DeepEqual(oldItem, newItem) {
+						updated = append(updated, newItem)
+					}
 					break
 				}
 			}
