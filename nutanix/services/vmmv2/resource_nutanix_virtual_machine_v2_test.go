@@ -205,6 +205,60 @@ func TestAccV2NutanixVmsResource_WithNicTrunk(t *testing.T) {
 	})
 }
 
+// TestAccV2NutanixVmsResource_NicAddRemove tests:
+// 1. Create VM with one NIC
+// 2. Update VM to add a second NIC
+// 3. Remove the added NIC (back to one NIC)
+// This test covers issue #994 - VM creation/update with multiple NICs
+func TestAccV2NutanixVmsResource_NicAddRemove(t *testing.T) {
+	r := acctest.RandIntRange(1, 1000)
+	name := fmt.Sprintf("tf-test-vm-nic-%d", r)
+	desc := "test vm for NIC add/remove"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixVmsResourceDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create VM with one NIC
+			{
+				Config: testVmsV4ConfigWithSingleNic(name, desc, r),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", name),
+					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.vlan_mode", "ACCESS"),
+				),
+			},
+			// Step 2: Add a second NIC
+			{
+				Config: testVmsV4ConfigWithTwoNics(name, desc, r),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", name),
+					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.#", "2"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.vlan_mode", "ACCESS"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.1.network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.1.network_info.0.vlan_mode", "ACCESS"),
+				),
+			},
+			// Step 3: Remove the second NIC (back to one NIC)
+			// Keep subnet resource to avoid deletion error while IP assignment is being released
+			{
+				Config: testVmsV4ConfigWithSingleNicKeepSubnet(name, desc, r),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", name),
+					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.vlan_mode", "ACCESS"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccV2NutanixVmsResource_WithLegacyBootOrder(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
@@ -1204,8 +1258,8 @@ func testVmsV4ConfigWithLegacyBootDevice(name, desc string) string {
 
 
 
-		data "nutanix_image" "ngt-image" {
-		  image_name = local.vmm.image_name
+		data "nutanix_images_v2" "ngt-image" {
+		  filter = "name eq '${local.vmm.image_name}'"
 		}
 
 		resource "nutanix_virtual_machine_v2" "test"{
@@ -1226,7 +1280,7 @@ func testVmsV4ConfigWithLegacyBootDevice(name, desc string) string {
 						data_source {
 							reference {
 								image_reference{
-									image_ext_id = data.nutanix_image.ngt-image.id
+									image_ext_id = data.nutanix_images_v2.ngt-image.images[0].ext_id
 								}
 							}
 						}
@@ -1246,7 +1300,7 @@ func testVmsV4ConfigWithLegacyBootDevice(name, desc string) string {
 				}
 			}
 			power_state = "ON"
-			depends_on = [data.nutanix_clusters_v2.clusters, data.nutanix_image.ngt-image]
+			depends_on = [data.nutanix_clusters_v2.clusters, data.nutanix_images_v2.ngt-image]
 		}
 `, name, desc, filepath)
 }
@@ -1999,4 +2053,252 @@ func testVmsClusterAutomaticSelectionConfig(name, desc string) string {
 			filter = "name eq '${nutanix_virtual_machine_v2.test.name}'"
 		}
 `, name, desc)
+}
+
+func testVmsV4ConfigWithSingleNic(name, desc string, r int) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+			cluster0 = [
+				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
+			config = jsondecode(file("%[4]s"))
+			vmm = local.config.vmm
+		}
+
+		data "nutanix_subnets_v2" "subnet1" {
+			filter = "name eq '${local.vmm.subnet_name}'"
+		}
+
+		data "nutanix_storage_containers_v2" "sc" {
+			filter = "clusterExtId eq '${local.cluster0}'"
+			limit = 1
+		}
+
+		resource "nutanix_virtual_machine_v2" "test" {
+			name                 = "%[1]s"
+			description          = "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets          = 1
+			cluster {
+				ext_id = local.cluster0
+			}
+			disks {
+				disk_address {
+					bus_type = "SCSI"
+					index    = 0
+				}
+				backing_info {
+					vm_disk {
+						disk_size_bytes = "1073741824"
+						storage_container {
+							ext_id = data.nutanix_storage_containers_v2.sc.storage_containers[0].ext_id
+						}
+					}
+				}
+			}
+			nics {
+				network_info {
+					nic_type  = "NORMAL_NIC"
+					vlan_mode = "ACCESS"
+					subnet {
+						ext_id = data.nutanix_subnets_v2.subnet1.subnets[0].ext_id
+					}
+				}
+			}
+			power_state = "OFF"
+		}
+`, name, desc, r, filepath)
+}
+
+// testVmsV4ConfigWithSingleNicKeepSubnet is used for Step 3 to remove the second NIC
+// but keep the test subnet resource to avoid deletion errors due to IP assignments
+func testVmsV4ConfigWithSingleNicKeepSubnet(name, desc string, r int) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+			cluster0 = [
+				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
+			config = jsondecode(file("%[4]s"))
+			vmm = local.config.vmm
+		}
+
+		data "nutanix_subnets_v2" "subnet1" {
+			filter = "name eq '${local.vmm.subnet_name}'"
+		}
+
+		data "nutanix_storage_containers_v2" "sc" {
+			filter = "clusterExtId eq '${local.cluster0}'"
+			limit = 1
+		}
+
+		# Keep the subnet resource to avoid deletion while IP might still be assigned
+		resource "nutanix_subnet_v2" "test_subnet" {
+			name              = "tf-test-subnet-%[3]d"
+			description       = "Subnet for multi-NIC test"
+			cluster_reference = local.cluster0
+			subnet_type       = "VLAN"
+			network_id        = local.vmm.subnet.network_id + %[3]d %% 100
+			ip_config {
+				ipv4 {
+					ip_subnet {
+						ip {
+							value = local.vmm.subnet.ip
+						}
+						prefix_length = local.vmm.subnet.prefix
+					}
+					default_gateway_ip {
+						value = local.vmm.subnet.gateway_ip
+					}
+					pool_list {
+						start_ip {
+							value = local.vmm.subnet.start_ip
+						}
+						end_ip {
+							value = local.vmm.subnet.end_ip
+						}
+					}
+				}
+			}
+		}
+
+		resource "nutanix_virtual_machine_v2" "test" {
+			name                 = "%[1]s"
+			description          = "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets          = 1
+			cluster {
+				ext_id = local.cluster0
+			}
+			disks {
+				disk_address {
+					bus_type = "SCSI"
+					index    = 0
+				}
+				backing_info {
+					vm_disk {
+						disk_size_bytes = "1073741824"
+						storage_container {
+							ext_id = data.nutanix_storage_containers_v2.sc.storage_containers[0].ext_id
+						}
+					}
+				}
+			}
+			# Only one NIC - removed the second NIC
+			nics {
+				network_info {
+					nic_type  = "NORMAL_NIC"
+					vlan_mode = "ACCESS"
+					subnet {
+						ext_id = data.nutanix_subnets_v2.subnet1.subnets[0].ext_id
+					}
+				}
+			}
+			power_state = "OFF"
+		}
+`, name, desc, r, filepath)
+}
+
+func testVmsV4ConfigWithTwoNics(name, desc string, r int) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+			cluster0 = [
+				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
+			config = jsondecode(file("%[4]s"))
+			vmm = local.config.vmm
+		}
+
+		data "nutanix_subnets_v2" "subnet1" {
+			filter = "name eq '${local.vmm.subnet_name}'"
+		}
+
+		data "nutanix_storage_containers_v2" "sc" {
+			filter = "clusterExtId eq '${local.cluster0}'"
+			limit = 1
+		}
+
+		# Create a second subnet for multi-NIC testing
+		resource "nutanix_subnet_v2" "test_subnet" {
+			name              = "tf-test-subnet-%[3]d"
+			description       = "Subnet for multi-NIC test"
+			cluster_reference = local.cluster0
+			subnet_type       = "VLAN"
+			network_id        = local.vmm.subnet.network_id + %[3]d %% 100
+			ip_config {
+				ipv4 {
+					ip_subnet {
+						ip {
+							value = local.vmm.subnet.ip
+						}
+						prefix_length = local.vmm.subnet.prefix
+					}
+					default_gateway_ip {
+						value = local.vmm.subnet.gateway_ip
+					}
+					pool_list {
+						start_ip {
+							value = local.vmm.subnet.start_ip
+						}
+						end_ip {
+							value = local.vmm.subnet.end_ip
+						}
+					}
+				}
+			}
+		}
+
+		resource "nutanix_virtual_machine_v2" "test" {
+			name                 = "%[1]s"
+			description          = "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets          = 1
+			cluster {
+				ext_id = local.cluster0
+			}
+			disks {
+				disk_address {
+					bus_type = "SCSI"
+					index    = 0
+				}
+				backing_info {
+					vm_disk {
+						disk_size_bytes = "1073741824"
+						storage_container {
+							ext_id = data.nutanix_storage_containers_v2.sc.storage_containers[0].ext_id
+						}
+					}
+				}
+			}
+			# First NIC - existing subnet
+			nics {
+				network_info {
+					nic_type  = "NORMAL_NIC"
+					vlan_mode = "ACCESS"
+					subnet {
+						ext_id = data.nutanix_subnets_v2.subnet1.subnets[0].ext_id
+					}
+				}
+			}
+			# Second NIC - new test subnet
+			nics {
+				network_info {
+					nic_type  = "NORMAL_NIC"
+					vlan_mode = "ACCESS"
+					subnet {
+						ext_id = nutanix_subnet_v2.test_subnet.ext_id
+					}
+				}
+			}
+			power_state = "OFF"
+		}
+`, name, desc, r, filepath)
 }

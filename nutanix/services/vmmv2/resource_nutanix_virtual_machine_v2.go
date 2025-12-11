@@ -16,6 +16,7 @@ import (
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -1601,8 +1602,12 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error waiting for vm (%s) to power ON: %s", utils.StringValue(uuid), errWaitTask)
 	}
 
-	// If power state is ON, then wait for the VM to be available
-	if d.Get("power_state") == "ON" {
+	// If power state is ON and NICs are configured, wait for IP address
+	// Skip waiting if no NICs are configured since there won't be any IP address
+	nics := d.Get("nics")
+	hasNics := nics != nil && len(common.InterfaceToSlice(nics)) > 0
+
+	if d.Get("power_state") == "ON" && hasNics {
 		// Wait for the VM to be available
 		waitIPConf := &resource.StateChangeConf{
 			Pending:    []string{"WAITING"},
@@ -1619,11 +1624,14 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 			vm := vmIntentResponse.(*config.GetVmApiResponse)
 			vmResp := vm.Data.GetValue().(config.Vm)
 
-			if len(vmResp.Nics) > 0 && len(vmResp.Nics[0].NetworkInfo.Ipv4Info.LearnedIpAddresses) != 0 {
-				d.SetConnInfo(map[string]string{
-					"type": "ssh",
-					"host": *vmResp.Nics[0].NetworkInfo.Ipv4Info.LearnedIpAddresses[0].Value,
-				})
+			if len(vmResp.Nics) > 0 && vmResp.Nics[0].NetworkInfo != nil {
+				ipAddr := getFirstIPAddress(vmResp.Nics[0])
+				if ipAddr != "" {
+					d.SetConnInfo(map[string]string{
+						"type": "ssh",
+						"host": ipAddr,
+					})
+				}
 			}
 		}
 	}
@@ -1968,7 +1976,18 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 	if d.HasChange("nics") {
 		oldNic, newNic := d.GetChange("nics")
-		newAddedNic, oldDeletedNic, updatedNic := diffConfig(oldNic.([]interface{}), newNic.([]interface{}))
+		aJSON, _ := json.MarshalIndent(common.InterfaceToSlice(oldNic), "", "  ")
+		log.Println("[DEBUG] oldNic raw config:", string(aJSON))
+		aJSON, _ = json.MarshalIndent(common.InterfaceToSlice(newNic), "", "  ")
+		log.Println("[DEBUG] newNic raw config:", string(aJSON))
+		newAddedNic, oldDeletedNic, updatedNic := diffConfig(common.InterfaceToSlice(oldNic), common.InterfaceToSlice(newNic))
+
+		aJSON, _ = json.MarshalIndent(newAddedNic, "", "  ")
+		log.Println("[DEBUG] newAddedNic diff config:", string(aJSON))
+		aJSON, _ = json.MarshalIndent(oldDeletedNic, "", "  ")
+		log.Println("[DEBUG] oldDeletedNic diff config:", string(aJSON))
+		aJSON, _ = json.MarshalIndent(updatedNic, "", "  ")
+		log.Println("[DEBUG] updatedNic diff config:", string(aJSON))
 
 		if len(oldDeletedNic) > 0 {
 			for _, nic := range oldDeletedNic {
@@ -2020,6 +2039,10 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				// // Extract E-Tag Header
 				args := make(map[string]interface{})
 				args["If-Match"] = getEtagHeader(ReadVMResp, conn)
+
+				log.Printf("[DEBUG] updating nic: %+v", *nicExtID)
+				aJSON, _ := json.MarshalIndent(nicInput, "", "  ")
+				log.Printf("[DEBUG] update nic payload: %s", string(aJSON))
 
 				resp, err := conn.VMAPIInstance.UpdateNicById(utils.StringPtr(d.Id()), nicExtID, &nicInput, args)
 				if err != nil {
@@ -3465,7 +3488,10 @@ func diffConfig(oldValue []interface{}, newValue []interface{}) ([]interface{}, 
 		if oldMap["ext_id"] != "" {
 			for _, newItem := range newValue {
 				if oldMap["ext_id"] == newItem.(map[string]interface{})["ext_id"] {
-					updated = append(updated, newItem)
+					// Only add to updated if the items are actually different
+					if !reflect.DeepEqual(oldItem, newItem) {
+						updated = append(updated, newItem)
+					}
 					break
 				}
 			}
@@ -3518,6 +3544,25 @@ func isVMPowerOff(d *schema.ResourceData, conn *vmm.Client) bool {
 	return vmResp.PowerState.GetName() == "OFF"
 }
 
+// getFirstIPAddress returns the first available IP address from a NIC.
+// It checks both DHCP learned IPs and statically configured IPs.
+func getFirstIPAddress(nic config.Nic) string {
+	if nic.NetworkInfo == nil {
+		return ""
+	}
+	// Check for DHCP learned IPs first
+	if nic.NetworkInfo.Ipv4Info != nil && len(nic.NetworkInfo.Ipv4Info.LearnedIpAddresses) > 0 {
+		if nic.NetworkInfo.Ipv4Info.LearnedIpAddresses[0].Value != nil {
+			return *nic.NetworkInfo.Ipv4Info.LearnedIpAddresses[0].Value
+		}
+	}
+	// Check for statically configured IP
+	if nic.NetworkInfo.Ipv4Config != nil && nic.NetworkInfo.Ipv4Config.IpAddress != nil && nic.NetworkInfo.Ipv4Config.IpAddress.Value != nil {
+		return *nic.NetworkInfo.Ipv4Config.IpAddress.Value
+	}
+	return ""
+}
+
 func waitForIPRefreshFunc(client *vmm.Client, vmUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := client.VMAPIInstance.GetVmById(utils.StringPtr(vmUUID))
@@ -3527,13 +3572,20 @@ func waitForIPRefreshFunc(client *vmm.Client, vmUUID string) resource.StateRefre
 
 		getResp := resp.Data.GetValue().(config.Vm)
 
-		if getResp.Nics != nil && len(getResp.Nics) > 0 {
+		if len(getResp.Nics) > 0 {
 			for _, nic := range getResp.Nics {
-				if nic.NetworkInfo.Ipv4Info != nil {
-					for _, ip := range nic.NetworkInfo.Ipv4Info.LearnedIpAddresses {
-						if ip.Value != nil {
-							return resp, "AVAILABLE", nil
+				if nic.NetworkInfo != nil {
+					// Check for DHCP learned IPs
+					if nic.NetworkInfo.Ipv4Info != nil {
+						for _, ip := range nic.NetworkInfo.Ipv4Info.LearnedIpAddresses {
+							if ip.Value != nil {
+								return resp, "AVAILABLE", nil
+							}
 						}
+					}
+					// Check for statically configured IPs
+					if nic.NetworkInfo.Ipv4Config != nil && nic.NetworkInfo.Ipv4Config.IpAddress != nil && nic.NetworkInfo.Ipv4Config.IpAddress.Value != nil {
+						return resp, "AVAILABLE", nil
 					}
 				}
 			}
