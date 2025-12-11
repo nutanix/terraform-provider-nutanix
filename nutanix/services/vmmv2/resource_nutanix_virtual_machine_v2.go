@@ -1602,8 +1602,12 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error waiting for vm (%s) to power ON: %s", utils.StringValue(uuid), errWaitTask)
 	}
 
-	// If power state is ON, then wait for the VM to be available
-	if d.Get("power_state") == "ON" {
+	// If power state is ON and NICs are configured, wait for IP address
+	// Skip waiting if no NICs are configured since there won't be any IP address
+	nics := d.Get("nics")
+	hasNics := nics != nil && len(common.InterfaceToSlice(nics)) > 0
+
+	if d.Get("power_state") == "ON" && hasNics {
 		// Wait for the VM to be available
 		waitIPConf := &resource.StateChangeConf{
 			Pending:    []string{"WAITING"},
