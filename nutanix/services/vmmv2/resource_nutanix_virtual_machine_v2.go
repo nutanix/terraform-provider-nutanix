@@ -1619,11 +1619,14 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 			vm := vmIntentResponse.(*config.GetVmApiResponse)
 			vmResp := vm.Data.GetValue().(config.Vm)
 
-			if len(vmResp.Nics) > 0 && len(vmResp.Nics[0].NetworkInfo.Ipv4Info.LearnedIpAddresses) != 0 {
-				d.SetConnInfo(map[string]string{
-					"type": "ssh",
-					"host": *vmResp.Nics[0].NetworkInfo.Ipv4Info.LearnedIpAddresses[0].Value,
-				})
+			if len(vmResp.Nics) > 0 && vmResp.Nics[0].NetworkInfo != nil {
+				ipAddr := getFirstIPAddress(vmResp.Nics[0])
+				if ipAddr != "" {
+					d.SetConnInfo(map[string]string{
+						"type": "ssh",
+						"host": ipAddr,
+					})
+				}
 			}
 		}
 	}
@@ -3518,6 +3521,25 @@ func isVMPowerOff(d *schema.ResourceData, conn *vmm.Client) bool {
 	return vmResp.PowerState.GetName() == "OFF"
 }
 
+// getFirstIPAddress returns the first available IP address from a NIC.
+// It checks both DHCP learned IPs and statically configured IPs.
+func getFirstIPAddress(nic config.Nic) string {
+	if nic.NetworkInfo == nil {
+		return ""
+	}
+	// Check for DHCP learned IPs first
+	if nic.NetworkInfo.Ipv4Info != nil && len(nic.NetworkInfo.Ipv4Info.LearnedIpAddresses) > 0 {
+		if nic.NetworkInfo.Ipv4Info.LearnedIpAddresses[0].Value != nil {
+			return *nic.NetworkInfo.Ipv4Info.LearnedIpAddresses[0].Value
+		}
+	}
+	// Check for statically configured IP
+	if nic.NetworkInfo.Ipv4Config != nil && nic.NetworkInfo.Ipv4Config.IpAddress != nil && nic.NetworkInfo.Ipv4Config.IpAddress.Value != nil {
+		return *nic.NetworkInfo.Ipv4Config.IpAddress.Value
+	}
+	return ""
+}
+
 func waitForIPRefreshFunc(client *vmm.Client, vmUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := client.VMAPIInstance.GetVmById(utils.StringPtr(vmUUID))
@@ -3527,13 +3549,20 @@ func waitForIPRefreshFunc(client *vmm.Client, vmUUID string) resource.StateRefre
 
 		getResp := resp.Data.GetValue().(config.Vm)
 
-		if getResp.Nics != nil && len(getResp.Nics) > 0 {
+		if len(getResp.Nics) > 0 {
 			for _, nic := range getResp.Nics {
-				if nic.NetworkInfo.Ipv4Info != nil {
-					for _, ip := range nic.NetworkInfo.Ipv4Info.LearnedIpAddresses {
-						if ip.Value != nil {
-							return resp, "AVAILABLE", nil
+				if nic.NetworkInfo != nil {
+					// Check for DHCP learned IPs
+					if nic.NetworkInfo.Ipv4Info != nil {
+						for _, ip := range nic.NetworkInfo.Ipv4Info.LearnedIpAddresses {
+							if ip.Value != nil {
+								return resp, "AVAILABLE", nil
+							}
 						}
+					}
+					// Check for statically configured IPs
+					if nic.NetworkInfo.Ipv4Config != nil && nic.NetworkInfo.Ipv4Config.IpAddress != nil && nic.NetworkInfo.Ipv4Config.IpAddress.Value != nil {
+						return resp, "AVAILABLE", nil
 					}
 				}
 			}
