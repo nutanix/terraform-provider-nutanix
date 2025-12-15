@@ -985,6 +985,34 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
     }
   }
 
+  network {
+		external_address {
+			ipv4 {
+				value = local.clusters.network.virtual_ip
+			}
+		}
+		ntp_server_ip_list {
+			fqdn {
+				value = local.clusters.network.ntp_servers[0]
+			}
+		}
+		ntp_server_ip_list {
+			fqdn {
+				value = local.clusters.network.ntp_servers[1]
+			}
+		}
+		ntp_server_ip_list {
+			fqdn {
+				value = local.clusters.network.ntp_servers[2]
+			}
+		}
+		ntp_server_ip_list {
+			fqdn {
+				value = local.clusters.network.ntp_servers[3]
+			}
+		}
+	}
+
   provisioner "local-exec" {
     command = "ssh-keygen -f ~/.ssh/known_hosts -R ${local.clusters.nodes[1].cvm_ip};   sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[1].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[1].username} password=${local.clusters.nodes[1].password}'"
 
@@ -1112,8 +1140,17 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
           value = local.clusters.nodes[3].cvm_ip
         }
       }
-      should_skip_host_networking   = false
-      should_skip_pre_expand_checks = true
+			should_skip_imaging = true
+			should_skip_discovery = false
+			should_validate_rack_awareness = false
+			is_nos_compatible = false
+			is_compute_only = false
+			is_never_scheduleable = false
+			is_light_compute = false
+			hypervisor_hostname = "test-hypervisor"
+			## remove this because the expand cluster satrt failing from IRIS
+      # should_skip_host_networking   = false
+      should_skip_pre_expand_checks = false
     }
   }
   config {
@@ -1123,6 +1160,34 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
       domain_awareness_level          = "NODE"
     }
   }
+
+	network {
+		external_address {
+			ipv4 {
+				value = local.clusters.network.virtual_ip
+			}
+		}
+		ntp_server_ip_list {
+			fqdn {
+				value = local.clusters.network.ntp_servers[0]
+			}
+		}
+		ntp_server_ip_list {
+			fqdn {
+				value = local.clusters.network.ntp_servers[1]
+			}
+		}
+		ntp_server_ip_list {
+			fqdn {
+				value = local.clusters.network.ntp_servers[2]
+			}
+		}
+		ntp_server_ip_list {
+			fqdn {
+				value = local.clusters.network.ntp_servers[3]
+			}
+		}
+	}
 
   provisioner "local-exec" {
     command = "ssh-keygen -f ~/.ssh/known_hosts -R ${local.clusters.nodes[1].cvm_ip};   sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[1].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[1].username} password=${local.clusters.nodes[1].password}'"
@@ -1211,8 +1276,16 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
           value = local.clusters.nodes[3].cvm_ip
         }
       }
-      should_skip_host_networking   = false
-      should_skip_pre_expand_checks = true
+			should_skip_imaging = true
+			should_skip_discovery = false
+			should_validate_rack_awareness = false
+			is_nos_compatible = false
+			is_compute_only = false
+			is_never_scheduleable = false
+			is_light_compute = false
+			hypervisor_hostname = "test-hypervisor"
+      # should_skip_host_networking   = false
+      should_skip_pre_expand_checks = false
     }
   }
   config {
@@ -1222,6 +1295,34 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
       domain_awareness_level          = "NODE"
     }
   }
+
+	network {
+		external_address {
+			ipv4 {
+				value = local.clusters.network.virtual_ip
+			}
+		}
+		ntp_server_ip_list {
+			fqdn {
+				value = local.clusters.network.ntp_servers[0]
+			}
+		}
+		ntp_server_ip_list {
+			fqdn {
+				value = local.clusters.network.ntp_servers[1]
+			}
+		}
+		ntp_server_ip_list {
+			fqdn {
+				value = local.clusters.network.ntp_servers[2]
+			}
+		}
+		ntp_server_ip_list {
+			fqdn {
+				value = local.clusters.network.ntp_servers[3]
+			}
+		}
+	}
 
   provisioner "local-exec" {
     command = "ssh-keygen -f ~/.ssh/known_hosts -R ${local.clusters.nodes[1].cvm_ip};   sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[1].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[1].username} password=${local.clusters.nodes[1].password}'"
