@@ -376,7 +376,7 @@ func ResourceNutanixProject() *schema.Resource {
 				Optional: true,
 			},
 			"acp": {
-				Type:         schema.TypeList,
+				Type:         schema.TypeSet,
 				Optional:     true,
 				RequiredWith: []string{"use_project_internal"},
 				Elem: &schema.Resource{
@@ -830,7 +830,8 @@ func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, m
 			}
 
 			if acp, ok := d.GetOk("acp"); ok {
-				accessControlPolicy = expandCreateAcp(acp.([]interface{}), d, d.Id(), clusterUUID, meta)
+				acp := acp.(*schema.Set).List()
+				accessControlPolicy = expandCreateAcp(acp, d, d.Id(), clusterUUID, meta)
 			}
 			spec.AccessControlPolicyList = accessControlPolicy
 			spec.ProjectDetail = projDetails
@@ -1145,8 +1146,8 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if d.HasChange("acp") {
-			acp := d.Get("acp")
-			accessControlPolicy = UpdateExpandAcpRM(acp.([]interface{}), response, d, meta, d.Id(), clusterUUID)
+			acp := d.Get("acp").(*schema.Set).List()
+			accessControlPolicy = UpdateExpandAcpRM(acp, response, d, meta, d.Id(), clusterUUID)
 		} else {
 			accessControlPolicy = UpdateACPNoChange(response)
 		}
