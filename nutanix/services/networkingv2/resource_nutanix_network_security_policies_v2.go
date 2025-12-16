@@ -37,7 +37,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"QUARANTINE", "ISOLATION", "APPLICATION"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"QUARANTINE", "ISOLATION", "APPLICATION", "SHAREDSERVICE"}, false),
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -65,7 +65,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"QUARANTINE", "TWO_ENV_ISOLATION", "APPLICATION", "INTRA_GROUP", "MULTI_ENV_ISOLATION"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"QUARANTINE", "TWO_ENV_ISOLATION", "APPLICATION", "INTRA_GROUP", "MULTI_ENV_ISOLATION", "SHARED_SERVICE"}, false),
 						},
 						"spec": {
 							Type:     schema.TypeList,
@@ -99,12 +99,24 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"secured_group_category_associated_entity_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													Default:      "VM",
+													ValidateFunc: validation.StringInSlice([]string{"SUBNET", "VM", "VPC"}, false),
+												},
 												"secured_group_category_references": {
 													Type:     schema.TypeList,
 													Required: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
+												},
+												"secured_group_entity_group_reference": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
 												},
 												"src_allow_spec": {
 													Type:         schema.TypeString,
@@ -118,6 +130,13 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 													Computed:     true,
 													ValidateFunc: validation.StringInSlice([]string{"ALL", "NONE"}, false),
 												},
+												"src_category_associated_entity_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													Default:      "VM",
+													ValidateFunc: validation.StringInSlice([]string{"SUBNET", "VM", "VPC"}, false),
+												},
 												"src_category_references": {
 													Type:     schema.TypeList,
 													Optional: true,
@@ -126,6 +145,18 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 														Type: schema.TypeString,
 													},
 												},
+												"src_entity_group_reference": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+												"dest_category_associated_entity_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													Default:      "VM",
+													ValidateFunc: validation.StringInSlice([]string{"SUBNET", "VM", "VPC"}, false),
+												},
 												"dest_category_references": {
 													Type:     schema.TypeList,
 													Optional: true,
@@ -133,6 +164,11 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
+												},
+												"dest_entity_group_reference": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
 												},
 												"src_subnet": {
 													Type:     schema.TypeList,
@@ -261,6 +297,11 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 													Optional: true,
 													Computed: true,
 												},
+												"network_function_reference": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
 											},
 										},
 									},
@@ -270,10 +311,30 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"secured_group_action": {
+												"secured_group_category_associated_entity_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													Default:      "VM",
+													ValidateFunc: validation.StringInSlice([]string{"SUBNET", "VM", "VPC"}, false),
+												},
+												"secured_group_category_references": {
+													Type:     schema.TypeList,
+													Required: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"secured_group_entity_group_reference": {
 													Type:     schema.TypeString,
 													Optional: true,
 													Computed: true,
+												},
+												"secured_group_action": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.StringInSlice([]string{"ALLOW", "DENY"}, false),
 												},
 												"secured_group_category_references": {
 													Type:     schema.TypeList,
@@ -281,6 +342,76 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
+													},
+												},
+												"secured_group_entity_group_reference": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+												"secured_group_service_references": {
+													Type:     schema.TypeList,
+													Required: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"tcp_services": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"start_port": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+															"end_port": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+														},
+													},
+												},
+												"udp_services": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"start_port": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+															"end_port": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+														},
+													},
+												},
+												"icmp_services": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"is_all_allowed": {
+																Type:     schema.TypeBool,
+																Optional: true,
+																Computed: true,
+															},
+															"type": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"code": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+														},
 													},
 												},
 											},
@@ -309,12 +440,24 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 																			MinItems: minItems,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
+																					"group_category_associated_entity_type": {
+																						Type:         schema.TypeString,
+																						Optional:     true,
+																						Computed:     true,
+																						Default:      "VM",
+																						ValidateFunc: validation.StringInSlice([]string{"SUBNET", "VM", "VPC"}, false),
+																					},
 																					"group_category_references": {
 																						Type:     schema.TypeList,
 																						Required: true,
 																						Elem: &schema.Schema{
 																							Type: schema.TypeString,
 																						},
+																					},
+																					"group_entity_group_reference": {
+																						Type:     schema.TypeString,
+																						Optional: true,
+																						Computed: true,
 																					},
 																				},
 																			},
@@ -362,7 +505,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{"ALL_VLAN", "ALL_VPC", "VPC_LIST"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"ALL_VLAN", "GLOBAL", "ALL_VPC", "VPC_LIST", "VPC_AS_CATEGORY"}, false),
 			},
 			"vpc_reference": {
 				Type:     schema.TypeList,
