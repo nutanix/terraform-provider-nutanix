@@ -37,7 +37,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"QUARANTINE", "ISOLATION", "APPLICATION"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"QUARANTINE", "ISOLATION", "APPLICATION", "SHAREDSERVICE"}, false),
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -65,7 +65,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"QUARANTINE", "TWO_ENV_ISOLATION", "APPLICATION", "INTRA_GROUP", "MULTI_ENV_ISOLATION"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"QUARANTINE", "TWO_ENV_ISOLATION", "APPLICATION", "INTRA_GROUP", "MULTI_ENV_ISOLATION", "SHARED_SERVICE"}, false),
 						},
 						"spec": {
 							Type:     schema.TypeList,
@@ -99,12 +99,24 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"secured_group_category_associated_entity_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													Default:      "VM",
+													ValidateFunc: validation.StringInSlice([]string{"SUBNET", "VM", "VPC"}, false),
+												},
 												"secured_group_category_references": {
 													Type:     schema.TypeList,
 													Required: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
+												},
+												"secured_group_entity_group_reference": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
 												},
 												"src_allow_spec": {
 													Type:         schema.TypeString,
@@ -118,6 +130,13 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 													Computed:     true,
 													ValidateFunc: validation.StringInSlice([]string{"ALL", "NONE"}, false),
 												},
+												"src_category_associated_entity_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													Default:      "VM",
+													ValidateFunc: validation.StringInSlice([]string{"SUBNET", "VM", "VPC"}, false),
+												},
 												"src_category_references": {
 													Type:     schema.TypeList,
 													Optional: true,
@@ -126,6 +145,18 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 														Type: schema.TypeString,
 													},
 												},
+												"src_entity_group_reference": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+												"dest_category_associated_entity_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													Default:      "VM",
+													ValidateFunc: validation.StringInSlice([]string{"SUBNET", "VM", "VPC"}, false),
+												},
 												"dest_category_references": {
 													Type:     schema.TypeList,
 													Optional: true,
@@ -133,6 +164,11 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
+												},
+												"dest_entity_group_reference": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
 												},
 												"src_subnet": {
 													Type:     schema.TypeList,
@@ -261,6 +297,11 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 													Optional: true,
 													Computed: true,
 												},
+												"network_function_reference": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
 											},
 										},
 									},
@@ -270,10 +311,23 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"secured_group_action": {
+												"secured_group_category_associated_entity_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													Default:      "VM",
+													ValidateFunc: validation.StringInSlice([]string{"SUBNET", "VM", "VPC"}, false),
+												},
+												"secured_group_entity_group_reference": {
 													Type:     schema.TypeString,
 													Optional: true,
 													Computed: true,
+												},
+												"secured_group_action": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.StringInSlice([]string{"ALLOW", "DENY"}, false),
 												},
 												"secured_group_category_references": {
 													Type:     schema.TypeList,
@@ -281,6 +335,76 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
+													},
+												},
+												"secured_group_entity_group_reference": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+												"secured_group_service_references": {
+													Type:     schema.TypeList,
+													Required: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"tcp_services": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"start_port": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+															"end_port": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+														},
+													},
+												},
+												"udp_services": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"start_port": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+															"end_port": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+														},
+													},
+												},
+												"icmp_services": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"is_all_allowed": {
+																Type:     schema.TypeBool,
+																Optional: true,
+																Computed: true,
+															},
+															"type": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"code": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+														},
 													},
 												},
 											},
@@ -309,12 +433,24 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 																			MinItems: minItems,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
+																					"group_category_associated_entity_type": {
+																						Type:         schema.TypeString,
+																						Optional:     true,
+																						Computed:     true,
+																						Default:      "VM",
+																						ValidateFunc: validation.StringInSlice([]string{"SUBNET", "VM", "VPC"}, false),
+																					},
 																					"group_category_references": {
 																						Type:     schema.TypeList,
 																						Required: true,
 																						Elem: &schema.Schema{
 																							Type: schema.TypeString,
 																						},
+																					},
+																					"group_entity_group_reference": {
+																						Type:     schema.TypeString,
+																						Optional: true,
+																						Computed: true,
 																					},
 																				},
 																			},
@@ -362,7 +498,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{"ALL_VLAN", "ALL_VPC", "VPC_LIST"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"ALL_VLAN", "GLOBAL", "ALL_VPC", "VPC_LIST", "VPC_AS_CATEGORY"}, false),
 			},
 			"vpc_reference": {
 				Type:     schema.TypeList,
@@ -809,8 +945,22 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 			appI := appRule.([]interface{})
 			appVal := appI[0].(map[string]interface{})
 
+			if secGroupCatAssocEntityType, ok := appVal["secured_group_category_associated_entity_type"]; ok && len(secGroupCatAssocEntityType.(string)) > 0 {
+				const one, two, three = 1, 2, 3
+				subMap := map[string]interface{}{
+					"SUBNET": one,
+					"VM":     two,
+					"VPC":    three,
+				}
+				pInt := subMap[secGroupCatAssocEntityType.(string)]
+				p := config.EntityType(pInt.(int))
+				app.SecuredGroupCategoryAssociatedEntityType = &p
+			}
 			if secGroup, ok := appVal["secured_group_category_references"]; ok && len(secGroup.([]interface{})) > 0 {
 				app.SecuredGroupCategoryReferences = common.ExpandListOfString(secGroup.([]interface{}))
+			}
+			if secGroupEntityGrpRef, ok := appVal["secured_group_entity_group_reference"]; ok && len(secGroupEntityGrpRef.(string)) > 0 {
+				app.SecuredGroupEntityGroupReference = utils.StringPtr(secGroupEntityGrpRef.(string))
 			}
 			if srcAllow, ok := appVal["src_allow_spec"]; ok && len(srcAllow.(string)) > 0 {
 				const two, three = 2, 3
@@ -832,11 +982,39 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 				p := import1.AllowType(pInt.(int))
 				app.DestAllowSpec = &p
 			}
+			if srcCatAssocEntityType, ok := appVal["src_category_associated_entity_type"]; ok && len(srcCatAssocEntityType.(string)) > 0 {
+				const one, two, three = 1, 2, 3
+				subMap := map[string]interface{}{
+					"SUBNET": one,
+					"VM":     two,
+					"VPC":    three,
+				}
+				pInt := subMap[srcCatAssocEntityType.(string)]
+				p := config.EntityType(pInt.(int))
+				app.SrcCategoryAssociatedEntityType = &p
+			}
 			if srcCatRef, ok := appVal["src_category_references"]; ok && len(srcCatRef.([]interface{})) > 0 {
 				app.SrcCategoryReferences = common.ExpandListOfString(srcCatRef.([]interface{}))
 			}
+			if srcEntityGrpRef, ok := appVal["src_entity_group_reference"]; ok && len(srcEntityGrpRef.(string)) > 0 {
+				app.SrcEntityGroupReference = utils.StringPtr(srcEntityGrpRef.(string))
+			}
+			if destCatAssocEntityType, ok := appVal["dest_category_associated_entity_type"]; ok && len(destCatAssocEntityType.(string)) > 0 {
+				const one, two, three = 1, 2, 3
+				subMap := map[string]interface{}{
+					"SUBNET": one,
+					"VM":     two,
+					"VPC":    three,
+				}
+				pInt := subMap[destCatAssocEntityType.(string)]
+				p := config.EntityType(pInt.(int))
+				app.DestCategoryAssociatedEntityType = &p
+			}
 			if destCatRef, ok := appVal["dest_category_references"]; ok && len(destCatRef.([]interface{})) > 0 {
 				app.DestCategoryReferences = common.ExpandListOfString(destCatRef.([]interface{}))
+			}
+			if destEntityGrpRef, ok := appVal["dest_entity_group_reference"]; ok && len(destEntityGrpRef.(string)) > 0 {
+				app.DestEntityGroupReference = utils.StringPtr(destEntityGrpRef.(string))
 			}
 			if srcSubnet, ok := appVal["src_subnet"]; ok && len(srcSubnet.([]interface{})) > 0 {
 				app.SrcSubnet = expandIPv4AddressMicroseg(srcSubnet)
@@ -869,6 +1047,9 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 			if netFuncChain, ok := appVal["network_function_chain_reference"]; ok && len(netFuncChain.(string)) > 0 {
 				app.NetworkFunctionChainReference = utils.StringPtr(netFuncChain.(string))
 			}
+			if netFuncRef, ok := appVal["network_function_reference"]; ok && len(netFuncRef.(string)) > 0 {
+				app.NetworkFunctionReference = utils.StringPtr(netFuncRef.(string))
+			}
 			policyRules.SetValue(*app)
 		}
 
@@ -878,8 +1059,22 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 			intraI := intraGroup.([]interface{})
 			intraVal := intraI[0].(map[string]interface{})
 
+			if secGroupCatAssocEntityType, ok := intraVal["secured_group_category_associated_entity_type"]; ok && len(secGroupCatAssocEntityType.(string)) > 0 {
+				const one, two, three = 1, 2, 3
+				subMap := map[string]interface{}{
+					"SUBNET": one,
+					"VM":     two,
+					"VPC":    three,
+				}
+				pInt := subMap[secGroupCatAssocEntityType.(string)]
+				p := config.EntityType(pInt.(int))
+				intra.SecuredGroupCategoryAssociatedEntityType = &p
+			}
 			if secGroup, ok := intraVal["secured_group_category_references"]; ok && len(secGroup.([]interface{})) > 0 {
 				intra.SecuredGroupCategoryReferences = common.ExpandListOfString(secGroup.([]interface{}))
+			}
+			if secGroupEntityGrpRef, ok := intraVal["secured_group_entity_group_reference"]; ok && len(secGroupEntityGrpRef.(string)) > 0 {
+				intra.SecuredGroupEntityGroupReference = utils.StringPtr(secGroupEntityGrpRef.(string))
 			}
 			if secGroupAction, ok := intraVal["secured_group_action"]; ok && len(secGroupAction.(string)) > 0 {
 				const two, three = 2, 3
@@ -890,6 +1085,18 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 				pInt := subMap[secGroupAction.(string)]
 				p := import1.IntraEntityGroupRuleAction(pInt.(int))
 				intra.SecuredGroupAction = &p
+			}
+			if secGroupServiceRef, ok := intraVal["secured_group_service_references"]; ok && len(secGroupServiceRef.([]interface{})) > 0 {
+				intra.SecuredGroupServiceReferences = common.ExpandListOfString(secGroupServiceRef.([]interface{}))
+			}
+			if tcp, ok := intraVal["tcp_services"]; ok && len(tcp.([]interface{})) > 0 {
+				intra.TcpServices = expandTCPPortRangeSpec(tcp.([]interface{}))
+			}
+			if udp, ok := intraVal["udp_services"]; ok && len(udp.([]interface{})) > 0 {
+				intra.UdpServices = expandUDPPortRangeSpec(udp.([]interface{}))
+			}
+			if icmp, ok := intraVal["icmp_services"]; ok && len(icmp.([]interface{})) > 0 {
+				intra.IcmpServices = expandIcmpTypeCodeSpec(icmp.([]interface{}))
 			}
 			policyRules.SetValue(*intra)
 		}
@@ -964,8 +1171,22 @@ func expandIsolationGroup(isolationGroup []interface{}) []import1.IsolationGroup
 			val := v.(map[string]interface{})
 			iso := import1.IsolationGroup{}
 
+			if groupCatAssocEntityType, ok := val["group_category_associated_entity_type"]; ok && len(groupCatAssocEntityType.(string)) > 0 {
+				const one, two, three = 1, 2, 3
+				subMap := map[string]interface{}{
+					"SUBNET": one,
+					"VM":     two,
+					"VPC":    three,
+				}
+				pInt := subMap[groupCatAssocEntityType.(string)]
+				p := config.EntityType(pInt.(int))
+				iso.GroupCategoryAssociatedEntityType = &p
+			}
 			if groupCat, ok := val["group_category_references"]; ok && len(groupCat.([]interface{})) > 0 {
 				iso.GroupCategoryReferences = common.ExpandListOfString(groupCat.([]interface{}))
+			}
+			if groupEntityGrpRef, ok := val["group_entity_group_reference"]; ok && len(groupEntityGrpRef.(string)) > 0 {
+				iso.GroupEntityGroupReference = utils.StringPtr(groupEntityGrpRef.(string))
 			}
 			isolations[k] = iso
 		}
