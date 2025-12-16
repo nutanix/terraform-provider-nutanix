@@ -318,13 +318,6 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 													Default:      "VM",
 													ValidateFunc: validation.StringInSlice([]string{"SUBNET", "VM", "VPC"}, false),
 												},
-												"secured_group_category_references": {
-													Type:     schema.TypeList,
-													Required: true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
-												},
 												"secured_group_entity_group_reference": {
 													Type:     schema.TypeString,
 													Optional: true,
