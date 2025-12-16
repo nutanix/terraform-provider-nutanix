@@ -960,7 +960,7 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 					"VPC":    three,
 				}
 				pInt := subMap[secGroupCatAssocEntityType.(string)]
-				p := import1.EntityType(pInt.(int))
+				p := config.EntityType(pInt.(int))
 				app.SecuredGroupCategoryAssociatedEntityType = &p
 			}
 			if secGroup, ok := appVal["secured_group_category_references"]; ok && len(secGroup.([]interface{})) > 0 {
@@ -997,7 +997,7 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 					"VPC":    three,
 				}
 				pInt := subMap[srcCatAssocEntityType.(string)]
-				p := import1.EntityType(pInt.(int))
+				p := config.EntityType(pInt.(int))
 				app.SrcCategoryAssociatedEntityType = &p
 			}
 			if srcCatRef, ok := appVal["src_category_references"]; ok && len(srcCatRef.([]interface{})) > 0 {
@@ -1014,7 +1014,7 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 					"VPC":    three,
 				}
 				pInt := subMap[destCatAssocEntityType.(string)]
-				p := import1.EntityType(pInt.(int))
+				p := config.EntityType(pInt.(int))
 				app.DestCategoryAssociatedEntityType = &p
 			}
 			if destCatRef, ok := appVal["dest_category_references"]; ok && len(destCatRef.([]interface{})) > 0 {
@@ -1074,7 +1074,7 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 					"VPC":    three,
 				}
 				pInt := subMap[secGroupCatAssocEntityType.(string)]
-				p := import1.EntityType(pInt.(int))
+				p := config.EntityType(pInt.(int))
 				intra.SecuredGroupCategoryAssociatedEntityType = &p
 			}
 			if secGroup, ok := intraVal["secured_group_category_references"]; ok && len(secGroup.([]interface{})) > 0 {
@@ -1186,7 +1186,7 @@ func expandIsolationGroup(isolationGroup []interface{}) []import1.IsolationGroup
 					"VPC":    three,
 				}
 				pInt := subMap[groupCatAssocEntityType.(string)]
-				p := import1.EntityType(pInt.(int))
+				p := config.EntityType(pInt.(int))
 				iso.GroupCategoryAssociatedEntityType = &p
 			}
 			if groupCat, ok := val["group_category_references"]; ok && len(groupCat.([]interface{})) > 0 {

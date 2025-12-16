@@ -719,6 +719,6 @@ func flattenIntraEntityGroupRuleAction(intraEntityGroupRuleAction *import1.Intra
 	return intraEntityGroupRuleAction.GetName()
 }
 
-func flattenEntityType(entityType *import1.EntityType) string {
+func flattenEntityType(entityType *config.EntityType) string {
 	return entityType.GetName()
 }
