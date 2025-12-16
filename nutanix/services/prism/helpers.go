@@ -394,20 +394,18 @@ func buildDataSourceListMetadata(set *schema.Set) *v3.DSMetadata {
 	return &filters
 }
 
-
-
 // customizeDiffProjectACP handles the custom diff logic for the "acp" (Access Control Policy) attribute.
 // Problem: Terraform treats lists positionally, so if the API returns ACPs in a different order
 // than the user specified, Terraform detects a "change" even though the content is identical.
-// Similarly, if user_reference_list or user_group_reference_list within an ACP are reordered,
-// Terraform shows confusing diffs.
 //
-// Solution: This function normalizes the ACP list and its nested reference lists by:
+// Solution: This function normalizes the ACP list by:
 //  1. Matching ACPs by role_reference.uuid (the unique identifier for an ACP)
 //  2. Merging computed fields (name, metadata, context_filter_list) from the OLD state
 //     with user-specified fields (role_reference, user_reference_list, user_group_reference_list) from NEW config
-//  3. Normalizing user_reference_list and user_group_reference_list within each ACP
-//  4. Maintaining the old order for existing items and appending new items at the end
+//  3. Maintaining the old order for existing ACPs and appending new ACPs at the end
+//
+// Note: user_reference_list and user_group_reference_list within each ACP now use TypeSet
+// with UUID-based hashing, which handles order-independent comparison automatically.
 //
 // This ensures Terraform only shows actual content changes, not order-based false positives.
 func customizeDiffProjectACP(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
@@ -496,20 +494,16 @@ func customizeDiffProjectACP(ctx context.Context, diff *schema.ResourceDiff, v i
 			merged["role_reference"] = roleRef
 		}
 
-		// Normalize user_reference_list order to prevent false diffs
-		if newUserRefList, ok := newMap["user_reference_list"].([]interface{}); ok {
-			oldUserRefList, _ := oldMap["user_reference_list"].([]interface{})
-			merged["user_reference_list"] = normalizeACPRefList(oldUserRefList, newUserRefList)
-			log.Printf("[DEBUG] CustomizeDiff: normalized user_reference_list for role %s (old: %d, new: %d, result: %d)",
-				oldRoleUUID, len(oldUserRefList), len(newUserRefList), len(merged["user_reference_list"].([]interface{})))
+		// user_reference_list and user_group_reference_list use TypeSet with hash based on UUID
+		// TypeSet handles order-independent comparison automatically, so we just pass through the new values
+		if newUserRefList, ok := newMap["user_reference_list"]; ok {
+			merged["user_reference_list"] = newUserRefList
+			log.Printf("[DEBUG] CustomizeDiff: passing through user_reference_list for role %s (TypeSet handles ordering)", oldRoleUUID)
 		}
 
-		// Normalize user_group_reference_list order to prevent false diffs
-		if newUserGroupRefList, ok := newMap["user_group_reference_list"].([]interface{}); ok {
-			oldUserGroupRefList, _ := oldMap["user_group_reference_list"].([]interface{})
-			merged["user_group_reference_list"] = normalizeACPRefList(oldUserGroupRefList, newUserGroupRefList)
-			log.Printf("[DEBUG] CustomizeDiff: normalized user_group_reference_list for role %s (old: %d, new: %d, result: %d)",
-				oldRoleUUID, len(oldUserGroupRefList), len(newUserGroupRefList), len(merged["user_group_reference_list"].([]interface{})))
+		if newUserGroupRefList, ok := newMap["user_group_reference_list"]; ok {
+			merged["user_group_reference_list"] = newUserGroupRefList
+			log.Printf("[DEBUG] CustomizeDiff: passing through user_group_reference_list for role %s (TypeSet handles ordering)", oldRoleUUID)
 		}
 
 		// Preserve description if specified
@@ -558,69 +552,15 @@ func getACPRoleUUID(acpItem interface{}) string {
 	return ""
 }
 
-// getRefItemUUID extracts the UUID from a reference item (user_reference or user_group_reference).
-// Reference items are maps with "kind", "name", and "uuid" fields.
-// Returns empty string if the structure is invalid or UUID is not found.
-func getRefItemUUID(refItem interface{}) string {
-	refMap, ok := refItem.(map[string]interface{})
+// acpReferenceHash generates a hash for user_reference_list and user_group_reference_list items
+// based on UUID. This ensures order-independent comparison in TypeSet.
+func acpReferenceHash(v interface{}) int {
+	m, ok := v.(map[string]interface{})
 	if !ok {
-		return ""
+		return 0
 	}
-	if uuid, ok := refMap["uuid"].(string); ok {
-		return uuid
+	if uuid, ok := m["uuid"].(string); ok {
+		return schema.HashString(uuid)
 	}
-	return ""
+	return 0
 }
-
-// normalizeACPRefList normalizes a reference list (user_reference_list or user_group_reference_list)
-// to prevent Terraform from detecting order-based changes.
-//
-// The normalization strategy:
-// 1. Keep existing items (present in both old and new) in their original order from oldList
-// 2. Append new items (only in newList) at the end, preserving their relative order
-// 3. Items removed from old (not in newList) are excluded
-//
-// This ensures that adding a new user/group to an ACP shows as an addition,
-// not as a change of existing items plus an addition.
-func normalizeACPRefList(oldList, newList []interface{}) []interface{} {
-	if len(oldList) == 0 {
-		return newList
-	}
-	if len(newList) == 0 {
-		return newList
-	}
-
-	// Build map of new items by UUID for quick lookup
-	newByUUID := make(map[string]interface{})
-	var newOrder []string
-	for _, item := range newList {
-		uuid := getRefItemUUID(item)
-		if uuid != "" {
-			newByUUID[uuid] = item
-			newOrder = append(newOrder, uuid)
-		}
-	}
-
-	// Build normalized list: old items first (in old order), then new items
-	normalized := make([]interface{}, 0, len(newList))
-	usedUUIDs := make(map[string]bool)
-
-	// First, add items that exist in both old and new (in old order)
-	for _, oldItem := range oldList {
-		oldUUID := getRefItemUUID(oldItem)
-		if newItem, exists := newByUUID[oldUUID]; exists {
-			normalized = append(normalized, newItem)
-			usedUUIDs[oldUUID] = true
-		}
-	}
-
-	// Then, add new items that weren't in the old list (preserving their order)
-	for _, uuid := range newOrder {
-		if !usedUUIDs[uuid] {
-			normalized = append(normalized, newByUUID[uuid])
-		}
-	}
-
-	return normalized
-}
-
