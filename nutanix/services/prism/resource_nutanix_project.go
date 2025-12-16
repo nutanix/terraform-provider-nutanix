@@ -2,6 +2,7 @@ package prism
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -31,6 +32,7 @@ func ResourceNutanixProject() *schema.Resource {
 			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
 			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
 		},
+		CustomizeDiff: customizeDiffProjectACP,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -378,7 +380,10 @@ func ResourceNutanixProject() *schema.Resource {
 			"acp": {
 				Type:         schema.TypeList,
 				Optional:     true,
+				Computed:     true,
 				RequiredWith: []string{"use_project_internal"},
+				// Note: DiffSuppressFunc was removed because it conflicts with CustomizeDiff.
+				// Order-independent ACP comparison is now handled entirely in CustomizeDiff.
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -1147,6 +1152,9 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		if d.HasChange("acp") {
 			acp := d.Get("acp").([]interface{})
+			log.Printf("[DEBUG] acp has changed")
+			aJSON, _ := json.MarshalIndent(acp, "", "  ")
+			log.Printf("[DEBUG] acp: %s", string(aJSON))
 			accessControlPolicy = UpdateExpandAcpRM(acp, response, d, meta, d.Id(), clusterUUID)
 		} else {
 			accessControlPolicy = UpdateACPNoChange(response)

@@ -1,7 +1,9 @@
 package prism
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -391,3 +393,234 @@ func buildDataSourceListMetadata(set *schema.Set) *v3.DSMetadata {
 	}
 	return &filters
 }
+
+
+
+// customizeDiffProjectACP handles the custom diff logic for the "acp" (Access Control Policy) attribute.
+// Problem: Terraform treats lists positionally, so if the API returns ACPs in a different order
+// than the user specified, Terraform detects a "change" even though the content is identical.
+// Similarly, if user_reference_list or user_group_reference_list within an ACP are reordered,
+// Terraform shows confusing diffs.
+//
+// Solution: This function normalizes the ACP list and its nested reference lists by:
+//  1. Matching ACPs by role_reference.uuid (the unique identifier for an ACP)
+//  2. Merging computed fields (name, metadata, context_filter_list) from the OLD state
+//     with user-specified fields (role_reference, user_reference_list, user_group_reference_list) from NEW config
+//  3. Normalizing user_reference_list and user_group_reference_list within each ACP
+//  4. Maintaining the old order for existing items and appending new items at the end
+//
+// This ensures Terraform only shows actual content changes, not order-based false positives.
+func customizeDiffProjectACP(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	log.Printf("[DEBUG] CustomizeDiff resource_nutanix_project")
+
+	if !diff.HasChange("acp") {
+		log.Printf("[DEBUG] CustomizeDiff: no acp change detected")
+		return nil
+	}
+
+	oldACP, newACP := diff.GetChange("acp")
+	oldACPList, ok1 := oldACP.([]interface{})
+	newACPList, ok2 := newACP.([]interface{})
+
+	if !ok1 || !ok2 {
+		log.Printf("[DEBUG] CustomizeDiff: failed to convert ACP lists (ok1=%v, ok2=%v)", ok1, ok2)
+		return nil
+	}
+
+	log.Printf("[DEBUG] CustomizeDiff: oldACPList length: %d, newACPList length: %d", len(oldACPList), len(newACPList))
+
+	if len(oldACPList) == 0 || len(newACPList) == 0 {
+		log.Printf("[DEBUG] CustomizeDiff: one of the lists is empty, skipping merge")
+		return nil
+	}
+
+	// Build a map from role UUID to old ACP item (for getting computed fields)
+	oldRoleToItem := make(map[string]map[string]interface{})
+	for i, oldItem := range oldACPList {
+		oldMap, ok := oldItem.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		roleUUID := getACPRoleUUID(oldItem)
+		if roleUUID != "" {
+			oldRoleToItem[roleUUID] = oldMap
+			log.Printf("[DEBUG] CustomizeDiff: oldACP[%d] role UUID: %s", i, roleUUID)
+		}
+	}
+
+	// Build a map from role UUID to new ACP item (for getting user-specified fields)
+	newRoleToItem := make(map[string]map[string]interface{})
+	var newRoleOrder []string
+	for i, newItem := range newACPList {
+		newMap, ok := newItem.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		roleUUID := getACPRoleUUID(newItem)
+		if roleUUID != "" {
+			newRoleToItem[roleUUID] = newMap
+			newRoleOrder = append(newRoleOrder, roleUUID)
+			log.Printf("[DEBUG] CustomizeDiff: newACP[%d] role UUID: %s", i, roleUUID)
+		}
+	}
+
+	// Create merged ACPs in old order
+	// For each ACP: take computed fields from old, user-specified fields from new
+	mergedACPs := make([]interface{}, 0, len(newACPList))
+	usedRoles := make(map[string]bool)
+
+	// First, process ACPs that exist in both old and new (in old order)
+	for _, oldItem := range oldACPList {
+		oldMap, ok := oldItem.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		oldRoleUUID := getACPRoleUUID(oldItem)
+		newMap, exists := newRoleToItem[oldRoleUUID]
+		if !exists {
+			// ACP was removed in new config - skip it
+			log.Printf("[DEBUG] CustomizeDiff: ACP with role %s removed in new config", oldRoleUUID)
+			continue
+		}
+
+		// Merge: start with old ACP (has computed fields), overlay new user-specified fields
+		merged := make(map[string]interface{})
+
+		// Copy all computed fields from old ACP (name, metadata, context_filter_list)
+		for k, v := range oldMap {
+			merged[k] = v
+		}
+
+		// Overlay user-specified fields from new ACP
+		if roleRef, ok := newMap["role_reference"]; ok {
+			merged["role_reference"] = roleRef
+		}
+
+		// Normalize user_reference_list order to prevent false diffs
+		if newUserRefList, ok := newMap["user_reference_list"].([]interface{}); ok {
+			oldUserRefList, _ := oldMap["user_reference_list"].([]interface{})
+			merged["user_reference_list"] = normalizeACPRefList(oldUserRefList, newUserRefList)
+			log.Printf("[DEBUG] CustomizeDiff: normalized user_reference_list for role %s (old: %d, new: %d, result: %d)",
+				oldRoleUUID, len(oldUserRefList), len(newUserRefList), len(merged["user_reference_list"].([]interface{})))
+		}
+
+		// Normalize user_group_reference_list order to prevent false diffs
+		if newUserGroupRefList, ok := newMap["user_group_reference_list"].([]interface{}); ok {
+			oldUserGroupRefList, _ := oldMap["user_group_reference_list"].([]interface{})
+			merged["user_group_reference_list"] = normalizeACPRefList(oldUserGroupRefList, newUserGroupRefList)
+			log.Printf("[DEBUG] CustomizeDiff: normalized user_group_reference_list for role %s (old: %d, new: %d, result: %d)",
+				oldRoleUUID, len(oldUserGroupRefList), len(newUserGroupRefList), len(merged["user_group_reference_list"].([]interface{})))
+		}
+
+		// Preserve description if specified
+		if desc, ok := newMap["description"]; ok && desc != "" {
+			merged["description"] = desc
+		}
+
+		mergedACPs = append(mergedACPs, merged)
+		usedRoles[oldRoleUUID] = true
+		log.Printf("[DEBUG] CustomizeDiff: merged ACP with role %s in position %d", oldRoleUUID, len(mergedACPs)-1)
+	}
+
+	// Add new ACPs that weren't in the old list (these are truly new)
+	for _, roleUUID := range newRoleOrder {
+		if !usedRoles[roleUUID] {
+			mergedACPs = append(mergedACPs, newRoleToItem[roleUUID])
+			log.Printf("[DEBUG] CustomizeDiff: adding new ACP with role %s at position %d", roleUUID, len(mergedACPs)-1)
+		}
+	}
+
+	// Set the merged list to update the diff
+	log.Printf("[DEBUG] CustomizeDiff: setting merged ACPs (count: %d)", len(mergedACPs))
+	if err := diff.SetNew("acp", mergedACPs); err != nil {
+		log.Printf("[DEBUG] CustomizeDiff: failed to SetNew for acp: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// getACPRoleUUID extracts the role UUID from an ACP item.
+// It navigates the nested structure: acp -> role_reference[0] -> uuid
+// Returns empty string if the structure is invalid or UUID is not found.
+func getACPRoleUUID(acpItem interface{}) string {
+	acpMap, ok := acpItem.(map[string]interface{})
+	if !ok {
+		return ""
+	}
+	if roleRef, ok := acpMap["role_reference"].([]interface{}); ok && len(roleRef) > 0 {
+		if roleMap, ok := roleRef[0].(map[string]interface{}); ok {
+			if uuid, ok := roleMap["uuid"].(string); ok {
+				return uuid
+			}
+		}
+	}
+	return ""
+}
+
+// getRefItemUUID extracts the UUID from a reference item (user_reference or user_group_reference).
+// Reference items are maps with "kind", "name", and "uuid" fields.
+// Returns empty string if the structure is invalid or UUID is not found.
+func getRefItemUUID(refItem interface{}) string {
+	refMap, ok := refItem.(map[string]interface{})
+	if !ok {
+		return ""
+	}
+	if uuid, ok := refMap["uuid"].(string); ok {
+		return uuid
+	}
+	return ""
+}
+
+// normalizeACPRefList normalizes a reference list (user_reference_list or user_group_reference_list)
+// to prevent Terraform from detecting order-based changes.
+//
+// The normalization strategy:
+// 1. Keep existing items (present in both old and new) in their original order from oldList
+// 2. Append new items (only in newList) at the end, preserving their relative order
+// 3. Items removed from old (not in newList) are excluded
+//
+// This ensures that adding a new user/group to an ACP shows as an addition,
+// not as a change of existing items plus an addition.
+func normalizeACPRefList(oldList, newList []interface{}) []interface{} {
+	if len(oldList) == 0 {
+		return newList
+	}
+	if len(newList) == 0 {
+		return newList
+	}
+
+	// Build map of new items by UUID for quick lookup
+	newByUUID := make(map[string]interface{})
+	var newOrder []string
+	for _, item := range newList {
+		uuid := getRefItemUUID(item)
+		if uuid != "" {
+			newByUUID[uuid] = item
+			newOrder = append(newOrder, uuid)
+		}
+	}
+
+	// Build normalized list: old items first (in old order), then new items
+	normalized := make([]interface{}, 0, len(newList))
+	usedUUIDs := make(map[string]bool)
+
+	// First, add items that exist in both old and new (in old order)
+	for _, oldItem := range oldList {
+		oldUUID := getRefItemUUID(oldItem)
+		if newItem, exists := newByUUID[oldUUID]; exists {
+			normalized = append(normalized, newItem)
+			usedUUIDs[oldUUID] = true
+		}
+	}
+
+	// Then, add new items that weren't in the old list (preserving their order)
+	for _, uuid := range newOrder {
+		if !usedUUIDs[uuid] {
+			normalized = append(normalized, newByUUID[uuid])
+		}
+	}
+
+	return normalized
+}
+
