@@ -1728,16 +1728,31 @@ func expandCreateAcp(pr []interface{}, d *schema.ResourceData, projectUUID strin
 			if v1, ok1 := v["description"]; ok1 {
 				acpSpec.Description = utils.StringPtr(v1.(string))
 			}
-			if v1, ok := v["user_reference_list"]; ok {
-				refList := make([]*v3.Reference, 0)
-				refList = append(refList, validateRefList(v1.([]interface{}), utils.StringPtr("user")))
+			// Handle multiple users in user_reference_list
+			if v1, ok := v["user_reference_list"]; ok && len(v1.([]interface{})) > 0 {
+				userRefs := v1.([]interface{})
+				refList := make([]*v3.Reference, 0, len(userRefs))
+				for _, userRef := range userRefs {
+					ref := expandReference(userRef.(map[string]interface{}))
+					if ref != nil {
+						ref.Kind = utils.StringPtr("user")
+						refList = append(refList, ref)
+					}
+				}
 				acpRes.UserReferenceList = refList
 			}
 
+			// Handle multiple user groups in user_group_reference_list
 			if v1, ok := v["user_group_reference_list"]; ok && len(v1.([]interface{})) > 0 {
-				refList := make([]*v3.Reference, 0)
-
-				refList = append(refList, validateRefList(v1.([]interface{}), utils.StringPtr("user_group")))
+				groupRefs := v1.([]interface{})
+				refList := make([]*v3.Reference, 0, len(groupRefs))
+				for _, groupRef := range groupRefs {
+					ref := expandReference(groupRef.(map[string]interface{}))
+					if ref != nil {
+						ref.Kind = utils.StringPtr("user_group")
+						refList = append(refList, ref)
+					}
+				}
 				acpRes.UserGroupReferenceList = refList
 			}
 
@@ -1797,15 +1812,31 @@ func UpdateExpandAcpRM(pr []interface{}, res *v3.ProjectInternalIntentResponse, 
 			if v1, ok1 := v["description"]; ok1 {
 				acpSpec.Description = utils.StringPtr(v1.(string))
 			}
+			// Handle multiple users in user_reference_list
 			if v, ok := v["user_reference_list"]; ok && len(v.([]interface{})) > 0 {
-				refList := make([]*v3.Reference, 0)
-				refList = append(refList, validateRefList(v.([]interface{}), utils.StringPtr("user")))
+				userRefs := v.([]interface{})
+				refList := make([]*v3.Reference, 0, len(userRefs))
+				for _, userRef := range userRefs {
+					ref := expandReference(userRef.(map[string]interface{}))
+					if ref != nil {
+						ref.Kind = utils.StringPtr("user")
+						refList = append(refList, ref)
+					}
+				}
 				acpRes.UserReferenceList = refList
 			}
 
+			// Handle multiple user groups in user_group_reference_list
 			if v, ok := v["user_group_reference_list"]; ok && len(v.([]interface{})) > 0 {
-				refList := make([]*v3.Reference, 0)
-				refList = append(refList, validateRefList(v.([]interface{}), utils.StringPtr("user_group")))
+				groupRefs := v.([]interface{})
+				refList := make([]*v3.Reference, 0, len(groupRefs))
+				for _, groupRef := range groupRefs {
+					ref := expandReference(groupRef.(map[string]interface{}))
+					if ref != nil {
+						ref.Kind = utils.StringPtr("user_group")
+						refList = append(refList, ref)
+					}
+				}
 				acpRes.UserGroupReferenceList = refList
 			}
 
