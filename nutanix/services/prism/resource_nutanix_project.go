@@ -376,7 +376,7 @@ func ResourceNutanixProject() *schema.Resource {
 				Optional: true,
 			},
 			"acp": {
-				Type:         schema.TypeSet,
+				Type:         schema.TypeList,
 				Optional:     true,
 				RequiredWith: []string{"use_project_internal"},
 				Elem: &schema.Resource{
@@ -391,7 +391,7 @@ func ResourceNutanixProject() *schema.Resource {
 							Optional: true,
 						},
 						"user_reference_list": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -411,7 +411,7 @@ func ResourceNutanixProject() *schema.Resource {
 							},
 						},
 						"user_group_reference_list": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -830,7 +830,7 @@ func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, m
 			}
 
 			if acp, ok := d.GetOk("acp"); ok {
-				acp := acp.(*schema.Set).List()
+				acp := acp.([]interface{})
 				accessControlPolicy = expandCreateAcp(acp, d, d.Id(), clusterUUID, meta)
 			}
 			spec.AccessControlPolicyList = accessControlPolicy
@@ -1146,7 +1146,7 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if d.HasChange("acp") {
-			acp := d.Get("acp").(*schema.Set).List()
+			acp := d.Get("acp").([]interface{})
 			accessControlPolicy = UpdateExpandAcpRM(acp, response, d, meta, d.Id(), clusterUUID)
 		} else {
 			accessControlPolicy = UpdateACPNoChange(response)
@@ -1721,11 +1721,16 @@ func expandCreateAcp(pr []interface{}, d *schema.ResourceData, projectUUID strin
 				acpSpec.Description = utils.StringPtr(v1.(string))
 			}
 			if v1, ok := v["user_reference_list"]; ok {
-				acpRes.UserReferenceList = validateArrayRef(v1.(*schema.Set), utils.StringPtr("user"))
+				refList := make([]*v3.Reference, 0)
+				refList = append(refList, validateRefList(v1.([]interface{}), utils.StringPtr("user")))
+				acpRes.UserReferenceList = refList
 			}
 
-			if v1, ok := v["user_group_reference_list"]; ok {
-				acpRes.UserGroupReferenceList = validateArrayRef(v1.(*schema.Set), utils.StringPtr("user_group"))
+			if v1, ok := v["user_group_reference_list"]; ok && len(v1.([]interface{})) > 0 {
+				refList := make([]*v3.Reference, 0)
+
+				refList = append(refList, validateRefList(v1.([]interface{}), utils.StringPtr("user_group")))
+				acpRes.UserGroupReferenceList = refList
 			}
 
 			if v, ok := v["role_reference"]; ok {
@@ -1784,12 +1789,16 @@ func UpdateExpandAcpRM(pr []interface{}, res *v3.ProjectInternalIntentResponse, 
 			if v1, ok1 := v["description"]; ok1 {
 				acpSpec.Description = utils.StringPtr(v1.(string))
 			}
-			if v, ok := v["user_reference_list"]; ok {
-				acpRes.UserReferenceList = validateArrayRef(v.(*schema.Set), utils.StringPtr("user"))
+			if v, ok := v["user_reference_list"]; ok && len(v.([]interface{})) > 0 {
+				refList := make([]*v3.Reference, 0)
+				refList = append(refList, validateRefList(v.([]interface{}), utils.StringPtr("user")))
+				acpRes.UserReferenceList = refList
 			}
 
-			if v, ok := v["user_group_reference_list"]; ok {
-				acpRes.UserGroupReferenceList = validateArrayRef(v.(*schema.Set), utils.StringPtr("user_group"))
+			if v, ok := v["user_group_reference_list"]; ok && len(v.([]interface{})) > 0 {
+				refList := make([]*v3.Reference, 0)
+				refList = append(refList, validateRefList(v.([]interface{}), utils.StringPtr("user_group")))
+				acpRes.UserGroupReferenceList = refList
 			}
 
 			if v, ok := v["role_reference"]; ok {
