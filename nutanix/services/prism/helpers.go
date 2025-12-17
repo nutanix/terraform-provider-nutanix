@@ -1,7 +1,9 @@
 package prism
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -390,4 +392,175 @@ func buildDataSourceListMetadata(set *schema.Set) *v3.DSMetadata {
 		}
 	}
 	return &filters
+}
+
+// customizeDiffProjectACP handles the custom diff logic for the "acp" (Access Control Policy) attribute.
+// Problem: Terraform treats lists positionally, so if the API returns ACPs in a different order
+// than the user specified, Terraform detects a "change" even though the content is identical.
+//
+// Solution: This function normalizes the ACP list by:
+//  1. Matching ACPs by role_reference.uuid (the unique identifier for an ACP)
+//  2. Merging computed fields (name, metadata, context_filter_list) from the OLD state
+//     with user-specified fields (role_reference, user_reference_list, user_group_reference_list) from NEW config
+//  3. Maintaining the old order for existing ACPs and appending new ACPs at the end
+//
+// Note: user_reference_list and user_group_reference_list within each ACP now use TypeSet
+// with UUID-based hashing, which handles order-independent comparison automatically.
+//
+// This ensures Terraform only shows actual content changes, not order-based false positives.
+func customizeDiffProjectACP(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	log.Printf("[DEBUG] CustomizeDiff resource_nutanix_project")
+
+	if !diff.HasChange("acp") {
+		log.Printf("[DEBUG] CustomizeDiff: no acp change detected")
+		return nil
+	}
+
+	oldACP, newACP := diff.GetChange("acp")
+	oldACPList, ok1 := oldACP.([]interface{})
+	newACPList, ok2 := newACP.([]interface{})
+
+	if !ok1 || !ok2 {
+		log.Printf("[DEBUG] CustomizeDiff: failed to convert ACP lists (ok1=%v, ok2=%v)", ok1, ok2)
+		return nil
+	}
+
+	log.Printf("[DEBUG] CustomizeDiff: oldACPList length: %d, newACPList length: %d", len(oldACPList), len(newACPList))
+
+	if len(oldACPList) == 0 || len(newACPList) == 0 {
+		log.Printf("[DEBUG] CustomizeDiff: one of the lists is empty, skipping merge")
+		return nil
+	}
+
+	// Build a map from role UUID to old ACP item (for getting computed fields)
+	oldRoleToItem := make(map[string]map[string]interface{})
+	for i, oldItem := range oldACPList {
+		oldMap, ok := oldItem.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		roleUUID := getACPRoleUUID(oldItem)
+		if roleUUID != "" {
+			oldRoleToItem[roleUUID] = oldMap
+			log.Printf("[DEBUG] CustomizeDiff: oldACP[%d] role UUID: %s", i, roleUUID)
+		}
+	}
+
+	// Build a map from role UUID to new ACP item (for getting user-specified fields)
+	newRoleToItem := make(map[string]map[string]interface{})
+	var newRoleOrder []string
+	for i, newItem := range newACPList {
+		newMap, ok := newItem.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		roleUUID := getACPRoleUUID(newItem)
+		if roleUUID != "" {
+			newRoleToItem[roleUUID] = newMap
+			newRoleOrder = append(newRoleOrder, roleUUID)
+			log.Printf("[DEBUG] CustomizeDiff: newACP[%d] role UUID: %s", i, roleUUID)
+		}
+	}
+
+	// Create merged ACPs in old order
+	// For each ACP: take computed fields from old, user-specified fields from new
+	mergedACPs := make([]interface{}, 0, len(newACPList))
+	usedRoles := make(map[string]bool)
+
+	// First, process ACPs that exist in both old and new (in old order)
+	for _, oldItem := range oldACPList {
+		oldMap, ok := oldItem.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		oldRoleUUID := getACPRoleUUID(oldItem)
+		newMap, exists := newRoleToItem[oldRoleUUID]
+		if !exists {
+			// ACP was removed in new config - skip it
+			log.Printf("[DEBUG] CustomizeDiff: ACP with role %s removed in new config", oldRoleUUID)
+			continue
+		}
+
+		// Merge: start with old ACP (has computed fields), overlay new user-specified fields
+		merged := make(map[string]interface{})
+
+		// Copy all computed fields from old ACP (name, metadata, context_filter_list)
+		for k, v := range oldMap {
+			merged[k] = v
+		}
+
+		// Overlay user-specified fields from new ACP
+		if roleRef, ok := newMap["role_reference"]; ok {
+			merged["role_reference"] = roleRef
+		}
+
+		// user_reference_list and user_group_reference_list use TypeSet with hash based on UUID
+		// TypeSet handles order-independent comparison automatically, so we just pass through the new values
+		if newUserRefList, ok := newMap["user_reference_list"]; ok {
+			merged["user_reference_list"] = newUserRefList
+			log.Printf("[DEBUG] CustomizeDiff: passing through user_reference_list for role %s (TypeSet handles ordering)", oldRoleUUID)
+		}
+
+		if newUserGroupRefList, ok := newMap["user_group_reference_list"]; ok {
+			merged["user_group_reference_list"] = newUserGroupRefList
+			log.Printf("[DEBUG] CustomizeDiff: passing through user_group_reference_list for role %s (TypeSet handles ordering)", oldRoleUUID)
+		}
+
+		// Preserve description if specified
+		if desc, ok := newMap["description"]; ok && desc != "" {
+			merged["description"] = desc
+		}
+
+		mergedACPs = append(mergedACPs, merged)
+		usedRoles[oldRoleUUID] = true
+		log.Printf("[DEBUG] CustomizeDiff: merged ACP with role %s in position %d", oldRoleUUID, len(mergedACPs)-1)
+	}
+
+	// Add new ACPs that weren't in the old list (these are truly new)
+	for _, roleUUID := range newRoleOrder {
+		if !usedRoles[roleUUID] {
+			mergedACPs = append(mergedACPs, newRoleToItem[roleUUID])
+			log.Printf("[DEBUG] CustomizeDiff: adding new ACP with role %s at position %d", roleUUID, len(mergedACPs)-1)
+		}
+	}
+
+	// Set the merged list to update the diff
+	log.Printf("[DEBUG] CustomizeDiff: setting merged ACPs (count: %d)", len(mergedACPs))
+	if err := diff.SetNew("acp", mergedACPs); err != nil {
+		log.Printf("[DEBUG] CustomizeDiff: failed to SetNew for acp: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// getACPRoleUUID extracts the role UUID from an ACP item.
+// It navigates the nested structure: acp -> role_reference[0] -> uuid
+// Returns empty string if the structure is invalid or UUID is not found.
+func getACPRoleUUID(acpItem interface{}) string {
+	acpMap, ok := acpItem.(map[string]interface{})
+	if !ok {
+		return ""
+	}
+	if roleRef, ok := acpMap["role_reference"].([]interface{}); ok && len(roleRef) > 0 {
+		if roleMap, ok := roleRef[0].(map[string]interface{}); ok {
+			if uuid, ok := roleMap["uuid"].(string); ok {
+				return uuid
+			}
+		}
+	}
+	return ""
+}
+
+// acpReferenceHash generates a hash for user_reference_list and user_group_reference_list items
+// based on UUID. This ensures order-independent comparison in TypeSet.
+func acpReferenceHash(v interface{}) int {
+	m, ok := v.(map[string]interface{})
+	if !ok {
+		return 0
+	}
+	if uuid, ok := m["uuid"].(string); ok {
+		return schema.HashString(uuid)
+	}
+	return 0
 }

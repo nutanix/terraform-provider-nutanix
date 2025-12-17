@@ -2,6 +2,7 @@ package prism
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -17,6 +18,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+
 func ResourceNutanixProject() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceNutanixProjectCreate,
@@ -31,6 +33,7 @@ func ResourceNutanixProject() *schema.Resource {
 			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
 			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
 		},
+		CustomizeDiff: customizeDiffProjectACP,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -378,7 +381,10 @@ func ResourceNutanixProject() *schema.Resource {
 			"acp": {
 				Type:         schema.TypeList,
 				Optional:     true,
+				Computed:     true,
 				RequiredWith: []string{"use_project_internal"},
+				// Note: DiffSuppressFunc was removed because it conflicts with CustomizeDiff.
+				// Order-independent ACP comparison is now handled entirely in CustomizeDiff.
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -409,6 +415,7 @@ func ResourceNutanixProject() *schema.Resource {
 									},
 								},
 							},
+							Set: acpReferenceHash,
 						},
 						"user_group_reference_list": {
 							Type:     schema.TypeSet,
@@ -429,6 +436,7 @@ func ResourceNutanixProject() *schema.Resource {
 									},
 								},
 							},
+							Set: acpReferenceHash,
 						},
 						"role_reference": {
 							Type:     schema.TypeList,
@@ -831,7 +839,8 @@ func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, m
 			}
 
 			if acp, ok := d.GetOk("acp"); ok {
-				accessControlPolicy = expandCreateAcp(acp.([]interface{}), d, d.Id(), clusterUUID, meta)
+				acp := acp.([]interface{})
+				accessControlPolicy = expandCreateAcp(acp, d, d.Id(), clusterUUID, meta)
 			}
 			spec.AccessControlPolicyList = accessControlPolicy
 			spec.ProjectDetail = projDetails
@@ -1146,8 +1155,11 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if d.HasChange("acp") {
-			acp := d.Get("acp")
-			accessControlPolicy = UpdateExpandAcpRM(acp.([]interface{}), response, d, meta, d.Id(), clusterUUID)
+			acp := d.Get("acp").([]interface{})
+			log.Printf("[DEBUG] acp has changed")
+			aJSON, _ := json.MarshalIndent(acp, "", "  ")
+			log.Printf("[DEBUG] acp: %s", string(aJSON))
+			accessControlPolicy = UpdateExpandAcpRM(acp, response, d, meta, d.Id(), clusterUUID)
 		} else {
 			accessControlPolicy = UpdateACPNoChange(response)
 		}
@@ -1720,12 +1732,36 @@ func expandCreateAcp(pr []interface{}, d *schema.ResourceData, projectUUID strin
 			if v1, ok1 := v["description"]; ok1 {
 				acpSpec.Description = utils.StringPtr(v1.(string))
 			}
+			// Handle multiple users in user_reference_list (TypeSet)
 			if v1, ok := v["user_reference_list"]; ok {
-				acpRes.UserReferenceList = validateArrayRef(v1.(*schema.Set), utils.StringPtr("user"))
+				if userSet, ok := v1.(*schema.Set); ok && userSet.Len() > 0 {
+					userRefs := userSet.List()
+					refList := make([]*v3.Reference, 0, len(userRefs))
+					for _, userRef := range userRefs {
+						ref := expandReference(userRef.(map[string]interface{}))
+						if ref != nil {
+							ref.Kind = utils.StringPtr("user")
+							refList = append(refList, ref)
+						}
+					}
+					acpRes.UserReferenceList = refList
+				}
 			}
 
+			// Handle multiple user groups in user_group_reference_list (TypeSet)
 			if v1, ok := v["user_group_reference_list"]; ok {
-				acpRes.UserGroupReferenceList = validateArrayRef(v1.(*schema.Set), utils.StringPtr("user_group"))
+				if groupSet, ok := v1.(*schema.Set); ok && groupSet.Len() > 0 {
+					groupRefs := groupSet.List()
+					refList := make([]*v3.Reference, 0, len(groupRefs))
+					for _, groupRef := range groupRefs {
+						ref := expandReference(groupRef.(map[string]interface{}))
+						if ref != nil {
+							ref.Kind = utils.StringPtr("user_group")
+							refList = append(refList, ref)
+						}
+					}
+					acpRes.UserGroupReferenceList = refList
+				}
 			}
 
 			if v, ok := v["role_reference"]; ok {
@@ -1785,12 +1821,36 @@ func UpdateExpandAcpRM(pr []interface{}, res *v3.ProjectInternalIntentResponse, 
 			if v1, ok1 := v["description"]; ok1 {
 				acpSpec.Description = utils.StringPtr(v1.(string))
 			}
+			// Handle multiple users in user_reference_list (TypeSet)
 			if v, ok := v["user_reference_list"]; ok {
-				acpRes.UserReferenceList = validateArrayRef(v.(*schema.Set), utils.StringPtr("user"))
+				if userSet, ok := v.(*schema.Set); ok && userSet.Len() > 0 {
+					userRefs := userSet.List()
+					refList := make([]*v3.Reference, 0, len(userRefs))
+					for _, userRef := range userRefs {
+						ref := expandReference(userRef.(map[string]interface{}))
+						if ref != nil {
+							ref.Kind = utils.StringPtr("user")
+							refList = append(refList, ref)
+						}
+					}
+					acpRes.UserReferenceList = refList
+				}
 			}
 
+			// Handle multiple user groups in user_group_reference_list (TypeSet)
 			if v, ok := v["user_group_reference_list"]; ok {
-				acpRes.UserGroupReferenceList = validateArrayRef(v.(*schema.Set), utils.StringPtr("user_group"))
+				if groupSet, ok := v.(*schema.Set); ok && groupSet.Len() > 0 {
+					groupRefs := groupSet.List()
+					refList := make([]*v3.Reference, 0, len(groupRefs))
+					for _, groupRef := range groupRefs {
+						ref := expandReference(groupRef.(map[string]interface{}))
+						if ref != nil {
+							ref.Kind = utils.StringPtr("user_group")
+							refList = append(refList, ref)
+						}
+					}
+					acpRes.UserGroupReferenceList = refList
+				}
 			}
 
 			if v, ok := v["role_reference"]; ok {
