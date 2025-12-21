@@ -192,8 +192,11 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 		clusterRef := management.NewClusterReference()
 		clusterExtID = clusterConfig["ext_id"].(string)
 		clusterRef.ExtId = utils.StringPtr(clusterExtID)
-
-		clusterConfigBody.Config = clusterRef
+		// From IRIS SDK, the cluster location config is a OneOfClusterLocationConfig
+		// so we need to set the value of the OneOfClusterLocationConfig
+		oneOfClusterLocationConfig := management.NewOneOfClusterLocationConfig()
+		oneOfClusterLocationConfig.SetValue(*clusterRef)
+		clusterConfigBody.Config = oneOfClusterLocationConfig
 
 		err := OneOfBackupTargetLocation.SetValue(*clusterConfigBody)
 		if err != nil {
@@ -273,7 +276,11 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 		if isClusterLocation && utils.StringValue(backupTargetLocation.ObjectType_) == clustersLocationObjectType {
 			log.Printf("[DEBUG] Cluster Backup Target with Ext ID: %s", utils.StringValue(backupTarget.ExtId))
 			clusterLocation := backupTarget.Location.GetValue().(management.ClusterLocation)
-			if utils.StringValue(clusterLocation.Config.ExtId) == clusterExtID {
+			// From IRIS SDK, the cluster location config is a OneOfClusterLocationConfig
+			// so we need to get the value of the OneOfClusterLocationConfig
+			clusterConfig := clusterLocation.Config.GetValue().(management.OneOfClusterLocationConfig)
+			clusterConfigValue := clusterConfig.GetValue().(management.ClusterReference)
+			if utils.StringValue(clusterConfigValue.ExtId) == clusterExtID {
 				d.SetId(utils.StringValue(backupTarget.ExtId))
 				break
 			}
@@ -281,7 +288,6 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 			objectStoreLocation := backupTarget.Location.GetValue().(management.ObjectStoreLocation)
 			// Since the backup target ext ID is not returned in the task details response
 			// we need to find the backup target by bucket name
-
 			if *objectStoreLocation.ProviderConfig.ObjectType_ == awsS3ConfigObjectType {
 				awsS3Config := objectStoreLocation.ProviderConfig.GetValue().(management.AWSS3Config)
 				if utils.StringValue(awsS3Config.BucketName) == bucketName {
@@ -427,8 +433,11 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 			clusterRef := management.NewClusterReference()
 
 			clusterRef.ExtId = utils.StringPtr(clusterConfig["ext_id"].(string))
-
-			clusterConfigBody.Config = clusterRef
+			// From IRIS SDK, the cluster location config is a OneOfClusterLocationConfig
+			// so we need to set the value of the OneOfClusterLocationConfig
+			oneOfClusterLocationConfig := management.NewOneOfClusterLocationConfig()
+			oneOfClusterLocationConfig.SetValue(*clusterRef)
+			clusterConfigBody.Config = oneOfClusterLocationConfig
 
 			err = oneOfBackupTargetLocation.SetValue(*clusterConfigBody)
 			if err != nil {

@@ -161,8 +161,11 @@ func ResourceNutanixRestoreSourceV2Create(ctx context.Context, d *schema.Resourc
 		clusterRef := management.NewClusterReference()
 
 		clusterRef.ExtId = utils.StringPtr(clusterConfig["ext_id"].(string))
-
-		clusterConfigBody.Config = clusterRef
+		// From IRIS SDK, the cluster location config is a OneOfClusterLocationConfig
+		// so we need to set the value of the OneOfClusterLocationConfig
+		oneOfClusterLocationConfig := management.NewOneOfClusterLocationConfig()
+		oneOfClusterLocationConfig.SetValue(*clusterRef)
+		clusterConfigBody.Config = oneOfClusterLocationConfig
 
 		err := oneOfRestoreSourceLocation.SetValue(*clusterConfigBody)
 		if err != nil {

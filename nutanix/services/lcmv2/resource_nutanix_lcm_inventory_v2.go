@@ -42,7 +42,7 @@ func ResourceNutanixLcmPerformInventoryV2Create(ctx context.Context, d *schema.R
 	}
 	// pass nil for the body as it is not required and its implemented in hercules Sdk
 	// it will be implemented in the future releases of terraform
-	resp, err := conn.LcmInventoryAPIInstance.PerformInventory(nil, clusterID, nil)
+	resp, err := conn.LcmInventoryAPIInstance.PerformInventory(clusterID, nil, nil)
 	if err != nil {
 		return diag.Errorf("error while performing the inventory: %v", err)
 	}
