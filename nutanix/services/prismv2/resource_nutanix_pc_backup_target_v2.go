@@ -278,9 +278,8 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 			clusterLocation := backupTarget.Location.GetValue().(management.ClusterLocation)
 			// From IRIS SDK, the cluster location config is a OneOfClusterLocationConfig
 			// so we need to get the value of the OneOfClusterLocationConfig
-			clusterConfig := clusterLocation.Config.GetValue().(management.OneOfClusterLocationConfig)
-			clusterConfigValue := clusterConfig.GetValue().(management.ClusterReference)
-			if utils.StringValue(clusterConfigValue.ExtId) == clusterExtID {
+			clusterConfig := clusterLocation.Config.GetValue().(management.ClusterReference)
+			if utils.StringValue(clusterConfig.ExtId) == clusterExtID {
 				d.SetId(utils.StringValue(backupTarget.ExtId))
 				break
 			}
