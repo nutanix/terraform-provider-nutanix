@@ -199,6 +199,46 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
+									"should_skip_discovery": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"should_skip_imaging": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"should_validate_rack_awareness": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"is_nos_compatible": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"is_compute_only": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"is_never_scheduleable": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"is_light_compute": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"hypervisor_hostname": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
 								},
 							},
 						},
@@ -1688,9 +1728,8 @@ func handleNodeChanges(ctx context.Context, d *schema.ResourceData, meta interfa
 			return diags
 		}
 
-		flags := nodeWithFlags.Flags
 		if diags := expandClusterWithNewNode(ctx, d, meta, *conn, *unconfiguredNodeDetails, *networkDetails,
-			flags.ShouldSkipHostNetworking, flags.ShouldSkipAddNode, flags.ShouldSkipPreExpandChecks); diags.HasError() {
+			nodeWithFlags.Flags); diags.HasError() {
 			return diags
 		}
 	}
@@ -1982,75 +2021,83 @@ func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta int
 func expandClusterWithNewNode(ctx context.Context, d *schema.ResourceData, meta interface{}, conn clusters.Client,
 	unconfigureNodeDetails config.UnconfigureNodeDetails,
 	nodeNetworkingDetails config.NodeNetworkingDetails,
-	shouldSkipHostNetworking, shouldSkipAddNode, shouldSkipPreExpandChecks bool) diag.Diagnostics {
+	flags NodeFlags) diag.Diagnostics {
 	unConfNode := unconfigureNodeDetails.NodeList[0]
 	nodeNetInfo := nodeNetworkingDetails
 
+	upLinks := config.NewUplinks()
+	activeUplinkField := config.NewUplinksField()
+	standbyUplinkField := config.NewUplinksField()
+	activeUplinkField.Name = nodeNetInfo.Uplinks[0].UplinkList[0].Name
+	activeUplinkField.Mac = nodeNetInfo.Uplinks[0].UplinkList[0].Mac
+	activeUplinkField.Value = nodeNetInfo.Uplinks[0].UplinkList[0].Name
+	standbyUplinkField.Name = nodeNetInfo.Uplinks[0].UplinkList[1].Name
+	standbyUplinkField.Mac = nodeNetInfo.Uplinks[0].UplinkList[1].Mac
+	standbyUplinkField.Value = nodeNetInfo.Uplinks[0].UplinkList[1].Name
+
+	upLinks.Active = append(upLinks.Active, *activeUplinkField)
+	upLinks.Standby = append(upLinks.Standby, *standbyUplinkField)
+
 	networks := make([]config.UplinkNetworkItem, 0)
-	networks = append(networks, config.UplinkNetworkItem{
-		Name:     nodeNetInfo.NetworkInfo.Hci[0].Name,
-		Networks: nodeNetInfo.NetworkInfo.Hci[0].Networks,
-		Uplinks: &config.Uplinks{
-			Active: []config.UplinksField{
-				{
-					Name:  nodeNetInfo.Uplinks[0].UplinkList[0].Name,
-					Mac:   nodeNetInfo.Uplinks[0].UplinkList[0].Mac,
-					Value: nodeNetInfo.Uplinks[0].UplinkList[0].Name,
-				},
-			},
-			Standby: []config.UplinksField{
-				{
-					Name:  nodeNetInfo.Uplinks[0].UplinkList[1].Name,
-					Mac:   nodeNetInfo.Uplinks[0].UplinkList[1].Mac,
-					Value: nodeNetInfo.Uplinks[0].UplinkList[1].Name,
-				},
-			},
-		},
-	})
+	uplinksNetworkItem := config.NewUplinkNetworkItem()
+	uplinksNetworkItem.Name = nodeNetInfo.NetworkInfo.Hci[0].Name
+	uplinksNetworkItem.Networks = nodeNetInfo.NetworkInfo.Hci[0].Networks
+	uplinksNetworkItem.Uplinks = upLinks
 
-	nodeItem := config.NodeItem{
-		NodeUuid:                unConfNode.NodeUuid,
-		NodePosition:            unConfNode.NodePosition,
-		Model:                   unConfNode.RackableUnitModel,
-		BlockId:                 unConfNode.RackableUnitSerial,
-		HypervisorType:          unConfNode.HypervisorType,
-		HypervisorVersion:       unConfNode.HypervisorVersion,
-		NosVersion:              unConfNode.NosVersion,
-		CurrentNetworkInterface: nodeNetInfo.Uplinks[0].UplinkList[0].Name,
-		HypervisorIp:            unConfNode.HypervisorIp,
-		CvmIp:                   unConfNode.CvmIp,
-		IpmiIp:                  unConfNode.IpmiIp,
-		IsRoboMixedHypervisor:   unConfNode.Attributes.IsRoboMixedHypervisor,
-		Networks:                networks,
+	networks = append(networks, *uplinksNetworkItem)
+
+	nodeItem := config.NewNodeItem()
+	nodeItem.NodeUuid = unConfNode.NodeUuid
+	nodeItem.NodePosition = unConfNode.NodePosition
+	nodeItem.Model = unConfNode.RackableUnitModel
+	nodeItem.BlockId = unConfNode.RackableUnitSerial
+	nodeItem.HypervisorType = unConfNode.HypervisorType
+	nodeItem.HypervisorVersion = unConfNode.HypervisorVersion
+	nodeItem.NosVersion = unConfNode.NosVersion
+	nodeItem.CurrentNetworkInterface = nodeNetInfo.Uplinks[0].UplinkList[0].Name
+	nodeItem.HypervisorIp = unConfNode.HypervisorIp
+	nodeItem.CvmIp = unConfNode.CvmIp
+	nodeItem.IpmiIp = unConfNode.IpmiIp
+	nodeItem.IsRoboMixedHypervisor = unConfNode.Attributes.IsRoboMixedHypervisor
+	nodeItem.Networks = networks
+	nodeItem.IsLightCompute = utils.BoolPtr(flags.IsLightCompute)
+	if flags.HypervisorHostname != "" {
+		nodeItem.HypervisorHostname = utils.StringPtr(flags.HypervisorHostname)
 	}
 
-	nodeList := []config.NodeItem{
-		nodeItem,
-	}
+	nodeList := make([]config.NodeItem, 0)
+	nodeList = append(nodeList, *nodeItem)
 
-	nodeParam := config.NodeParam{
-		ShouldSkipHostNetworking: utils.BoolPtr(shouldSkipHostNetworking),
-		NodeList:                 nodeList,
-		HypervisorIsos: []config.HypervisorIsoMap{
-			{
-				Type: unConfNode.HypervisorType,
-			},
-		},
+	nodeParam := config.NewNodeParam()
+	if flags.ShouldSkipHostNetworking != nil {
+		nodeParam.ShouldSkipHostNetworking = flags.ShouldSkipHostNetworking
 	}
+	nodeParam.NodeList = nodeList
 
-	body := config.ExpandClusterParams{
-		ShouldSkipAddNode:         utils.BoolPtr(shouldSkipAddNode),
-		ShouldSkipPreExpandChecks: utils.BoolPtr(shouldSkipPreExpandChecks),
-		NodeParams:                &nodeParam,
-		ConfigParams: &config.ConfigParams{
-			TargetHypervisor: utils.StringPtr(unConfNode.HypervisorType.GetName()),
-		},
-	}
+	hypervisorIsoMap := config.NewHypervisorIsoMap()
+	hypervisorIsoMap.Type = unConfNode.HypervisorType
+
+	nodeParam.HypervisorIsos = append(nodeParam.HypervisorIsos, *hypervisorIsoMap)
+
+	configParams := config.NewConfigParams()
+	configParams.TargetHypervisor = utils.StringPtr(unConfNode.HypervisorType.GetName())
+	configParams.ShouldSkipDiscovery = utils.BoolPtr(flags.ShouldSkipDiscovery)
+	configParams.ShouldSkipImaging = utils.BoolPtr(flags.ShouldSkipImaging)
+	configParams.ShouldValidateRackAwareness = utils.BoolPtr(flags.ShouldValidateRackAwareness)
+	configParams.IsNosCompatible = utils.BoolPtr(flags.IsNosCompatible)
+	configParams.IsComputeOnly = utils.BoolPtr(flags.IsComputeOnly)
+	configParams.IsNeverScheduleable = utils.BoolPtr(flags.IsNeverScheduleable)
+
+	body := config.NewExpandClusterParams()
+	body.ShouldSkipAddNode = utils.BoolPtr(flags.ShouldSkipAddNode)
+	body.ShouldSkipPreExpandChecks = utils.BoolPtr(flags.ShouldSkipPreExpandChecks)
+	body.NodeParams = nodeParam
+	body.ConfigParams = configParams
 
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] Add Node Request Body: %s", string(aJSON))
 
-	resp, err := conn.ClusterEntityAPI.ExpandCluster(utils.StringPtr(d.Id()), &body)
+	resp, err := conn.ClusterEntityAPI.ExpandCluster(utils.StringPtr(d.Id()), body)
 	if err != nil {
 		return diag.Errorf("error while adding node : %v", err)
 	}

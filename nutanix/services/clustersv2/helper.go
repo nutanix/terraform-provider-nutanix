@@ -263,9 +263,17 @@ func DiffNodes(d *schema.ResourceData, existing, newNodes []config.NodeListItemR
 
 type NodeFlags struct {
 	// Add node flags
-	ShouldSkipAddNode         bool
-	ShouldSkipHostNetworking  bool
-	ShouldSkipPreExpandChecks bool
+	ShouldSkipAddNode           bool
+	ShouldSkipHostNetworking    *bool
+	ShouldSkipPreExpandChecks   bool
+	ShouldSkipDiscovery         bool
+	ShouldSkipImaging           bool
+	ShouldValidateRackAwareness bool
+	IsNosCompatible             bool
+	IsComputeOnly               bool
+	IsNeverScheduleable         bool
+	IsLightCompute              bool
+	HypervisorHostname          string
 
 	// Remove node flags
 	ShouldSkipRemove       bool
@@ -277,6 +285,86 @@ type NodeFlags struct {
 type NodeWithFlags struct {
 	Node  config.NodeListItemReference
 	Flags NodeFlags
+}
+
+// isFieldSetInRawConfig checks if a specific field was explicitly set in the raw TF config
+// for a node_list item matching the given controller VM IP.
+func isFieldSetInRawConfig(d *schema.ResourceData, nodeIP string, fieldName string) bool {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() {
+		return false
+	}
+
+	nodesAttr := rawConfig.GetAttr("nodes")
+	if nodesAttr.IsNull() || !nodesAttr.CanIterateElements() {
+		return false
+	}
+
+	for nodesIt := nodesAttr.ElementIterator(); nodesIt.Next(); {
+		_, nodeVal := nodesIt.Element()
+		if nodeVal.IsNull() {
+			continue
+		}
+
+		nodeListAttr := nodeVal.GetAttr("node_list")
+		if nodeListAttr.IsNull() || !nodeListAttr.CanIterateElements() {
+			continue
+		}
+
+		for nodeListIt := nodeListAttr.ElementIterator(); nodeListIt.Next(); {
+			_, nodeListItem := nodeListIt.Element()
+			if nodeListItem.IsNull() {
+				continue
+			}
+
+			// Check if this node_list item matches by controller_vm_ip
+			controllerVmIpAttr := nodeListItem.GetAttr("controller_vm_ip")
+			if controllerVmIpAttr.IsNull() || !controllerVmIpAttr.CanIterateElements() {
+				continue
+			}
+
+			for cvmIt := controllerVmIpAttr.ElementIterator(); cvmIt.Next(); {
+				_, cvmVal := cvmIt.Element()
+				if cvmVal.IsNull() {
+					continue
+				}
+
+				// Check ipv4
+				ipv4Attr := cvmVal.GetAttr("ipv4")
+				if !ipv4Attr.IsNull() && ipv4Attr.CanIterateElements() {
+					for ipv4It := ipv4Attr.ElementIterator(); ipv4It.Next(); {
+						_, ipv4Val := ipv4It.Element()
+						if !ipv4Val.IsNull() {
+							valueAttr := ipv4Val.GetAttr("value")
+							if !valueAttr.IsNull() && valueAttr.AsString() == nodeIP {
+								// Found matching node, check if field is set
+								fieldAttr := nodeListItem.GetAttr(fieldName)
+								return !fieldAttr.IsNull()
+							}
+						}
+					}
+				}
+
+				// Check ipv6
+				ipv6Attr := cvmVal.GetAttr("ipv6")
+				if !ipv6Attr.IsNull() && ipv6Attr.CanIterateElements() {
+					for ipv6It := ipv6Attr.ElementIterator(); ipv6It.Next(); {
+						_, ipv6Val := ipv6It.Element()
+						if !ipv6Val.IsNull() {
+							valueAttr := ipv6Val.GetAttr("value")
+							if !valueAttr.IsNull() && valueAttr.AsString() == nodeIP {
+								// Found matching node, check if field is set
+								fieldAttr := nodeListItem.GetAttr(fieldName)
+								return !fieldAttr.IsNull()
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return false
 }
 
 // extractNodeFlags finds a node from the Terraform diff (nodes) that matches
@@ -336,11 +424,56 @@ func extractNodeFlags(d *schema.ResourceData, node config.NodeListItemReference)
 						if v, ok := itemMap["should_skip_add_node"].(bool); ok {
 							flags.ShouldSkipAddNode = v
 						}
-						if v, ok := itemMap["should_skip_host_networking"].(bool); ok {
-							flags.ShouldSkipHostNetworking = v
+						// Only set ShouldSkipHostNetworking if explicitly set in TF config
+						if isFieldSetInRawConfig(d, nodeIP, "should_skip_host_networking") {
+							if v, ok := itemMap["should_skip_host_networking"].(bool); ok {
+								flags.ShouldSkipHostNetworking = utils.BoolPtr(v)
+							}
 						}
-						if v, ok := itemMap["should_skip_pre_expand_checks"].(bool); ok {
-							flags.ShouldSkipPreExpandChecks = v
+						if isFieldSetInRawConfig(d, nodeIP, "should_skip_pre_expand_checks") {
+							if v, ok := itemMap["should_skip_pre_expand_checks"].(bool); ok {
+								flags.ShouldSkipPreExpandChecks = v
+							}
+						}
+						if isFieldSetInRawConfig(d, nodeIP, "should_skip_discovery") {
+							if v, ok := itemMap["should_skip_discovery"].(bool); ok {
+								flags.ShouldSkipDiscovery = v
+							}
+						}
+						if isFieldSetInRawConfig(d, nodeIP, "should_skip_imaging") {
+							if v, ok := itemMap["should_skip_imaging"].(bool); ok {
+								flags.ShouldSkipImaging = v
+							}
+						}
+						if isFieldSetInRawConfig(d, nodeIP, "should_validate_rack_awareness") {
+							if v, ok := itemMap["should_validate_rack_awareness"].(bool); ok {
+								flags.ShouldValidateRackAwareness = v
+							}
+						}
+						if isFieldSetInRawConfig(d, nodeIP, "is_nos_compatible") {
+							if v, ok := itemMap["is_nos_compatible"].(bool); ok {
+								flags.IsNosCompatible = v
+							}
+						}
+						if isFieldSetInRawConfig(d, nodeIP, "is_compute_only") {
+							if v, ok := itemMap["is_compute_only"].(bool); ok {
+								flags.IsComputeOnly = v
+							}
+						}
+						if isFieldSetInRawConfig(d, nodeIP, "is_never_scheduleable") {
+							if v, ok := itemMap["is_never_scheduleable"].(bool); ok {
+								flags.IsNeverScheduleable = v
+							}
+						}
+						if isFieldSetInRawConfig(d, nodeIP, "is_light_compute") {
+							if v, ok := itemMap["is_light_compute"].(bool); ok {
+								flags.IsLightCompute = v
+							}
+						}
+						if isFieldSetInRawConfig(d, nodeIP, "hypervisor_hostname") {
+							if v, ok := itemMap["hypervisor_hostname"].(string); ok {
+								flags.HypervisorHostname = v
+							}
 						}
 						break
 					}
