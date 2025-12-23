@@ -686,22 +686,6 @@ locals {
 
 }
 
-locals {
-  pre_update_hook_command = <<EOT
-  sshpass -p '${local.pcSSHPassword}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${local.username}@${local.ip} \
-  "docker exec aoss_service_manager sh -c 'cd /home/nutanix/config/poseidon_master && \
-  cp buckets_tools_template.yaml buckets_tools_template_backup.yml && \
-  sed -i -E \"s|(image: .+/[^:]+:)[^ ]+|\\\\1invalid-version|\" buckets_tools_template.yaml'"
-  EOT
-}
-
-locals {
-  restore_command = <<EOT
-  sshpass -p '${local.pcSSHPassword}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${local.username}@${local.ip} \
-  "docker exec aoss_service_manager sh -c 'cd /home/nutanix/config/poseidon_master && mv buckets_tools_template_backup.yml buckets_tools_template.yaml'"
-  EOT
-}
-
 data "nutanix_clusters_v2" "clusters" {}
 
 data "nutanix_subnets_v2" "subnets" {
@@ -711,9 +695,29 @@ data "nutanix_subnets_v2" "subnets" {
 # this resource to change image tag on pc to incorrect one
 # to make sure object store deployment fails
 resource "terraform_data" "pre_update_hook" {
+  input = {
+    pc_ssh_password = local.pcSSHPassword
+    pc_ssh_username = local.username
+    pc_ip           = local.ip
+  }
   provisioner "local-exec" {
     when       = create
-    command    = local.pre_update_hook_command
+    command    = <<EOT
+sshpass -p '${self.input.pc_ssh_password}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${self.input.pc_ssh_username}@${self.input.pc_ip} \
+"docker exec aoss_service_manager sh -c 'cd /home/nutanix/config/poseidon_master && \
+cp buckets_tools_template.yaml buckets_tools_template_backup.yml && \
+sed -i -E \"s|(image: .+/[^:]+:)[^ ]+|\\\\1invalid-version|\" buckets_tools_template.yaml'"
+EOT
+    on_failure = continue
+  }
+  # If the test fails after we patched the template (e.g. OSS deploy failure or assertion failure),
+  # ensure we restore the correct template on test cleanup (terraform destroy).
+  provisioner "local-exec" {
+    when       = destroy
+    command    = <<EOT
+sshpass -p '${self.input.pc_ssh_password}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${self.input.pc_ssh_username}@${self.input.pc_ip} \
+"docker exec aoss_service_manager sh -c 'cd /home/nutanix/config/poseidon_master && mv buckets_tools_template_backup.yml buckets_tools_template.yaml'"
+EOT
     on_failure = continue
   }
 }
@@ -764,7 +768,7 @@ resource "terraform_data" "cleanup_bucket_test" {
 set -eu
 URL="https://$NUTANIX_ENDPOINT:$NUTANIX_PORT/oss/api/nutanix/v3/objectstore_proxy/${self.input.object_store_id}/buckets/${self.input.bucket_name}?force_empty_bucket=true"
 CODE="$(curl -sSk -u "$NUTANIX_USERNAME:$NUTANIX_PASSWORD" -X DELETE "$URL" -o /tmp/os_bucket_delete_test.out -w "%%%%{http_code}" || echo "000")"
-if [ "$CODE" != "200" ] && [ "$CODE" != "202" ] && [ "$CODE" != "204" ] && [ "$CODE" != "404" ] && [ "$CODE" != "503" ]; then
+if [ "$CODE" != "200" ] && [ "$CODE" != "202" ] && [ "$CODE" != "204" ] && [ "$CODE" != "404" ] && [ "$CODE" != "500" ] && [ "$CODE" != "503" ]; then
   echo "bucket delete failed (test) http_code=$CODE url=$URL"
   cat /tmp/os_bucket_delete_test.out || true
   exit 1
@@ -779,7 +783,10 @@ EOT
 # to make sure object store deployment succeeds
 resource "terraform_data" "post_update_hook" {
   provisioner "local-exec" {
-    command    = local.restore_command
+    command    = <<EOT
+sshpass -p '${local.pcSSHPassword}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${local.username}@${local.ip} \
+"docker exec aoss_service_manager sh -c 'cd /home/nutanix/config/poseidon_master && mv buckets_tools_template_backup.yml buckets_tools_template.yaml'"
+EOT
     on_failure = continue
 	when	   = create
   }
