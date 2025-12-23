@@ -91,6 +91,7 @@ func flattenKeyManagementServer(kmsList []config.KeyManagementServer) ([]map[str
 			"tenant_id":          utils.StringValue(kms.TenantId),
 			"access_information": accessInformation,
 			"links":              flattenLinks(kms.Links),
+			"creation_timestamp": utils.TimeStringValue(kms.CreationTimestamp),
 		}
 		kmsFlattened = append(kmsFlattened, kmsMap)
 	}

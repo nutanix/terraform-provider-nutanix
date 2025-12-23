@@ -37,16 +37,43 @@ The `kms` attribute export the following:
 - `links`: - A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 - `name`: - Name of the key management server (KMS).
 - `access_information`: - Access information for the Azure Key Vault.
+- `creation_timestamp`: - The timestamp when the key management server was created.
 
 #### access_information
 
 The `access_information` exports the following:
 
-- `endpoint_url`: (Required) Endpoint URL for the Azure Key Vault.
-- `key_id`: (Required) Master key identifier for the Azure Key Vault.
-- `tenant_id`: (Required) Tetant identifier for the Azure Key Vault.
-- `client_id`: (Required) Client identifier for the Azure Key Vault.
-- `client_secret`: (Required) Client secret for the Azure Key Vault.
-- `credential_expiry_date`: (Required) When the client secret is going to expire.
+- `azure_key_vault`: - Access information for the Azure Key Vault.
+- `kmip_key_vault`: - Access information for the KMIP Key Vault.
 
-See detailed information in [Nutanix List key management servers V4](https://developers.nutanix.com/api-reference?namespace=security&version=v4.0#tag/KeyManagementServers/operation/listKeyManagementServers)
+#### azure_key_vault
+
+The `azure_key_vault` exports the following:
+
+- `endpoint_url`: Endpoint URL for the Azure Key Vault.
+- `key_id`: Master key identifier for the Azure Key Vault.
+- `tenant_id`: Tetant identifier for the Azure Key Vault.
+- `client_id`: Client identifier for the Azure Key Vault.
+- `truncated_client_secret`: Truncated client secret for the Azure Key Vault.
+- `credential_expiry_date`: When the client secret is going to expire.
+
+#### kmip_key_vault
+
+The `kmip_key_vault` exports the following:
+
+- `ca_name`: Name of the Certificate Authority.
+- `ca_pem`: Cert PEM File.
+- `cert_pem`: Cert PEM.
+- `endpoints`: List of endpoints of the External Key Manager server.
+  - `ip_address`: IP address of the External Key Manager server.
+    - `ipv4`: IPv4 address of the External Key Manager server.
+      - `value`: IPv4 address of the External Key Manager server.
+      - `prefix_length`: Prefix length of the IPv4 address.
+    - `ipv6`: IPv6 address of the External Key Manager server.
+      - `value`: IPv6 address of the External Key Manager server.
+      - `prefix_length`: Prefix length of the IPv6 address.
+    - `fqdn`: FQDN of the External Key Manager server.
+      - `value`: FQDN of the External Key Manager server.
+  - `port`: Port of the External Key Manager server.
+
+See detailed information in [Nutanix List key management servers V4](https://developers.nutanix.com/api-reference?namespace=security&version=v4.1#tag/KeyManagementServers/operation/listKeyManagementServers)

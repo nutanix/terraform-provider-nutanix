@@ -4,6 +4,7 @@ package securityv2
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -59,16 +60,11 @@ func DatasourceNutanixKeyManagementServerV2() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"client_secret": {
-										Type:      schema.TypeString,
-										Computed:  true,
-										Sensitive: true,
-									},
-									"credential_expiry_date": {
+									"truncated_client_secret": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"truncated_client_secret": {
+									"credential_expiry_date": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -122,6 +118,10 @@ func DatasourceNutanixKeyManagementServerV2() *schema.Resource {
 					},
 				},
 			},
+			"creation_timestamp": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -161,6 +161,9 @@ func DatasourceNutanixKeyManagementServerV2Read(ctx context.Context, d *schema.R
 	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("creation_timestamp", utils.TimeStringValue(getResp.CreationTimestamp)); err != nil {
+		return diag.FromErr(err)
+	}
 
 	d.SetId(utils.StringValue(getResp.ExtId))
 	return nil
@@ -188,26 +191,47 @@ func flattenLinks(links []response.ApiLink) []interface{} {
 
 func flattenAccessInformation(accessInfo interface{}) ([]map[string]interface{}, error) {
 	if accessInfo == nil {
+		log.Printf("[DEBUG] flattenAccessInformation: accessInfo is nil")
 		return nil, fmt.Errorf("access information is nil")
 	}
 
+	log.Printf("[DEBUG] flattenAccessInformation: input type=%T", accessInfo)
+
 	switch v := accessInfo.(type) {
 	case *config.OneOfKeyManagementServerAccessInformation:
+		log.Printf("[DEBUG] flattenAccessInformation: handling OneOfKeyManagementServerAccessInformation")
 		return flattenAccessInformation(v.GetValue())
+	case *config.AzureAccessInformation:
+		if v == nil {
+			log.Printf("[DEBUG] flattenAccessInformation: *AzureAccessInformation is nil")
+			return nil, fmt.Errorf("access information is nil")
+		}
+		log.Printf("[DEBUG] flattenAccessInformation: handling *AzureAccessInformation")
+		return flattenAccessInformation(*v)
 	case config.AzureAccessInformation:
+		// NOTE: Do not log sensitive fields (e.g. client_secret).
+		log.Printf("[DEBUG] flattenAccessInformation: handling AzureAccessInformation")
 		azure := map[string]interface{}{
 			"endpoint_url":            utils.StringValue(v.EndpointUrl),
 			"key_id":                  utils.StringValue(v.KeyId),
 			"tenant_id":               utils.StringValue(v.TenantId),
 			"client_id":               utils.StringValue(v.ClientId),
-			"client_secret":           utils.StringValue(v.ClientSecret),
 			"truncated_client_secret": utils.StringValue(v.TruncatedClientSecret),
 			"credential_expiry_date":  utils.TimeValue(v.CredentialExpiryDate).Format("2006-01-02"),
 		}
 		return []map[string]interface{}{{
 			"azure_key_vault": []map[string]interface{}{azure},
 		}}, nil
+	case *config.KmipAccessInformation:
+		if v == nil {
+			log.Printf("[DEBUG] flattenAccessInformation: *KmipAccessInformation is nil")
+			return nil, fmt.Errorf("access information is nil")
+		}
+		log.Printf("[DEBUG] flattenAccessInformation: handling *KmipAccessInformation (endpoints=%d)", len(v.Endpoints))
+		return flattenAccessInformation(*v)
 	case config.KmipAccessInformation:
+		// NOTE: Do not log sensitive fields (e.g. cert_pem/private_key/ca_pem).
+		log.Printf("[DEBUG] flattenAccessInformation: handling KmipAccessInformation (endpoints=%d)", len(v.Endpoints))
 		kmip := map[string]interface{}{
 			"ca_name":     utils.StringValue(v.CaName),
 			"ca_pem":      utils.StringValue(v.CaPem),
@@ -229,6 +253,7 @@ func flattenAccessInformation(accessInfo interface{}) ([]map[string]interface{},
 			"kmip_key_vault": []map[string]interface{}{kmip},
 		}}, nil
 	default:
+		log.Printf("[DEBUG] flattenAccessInformation: unsupported type=%T", accessInfo)
 		return nil, fmt.Errorf("unsupported access information type %T", accessInfo)
 	}
 }

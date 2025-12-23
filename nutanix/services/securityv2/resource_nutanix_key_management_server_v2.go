@@ -255,9 +255,18 @@ func ResourceNutanixKeyManagementServerV2Read(ctx context.Context, d *schema.Res
 	if err := d.Set("name", getResp.Name); err != nil {
 		return diag.FromErr(err)
 	}
+	log.Printf("[DEBUG] flattening access information")
 	accessInfo, flattenErr := flattenAccessInformation(getResp.GetAccessInformation())
 	if flattenErr != nil {
 		return diag.FromErr(flattenErr)
+	}
+	// Preserve sensitive values from config/state (API may not return them).
+	// This avoids perpetual diffs for required sensitive fields like client_secret.
+	if v, ok := d.GetOk("access_information.0.azure_key_vault.0.client_secret"); ok && len(accessInfo) > 0 {
+		if azureList, ok2 := accessInfo[0]["azure_key_vault"].([]map[string]interface{}); ok2 && len(azureList) > 0 {
+			azureList[0]["client_secret"] = v.(string)
+			accessInfo[0]["azure_key_vault"] = azureList
+		}
 	}
 	if err := d.Set("access_information", accessInfo); err != nil {
 		return diag.FromErr(err)
@@ -455,14 +464,18 @@ func expandAccessInformation(accessInfo []interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("failed to parse credential_expiry_date %q: %w", expiryStr, err)
 		}
 
-		return config.AzureAccessInformation{
-			EndpointUrl:          utils.StringPtr(azureMap["endpoint_url"].(string)),
-			KeyId:                utils.StringPtr(azureMap["key_id"].(string)),
-			TenantId:             utils.StringPtr(azureMap["tenant_id"].(string)),
-			ClientId:             utils.StringPtr(azureMap["client_id"].(string)),
-			ClientSecret:         utils.StringPtr(azureMap["client_secret"].(string)),
-			CredentialExpiryDate: utils.Time(expiryTime),
-		}, nil
+		azureAccessInfo := config.NewAzureAccessInformation()
+
+		azureAccessInfo.EndpointUrl = utils.StringPtr(azureMap["endpoint_url"].(string))
+		azureAccessInfo.KeyId = utils.StringPtr(azureMap["key_id"].(string))
+		azureAccessInfo.TenantId = utils.StringPtr(azureMap["tenant_id"].(string))
+		azureAccessInfo.ClientId = utils.StringPtr(azureMap["client_id"].(string))
+		azureAccessInfo.ClientSecret = utils.StringPtr(azureMap["client_secret"].(string))
+		azureAccessInfo.CredentialExpiryDate = utils.Time(expiryTime)
+
+		// The generated API client's OneOf setter expects the non-pointer model type.
+		// Returning a pointer here can lead to: "*config.AzureAccessInformation(...) is not expected type".
+		return *azureAccessInfo, nil
 	}
 
 	kmipMap, ok := kmipList[0].(map[string]interface{})
@@ -475,13 +488,15 @@ func expandAccessInformation(accessInfo []interface{}) (interface{}, error) {
 		return nil, err
 	}
 
-	return config.KmipAccessInformation{
-		CaName:     utils.StringPtr(kmipMap["ca_name"].(string)),
-		CaPem:      utils.StringPtr(kmipMap["ca_pem"].(string)),
-		CertPem:    utils.StringPtr(kmipMap["cert_pem"].(string)),
-		PrivateKey: utils.StringPtr(kmipMap["private_key"].(string)),
-		Endpoints:  endpoints,
-	}, nil
+	kmipAccessInfo := config.NewKmipAccessInformation()
+	kmipAccessInfo.CaName = utils.StringPtr(kmipMap["ca_name"].(string))
+	kmipAccessInfo.CaPem = utils.StringPtr(kmipMap["ca_pem"].(string))
+	kmipAccessInfo.CertPem = utils.StringPtr(kmipMap["cert_pem"].(string))
+	kmipAccessInfo.PrivateKey = utils.StringPtr(kmipMap["private_key"].(string))
+	kmipAccessInfo.Endpoints = endpoints
+
+	// The generated API client's OneOf setter expects the non-pointer model type.
+	return *kmipAccessInfo, nil
 }
 
 func expandKMIPEndpoints(raw interface{}) ([]config.EndpointInfo, error) {
