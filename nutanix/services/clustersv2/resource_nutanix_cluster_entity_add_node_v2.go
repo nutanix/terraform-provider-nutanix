@@ -471,7 +471,7 @@ func ResourceNutanixClusterAddNodeV2Create(ctx context.Context, d *schema.Resour
 	body := config.ExpandClusterParams{}
 
 	if nodeParams, ok := d.GetOk("node_params"); ok {
-		body.NodeParams = expandClusterNodeParams(nodeParams)
+		body.NodeParams = expandClusterNodeParams(d, nodeParams)
 	}
 	if configParams, ok := d.GetOk("config_params"); ok {
 		body.ConfigParams = expandClusterConfigParams(configParams)
@@ -605,7 +605,7 @@ func ResourceNutanixClusterAddNodeV2Delete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func expandClusterNodeParams(pr interface{}) *config.NodeParam {
+func expandClusterNodeParams(d *schema.ResourceData, pr interface{}) *config.NodeParam {
 	if pr != nil {
 		nConf := config.NodeParam{}
 		prI := pr.([]interface{})
@@ -629,8 +629,12 @@ func expandClusterNodeParams(pr interface{}) *config.NodeParam {
 		if bundleInfo, ok := val["bundle_info"]; ok {
 			nConf.BundleInfo = expandBundleInfo(bundleInfo)
 		}
-		if skipHostNetworking, ok := val["should_skip_host_networking"]; ok {
-			nConf.ShouldSkipHostNetworking = utils.BoolPtr(skipHostNetworking.(bool))
+		// Only set this if the user explicitly configured it; otherwise omit from request body.
+		// This avoids sending the default "false" from Optional+Computed into the API.
+		if common.IsExplicitlySet(d, "node_params.0.should_skip_host_networking") {
+			if skipHostNetworking, ok := val["should_skip_host_networking"]; ok {
+				nConf.ShouldSkipHostNetworking = utils.BoolPtr(skipHostNetworking.(bool))
+			}
 		}
 
 		return &nConf

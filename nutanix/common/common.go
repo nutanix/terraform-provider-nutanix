@@ -7,7 +7,10 @@ import (
 	"hash/crc32"
 	"log"
 	"reflect"
+	"strconv"
+	"strings"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
@@ -72,13 +75,72 @@ func IsExplicitlySet(d *schema.ResourceData, key string) bool {
 		return false // If rawConfig is null/unknown, key wasn't explicitly set
 	}
 
-	// Convert rawConfig to map and check if key exists
-	configMap := rawConfig.AsValueMap()
-	if val, exists := configMap[key]; exists {
-		log.Printf("[DEBUG] Key: %s, Value: %s", key, val)
-		return !val.IsNull() // Ensure key exists and isn't explicitly null
+	val, ok := getRawConfigValueAtPath(rawConfig, key)
+	if !ok {
+		return false
 	}
-	return false
+
+	log.Printf("[DEBUG] Key: %s, Value: %s", key, val)
+	return !val.IsNull() // Ensure key exists and isn't explicitly null
+}
+
+func getRawConfigValueAtPath(root cty.Value, path string) (cty.Value, bool) {
+	if root.IsNull() || !root.IsKnown() {
+		return cty.NilVal, false
+	}
+	if path == "" {
+		return cty.NilVal, false
+	}
+
+	cur := root
+	parts := strings.Split(path, ".")
+	for _, p := range parts {
+		if p == "" {
+			return cty.NilVal, false
+		}
+
+		if cur.IsNull() || !cur.IsKnown() {
+			return cty.NilVal, false
+		}
+
+		// Handle list/tuple index (e.g. "node_params.0.foo")
+		if idx, err := strconv.Atoi(p); err == nil {
+			t := cur.Type()
+			if !(t.IsListType() || t.IsTupleType()) {
+				return cty.NilVal, false
+			}
+
+			lenVal := cur.Length()
+			if lenVal.IsNull() || !lenVal.IsKnown() {
+				return cty.NilVal, false
+			}
+
+			bf := lenVal.AsBigFloat()
+			li, _ := bf.Int64()
+			if idx < 0 || int64(idx) >= li {
+				return cty.NilVal, false
+			}
+
+			cur = cur.Index(cty.NumberIntVal(int64(idx)))
+			continue
+		}
+
+		// Handle object/map attribute (top-level and nested)
+		t := cur.Type()
+		if t.IsObjectType() || t.IsMapType() {
+			m := cur.AsValueMap()
+			child, exists := m[p]
+			if !exists {
+				return cty.NilVal, false
+			}
+			cur = child
+			continue
+		}
+
+		return cty.NilVal, false
+	}
+
+	return cur, true
 }
 
 func TaskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
