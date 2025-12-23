@@ -754,12 +754,16 @@ resource "nutanix_object_store_v2" "test" {
 
 // Ensure bucket is deleted before the object store is destroyed, even if a test step fails.
 resource "terraform_data" "cleanup_bucket_test" {
+  input = {
+    object_store_id = nutanix_object_store_v2.test.id
+    bucket_name     = local.objectStore.bucket_name
+  }
   provisioner "local-exec" {
     when = destroy
     command = <<EOT
 set -eu
-URL="https://$NUTANIX_ENDPOINT:$NUTANIX_PORT/oss/api/nutanix/v3/objectstore_proxy/${nutanix_object_store_v2.test.id}/buckets/${local.objectStore.bucket_name}?force_empty_bucket=true"
-CODE="$(curl -sSk -u "$NUTANIX_USERNAME:$NUTANIX_PASSWORD" -X DELETE "$URL" -o /tmp/os_bucket_delete_test.out -w "%%{http_code}" || echo "000")"
+URL="https://$NUTANIX_ENDPOINT:$NUTANIX_PORT/oss/api/nutanix/v3/objectstore_proxy/${self.input.object_store_id}/buckets/${self.input.bucket_name}?force_empty_bucket=true"
+CODE="$(curl -sSk -u "$NUTANIX_USERNAME:$NUTANIX_PASSWORD" -X DELETE "$URL" -o /tmp/os_bucket_delete_test.out -w "%%%%{http_code}" || echo "000")"
 if [ "$CODE" != "200" ] && [ "$CODE" != "202" ] && [ "$CODE" != "204" ] && [ "$CODE" != "404" ] && [ "$CODE" != "503" ]; then
   echo "bucket delete failed (test) http_code=$CODE url=$URL"
   cat /tmp/os_bucket_delete_test.out || true
@@ -930,6 +934,10 @@ resource "nutanix_ova_v2" "object-liteSource-ova" {
   depends_on               = [terraform_data.delay]
 }
 
+# Download Ova from object store
+resource "nutanix_ova_download_v2" "test" {
+  ova_ext_id = nutanix_ova_v2.object-liteSource-ova.id
+}
 
 `, nutanixUsername, nutanixPassword, nutanixEndpoint, nutanixPort, objectLiteSourceImgName, vmName, vmOvaName, objectOvaName)
 }
