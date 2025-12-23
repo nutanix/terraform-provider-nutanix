@@ -87,80 +87,6 @@ func TestAccV2NutanixKeyManagementServerResource_Basic(t *testing.T) {
 	})
 }
 
-// func TestAccV2NutanixKeyManagementServerResource_KMIP(t *testing.T) {
-// 	r := acctest.RandInt()
-// 	name := fmt.Sprintf("tf-test-kms-%d", r)
-// 	updatedName := fmt.Sprintf("%s-updated", name)
-// 	// Expiry time is two week later
-// 	expirationTime := time.Now().Add(14 * 24 * time.Hour)
-// 	expirationTimeFormatted := expirationTime.UTC().Format("2006-01-02")
-// 	// Updated expiry time is one month later
-// 	updatedExpirationTime := time.Now().Add(30 * 24 * time.Hour)
-// 	updatedExpirationTimeFormatted := updatedExpirationTime.UTC().Format("2006-01-02")
-
-// 	resource.Test(t, resource.TestCase{
-// 		PreCheck:  func() { acc.TestAccPreCheck(t) },
-// 		Providers: acc.TestAccProviders,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testKMSResourceKMIPConfig(name, expirationTimeFormatted),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					resource.TestCheckResourceAttrSet(resourceNameKeyManagementServer, "id"),
-// 					resource.TestCheckResourceAttrSet(resourceNameKeyManagementServer, "ext_id"),
-// 					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "name", name),
-// 					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.kmip_key_vault.0.ca_name", testVars.Security.KMS.),
-// 					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.kmip_key_vault.0.ca_pem", testVars.Security.KMS.CAPem),
-// 					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.kmip_key_vault.0.cert_pem", testVars.Security.KMS.CertPem),
-// 					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.kmip_key_vault.0.private_key", testVars.Security.KMS.PrivateKey),
-// 					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.kmip_key_vault.0.endpoints.0.ip_address.0.value", testVars.Security.KMS.EndpointURL),
-// 					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.kmip_key_vault.0.endpoints.0.port", testVars.Security.KMS.Port),
-// 					func(s *terraform.State) error {
-// 						kmsAttributes := s.RootModule().Resources[resourceNameKeyManagementServer].Primary.Attributes
-
-// 						keyID := kmsAttributes["access_information.0.azure_key_vault.0.key_id"]
-// 						if strings.Split(keyID, ":")[0] != testVars.Security.KMS.KeyID {
-// 							return fmt.Errorf("expected key_id to contain %q, got %q", testVars.Security.KMS.KeyID, keyID)
-// 						}
-// 						return nil
-// 					},
-// 					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.tenant_id", testVars.Security.KMS.TenantID),
-// 					resource.TestCheckResourceAttrSet(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.truncated_client_secret"),
-// 					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.credential_expiry_date", expirationTimeFormatted),
-// 				),
-// 			},
-// 			// test update
-// 			{
-// 				Config: testKMSResourceConfig(updatedName, updatedExpirationTimeFormatted),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					resource.TestCheckResourceAttrSet(resourceNameKeyManagementServer, "id"),
-// 					resource.TestCheckResourceAttrSet(resourceNameKeyManagementServer, "ext_id"),
-// 					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "name", updatedName),
-// 					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.client_id", testVars.Security.KMS.ClientID),
-// 					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.credential_expiry_date", updatedExpirationTimeFormatted),
-// 					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.endpoint_url", testVars.Security.KMS.EndpointURL),
-// 					func(s *terraform.State) error {
-// 						kmsAttributes := s.RootModule().Resources[resourceNameKeyManagementServer].Primary.Attributes
-
-// 						keyID := kmsAttributes["access_information.0.azure_key_vault.0.key_id"]
-
-// 						if strings.Split(keyID, ":")[0] == testVars.Security.KMS.KeyID {
-// 							return nil
-// 						}
-// 						return fmt.Errorf("expected key_id to contain %q, got %q", testVars.Security.KMS.KeyID, keyID)
-// 					},
-// 					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.tenant_id", testVars.Security.KMS.TenantID),
-// 					resource.TestCheckResourceAttrSet(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.truncated_client_secret"),
-// 				),
-// 			},
-// 			// test update with wrong access information
-// 			{
-// 				Config:      testKMSResourceInvalidAccessInfoConfig(updatedName),
-// 				ExpectError: regexp.MustCompile("error waiting for kms to be updated:"),
-// 			},
-// 		},
-// 	})
-// }
-
 func TestAccV2NutanixKeyManagementServerResource_InvalidAccessInfo(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-kms-%d", r)
@@ -232,27 +158,3 @@ resource "nutanix_key_management_server_v2" "test" {
 }
 `, name, credentialExpiryDate)
 }
-
-// func testKMSResourceKMIPConfig(name, credentialExpiryDate string) string {
-// 	return fmt.Sprintf(`
-// resource "nutanix_key_management_server_v2" "test" {
-//   name = "%[2]s"
-//   access_information {
-//     kmip_key_vault {
-//       ca_name = "test-ca"
-//       ca_pem = "test-ca-pem"
-//       cert_pem = "test-cert-pem"
-//       private_key = "test-private-key"
-//       endpoints {
-// 	 		ip_address {
-// 	 			ipv4 {
-// 	 				value = "10.4.5.50"
-// 	 			}
-// 	 		}
-// 	 		port = 5696
-// 	  }
-// 	}
-//   }
-// }
-// `, name, credentialExpiryDate)
-// }
