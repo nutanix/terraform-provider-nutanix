@@ -36,7 +36,7 @@ The `kms` attribute export the following:
 - `ext_id`: A globally unique identifier of an instance that is suitable for external consumption.
 - `links`: - A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 - `name`: - Name of the key management server (KMS).
-- `access_information`: - Access information for the Azure Key Vault.
+- `access_information`: - KMS Access information, it can be Azure Key Vault access information or KMIP based External Key Manager Access Information.
 - `creation_timestamp`: - The timestamp when the key management server was created.
 
 #### access_information
