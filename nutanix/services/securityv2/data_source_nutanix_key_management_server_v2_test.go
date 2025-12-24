@@ -32,22 +32,22 @@ func TestAccV2NutanixKeyManagementServerDatasource_Basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameKeyManagementServer, "ext_id"),
 					resource.TestCheckResourceAttr(datasourceNameKeyManagementServer, "name", name),
-					resource.TestCheckResourceAttr(datasourceNameKeyManagementServer, "access_information.0.client_id", testVars.Security.KMS.ClientID),
-					resource.TestCheckResourceAttr(datasourceNameKeyManagementServer, "access_information.0.credential_expiry_date", expirationTimeFormatted),
-					resource.TestCheckResourceAttr(datasourceNameKeyManagementServer, "access_information.0.endpoint_url", testVars.Security.KMS.EndpointURL),
+					resource.TestCheckResourceAttr(datasourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.client_id", testVars.Security.KMS.ClientID),
+					resource.TestCheckResourceAttr(datasourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.credential_expiry_date", expirationTimeFormatted),
+					resource.TestCheckResourceAttr(datasourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.endpoint_url", testVars.Security.KMS.EndpointURL),
 					func(s *terraform.State) error {
 						kmsAttributes := s.RootModule().Resources[datasourceNameKeyManagementServer].Primary.Attributes
 
-						keyID := kmsAttributes["access_information.0.key_id"]
+						keyID := kmsAttributes["access_information.0.azure_key_vault.0.key_id"]
 
 						if strings.Split(keyID, ":")[0] == testVars.Security.KMS.KeyID {
 							return nil
 						}
 						return fmt.Errorf("expected key_id to contain %q, got %q", testVars.Security.KMS.KeyID, keyID)
 					},
-					resource.TestCheckResourceAttr(datasourceNameKeyManagementServer, "access_information.0.tenant_id", testVars.Security.KMS.TenantID),
-					resource.TestCheckResourceAttrSet(datasourceNameKeyManagementServer, "access_information.0.truncated_client_secret"),
-					resource.TestCheckResourceAttr(datasourceNameKeyManagementServer, "access_information.0.credential_expiry_date", expirationTimeFormatted),
+					resource.TestCheckResourceAttr(datasourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.tenant_id", testVars.Security.KMS.TenantID),
+					resource.TestCheckResourceAttrSet(datasourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.truncated_client_secret"),
+					resource.TestCheckResourceAttr(datasourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.credential_expiry_date", expirationTimeFormatted),
 				),
 			},
 		},

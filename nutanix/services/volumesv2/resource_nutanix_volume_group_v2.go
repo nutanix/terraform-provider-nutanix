@@ -391,7 +391,7 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 func ResourceNutanixVolumeGroupV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
-	resp, err := conn.VolumeAPIInstance.GetVolumeGroupById(utils.StringPtr(d.Id()))
+	resp, err := conn.VolumeAPIInstance.GetVolumeGroupById(utils.StringPtr(d.Id()), nil)
 	if err != nil {
 		return diag.Errorf("error while fetching Volume Group : %v", err)
 	}

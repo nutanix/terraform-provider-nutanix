@@ -81,7 +81,7 @@ func DatasourceNutanixKeyManagementServersV2Read(ctx context.Context, d *schema.
 func flattenKeyManagementServer(kmsList []config.KeyManagementServer) ([]map[string]interface{}, error) {
 	kmsFlattened := make([]map[string]interface{}, 0, len(kmsList))
 	for _, kms := range kmsList {
-		accessInformation, flattenErr := flattenAccessInformation(kms.AccessInformation)
+		accessInformation, flattenErr := flattenAccessInformation(kms.GetAccessInformation())
 		if flattenErr != nil {
 			return nil, flattenErr
 		}
@@ -91,6 +91,7 @@ func flattenKeyManagementServer(kmsList []config.KeyManagementServer) ([]map[str
 			"tenant_id":          utils.StringValue(kms.TenantId),
 			"access_information": accessInformation,
 			"links":              flattenLinks(kms.Links),
+			"creation_timestamp": utils.TimeStringValue(kms.CreationTimestamp),
 		}
 		kmsFlattened = append(kmsFlattened, kmsMap)
 	}

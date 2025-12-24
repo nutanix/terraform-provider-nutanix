@@ -37,21 +37,21 @@ func TestAccV2NutanixKeyManagementServerResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameKeyManagementServer, "id"),
 					resource.TestCheckResourceAttrSet(resourceNameKeyManagementServer, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "name", name),
-					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.client_id", testVars.Security.KMS.ClientID),
-					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.credential_expiry_date", expirationTimeFormatted),
-					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.endpoint_url", testVars.Security.KMS.EndpointURL),
+					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.client_id", testVars.Security.KMS.ClientID),
+					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.credential_expiry_date", expirationTimeFormatted),
+					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.endpoint_url", testVars.Security.KMS.EndpointURL),
 					func(s *terraform.State) error {
 						kmsAttributes := s.RootModule().Resources[resourceNameKeyManagementServer].Primary.Attributes
 
-						keyID := kmsAttributes["access_information.0.key_id"]
+						keyID := kmsAttributes["access_information.0.azure_key_vault.0.key_id"]
 						if strings.Split(keyID, ":")[0] != testVars.Security.KMS.KeyID {
 							return fmt.Errorf("expected key_id to contain %q, got %q", testVars.Security.KMS.KeyID, keyID)
 						}
 						return nil
 					},
-					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.tenant_id", testVars.Security.KMS.TenantID),
-					resource.TestCheckResourceAttrSet(resourceNameKeyManagementServer, "access_information.0.truncated_client_secret"),
-					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.credential_expiry_date", expirationTimeFormatted),
+					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.tenant_id", testVars.Security.KMS.TenantID),
+					resource.TestCheckResourceAttrSet(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.truncated_client_secret"),
+					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.credential_expiry_date", expirationTimeFormatted),
 				),
 			},
 			// test update
@@ -61,27 +61,29 @@ func TestAccV2NutanixKeyManagementServerResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameKeyManagementServer, "id"),
 					resource.TestCheckResourceAttrSet(resourceNameKeyManagementServer, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "name", updatedName),
-					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.client_id", testVars.Security.KMS.ClientID),
-					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.credential_expiry_date", updatedExpirationTimeFormatted),
-					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.endpoint_url", testVars.Security.KMS.EndpointURL),
+					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.client_id", testVars.Security.KMS.ClientID),
+					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.credential_expiry_date", updatedExpirationTimeFormatted),
+					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.endpoint_url", testVars.Security.KMS.EndpointURL),
 					func(s *terraform.State) error {
 						kmsAttributes := s.RootModule().Resources[resourceNameKeyManagementServer].Primary.Attributes
 
-						keyID := kmsAttributes["access_information.0.key_id"]
+						keyID := kmsAttributes["access_information.0.azure_key_vault.0.key_id"]
 
 						if strings.Split(keyID, ":")[0] == testVars.Security.KMS.KeyID {
 							return nil
 						}
 						return fmt.Errorf("expected key_id to contain %q, got %q", testVars.Security.KMS.KeyID, keyID)
 					},
-					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.tenant_id", testVars.Security.KMS.TenantID),
-					resource.TestCheckResourceAttrSet(resourceNameKeyManagementServer, "access_information.0.truncated_client_secret"),
+					resource.TestCheckResourceAttr(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.tenant_id", testVars.Security.KMS.TenantID),
+					resource.TestCheckResourceAttrSet(resourceNameKeyManagementServer, "access_information.0.azure_key_vault.0.truncated_client_secret"),
 				),
 			},
 			// test update with wrong access information
 			{
-				Config:      testKMSResourceInvalidAccessInfoConfig(updatedName),
-				ExpectError: regexp.MustCompile("error waiting for kms to be updated:"),
+				Config: testKMSResourceInvalidAccessInfoConfig(updatedName),
+				// Error may include a KMS identifier in parentheses and may be phrased
+				// as "to updated" or "to be updated" depending on client/API wording.
+				ExpectError: regexp.MustCompile(`error waiting for kms( \([^)]*\))? to (be )?updated:`),
 			},
 		},
 	})
@@ -112,17 +114,19 @@ locals {
 resource "nutanix_key_management_server_v2" "test" {
   name = "%[2]s"
   access_information {
-    endpoint_url           = local.kms.endpoint_url
-    key_id                 = local.kms.key_id
-    tenant_id              = local.kms.tenant_id
-    client_id              = local.kms.client_id
-    client_secret          = local.kms.client_secret
-    credential_expiry_date = "%[3]s"
+    azure_key_vault {
+      endpoint_url           = local.kms.endpoint_url
+      key_id                 = local.kms.key_id
+      tenant_id              = local.kms.tenant_id
+      client_id              = local.kms.client_id
+      client_secret          = local.kms.client_secret
+      credential_expiry_date = "%[3]s"
+    }
   }
   lifecycle {
     ignore_changes = [
-      access_information[0].client_secret,
-      access_information[0].key_id
+      access_information[0].azure_key_vault[0].client_secret,
+      access_information[0].azure_key_vault[0].key_id
     ]
   }
 }
@@ -138,17 +142,19 @@ func testKMSResourceInvalidAccessInfoConfig(name string) string {
 resource "nutanix_key_management_server_v2" "test" {
   name = "%[2]s-invalid"
   access_information {
-    endpoint_url           = "https://invalid-keyvault-001.vault.azure.net/"
-    key_id                 = "invalid_key_id"
-    tenant_id              = "ab414ed6-7d97-4f7a-b98f-fcba7cac3b8c"
-    client_id              = "ae1a2b3c-5d6e-7f80-9a1b-2c3d4e5f6789"
-    client_secret          = "98765432-10fe-dcba-9876-543210fedcba"
-    credential_expiry_date = "%[2]s"
+    azure_key_vault {
+      endpoint_url           = "https://invalid-keyvault-001.vault.azure.net/"
+      key_id                 = "invalid_key_id"
+      tenant_id              = "ab414ed6-7d97-4f7a-b98f-fcba7cac3b8c"
+      client_id              = "ae1a2b3c-5d6e-7f80-9a1b-2c3d4e5f6789"
+      client_secret          = "98765432-10fe-dcba-9876-543210fedcba"
+      credential_expiry_date = "%[2]s"
+    }
   }
   lifecycle {
     ignore_changes = [
-      access_information[0].client_secret,
-      access_information[0].key_id
+      access_information[0].azure_key_vault[0].client_secret,
+      access_information[0].azure_key_vault[0].key_id
     ]
   }
 }
