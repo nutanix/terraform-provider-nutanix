@@ -38,45 +38,45 @@ resource "nutanix_key_management_server_v2" "kms"{
 
 The following arguments are supported:
 
-- `name`: -(Required) Name of the key management server (KMS).
-- `access_information`: -(Required) KMS Access information, it can be Azure Key Vault access information or KMIP based External Key Manager Access Information.
+- `name`: - (Required) Name of the key management server (KMS).
+- `access_information`: - (Required) KMS Access information, it can be Azure Key Vault access information or KMIP based External Key Manager Access Information.
 
 ### access_information
 
 The `access_information` it must be one of `azure_key_vault` or `kmip_key_vault`.
 
-- `azure_key_vault`: -(Optional) Azure Key Vault access information.
-- `kmip_key_vault`: -(Optional) KMIP based External Key Manager Access Information.
+- `azure_key_vault`: - (Optional) Azure Key Vault access information.
+- `kmip_key_vault`: - (Optional) KMIP based External Key Manager Access Information.
 
 #### azure_key_vault
 
 The `azure_key_vault` supports the following:
 
-- `endpoint_url`: -(Required) Endpoint URL for the Azure Key Vault.
-- `key_id`: -(Required) Master key identifier for the Azure Key Vault.
-- `tenant_id`: -(Required) Tetant identifier for the Azure Key Vault.
-- `client_id`: -(Required) Client identifier for the Azure Key Vault.
-- `client_secret`: -(Required) Client secret for the Azure Key Vault.
-- `credential_expiry_date`: -(Required) When the client secret is going to expire.
+- `endpoint_url`: - (Required) Endpoint URL for the Azure Key Vault.
+- `key_id`: - (Required) Master key identifier for the Azure Key Vault.
+- `tenant_id`: - (Required) Tetant identifier for the Azure Key Vault.
+- `client_id`: - (Required) Client identifier for the Azure Key Vault.
+- `client_secret`: - (Required) Client secret for the Azure Key Vault.
+- `credential_expiry_date`: - (Required) When the client secret is going to expire.
 
 #### kmip_key_vault
 
 The `kmip_key_vault` supports the following:
 
-- `ca_name`: -(Required) Name of the CA.
-- `ca_pem`: -(Required) CA PEM.
-- `cert_pem`: -(Required) Cert PEM.
-- `private_key`: -(Required) Private key.
-- `endpoints`: -(Required) List of endpoints of the External Key Manager server.
-  - `ip_address`: -(Required) IP address of the External Key Manager server.
-    - `ipv4`: -(Optional) IPv4 address of the External Key Manager server.
-      - `value`: -(Required) IPv4 address of the External Key Manager server.
-      - `prefix_length`: -(Optional) Prefix length of the IPv4 address. 
-    - `ipv6`: -(Optional) IPv6 address of the External Key Manager server.
-      - `value`: -(Required) IPv6 address of the External Key Manager server.
-      - `prefix_length`: -(Optional) Prefix length of the IPv6 address.
-    - `fqdn`: -(Optional) FQDN of the External Key Manager server.
-      - `value`: -(Optional) FQDN of the External Key Manager server.
-  - `port`: -(Required) Port of the External Key Manager server.
+- `ca_name`: - (Required) Name of the CA.
+- `ca_pem`: - (Required) CA PEM.
+- `cert_pem`: - (Required) Cert PEM.
+- `private_key`: - (Required) Private key.
+- `endpoints`: - (Required) List of endpoints of the External Key Manager server.
+  - `ip_address`: - (Required) IP address of the External Key Manager server.
+    - `ipv4`: - (Optional) IPv4 address of the External Key Manager server.
+      - `value`: - (Required) IPv4 address of the External Key Manager server.
+      - `prefix_length`: - (Optional) Prefix length of the IPv4 address. 
+    - `ipv6`: - (Optional) IPv6 address of the External Key Manager server.
+      - `value`: - (Required) IPv6 address of the External Key Manager server.
+      - `prefix_length`: - (Optional) Prefix length of the IPv6 address.
+    - `fqdn`: - (Optional) FQDN of the External Key Manager server.
+      - `value`: - (Optional) FQDN of the External Key Manager server.
+  - `port`: - (Required) Port of the External Key Manager server.
 
 See detailed information in [Nutanix Create a key management server V4](https://developers.nutanix.com/api-reference?namespace=security&version=v4.1#tag/KeyManagementServers/operation/createKeyManagementServer)
