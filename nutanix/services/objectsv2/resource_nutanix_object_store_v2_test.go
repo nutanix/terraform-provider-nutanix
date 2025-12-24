@@ -942,7 +942,7 @@ resource "nutanix_ova_v2" "object-liteSource-ova" {
 }
 
 # Download Ova from object store
-resource "nutanix_ova_download_v2" "test" {
+resource "nutanix_ova_download_v2" "test-2" {
   ova_ext_id = nutanix_ova_v2.object-liteSource-ova.id
 }
 
