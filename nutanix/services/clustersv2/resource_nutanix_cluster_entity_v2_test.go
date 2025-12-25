@@ -133,6 +133,11 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 					data "nutanix_cluster_v2" "cluster" {
 						ext_id = nutanix_cluster_v2.test.id
 					}
+
+					# get the clusters data from the data source
+					data "nutanix_clusters_v2" "get-cluster-categories" {
+						filter = "name eq '${nutanix_cluster_v2.test.name}'"
+					}
 				`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(clusterResourceName, "cluster_profile_ext_id", ""),
@@ -881,12 +886,6 @@ func testAccClusterResourceAssociateCategoriesConfig(r int) string {
 			key         = "test-cat3-key-%[1]d"
 			value       = "test-cat3-value-%[1]d"
 			description = "third category for cluster"
-		}
-
-		# associate categories with cluster
-		resource "nutanix_cluster_categories_v2" "test" {
-			cluster_ext_id = nutanix_cluster_v2.test.id
-			categories = [nutanix_category_v2.cat-1.id, nutanix_category_v2.cat-2.id, nutanix_category_v2.cat-3.id]
 		}
 
 		# List all cluster to tests categories

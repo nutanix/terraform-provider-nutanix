@@ -15,7 +15,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func TestAccNutanixClusterProfileV2_basic(t *testing.T) {
+func TestAccV2NutanixClusterProfileV2_basic(t *testing.T) {
 	resourceName1 := "nutanix_cluster_profile_v2.tf_first"
 	resourceName2 := "nutanix_cluster_profile_v2.tf_second"
 
@@ -265,7 +265,7 @@ func TestAccNutanixClusterProfileV2_basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixClusterProfileV2_duplicate(t *testing.T) {
+func TestAccV2NutanixClusterProfileV2_duplicate(t *testing.T) {
 	profileName1 := "tf-test-cluster-profile"
 	profileName2 := "tf-test-cluster-profile"
 
@@ -282,7 +282,7 @@ func TestAccNutanixClusterProfileV2_duplicate(t *testing.T) {
 	})
 }
 
-func TestAccNutanixClusterProfileV2_fetchCPWrongExtID(t *testing.T) {
+func TestAccV2NutanixClusterProfileV2_fetchCPWrongExtID(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,

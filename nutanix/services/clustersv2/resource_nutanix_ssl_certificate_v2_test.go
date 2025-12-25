@@ -14,7 +14,7 @@ import (
 const dataSourceNameSSLCertificate = "data.nutanix_ssl_certificate_v2.test"
 const resourceNameSSLCertificate = "nutanix_ssl_certificate_v2.test"
 
-func TestAccNutanixSSLCertificateV2_Basic(t *testing.T) {
+func TestAccV2NutanixSSLCertificateV2_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -47,7 +47,7 @@ func TestAccNutanixSSLCertificateV2_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixSSLCertificateV2_Regenerate(t *testing.T) {
+func TestAccV2NutanixSSLCertificateV2_Regenerate(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
