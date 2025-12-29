@@ -146,6 +146,69 @@ func checkCategories(resourceName, categoriesPath string, expectedCategoryResour
 	}
 }
 
+// checkNtpServerList verifies the NTP FQDN list under the given Terraform path.
+// Example path: "network.0.ntp_server_ip_list"
+func checkNtpServerList(resourceName, ntpPath string, expectedNtpServers []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource %s not found in state", resourceName)
+		}
+
+		attrs := rs.Primary.Attributes
+
+		// Order is not guaranteed by the API, so validate membership rather than index-by-index equality.
+		// GOT SHOULD BE IN THE expected list
+		countKey := ntpPath + ".#"
+		countStr, ok := attrs[countKey]
+		if !ok {
+			return fmt.Errorf("ntp server count not found at %s", countKey)
+		}
+		var count int
+		fmt.Sscanf(countStr, "%d", &count)
+
+		gotServers := make([]string, 0, count)
+		for i := 0; i < count; i++ {
+			key := fmt.Sprintf("%s.%d.fqdn.0.value", ntpPath, i)
+			if v, ok := attrs[key]; ok && v != "" {
+				gotServers = append(gotServers, v)
+			}
+		}
+
+		if len(gotServers) != len(expectedNtpServers) {
+			return fmt.Errorf("ntp server count mismatch: expected %d, got %d at %s: %v", len(expectedNtpServers), len(gotServers), ntpPath, gotServers)
+		}
+
+		expectedSet := make(map[string]struct{}, len(expectedNtpServers))
+		for _, e := range expectedNtpServers {
+			if e != "" {
+				expectedSet[e] = struct{}{}
+			}
+		}
+
+		for _, got := range gotServers {
+			if _, exists := expectedSet[got]; !exists {
+				return fmt.Errorf("unexpected ntp server %q found at %s; expected one of %v", got, ntpPath, expectedNtpServers)
+			}
+		}
+
+		for _, expected := range expectedNtpServers {
+			found := false
+			for _, got := range gotServers {
+				if got == expected {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return fmt.Errorf("expected ntp server %q not found at %s: %v", expected, ntpPath, gotServers)
+			}
+		}
+
+		return nil
+	}
+}
+
 // helper function to check if the cluster is destroyed
 func testAccCheckNutanixClusterDestroy(s *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)

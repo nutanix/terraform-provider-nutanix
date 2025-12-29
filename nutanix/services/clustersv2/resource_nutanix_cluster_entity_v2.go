@@ -328,10 +328,12 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem:     common.SchemaForIPList(true),
 						},
+						// change to set to ensure ignoring order in the list 
 						"ntp_server_ip_list": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
+							Set:      common.HashIPItem,
 							Elem:     common.SchemaForIPList(true),
 						},
 						"smtp_server": {
@@ -1225,7 +1227,7 @@ func expandClusterNetworkReference(pr interface{}) *config.ClusterNetworkReferen
 		}
 		if ntpServerIPList, ok := val["ntp_server_ip_list"]; ok {
 			log.Printf("[DEBUG] ntp_server_ip_list ")
-			cls.NtpServerIpList = expandIPAddressOrFQDN(ntpServerIPList.([]interface{}))
+			cls.NtpServerIpList = expandIPAddressOrFQDN(common.InterfaceToSlice(ntpServerIPList))
 		}
 		if smtpServer, ok := val["smtp_server"]; ok {
 			cls.SmtpServer = expandSMTPServerRef(smtpServer)
@@ -1953,7 +1955,11 @@ func handleCategoryAssociationChanges(ctx context.Context, d *schema.ResourceDat
 	oldCategoriesRaw, newCategoriesRaw := d.GetChange("categories")
 
 	// Use shared function to handle category updates
-	return UpdateClusterCategories(ctx, d, meta, clusterExtID, oldCategoriesRaw, newCategoriesRaw)
+	diags := UpdateClusterCategories(ctx, d, meta, clusterExtID, oldCategoriesRaw, newCategoriesRaw)
+	if diags.HasError() {
+		return diags
+	}
+	return ResourceNutanixClusterV2Read(ctx, d, meta)
 }
 
 func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta interface{},

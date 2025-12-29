@@ -187,12 +187,12 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Plan
 			{
-				Config:   testAccClusterResourceAllConfig(name),
+				Config:   testAccClusterResourceAllConfig(name, "", r),
 				PlanOnly: false,
 			},
 			// Step 2: Apply
 			{
-				Config: testAccClusterResourceAllConfig(name),
+				Config: testAccClusterResourceAllConfig(name, "", r),
 				Check: resource.ComposeTestCheckFunc(
 					// check the unconfigured node is discovered or not
 					resource.TestCheckResourceAttr(resourceNameDiscoverUnConfigNode, "address_type", "IPV4"),
@@ -210,11 +210,9 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(clusterResourceName, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
 					resource.TestCheckResourceAttr(clusterResourceName, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.external_address.0.ipv4.0.value", testVars.Clusters.Network.VirtualIP),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.0.fqdn.0.value", testVars.Clusters.Network.NTPServers[0]),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.1.fqdn.0.value", testVars.Clusters.Network.NTPServers[1]),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.2.fqdn.0.value", testVars.Clusters.Network.NTPServers[2]),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.3.fqdn.0.value", testVars.Clusters.Network.NTPServers[3]),
-
+					// check on cluster ntp server list
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.#", "4"),
+					checkNtpServerList(clusterResourceName, "network.0.ntp_server_ip_list", testVars.Clusters.Network.NTPServers),
 					resource.TestCheckResourceAttrSet(clusterResourceNameRegistration, "pc_ext_id"),
 					resource.TestCheckResourceAttr(clusterResourceNameRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.address.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
 					resource.TestCheckResourceAttr(clusterResourceNameRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.credentials.0.authentication.0.username", testVars.Clusters.Nodes[0].Username),
@@ -223,7 +221,22 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 			// ############################################## Associate categories with cluster ##############################################
 			// Step 3: Associate categories to the cluster and check on list cluster data source for categories
 			{
-				Config: testAccClusterResourceAllConfig(name) + testAccClusterResourceAssociateCategoriesConfig(r),
+				Config: testAccClusterResourceAllConfig(name, "nutanix_category_v2.cat-1.id, nutanix_category_v2.cat-2.id, nutanix_category_v2.cat-3.id", r),
+			},
+			// Step 4: Check on list cluster data source for categories
+			{
+				Config: testAccClusterResourceAllConfig(name, "nutanix_category_v2.cat-1.id, nutanix_category_v2.cat-2.id, nutanix_category_v2.cat-3.id", r) +
+					`
+				# List all cluster to tests categories
+				data "nutanix_clusters_v2" "test" {
+					filter = "name eq '${nutanix_cluster_v2.test.name}'"
+				}
+
+				# get the cluster data source to test categories
+				data "nutanix_cluster_v2" "test" {
+					ext_id = nutanix_cluster_v2.test.id
+				}
+				`,
 				Check: resource.ComposeTestCheckFunc(
 					// check on list cluster data source for categories (order-independent)
 					checkCategories(dataSourceNameClusters, "cluster_entities.0.categories", []string{
@@ -240,10 +253,10 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					}),
 				),
 			},
-			// Step 4: Check on cluster resource for categories
+			// Step 5: Check on cluster resource for categories
 			{
 
-				Config: testAccClusterResourceAllConfig(name) + testAccClusterResourceAssociateCategoriesConfig(r),
+				Config: testAccClusterResourceAllConfig(name, "nutanix_category_v2.cat-1.id, nutanix_category_v2.cat-2.id, nutanix_category_v2.cat-3.id", r),
 				Check: resource.ComposeTestCheckFunc(
 					// check on cluster resource for categories (order-independent)
 					checkCategories(clusterResourceName, "categories", []string{
@@ -253,14 +266,14 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					}),
 				),
 			},
-			// Step 5: Disassociate categories from cluster
+			// Step 6: Disassociate categories from cluster
 			{
-				Config: testAccClusterResourceAllConfig(name),
+				Config: testAccClusterResourceAllConfig(name, "", r),
 			},
-			// Step 6: Check if categories are disassociated from cluster, data source check for categories
+			// Step 7: Check if categories are disassociated from cluster, data source check for categories
 			{
 				// Check if categories are disassociated from cluster
-				Config: testAccClusterResourceAllConfig(name) + `
+				Config: testAccClusterResourceAllConfig(name, "", r) + `
 					# List all cluster to tests categories
 					data "nutanix_clusters_v2" "list-cluster" {
 						filter = "name eq '${nutanix_cluster_v2.test.name}'"
@@ -277,16 +290,16 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					resource.TestCheckResourceAttr("data.nutanix_clusters_v2.list-cluster", "cluster_entities.0.categories.#", "0"),
 				),
 			},
-			// Step 7: Check if categories are disassociated from cluster, resource check for categories
+			// Step 8: Check if categories are disassociated from cluster, resource check for categories
 			{
-				Config: testAccClusterResourceAllConfig(name),
+				Config: testAccClusterResourceAllConfig(name, "", r),
 				Taint:  []string{clusterResourceName},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(clusterResourceName, "categories.#", "0"),
 				),
 			},
 			// ############################################## Update cluster config ##############################################
-			// Step 8: Update cluster config and check on cluster resource for config
+			// Step 9: Update cluster config and check on cluster resource for config
 			{
 				PreConfig: func() {
 					time.Sleep(10 * time.Second) // 10-second delay
@@ -303,22 +316,18 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(clusterResourceName, "config.0.pulse_status.0.pii_scrubbing_level", "DEFAULT"),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.external_address.0.ipv4.0.value", testVars.Clusters.Network.VirtualIP),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.external_data_services_ip.0.ipv4.0.value", testVars.Clusters.Network.IscsiIP),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.0.fqdn.0.value", testVars.Clusters.Network.NTPServers[0]),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.1.fqdn.0.value", testVars.Clusters.Network.NTPServers[1]),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.2.fqdn.0.value", testVars.Clusters.Network.NTPServers[2]),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.3.fqdn.0.value", testVars.Clusters.Network.NTPServers[3]),
+					// check on cluster ntp server list
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.#", "4"),
+					checkNtpServerList(clusterResourceName, "network.0.ntp_server_ip_list", testVars.Clusters.Network.NTPServers),
+					// check on cluster smtp server list
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.#", "1"),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.email_address", testVars.Clusters.Network.SMTPServer.EmailAddress),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.ip_address.0.ipv4.0.value", testVars.Clusters.Network.SMTPServer.IP),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.port", strconv.Itoa(testVars.Clusters.Network.SMTPServer.Port)),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.username", testVars.Clusters.Network.SMTPServer.Username),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.type", testVars.Clusters.Network.SMTPServer.Type),
-
-					// check on list cluster data source for categories
-					resource.TestCheckResourceAttr(dataSourceNameClusters, "cluster_entities.0.categories.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceNameClusters, "cluster_entities.0.categories.0", "nutanix_category_v2.test", "id"),
-				),
-			},
-			// Step 9: Disable the cluster pulse status and check on cluster resource for config
+				)},
+			// Step 10: Disable the cluster pulse status and check on cluster resource for config
 			{
 				PreConfig: func() {
 					time.Sleep(10 * time.Second) // 10-second delay
@@ -334,10 +343,9 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(clusterResourceName, "config.0.pulse_status.0.is_enabled", "false"),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.external_address.0.ipv4.0.value", testVars.Clusters.Network.VirtualIP),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.external_data_services_ip.0.ipv4.0.value", testVars.Clusters.Network.IscsiIP),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.0.fqdn.0.value", testVars.Clusters.Network.NTPServers[0]),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.1.fqdn.0.value", testVars.Clusters.Network.NTPServers[1]),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.2.fqdn.0.value", testVars.Clusters.Network.NTPServers[2]),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.3.fqdn.0.value", testVars.Clusters.Network.NTPServers[3]),
+					// check on cluster ntp server list
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.#", "4"),
+					checkNtpServerList(clusterResourceName, "network.0.ntp_server_ip_list", testVars.Clusters.Network.NTPServers),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.email_address", testVars.Clusters.Network.SMTPServer.EmailAddress),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.ip_address.0.ipv4.0.value", testVars.Clusters.Network.SMTPServer.IP),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.port", strconv.Itoa(testVars.Clusters.Network.SMTPServer.Port)),
@@ -593,7 +601,7 @@ func testAccClusterResourceMinimumConfig(name, clusterProfileExtID string, categ
 `, clusterConfig, name, categories, clusterProfileExtIDLine)
 }
 
-func testAccClusterResourceAllConfig(name string) string {
+func testAccClusterResourceAllConfig(name, categories string, r int) string {
 	return fmt.Sprintf(`
 		%[1]s
 
@@ -615,6 +623,25 @@ func testAccClusterResourceAllConfig(name string) string {
 			  error_message = "The node ${local.clusters.nodes[0].cvm_ip} are not unconfigured"
 			}
 		  }
+		}
+
+		# create categories
+		resource "nutanix_category_v2" "cat-1" {
+			key         = "test-cat1-key-%[4]d"
+			value       = "test-cat1-value-%[4]d"
+			description = "first category for cluster"
+		}
+
+		resource "nutanix_category_v2" "cat-2" {
+			key         = "test-cat2-key-%[4]d"
+			value       = "test-cat2-value-%[4]d"
+			description = "second category for cluster"
+		}
+
+		resource "nutanix_category_v2" "cat-3" {
+			key         = "test-cat3-key-%[4]d"
+			value       = "test-cat3-value-%[4]d"
+			description = "third category for cluster"
 		}
 
 
@@ -680,9 +707,9 @@ func testAccClusterResourceAllConfig(name string) string {
 				}
 		  }
 
-
+		  categories = [%[3]s]
 		  lifecycle {
-				ignore_changes = [network.0.smtp_server.0.server.0.password,  links, categories, config.0.cluster_function]
+				ignore_changes = [network.0.smtp_server.0.server.0.password,  links, config.0.cluster_function]
 		  }
 
 		  provisioner "local-exec" {
@@ -690,7 +717,7 @@ func testAccClusterResourceAllConfig(name string) string {
 
 				on_failure = continue
 		  }
-		  depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node, nutanix_category_v2.test]
+		  depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node, nutanix_category_v2.test, nutanix_category_v2.cat-1, nutanix_category_v2.cat-2, nutanix_category_v2.cat-3]
 		}
 
 		# register the cluster to pc
@@ -716,7 +743,7 @@ func testAccClusterResourceAllConfig(name string) string {
 		  depends_on = [nutanix_cluster_v2.test]
 		}
 
-	`, clusterConfig, name)
+	`, clusterConfig, name, categories, r)
 }
 
 func testAccClusterResourceUpdateConfig(updatedName, pulseStatus string) string {
@@ -831,7 +858,7 @@ func testAccClusterResourceUpdateConfig(updatedName, pulseStatus string) string 
 		  }
 
 		  lifecycle {
-			ignore_changes = [network.0.smtp_server.0.server.0.password,  links, categories, config.0.cluster_function]
+			ignore_changes = [network.0.smtp_server.0.server.0.password,  links, config.0.cluster_function]
 		  }
 
 		  provisioner "local-exec" {
@@ -865,41 +892,6 @@ func testAccClusterResourceUpdateConfig(updatedName, pulseStatus string) string 
 		}
 
 `, clusterConfig, updatedName, pulseStatus)
-}
-
-func testAccClusterResourceAssociateCategoriesConfig(r int) string {
-	return fmt.Sprintf(`
-		# create a new category
-		resource "nutanix_category_v2" "cat-1" {
-			key         = "test-cat1-key-%[1]d"
-			value       = "test-cat1-value-%[1]d"
-			description = "first category for cluster"
-		}
-
-		resource "nutanix_category_v2" "cat-2" {
-			key         = "test-cat2-key-%[1]d"
-			value       = "test-cat2-value-%[1]d"
-			description = "second category for cluster"
-		}
-
-		resource "nutanix_category_v2" "cat-3" {
-			key         = "test-cat3-key-%[1]d"
-			value       = "test-cat3-value-%[1]d"
-			description = "third category for cluster"
-		}
-
-		# List all cluster to tests categories
-		data "nutanix_clusters_v2" "test" {
-			filter = "name eq '${nutanix_cluster_v2.test.name}'"
-			depends_on = [nutanix_cluster_categories_v2.test]
-		}
-
-		# get the cluster data source to test categories
-		data "nutanix_cluster_v2" "test" {
-			ext_id = nutanix_cluster_v2.test.id
-			depends_on = [nutanix_cluster_categories_v2.test]
-		}
-	`, r)
 }
 
 func testAcc3NodeClustersConfig(clusterName string) string {
