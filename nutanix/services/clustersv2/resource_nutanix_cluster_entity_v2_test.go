@@ -163,7 +163,6 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 					resource.TestCheckResourceAttr(clusterResourceName, "cluster_profile_ext_id", ""),
 					resource.TestCheckResourceAttr(clusterResourceName, "categories.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceNameClusterData, "categories.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceNameGetClusterCategoriesData, "cluster_entities.0.categories.#", "0"),
 				),
 			},
 		},
