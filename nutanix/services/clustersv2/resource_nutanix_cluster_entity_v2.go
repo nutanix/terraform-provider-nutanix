@@ -328,7 +328,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem:     common.SchemaForIPList(true),
 						},
-						// change to set to ensure ignoring order in the list 
+						// change to set to ensure ignoring order in the list
 						"ntp_server_ip_list": {
 							Type:     schema.TypeSet,
 							Optional: true,
