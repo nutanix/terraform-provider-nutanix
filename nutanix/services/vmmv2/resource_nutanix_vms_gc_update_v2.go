@@ -227,7 +227,7 @@ func ResourceNutanixVMGCUpdateV2Create(ctx context.Context, d *schema.ResourceDa
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Update GC Task Details: %s", string(aJSON))
 
-	d.SetId(vmExtID)
+	d.SetId(vmExtID.(string))
 
 	return nil
 }
