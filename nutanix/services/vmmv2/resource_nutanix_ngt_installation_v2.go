@@ -447,17 +447,16 @@ func ResourceNutanixNGTInstallationV4Delete(ctx context.Context, d *schema.Resou
 				time.Sleep(2 * time.Second)
 				continue
 			}
+			taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+			if err != nil {
+				return diag.Errorf("error while uninstalling gest tools, in Get UUID from TASK API  : %v", err)
+			}
+			taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
+			aJSON, _ := json.MarshalIndent(taskDetails, "", " ")
+			log.Printf("[DEBUG] NGT Uninstallation Task Details: %s", string(aJSON))
 			return diag.Errorf("error waiting for NGT (%s) to uninstall : %s", utils.StringValue(taskUUID), errWaitTask)
 		}
 		break
 	}
-
-	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-	if err != nil {
-		return diag.Errorf("error while uninstalling gest tools, in Get UUID from TASK API  : %v", err)
-	}
-
 	return nil
 }
