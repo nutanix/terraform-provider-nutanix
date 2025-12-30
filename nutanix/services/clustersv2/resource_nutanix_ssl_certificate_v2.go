@@ -109,27 +109,26 @@ func ResourceNutanixSSLCertificateV2Create(ctx context.Context, d *schema.Resour
 
 	// calling group API to poll for completion of task
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the SSL Certificate to be available
+	// Wait for the SSL certificate to be updated
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for SSL certificate (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
-	returnResourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	// Get UUID from TASK API
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while fetching SSL certificate task: %v", err)
 	}
-	taskDetails := returnResourceUUID.Data.GetValue().(prismConfig.Task)
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] SSL certificate update task details: %s", string(aJSON))
+	log.Printf("[DEBUG] Update SSL Certificate Task Details: %s", string(aJSON))
 
-	d.SetId(resource.UniqueId())
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 
 	return ResourceNutanixSSLCertificateV2Read(ctx, d, meta)
 }

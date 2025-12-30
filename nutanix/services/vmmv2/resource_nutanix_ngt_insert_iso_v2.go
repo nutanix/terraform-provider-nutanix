@@ -2,6 +2,7 @@ package vmmv2
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"time"
 
@@ -149,32 +150,37 @@ func ResourceNutanixNGTInsertIsoV2Create(ctx context.Context, d *schema.Resource
 		taskUUID := TaskRef.ExtId
 
 		taskconn := meta.(*conns.Client).PrismAPI
-		// Wait for the VM to be available
+		// Wait for the NGT ISO to be inserted
 		stateConf := &resource.StateChangeConf{
 			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 			Target:  []string{"SUCCEEDED"},
-			Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 			Timeout: d.Timeout(schema.TimeoutCreate),
 		}
 
 		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-			return diag.Errorf("error waiting for template (%s) to Insert gest tools ISO: %s", utils.StringValue(taskUUID), errWaitTask)
+			return diag.Errorf("error waiting for NGT ISO insert (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 		}
 
 		// Get UUID from TASK API
-		resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 		if err != nil {
-			return diag.Errorf("error while Inserting  gest tools ISO  : %v", err)
+			return diag.Errorf("error while fetching NGT ISO insert task (%s): %v", utils.StringValue(taskUUID), err)
 		}
-		rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
-		for _, entity := range rUUID.EntitiesAffected {
-			if utils.StringValue(entity.Rel) == "vmm:ahv:config:vm:cdrom" {
-				uuid := entity.ExtId
-				d.Set("cdrom_ext_id", *uuid)
+		taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
+
+		aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+		log.Printf("[DEBUG] NGT ISO Insert Task Details: %s", string(aJSON))
+
+		for _, entity := range taskDetails.EntitiesAffected {
+			if utils.StringValue(entity.Rel) == utils.RelEntityTypeCDROM {
+				d.Set("cdrom_ext_id", utils.StringValue(entity.ExtId))
 			}
 		}
 
-		d.SetId(resource.UniqueId())
+		// This is an action resource that does not maintain state.
+		// The resource ID is set to the task ExtId for traceability.
+		d.SetId(utils.StringValue(taskDetails.ExtId))
 
 		return ResourceNutanixNGTInsertIsoV2Read(ctx, d, meta)
 	}

@@ -885,31 +885,34 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the cluster to be created
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for cluster (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching cluster UUID : %v", err)
+		return diag.Errorf("error while fetching cluster task: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
-	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Create Cluster Task Response Details: %s", string(aJSON))
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Create Cluster Task Details: %s", string(aJSON))
 
-	randomID := utils.GenUUID()
-
-	d.SetId(randomID)
+	// Set the resource ID to the task UUID for the following reasons:
+	// 1. The cluster creation is an asynchronous operation - the cluster exists but It is not yet available for read operations.
+	// 2. Using the task UUID (instead of a random ID) provides traceability - it allows
+	//    correlation between the Terraform resource and the actual cluster creation task.
+	// 3. The Read function will later retrieve the actual cluster ext_id by querying
+	//    clusters by name once the cluster is registered with Prism Central.
+	// 4. This allows for better error handling and recovery - if the cluster creation fails,
+	//    the task UUID can be used to troubleshoot the issue.
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 
 	return nil
 }
@@ -1025,17 +1028,24 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 	taskUUID := TaskRef.ExtId
 	taskconn := meta.(*conns.Client).PrismAPI
 
+	// Wait for the cluster to be updated
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
-
 	if _, errWait := stateConf.WaitForStateContext(ctx); errWait != nil {
-		return diag.Errorf("error waiting for cluster update task (%s): %s", utils.StringValue(taskUUID), errWait)
+		return diag.Errorf("error waiting for cluster (%s) to update: %s", utils.StringValue(taskUUID), errWait)
 	}
-
+	// Get UUID from TASK API
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching cluster update task: %v", err)
+	}
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Update Cluster Task Details: %s", string(aJSON))
 	log.Printf("[DEBUG] Cluster update completed successfully")
 	time.Sleep(1 * time.Minute)
 	return ResourceNutanixClusterV2Read(ctx, d, meta)
@@ -1093,20 +1103,25 @@ func ResourceNutanixClusterV2Delete(ctx context.Context, d *schema.ResourceData,
 	TaskRef := resp.Data.GetValue().(import1.TaskReference)
 	taskUUID := TaskRef.ExtId
 
-	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the cluster to be deleted
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for cluster (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
+	// Get UUID from TASK API
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching cluster delete task: %v", err)
+	}
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Delete Cluster Task Details: %s", string(aJSON))
 	return nil
 }
 
@@ -1843,23 +1858,21 @@ func handleClusterProfileAssociationUpdate(ctx context.Context, d *schema.Resour
 		TaskRef := disassociateResp.Data.GetValue().(import1.TaskReference)
 		taskUUID := TaskRef.ExtId
 
-		// Wait for the disassociation task to complete
+		// Wait for the cluster profile to be disassociated
 		stateConf := &resource.StateChangeConf{
 			Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 			Target:  []string{"SUCCEEDED"},
 			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 			Timeout: d.Timeout(schema.TimeoutUpdate),
 		}
-
 		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 			return diag.Errorf("error waiting for cluster profile (%s) to disassociate: %s", utils.StringValue(taskUUID), errWaitTask)
 		}
-
 		log.Printf("[DEBUG] Cluster profile disassociation task %s completed", utils.StringValue(taskUUID))
-		// Get Task Details
+		// Get UUID from TASK API
 		taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 		if err != nil {
-			return diag.Errorf("error while fetching cluster profile disassociation task UUID : %v", err)
+			return diag.Errorf("error while fetching cluster profile disassociation task: %v", err)
 		}
 		taskDetails := taskResp.Data.GetValue().(import2.Task)
 		aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
@@ -1877,23 +1890,21 @@ func handleClusterProfileAssociationUpdate(ctx context.Context, d *schema.Resour
 		TaskRef := associateResp.Data.GetValue().(import1.TaskReference)
 		taskUUID := TaskRef.ExtId
 
-		// Wait for the association task to complete
+		// Wait for the cluster profile to be associated
 		stateConf := &resource.StateChangeConf{
 			Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 			Target:  []string{"SUCCEEDED"},
 			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 			Timeout: d.Timeout(schema.TimeoutUpdate),
 		}
-
 		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 			return diag.Errorf("error waiting for cluster profile (%s) to associate: %s", utils.StringValue(taskUUID), errWaitTask)
 		}
 		log.Printf("[DEBUG] Cluster profile association task %s completed", utils.StringValue(taskUUID))
-
-		// Get Task Details
+		// Get UUID from TASK API
 		taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 		if err != nil {
-			return diag.Errorf("error while fetching cluster profile association task UUID : %v", err)
+			return diag.Errorf("error while fetching cluster profile association task: %v", err)
 		}
 		taskDetails := taskResp.Data.GetValue().(import2.Task)
 		aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
@@ -1996,31 +2007,28 @@ func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta int
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the node to be available
+	// Wait for the node to be removed
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		resourceUUID, _ := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-		rUUID := resourceUUID.Data.GetValue().(import2.Task)
-		aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
-		log.Printf("Error Remove Node Task Details : %s", string(aJSON))
-		return diag.Errorf("error waiting for  node (%s) to Remove: %s", utils.StringValue(taskUUID), errWaitTask)
+		taskResp, _ := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		taskDetails := taskResp.Data.GetValue().(import2.Task)
+		aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+		log.Printf("[ERROR] Remove Node Task Details: %s", string(aJSON))
+		return diag.Errorf("error waiting for node (%s) to remove: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
 	// Get UUID from TASK API
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching  node UUID : %v", err)
+		return diag.Errorf("error while fetching node removal task: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
-
-	bJSON, _ := json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("cluster update: remove node task details : %s", string(bJSON))
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Remove Node Task Details: %s", string(aJSON))
 	return nil
 }
 
@@ -2112,27 +2120,24 @@ func expandClusterWithNewNode(ctx context.Context, d *schema.ResourceData, meta 
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the  node to be available
+	// Wait for the node to be added
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for  node (%s) to add: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for node (%s) to add: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching  node UUID : %v", err)
+		return diag.Errorf("error while fetching add node task: %v", err)
 	}
-
-	aJSON, _ = json.Marshal(resourceUUID)
-	log.Printf("[DEBUG] Add Node Response: %s", string(aJSON))
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Add Node Task Details: %s", string(aJSON))
 	return nil
 }
 
@@ -2179,45 +2184,41 @@ func fetchNetworkDetailsForNodes(ctx context.Context, d *schema.ResourceData, me
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the  node to be available
+	// Wait for the fetch node networking details operation to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for  node (%s) to add: %s", utils.StringValue(taskUUID), errWaitTask), nil
+		return diag.Errorf("error waiting for fetch node networking details (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask), nil
 	}
-
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching task : %v", err), nil
+		return diag.Errorf("error while fetching node networking details task: %v", err), nil
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Fetch Node Networking Details Task Details: %s", string(aJSON))
 
-	bJSON, _ := json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Fetch Network Info Task Details: %s", string(bJSON))
+	uuid := strings.Split(utils.StringValue(taskDetails.ExtId), "=:")[1]
 
-	uuid := strings.Split(utils.StringValue(rUUID.ExtId), "=:")[1]
-
-	const networkingDetails = 3
+	const networkingDetails = config.TASKRESPONSETYPE_NETWORKING_DETAILS
 	taskResponseType := config.TaskResponseType(networkingDetails)
 	networkDetailsTaskResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr), nil
 	}
 
-	taskResp := networkDetailsTaskResp.Data.GetValue().(config.TaskResponse)
+	unconfiguredNodesTaskResp := networkDetailsTaskResp.Data.GetValue().(config.TaskResponse)
 
-	if *taskResp.TaskResponseType != config.TaskResponseType(networkingDetails) {
+	if *unconfiguredNodesTaskResp.TaskResponseType != config.TaskResponseType(networkingDetails) {
 		return diag.Errorf("error while fetching Task Response for Network Detail Nodes : %v", "task response type mismatch"), nil
 	}
 
-	nodeNetworkDetails := taskResp.Response.GetValue().(config.NodeNetworkingDetails)
+	nodeNetworkDetails := unconfiguredNodesTaskResp.Response.GetValue().(config.NodeNetworkingDetails)
 
 	aJSON, _ = json.MarshalIndent(networkDetailsTaskResp, "", " ")
 	log.Printf("[DEBUG] fetching Network Details for Node to be added task details: %s", string(aJSON))
@@ -2253,43 +2254,40 @@ func discoverUnconfiguredNode(ctx context.Context, d *schema.ResourceData, meta 
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Nodes Trap to be available
+	// Wait for the discover unconfigured nodes operation to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Unconfigured Nodes (%s) to fetch: %s", utils.StringValue(taskUUID), errWaitTask), nil
+		return diag.Errorf("error waiting for unconfigured nodes (%s) to discover: %s", utils.StringValue(taskUUID), errWaitTask), nil
 	}
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	// Get UUID from TASK API
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Unconfigured Nodes UUID : %v", err), nil
+		return diag.Errorf("error while fetching discover unconfigured nodes task: %v", err), nil
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Discover Unconfigured Nodes Task Details: %s", string(aJSON))
+	uuid := strings.Split(utils.StringValue(taskDetails.ExtId), "=:")[1]
 
-	jsonBody, _ := json.MarshalIndent(resourceUUID, "", "  ")
-	log.Printf("[DEBUG] fetching Unconfigured Nodes resourceUUID : %s", string(jsonBody))
-
-	uuid := strings.Split(utils.StringValue(rUUID.ExtId), "=:")[1]
-
-	const unconfiguredNodes = 2
+	const unconfiguredNodes = config.TASKRESPONSETYPE_UNCONFIGURED_NODES
 	taskResponseType := config.TaskResponseType(unconfiguredNodes)
 	unconfiguredNodesResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr), nil
 	}
 
-	taskResp := unconfiguredNodesResp.Data.GetValue().(config.TaskResponse)
+	unconfiguredNodesTaskResp := unconfiguredNodesResp.Data.GetValue().(config.TaskResponse)
 
-	if *taskResp.TaskResponseType != config.TaskResponseType(unconfiguredNodes) {
+	if *unconfiguredNodesTaskResp.TaskResponseType != config.TaskResponseType(unconfiguredNodes) {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", "task response type mismatch"), nil
 	}
 
-	unconfiguredNodeDetails := taskResp.Response.GetValue().(config.UnconfigureNodeDetails)
+	unconfiguredNodeDetails := unconfiguredNodesTaskResp.Response.GetValue().(config.UnconfigureNodeDetails)
 
 	aJSON, _ = json.MarshalIndent(unconfiguredNodeDetails, "", " ")
 	log.Printf("[DEBUG] cluster expand: unconfigured node details: %s", string(aJSON))

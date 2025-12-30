@@ -3,7 +3,6 @@ package passwordmanagerv2
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -16,6 +15,7 @@ import (
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -108,40 +108,61 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 					return diag.Errorf("error while fetching task by ID %s: %v", utils.StringValue(taskUUID), taskErr)
 				}
 
+				// Wait for the password change to complete
 				stateConf := &resource.StateChangeConf{
-					Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+					Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 					Target:  []string{"SUCCEEDED"},
-					Refresh: taskStateRefreshPrismTaskGroup(newPrismClient, utils.StringValue(taskUUID)),
+					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, newPrismClient, utils.StringValue(taskUUID)),
 					Timeout: d.Timeout(schema.TimeoutCreate),
 				}
 
 				if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-					return diag.Errorf("Change Password Request failed for ext_id %s with error %s", utils.StringValue(extID), errWaitTask)
+					return diag.Errorf("error waiting for password change (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 				}
 
-				// set the resource id to random uuid
-				d.SetId(utils.GenUUID())
+				// Get task details for logging
+				taskResp, err := newPrismClient.TaskRefAPI.GetTaskById(taskUUID, nil)
+				if err != nil {
+					return diag.Errorf("error while fetching password change task: %v", err)
+				}
+				taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+				aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+				log.Printf("[DEBUG] Create Password Manager Task Details: %s", string(aJSON))
+
+				// This is an action resource that does not maintain state.
+				// The resource ID is set to the task ExtId for traceability.
+				d.SetId(utils.StringValue(taskDetails.ExtId))
 				return resourceNutanixPasswordManagerV2Read(ctx, d, meta)
 			}
 			return diag.Errorf("error while fetching task by ID %s: %v", utils.StringValue(taskUUID), taskErr)
 		}
 	}
 
-	// the password change is not for the user configured in the provider configuration
-	// Wait for the PreChecks to be successful
+	// The password change is not for the user configured in the provider configuration
+	// Wait for the password change to complete
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroup(taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("Change Password Request failed for ext_id %s with error %s", utils.StringValue(extID), errWaitTask)
+		return diag.Errorf("error waiting for password change (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
-	// set the resource id to random uuid
-	d.SetId(utils.GenUUID())
+	// Get task details for logging
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching password change task: %v", err)
+	}
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Create Password Manager Task Details: %s", string(aJSON))
+
+	// This is an action resource that does not maintain state.
+	// The resource ID is set to the task ExtId for traceability.
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 	return resourceNutanixPasswordManagerV2Read(ctx, d, meta)
 }
 
@@ -159,45 +180,4 @@ func resourceNutanixPasswordManagerV2Update(ctx context.Context, d *schema.Resou
 func resourceNutanixPasswordManagerV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] Deleting Password Manager V2 resource with ext_id: %s", d.Get("ext_id").(string))
 	return nil
-}
-
-func taskStateRefreshPrismTaskGroup(client *prism.Client, taskUUID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-		if err != nil {
-			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
-		}
-
-		// get the group results
-
-		v := vresp.Data.GetValue().(prismConfig.Task)
-
-		if getTaskStatus(v.Status) == "CANCELED" || getTaskStatus(v.Status) == "FAILED" {
-			return v, getTaskStatus(v.Status),
-				fmt.Errorf("error_detail: %s, progress_message: %d", utils.StringValue(v.ErrorMessages[0].Message), utils.IntValue(v.ProgressPercentage))
-		}
-		return v, getTaskStatus(v.Status), nil
-	}
-}
-
-func getTaskStatus(pr *prismConfig.TaskStatus) string {
-	const two, three, five, six, seven = 2, 3, 5, 6, 7
-	if pr != nil {
-		if *pr == prismConfig.TaskStatus(six) {
-			return "FAILED"
-		}
-		if *pr == prismConfig.TaskStatus(seven) {
-			return "CANCELED"
-		}
-		if *pr == prismConfig.TaskStatus(two) {
-			return "QUEUED"
-		}
-		if *pr == prismConfig.TaskStatus(three) {
-			return "RUNNING"
-		}
-		if *pr == prismConfig.TaskStatus(five) {
-			return "SUCCEEDED"
-		}
-	}
-	return "UNKNOWN"
 }
