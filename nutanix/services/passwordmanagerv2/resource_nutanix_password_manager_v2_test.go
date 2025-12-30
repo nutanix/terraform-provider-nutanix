@@ -65,8 +65,10 @@ func TestAccV2NutanixPasswordManagerResource_UpdatePasswordForAdminPCUserWrongCu
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccPasswordManagerResourceUpdatePasswordForAdminPCUserConfig(systemTypePCFilter, "wrong_current_password", "new_password"),
-				ExpectError: regexp.MustCompile("Failed to change system user password due to RPC call for password change failed"),
+				Config: testAccPasswordManagerResourceUpdatePasswordForAdminPCUserConfig(systemTypePCFilter, "wrong_current_password", "new_password"),
+				// Error details vary across PC versions/setups (e.g. "Unauthorised (PAM authentication failed)" / "Account locked"),
+				// but the task failure prefix is stable.
+				ExpectError: regexp.MustCompile("Failed to change system user password due to"),
 			},
 		},
 	},
@@ -82,7 +84,9 @@ func TestAccV2NutanixPasswordManagerResource_UpdatePasswordForAdminAOSUserWrongC
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPasswordManagerResourceUpdatePasswordForAdminPCUserConfig(systemTypePCFilter, "wrong_current_password", "new_password"),
-				ExpectError: regexp.MustCompile("Failed to change system user password due to Password change for AOS failed with error: Password change operation failed due to some internal issue.."),
+				// Error details vary across AOS versions/setups (e.g. "Password change operation failed due to some internal issue." / "RPC call for password change failed"),
+				// but the task failure prefix is stable.
+				ExpectError: regexp.MustCompile("Failed to change system user password due to"),
 			},
 		},
 	},
