@@ -1064,7 +1064,7 @@ func expandZoneNetworkMappingList(d []interface{}) []*v3.AvailabilityZoneNetwork
 		if v5, ok1 := v4["recovery_network"].([]interface{}); ok1 && len(v5) > 0 {
 			netMap.RecoveryNetwork = expandRecoveryNetwork(v5)
 		}
-		if v5, ok1 := v4["test_network"].([]interface{}); ok1 && len(v5) > 0 && len(v5) > 0 {
+		if v5, ok1 := v4["test_network"].([]interface{}); ok1 && len(v5) > 0 {
 			netMap.TestNetwork = expandRecoveryNetwork(v5)
 		}
 		if v5, ok1 := v4["recovery_ip_assignment_list"].([]interface{}); ok1 && len(v5) > 0 {
