@@ -89,7 +89,7 @@ func ResourceNutanixUnregisterClusterV2Create(ctx context.Context, d *schema.Res
 	log.Printf("[DEBUG] Unregister Cluster task details: %s", string(aJSON))
 
 	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeDomainManager,
-		"Unregistered Domain Manager")
+		"Unregister Domain Manager")
 	if err != nil {
 		return diag.Errorf("error while extracting domain manager UUID from task response: %s", err)
 	}

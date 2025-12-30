@@ -385,10 +385,11 @@ func ResourceNutanixRecoveryPointsV2Create(ctx context.Context, d *schema.Resour
 	log.Printf("[DEBUG] Create Recovery Point Task Details: %s", string(aJSON))
 
 	// Extract UUID from completion details
-	uuid, err := commonUtils.ExtractCompletionDetailFromTask(taskDetails, utils.CompletionDetailsNameRecoveryPoint, "Recovery point")
-	if err != nil {
-		return diag.FromErr(err)
+	values := commonUtils.ExtractCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameRecoveryPoint)
+	if len(values) == 0 {
+		return diag.Errorf("Recovery point not found in task completion details")
 	}
+	uuid := values[0]
 	d.SetId(uuid)
 
 	return ResourceNutanixRecoveryPointsV2Read(ctx, d, meta)

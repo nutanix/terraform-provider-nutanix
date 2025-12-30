@@ -227,9 +227,8 @@ func ResourceNutanixVMGCUpdateV2Create(ctx context.Context, d *schema.ResourceDa
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Update GC Task Details: %s", string(aJSON))
 
-	// This is an action resource that does not maintain state.
-	// The resource ID is set to the task ExtId for traceability.
-	d.SetId(utils.StringValue(taskDetails.ExtId))
+
+	d.SetId(vmExtID)
 
 	return nil
 }

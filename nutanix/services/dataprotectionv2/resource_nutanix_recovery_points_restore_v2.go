@@ -139,11 +139,11 @@ func ResourceNutanixRecoveryPointRestoreV2Create(ctx context.Context, d *schema.
 	// Extract VM and Volume Group ExtIds from completion details
 	vmExtIds := make([]string, 0)
 	vgExtIds := make([]string, 0)
-	vmExtIdsStrs := common.ExtractAllCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameVMExtIDs)
+	vmExtIdsStrs := common.ExtractCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameVMExtIDs)
 	for _, vmExtIdsStr := range vmExtIdsStrs {
 		vmExtIds = append(vmExtIds, strings.Split(vmExtIdsStr, ",")...)
 	}
-	vgExtIdsStrs := common.ExtractAllCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameVGExtIDs)
+	vgExtIdsStrs := common.ExtractCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameVGExtIDs)
 	for _, vgExtIdsStr := range vgExtIdsStrs {
 		vgExtIds = append(vgExtIds, strings.Split(vgExtIdsStr, ",")...)
 	}

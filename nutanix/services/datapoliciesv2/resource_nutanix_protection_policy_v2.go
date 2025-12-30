@@ -134,10 +134,11 @@ func ResourceNutanixProtectionPoliciesV2Create(ctx context.Context, d *schema.Re
 	log.Printf("[DEBUG] Create Protection Policy Task Details: %s", string(aJSON))
 
 	// Extract UUID from completion details
-	uuid, err := commonUtils.ExtractCompletionDetailFromTask(taskDetails, utils.CompletionDetailsNameProtectionPolicy, "Protection Policy")
-	if err != nil {
-		return diag.FromErr(err)
+	values := commonUtils.ExtractCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameProtectionPolicy)
+	if len(values) == 0 {
+		return diag.Errorf("Protection Policy not found in task completion details")
 	}
+	uuid := values[0]
 	d.SetId(uuid)
 
 	return ResourceNutanixProtectionPoliciesV2Read(ctx, d, meta)
