@@ -215,8 +215,8 @@ func TestAccV2NutanixVmsResource_NicAddRemove(t *testing.T) {
 	name := fmt.Sprintf("tf-test-vm-nic-%d", r)
 	desc := "test vm for NIC add/remove"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
 		CheckDestroy: testAccCheckNutanixVmsResourceDestroy,
 		Steps: []resource.TestStep{
 			// Step 1: Create VM with one NIC
