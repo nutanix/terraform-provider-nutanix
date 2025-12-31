@@ -168,6 +168,6 @@ func DatasourceNutanixVolumeDiskV2Read(ctx context.Context, d *schema.ResourceDa
 	if err := d.Set("disk_storage_features", flattenDiskStorageFeatures(getResp.DiskStorageFeatures)); err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(*getResp.ExtId)
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return nil
 }

@@ -14,6 +14,7 @@ import (
 	volumesPrism "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/prism/v4/config"
 	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -195,31 +196,34 @@ func ResourceNutanixVolumeGroupIscsiClientV2Create(ctx context.Context, d *schem
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
+	// Wait for the iSCSI client to be attached to the Volume Group
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Iscsi Client  (%s) to Attach to Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for iSCSI client (%s) to attach to Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while Attaching Iscsi Client to Volume Group: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
-	log.Printf("[DEBUG] rUUID 0: %v", *rUUID.EntitiesAffected[0].ExtId)
-	log.Printf("[DEBUG] rUUID 1: %v", *rUUID.EntitiesAffected[1].ExtId)
-	uuid := rUUID.EntitiesAffected[0].ExtId
+	taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
 
-	d.SetId(*uuid)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Attach Iscsi Client to Volume Group Task Details: %s", string(aJSON))
 
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeIscsiClient, "iSCSI client")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(utils.StringValue(uuid))
 	return nil
 }
 
@@ -252,28 +256,32 @@ func ResourceNutanixVVolumeGroupIscsiClientV2Delete(ctx context.Context, d *sche
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
+	// Wait for the iSCSI client to be detached from the Volume Group
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Iscsi Client (%s) to Detach From Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for iSCSI client (%s) to detach from Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while Detaching Iscsi Client to Volume Group: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
+	taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
 
-	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Detach Iscsi Client from Volume Group Task Details: %s", string(aJSON))
+
+	_, err = common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeIscsiClient, "iSCSI client")
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }

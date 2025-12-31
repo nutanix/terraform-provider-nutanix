@@ -3,7 +3,6 @@ package objectstoresv2
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
@@ -18,7 +17,6 @@ import (
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -260,18 +258,18 @@ func ResourceNutanixObjectsV2Create(ctx context.Context, d *schema.ResourceData,
 
 	resp, err := conn.ObjectStoresAPIInstance.CreateObjectstore(objectStorePayload)
 	if err != nil {
-		return diag.Errorf("Error creating object store: %s", err)
+		return diag.Errorf("error creating object store: %s", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(objectPrismConfig.TaskReference)
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the object store to be created
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -280,13 +278,16 @@ func ResourceNutanixObjectsV2Create(ctx context.Context, d *schema.ResourceData,
 
 		taskResp, taskErr := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 		if taskErr != nil {
-			return diag.Errorf("error while fetch deploy object store task: %s", taskErr)
+			return diag.Errorf("error while fetching deploy object store task (%s): %s", utils.StringValue(taskUUID), taskErr)
 		}
 
 		taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 
 		// Get created object store extID from TASK API
-		objectStoreExtID := taskDetails.EntitiesAffected[0].ExtId
+		objectStoreExtID, extractErr := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeObjects, "Object store")
+		if extractErr != nil {
+			return diag.FromErr(extractErr)
+		}
 
 		log.Printf("[DEBUG] object store extID: %s", utils.StringValue(objectStoreExtID))
 
@@ -299,23 +300,26 @@ func ResourceNutanixObjectsV2Create(ctx context.Context, d *schema.ResourceData,
 			log.Printf("[DEBUG] object store not found")
 			// If the object store is not found, object store is not deployed
 			// and return the error
-			return diag.Errorf("error waiting for object store to be deployed : %s", err)
+			return diag.Errorf("error waiting for object store (%s) to be created: %s", utils.StringValue(taskUUID), err)
 		}
 		// else, the object store instance exists in the system
 	}
 
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetch deploy object store task: %s", err)
+		return diag.Errorf("error while fetching object store create task (%s): %s", utils.StringValue(taskUUID), err)
 	}
 
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] deploy object store task details: %s", string(aJSON))
+	log.Printf("[DEBUG] Object Store Create Task Details: %s", string(aJSON))
 
 	// Get created object store extID from TASK API
-	objectStoreExtID := taskDetails.EntitiesAffected[0].ExtId
-	d.SetId(*objectStoreExtID)
+	objectStoreExtID, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeObjects, "Object store")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(utils.StringValue(objectStoreExtID))
 
 	return ResourceNutanixObjectsV2Read(ctx, d, meta)
 }
@@ -326,7 +330,7 @@ func ResourceNutanixObjectsV2Read(ctx context.Context, d *schema.ResourceData, m
 
 	readResp, err := conn.ObjectStoresAPIInstance.GetObjectstoreById(utils.StringPtr(d.Id()))
 	if err != nil {
-		return diag.Errorf("Error reading object store: %s", err)
+		return diag.Errorf("error reading object store: %s", err)
 	}
 
 	objectStore := readResp.Data.GetValue().(config.ObjectStore)
@@ -403,7 +407,7 @@ func ResourceNutanixObjectsV2Update(ctx context.Context, d *schema.ResourceData,
 
 	readResp, err := conn.ObjectStoresAPIInstance.GetObjectstoreById(utils.StringPtr(d.Id()))
 	if err != nil {
-		return diag.Errorf("Error reading object store: %s", err)
+		return diag.Errorf("error reading object store: %s", err)
 	}
 
 	// Extract E-Tag Header
@@ -419,28 +423,28 @@ func ResourceNutanixObjectsV2Update(ctx context.Context, d *schema.ResourceData,
 	// resume the object store deployment if the state is OBJECT_STORE_DEPLOYMENT_FAILED
 	resp, err := conn.ObjectStoresAPIInstance.UpdateObjectstoreById(utils.StringPtr(d.Id()), &objectStoreUpdatePayload, args)
 	if err != nil {
-		return diag.Errorf("Error updating object store: %s", err)
+		return diag.Errorf("error updating object store: %s", err)
 	}
 	TaskRef := resp.Data.GetValue().(objectPrismConfig.TaskReference)
 	taskUUID := TaskRef.ExtId
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the object store to be updated
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for object store to be updated : %s", err)
+		return diag.Errorf("error waiting for object store (%s) to be updated: %s", utils.StringValue(taskUUID), err)
 	}
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while update object store task: %s", err)
+		return diag.Errorf("error while fetching object store update task (%s): %s", utils.StringValue(taskUUID), err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Object store Update task details: %s", string(aJSON))
+	log.Printf("[DEBUG] Object Store Update Task Details: %s", string(aJSON))
 
 	return ResourceNutanixObjectsV2Read(ctx, d, meta)
 }
@@ -450,7 +454,7 @@ func ResourceNutanixObjectsV2Delete(ctx context.Context, d *schema.ResourceData,
 
 	readResp, err := conn.ObjectStoresAPIInstance.GetObjectstoreById(utils.StringPtr(d.Id()))
 	if err != nil {
-		return diag.Errorf("Error reading object store: %s", err)
+		return diag.Errorf("error reading object store: %s", err)
 	}
 
 	// Extract E-Tag Header
@@ -460,7 +464,7 @@ func ResourceNutanixObjectsV2Delete(ctx context.Context, d *schema.ResourceData,
 
 	resp, err := conn.ObjectStoresAPIInstance.DeleteObjectstoreById(utils.StringPtr(d.Id()), args)
 	if err != nil {
-		return diag.Errorf("Error deleting object store: %s", err)
+		return diag.Errorf("error deleting object store: %s", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(objectPrismConfig.TaskReference)
@@ -470,19 +474,19 @@ func ResourceNutanixObjectsV2Delete(ctx context.Context, d *schema.ResourceData,
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for object store to be deleted : %s", err)
+		return diag.Errorf("error waiting for object store (%s) to be deleted: %s", utils.StringValue(taskUUID), err)
 	}
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching object store delete task: %s", err)
+		return diag.Errorf("error while fetching object store delete task (%s): %s", utils.StringValue(taskUUID), err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Object store delete task details: %s", string(aJSON))
+	log.Printf("[DEBUG] Object Store Delete Task Details: %s", string(aJSON))
 
 	return nil
 }
@@ -678,47 +682,4 @@ func expandState(state string) *config.State {
 	}
 
 	return &stateEnum
-}
-
-// func to check pc task status, and return the task status or error message
-func taskStateRefreshPrismTaskGroupFunc(client *prism.Client, taskUUID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		taskResp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-
-		if err != nil {
-			return "", "", fmt.Errorf("error while polling prism task: %v", err)
-		}
-
-		// get the group results
-		v := taskResp.Data.GetValue().(prismConfig.Task)
-
-		if getTaskStatus(v.Status) == "CANCELED" || getTaskStatus(v.Status) == "FAILED" {
-			return v, getTaskStatus(v.Status),
-				fmt.Errorf("error_detail: %s, progress_message: %d", utils.StringValue(v.ErrorMessages[0].Message), utils.IntValue(v.ProgressPercentage))
-		}
-		return v, getTaskStatus(v.Status), nil
-	}
-}
-
-// func to flatten the task status to string
-func getTaskStatus(pr *prismConfig.TaskStatus) string {
-	if pr != nil {
-		const QUEUED, RUNNING, SUCCEEDED, FAILED, CANCELED = 2, 3, 5, 6, 7
-		if *pr == prismConfig.TaskStatus(FAILED) {
-			return "FAILED"
-		}
-		if *pr == prismConfig.TaskStatus(CANCELED) {
-			return "CANCELED"
-		}
-		if *pr == prismConfig.TaskStatus(QUEUED) {
-			return "QUEUED"
-		}
-		if *pr == prismConfig.TaskStatus(RUNNING) {
-			return "RUNNING"
-		}
-		if *pr == prismConfig.TaskStatus(SUCCEEDED) {
-			return "SUCCEEDED"
-		}
-	}
-	return "UNKNOWN"
 }

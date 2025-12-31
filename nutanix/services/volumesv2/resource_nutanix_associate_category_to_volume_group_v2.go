@@ -14,6 +14,7 @@ import (
 	volumesPrism "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/prism/v4/config"
 	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -90,7 +91,7 @@ func ResourceNutanixAssociateCategoryToVolumeGroupV2Create(ctx context.Context, 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -99,7 +100,6 @@ func ResourceNutanixAssociateCategoryToVolumeGroupV2Create(ctx context.Context, 
 	}
 
 	// Get UUID from TASK API
-
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while fetching Associate Category to Volume Group Task : %v", err)
@@ -109,7 +109,9 @@ func ResourceNutanixAssociateCategoryToVolumeGroupV2Create(ctx context.Context, 
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Associate Category to Volume Group Task Details: %s", string(aJSON))
 
-	d.SetId(utils.GenUUID())
+	// This is an action resource that does not maintain state.
+	// The resource ID is set to the task ExtId for traceability.
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 
 	return nil
 }
@@ -146,28 +148,26 @@ func ResourceNutanixAssociateCategoryToVolumeGroupV2Delete(ctx context.Context, 
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
+	// Wait for the category to be disassociated from the Volume Group
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Category task (%s) to Dissociate from Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for category (%s) to disassociate from Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Dissociate Category from Volume Group Task : %v", err)
+		return diag.Errorf("error while fetching disassociate category from Volume Group task (%s): %v", utils.StringValue(taskUUID), err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
-
-	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Dissociate Category from Volume Group Task Details: %s", string(aJSON))
+	taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Disassociate Category from Volume Group Task Details: %s", string(aJSON))
 
 	return nil
 }

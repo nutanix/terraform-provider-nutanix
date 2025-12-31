@@ -2,6 +2,7 @@ package vmmv2
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -10,9 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -223,19 +226,30 @@ func ResourceNutanixVmsCdRomsInsertEjectV2Create(ctx context.Context, d *schema.
 		taskUUID := TaskRef.ExtId
 
 		taskconn := meta.(*conns.Client).PrismAPI
-		// Wait for the VM to be available
+		// Wait for the CD-ROM to be inserted
 		stateConf := &resource.StateChangeConf{
-			Pending: []string{"QUEUED", "RUNNING"},
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 			Target:  []string{"SUCCEEDED"},
-			Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 			Timeout: d.Timeout(schema.TimeoutCreate),
 		}
 
 		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-			return diag.Errorf("error waiting for cd-rom (%s) to insert: %s", utils.StringValue(taskUUID), errWaitTask)
+			return diag.Errorf("error waiting for CD-ROM insert (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 		}
 
-		d.SetId(resource.UniqueId())
+		// Get UUID from TASK API
+		taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		if err != nil {
+			return diag.Errorf("error while fetching CD-ROM insert task (%s): %v", utils.StringValue(taskUUID), err)
+		}
+		taskDetails := taskResp.Data.GetValue().(import2.Task)
+		aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+		log.Printf("[DEBUG] CD-ROM Insert Task Details: %s", string(aJSON))
+
+		// This is an action resource that does not maintain state.
+		// The resource ID is set to the task ExtId for traceability.
+		d.SetId(utils.StringValue(taskDetails.ExtId))
 		return ResourceNutanixVmsCdRomsInsertEjectV2Read(ctx, d, meta)
 	}
 	return diag.Errorf("Action %s is not supported for CD-ROM Insert", d.Get("action").(string))

@@ -102,7 +102,7 @@ func DatasourceNutanixProtectionPolicyV2Read(ctx context.Context, d *schema.Reso
 		return diag.FromErr(err)
 	}
 
-	d.SetId(*getResp.ExtId)
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return nil
 }
 
@@ -143,7 +143,7 @@ func flattenLinks(links []response.ApiLink) []map[string]interface{} {
 		}
 		return linkList
 	}
-	return nil
+	return []map[string]interface{}{}
 }
 
 func flattenReplicationLocations(replicationLocations []config.ReplicationLocation) []map[string]interface{} {

@@ -1,6 +1,8 @@
 package datapolicies
 
 import (
+	"strconv"
+
 	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/api"
 	datapolicies "github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
@@ -8,6 +10,7 @@ import (
 
 type Client struct {
 	ProtectionPolicies *api.ProtectionPoliciesApi
+	StoragePolicies    *api.StoragePoliciesApi
 }
 
 func NewDataPoliciesClient(credentials client.Credentials) (*Client, error) {
@@ -20,7 +23,12 @@ func NewDataPoliciesClient(credentials client.Credentials) (*Client, error) {
 		pcClient.Host = credentials.Endpoint
 		pcClient.Password = credentials.Password
 		pcClient.Username = credentials.Username
-		pcClient.Port = 9440
+		port, err := strconv.Atoi(credentials.Port)
+		if err != nil {
+			pcClient.Port = 9440
+		}
+		pcClient.Port = port
+
 		pcClient.VerifySSL = false
 
 		baseClient = pcClient
@@ -28,6 +36,7 @@ func NewDataPoliciesClient(credentials client.Credentials) (*Client, error) {
 
 	f := &Client{
 		ProtectionPolicies: api.NewProtectionPoliciesApi(baseClient),
+		StoragePolicies:    api.NewStoragePoliciesApi(baseClient),
 	}
 
 	return f, nil

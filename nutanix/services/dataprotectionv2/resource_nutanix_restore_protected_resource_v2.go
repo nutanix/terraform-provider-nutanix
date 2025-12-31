@@ -13,6 +13,7 @@ import (
 	dataprotectionPrismConfig "github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -39,9 +40,9 @@ func ResourceNutanixRestoreProtectedResourceV2() *schema.Resource {
 	}
 }
 
-// ResourceNutanixRestoreProtectedResourceV2Create to Restore Protected Resource
-// This Resource is action resource and does not have any state
-// resource id is set to random UUID
+// ResourceNutanixRestoreProtectedResourceV2Create restores a protected resource.
+// This is an action resource that does not maintain state.
+// The resource ID is set to the task ExtId for traceability.
 func ResourceNutanixRestoreProtectedResourceV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataProtectionAPI
 
@@ -58,39 +59,37 @@ func ResourceNutanixRestoreProtectedResourceV2Create(ctx context.Context, d *sch
 
 	resp, err := conn.ProtectedResource.RestoreProtectedResource(utils.StringPtr(extID), bodySpec)
 	if err != nil {
-		return diag.Errorf("Error while restoring protected resource: %s", err)
+		return diag.Errorf("error while restoring protected resource: %s", err)
 	}
 
-	TaskRef := resp.Data.GetValue().(dataprotectionPrismConfig.TaskReference)
-	taskUUID := TaskRef.ExtId
+	taskRef := resp.Data.GetValue().(dataprotectionPrismConfig.TaskReference)
+	taskUUID := taskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the restore protected resource operation to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return diag.Errorf("Error waiting for task to complete: %s", err)
+		return diag.Errorf("error waiting for restore protected resource task (%s) to complete: %s", utils.StringValue(taskUUID), err)
 	}
 
 	// Get UUID from TASK API
-
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("Error while getting task by ID: %s", err)
+		return diag.Errorf("error while fetching restore protected resource task: %v", err)
 	}
-
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 
 	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Restore Protected Resource Task Details: %s", aJSON)
+	log.Printf("[DEBUG] Restore Protected Resource Task Details: %s", string(aJSON))
 
-	d.SetId(utils.GenUUID())
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 
 	return nil
 }

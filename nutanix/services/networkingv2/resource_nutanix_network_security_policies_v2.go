@@ -493,11 +493,11 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 	// calling group API to poll for completion of task
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Network security  policy to be available
+	// Wait for the network security policy to be created
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -506,15 +506,19 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching vpc UUID : %v", err)
+		return diag.Errorf("error while fetching network security policy task: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Create Network Security Policy Task Details: %s", string(aJSON))
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeSecurityPolicy, "Network security policy")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(utils.StringValue(uuid))
 
 	return ResourceNutanixNetworkSecurityPolicyV2Read(ctx, d, meta)
 }
@@ -706,16 +710,16 @@ func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema
 	// calling group API to poll for completion of task
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Service Group to be available
+	// Wait for the network security policy to be updated
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for network security (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for network security policy (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	return ResourceNutanixNetworkSecurityPolicyV2Read(ctx, d, meta)
 }
@@ -734,16 +738,16 @@ func ResourceNutanixNetworkSecurityPolicyV2Delete(ctx context.Context, d *schema
 	// calling group API to poll for completion of task
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Service Group to be available
+	// Wait for the network security policy to be deleted
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for network security (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for network security policy (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	return nil
 }

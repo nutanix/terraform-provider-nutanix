@@ -42,13 +42,6 @@ resource "nutanix_project" "project_test" {
     value = "Staging"
   }
 
-  resource_domain {
-    resources {
-      limit         = 4
-      resource_type = "STORAGE"
-    }
-  }
-
   default_subnet_reference {
     uuid = nutanix_subnet.subnet.metadata.uuid
   }
@@ -162,11 +155,8 @@ The following arguments are supported:
 * `cluster_uuid` - (Optional) The UUID of cluster. (Required when using project_internal flag).
 * `enable_collab` - (Optional) flag to allow collaboration of projects. (Use with project_internal flag)
 
-### Resource Domain
-* `resource_domain` - (Optional) The status for a resource domain (limits and values)
-* `resource_domain.resources` - (Required) Array of the utilization/limit for resource types
-* `resource_domain.resources.#.limit` - (Required) The resource consumption limit.
-* `resource_domain.resources.#.resource_type` - (Required) The type of resource (for example storage, CPUs)
+### Resource Domain (Deprecated)
+* `resource_domain` - (Deprecated) Not supported starting from provider version `2.4.0` and ignored by the provider. Remove it from your configuration/scripts.
 
 ### Account Reference List
 * `account_reference_list` - (Optional/Computed) List of accounts associated with the project.
@@ -291,10 +281,6 @@ The following arguments are supported:
 
 ## Attributes Reference
 The following attributes are exported:
-
-### Resource Domain
-* `resource_domain.resources.#.units` - The units of the resource type
-* `resource_domain.resources.#.value` - The amount of resource consumed
 
 ### ACP
 ACPs will be exported if use_project_internal flag is set.
