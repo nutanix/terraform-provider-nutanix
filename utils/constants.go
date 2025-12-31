@@ -37,6 +37,7 @@ const (
 // CompletionDetailsName constants - Completion details name for the task entities affected
 const (
 	CompletionDetailsNameRecoveryPoint    = "recoveryPointExtId"
+	CompletionDetailsNameVmRecoveryPoint  = "VM Recovery Point UUID"
 	CompletionDetailsNameVMExtIDs         = "vmExtIds"
 	CompletionDetailsNameVGExtIDs         = "volumeGroupExtIds"
 	CompletionDetailsNameProtectionPolicy = "protectionPolicyExtId"
