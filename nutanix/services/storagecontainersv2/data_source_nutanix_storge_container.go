@@ -171,7 +171,7 @@ func DatasourceNutanixStorageContainerV2Read(ctx context.Context, d *schema.Reso
 		containerExtId = utils.StringValue(getResp.ContainerExtId)
 	}
 
-	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+	if err := d.Set("ext_id", containerExtId); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
@@ -180,7 +180,7 @@ func DatasourceNutanixStorageContainerV2Read(ctx context.Context, d *schema.Reso
 	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("container_ext_id", containerExtId); err != nil {
+	if err := d.Set("container_ext_id", getResp.ContainerExtId); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("owner_ext_id", getResp.OwnerExtId); err != nil {
