@@ -410,33 +410,55 @@ func ResourceNutanixNGTInstallationV4Delete(ctx context.Context, d *schema.Resou
 
 	extID := d.Get("ext_id").(string)
 
-	readResp, err := conn.VMAPIInstance.GetVmById(&extID)
-	if err != nil {
-		return diag.Errorf("error while fetching Vm : %v", err)
-	}
-	args := make(map[string]interface{})
-	args["If-Match"] = getEtagHeader(readResp, conn)
-
-	resp, err := conn.VMAPIInstance.UninstallVmGuestTools(utils.StringPtr(extID), args)
-	if err != nil {
-		return diag.Errorf("error while uninstalling gest tools  : %v", err)
-	}
-
-	TaskRef := resp.Data.GetValue().(vmmPrism.TaskReference)
-	taskUUID := TaskRef.ExtId
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the NGT to be uninstalled
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutDelete),
-	}
 
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for NGT uninstallation (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
-	}
+	// This operation is async. Under cluster load (or during parallel destroys), the task can
+	// sit queued and the VM ETag can change before it actually starts, leading to VM_ETAG_MISMATCH.
+	// In that case, re-fetch the latest ETag and retry.
+	const maxAttempts = 5
+	var taskUUID *string
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		readResp, err := conn.VMAPIInstance.GetVmById(&extID)
+		if err != nil {
+			return diag.Errorf("error while fetching Vm : %v", err)
+		}
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(readResp, conn)
 
+		resp, err := conn.VMAPIInstance.UninstallVmGuestTools(utils.StringPtr(extID), args)
+		if err != nil {
+			return diag.Errorf("error while uninstalling gest tools  : %v", err)
+		}
+
+		TaskRef := resp.Data.GetValue().(vmmPrism.TaskReference)
+		taskUUID = TaskRef.ExtId
+
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutDelete),
+		}
+
+		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+			if attempt < maxAttempts && isVmmEtagMismatchErr(errWaitTask) {
+				log.Printf("[DEBUG] NGT uninstall failed due to VM ETag mismatch (attempt %d/%d). Retrying with refreshed ETag. Task UUID: %s, error: %s",
+					attempt, maxAttempts, utils.StringValue(taskUUID), errWaitTask)
+				time.Sleep(2 * time.Second)
+				continue
+			}
+			taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+			if err != nil {
+				taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
+				aJSON, _ := json.MarshalIndent(taskDetails, "", " ")
+				log.Printf("[DEBUG] NGT Uninstallation Task Details: %s", string(aJSON))
+				return diag.Errorf("error while uninstalling gest tools, in Get UUID from TASK API  : %v", err)
+			}
+			taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
+			aJSON, _ := json.MarshalIndent(taskDetails, "", " ")
+			log.Printf("[DEBUG] NGT Uninstallation Task Details: %s", string(aJSON))
+		}
+		break
+	}
 	return nil
 }
