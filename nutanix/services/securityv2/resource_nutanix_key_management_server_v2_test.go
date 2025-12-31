@@ -83,7 +83,7 @@ func TestAccV2NutanixKeyManagementServerResource_Basic(t *testing.T) {
 				Config: testKMSResourceInvalidAccessInfoConfig(updatedName),
 				// Error may include a KMS identifier in parentheses and may be phrased
 				// as "to updated" or "to be updated" depending on client/API wording.
-				ExpectError: regexp.MustCompile(`error waiting for kms( \([^)]*\))? to (be )?updated:`),
+				ExpectError: regexp.MustCompile(`error waiting for (kms|key management server)( \([^)]*\))? to (be )?updated:`),
 			},
 		},
 	})
@@ -99,7 +99,7 @@ func TestAccV2NutanixKeyManagementServerResource_InvalidAccessInfo(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				Config:      testKMSResourceInvalidAccessInfoConfig(name),
-				ExpectError: regexp.MustCompile("error waiting for kms to be created:"),
+				ExpectError: regexp.MustCompile(`error waiting for (kms|key management server)( \([^)]*\))? to be created:`),
 			},
 		},
 	})
