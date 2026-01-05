@@ -18,7 +18,7 @@ require (
 	github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.2.1
 	github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.2.1
 	github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.2.1
-	github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4 v4.0.1
+	github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4 v4.0.2
 	github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.2.1
 	github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4 v4.1.1
 	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.2.1
