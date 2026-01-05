@@ -106,10 +106,43 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 		if prismErr != nil {
 			return diag.Errorf("error while creating new prism client: %v", prismErr)
 		}
-		// newPrismClient.TaskRefAPI.ApiClient.AllowVersionNegotiation = false
 
-		taskconn = newPrismClient
-		_, taskErr = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		newTaskconn, err := prism.NewPrismClient(newCredentials)
+		if err != nil {
+			return diag.Errorf("error while creating new prism client: %v", err)
+		}
+		// retry to fetch the task
+		log.Printf("[DEBUG]  creating new taskconn with new password and retrying to fetch the task: %s", utils.StringValue(taskUUID))
+
+		_, taskErr = newTaskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		if taskErr != nil {
+			return diag.Errorf("error while fetching task by ID %s: %v", utils.StringValue(taskUUID), taskErr)
+		}
+		// Wait for the password change to complete
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, newPrismClient, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutCreate),
+		}
+
+		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+			return diag.Errorf("error waiting for password change (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
+		}
+
+		// Get task details for logging
+		taskResp, err := newPrismClient.TaskRefAPI.GetTaskById(taskUUID, nil)
+		if err != nil {
+			return diag.Errorf("error while fetching password change task: %v", err)
+		}
+		taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+		aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+		log.Printf("[DEBUG] Create Password Manager Task Details: %s", string(aJSON))
+
+		// This is an action resource that does not maintain state.
+		// The resource ID is set to the task ExtId for traceability.
+		d.SetId(utils.StringValue(taskDetails.ExtId))
+		return resourceNutanixPasswordManagerV2Read(ctx, d, meta)
 	}
 	if taskErr != nil {
 		return diag.Errorf("error while fetching task by ID %s: %v", utils.StringValue(taskUUID), taskErr)
