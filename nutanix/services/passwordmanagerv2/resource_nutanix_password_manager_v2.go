@@ -33,8 +33,7 @@ func isUnauthorizedErr(err error) bool {
 		strings.Contains(msg, "invalid credentials") ||
 		// prism-go-client tries to follow OIDC redirects but incorrectly builds a relative URL,
 		// which results in: `unsupported protocol scheme ""`
-		strings.Contains(msg, "unsupported protocol scheme") ||
-		strings.Contains(msg, "/api/iam/authn/v1/oidc/auth")
+		strings.Contains(msg, "unsupported protocol scheme")
 }
 
 func ResourceNutanixPasswordManagerV2() *schema.Resource {
@@ -92,6 +91,9 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 	_, taskErr := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if taskErr != nil && isUnauthorizedErr(taskErr) {
 		log.Printf("[DEBUG] prism task fetch returned unauthorized after password change; recreating prism client with new password and retrying")
+
+		aJSON, _ = json.MarshalIndent(taskErr, "", "  ")
+		log.Printf("[DEBUG]  task error object: %s", string(aJSON))
 
 		newCredentials := client.Credentials{
 			Username: taskconn.TaskRefAPI.ApiClient.Username,
