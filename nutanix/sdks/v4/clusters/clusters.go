@@ -33,7 +33,7 @@ func NewClustersClient(credentials client.Credentials) (*Client, error) {
 			}
 		}
 		pcClient.VerifySSL = false
-		pcClient.AllowVersionNegotiation = false
+		// pcClient.AllowVersionNegotiation = false
 		baseClient = pcClient
 	}
 

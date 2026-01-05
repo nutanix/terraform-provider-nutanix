@@ -106,7 +106,7 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 		if prismErr != nil {
 			return diag.Errorf("error while creating new prism client: %v", prismErr)
 		}
-		newPrismClient.TaskRefAPI.ApiClient.AllowVersionNegotiation = false
+		// newPrismClient.TaskRefAPI.ApiClient.AllowVersionNegotiation = false
 
 		taskconn = newPrismClient
 		_, taskErr = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
