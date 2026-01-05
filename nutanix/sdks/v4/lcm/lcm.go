@@ -1,6 +1,8 @@
 package lcm
 
 import (
+	"strconv"
+
 	"github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/api"
 	lcm "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
@@ -26,8 +28,13 @@ func NewLcmClient(credentials client.Credentials) (*Client, error) {
 		pcClient.Password = credentials.Password
 		pcClient.Username = credentials.Username
 		pcClient.Port = 9440
+		if credentials.Port != "" {
+			if p, err := strconv.Atoi(credentials.Port); err == nil {
+				pcClient.Port = p
+			}
+		}
 		pcClient.VerifySSL = false
-
+		pcClient.AllowVersionNegotiation = false
 		baseClient = pcClient
 	}
 

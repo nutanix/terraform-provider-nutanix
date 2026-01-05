@@ -1,6 +1,8 @@
 package microseg
 
 import (
+	"strconv"
+
 	"github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/api"
 	microseg "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
@@ -23,8 +25,13 @@ func NewMicrosegClient(credentials client.Credentials) (*Client, error) {
 		pcClient.Password = credentials.Password
 		pcClient.Username = credentials.Username
 		pcClient.Port = 9440
+		if credentials.Port != "" {
+			if p, err := strconv.Atoi(credentials.Port); err == nil {
+				pcClient.Port = p
+			}
+		}
 		pcClient.VerifySSL = false
-
+		pcClient.AllowVersionNegotiation = false
 		baseClient = pcClient
 	}
 

@@ -1,7 +1,6 @@
 package objectstores
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4/api"
@@ -23,13 +22,13 @@ func NewObjectStoresClient(credentials client.Credentials) (*Client, error) {
 		pcClient.Host = credentials.Endpoint
 		pcClient.Password = credentials.Password
 		pcClient.Username = credentials.Username
-		port, err := strconv.Atoi(credentials.Port)
-		if err != nil {
-			return nil, fmt.Errorf("invalid port: %w", err)
+		pcClient.Port = 9440
+		if credentials.Port != "" {
+			if p, err := strconv.Atoi(credentials.Port); err == nil {
+				pcClient.Port = p
+			}
 		}
-		pcClient.Port = port
 		pcClient.VerifySSL = false
-
 		baseClient = pcClient
 	}
 

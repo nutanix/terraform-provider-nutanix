@@ -23,14 +23,14 @@ func NewDataPoliciesClient(credentials client.Credentials) (*Client, error) {
 		pcClient.Host = credentials.Endpoint
 		pcClient.Password = credentials.Password
 		pcClient.Username = credentials.Username
-		port, err := strconv.Atoi(credentials.Port)
-		if err != nil {
-			pcClient.Port = 9440
+		pcClient.Port = 9440
+		if credentials.Port != "" {
+			if p, err := strconv.Atoi(credentials.Port); err == nil {
+				pcClient.Port = p
+			}
 		}
-		pcClient.Port = port
-
 		pcClient.VerifySSL = false
-
+		pcClient.AllowVersionNegotiation = false
 		baseClient = pcClient
 	}
 
