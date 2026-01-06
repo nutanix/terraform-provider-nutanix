@@ -2,6 +2,7 @@ package prism_test
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -238,6 +239,143 @@ func TestAccNutanixProject_withInternalWithACPUserGroup(t *testing.T) {
 	})
 }
 
+func TestAccNutanixProject_ACPOrderAndNestedRefs_NoPlanDiff(t *testing.T) {
+	resourceName := "nutanix_project.projects"
+
+	name := acctest.RandomWithPrefix("tf-acc-project-acp-order")
+	description := "project description"
+	// Move these from constants -> local test variables (per request)
+	projectAdminUserName := "ssptest1@qa.nucalm.io"
+	developerUserName := "ssptest2@qa.nucalm.io"
+	extraUserName := "ssptest3@qa.nucalm.io"
+	backupAdminUserName := "ssptest4@qa.nucalm.io"
+	roleDeveloperName := "Developer"
+	roleProjectAdminName := "Project Admin"
+	roleBackupAdminName := "Backup Admin"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixProjectDestroy,
+		Steps: []resource.TestStep{
+			// 1) Create the project (ACP order: Developer, Project Admin)
+			{
+				PreConfig: func() {
+					fmt.Println("Step 1: creating project")
+				},
+				Config: testAccNutanixProjectACPOrderConfig(name, description, false, false, false, projectAdminUserName, developerUserName, extraUserName, backupAdminUserName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixProjectExists(&resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "use_project_internal", "true"),
+					resource.TestCheckResourceAttr(resourceName, "api_version", "3.1"),
+					resource.TestCheckResourceAttr(resourceName, "acp.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "user_reference_list.#", "2"),
+					testAccCheckProjectACPHasRole(resourceName, roleDeveloperName),
+					testAccCheckProjectACPHasRole(resourceName, roleProjectAdminName),
+					testAccCheckProjectACPCountsByRole(resourceName, roleDeveloperName, 1, 0),
+					testAccCheckProjectACPCountsByRole(resourceName, roleProjectAdminName, 1, 0),
+				),
+			},
+			// 2) Plan, no changes (same config)
+			{
+				PreConfig: func() {
+					fmt.Println("Step 2: planning project, same config")
+				},
+				Config:             testAccNutanixProjectACPOrderConfig(name, description, false, false, false, projectAdminUserName, developerUserName, extraUserName, backupAdminUserName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+			// 3) Change ACP order in TF config, plan should still be clean (ACP order: Project Admin, Developer)
+			{
+				PreConfig: func() {
+					fmt.Println("Step 3: planning project, change ACP order")
+				},
+				Config:             testAccNutanixProjectACPOrderConfig(name, description, true, false, false, projectAdminUserName, developerUserName, extraUserName, backupAdminUserName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+			// 4) Plan, no changes (repeat)
+			{
+				PreConfig: func() {
+					fmt.Println("Step 4: planning project, same config")
+				},
+				Config:             testAccNutanixProjectACPOrderConfig(name, description, true, false, false, projectAdminUserName, developerUserName, extraUserName, backupAdminUserName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+			// 5) Add a new ACP in the middle between the two ACP blocks (Developer, Backup Admin, Project Admin)
+			{
+				PreConfig: func() {
+					fmt.Println("Step 5: applying config with Backup Admin ACP inserted in the middle")
+				},
+				Config: testAccNutanixProjectACPOrderConfig(name, description, false, false, true, projectAdminUserName, developerUserName, extraUserName, backupAdminUserName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixProjectExists(&resourceName),
+					resource.TestCheckResourceAttr(resourceName, "acp.#", "3"),
+					testAccCheckProjectACPHasRole(resourceName, roleDeveloperName),
+					testAccCheckProjectACPHasRole(resourceName, roleBackupAdminName),
+					testAccCheckProjectACPHasRole(resourceName, roleProjectAdminName),
+					testAccCheckProjectACPCountsByRole(resourceName, roleBackupAdminName, 1, 0),
+				),
+			},
+			// 6) Plan, no changes after inserting the middle ACP
+			{
+				PreConfig: func() {
+					fmt.Println("Step 6: planning project, same config (with Backup Admin ACP)")
+				},
+				Config:             testAccNutanixProjectACPOrderConfig(name, description, false, false, true, projectAdminUserName, developerUserName, extraUserName, backupAdminUserName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+			// 7) Add user_reference_list, external_user_group_reference_list,
+			//    acp[Project Admin].user_reference_list, acp[Developer].user_group_reference_list
+			{
+				PreConfig: func() {
+					fmt.Println("Step 7: planning project, add user_reference_list, external_user_group_reference_list, acp[Project Admin].user_reference_list, acp[Developer].user_group_reference_list")
+				},
+				Config: testAccNutanixProjectACPOrderConfig(name, description, true, true, false, projectAdminUserName, developerUserName, extraUserName, backupAdminUserName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixProjectExists(&resourceName),
+					resource.TestCheckResourceAttr(resourceName, "acp.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "user_reference_list.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "external_user_group_reference_list.#", "1"),
+					testAccCheckProjectACPCountsByRole(resourceName, roleDeveloperName, 1, 1),
+					testAccCheckProjectACPCountsByRole(resourceName, roleProjectAdminName, 2, 0),
+				),
+			},
+			// 8) Plan, no changes
+			{
+				PreConfig: func() {
+					fmt.Println("Step 8: planning project, same config")
+				},
+				Config:             testAccNutanixProjectACPOrderConfig(name, description, true, true, false, projectAdminUserName, developerUserName, extraUserName, backupAdminUserName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+			// 9) Change ACP order again, plan should still be clean (ACP order: Developer, Project Admin)
+			{
+				PreConfig: func() {
+					fmt.Println("Step 9: planning project, change ACP order")
+				},
+				Config:             testAccNutanixProjectACPOrderConfig(name, description, false, true, false, projectAdminUserName, developerUserName, extraUserName, backupAdminUserName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+			// 10) Plan, no changes
+			{
+				PreConfig: func() {
+					fmt.Println("Step 10: planning project, same config")
+				},
+				Config:             testAccNutanixProjectACPOrderConfig(name, description, false, true, false, projectAdminUserName, developerUserName, extraUserName, backupAdminUserName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixProjectImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -281,6 +419,321 @@ func testAccCheckNutanixProjectDestroy(s *terraform.State) error {
 		}
 	}
 	return nil
+}
+
+func testAccCheckProjectACPHasRole(resourceName, roleName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("not found: %s", resourceName)
+		}
+
+		acpCountStr := rs.Primary.Attributes["acp.#"]
+		acpCount, err := strconv.Atoi(acpCountStr)
+		if err != nil {
+			return fmt.Errorf("invalid acp.# %q: %w", acpCountStr, err)
+		}
+
+		for i := 0; i < acpCount; i++ {
+			if rs.Primary.Attributes[fmt.Sprintf("acp.%d.role_reference.0.name", i)] == roleName {
+				return nil
+			}
+		}
+
+		return fmt.Errorf("acp role not found in state: role name %s", roleName)
+	}
+}
+
+func testAccCheckProjectACPCountsByRole(resourceName, roleName string, expectedUserRefs, expectedUserGroupRefs int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("not found: %s", resourceName)
+		}
+
+		acpCountStr := rs.Primary.Attributes["acp.#"]
+		acpCount, err := strconv.Atoi(acpCountStr)
+		if err != nil {
+			return fmt.Errorf("invalid acp.# %q: %w", acpCountStr, err)
+		}
+
+		for i := 0; i < acpCount; i++ {
+			if rs.Primary.Attributes[fmt.Sprintf("acp.%d.role_reference.0.name", i)] != roleName {
+				continue
+			}
+
+			userRefsStr := rs.Primary.Attributes[fmt.Sprintf("acp.%d.user_reference_list.#", i)]
+			userGroupsStr := rs.Primary.Attributes[fmt.Sprintf("acp.%d.user_group_reference_list.#", i)]
+
+			userRefs, err := strconv.Atoi(userRefsStr)
+			if err != nil {
+				return fmt.Errorf("invalid acp.%d.user_reference_list.# %q: %w", i, userRefsStr, err)
+			}
+			userGroups, err := strconv.Atoi(userGroupsStr)
+			if err != nil {
+				return fmt.Errorf("invalid acp.%d.user_group_reference_list.# %q: %w", i, userGroupsStr, err)
+			}
+
+			if userRefs != expectedUserRefs {
+				return fmt.Errorf("expected role %s to have %d user_reference_list entries, got %d", roleName, expectedUserRefs, userRefs)
+			}
+			if userGroups != expectedUserGroupRefs {
+				return fmt.Errorf("expected role %s to have %d user_group_reference_list entries, got %d", roleName, expectedUserGroupRefs, userGroups)
+			}
+			return nil
+		}
+
+		return fmt.Errorf("acp role not found in state: role name %s", roleName)
+	}
+}
+
+// testAccNutanixProjectACPOrderConfig reproduces issue #1042:
+// - Create project with ACP blocks, then ensure that reordering ACP blocks does NOT cause drift.
+// - Then add extra user/group references and ensure drift-free plans after applying.
+func testAccNutanixProjectACPOrderConfig(name, description string, acpProjectAdminFirst, includeExtraRefs, includeBackupAdminACP bool, projectAdminUserName, developerUserName, extraUserName, backupAdminUserName string) string {
+	// Base users (always present) - values are derived from data sources in locals below
+	usersBlock := `
+  # Project Admin User
+  user_reference_list {
+    name = local.user1_name
+    kind = "user"
+    uuid = local.user1_uuid
+  }
+
+  # Developer User
+  user_reference_list {
+    name = local.user2_name
+    kind = "user"
+    uuid = local.user2_uuid
+  }
+`
+
+	extraRefsBlock := ""
+	if includeExtraRefs {
+		extraRefsBlock = `
+  user_reference_list {
+    name = local.user3_name
+    kind = "user"
+    uuid = local.user3_uuid
+  }
+
+  external_user_group_reference_list {
+    kind = "user_group"
+    name = local.ug1_dn
+    uuid = local.ug1_uuid
+  }
+`
+	}
+
+	// ACPs (same semantics, configurable order) - role UUIDs come from role data sources, refs from locals
+	backupAdminACP := `
+  # Backup Admin ACP
+  acp {
+    role_reference {
+      kind = "role"
+      uuid = data.nutanix_role.backup_admin.id
+      name = "Backup Admin"
+    }
+    user_reference_list {
+      name = local.user4_name
+      kind = "user"
+      uuid = local.user4_uuid
+    }
+  }
+`
+
+	projectAdminACP := fmt.Sprintf(`
+  # Project Admin ACP
+  acp {
+    role_reference {
+      kind = "role"
+      uuid = data.nutanix_role.project_admin.id
+      name = "Project Admin"
+    }
+    user_reference_list {
+      name = local.user1_name
+      kind = "user"
+      uuid = local.user1_uuid
+    }
+%s
+  }
+`, func() string {
+		if !includeExtraRefs {
+			return ""
+		}
+		return `    user_reference_list {
+      name = local.user3_name
+      kind = "user"
+      uuid = local.user3_uuid
+    }
+`
+	}())
+
+	developerACP := fmt.Sprintf(`
+  # Developer ACP
+  acp {
+    role_reference {
+      kind = "role"
+      uuid = data.nutanix_role.developer.id
+      name = "Developer"
+    }
+    user_reference_list {
+      name = local.user2_name
+      kind = "user"
+      uuid = local.user2_uuid
+    }
+%s
+  }
+`, func() string {
+		if !includeExtraRefs {
+			return ""
+		}
+		return `    user_group_reference_list {
+      kind = "user_group"
+      name = local.ug1_dn
+      uuid = local.ug1_uuid
+    }
+`
+	}())
+
+	acpBlock := developerACP + projectAdminACP
+	if acpProjectAdminFirst {
+		acpBlock = projectAdminACP + developerACP
+	}
+	if includeBackupAdminACP {
+		// Insert Backup Admin ACP in the middle between the two blocks (preserve outer order)
+		if acpProjectAdminFirst {
+			acpBlock = projectAdminACP + backupAdminACP + developerACP
+		} else {
+			acpBlock = developerACP + backupAdminACP + projectAdminACP
+		}
+	}
+
+	// This config mirrors temp/issues/1042/main.tf:
+	// - v3 data sources: nutanix_clusters / nutanix_subnets / nutanix_users / nutanix_user_groups / nutanix_role
+	// - locals compute cluster UUID, subnet UUID, user UUIDs, and user-group UUID/DN
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+
+locals {
+  cluster_ext_id = [
+    for cluster in data.nutanix_clusters.clusters.entities :
+    cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+  ][0]
+}
+
+data "nutanix_role" "developer" {
+  role_name = "Developer"
+}
+
+data "nutanix_role" "project_admin" {
+  role_name = "Project Admin"
+}
+%s
+
+data "nutanix_subnets" "test" {
+  metadata {
+    filter = "name==%s"
+  }
+}
+
+locals {
+  subnet_ext_id = data.nutanix_subnets.test.entities[0].metadata.uuid
+}
+
+data "nutanix_user_groups" "user_groups" {}
+
+locals {
+  ugs = data.nutanix_user_groups.user_groups.entities
+
+  // same pattern as tf script: filter by DN from test_config.json
+  ugs_by_dn = [
+    for ug in local.ugs :
+    ug if try(ug.directory_service_user_group[0].distinguished_name, "") == %q
+  ]
+
+  // Prefer the DN match, but fall back to the first user group if the filter returns empty.
+  ug1      = try(local.ugs_by_dn[0], local.ugs[0])
+  ug1_uuid = try(local.ug1.metadata.uuid, "")
+  ug1_dn   = try(local.ug1.directory_service_user_group[0].distinguished_name, "")
+}
+
+data "nutanix_users" "users" {}
+
+locals {
+  users = data.nutanix_users.users.entities
+
+  // match users by name (as in tf script)
+  user1 = try([for u in local.users : u if u.name == "%s"][0], local.users[0])
+  user2 = try([for u in local.users : u if u.name == "%s"][0], local.users[1])
+%s
+
+  user1_name = local.user1.name
+  user2_name = local.user2.name
+  user1_uuid = local.user1.metadata.uuid
+  user2_uuid = local.user2.metadata.uuid
+%s
+}
+
+resource "nutanix_project" "projects" {
+  name                 = "%s"
+  description          = "%s"
+  use_project_internal = true
+  api_version          = "3.1"
+  cluster_uuid         = local.cluster_ext_id
+
+  cluster_reference_list {
+    kind = "cluster"
+    uuid = local.cluster_ext_id
+  }
+
+  account_reference_list {
+    kind = "account"
+    uuid = "%s"
+  }
+
+  subnet_reference_list {
+    kind = "subnet"
+    uuid = local.subnet_ext_id
+  }
+
+  default_subnet_reference {
+    kind = "subnet"
+    uuid = local.subnet_ext_id
+  }
+%s
+%s
+%s
+}
+`, func() string {
+		if !includeBackupAdminACP {
+			return ""
+		}
+		return `
+data "nutanix_role" "backup_admin" {
+  role_name = "Backup Admin"
+}
+`
+	}(), testVars.SubnetName, testVars.UserGroupWithDistinguishedName[1].DistinguishedName, projectAdminUserName, developerUserName, func() string {
+		if !includeBackupAdminACP {
+			return ""
+		}
+		return fmt.Sprintf(`
+  user4 = try([for u in local.users : u if u.name == "%s"][0], local.users[0])
+  user4_name = local.user4.name
+  user4_uuid = local.user4.metadata.uuid
+`, backupAdminUserName)
+	}(), func() string {
+		if !includeExtraRefs {
+			return ""
+		}
+		// third user and its derived locals
+		return fmt.Sprintf(`
+  user3 = try([for u in local.users : u if u.name == "%s"][0], local.users[2])
+  user3_name = local.user3.name
+  user3_uuid = local.user3.metadata.uuid
+`, extraUserName)
+	}(), name, description, testVars.AccountUUID, usersBlock, extraRefsBlock, acpBlock)
 }
 
 func testAccNutanixProjectConfig(subnetName, name, description, categoryName, categoryVal, limit, rsType string) string {

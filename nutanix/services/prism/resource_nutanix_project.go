@@ -382,8 +382,6 @@ func ResourceNutanixProject() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				RequiredWith: []string{"use_project_internal"},
-				// Note: DiffSuppressFunc was removed because it conflicts with CustomizeDiff.
-				// Order-independent ACP comparison is now handled entirely in CustomizeDiff.
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -762,8 +760,7 @@ func ResourceNutanixProject() *schema.Resource {
 func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).API
 
-	uuid := ""
-	taskUUID := ""
+	var uuid, taskUUID string
 	// if use project internal flag is set ,  we will use projects_internal API
 	if _, ok := d.GetOkExists("use_project_internal"); ok {
 		req := &v3.ProjectInternalIntentInput{
@@ -985,7 +982,7 @@ func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, met
 		if err := d.Set("default_environment_reference", flattenReferenceValuesList(project.Spec.ProjectDetail.Resources.DefaultEnvironmentReference)); err != nil {
 			return diag.Errorf("error setting `default_environment_reference` for Project(%s): %s", d.Id(), err)
 		}
-		if err := d.Set("acp", flattenProjectAcp(project.Status.AccessControlPolicyListStatus)); err != nil {
+		if err := d.Set("acp", orderACPsLikeState(d, flattenProjectAcp(project.Status.AccessControlPolicyListStatus))); err != nil {
 			return diag.Errorf("error setting `acp` for Project(%s): %s", d.Id(), err)
 		}
 	} else {
@@ -1059,8 +1056,7 @@ func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, met
 func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).API
 
-	uuid := ""
-	taskUUID := ""
+	var uuid, taskUUID string
 
 	if _, ok := d.GetOkExists("use_project_internal"); ok {
 		request := &v3.ProjectInternalIntentInput{}
@@ -1803,8 +1799,21 @@ func expandCreateAcp(pr []interface{}, d *schema.ResourceData, projectUUID strin
 
 func UpdateExpandAcpRM(pr []interface{}, res *v3.ProjectInternalIntentResponse, d *schema.ResourceData, meta interface{}, projectUUID string, clusterUUID string) []*v3.AccessControlPolicyList {
 	if len(pr) > 0 {
+		// When "acp" is schema.TypeList, Terraform compares positionally. However, the API may
+		// return ACPs in a different order, so we must update ACPs by stable identity (role UUID),
+		// not by list index.
+		existingByRole := make(map[string]*v3.AccessControlPolicyList)
+		for _, existing := range res.Spec.AccessControlPolicyList {
+			if existing == nil || existing.ACP == nil || existing.ACP.Resources == nil || existing.ACP.Resources.RoleReference == nil {
+				continue
+			}
+			if existing.ACP.Resources.RoleReference.UUID == nil {
+				continue
+			}
+			existingByRole[*existing.ACP.Resources.RoleReference.UUID] = existing
+		}
+
 		acpList := make([]*v3.AccessControlPolicyList, len(pr))
-		oldACPExists := len(res.Spec.AccessControlPolicyList)
 		for k, val := range pr {
 			acps := &v3.AccessControlPolicyList{}
 			acpSpec := &v3.AccessControlPolicySpec{}
@@ -1874,13 +1883,18 @@ func UpdateExpandAcpRM(pr []interface{}, res *v3.ProjectInternalIntentResponse, 
 			}
 
 			metadata := &v3.Metadata{}
-			if k < oldACPExists {
-				acps.Operation = utils.StringPtr("UPDATE")
-
-				metadata.Kind = res.Spec.AccessControlPolicyList[k].Metadata.Kind
-				metadata.UUID = res.Spec.AccessControlPolicyList[k].Metadata.UUID
-				metadata.Categories = nil
-				metadata.ProjectReference = nil
+			// Match existing ACP by role UUID; if found, UPDATE with correct metadata UUID.
+			if acpRes.RoleReference != nil && acpRes.RoleReference.UUID != nil {
+				if existing, ok := existingByRole[*acpRes.RoleReference.UUID]; ok && existing.Metadata != nil {
+					acps.Operation = utils.StringPtr("UPDATE")
+					metadata.Kind = existing.Metadata.Kind
+					metadata.UUID = existing.Metadata.UUID
+					metadata.Categories = nil
+					metadata.ProjectReference = nil
+				} else {
+					acps.Operation = utils.StringPtr("ADD")
+					metadata.Kind = utils.StringPtr("access_control_policy")
+				}
 			} else {
 				acps.Operation = utils.StringPtr("ADD")
 				metadata.Kind = utils.StringPtr("access_control_policy")
