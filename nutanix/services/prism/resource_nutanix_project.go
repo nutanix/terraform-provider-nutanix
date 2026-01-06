@@ -18,7 +18,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-
 func ResourceNutanixProject() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceNutanixProjectCreate,
