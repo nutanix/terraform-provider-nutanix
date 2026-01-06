@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -207,6 +208,68 @@ func validateArrayRef(references interface{}, kindValue *string) []*v3.Reference
 	return nil
 }
 
+// orderACPsLikeState reorders the flattened ACP list returned from the API to match the ordering
+// currently in state/config (d.Get("acp")), keyed by role_reference.uuid.
+//
+// This keeps "acp" as schema.TypeList (positional), while avoiding drift when the API returns
+// ACPs in a different order than the user configuration.
+func orderACPsLikeState(d *schema.ResourceData, remote []map[string]interface{}) []map[string]interface{} {
+	if len(remote) == 0 {
+		return remote
+	}
+
+	rawCurrent, ok := d.GetOk("acp")
+	if !ok {
+		return remote
+	}
+	current, ok := rawCurrent.([]interface{})
+	if !ok || len(current) == 0 {
+		return remote
+	}
+
+	rolePos := make(map[string]int)
+	for idx, item := range current {
+		roleUUID := getACPRoleUUID(item)
+		if roleUUID == "" {
+			continue
+		}
+		if _, exists := rolePos[roleUUID]; !exists {
+			rolePos[roleUUID] = idx
+		}
+	}
+	if len(rolePos) == 0 {
+		return remote
+	}
+
+	type keyed struct {
+		pos int
+		acp map[string]interface{}
+	}
+
+	known := make([]keyed, 0, len(remote))
+	unknown := make([]map[string]interface{}, 0, len(remote))
+
+	for _, acp := range remote {
+		roleUUID := getACPRoleUUID(acp)
+		if pos, ok := rolePos[roleUUID]; ok {
+			known = append(known, keyed{pos: pos, acp: acp})
+		} else {
+			unknown = append(unknown, acp)
+		}
+	}
+
+	sort.SliceStable(known, func(i, j int) bool {
+		return known[i].pos < known[j].pos
+	})
+
+	out := make([]map[string]interface{}, 0, len(remote))
+	for _, k := range known {
+		out = append(out, k.acp)
+	}
+	out = append(out, unknown...)
+	return out
+}
+
 func flattenArrayReferenceValues(refs []*v3.Reference) []map[string]interface{} {
 	references := make([]map[string]interface{}, 0)
 	for _, r := range refs {
@@ -394,6 +457,28 @@ func buildDataSourceListMetadata(set *schema.Set) *v3.DSMetadata {
 	return &filters
 }
 
+// acpHash provides a stable identity for an ACP block so Terraform treats ACPs as order-insensitive.
+// We key primarily off role_reference.uuid because that's the unique semantic identifier for an ACP.
+func acpHash(v interface{}) int {
+	m, ok := v.(map[string]interface{})
+	if !ok {
+		return 0
+	}
+	roleRef, ok := m["role_reference"].([]interface{})
+	if !ok || len(roleRef) == 0 {
+		return 0
+	}
+	roleMap, ok := roleRef[0].(map[string]interface{})
+	if !ok {
+		return 0
+	}
+	uuid, ok := roleMap["uuid"].(string)
+	if !ok || uuid == "" {
+		return 0
+	}
+	return schema.HashString(uuid)
+}
+
 // customizeDiffProjectACP handles the custom diff logic for the "acp" (Access Control Policy) attribute.
 // Problem: Terraform treats lists positionally, so if the API returns ACPs in a different order
 // than the user specified, Terraform detects a "change" even though the content is identical.
@@ -417,6 +502,16 @@ func customizeDiffProjectACP(ctx context.Context, diff *schema.ResourceDiff, v i
 	}
 
 	oldACP, newACP := diff.GetChange("acp")
+
+	// If "acp" is a TypeSet, Terraform already handles ordering via hashing.
+	// We can safely skip the list-merge normalization logic.
+	if _, ok := oldACP.(*schema.Set); ok {
+		return nil
+	}
+	if _, ok := newACP.(*schema.Set); ok {
+		return nil
+	}
+
 	oldACPList, ok1 := oldACP.([]interface{})
 	newACPList, ok2 := newACP.([]interface{})
 
