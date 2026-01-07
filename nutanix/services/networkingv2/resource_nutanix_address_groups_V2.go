@@ -2,6 +2,8 @@ package networkingv2
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -9,8 +11,9 @@ import (
 	"github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/prism/v4/config"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -119,30 +122,34 @@ func ResourceNutanixAddressGroupsV2Create(ctx context.Context, d *schema.Resourc
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Address Group to be available
+
+	// Wait for the address group to be created
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for address groups (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for address group (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching vpc UUID : %v", err)
+		return diag.Errorf("error while fetching address group task: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Create Address Group Task Details: %s", string(aJSON))
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeAddressGroup, "Address group")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(utils.StringValue(uuid))
 	return ResourceNutanixAddressGroupsV2Read(ctx, d, meta)
 }
 
@@ -192,7 +199,7 @@ func ResourceNutanixAddressGroupsV2Read(ctx context.Context, d *schema.ResourceD
 
 func ResourceNutanixAddressGroupsV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
-	updateInput := &import1.AddressGroup{}
+
 	resp, err := conn.AddressGroupAPIInstance.GetAddressGroupById(utils.StringPtr(d.Id()))
 	if err != nil {
 		return diag.Errorf("error while fetching address group : %v", err)
@@ -200,7 +207,7 @@ func ResourceNutanixAddressGroupsV2Update(ctx context.Context, d *schema.Resourc
 
 	getResp := resp.Data.GetValue().(import1.AddressGroup)
 
-	updateInput = &getResp
+	updateInput := &getResp
 
 	if d.HasChange("name") {
 		updateInput.Name = utils.StringPtr(d.Get("name").(string))
@@ -224,18 +231,18 @@ func ResourceNutanixAddressGroupsV2Update(ctx context.Context, d *schema.Resourc
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Address Group to be available
+
+	// Wait for the address group to be updated
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for address groups (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for address group (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	return ResourceNutanixAddressGroupsV2Read(ctx, d, meta)
 }
@@ -245,25 +252,25 @@ func ResourceNutanixAddressGroupsV2Delete(ctx context.Context, d *schema.Resourc
 
 	resp, err := conn.AddressGroupAPIInstance.DeleteAddressGroupById(utils.StringPtr(d.Id()))
 	if err != nil {
-		return diag.Errorf("error while address service groups : %v", err)
+		return diag.Errorf("error while deleting address group: %v", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(import4.TaskReference)
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Address Group to be available
+
+	// Wait for the address group to be deleted
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for address groups (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for address group (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	return nil
 }

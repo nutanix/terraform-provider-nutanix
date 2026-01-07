@@ -8,12 +8,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
-	import3 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/response"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-const defaultValue = 32
+const ipv4PrefixLengthDefaultValue = 32
 
 func DatasourceNutanixClusterEntityV2() *schema.Resource {
 	return &schema.Resource{
@@ -31,22 +31,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"links": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"href": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"rel": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
+			"links": common.LinksSchema(),
 			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -68,12 +53,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 									"controller_vm_ip": {
 										Type:     schema.TypeList,
 										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLength(),
-												"ipv6": SchemaForValuePrefixLength(),
-											},
-										},
+										Elem:     common.SchemaForIPList(false),
 									},
 									"node_uuid": {
 										Type:     schema.TypeString,
@@ -82,12 +62,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 									"host_ip": {
 										Type:     schema.TypeList,
 										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLength(),
-												"ipv6": SchemaForValuePrefixLength(),
-											},
-										},
+										Elem:     common.SchemaForIPList(false),
 									},
 								},
 							},
@@ -103,22 +78,12 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 						"external_address": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
-								},
-							},
+							Elem:     common.SchemaForIPList(false),
 						},
 						"external_data_services_ip": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
-								},
-							},
+							Elem:     common.SchemaForIPList(false),
 						},
 						"external_subnet": {
 							Type:     schema.TypeString,
@@ -138,46 +103,12 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 						"name_server_ip_list": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
-									"fqdn": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"value": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
+							Elem:     common.SchemaForIPList(true),
 						},
 						"ntp_server_ip_list": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
-									"fqdn": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"value": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
+							Elem:     common.SchemaForIPList(true),
 						},
 						"smtp_server": {
 							Type:     schema.TypeList,
@@ -196,24 +127,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 												"ip_address": {
 													Type:     schema.TypeList,
 													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"ipv4": SchemaForValuePrefixLength(),
-															"ipv6": SchemaForValuePrefixLength(),
-															"fqdn": {
-																Type:     schema.TypeList,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"value": {
-																			Type:     schema.TypeString,
-																			Computed: true,
-																		},
-																	},
-																},
-															},
-														},
-													},
+													Elem:     common.SchemaForIPList(true),
 												},
 												"port": {
 													Type:     schema.TypeInt,
@@ -240,12 +154,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 						"masquerading_ip": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
-								},
-							},
+							Elem:     common.SchemaForIPList(false),
 						},
 						"masquerading_port": {
 							Type:     schema.TypeString,
@@ -259,12 +168,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 									"ip": {
 										Type:     schema.TypeList,
 										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLength(),
-												"ipv6": SchemaForValuePrefixLength(),
-											},
-										},
+										Elem:     common.SchemaForIPList(false),
 									},
 									"type": {
 										Type:     schema.TypeBool,
@@ -349,42 +253,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 									"ip_address": {
 										Type:     schema.TypeList,
 										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ipv4": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"value": {
-																Type:     schema.TypeString,
-																Computed: true,
-															},
-															"prefix_length": {
-																Type:     schema.TypeInt,
-																Computed: true,
-															},
-														},
-													},
-												},
-												"ipv6": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"value": {
-																Type:     schema.TypeString,
-																Computed: true,
-															},
-															"prefix_length": {
-																Type:     schema.TypeInt,
-																Computed: true,
-															},
-														},
-													},
-												},
-											},
-										},
+										Elem:     common.SchemaForIPList(false),
 									},
 									"port": {
 										Type:     schema.TypeInt,
@@ -683,7 +552,7 @@ func DatasourceNutanixClusterEntityV2Read(ctx context.Context, d *schema.Resourc
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
+	if err := d.Set("links", common.FlattenLinks(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("name", getResp.Name); err != nil {
@@ -720,49 +589,7 @@ func DatasourceNutanixClusterEntityV2Read(ctx context.Context, d *schema.Resourc
 		return diag.FromErr(err)
 	}
 
-	d.SetId(*getResp.ExtId)
-	return nil
-}
-
-func SchemaForValuePrefixLength() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		Computed: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"value": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-				},
-				"prefix_length": {
-					Type:     schema.TypeInt,
-					Optional: true,
-					Default:  defaultValue,
-				},
-			},
-		},
-	}
-}
-
-func flattenLinks(pr []import3.ApiLink) []map[string]interface{} {
-	if len(pr) > 0 {
-		linkList := make([]map[string]interface{}, len(pr))
-
-		for k, v := range pr {
-			links := map[string]interface{}{}
-			if v.Href != nil {
-				links["href"] = v.Href
-			}
-			if v.Rel != nil {
-				links["rel"] = v.Rel
-			}
-
-			linkList[k] = links
-		}
-		return linkList
-	}
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return nil
 }
 
@@ -844,26 +671,8 @@ func flattenHTTPProxyWhiteList(proxyWhiteList []import1.HttpProxyWhiteListConfig
 	return nil
 }
 
-func flattenTargetType(targetType *import1.HttpProxyWhiteListTargetType) interface{} {
-	if targetType != nil {
-		const (
-			ipv4Address, ipv6Address, ipv4NetworkMask, domainNameSuffix, hostName = 2, 3, 4, 5, 6
-		)
-
-		switch *targetType {
-		case ipv6Address:
-			return "IPV6_ADDRESS"
-		case hostName:
-			return "HOST_NAME"
-		case domainNameSuffix:
-			return "DOMAIN_NAME_SUFFIX"
-		case ipv4NetworkMask:
-			return "IPV4_NETWORK_MASK"
-		case ipv4Address:
-			return "IPV4_ADDRESS"
-		}
-	}
-	return "UNKNOWN"
+func flattenTargetType(targetType *import1.HttpProxyWhiteListTargetType) string {
+	return common.FlattenPtrEnum(targetType)
 }
 
 func flattenHTTPProxyList(httpProxyList []import1.HttpProxyConfig) []interface{} {
@@ -887,28 +696,8 @@ func flattenHTTPProxyList(httpProxyList []import1.HttpProxyConfig) []interface{}
 	return nil
 }
 
-func flattenProxyTypes(proxyTypes []import1.HttpProxyType) []interface{} {
-	if len(proxyTypes) > 0 {
-		types := make([]interface{}, len(proxyTypes))
-		const (
-			HTTP, HTTPS, SOCKS = 2, 3, 4
-		)
-
-		for k, v := range proxyTypes {
-			switch v {
-			case HTTP:
-				types[k] = "HTTP"
-			case HTTPS:
-				types[k] = "HTTPS"
-			case SOCKS:
-				types[k] = "SOCKS"
-			default:
-				types[k] = "UNKNOWN"
-			}
-		}
-		return types
-	}
-	return nil
+func flattenProxyTypes(proxyTypes []import1.HttpProxyType) []string {
+	return common.FlattenEnumValueList(proxyTypes)
 }
 
 func flattenClusterConfigReference(pr *import1.ClusterConfigReference) []map[string]interface{} {
@@ -956,76 +745,51 @@ func flattenPulseStatus(status *import1.PulseStatus) []map[string]interface{} {
 }
 
 func flattenPulseScrubbingLevel(level *import1.PIIScrubbingLevel) string {
-	if level != nil {
-		const DEFAULT, ALL = 2, 3
-
-		switch *level {
-		case DEFAULT:
-			return "DEFAULT"
-		case ALL:
-			return "ALL"
-		}
-	}
-	return "UNKNOWN"
+	return common.FlattenPtrEnum(level)
 }
 
-func flattenIPAddress(pr *import4.IPAddress) []map[string]interface{} {
-	if pr != nil {
-		ips := make([]map[string]interface{}, 0)
-		ip := make(map[string]interface{})
-
-		ip["ipv4"] = flattenIPv4Address(pr.Ipv4)
-		ip["ipv6"] = flattenIPv6Address(pr.Ipv6)
-
-		ips = append(ips, ip)
-		return ips
+func flattenIPAddress(addr *import4.IPAddress) []map[string]interface{} {
+	if addr == nil {
+		return nil
 	}
-	return nil
+
+	ipMap := map[string]interface{}{
+		"ipv4": flattenIPv4Address(addr.Ipv4),
+		"ipv6": flattenIPv6Address(addr.Ipv6),
+	}
+
+	return []map[string]interface{}{ipMap}
 }
 
-func flattenIPAddressOrFQDN(pr []import4.IPAddressOrFQDN) []map[string]interface{} {
-	if len(pr) > 0 {
-		ips := make([]map[string]interface{}, len(pr))
-
-		for k, v := range pr {
-			ip := make(map[string]interface{})
-
-			ip["ipv4"] = flattenIPv4Address(v.Ipv4)
-			ip["ipv6"] = flattenIPv6Address(v.Ipv6)
-			ip["fqdn"] = flattenFQDN(v.Fqdn)
-
-			ips[k] = ip
-		}
-		return ips
+func flattenIPAddressOrFQDN(addrs []import4.IPAddressOrFQDN) []map[string]interface{} {
+	if len(addrs) == 0 {
+		return nil
 	}
-	return nil
+
+	result := make([]map[string]interface{}, len(addrs))
+	for i, addr := range addrs {
+		ipMap := map[string]interface{}{
+			"ipv4": flattenIPv4Address(addr.Ipv4),
+			"ipv6": flattenIPv6Address(addr.Ipv6),
+			"fqdn": flattenFQDN(addr.Fqdn),
+		}
+		result[i] = ipMap
+	}
+	return result
 }
 
-func flattenSMTPServerRef(pr *import1.SmtpServerRef) []map[string]interface{} {
-	if pr != nil {
-		smtp := make([]map[string]interface{}, 0)
-		s := make(map[string]interface{})
-
-		s["email_address"] = pr.EmailAddress
-		s["server"] = flattenSMTPNetwork(pr.Server)
-		if pr.Type != nil {
-			const PLAIN, STARTTLS, SSL = 2, 3, 4
-			switch *pr.Type {
-			case PLAIN:
-				s["type"] = "PLAIN"
-			case STARTTLS:
-				s["type"] = "STARTTLS"
-			case SSL:
-				s["type"] = "SSL"
-			default:
-				s["type"] = "UNKNOWN"
-			}
-		}
-
-		smtp = append(smtp, s)
-		return smtp
+func flattenSMTPServerRef(smtpServerRef *import1.SmtpServerRef) []map[string]interface{} {
+	if smtpServerRef == nil {
+		return nil
 	}
-	return nil
+
+	smtpRef := map[string]interface{}{
+		"email_address": utils.StringValue(smtpServerRef.EmailAddress),
+		"server":        flattenSMTPNetwork(smtpServerRef.Server),
+	}
+	smtpRef["type"] = common.FlattenPtrEnum(smtpServerRef.Type)
+
+	return []map[string]interface{}{smtpRef}
 }
 
 func flattenBackplaneNetworkParams(pr *import1.BackplaneNetworkParams) []map[string]interface{} {
@@ -1081,51 +845,42 @@ func flattenSMTPNetwork(pr *import1.SmtpNetwork) []map[string]interface{} {
 	return nil
 }
 
-func flattenIPv4Address(pr *import4.IPv4Address) []interface{} {
-	if pr != nil {
-		ipv4 := make([]interface{}, 0)
-
-		ip := make(map[string]interface{})
-
-		ip["value"] = pr.Value
-		ip["prefix_length"] = pr.PrefixLength
-
-		ipv4 = append(ipv4, ip)
-
-		return ipv4
+func flattenIPv4Address(ipv4Address *import4.IPv4Address) []interface{} {
+	if ipv4Address == nil {
+		return nil
 	}
-	return nil
+
+	ip := map[string]interface{}{
+		"value":         ipv4Address.Value,
+		"prefix_length": ipv4Address.PrefixLength,
+	}
+
+	return []interface{}{ip}
 }
 
-func flattenIPv6Address(pr *import4.IPv6Address) []interface{} {
-	if pr != nil {
-		ipv6 := make([]interface{}, 0)
-
-		ip := make(map[string]interface{})
-
-		ip["value"] = pr.Value
-		ip["prefix_length"] = pr.PrefixLength
-
-		ipv6 = append(ipv6, ip)
-
-		return ipv6
+func flattenIPv6Address(ipv6Address *import4.IPv6Address) []interface{} {
+	if ipv6Address == nil {
+		return nil
 	}
-	return nil
+
+	ip := map[string]interface{}{
+		"value":         ipv6Address.Value,
+		"prefix_length": ipv6Address.PrefixLength,
+	}
+
+	return []interface{}{ip}
 }
 
 func flattenFQDN(pr *import4.FQDN) []interface{} {
-	if pr != nil {
-		fqdn := make([]interface{}, 0)
-
-		f := make(map[string]interface{})
-
-		f["value"] = pr.Value
-
-		fqdn = append(fqdn, f)
-
-		return fqdn
+	if pr == nil {
+		return nil
 	}
-	return nil
+
+	f := map[string]interface{}{
+		"value": pr.Value,
+	}
+
+	return []interface{}{f}
 }
 
 func flattenBuildReference(pr *import1.BuildReference) []map[string]interface{} {
@@ -1216,255 +971,49 @@ func flattenRedundancyStatus(redundancyStatus *import1.RedundancyStatusDetails) 
 }
 
 func flattenClusterFaultTolerance(faultTolerance *import1.ClusterFaultToleranceRef) string {
-	if faultTolerance != nil {
-		const two, three, four, five = 2, 3, 4, 5
-
-		switch *faultTolerance {
-		case two:
-			return "CFT_0N_AND_0D"
-		case three:
-			return "CFT_1N_OR_1D"
-		case four:
-			return "CFT_2N_OR_2D"
-		case five:
-			return "CFT_1N_AND_1D"
-		default:
-			return "UNKNOWN"
-		}
-	}
-	return "UNKNOWN"
+	return common.FlattenPtrEnum(faultTolerance)
 }
 
-func flattenHypervisorType(pr []import1.HypervisorType) []string {
-	if len(pr) > 0 {
-		hyperTypes := make([]string, len(pr))
-		const AHV, ESX, HYPERV, XEN, NATIVEHOST = 2, 3, 4, 5, 6
-
-		for i, v := range pr {
-			if v == import1.HypervisorType(AHV) {
-				hyperTypes[i] = "AHV"
-			}
-			if v == import1.HypervisorType(ESX) {
-				hyperTypes[i] = "ESX"
-			}
-			if v == import1.HypervisorType(HYPERV) {
-				hyperTypes[i] = "HYPERV"
-			}
-			if v == import1.HypervisorType(XEN) {
-				hyperTypes[i] = "XEN"
-			}
-			if v == import1.HypervisorType(NATIVEHOST) {
-				hyperTypes[i] = "NATIVEHOST"
-			}
-		}
-		return hyperTypes
-	}
-	return []string{"UNKNOWN"}
+func flattenHypervisorType(hypervisorTypes []import1.HypervisorType) []string {
+	return common.FlattenEnumValueList(hypervisorTypes)
 }
 
-func flattenClusterFunctionRef(pr []import1.ClusterFunctionRef) []string {
-	if len(pr) > 0 {
-		clsFuncs := make([]string, len(pr))
-
-		const two, three, four, five, six, seven, eight = 2, 3, 4, 5, 6, 7, 8
-		for i, v := range pr {
-			if v == import1.ClusterFunctionRef(two) {
-				clsFuncs[i] = "AOS"
-			}
-			if v == import1.ClusterFunctionRef(three) {
-				clsFuncs[i] = "PRISM_CENTRAL"
-			}
-			if v == import1.ClusterFunctionRef(four) {
-				clsFuncs[i] = "CLOUD_DATA_GATEWAY"
-			}
-			if v == import1.ClusterFunctionRef(five) {
-				clsFuncs[i] = "AFS"
-			}
-			if v == import1.ClusterFunctionRef(six) {
-				clsFuncs[i] = "ONE_NODE"
-			}
-			if v == import1.ClusterFunctionRef(seven) {
-				clsFuncs[i] = "TWO_NODE"
-			}
-			if v == import1.ClusterFunctionRef(eight) {
-				clsFuncs[i] = "ANALYTICS_PLATFORM"
-			}
-		}
-		return clsFuncs
-	}
-	return nil
+func flattenClusterFunctionRef(clusterFunctionRefs []import1.ClusterFunctionRef) []string {
+	return common.FlattenEnumValueList(clusterFunctionRefs)
 }
 
-func flattenClusterArchReference(pr *import1.ClusterArchReference) string {
-	if pr != nil {
-		const two, three = 2, 3
-		if *pr == import1.ClusterArchReference(two) {
-			return "X86_64"
-		}
-		if *pr == import1.ClusterArchReference(three) {
-			return "PPC64LE"
-		}
-	}
-	return "UNKNOWN"
+func flattenClusterArchReference(clusterArchReference *import1.ClusterArchReference) string {
+	return common.FlattenPtrEnum(clusterArchReference)
 }
 
-func flattenOperationMode(pr *import1.OperationMode) string {
-	if pr != nil {
-		const two, three, four, five, six = 2, 3, 4, 5, 6
-		if *pr == import1.OperationMode(two) {
-			return "NORMAL"
-		}
-		if *pr == import1.OperationMode(three) {
-			return "READ_ONLY"
-		}
-		if *pr == import1.OperationMode(four) {
-			return "STAND_ALONE"
-		}
-		if *pr == import1.OperationMode(five) {
-			return "SWITCH_TO_TWO_NODE"
-		}
-		if *pr == import1.OperationMode(six) {
-			return "OVERRIDE"
-		}
-	}
-	return "UNKNOWN"
+func flattenOperationMode(operationMode *import1.OperationMode) string {
+	return common.FlattenPtrEnum(operationMode)
 }
 
-func flattenEncryptionStatus(pr *import1.EncryptionStatus) string {
-	if pr != nil {
-		const two, three = 2, 3
-		if *pr == import1.EncryptionStatus(two) {
-			return "ENABLED"
-		}
-		if *pr == import1.EncryptionStatus(three) {
-			return "DISABLED"
-		}
-	}
-	return "UNKNOWN"
+func flattenEncryptionStatus(EncryptionStatus *import1.EncryptionStatus) string {
+	return common.FlattenPtrEnum(EncryptionStatus)
 }
 
-func flattenEncryptionOptionInfo(pr []import1.EncryptionOptionInfo) []string {
-	if len(pr) > 0 {
-		enInfo := make([]string, len(pr))
-		const two, three, four = 2, 3, 4
-
-		for i, v := range pr {
-			if v == import1.EncryptionOptionInfo(two) {
-				enInfo[i] = "SOFTWARE"
-			}
-			if v == import1.EncryptionOptionInfo(three) {
-				enInfo[i] = "HARDWARE"
-			}
-			if v == import1.EncryptionOptionInfo(four) {
-				enInfo[i] = "SOFTWARE_AND_HARDWARE"
-			}
-		}
-		return enInfo
-	}
-	return nil
+func flattenEncryptionOptionInfo(encryptionOptionInfos []import1.EncryptionOptionInfo) []string {
+	return common.FlattenEnumValueList(encryptionOptionInfos)
 }
 
-func flattenEncryptionScopeInfo(pr []import1.EncryptionScopeInfo) []string {
-	if len(pr) > 0 {
-		enScope := make([]string, len(pr))
-		const two, three = 2, 3
-
-		for i, v := range pr {
-			if v == import1.EncryptionScopeInfo(two) {
-				enScope[i] = "CLUSTER"
-			}
-			if v == import1.EncryptionScopeInfo(three) {
-				enScope[i] = "CONTAINER"
-			}
-		}
-		return enScope
-	}
-	return nil
+func flattenEncryptionScopeInfo(encryptionScopeInfos []import1.EncryptionScopeInfo) []string {
+	return common.FlattenEnumValueList(encryptionScopeInfos)
 }
 
-func flattenKeyManagementServerType(pr *import1.KeyManagementServerType) string {
-	if pr != nil {
-		const two, three, four = 2, 3, 4
-
-		if *pr == import1.KeyManagementServerType(two) {
-			return "LOCAL"
-		}
-		if *pr == import1.KeyManagementServerType(three) {
-			return "PRISM_CENTRAL"
-		}
-		if *pr == import1.KeyManagementServerType(four) {
-			return "EXTERNAL"
-		}
-	}
-	return "UNKNOWN"
+func flattenKeyManagementServerType(keyManagementServerType *import1.KeyManagementServerType) string {
+	return common.FlattenPtrEnum(keyManagementServerType)
 }
 
-func flattenDomainAwarenessLevel(pr *import1.DomainAwarenessLevel) string {
-	if pr != nil {
-		const two, three, four, five = 2, 3, 4, 5
-		if *pr == import1.DomainAwarenessLevel(two) {
-			return "NODE"
-		}
-		if *pr == import1.DomainAwarenessLevel(three) {
-			return "BLOCK"
-		}
-		if *pr == import1.DomainAwarenessLevel(four) {
-			return "RACK"
-		}
-		if *pr == import1.DomainAwarenessLevel(five) {
-			return "DISK"
-		}
-	}
-	return "UNKNOWN"
+func flattenDomainAwarenessLevel(domainAwarenessLevel *import1.DomainAwarenessLevel) string {
+	return common.FlattenPtrEnum(domainAwarenessLevel)
 }
 
-func flattenUpgradeStatus(pr *import1.UpgradeStatus) string {
-	if pr != nil {
-		const two, three, four, five, six, seven, eight, nine, ten = 2, 3, 4, 5, 6, 7, 8, 9, 10
-
-		if *pr == import1.UpgradeStatus(two) {
-			return "PENDING"
-		}
-		if *pr == import1.UpgradeStatus(three) {
-			return "DOWNLOADING"
-		}
-		if *pr == import1.UpgradeStatus(four) {
-			return "QUEUED"
-		}
-		if *pr == import1.UpgradeStatus(five) {
-			return "PREUPGRADE"
-		}
-		if *pr == import1.UpgradeStatus(six) {
-			return "UPGRADING"
-		}
-		if *pr == import1.UpgradeStatus(seven) {
-			return "SUCCEEDED"
-		}
-		if *pr == import1.UpgradeStatus(eight) {
-			return "FAILED"
-		}
-		if *pr == import1.UpgradeStatus(nine) {
-			return "CANCELED"
-		}
-		if *pr == import1.UpgradeStatus(ten) {
-			return "SCHEDULED"
-		}
-	}
-	return "UNKNOWN"
+func flattenUpgradeStatus(upgradeStatus *import1.UpgradeStatus) string {
+	return common.FlattenPtrEnum(upgradeStatus)
 }
 
-func flattenSoftwareTypeRef(pr *import1.SoftwareTypeRef) string {
-	if pr != nil {
-		const two, three, four = 2, 3, 4
-		if *pr == import1.SoftwareTypeRef(two) {
-			return "NOS"
-		}
-		if *pr == import1.SoftwareTypeRef(three) {
-			return "NCC"
-		}
-		if *pr == import1.SoftwareTypeRef(four) {
-			return "PRISM_CENTRAL"
-		}
-	}
-	return "UNKNOWN"
+func flattenSoftwareTypeRef(softwareTypeRef *import1.SoftwareTypeRef) string {
+	return common.FlattenPtrEnum(softwareTypeRef)
 }

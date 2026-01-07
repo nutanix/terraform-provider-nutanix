@@ -56,15 +56,15 @@ func resourceNutanixFoundationImageCreate(ctx context.Context, d *schema.Resourc
 
 	fileName, ok := d.GetOk("filename")
 	if !ok {
-		return diag.Errorf(getRequiredErrorMessage("filename"))
+		return diag.Errorf("%s", getRequiredErrorMessage("filename"))
 	}
 	installerType, ok := d.GetOk("installer_type")
 	if !ok {
-		return diag.Errorf(getRequiredErrorMessage("installer_type"))
+		return diag.Errorf("%s", getRequiredErrorMessage("installer_type"))
 	}
 	source, ok := d.GetOk("source")
 	if !ok {
-		return diag.Errorf(getRequiredErrorMessage("source"))
+		return diag.Errorf("%s", getRequiredErrorMessage("source"))
 	}
 
 	resp, err := conn.FileManagement.UploadImage(ctx, installerType.(string), fileName.(string), source.(string))

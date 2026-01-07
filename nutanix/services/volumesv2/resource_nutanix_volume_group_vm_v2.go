@@ -12,6 +12,7 @@ import (
 	volumesPrism "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/prism/v4/config"
 	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -73,16 +74,16 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Create(ctx context.Context, d *
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
+	// Wait for the VM to be attached to the Volume Group
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Volume group (%s) to attach to VM: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for VM (%s) to attach to Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
@@ -92,11 +93,16 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Create(ctx context.Context, d *
 		return diag.Errorf("error while Attaching Vm to Volume Group: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Attach Vm to Volume Group Task Details: %s", string(aJSON))
 
-	uuid := taskDetails.EntitiesAffected[0].ExtId
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeVolumeGroup, "Volume group")
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	d.SetId(*uuid)
-	d.Set("ext_id", *uuid)
+	d.SetId(utils.StringValue(uuid))
+	d.Set("ext_id", utils.StringValue(uuid))
 
 	return nil
 }
@@ -133,27 +139,25 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Delete(ctx context.Context, d *
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
+	// Wait for the VM to be detached from the Volume Group
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Volume group (%s) to detach from VM: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for VM (%s) to detach from Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while Detaching Vm to Volume Group: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
-
-	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Detach Vm from Volume Group Task Details: %s", string(aJSON))
 
 	return nil

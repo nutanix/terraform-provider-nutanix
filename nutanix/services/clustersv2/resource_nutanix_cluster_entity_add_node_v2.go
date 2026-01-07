@@ -13,6 +13,7 @@ import (
 	clustermgmtPrism "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -268,12 +269,7 @@ func AddNodeListSchema() *schema.Schema {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
-						},
-					},
+					Elem:     common.SchemaForIPList(false),
 				},
 				"digital_certificate_map_list": {
 					Type:     schema.TypeList,
@@ -298,23 +294,13 @@ func AddNodeListSchema() *schema.Schema {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
-						},
-					},
+					Elem:     common.SchemaForIPList(false),
 				},
 				"hypervisor_ip": {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
-						},
-					},
+					Elem:     common.SchemaForIPList(false),
 				},
 				"model": {
 					Type:     schema.TypeString,
@@ -386,23 +372,13 @@ func computedNodeListSchema() *schema.Schema {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
-						},
-					},
+					Elem:     common.SchemaForIPList(false),
 				},
 				"ipmi_ip": {
 					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"ipv4": SchemaForValuePrefixLengthResource(),
-							"ipv6": SchemaForValuePrefixLengthResource(),
-						},
-					},
+					Elem:     common.SchemaForIPList(false),
 				},
 				"digital_certificate_map_list": {
 					Type:     schema.TypeList,
@@ -495,7 +471,7 @@ func ResourceNutanixClusterAddNodeV2Create(ctx context.Context, d *schema.Resour
 	body := config.ExpandClusterParams{}
 
 	if nodeParams, ok := d.GetOk("node_params"); ok {
-		body.NodeParams = expandClusterNodeParams(nodeParams)
+		body.NodeParams = expandClusterNodeParams(d, nodeParams)
 	}
 	if configParams, ok := d.GetOk("config_params"); ok {
 		body.ConfigParams = expandClusterConfigParams(configParams)
@@ -519,30 +495,26 @@ func ResourceNutanixClusterAddNodeV2Create(ctx context.Context, d *schema.Resour
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the  node to be available
+	// Wait for the node to be added
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for  node (%s) to add: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for node (%s) to add: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching  node UUID : %v", err)
+		return diag.Errorf("error while fetching add node task: %v", err)
 	}
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Add Node Task Details: %s", string(aJSON))
 
-	aJSON, _ = json.Marshal(resourceUUID)
-	log.Printf("[DEBUG] Add Node Response: %s", string(aJSON))
-
-	uuid := clusterExtID.(string)
-	d.SetId(uuid)
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 	return nil
 }
 
@@ -600,36 +572,32 @@ func ResourceNutanixClusterAddNodeV2Delete(ctx context.Context, d *schema.Resour
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the node to be available
+	// Wait for the node to be removed
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		resourceUUID, _ := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-		rUUID := resourceUUID.Data.GetValue().(import2.Task)
-		aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
-		log.Printf("Error Remove Node Task Details : %s", string(aJSON))
-		return diag.Errorf("error waiting for  node (%s) to Remove: %s", utils.StringValue(taskUUID), errWaitTask)
+		taskResp, _ := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		taskDetails := taskResp.Data.GetValue().(import2.Task)
+		aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+		log.Printf("[ERROR] Remove Node Task Details: %s", string(aJSON))
+		return diag.Errorf("error waiting for node (%s) to remove: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching  node UUID : %v", err)
+		return diag.Errorf("error while fetching remove node task: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
-
-	bJSON, _ := json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("Remove Node Task Details : %s", string(bJSON))
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Remove Node Task Details: %s", string(aJSON))
 	return nil
 }
 
-func expandClusterNodeParams(pr interface{}) *config.NodeParam {
+func expandClusterNodeParams(d *schema.ResourceData, pr interface{}) *config.NodeParam {
 	if pr != nil {
 		nConf := config.NodeParam{}
 		prI := pr.([]interface{})
@@ -653,8 +621,12 @@ func expandClusterNodeParams(pr interface{}) *config.NodeParam {
 		if bundleInfo, ok := val["bundle_info"]; ok {
 			nConf.BundleInfo = expandBundleInfo(bundleInfo)
 		}
-		if skipHostNetworking, ok := val["should_skip_host_networking"]; ok {
-			nConf.ShouldSkipHostNetworking = utils.BoolPtr(skipHostNetworking.(bool))
+		// Only set this if the user explicitly configured it; otherwise omit from request body.
+		// This avoids sending the default "false" from Optional+Computed into the API.
+		if common.IsExplicitlySet(d, "node_params.0.should_skip_host_networking") {
+			if skipHostNetworking, ok := val["should_skip_host_networking"]; ok {
+				nConf.ShouldSkipHostNetworking = utils.BoolPtr(skipHostNetworking.(bool))
+			}
 		}
 
 		return &nConf
@@ -1006,23 +978,7 @@ func expandDetails(pr interface{}) *config.UserInfo {
 }
 
 func expandHypervisorType(hypervisorType interface{}) *config.HypervisorType {
-	if hypervisorType != nil && hypervisorType != "" {
-		const two, three, four, five, six = 2, 3, 4, 5, 6
-		subMap := map[string]interface{}{
-			"AHV":        two,
-			"ESX":        three,
-			"HYPERV":     four,
-			"XEN":        five,
-			"NATIVEHOST": six,
-		}
-		pVal := subMap[hypervisorType.(string)]
-		if pVal == nil {
-			return nil
-		}
-		p := config.HypervisorType(pVal.(int))
-		return &p
-	}
-	return nil
+	return common.ExpandEnum(hypervisorType, HypervisorTypeMap, "hypervisor_type")
 }
 
 func expandExtraParams(pr interface{}) *config.NodeRemovalExtraParam {

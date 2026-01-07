@@ -12,10 +12,15 @@ Represents the Cluster entity. Provides the basic infrastructure for compute, st
 
 -> **Recommendations:** It is recommended to create and register the cluster with Prism Central as part of the same workflow. Cluster updates, importing, and destruction through Terraform are supported only when the cluster is registered with Prism Central. To register a cluster with Prism Central use Terraform resource nutanix_pc_registration_v2.
 
-
 -> **Note:**: Cluster resource supports add/remove node operations. However, these operations require cluster to be registered with Prism Central.
 
-## Example Usage
+-> **Note:**: TThe cluster resource supports both associating and disassociating categories, allowing you to attach or detach categories on a cluster through Terraform. However, these operations require cluster to be registered with Prism Central.
+
+**Note:**: The cluster resource supports both associating and disassociating cluster profile, allowing you to attach or detach cluster profile on a cluster through Terraform. However, these operations require cluster to be registered with Prism Central.
+
+## Example Usage:
+
+### Example 1: 1 Node Cluster Creation Example
 
 ```hcl
 resource "nutanix_cluster_v2" "cluster"{
@@ -76,7 +81,7 @@ resource "nutanix_cluster_v2" "cluster"{
 }
 ```
 
-### 3 Node Cluster Creation Example and Adding Nodes Example
+### Example 2: 3 Node Cluster Creation Example and Adding Nodes Example
 
 ```hcl
 resource "nutanix_cluster_v2" "cluster-3nodes" {
@@ -132,16 +137,82 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
 ```
 
 
+### Example 3: Creating a cluster with categories
+
+```hcl
+resource "nutanix_cluster_v2" "cluster-with-categories" {
+  name = "cluster-example"
+  nodes {
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = "10.xx.xx.xx"
+        }
+      }
+    }
+  }
+  config {
+    cluster_function  = ["AOS"]
+    redundancy_factor = 1
+    cluster_arch      = "X86_64"
+    fault_tolerance_state {
+      domain_awareness_level = "DISK"
+    }
+  }
+  network {
+    external_address {
+      ipv4 {
+        value = "10.xx.xx.xx"
+      }
+    }
+    external_data_services_ip {
+      ipv4 {
+        value = "10.xx.xx.xx"
+      }
+    }
+    ntp_server_ip_list {
+      fqdn {
+        value = "ntp.server.nutanix.com"
+      }
+    }
+    ntp_server_ip_list {
+      fqdn {
+        value = "ntp.server_1.nutanix.com"
+      }
+    }
+    smtp_server {
+      email_address = "example.ex@exmple.com"
+      server {
+        ip_address {
+          ipv4 {
+            value = "10.xx.xx.xx"
+          }
+        }
+        port     = 123
+        username = "example"
+        password = "example!2134"
+      }
+      type = "PLAIN"
+    }
+  }
+  ## after creating and registering the cluster with prism central,
+  ## to associate categories to the cluster, uncomment the following block
+  ## and to disassociate categories from the cluster, remove it from the categories list.
+  # categories = ["72a80be7-a6d7-4ad4-8071-3d92f40f1e7d", "45588de3-7c18-4230-a147-7e26ad92d8a6"]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 > after creating the cluster, you need to register the cluster with prism central to be able to use it.
+
 * `dryrun`: - (Optional) parameter that allows long-running operations to execute in a dry-run mode providing ability to identify trouble spots and system failures without performing the actual operation. Additionally this mode also offers a summary snapshot of the resultant system in order to better understand how things fit together. The operation runs in dry-run mode only if the provided value is true.
 * `name`: - (Required) The name for the vm.
 * `nodes`: - (Optional) The reference to a node and remove node parameters.
 * `config`: - (Optional) Cluster configuration details.
 * `network`: - (Optional) Network details of a cluster.
-* `upgrade_status`: - (Optional) The reference to a project.
+* `upgrade_status`: - (Optional) Upgrade status of a cluster.
     Valid values are:
      - "CANCELLED"	The cluster upgrade is cancelled.
      - "FAILED"	The cluster upgrade failed.
@@ -154,13 +225,17 @@ The following arguments are supported:
      - "SCHEDULED"	The cluster upgrade is in scheduled state.
 * `container_name`: - (Optional) The name of the default container created as part of cluster creation. This is part of payload for cluster create operation only.
 * `categories`: - (Optional) The reference to a project.
+* `cluster_profile_ext_id`: - (Optional) The reference to a cluster profile.
+
 ### Nodes
 
 The nodes attribute supports the following:
+
 * `node_list`: - (Optional) List of nodes in a cluster.
 * `remove_node_params`: - (Optional) Parameters for removing nodes. Supports:
 
 #### remove_node_params Attributes
+
 * `should_skip_remove`: - (Optional, default false) Skip remove operation for the node.
 * `should_skip_prechecks`: - (Optional, default false) Skip remove prechecks.
 * `extra_params`: - (Optional) Extra parameters for removing nodes. Supports:
@@ -171,12 +246,12 @@ The nodes attribute supports the following:
 ### Node List
 
 The nodes attribute supports the following:
+
 * `controller_vm_ip`: - (Required) An unique address that identifies a device on the internet or a local network in IPv4 or IPv6 format.
 * `host_ip`: - (Optional) An unique address that identifies a device on the internet or a local network in IPv4 or IPv6 format.
 * `should_skip_host_networking`: - (Optional, default false) Flag to indicate if host networking needs to be skipped during node addition.
 * `should_skip_pre_expand_checks`: - (Optional, default false) Flag to indicate if pre expand checks needs to be skipped during node addition.
 * `should_skip_add_node`: - (Optional, default false) Flag to indicate if add node operation needs to be skipped during node addition.
-
 
 ### Controller VM IP
 

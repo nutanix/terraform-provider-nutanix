@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/spf13/cast"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
@@ -23,15 +22,11 @@ func TestAccNutanixProject_basic(t *testing.T) {
 	description := acctest.RandomWithPrefix("test-project-desc-dou")
 	categoryName := "Environment"
 	categoryVal := "Staging"
-	limit := cast.ToString(acctest.RandIntRange(2, 4))
-	rsType := "STORAGE"
 
 	updateName := acctest.RandomWithPrefix("test-project-name-dou")
 	updateDescription := acctest.RandomWithPrefix("test-project-desc-dou")
 	updateCategoryName := "Environment"
 	updateCategoryVal := "Production"
-	updateLimit := cast.ToString(acctest.RandIntRange(4, 8))
-	updateRSType := "MEMORY"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
@@ -39,30 +34,21 @@ func TestAccNutanixProject_basic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProjectConfig(subnetName, name, description, categoryName, categoryVal, limit, rsType),
+				Config: testAccNutanixProjectConfig(subnetName, name, description, categoryName, categoryVal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixProjectExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.limit", limit),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.resource_type", rsType),
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "api_version", "3.1"),
 				),
 			},
 			{
-				Config: testAccNutanixProjectConfig(
-					subnetName, updateName, updateDescription, updateCategoryName, updateCategoryVal, updateLimit, updateRSType),
+				Config: testAccNutanixProjectConfig(subnetName, updateName, updateDescription, updateCategoryName, updateCategoryVal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixProjectExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", updateName),
 					resource.TestCheckResourceAttr(resourceName, "description", updateDescription),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.limit", updateLimit),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.resource_type", updateRSType),
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "api_version", "3.1"),
 				),
@@ -79,8 +65,6 @@ func TestAccNutanixProject_importBasic(t *testing.T) {
 	description := acctest.RandomWithPrefix("test-project-desc-dou")
 	categoryName := "Environment"
 	categoryVal := "Staging"
-	limit := cast.ToString(acctest.RandIntRange(2, 4))
-	rsType := "STORAGE"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
@@ -88,7 +72,7 @@ func TestAccNutanixProject_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProjectConfig(subnetName, name, description, categoryName, categoryVal, limit, rsType),
+				Config: testAccNutanixProjectConfig(subnetName, name, description, categoryName, categoryVal),
 			},
 			{
 				ResourceName:      resourceName,
@@ -108,22 +92,16 @@ func TestAccNutanixProject_withInternal(t *testing.T) {
 	description := acctest.RandomWithPrefix("test-project-desc-dou")
 	categoryName := "Environment"
 	categoryVal := "Staging"
-	limit := cast.ToString(acctest.RandIntRange(2, 4))
-	rsType := "STORAGE"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProjectInternalConfig(subnetName, name, description, categoryName, categoryVal, limit, rsType),
+				Config: testAccNutanixProjectInternalConfig(subnetName, name, description, categoryName, categoryVal),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.limit", limit),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.resource_type", rsType),
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "api_version", "3.1"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_reference_list.#", "2"),
@@ -178,22 +156,16 @@ func TestAccNutanixProject_withInternalWithACP(t *testing.T) {
 	description := acctest.RandomWithPrefix("test-project-desc-dou")
 	categoryName := "Environment"
 	categoryVal := "Staging"
-	limit := cast.ToString(acctest.RandIntRange(2, 4))
-	rsType := "STORAGE"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal, limit, rsType),
+				Config: testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.limit", limit),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.resource_type", rsType),
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "api_version", "3.1"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_reference_list.#", "1"),
@@ -212,22 +184,16 @@ func TestAccNutanixProject_withInternalWithACPUserGroup(t *testing.T) {
 	description := acctest.RandomWithPrefix("test-project-desc-dou")
 	categoryName := "Environment"
 	categoryVal := "Staging"
-	limit := cast.ToString(acctest.RandIntRange(2, 4))
-	rsType := "STORAGE"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, description, categoryName, categoryVal, limit, rsType),
+				Config: testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, description, categoryName, categoryVal),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.limit", limit),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.resource_type", rsType),
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "api_version", "3.1"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_reference_list.#", "1"),
@@ -776,13 +742,6 @@ func testAccNutanixProjectConfig(subnetName, name, description, categoryName, ca
 				value = "%s"
 			}
 
-			resource_domain {
-				resources {
-					limit         = %s
-					resource_type = "%s"
-				}
-			}
-
 			default_subnet_reference {
 				uuid = nutanix_subnet.subnet.metadata.uuid
 			}
@@ -792,10 +751,10 @@ func testAccNutanixProjectConfig(subnetName, name, description, categoryName, ca
 
 			api_version = "3.1"
 		}
-	`, subnetName, name, description, categoryName, categoryVal, limit, rsType)
+	`, subnetName, name, description, categoryName, categoryVal)
 }
 
-func testAccNutanixProjectInternalConfig(subnetName, name, description, categoryName, categoryVal, limit, rsType string) string {
+func testAccNutanixProjectInternalConfig(subnetName, name, description, categoryName, categoryVal string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -872,13 +831,6 @@ func testAccNutanixProjectInternalConfig(subnetName, name, description, category
 				value = "%s"
 			}
 
-			resource_domain {
-				resources {
-					limit         = %s
-					resource_type = "%s"
-				}
-			}
-
 			default_subnet_reference {
 				uuid = nutanix_subnet.subnet.metadata.uuid
 			}
@@ -906,7 +858,7 @@ func testAccNutanixProjectInternalConfig(subnetName, name, description, category
 				uuid= nutanix_vpc.acctest-managed.id
 			}
 		}
-	`, subnetName, name, description, categoryName, categoryVal, limit, rsType)
+	`, subnetName, name, description, categoryName, categoryVal)
 }
 
 func testAccNutanixProjectInternalConfigUpdate(subnetName, name, description string) string {
@@ -973,7 +925,7 @@ func testAccNutanixProjectInternalConfigUpdate(subnetName, name, description str
 	`, subnetName, name, description)
 }
 
-func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal, limit, rsType string) string {
+func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -1009,7 +961,7 @@ func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, c
 			description = "description role"
 			permission_reference_list {
 				kind = "permission"
-				uuid = "%[8]s"
+				uuid = "%[6]s"
 			}
 		}
 
@@ -1020,13 +972,6 @@ func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, c
 			categories {
 				name  = "%[4]s"
 				value = "%[5]s"
-			}
-
-			resource_domain {
-				resources {
-					limit         = %[6]s
-					resource_type = "%[7]s"
-				}
 			}
 
 			default_subnet_reference {
@@ -1064,10 +1009,10 @@ func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, c
 				description= "untitledAcp-54acc50f-ab94-640a-5f06-5c855cc09539"
 			}
 		}
-	`, subnetName, name, description, categoryName, categoryVal, limit, rsType, testVars.Permissions[0].UUID)
+	`, subnetName, name, description, categoryName, categoryVal, testVars.Permissions[0].UUID)
 }
 
-func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, description, categoryName, categoryVal, limit, rsType string) string {
+func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, description, categoryName, categoryVal string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -1103,13 +1048,13 @@ func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, descr
 			description = "description role"
 			permission_reference_list {
 				kind = "permission"
-				uuid = "%[8]s"
+				uuid = "%[6]s"
 			}
 		}
 
 		resource "nutanix_user_groups" "acctest-managed" {
 			directory_service_user_group {
-				distinguished_name = "%[9]s"
+				distinguished_name = "%[7]s"
 			}
 		}
 
@@ -1120,13 +1065,6 @@ func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, descr
 			categories {
 				name  = "%[4]s"
 				value = "%[5]s"
-			}
-
-			resource_domain {
-				resources {
-					limit         = %[6]s
-					resource_type = "%[7]s"
-				}
 			}
 
 			default_subnet_reference {
@@ -1143,7 +1081,7 @@ func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, descr
 			}
 
 			external_user_group_reference_list {
-				name= "%[9]s"
+				name= "%[7]s"
 			   	kind= "user_group"
 			   	uuid= nutanix_user_groups.acctest-managed.id
 			}
@@ -1157,7 +1095,7 @@ func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, descr
 				}
 
 				user_group_reference_list {
-					name= "%[9]s"
+					name= "%[7]s"
 					kind= "user_group"
 					uuid= nutanix_user_groups.acctest-managed.id
 				}
@@ -1165,5 +1103,5 @@ func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, descr
 				description= "untitledAcp-54acc50f-ab94-640a-5f06-5c855cc09539"
 			}
 		}
-	`, subnetName, name, description, categoryName, categoryVal, limit, rsType, testVars.Permissions[0].UUID, testVars.UserGroupWithDistinguishedName[3].DistinguishedName)
+	`, subnetName, name, description, categoryName, categoryVal, testVars.Permissions[0].UUID, testVars.UserGroupWithDistinguishedName[3].DistinguishedName)
 }

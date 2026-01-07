@@ -11,11 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	common "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
+	networkingCommon "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
 	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
 	networkingPrism "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -250,28 +251,32 @@ func ResourceNutanixRoutesV2Create(ctx context.Context, d *schema.ResourceData, 
 	taskUUID := taskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the route table to be available
+	// Wait for the route to be created
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for route table (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for route (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+
+	// Get UUID from TASK API
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching cretaet route task UUID : %v", err)
+		return diag.Errorf("error while fetching route task: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Create Route Task Details: %s", string(aJSON))
 
-	aJSON, _ = json.Marshal(rUUID)
-	log.Printf("[DEBUG] create Route Task Details: %v", string(aJSON))
-
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeRoute, "Route")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(utils.StringValue(uuid))
 
 	return ResourceNutanixRoutesV2Read(ctx, d, meta)
 }
@@ -351,26 +356,26 @@ func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, 
 	taskUUID := taskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the route table to be available
+	// Wait for the route to be updated
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for route table (%s) to perform: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for route (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+
+	// Get task details from TASK API
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching update route task UUID : %v", err)
+		return diag.Errorf("error while fetching route update task: %v", err)
 	}
-
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
-
-	aJSON, _ = json.Marshal(rUUID)
-	log.Printf("[DEBUG] Update Route Task Details: %v", string(aJSON))
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Update Route Task Details: %s", string(aJSON))
 
 	return ResourceNutanixRoutesV2Read(ctx, d, meta)
 }
@@ -382,33 +387,34 @@ func ResourceNutanixRoutesV2Delete(ctx context.Context, d *schema.ResourceData, 
 
 	resp, err := conn.Routes.DeleteRouteForRouteTableById(utils.StringPtr(d.Id()), &routeTableExtID)
 	if err != nil {
-		return diag.Errorf("error while deleting route : %v", err)
+		return diag.Errorf("error while deleting route: %v", err)
 	}
 
 	taskRef := resp.Data.GetValue().(networkingPrism.TaskReference)
 	taskUUID := taskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the route table to be available
+
+	// Wait for the route to be deleted
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for route table (%s) to perform: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for route (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+
+	// Get task details for logging
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching update route task UUID : %v", err)
+		return diag.Errorf("error while fetching route delete task: %v", err)
 	}
-
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
-
-	aJSON, _ := json.Marshal(rUUID)
-	log.Printf("[DEBUG] Update Route Task Details: %v", string(aJSON))
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Delete Route Task Details: %s", string(aJSON))
 
 	return nil
 }
@@ -457,14 +463,14 @@ func expandNextHop(nextHop interface{}) *config.Nexthop {
 	return nextHopObj
 }
 
-func expandNextHopIPAddress(address interface{}) *common.IPAddress {
+func expandNextHopIPAddress(address interface{}) *networkingCommon.IPAddress {
 	if len(address.([]interface{})) == 0 {
 		log.Printf("[DEBUG] No next hop IP address found")
 		return nil
 	}
 	addressMap := address.([]interface{})
 	addressVal := addressMap[0].(map[string]interface{})
-	addressObj := &common.IPAddress{}
+	addressObj := &networkingCommon.IPAddress{}
 
 	if ipv4, ok := addressVal["ipv4"]; ok && len(ipv4.([]interface{})) > 0 {
 		addressObj.Ipv4 = expandIPv4Address(ipv4)
@@ -492,35 +498,50 @@ func expandNextHopType(hopType interface{}) *config.NexthopType {
 	return nil
 }
 
-func expandMetadata(metadata []interface{}) *common.Metadata {
-	if len(metadata) == 0 {
-		log.Printf("[DEBUG] No metadata found")
+func expandMetadata(metadata []interface{}) *networkingCommon.Metadata {
+	if len(metadata) == 0 || metadata[0] == nil {
+		log.Printf("[DEBUG] No metadata found or metadata is nil")
 		return nil
 	}
-	metadataMap := metadata[0].(map[string]interface{})
-	metadataObj := &common.Metadata{}
-	if ownerRefID, ok := metadataMap["owner_reference_id"]; ok {
-		metadataObj.OwnerReferenceId = utils.StringPtr(ownerRefID.(string))
+
+	metadataMap, ok := metadata[0].(map[string]interface{})
+	if !ok {
+		log.Printf("[DEBUG] Failed to convert metadata to map[string]interface{}")
+		return nil
 	}
-	if ownerUserName, ok := metadataMap["owner_user_name"]; ok {
-		metadataObj.OwnerUserName = utils.StringPtr(ownerUserName.(string))
-	}
-	if projRefID, ok := metadataMap["project_reference_id"]; ok {
-		metadataObj.ProjectReferenceId = utils.StringPtr(projRefID.(string))
-	}
-	if projName, ok := metadataMap["project_name"]; ok {
-		metadataObj.ProjectName = utils.StringPtr(projName.(string))
-	}
-	if categoryIDs, ok := metadataMap["category_ids"]; ok {
-		categoryIDList := categoryIDs.([]interface{})
-		categoryIDListStr := make([]string, len(categoryIDList))
-		for i, v := range categoryIDList {
-			categoryIDListStr[i] = v.(string)
+
+	metadataObj := &networkingCommon.Metadata{}
+
+	setStringPtr := func(field **string, key string) {
+		if val, ok := metadataMap[key]; ok {
+			if strVal, valid := val.(string); valid && strVal != "" {
+				*field = utils.StringPtr(strVal)
+			}
 		}
-		metadataObj.CategoryIds = categoryIDListStr
 	}
-	aJSON, _ := json.Marshal(metadataObj)
-	log.Printf("[DEBUG] Metadata Object: %v", string(aJSON))
+
+	setStringPtr(&metadataObj.OwnerReferenceId, "owner_reference_id")
+	setStringPtr(&metadataObj.OwnerUserName, "owner_user_name")
+	setStringPtr(&metadataObj.ProjectReferenceId, "project_reference_id")
+	setStringPtr(&metadataObj.ProjectName, "project_name")
+
+	if categoryIDs, ok := metadataMap["category_ids"]; ok {
+		if categorySlice, valid := categoryIDs.([]interface{}); valid && len(categorySlice) > 0 {
+			categoryIDListStr := make([]string, 0, len(categorySlice))
+			for _, v := range categorySlice {
+				if s, ok := v.(string); ok && s != "" {
+					categoryIDListStr = append(categoryIDListStr, s)
+				}
+			}
+			metadataObj.CategoryIds = categoryIDListStr
+		}
+	}
+
+	if aJSON, err := json.Marshal(metadataObj); err == nil {
+		log.Printf("[DEBUG] Metadata Object: %v", string(aJSON))
+	} else {
+		log.Printf("[DEBUG] Failed to marshal metadata object: %v", err)
+	}
 
 	return metadataObj
 }

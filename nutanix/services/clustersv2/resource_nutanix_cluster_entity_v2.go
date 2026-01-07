@@ -1,3 +1,4 @@
+// Package clustersv2 provides resources for managing Nutanix clusters.
 package clustersv2
 
 import (
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,7 +23,6 @@ import (
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/clusters"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -29,6 +30,97 @@ import (
 const (
 	CANCELED = "CANCELLED"
 )
+
+// customizeClusterProfileExtIDDiff forces Terraform to detect changes when cluster_profile_ext_id
+// is explicitly set to empty or removed from config. This is needed because computed+optional
+// attributes may not trigger HasChange when going from a value to empty.
+func customizeClusterProfileExtIDDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	// Get old and new values using GetChange (old from state, new from config)
+	oldValRaw, newValRaw := d.GetChange("cluster_profile_ext_id")
+	oldValStr := ""
+	newValStr := ""
+	if oldValRaw != nil {
+		oldValStr = oldValRaw.(string)
+	}
+	if newValRaw != nil {
+		newValStr = newValRaw.(string)
+	}
+
+	// If old and new are the same, no change needed
+	if oldValStr == newValStr {
+		log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: cluster_profile_ext_id is the same")
+		return nil
+	}
+
+	// If there's no old value, nothing to disassociate
+	if oldValStr == "" {
+		log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: cluster_profile_ext_id is empty")
+		return nil
+	}
+
+	// Check if the attribute was explicitly set to empty or removed from config
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		// Config is null/unknown, can't determine - but if newValStr is empty and oldValStr is not,
+		// it means we're going from a value to empty, so force the diff
+		if newValStr == "" && oldValStr != "" {
+			log.Printf("[DEBUG] CustomizeDiff: cluster_profile_ext_id changed to empty (config unknown), forcing diff. Old: '%s'", oldValStr)
+			if err := d.SetNew("cluster_profile_ext_id", ""); err != nil {
+				log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: error setting new cluster_profile_ext_id: %v", err)
+				return err
+			}
+			return nil
+		}
+		return nil
+	}
+
+	configMap := rawConfig.AsValueMap()
+	val, exists := configMap["cluster_profile_ext_id"]
+
+	// Case 1: Attribute was removed from config (exists in state but not in config)
+	if !exists && oldValStr != "" {
+		log.Printf("[DEBUG] CustomizeDiff: cluster_profile_ext_id removed from config, forcing diff. Old: '%s'", oldValStr)
+		// Force a diff by setting new value to empty
+		if err := d.SetNew("cluster_profile_ext_id", ""); err != nil {
+			log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: error setting new cluster_profile_ext_id: %v", err)
+			return err
+		}
+		log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: cluster_profile_ext_id set to empty")
+		return nil
+	}
+
+	// Case 2: Attribute exists in config - check if it's explicitly set to empty
+	if exists && !val.IsNull() && val.IsKnown() {
+		if val.Type().Equals(cty.String) {
+			strVal := val.AsString()
+			if strVal == "" && oldValStr != "" {
+				log.Printf("[DEBUG] CustomizeDiff: cluster_profile_ext_id explicitly set to empty, forcing diff. Old: '%s'", oldValStr)
+				// Force a diff by setting new value to empty
+				if err := d.SetNew("cluster_profile_ext_id", ""); err != nil {
+					log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: error setting new cluster_profile_ext_id: %v", err)
+					return err
+				}
+				log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: cluster_profile_ext_id set to empty")
+				return nil
+			}
+		}
+	}
+
+	// Case 3: HasChange detected a change, but we need to ensure empty string is explicitly set
+	// when going from non-empty to empty (this handles computed values that might be empty)
+	if d.HasChange("cluster_profile_ext_id") && newValStr == "" && oldValStr != "" {
+		log.Printf("[DEBUG] CustomizeDiff: cluster_profile_ext_id changed from non-empty to empty, forcing explicit empty string. Old: '%s'", oldValStr)
+		if err := d.SetNew("cluster_profile_ext_id", ""); err != nil {
+			log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: error setting new cluster_profile_ext_id: %v", err)
+			return err
+		}
+		log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: cluster_profile_ext_id set to empty")
+		return nil
+	}
+
+	log.Printf("[DEBUG] customizeClusterProfileExtIDDiff: cluster_profile_ext_id no change needed")
+	return nil
+}
 
 func ResourceNutanixClusterV2() *schema.Resource {
 	return &schema.Resource{
@@ -39,6 +131,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: clusterImportFunc,
 		},
+		CustomizeDiff: customizeClusterProfileExtIDDiff,
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -77,12 +170,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 									"controller_vm_ip": {
 										Type:     schema.TypeList,
 										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLengthResource(),
-												"ipv6": SchemaForValuePrefixLengthResource(),
-											},
-										},
+										Elem:     common.SchemaForIPList(false),
 									},
 									"node_uuid": {
 										Type:     schema.TypeString,
@@ -92,12 +180,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLengthResource(),
-												"ipv6": SchemaForValuePrefixLengthResource(),
-											},
-										},
+										Elem:     common.SchemaForIPList(false),
 									},
 
 									// expand cluster with node params
@@ -113,6 +196,46 @@ func ResourceNutanixClusterV2() *schema.Resource {
 									},
 									"should_skip_pre_expand_checks": {
 										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"should_skip_discovery": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"should_skip_imaging": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"should_validate_rack_awareness": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"is_nos_compatible": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"is_compute_only": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"is_never_scheduleable": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"is_light_compute": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"hypervisor_hostname": {
+										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
 									},
@@ -175,23 +298,13 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(),
-									"ipv6": SchemaForValuePrefixLengthResource(),
-								},
-							},
+							Elem:     common.SchemaForIPList(false),
 						},
 						"external_data_services_ip": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(),
-									"ipv6": SchemaForValuePrefixLengthResource(),
-								},
-							},
+							Elem:     common.SchemaForIPList(false),
 						},
 						"external_subnet": {
 							Type:     schema.TypeString,
@@ -213,51 +326,15 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(),
-									"ipv6": SchemaForValuePrefixLengthResource(),
-									"fqdn": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"value": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
+							Elem:     common.SchemaForIPList(true),
 						},
+						// change to set to ensure ignoring order in the list
 						"ntp_server_ip_list": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(),
-									"ipv6": SchemaForValuePrefixLengthResource(),
-									"fqdn": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"value": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
+							Set:      common.HashIPItem,
+							Elem:     common.SchemaForIPList(true),
 						},
 						"smtp_server": {
 							Type:     schema.TypeList,
@@ -280,25 +357,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 													Type:     schema.TypeList,
 													Optional: true,
 													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"ipv4": SchemaForValuePrefixLengthResource(),
-															"ipv6": SchemaForValuePrefixLengthResource(),
-															"fqdn": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"value": {
-																			Type:     schema.TypeString,
-																			Computed: true,
-																		},
-																	},
-																},
-															},
-														},
-													},
+													Elem:     common.SchemaForIPList(true),
 												},
 												"port": {
 													Type:     schema.TypeInt,
@@ -322,7 +381,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
-										ValidateFunc: validation.StringInSlice([]string{"PLAIN", "STARTTLS", "SSL"}, false),
+										ValidateFunc: validation.StringInSlice(SMTPTypeStrings, false),
 									},
 								},
 							},
@@ -331,12 +390,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLengthResource(),
-									"ipv6": SchemaForValuePrefixLengthResource(),
-								},
-							},
+							Elem:     common.SchemaForIPList(false),
 						},
 						"masquerading_port": {
 							Type:     schema.TypeString,
@@ -352,18 +406,13 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLengthResource(),
-												"ipv6": SchemaForValuePrefixLengthResource(),
-											},
-										},
+										Elem:     common.SchemaForIPList(false),
 									},
 									"type": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
-										ValidateFunc: validation.StringInSlice([]string{"VCENTER"}, false),
+										ValidateFunc: validation.StringInSlice(ManagementServerTypeStrings, false),
 									},
 									"is_drs_enabled": {
 										Type:     schema.TypeBool,
@@ -389,9 +438,10 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 						},
 						"key_management_server_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(KeyManagementServerTypeStrings, false),
 						},
 						"backplane": {
 							Type:     schema.TypeList,
@@ -409,8 +459,8 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
-									"subnet":  SchemaForValuePrefixLengthResource(),
-									"netmask": SchemaForValuePrefixLengthResource(),
+									"subnet":  common.SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
+									"netmask": common.SchemaForValuePrefixLengthResource(ipv4PrefixLengthDefaultValue),
 								},
 							},
 						},
@@ -424,12 +474,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLengthResource(),
-												"ipv6": SchemaForValuePrefixLengthResource(),
-											},
-										},
+										Elem:     common.SchemaForIPList(false),
 									},
 									"port": {
 										Type:     schema.TypeInt,
@@ -456,7 +501,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringInSlice([]string{"HTTP", "HTTPS", "SOCKS"}, false),
+											ValidateFunc: validation.StringInSlice(HTTPProxyTypeStrings, false),
 										},
 									},
 								},
@@ -475,7 +520,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 									"target_type": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringInSlice([]string{"IPV6_ADDRESS", "HOST_NAME", "DOMAIN_NAME_SUFFIX", "IPV4_NETWORK_MASK", "IPV4_ADDRESS"}, false),
+										ValidateFunc: validation.StringInSlice(HTTPProxyWhiteListTargetStrings, false),
 									},
 								},
 							},
@@ -534,7 +579,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice([]string{"AOS", "ONE_NODE", "TWO_NODE"}, false),
+								ValidateFunc: validation.StringInSlice(ClusterFunctionStrings, false),
 							},
 						},
 						"timezone": {
@@ -616,9 +661,10 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							},
 						},
 						"cluster_arch": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(ClusterArchStrings, false),
 						},
 						"fault_tolerance_state": {
 							Type:     schema.TypeList,
@@ -638,7 +684,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
-										ValidateFunc: validation.StringInSlice([]string{"RACK", "NODE", "BLOCK", "DISK"}, false),
+										ValidateFunc: validation.StringInSlice(DomainAwarenessLevelStrings, false),
 									},
 									"current_cluster_fault_tolerance": {
 										Type:     schema.TypeString,
@@ -648,7 +694,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
-										ValidateFunc: validation.StringInSlice([]string{"CFT_1N_OR_1D", "CFT_2N_OR_2D", "CFT_1N_AND_1D", "CFT_0N_AND_0D"}, false),
+										ValidateFunc: validation.StringInSlice(ClusterFaultToleranceStrings, false),
 									},
 									"redundancy_status": {
 										Type:     schema.TypeList,
@@ -674,9 +720,10 @@ func ResourceNutanixClusterV2() *schema.Resource {
 							Computed: true,
 						},
 						"operation_mode": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(OperationModeStrings, false),
 						},
 						"is_lts": {
 							Type:     schema.TypeBool,
@@ -720,7 +767,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
-										ValidateFunc: validation.StringInSlice([]string{"ALL", "DEFAULT"}, false),
+										ValidateFunc: validation.StringInSlice(PIIScrubbingLevelStrings, false),
 									},
 								},
 							},
@@ -742,9 +789,10 @@ func ResourceNutanixClusterV2() *schema.Resource {
 				Computed: true,
 			},
 			"categories": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
+				Set:      common.HashStringItem,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -759,7 +807,19 @@ func ResourceNutanixClusterV2() *schema.Resource {
 			},
 			"cluster_profile_ext_id": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Suppress diff if both old and new are empty (treat empty string and nil as equivalent)
+					oldTrimmed := strings.TrimSpace(old)
+					newTrimmed := strings.TrimSpace(new)
+					log.Printf("[DEBUG] cluster_profile_ext_id DiffSuppressFunc: oldTrimmed: %s, newTrimmed: %s", oldTrimmed, newTrimmed)
+					if oldTrimmed == "" && newTrimmed == "" {
+						return true
+					}
+					// Otherwise, let Terraform handle the diff normally
+					return false
+				},
 			},
 			"backup_eligibility_score": {
 				Type:     schema.TypeInt,
@@ -770,43 +830,7 @@ func ResourceNutanixClusterV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"links": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"href": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"rel": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func SchemaForValuePrefixLengthResource() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		Computed: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"value": {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-				"prefix_length": {
-					Type:     schema.TypeInt,
-					Optional: true,
-					Default:  defaultValue,
-				},
-			},
+			"links": common.LinksSchema(),
 		},
 	}
 }
@@ -835,7 +859,7 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 		body.Config = expandClusterConfigReference(configVar, d)
 	}
 	if upgradeStatus, ok := d.GetOk("upgrade_status"); ok {
-		body.UpgradeStatus = expandUpgradeStatus(upgradeStatus)
+		body.UpgradeStatus = common.ExpandEnum(upgradeStatus, UpgradeStatusMap, "upgrade_status")
 	}
 
 	if containerName, ok := d.GetOk("container_name"); ok {
@@ -843,7 +867,9 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if categories, ok := d.GetOk("categories"); ok {
-		categoriesListStr := common.ExpandListOfString(categories.([]interface{}))
+		// Convert to slice - handles both TypeList and TypeSet
+		categoriesList := common.InterfaceToSlice(categories)
+		categoriesListStr := common.ExpandListOfString(categoriesList)
 		body.Categories = categoriesListStr
 	}
 
@@ -859,31 +885,34 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the cluster to be created
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for cluster (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching cluster UUID : %v", err)
+		return diag.Errorf("error while fetching cluster task: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
-	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Create Cluster Task Response Details: %s", string(aJSON))
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Create Cluster Task Details: %s", string(aJSON))
 
-	randomID := utils.GenUUID()
-
-	d.SetId(randomID)
+	// Set the resource ID to the task UUID for the following reasons:
+	// 1. The cluster creation is an asynchronous operation - the cluster exists but It is not yet available for read operations.
+	// 2. Using the task UUID (instead of a random ID) provides traceability - it allows
+	//    correlation between the Terraform resource and the actual cluster creation task.
+	// 3. The Read function will later retrieve the actual cluster ext_id by querying
+	//    clusters by name once the cluster is registered with Prism Central.
+	// 4. This allows for better error handling and recovery - if the cluster creation fails,
+	//    the task UUID can be used to troubleshoot the issue.
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 
 	return nil
 }
@@ -910,7 +939,6 @@ func ResourceNutanixClusterV2Read(ctx context.Context, d *schema.ResourceData, m
 			log.Printf("[DEBUG] ResourceNutanixClusterV2Read : error while fetching cluster : %v", err)
 			return diag.Errorf("error while fetching cluster : %v", err)
 		}
-		log.Printf("[DEBUG] ResourceNutanixClusterV2Read : error while fetching cluster : %v", err)
 	}
 	// Clusters READ context
 	return clusterRead(d, meta)
@@ -930,6 +958,8 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 	if d.Get("ext_id").(string) == "" {
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster not found, extID is empty")
 		err := getClusterExtID(d, conn)
+
+		// Check if the error is a ClusterNotFoundError
 		if err != nil {
 			log.Printf("[DEBUG] ResourceNutanixClusterV2Update : error while fetching cluster : %v", err)
 			return diag.Errorf("error while fetching cluster : %v: Please register the cluster to Prism Central if not.", err)
@@ -945,6 +975,25 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 			return diags
 		}
 		nodeChanges = true
+	}
+
+	// === Handle Category Association Changes ===
+	if d.HasChange("categories") {
+		if diags := handleCategoryAssociationChanges(ctx, d, meta, conn, expand); diags.HasError() {
+			return diags
+		}
+	}
+
+	// === Handle Cluster Profile association update ===
+	// Check if cluster_profile_ext_id changed or was explicitly set to empty
+	// For computed+optional attributes, we need to check both HasChange and if it was explicitly set to empty
+	hasChange := d.HasChange("cluster_profile_ext_id")
+	isExplicitlySetToEmpty := isClusterProfileExtIDExplicitlySetToEmpty(d)
+
+	if hasChange || isExplicitlySetToEmpty {
+		if diags := handleClusterProfileAssociationUpdate(ctx, d, meta, conn, expand); diags.HasError() {
+			return diags
+		}
 	}
 
 	// === Handle other Cluster field changes ===
@@ -979,17 +1028,24 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 	taskUUID := TaskRef.ExtId
 	taskconn := meta.(*conns.Client).PrismAPI
 
+	// Wait for the cluster to be updated
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
-
 	if _, errWait := stateConf.WaitForStateContext(ctx); errWait != nil {
-		return diag.Errorf("error waiting for cluster update task (%s): %s", utils.StringValue(taskUUID), errWait)
+		return diag.Errorf("error waiting for cluster (%s) to update: %s", utils.StringValue(taskUUID), errWait)
 	}
-
+	// Get UUID from TASK API
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching cluster update task: %v", err)
+	}
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Update Cluster Task Details: %s", string(aJSON))
 	log.Printf("[DEBUG] Cluster update completed successfully")
 	time.Sleep(1 * time.Minute)
 	return ResourceNutanixClusterV2Read(ctx, d, meta)
@@ -1047,64 +1103,26 @@ func ResourceNutanixClusterV2Delete(ctx context.Context, d *schema.ResourceData,
 	TaskRef := resp.Data.GetValue().(import1.TaskReference)
 	taskUUID := TaskRef.ExtId
 
-	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the cluster to be deleted
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for cluster (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
+	// Get UUID from TASK API
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching cluster delete task: %v", err)
+	}
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Delete Cluster Task Details: %s", string(aJSON))
 	return nil
-}
-
-func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
-		// encodeUUID := data + ":" + taskUUID
-		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-		if err != nil {
-			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
-		}
-
-		// get the group results
-
-		v := vresp.Data.GetValue().(import2.Task)
-
-		if getTaskStatus(v.Status) == "CANCELED" || getTaskStatus(v.Status) == "FAILED" {
-			return v, getTaskStatus(v.Status),
-				fmt.Errorf("error_detail: %s, progress_message: %d", utils.StringValue(v.ErrorMessages[0].Message), utils.IntValue(v.ProgressPercentage))
-		}
-		return v, getTaskStatus(v.Status), nil
-	}
-}
-
-func getTaskStatus(pr *import2.TaskStatus) string {
-	const two, three, five, six, seven = 2, 3, 5, 6, 7
-	if pr != nil {
-		if *pr == import2.TaskStatus(six) {
-			return "FAILED"
-		}
-		if *pr == import2.TaskStatus(seven) {
-			return "CANCELED"
-		}
-		if *pr == import2.TaskStatus(two) {
-			return "QUEUED"
-		}
-		if *pr == import2.TaskStatus(three) {
-			return "RUNNING"
-		}
-		if *pr == import2.TaskStatus(five) {
-			return "SUCCEEDED"
-		}
-	}
-	return "UNKNOWN"
 }
 
 func getClusterExtID(d *schema.ResourceData, conn *clusters.Client) error {
@@ -1172,28 +1190,6 @@ func expandNodeReference(pr interface{}) *config.NodeReference {
 	return nil
 }
 
-func expandUpgradeStatus(upgradeStatus interface{}) *config.UpgradeStatus {
-	const two, three, four, five, six, seven, eight, nine, ten = 2, 3, 4, 5, 6, 7, 8, 9, 10
-	subMap := map[string]interface{}{
-		"PENDING":     two,
-		"DOWNLOADING": three,
-		"QUEUED":      four,
-		"PREUPGRADE":  five,
-		"UPGRADING":   six,
-		"SUCCEEDED":   seven,
-		"FAILED":      eight,
-		CANCELED:      nine,
-		"SCHEDULED":   ten,
-	}
-	if subMap[upgradeStatus.(string)] != nil {
-		pVal := subMap[upgradeStatus.(string)]
-		p := config.UpgradeStatus(pVal.(int))
-		return &p
-	}
-	log.Printf("[INFO] upgrade_status is not provided")
-	return nil
-}
-
 func expandNodeListItemReference(pr []interface{}) []config.NodeListItemReference {
 	if len(pr) > 0 {
 		nodeList := make([]config.NodeListItemReference, len(pr))
@@ -1246,7 +1242,7 @@ func expandClusterNetworkReference(pr interface{}) *config.ClusterNetworkReferen
 		}
 		if ntpServerIPList, ok := val["ntp_server_ip_list"]; ok {
 			log.Printf("[DEBUG] ntp_server_ip_list ")
-			cls.NtpServerIpList = expandIPAddressOrFQDN(ntpServerIPList.([]interface{}))
+			cls.NtpServerIpList = expandIPAddressOrFQDN(common.InterfaceToSlice(ntpServerIPList))
 		}
 		if smtpServer, ok := val["smtp_server"]; ok {
 			cls.SmtpServer = expandSMTPServerRef(smtpServer)
@@ -1263,20 +1259,7 @@ func expandClusterNetworkReference(pr interface{}) *config.ClusterNetworkReferen
 			cls.Fqdn = utils.StringPtr(fqdn.(string))
 		}
 		if keyManagementServerType, ok := val["key_management_server_type"]; ok {
-			log.Printf("[DEBUG] key_management_server_type : %s", keyManagementServerType)
-			const zero, one, two, three, four = 0, 1, 2, 3, 4
-			subMap := map[string]interface{}{
-				"UNKNOWN":       zero,
-				"$REDACTED":     one,
-				"LOCAL":         two,
-				"PRISM_CENTRAL": three,
-				"EXTERNAL":      four,
-			}
-			if subMap[keyManagementServerType.(string)] != nil {
-				pVal := subMap[keyManagementServerType.(string)]
-				p := config.KeyManagementServerType(pVal.(int))
-				cls.KeyManagementServerType = &p
-			}
+			cls.KeyManagementServerType = common.ExpandEnum(keyManagementServerType, KeyManagementServerTypeMap, "key_management_server_type")
 		}
 		if backplane, ok := val["backplane"]; ok {
 			cls.Backplane = expandBackplaneNetworkParams(backplane)
@@ -1305,21 +1288,8 @@ func expandHTTPProxyWhiteList(proxyTypesWhiteList []interface{}) []config.HttpPr
 			if target, ok := val["target"]; ok {
 				httpProxy.Target = utils.StringPtr(target.(string))
 			}
-			if targetType, ok := val["target_type"]; ok {
-				const two, three, four, five, six = 2, 3, 4, 5, 6
-				subMap := map[string]interface{}{
-					"IPV4_ADDRESS":       two,
-					"IPV6_ADDRESS":       three,
-					"IPV4_NETWORK_MASK":  four,
-					"DOMAIN_NAME_SUFFIX": five,
-					"HOST_NAME":          six,
-				}
-				if subMap[targetType.(string)] != nil {
-					pVal := subMap[targetType.(string)]
-					p := config.HttpProxyWhiteListTargetType(pVal.(int))
-					httpProxy.TargetType = &p
-				}
-			}
+			httpProxy.TargetType = common.ExpandEnum(val["target_type"], HTTPProxyWhiteListTargetMap, "target_type")
+
 			httpProxyWhiteList[k] = *httpProxy
 		}
 		return httpProxyWhiteList
@@ -1350,27 +1320,8 @@ func expandHTTPProxyList(httpProxyList []interface{}) []config.HttpProxyConfig {
 			if name, ok := val["name"]; ok {
 				httpProxy.Name = utils.StringPtr(name.(string))
 			}
-			if proxyTypes, ok := val["proxy_types"]; ok {
-				if proxyTypes == nil || len(proxyTypes.([]interface{})) == 0 {
-					httpProxy.ProxyTypes = nil
-				} else {
-					proxyTypesList := make([]config.HttpProxyType, len(proxyTypes.([]interface{})))
-					const two, three, four = 2, 3, 4
-					subMap := map[string]interface{}{
-						"HTTP":  two,
-						"HTTPS": three,
-						"SOCKS": four,
-					}
-					for i, val := range proxyTypes.([]interface{}) {
-						if subMap[val.(string)] != nil {
-							pVal := subMap[val.(string)]
-							p := config.HttpProxyType(pVal.(int))
-							proxyTypesList[i] = p
-						}
-					}
-					httpProxy.ProxyTypes = proxyTypesList
-				}
-			}
+			httpProxy.ProxyTypes = common.ExpandEnumList(val["proxy_types"], HTTPProxyTypeMap, "proxy_type")
+
 			httpProxyConfig[k] = *httpProxy
 		}
 		return httpProxyConfig
@@ -1387,29 +1338,8 @@ func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *confi
 		if buildInfo, ok := val["build_info"]; ok && d.HasChange("config.0.build_info") {
 			clsConf.BuildInfo = expandBuildReference(buildInfo)
 		}
-		if clusterFunction, ok := val["cluster_function"]; ok && d.HasChange("config.0.cluster_function") {
-			cfLen := len(clusterFunction.([]interface{}))
-			cfs := make([]config.ClusterFunctionRef, cfLen)
-			const two, three, four, five, six, seven, eight = 2, 3, 4, 5, 6, 7, 8
-			subMap := map[string]interface{}{
-				"AOS":                two,
-				"PRISM_CENTRAL":      three,
-				"CLOUD_DATA_GATEWAY": four,
-				"AFS":                five,
-				"ONE_NODE":           six,
-				"TWO_NODE":           seven,
-				"ANALYTICS_PLATFORM": eight,
-			}
+		clsConf.ClusterFunction = common.ExpandEnumList(val["cluster_function"], ClusterFunctionMap, "cluster_function")
 
-			for k, v := range clusterFunction.([]interface{}) {
-				if subMap[v.(string)] != nil {
-					pVal := subMap[v.(string)]
-					p := config.ClusterFunctionRef(pVal.(int))
-					cfs[k] = p
-				}
-			}
-			clsConf.ClusterFunction = cfs
-		}
 		if _, ok := val["authorized_public_key_list"]; ok && d.HasChange("config.0.authorized_public_key_list") {
 			_, newObj := d.GetChange("config.0.authorized_public_key_list")
 			clsConf.AuthorizedPublicKeyList = expandPublicKey(newObj.([]interface{}))
@@ -1417,48 +1347,17 @@ func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *confi
 		if redundancyFactor, ok := val["redundancy_factor"]; ok && d.HasChange("config.0.redundancy_factor") {
 			clsConf.RedundancyFactor = utils.Int64Ptr(int64(redundancyFactor.(int)))
 		}
-		if clusterArch, ok := val["cluster_arch"]; ok && d.HasChange("config.0.cluster_arch") {
-			const two, three = 2, 3
-			subMap := map[string]interface{}{
-				"X86_64":  two,
-				"PPC64LE": three,
-			}
-			if subMap[clusterArch.(string)] != nil {
-				pVal := subMap[clusterArch.(string)]
-				p := config.ClusterArchReference(pVal.(int))
-				clsConf.ClusterArch = &p
-			}
-		}
+		clsConf.ClusterArch = common.ExpandEnum(val["cluster_arch"], ClusterArchMap, "cluster_arch")
+
 		if faultToleranceState, ok := val["fault_tolerance_state"]; ok && d.HasChange("config.0.fault_tolerance_state") {
 			clsConf.FaultToleranceState = expandFaultToleranceState(faultToleranceState)
 		}
 		if operationMode, ok := val["operation_mode"]; ok && d.HasChange("config.0.operation_mode") {
-			const two, three, four, five, six = 2, 3, 4, 5, 6
-			subMap := map[string]interface{}{
-				"NORMAL":             two,
-				"READ_ONLY":          three,
-				"STAND_ALONE":        four,
-				"SWITCH_TO_TWO_NODE": five,
-				"OVERRIDE":           six,
-			}
-			if subMap[operationMode.(string)] != nil {
-				pVal := subMap[operationMode.(string)]
-				p := config.OperationMode(pVal.(int))
-				clsConf.OperationMode = &p
-			}
+			clsConf.OperationMode = common.ExpandEnum(operationMode, OperationModeMap, "operation_mode")
 		}
-		if encryptionInTransitStatus, ok := val["encryption_in_transit_status"]; ok && d.HasChange("config.0.encryption_in_transit_status") {
-			const two, three = 2, 3
-			subMap := map[string]interface{}{
-				"ENABLED":  two,
-				"DISABLED": three,
-			}
 
-			if subMap[encryptionInTransitStatus.(string)] != nil {
-				pVal := subMap[encryptionInTransitStatus.(string)]
-				p := config.EncryptionStatus(pVal.(int))
-				clsConf.EncryptionInTransitStatus = &p
-			}
+		if encryptionInTransitStatus, ok := val["encryption_in_transit_status"]; ok && d.HasChange("config.0.encryption_in_transit_status") {
+			clsConf.EncryptionInTransitStatus = common.ExpandEnum(encryptionInTransitStatus, EncryptionStatusMap, "encryption_in_transit_status")
 		}
 
 		if pulseStatus, ok := val["pulse_status"]; ok && d.HasChange("config.0.pulse_status") {
@@ -1484,17 +1383,9 @@ func expandPulseStatus(status interface{}) *config.PulseStatus {
 		pulse.IsEnabled = utils.BoolPtr(isEnabled.(bool))
 	}
 	if piiScrubbingLevel, ok := val["pii_scrubbing_level"]; ok {
-		const two, three = 2, 3
-		subMap := map[string]interface{}{
-			"DEFAULT": two,
-			"ALL":     three,
-		}
-		if subMap[piiScrubbingLevel.(string)] != nil {
-			pVal := subMap[piiScrubbingLevel.(string)]
-			p := config.PIIScrubbingLevel(pVal.(int))
-			pulse.PiiScrubbingLevel = &p
-		}
+		pulse.PiiScrubbingLevel = common.ExpandEnum(piiScrubbingLevel, PIIScrubbingLevelMap, "pii_scrubbing_level")
 	}
+
 	return pulse
 }
 
@@ -1547,44 +1438,72 @@ func expandIPAddressOrFQDN(pr []interface{}) []import4.IPAddressOrFQDN {
 }
 
 func expandIPv4Address(pr interface{}) *import4.IPv4Address {
-	if len(pr.([]interface{})) == 0 {
+	// nil check
+	if pr == nil {
 		return nil
 	}
-	if pr != nil {
-		ipv4 := import4.NewIPv4Address()
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
 
-		if value, ok := val["value"]; ok {
-			ipv4.Value = utils.StringPtr(value.(string))
-		}
-		if prefix, ok := val["prefix_length"]; ok {
-			ipv4.PrefixLength = utils.IntPtr(prefix.(int))
-		}
-		return ipv4
+	// safe type assert for expected slice
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
 	}
-	return nil
+
+	// safe type assert for first element being a map
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+	ipv4 := import4.NewIPv4Address()
+
+	if v, ok := valMap["value"]; ok {
+		if s, ok2 := v.(string); ok2 {
+			ipv4.Value = utils.StringPtr(s)
+		}
+	}
+
+	if p, ok := valMap["prefix_length"]; ok {
+		if n, ok2 := p.(int); ok2 {
+			ipv4.PrefixLength = utils.IntPtr(n)
+		}
+	}
+
+	return ipv4
 }
 
 func expandIPv6Address(pr interface{}) *import4.IPv6Address {
-	if len(pr.([]interface{})) == 0 {
+	// nil check
+	if pr == nil {
 		return nil
 	}
 
-	if pr != nil {
-		ipv6 := import4.NewIPv6Address()
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
-
-		if value, ok := val["value"]; ok {
-			ipv6.Value = utils.StringPtr(value.(string))
-		}
-		if prefix, ok := val["prefix_length"]; ok {
-			ipv6.PrefixLength = utils.IntPtr(prefix.(int))
-		}
-		return ipv6
+	// safe type assert for expected slice
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
 	}
-	return nil
+
+	// safe type assert for first element being a map
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+
+	ipv6 := import4.NewIPv6Address()
+
+	if v, ok := valMap["value"]; ok {
+		if s, ok2 := v.(string); ok2 {
+			ipv6.Value = utils.StringPtr(s)
+		}
+	}
+
+	if p, ok := valMap["prefix_length"]; ok {
+		if n, ok2 := p.(int); ok2 {
+			ipv6.PrefixLength = utils.IntPtr(n)
+		}
+	}
+
+	return ipv6
 }
 
 func expandSMTPServerRef(pr interface{}) *config.SmtpServerRef {
@@ -1604,18 +1523,9 @@ func expandSMTPServerRef(pr interface{}) *config.SmtpServerRef {
 			smtp.Server = expandSMTPNetwork(server.([]interface{}))
 		}
 		if smtpType, ok := val["type"]; ok {
-			const two, three, four = 2, 3, 4
-			subMap := map[string]interface{}{
-				"PLAIN":    two,
-				"STARTTLS": three,
-				"SSL":      four,
-			}
-			if subMap[smtpType.(string)] != nil {
-				pVal := subMap[smtpType.(string)]
-				p := config.SmtpType(pVal.(int))
-				smtp.Type = &p
-			}
+			smtp.Type = common.ExpandEnum(smtpType, SMTPTypeMap, "smtp_type")
 		}
+
 		return smtp
 	}
 	return nil
@@ -1660,17 +1570,7 @@ func expandManagementServerRef(pr interface{}) *config.ManagementServerRef {
 			mgm.Ip = expandIPAddress(ip.([]interface{}))
 		}
 		if mgmType, ok := val["type"]; ok {
-			const two = 2
-			switch mgmType.(string) {
-			case "VCENTER":
-				p := config.ManagementServerType(two)
-				mgm.Type = &p
-				log.Printf("[DEBUG] mgmType : VCENTER case")
-			default:
-				log.Printf("[DEBUG] mgmType : default case")
-				mgm.Type = nil
-			}
-			log.Printf("[DEBUG] mgmType : %v", mgmType.(string))
+			mgm.Type = common.ExpandEnum(mgmType, ManagementServerTypeMap, "management_server_type")
 		}
 		if drsEnabled, ok := val["is_drs_enabled"]; ok {
 			mgm.IsDrsEnabled = utils.BoolPtr(drsEnabled.(bool))
@@ -1710,17 +1610,33 @@ func expandSMTPNetwork(pr []interface{}) *config.SmtpNetwork {
 	return nil
 }
 
-func expandFQDN(pr []interface{}) *import4.FQDN {
-	if len(pr) > 0 {
-		fqdn := import4.FQDN{}
-		val := pr[0].(map[string]interface{})
-		if value, ok := val["value"]; ok {
-			fqdn.Value = utils.StringPtr(value.(string))
-		}
-
-		return &fqdn
+func expandFQDN(pr interface{}) *import4.FQDN {
+	// nil check
+	if pr == nil {
+		return nil
 	}
-	return nil
+
+	// safe type assert for expected slice
+	prSlice, ok := pr.([]interface{})
+	if !ok || len(prSlice) == 0 {
+		return nil
+	}
+
+	// safe type assert for first element being a map
+	valMap, ok := prSlice[0].(map[string]interface{})
+	if !ok || len(valMap) == 0 {
+		return nil
+	}
+
+	fqdn := import4.NewFQDN()
+
+	if v, ok := valMap["value"]; ok {
+		if s, ok2 := v.(string); ok2 && s != "" {
+			fqdn.Value = utils.StringPtr(s)
+		}
+	}
+
+	return fqdn
 }
 
 func expandBuildReference(buildInfo interface{}) *config.BuildReference {
@@ -1782,48 +1698,25 @@ func expandFaultToleranceState(pr interface{}) *config.FaultToleranceState {
 		val := prI[0].(map[string]interface{})
 
 		if domainAwarenessLevel, ok := val["domain_awareness_level"]; ok {
-			const two, three, four, five = 2, 3, 4, 5
-			subMap := map[string]interface{}{
-				"NODE":  two,
-				"BLOCK": three,
-				"RACK":  four,
-				"DISK":  five,
-			}
-			if subMap[domainAwarenessLevel.(string)] != nil {
-				pVal := subMap[domainAwarenessLevel.(string)]
-				p := config.DomainAwarenessLevel(pVal.(int))
-				fts.DomainAwarenessLevel = &p
-			}
+			fts.DomainAwarenessLevel = common.ExpandEnum(domainAwarenessLevel, DomainAwarenessLevelMap, "domain_awareness_level")
 		}
 
 		if currentClusterFaultTolerance, ok := val["current_cluster_fault_tolerance"]; ok {
-			const two, three, four, five = 2, 3, 4, 5
-			subMap := map[string]interface{}{
-				"CFT_0N_AND_0D": two,
-				"CFT_1N_OR_1D":  three,
-				"CFT_2N_OR_2D":  four,
-				"CFT_1N_AND_1D": five,
-			}
-			if subMap[currentClusterFaultTolerance.(string)] != nil {
-				pVal := subMap[currentClusterFaultTolerance.(string)]
-				p := config.ClusterFaultToleranceRef(pVal.(int))
-				fts.CurrentClusterFaultTolerance = &p
-			}
+			fts.CurrentClusterFaultTolerance = common.ExpandEnum(
+				currentClusterFaultTolerance,
+				ClusterFaultToleranceMap,
+				"current_cluster_fault_tolerance",
+			)
 		}
+
 		if desiredClusterFaultTolerance, ok := val["desired_cluster_fault_tolerance"]; ok {
-			const two, three, four, five = 2, 3, 4, 5
-			subMap := map[string]interface{}{
-				"CFT_0N_AND_0D": two,
-				"CFT_1N_OR_1D":  three,
-				"CFT_2N_OR_2D":  four,
-				"CFT_1N_AND_1D": five,
-			}
-			if subMap[desiredClusterFaultTolerance.(string)] != nil {
-				pVal := subMap[desiredClusterFaultTolerance.(string)]
-				p := config.ClusterFaultToleranceRef(pVal.(int))
-				fts.DesiredClusterFaultTolerance = &p
-			}
+			fts.DesiredClusterFaultTolerance = common.ExpandEnum(
+				desiredClusterFaultTolerance,
+				ClusterFaultToleranceMap,
+				"desired_cluster_fault_tolerance",
+			)
 		}
+
 		return fts
 	}
 	return nil
@@ -1852,9 +1745,8 @@ func handleNodeChanges(ctx context.Context, d *schema.ResourceData, meta interfa
 			return diags
 		}
 
-		flags := nodeWithFlags.Flags
 		if diags := expandClusterWithNewNode(ctx, d, meta, *conn, *unconfiguredNodeDetails, *networkDetails,
-			flags.ShouldSkipHostNetworking, flags.ShouldSkipAddNode, flags.ShouldSkipPreExpandChecks); diags.HasError() {
+			nodeWithFlags.Flags); diags.HasError() {
 			return diags
 		}
 	}
@@ -1870,6 +1762,153 @@ func handleNodeChanges(ctx context.Context, d *schema.ResourceData, meta interfa
 	if len(changed) > 0 {
 		b, _ := json.MarshalIndent(changed, "", "  ")
 		log.Printf("[DEBUG] Nodes changed (informational only): %s", string(b))
+	}
+
+	return nil
+}
+
+// isClusterProfileExtIDExplicitlySetToEmpty checks if cluster_profile_ext_id was explicitly set to empty string in the config
+// or removed from the config entirely. This is needed because for computed+optional attributes, Terraform may not detect
+// a change from a value to empty or when the attribute is removed.
+func isClusterProfileExtIDExplicitlySetToEmpty(d *schema.ResourceData) bool {
+	// Check if there's a current value in state (meaning we might be changing from non-empty to empty/removed)
+	currentVal := d.Get("cluster_profile_ext_id").(string)
+	if currentVal == "" {
+		// No current value, so nothing to disassociate
+		return false
+	}
+
+	// Get the raw config to check if the attribute exists and what its value is
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		// Config is null/unknown, can't determine if attribute was removed
+		return false
+	}
+
+	configMap := rawConfig.AsValueMap()
+	val, exists := configMap["cluster_profile_ext_id"]
+
+	if !exists {
+		// Attribute not in config at all (removed from config)
+		log.Printf("[DEBUG] cluster_profile_ext_id removed from config, current value in state: '%s'", currentVal)
+		return true
+	}
+
+	// Attribute exists in config - check if it's explicitly set to empty string
+	if !val.IsNull() && val.IsKnown() {
+		// Check if it's a string type and get its value
+		if val.Type().Equals(cty.String) {
+			strVal := val.AsString()
+			if strVal == "" {
+				// Explicitly set to empty string
+				log.Printf("[DEBUG] cluster_profile_ext_id explicitly set to empty in config, current value in state: '%s'", currentVal)
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func handleClusterProfileAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}, conn *clusters.Client, expand *string) diag.Diagnostics {
+	log.Printf("[DEBUG] Handling cluster profile association update for cluster: %s", d.Id())
+
+	// Get old and new cluster profile ext IDs
+	oldProfileExtIDRaw, newProfileExtIDRaw := d.GetChange("cluster_profile_ext_id")
+	oldProfileExtID := ""
+	newProfileExtID := ""
+	if oldProfileExtIDRaw != nil {
+		oldProfileExtID = oldProfileExtIDRaw.(string)
+	}
+	if newProfileExtIDRaw != nil {
+		newProfileExtID = newProfileExtIDRaw.(string)
+	}
+
+	// Check if the attribute was explicitly set to empty or removed from config
+	// This is needed because GetChange might return the computed value instead of empty
+	// when the attribute is removed or set to empty in the config
+	if isClusterProfileExtIDExplicitlySetToEmpty(d) {
+		log.Printf("[DEBUG] cluster_profile_ext_id was explicitly set to empty or removed, treating new value as empty string")
+		newProfileExtID = ""
+	}
+
+	log.Printf("[DEBUG] Cluster profile association change - old: '%s', new: '%s'", oldProfileExtID, newProfileExtID)
+
+	clusterUUID := d.Id()
+	taskconn := meta.(*conns.Client).PrismAPI
+
+	// Build cluster reference for this cluster
+	clusterRef := config.ClusterReference{
+		Uuid: utils.StringPtr(clusterUUID),
+	}
+	clustersRef := []config.ClusterReference{clusterRef}
+
+	ClusterReferenceListSpec := &config.ClusterReferenceListSpec{
+		Clusters: clustersRef,
+	}
+
+	// Disassociate from old profile if it was set and is different from new
+	if oldProfileExtID != "" && oldProfileExtID != newProfileExtID {
+		log.Printf("[DEBUG] Disassociating cluster %s from cluster profile %s", clusterUUID, oldProfileExtID)
+		disassociateResp, disassociateErr := conn.ClusterProfilesAPI.DisassociateClusterFromClusterProfile(utils.StringPtr(oldProfileExtID), ClusterReferenceListSpec)
+		if disassociateErr != nil {
+			return diag.Errorf("error disassociating cluster from cluster profile: %v", disassociateErr)
+		}
+
+		TaskRef := disassociateResp.Data.GetValue().(import1.TaskReference)
+		taskUUID := TaskRef.ExtId
+
+		// Wait for the cluster profile to be disassociated
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutUpdate),
+		}
+		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+			return diag.Errorf("error waiting for cluster profile (%s) to disassociate: %s", utils.StringValue(taskUUID), errWaitTask)
+		}
+		log.Printf("[DEBUG] Cluster profile disassociation task %s completed", utils.StringValue(taskUUID))
+		// Get UUID from TASK API
+		taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		if err != nil {
+			return diag.Errorf("error while fetching cluster profile disassociation task: %v", err)
+		}
+		taskDetails := taskResp.Data.GetValue().(import2.Task)
+		aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+		log.Printf("[DEBUG] Disassociate Cluster Profile Task Details: %s", string(aJSON))
+	}
+
+	// Associate with new profile if it's set and different from old
+	if newProfileExtID != "" && newProfileExtID != oldProfileExtID {
+		log.Printf("[DEBUG] Associating cluster %s with cluster profile %s", clusterUUID, newProfileExtID)
+		associateResp, associateErr := conn.ClusterProfilesAPI.ApplyClusterProfile(utils.StringPtr(newProfileExtID), ClusterReferenceListSpec, utils.BoolPtr(false))
+		if associateErr != nil {
+			return diag.Errorf("error associating cluster to cluster profile: %v", associateErr)
+		}
+
+		TaskRef := associateResp.Data.GetValue().(import1.TaskReference)
+		taskUUID := TaskRef.ExtId
+
+		// Wait for the cluster profile to be associated
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutUpdate),
+		}
+		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+			return diag.Errorf("error waiting for cluster profile (%s) to associate: %s", utils.StringValue(taskUUID), errWaitTask)
+		}
+		log.Printf("[DEBUG] Cluster profile association task %s completed", utils.StringValue(taskUUID))
+		// Get UUID from TASK API
+		taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		if err != nil {
+			return diag.Errorf("error while fetching cluster profile association task: %v", err)
+		}
+		taskDetails := taskResp.Data.GetValue().(import2.Task)
+		aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+		log.Printf("[DEBUG] Associate Cluster Profile Task Details: %s", string(aJSON))
 	}
 
 	return nil
@@ -1893,20 +1932,45 @@ func handleClusterFieldUpdate(d *schema.ResourceData) (config.Cluster, bool) {
 	}
 	if d.HasChange("upgrade_status") {
 		hasChanges = true
-		updateSpec.UpgradeStatus = expandUpgradeStatus(d.Get("upgrade_status"))
+		updateSpec.UpgradeStatus = common.ExpandEnum(d.Get("upgrade_status"), UpgradeStatusMap, "upgrade_status")
 	}
 	if d.HasChange("container_name") {
 		hasChanges = true
 		updateSpec.ContainerName = utils.StringPtr(d.Get("container_name").(string))
 	}
-	if d.HasChange("categories") {
-		hasChanges = true
-		categories := d.Get("categories").([]interface{})
-		updateSpec.Categories = common.ExpandListOfString(categories)
-	}
+	// Note: categories are handled separately via handleCategoryAssociationChanges
+	// Categories should use Associate/Disassociate APIs, not UpdateClusterById
 
 	log.Printf("[DEBUG] handleClusterFieldUpdate: hasChanges=%v", hasChanges)
 	return updateSpec, hasChanges
+}
+
+// handleCategoryAssociationChanges handles category association and disassociation changes
+// Categories should be managed via Associate/Disassociate APIs, not through UpdateClusterById
+func handleCategoryAssociationChanges(ctx context.Context, d *schema.ResourceData, meta interface{}, conn *clusters.Client, expand *string) diag.Diagnostics {
+	// Get cluster ext_id - use d.Id() if available, otherwise try to get from state
+	clusterExtID := d.Id()
+	if clusterExtID == "" {
+		// Try to get from ext_id field
+		if extID, ok := d.GetOk("ext_id"); ok {
+			clusterExtID = extID.(string)
+		}
+		if clusterExtID == "" {
+			return diag.Errorf("cluster ext_id is required for category operations")
+		}
+	}
+
+	log.Printf("[DEBUG] Handling category association changes for cluster: %s", clusterExtID)
+
+	// Get old and new category values
+	oldCategoriesRaw, newCategoriesRaw := d.GetChange("categories")
+
+	// Use shared function to handle category updates
+	diags := UpdateClusterCategories(ctx, d, meta, clusterExtID, oldCategoriesRaw, newCategoriesRaw)
+	if diags.HasError() {
+		return diags
+	}
+	return ResourceNutanixClusterV2Read(ctx, d, meta)
 }
 
 func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta interface{},
@@ -1943,106 +2007,111 @@ func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta int
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the node to be available
+	// Wait for the node to be removed
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		resourceUUID, _ := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-		rUUID := resourceUUID.Data.GetValue().(import2.Task)
-		aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
-		log.Printf("Error Remove Node Task Details : %s", string(aJSON))
-		return diag.Errorf("error waiting for  node (%s) to Remove: %s", utils.StringValue(taskUUID), errWaitTask)
+		taskResp, _ := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		taskDetails := taskResp.Data.GetValue().(import2.Task)
+		aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+		log.Printf("[ERROR] Remove Node Task Details: %s", string(aJSON))
+		return diag.Errorf("error waiting for node (%s) to remove: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
 	// Get UUID from TASK API
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching  node UUID : %v", err)
+		return diag.Errorf("error while fetching node removal task: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
-
-	bJSON, _ := json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("cluster update: remove node task details : %s", string(bJSON))
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Remove Node Task Details: %s", string(aJSON))
 	return nil
 }
 
 func expandClusterWithNewNode(ctx context.Context, d *schema.ResourceData, meta interface{}, conn clusters.Client,
 	unconfigureNodeDetails config.UnconfigureNodeDetails,
 	nodeNetworkingDetails config.NodeNetworkingDetails,
-	shouldSkipHostNetworking, shouldSkipAddNode, shouldSkipPreExpandChecks bool) diag.Diagnostics {
+	flags NodeFlags) diag.Diagnostics {
 	unConfNode := unconfigureNodeDetails.NodeList[0]
 	nodeNetInfo := nodeNetworkingDetails
 
+	upLinks := config.NewUplinks()
+	activeUplinkField := config.NewUplinksField()
+	standbyUplinkField := config.NewUplinksField()
+	activeUplinkField.Name = nodeNetInfo.Uplinks[0].UplinkList[0].Name
+	activeUplinkField.Mac = nodeNetInfo.Uplinks[0].UplinkList[0].Mac
+	activeUplinkField.Value = nodeNetInfo.Uplinks[0].UplinkList[0].Name
+	standbyUplinkField.Name = nodeNetInfo.Uplinks[0].UplinkList[1].Name
+	standbyUplinkField.Mac = nodeNetInfo.Uplinks[0].UplinkList[1].Mac
+	standbyUplinkField.Value = nodeNetInfo.Uplinks[0].UplinkList[1].Name
+
+	upLinks.Active = append(upLinks.Active, *activeUplinkField)
+	upLinks.Standby = append(upLinks.Standby, *standbyUplinkField)
+
 	networks := make([]config.UplinkNetworkItem, 0)
-	networks = append(networks, config.UplinkNetworkItem{
-		Name:     nodeNetInfo.NetworkInfo.Hci[0].Name,
-		Networks: nodeNetInfo.NetworkInfo.Hci[0].Networks,
-		Uplinks: &config.Uplinks{
-			Active: []config.UplinksField{
-				{
-					Name:  nodeNetInfo.Uplinks[0].UplinkList[0].Name,
-					Mac:   nodeNetInfo.Uplinks[0].UplinkList[0].Mac,
-					Value: nodeNetInfo.Uplinks[0].UplinkList[0].Name,
-				},
-			},
-			Standby: []config.UplinksField{
-				{
-					Name:  nodeNetInfo.Uplinks[0].UplinkList[1].Name,
-					Mac:   nodeNetInfo.Uplinks[0].UplinkList[1].Mac,
-					Value: nodeNetInfo.Uplinks[0].UplinkList[1].Name,
-				},
-			},
-		},
-	})
+	uplinksNetworkItem := config.NewUplinkNetworkItem()
+	uplinksNetworkItem.Name = nodeNetInfo.NetworkInfo.Hci[0].Name
+	uplinksNetworkItem.Networks = nodeNetInfo.NetworkInfo.Hci[0].Networks
+	uplinksNetworkItem.Uplinks = upLinks
 
-	nodeItem := config.NodeItem{
-		NodeUuid:                unConfNode.NodeUuid,
-		NodePosition:            unConfNode.NodePosition,
-		Model:                   unConfNode.RackableUnitModel,
-		BlockId:                 unConfNode.RackableUnitSerial,
-		HypervisorType:          unConfNode.HypervisorType,
-		HypervisorVersion:       unConfNode.HypervisorVersion,
-		NosVersion:              unConfNode.NosVersion,
-		CurrentNetworkInterface: nodeNetInfo.Uplinks[0].UplinkList[0].Name,
-		HypervisorIp:            unConfNode.HypervisorIp,
-		CvmIp:                   unConfNode.CvmIp,
-		IpmiIp:                  unConfNode.IpmiIp,
-		IsRoboMixedHypervisor:   unConfNode.Attributes.IsRoboMixedHypervisor,
-		Networks:                networks,
+	networks = append(networks, *uplinksNetworkItem)
+
+	nodeItem := config.NewNodeItem()
+	nodeItem.NodeUuid = unConfNode.NodeUuid
+	nodeItem.NodePosition = unConfNode.NodePosition
+	nodeItem.Model = unConfNode.RackableUnitModel
+	nodeItem.BlockId = unConfNode.RackableUnitSerial
+	nodeItem.HypervisorType = unConfNode.HypervisorType
+	nodeItem.HypervisorVersion = unConfNode.HypervisorVersion
+	nodeItem.NosVersion = unConfNode.NosVersion
+	nodeItem.CurrentNetworkInterface = nodeNetInfo.Uplinks[0].UplinkList[0].Name
+	nodeItem.HypervisorIp = unConfNode.HypervisorIp
+	nodeItem.CvmIp = unConfNode.CvmIp
+	nodeItem.IpmiIp = unConfNode.IpmiIp
+	nodeItem.IsRoboMixedHypervisor = unConfNode.Attributes.IsRoboMixedHypervisor
+	nodeItem.Networks = networks
+	nodeItem.IsLightCompute = utils.BoolPtr(flags.IsLightCompute)
+	if flags.HypervisorHostname != "" {
+		nodeItem.HypervisorHostname = utils.StringPtr(flags.HypervisorHostname)
 	}
 
-	nodeList := []config.NodeItem{
-		nodeItem,
-	}
+	nodeList := make([]config.NodeItem, 0)
+	nodeList = append(nodeList, *nodeItem)
 
-	nodeParam := config.NodeParam{
-		ShouldSkipHostNetworking: utils.BoolPtr(shouldSkipHostNetworking),
-		NodeList:                 nodeList,
-		HypervisorIsos: []config.HypervisorIsoMap{
-			{
-				Type: unConfNode.HypervisorType,
-			},
-		},
+	nodeParam := config.NewNodeParam()
+	if flags.ShouldSkipHostNetworking != nil {
+		nodeParam.ShouldSkipHostNetworking = flags.ShouldSkipHostNetworking
 	}
+	nodeParam.NodeList = nodeList
 
-	body := config.ExpandClusterParams{
-		ShouldSkipAddNode:         utils.BoolPtr(shouldSkipAddNode),
-		ShouldSkipPreExpandChecks: utils.BoolPtr(shouldSkipPreExpandChecks),
-		NodeParams:                &nodeParam,
-		ConfigParams: &config.ConfigParams{
-			TargetHypervisor: utils.StringPtr(unConfNode.HypervisorType.GetName()),
-		},
-	}
+	hypervisorIsoMap := config.NewHypervisorIsoMap()
+	hypervisorIsoMap.Type = unConfNode.HypervisorType
+
+	nodeParam.HypervisorIsos = append(nodeParam.HypervisorIsos, *hypervisorIsoMap)
+
+	configParams := config.NewConfigParams()
+	configParams.TargetHypervisor = utils.StringPtr(unConfNode.HypervisorType.GetName())
+	configParams.ShouldSkipDiscovery = utils.BoolPtr(flags.ShouldSkipDiscovery)
+	configParams.ShouldSkipImaging = utils.BoolPtr(flags.ShouldSkipImaging)
+	configParams.ShouldValidateRackAwareness = utils.BoolPtr(flags.ShouldValidateRackAwareness)
+	configParams.IsNosCompatible = utils.BoolPtr(flags.IsNosCompatible)
+	configParams.IsComputeOnly = utils.BoolPtr(flags.IsComputeOnly)
+	configParams.IsNeverScheduleable = utils.BoolPtr(flags.IsNeverScheduleable)
+
+	body := config.NewExpandClusterParams()
+	body.ShouldSkipAddNode = utils.BoolPtr(flags.ShouldSkipAddNode)
+	body.ShouldSkipPreExpandChecks = utils.BoolPtr(flags.ShouldSkipPreExpandChecks)
+	body.NodeParams = nodeParam
+	body.ConfigParams = configParams
 
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] Add Node Request Body: %s", string(aJSON))
 
-	resp, err := conn.ClusterEntityAPI.ExpandCluster(utils.StringPtr(d.Id()), &body)
+	resp, err := conn.ClusterEntityAPI.ExpandCluster(utils.StringPtr(d.Id()), body)
 	if err != nil {
 		return diag.Errorf("error while adding node : %v", err)
 	}
@@ -2051,27 +2120,24 @@ func expandClusterWithNewNode(ctx context.Context, d *schema.ResourceData, meta 
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the  node to be available
+	// Wait for the node to be added
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for  node (%s) to add: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for node (%s) to add: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching  node UUID : %v", err)
+		return diag.Errorf("error while fetching add node task: %v", err)
 	}
-
-	aJSON, _ = json.Marshal(resourceUUID)
-	log.Printf("[DEBUG] Add Node Response: %s", string(aJSON))
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Add Node Task Details: %s", string(aJSON))
 	return nil
 }
 
@@ -2118,45 +2184,41 @@ func fetchNetworkDetailsForNodes(ctx context.Context, d *schema.ResourceData, me
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the  node to be available
+	// Wait for the fetch node networking details operation to complete
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "QUEUED"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for  node (%s) to add: %s", utils.StringValue(taskUUID), errWaitTask), nil
+		return diag.Errorf("error waiting for fetch node networking details (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask), nil
 	}
-
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching task : %v", err), nil
+		return diag.Errorf("error while fetching node networking details task: %v", err), nil
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Fetch Node Networking Details Task Details: %s", string(aJSON))
 
-	bJSON, _ := json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Fetch Network Info Task Details: %s", string(bJSON))
+	uuid := strings.Split(utils.StringValue(taskDetails.ExtId), "=:")[1]
 
-	uuid := strings.Split(utils.StringValue(rUUID.ExtId), "=:")[1]
-
-	const networkingDetails = 3
+	const networkingDetails = config.TASKRESPONSETYPE_NETWORKING_DETAILS
 	taskResponseType := config.TaskResponseType(networkingDetails)
 	networkDetailsTaskResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr), nil
 	}
 
-	taskResp := networkDetailsTaskResp.Data.GetValue().(config.TaskResponse)
+	unconfiguredNodesTaskResp := networkDetailsTaskResp.Data.GetValue().(config.TaskResponse)
 
-	if *taskResp.TaskResponseType != config.TaskResponseType(networkingDetails) {
+	if *unconfiguredNodesTaskResp.TaskResponseType != config.TaskResponseType(networkingDetails) {
 		return diag.Errorf("error while fetching Task Response for Network Detail Nodes : %v", "task response type mismatch"), nil
 	}
 
-	nodeNetworkDetails := taskResp.Response.GetValue().(config.NodeNetworkingDetails)
+	nodeNetworkDetails := unconfiguredNodesTaskResp.Response.GetValue().(config.NodeNetworkingDetails)
 
 	aJSON, _ = json.MarshalIndent(networkDetailsTaskResp, "", " ")
 	log.Printf("[DEBUG] fetching Network Details for Node to be added task details: %s", string(aJSON))
@@ -2192,43 +2254,40 @@ func discoverUnconfiguredNode(ctx context.Context, d *schema.ResourceData, meta 
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Nodes Trap to be available
+	// Wait for the discover unconfigured nodes operation to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Unconfigured Nodes (%s) to fetch: %s", utils.StringValue(taskUUID), errWaitTask), nil
+		return diag.Errorf("error waiting for unconfigured nodes (%s) to discover: %s", utils.StringValue(taskUUID), errWaitTask), nil
 	}
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	// Get UUID from TASK API
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Unconfigured Nodes UUID : %v", err), nil
+		return diag.Errorf("error while fetching discover unconfigured nodes task: %v", err), nil
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Discover Unconfigured Nodes Task Details: %s", string(aJSON))
+	uuid := strings.Split(utils.StringValue(taskDetails.ExtId), "=:")[1]
 
-	jsonBody, _ := json.MarshalIndent(resourceUUID, "", "  ")
-	log.Printf("[DEBUG] fetching Unconfigured Nodes resourceUUID : %s", string(jsonBody))
-
-	uuid := strings.Split(utils.StringValue(rUUID.ExtId), "=:")[1]
-
-	const unconfiguredNodes = 2
+	const unconfiguredNodes = config.TASKRESPONSETYPE_UNCONFIGURED_NODES
 	taskResponseType := config.TaskResponseType(unconfiguredNodes)
 	unconfiguredNodesResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr), nil
 	}
 
-	taskResp := unconfiguredNodesResp.Data.GetValue().(config.TaskResponse)
+	unconfiguredNodesTaskResp := unconfiguredNodesResp.Data.GetValue().(config.TaskResponse)
 
-	if *taskResp.TaskResponseType != config.TaskResponseType(unconfiguredNodes) {
+	if *unconfiguredNodesTaskResp.TaskResponseType != config.TaskResponseType(unconfiguredNodes) {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", "task response type mismatch"), nil
 	}
 
-	unconfiguredNodeDetails := taskResp.Response.GetValue().(config.UnconfigureNodeDetails)
+	unconfiguredNodeDetails := unconfiguredNodesTaskResp.Response.GetValue().(config.UnconfigureNodeDetails)
 
 	aJSON, _ = json.MarshalIndent(unconfiguredNodeDetails, "", " ")
 	log.Printf("[DEBUG] cluster expand: unconfigured node details: %s", string(aJSON))
@@ -2268,7 +2327,7 @@ func clusterRead(d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
+	if err := d.Set("links", common.FlattenLinks(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("name", getResp.Name); err != nil {
@@ -2286,7 +2345,19 @@ func clusterRead(d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	if err := d.Set("upgrade_status", flattenUpgradeStatus(getResp.UpgradeStatus)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("categories", getResp.Categories); err != nil {
+	// Convert categories from API response to Terraform schema format (schema.Set)
+	// The API returns []string, which needs to be converted to schema.Set for TypeSet schema
+	categoriesList := make([]interface{}, 0)
+	if len(getResp.Categories) > 0 {
+		for _, category := range getResp.Categories {
+			if category != "" {
+				categoriesList = append(categoriesList, category)
+			}
+		}
+	}
+	// Create a schema.Set from the list using the same hash function as the schema
+	categoriesSet := schema.NewSet(common.HashStringItem, categoriesList)
+	if err := d.Set("categories", categoriesSet); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("vm_count", getResp.VmCount); err != nil {

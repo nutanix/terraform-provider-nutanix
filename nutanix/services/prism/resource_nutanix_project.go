@@ -55,9 +55,13 @@ func ResourceNutanixProject() *schema.Resource {
 				Optional: true,
 			},
 			"resource_domain": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:       schema.TypeList,
+				Optional:   true,
+				MaxItems:   1,
+				Deprecated: "Deprecated since v2.4.0. Prism Central no longer supports `resource_domain` for projects; remove this block from your configuration/scripts.",
+				// `resource_domain` is no longer supported by Prism Central, but we keep it in the schema to avoid
+				// breaking existing customer configurations. We also suppress diffs so it does not trigger updates.
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool { return true },
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"resources": {
@@ -762,6 +766,7 @@ func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, m
 
 	var uuid, taskUUID string
 	// if use project internal flag is set ,  we will use projects_internal API
+	//nolint:staticcheck
 	if _, ok := d.GetOkExists("use_project_internal"); ok {
 		req := &v3.ProjectInternalIntentInput{
 			Spec:       expandProjectInternalSpec(d, meta),
@@ -904,7 +909,7 @@ func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).API
-
+	//nolint:staticcheck
 	if _, ok := d.GetOkExists("use_project_internal"); ok {
 		project, err := conn.V3.GetProjectInternal(ctx, d.Id())
 		if err != nil {
@@ -929,9 +934,7 @@ func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, met
 		if err := d.Set("is_default", project.Status.ProjectStatus.Resources.IsDefault); err != nil {
 			return diag.Errorf("error setting `is_default` for Project(%s): %s", d.Id(), err)
 		}
-		if err := d.Set("resource_domain", flattenResourceDomain(project.Spec.ProjectDetail.Resources.ResourceDomain)); err != nil {
-			return diag.Errorf("error setting `resource_domain` for Project(%s): %s", d.Id(), err)
-		}
+		// Deprecated since v2.4.0. Prism Central no longer supports `resource_domain` for projects; remove this block from your configuration/scripts.
 		if err := d.Set("account_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.AccountReferenceList)); err != nil {
 			return diag.Errorf("error setting `account_reference_list` for Project(%s): %s", d.Id(), err)
 		}
@@ -1009,9 +1012,6 @@ func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, met
 		if err := d.Set("is_default", project.Status.Resources.IsDefault); err != nil {
 			return diag.Errorf("error setting `is_default` for Project(%s): %s", d.Id(), err)
 		}
-		if err := d.Set("resource_domain", flattenResourceDomain(project.Spec.Resources.ResourceDomain)); err != nil {
-			return diag.Errorf("error setting `resource_domain` for Project(%s): %s", d.Id(), err)
-		}
 		if err := d.Set("account_reference_list", flattenReferenceList(project.Spec.Resources.AccountReferenceList)); err != nil {
 			return diag.Errorf("error setting `account_reference_list` for Project(%s): %s", d.Id(), err)
 		}
@@ -1057,7 +1057,7 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.Client).API
 
 	var uuid, taskUUID string
-
+	//nolint:staticcheck
 	if _, ok := d.GetOkExists("use_project_internal"); ok {
 		request := &v3.ProjectInternalIntentInput{}
 		spec := &v3.ProjectInternalSpec{}
@@ -1083,12 +1083,6 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 			if response.Spec.ProjectDetail != nil || response.Spec.AccessControlPolicyList != nil {
 				projDetails = response.Spec.ProjectDetail
 			}
-
-			if len(response.Spec.ProjectDetail.Resources.ResourceDomain.Resources) > 0 {
-				projDetails.Resources.ResourceDomain = response.Spec.ProjectDetail.Resources.ResourceDomain
-			} else {
-				projDetails.Resources.ResourceDomain = nil
-			}
 		}
 		var clusterUUID string
 		if clusterID, ok := d.GetOk("cluster_uuid"); ok {
@@ -1100,9 +1094,6 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 		if d.HasChange("description") {
 			projDetails.Description = utils.StringPtr(d.Get("description").(string))
-		}
-		if d.HasChange("resource_domain") {
-			projDetails.Resources.ResourceDomain = expandProjectInternalResourceDomain(d.Get("resource_domain"))
 		}
 		if d.HasChange("account_reference_list") {
 			projDetails.Resources.AccountReferenceList = expandReferenceList(d, "account_reference_list")
@@ -1187,9 +1178,6 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 		if d.HasChange("description") {
 			project.Spec.Descripion = d.Get("description").(string)
-		}
-		if d.HasChange("resource_domain") {
-			project.Spec.Resources.ResourceDomain = expandResourceDomain(d)
 		}
 		if d.HasChange("account_reference_list") {
 			project.Spec.Resources.AccountReferenceList = expandReferenceList(d, "account_reference_list")
@@ -1282,7 +1270,6 @@ func expandProjectSpec(d *schema.ResourceData) *v3.ProjectSpec {
 		Name:       d.Get("name").(string),
 		Descripion: d.Get("description").(string),
 		Resources: &v3.ProjectResources{
-			ResourceDomain:                 expandResourceDomain(d),
 			AccountReferenceList:           expandReferenceList(d, "account_reference_list"),
 			EnvironmentReferenceList:       expandReferenceList(d, "environment_reference_list"),
 			DefaultSubnetReference:         expandReferenceList(d, "default_subnet_reference")[0],
@@ -1373,7 +1360,6 @@ func expandProjectDetails(d *schema.ResourceData) *v3.ProjectDetails {
 		Name:        utils.StringPtr(d.Get("name").(string)),
 		Description: utils.StringPtr(d.Get("description").(string)),
 		Resources: &v3.ProjectInternalResources{
-			ResourceDomain:                 expandResourceDomain(d),
 			AccountReferenceList:           expandReferenceList(d, "account_reference_list"),
 			EnvironmentReferenceList:       expandReferenceList(d, "environment_reference_list"),
 			DefaultSubnetReference:         expandReferenceList(d, "default_subnet_reference")[0],
@@ -1766,6 +1752,7 @@ func expandCreateAcp(pr []interface{}, d *schema.ResourceData, projectUUID strin
 
 				// check for project collaboration. default is set to true
 				pcCollab := true
+				//nolint:staticcheck
 				if pc, ok1 := d.GetOkExists("enable_collab"); ok1 {
 					pcCollab = pc.(bool)
 				}
@@ -1867,6 +1854,7 @@ func UpdateExpandAcpRM(pr []interface{}, res *v3.ProjectInternalIntentResponse, 
 
 				// check for project collaboration. default is set to true
 				pcCollab := true
+				//nolint:staticcheck
 				if pc, ok1 := d.GetOkExists("enable_collab"); ok1 {
 					pcCollab = pc.(bool)
 				}
