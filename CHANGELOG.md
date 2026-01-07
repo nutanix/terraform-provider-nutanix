@@ -1,3 +1,31 @@
+## 2.4.0 (January 8, 2026)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.4...v2.4.0)
+
+**New Features:**
+- **Key Management Server (Security)**: Manage and configure external Key Management Servers for securing workloads.
+- **Security Technical Implementation Guide controls details (Security)**: View compliance with technical security controls.
+- **SSL Certification (Cluster Management)**: Add and manage SSL certificates for secure cluster communications.
+- **Cluster Profile (Cluster Management)**: Define and manage cluster configuration profiles for consistent deployments.
+- **Associate/Disassociate Cluster from Cluster Profile (Cluster Management)**: Link or unlink clusters to profiles for streamlined management.
+- **Associate/Disassociate Categories to Cluster (Cluster Management)**: Assign or remove custom categories to clusters.
+- **Storage Policies (Data Policies)**: Create and manage storage policy rules to optimize resource allocation.
+
+**Enhancements:**
+- Add Support for Package-Specific Acceptance Tests via /ok-to-test -p Command [#1014](https://github.com/nutanix/terraform-provider-nutanix/issues/1014)
+- Centralize task entity type and completion detail constants for reliable UUID extraction [#1029](https://github.com/nutanix/terraform-provider-nutanix/issues/1029)
+
+**Fixed Bugs:**
+- Unable to list VPC using data "nutanix_vpcs_v2" "list_vpcs" [#1000](https://github.com/nutanix/terraform-provider-nutanix/issues/1000)
+- virtual_machine_v2: VM creation fails with multiple NICs ("invalid input arguments") [#994](https://github.com/nutanix/terraform-provider-nutanix/issues/994)
+- V3: Project: Revisit the Project Module resources [#962](https://github.com/nutanix/terraform-provider-nutanix/issues/962)
+    - Projects: ACP: Order changes in API response lead to data inconsistency in state file. [#1042](https://github.com/nutanix/terraform-provider-nutanix/issues/1042)
+    - Projects: ACP: Removing a ACP causing index shifting issues. [#1044](https://github.com/nutanix/terraform-provider-nutanix/issues/1044)
+    - Project: ACP: Adding a new user or new user group to existing ACP is failed. [#1043](https://github.com/nutanix/terraform-provider-nutanix/issues/1043)
+- Bug Report: resource "nutanix_user_groups_v2" [#947](https://github.com/nutanix/terraform-provider-nutanix/issues/947)
+
+**Breaking Chnages:**
+- From PC version 7.5 onwards, the resource domain is not supported for Projects resources. As a result, Terraform support for this functionality has been removed starting with the 2.4.0 release. [#1049](https://github.com/nutanix/terraform-provider-nutanix/issues/1049)
+
 ## 2.3.4 (November 14, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.3...v2.3.4)
 
