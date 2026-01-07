@@ -909,6 +909,8 @@ func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).API
+	diags := diag.Diagnostics{}
+
 	//nolint:staticcheck
 	if _, ok := d.GetOkExists("use_project_internal"); ok {
 		project, err := conn.V3.GetProjectInternal(ctx, d.Id())
@@ -985,8 +987,30 @@ func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, met
 		if err := d.Set("default_environment_reference", flattenReferenceValuesList(project.Spec.ProjectDetail.Resources.DefaultEnvironmentReference)); err != nil {
 			return diag.Errorf("error setting `default_environment_reference` for Project(%s): %s", d.Id(), err)
 		}
-		if err := d.Set("acp", orderACPsLikeState(d, flattenProjectAcp(project.Status.AccessControlPolicyListStatus))); err != nil {
+		remoteACPFlat := flattenProjectAcp(project.Status.AccessControlPolicyListStatus)
+		if err := d.Set("acp", orderACPsLikeState(d, remoteACPFlat)); err != nil {
 			return diag.Errorf("error setting `acp` for Project(%s): %s", d.Id(), err)
+		}
+
+		// During plan, Terraform runs a refresh (Read). If the user explicitly set `acp`
+		// in config and removed an ACP from the middle, subsequent ACPs shift indices and
+		// the plan can look noisy. We detect this by comparing the ACP role order from the
+		// API with the ACP role order in raw config, then emit a warning so it shows up in
+		// plan output.
+		if newConfigRoles, set := rawConfigACPRoleUUIDs(d); set {
+			oldRoles := make([]string, 0, len(remoteACPFlat))
+			for _, acp := range remoteACPFlat {
+				if role := getACPRoleUUID(acp); role != "" {
+					oldRoles = append(oldRoles, role)
+				}
+			}
+			if acpRemovalFromMiddleRoles(oldRoles, newConfigRoles) {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  acpIndexWarningSummary,
+					Detail:   acpIndexWarningDetail,
+				})
+			}
 		}
 	} else {
 		project, err := conn.V3.GetProject(d.Id())
@@ -1050,11 +1074,12 @@ func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, met
 			return diag.Errorf("error setting `api_version` for Project(%s): %s", d.Id(), err)
 		}
 	}
-	return nil
+	return diags
 }
 
 func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).API
+	diags := diag.Diagnostics{}
 
 	var uuid, taskUUID string
 	//nolint:staticcheck
@@ -1140,6 +1165,22 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if d.HasChange("acp") {
+			// Emit a targeted warning when ACPs are removed from the middle of the list,
+			// which causes positional index shifting and noisy diffs.
+			if oldRaw, newRaw := d.GetChange("acp"); oldRaw != nil && newRaw != nil {
+				if oldList, ok1 := oldRaw.([]interface{}); ok1 {
+					if newList, ok2 := newRaw.([]interface{}); ok2 {
+						if acpRemovalFromMiddle(oldList, newList) {
+							diags = append(diags, diag.Diagnostic{
+								Severity: diag.Warning,
+								Summary:  acpIndexWarningSummary,
+								Detail:   acpIndexWarningDetail,
+							})
+						}
+					}
+				}
+			}
+
 			acp := d.Get("acp").([]interface{})
 			log.Printf("[DEBUG] acp has changed")
 			aJSON, _ := json.MarshalIndent(acp, "", "  ")
@@ -1236,7 +1277,7 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("error waiting for project(%s) to update: %s", uuid, errWaitTask)
 	}
 
-	return resourceNutanixProjectRead(ctx, d, meta)
+	return append(diags, resourceNutanixProjectRead(ctx, d, meta)...)
 }
 
 func resourceNutanixProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

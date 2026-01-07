@@ -10,10 +10,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+const (
+	acpIndexWarningSummary = "ACP blocks are index-based"
+	acpIndexWarningDetail  = "⚠️ Warning: ACP blocks are index-based. Removing an ACP from the middle of the list causes Terraform to shift subsequent ACPs. While the backend update succeeds without impact, the plan may show unexpected updates due to index reordering."
 )
 
 const (
@@ -645,6 +651,122 @@ func getACPRoleUUID(acpItem interface{}) string {
 		}
 	}
 	return ""
+}
+
+// acpRemovalFromMiddle returns true when the new ACP list looks like the old ACP list
+// with one or more elements removed from the middle (i.e. subsequent elements shift left).
+//
+// This is the scenario that typically produces noisy plans because ACP is a schema.TypeList
+// and Terraform diffs it positionally.
+func acpRemovalFromMiddle(oldACPList, newACPList []interface{}) bool {
+	// Build role UUID order lists, skipping invalid entries.
+	oldRoles := make([]string, 0, len(oldACPList))
+	for _, it := range oldACPList {
+		if role := getACPRoleUUID(it); role != "" {
+			oldRoles = append(oldRoles, role)
+		}
+	}
+	newRoles := make([]string, 0, len(newACPList))
+	for _, it := range newACPList {
+		if role := getACPRoleUUID(it); role != "" {
+			newRoles = append(newRoles, role)
+		}
+	}
+
+	return acpRemovalFromMiddleRoles(oldRoles, newRoles)
+}
+
+func acpRemovalFromMiddleRoles(oldRoles, newRoles []string) bool {
+	// Only consider removal cases.
+	if len(newRoles) >= len(oldRoles) {
+		return false
+	}
+	// If new list is empty, there's no "shift of subsequent elements" to warn about.
+	if len(newRoles) == 0 {
+		return false
+	}
+
+	// Two-pointer subsequence check:
+	// If we ever have to "skip" oldRoles to match the next newRole, then something
+	// was removed from the middle (not only trimmed from the end).
+	removedFromMiddle := false
+	i := 0 // oldRoles index
+	for _, nr := range newRoles {
+		found := -1
+		for k := i; k < len(oldRoles); k++ {
+			if oldRoles[k] == nr {
+				found = k
+				break
+			}
+		}
+		if found == -1 {
+			// Not a pure removal/subsequence scenario (could be reorder or change).
+			return false
+		}
+		if found > i {
+			removedFromMiddle = true
+		}
+		i = found + 1
+	}
+
+	// If we only removed items from the tail, removedFromMiddle stays false.
+	return removedFromMiddle
+}
+
+// rawConfigACPRoleUUIDs extracts ACP role UUIDs from raw Terraform config. Returns (roles, true)
+// if the user explicitly set `acp` (even if set to an empty list), otherwise (nil, false).
+func rawConfigACPRoleUUIDs(d *schema.ResourceData) ([]string, bool) {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() {
+		return nil, false
+	}
+
+	acpAttr := rawConfig.GetAttr("acp")
+	if acpAttr.IsNull() {
+		return nil, false
+	}
+
+	roles := make([]string, 0)
+	if !acpAttr.CanIterateElements() {
+		return roles, true
+	}
+
+	for it := acpAttr.ElementIterator(); it.Next(); {
+		_, acpVal := it.Element()
+		if acpVal.IsNull() {
+			continue
+		}
+
+		roleRefAttr := acpVal.GetAttr("role_reference")
+		if roleRefAttr.IsNull() || !roleRefAttr.CanIterateElements() {
+			continue
+		}
+
+		// role_reference is a list with MaxItems=1
+		var roleUUID string
+		first := true
+		for rrIt := roleRefAttr.ElementIterator(); rrIt.Next(); {
+			if !first {
+				break
+			}
+			first = false
+			_, rrVal := rrIt.Element()
+			if rrVal.IsNull() {
+				break
+			}
+			uuidAttr := rrVal.GetAttr("uuid")
+			if uuidAttr.IsNull() || !uuidAttr.IsKnown() || uuidAttr.Type() != cty.String {
+				break
+			}
+			roleUUID = uuidAttr.AsString()
+		}
+
+		if roleUUID != "" {
+			roles = append(roles, roleUUID)
+		}
+	}
+
+	return roles, true
 }
 
 // acpReferenceHash generates a hash for user_reference_list and user_group_reference_list items
