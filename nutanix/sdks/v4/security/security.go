@@ -6,6 +6,7 @@ import (
 	"github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/api"
 	prism "github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/sdkconfig"
 )
 
 type Client struct {
@@ -20,16 +21,17 @@ func NewSecurityClient(credentials client.Credentials) (*Client, error) {
 	if credentials.Username != "" && credentials.Password != "" && credentials.Endpoint != "" {
 		pcClient := prism.NewApiClient()
 
-		port, err := strconv.Atoi(credentials.Port)
-		if err != nil {
-			pcClient.Port = 9440
-		}
 		pcClient.Host = credentials.Endpoint
 		pcClient.Password = credentials.Password
 		pcClient.Username = credentials.Username
-		pcClient.Port = port
+		pcClient.Port = sdkconfig.DefaultPort
+		if credentials.Port != "" {
+			if p, err := strconv.Atoi(credentials.Port); err == nil {
+				pcClient.Port = p
+			}
+		}
 		pcClient.VerifySSL = false
-
+		pcClient.AllowVersionNegotiation = sdkconfig.AllowVersionNegotiation
 		baseClient = pcClient
 	}
 

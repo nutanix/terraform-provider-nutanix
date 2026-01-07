@@ -20,6 +20,22 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+func isUnauthorizedErr(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	// Different generated clients format auth failures differently; be permissive.
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "401") ||
+		strings.Contains(msg, "unauthorized") ||
+		strings.Contains(msg, "invalid auth credentials") ||
+		strings.Contains(msg, "invalid credentials") ||
+		// prism-go-client tries to follow OIDC redirects but incorrectly builds a relative URL,
+		// which results in: `unsupported protocol scheme ""`
+		strings.Contains(msg, "unsupported protocol scheme")
+}
+
 func ResourceNutanixPasswordManagerV2() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceNutanixPasswordManagerV2Create,
@@ -73,69 +89,65 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 	taskconn := meta.(*conns.Client).PrismAPI
 
 	_, taskErr := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-	if taskErr != nil {
-		log.Printf("[DEBUG] Checking if the error is due to password change for the user configured in the provider configuration")
-		// if the error is 401, it means the password has been changed for the
-		// user configured in the provider configuration, so we need to set the new password
-		// and retry to fetch the task
-		// Convert the struct to JSON bytes
-		rawJSON, _ := json.Marshal(taskErr)
+	if taskErr != nil && isUnauthorizedErr(taskErr) {
+		log.Printf("[DEBUG] prism task fetch returned unauthorized after password change; recreating prism client with new password and retrying")
 
-		var taskErrMap map[string]interface{}
+		aJSON, _ = json.MarshalIndent(taskErr, "", "  ")
+		log.Printf("[DEBUG]  task error object: %s", string(aJSON))
 
-		if unmarshalErr := json.Unmarshal(rawJSON, &taskErrMap); unmarshalErr == nil {
-			log.Printf("[DEBUG]  Error message: %s", taskErrMap["Message"])
-			if status, ok := taskErrMap["Status"].(string); ok && strings.Contains(status, "401") {
-				log.Printf("[DEBUG]  Status code is %s, indicating a 401 Unauthorized error", taskErrMap["Status"])
-				// password changed for the user configured in the provider configuration
-				// set the task conn client password to the new password and retry to fetch the task
+		newCredentials := client.Credentials{
+			Username: taskconn.TaskRefAPI.ApiClient.Username,
+			Password: utils.StringValue(body.NewPassword),
+			Endpoint: taskconn.TaskRefAPI.ApiClient.Host,
+			Port:     strconv.Itoa(taskconn.TaskRefAPI.ApiClient.Port),
+			// ApiClient.VerifySSL=false means "insecure".
+			Insecure: !taskconn.TaskRefAPI.ApiClient.VerifySSL,
+		}
 
-				newCredentials := client.Credentials{
-					Username: taskconn.TaskRefAPI.ApiClient.Username,
-					Password: utils.StringValue(body.NewPassword),
-					Endpoint: taskconn.TaskRefAPI.ApiClient.Host,
-					Port:     strconv.Itoa(taskconn.TaskRefAPI.ApiClient.Port),
-				}
+		newPrismClient, prismErr := prism.NewPrismClient(newCredentials)
+		if prismErr != nil {
+			return diag.Errorf("error while creating new prism client: %v", prismErr)
+		}
 
-				newPrismClient, prismErr := prism.NewPrismClient(newCredentials)
-				if prismErr != nil {
-					return diag.Errorf("error while creating new prism client: %v", prismErr)
-				}
+		newTaskconn, err := prism.NewPrismClient(newCredentials)
+		if err != nil {
+			return diag.Errorf("error while creating new prism client: %v", err)
+		}
+		// retry to fetch the task
+		log.Printf("[DEBUG]  creating new taskconn with new password and retrying to fetch the task: %s", utils.StringValue(taskUUID))
 
-				// retry to fetch the task
-				_, taskErr = newPrismClient.TaskRefAPI.GetTaskById(taskUUID, nil)
-				if taskErr != nil {
-					return diag.Errorf("error while fetching task by ID %s: %v", utils.StringValue(taskUUID), taskErr)
-				}
-
-				// Wait for the password change to complete
-				stateConf := &resource.StateChangeConf{
-					Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-					Target:  []string{"SUCCEEDED"},
-					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, newPrismClient, utils.StringValue(taskUUID)),
-					Timeout: d.Timeout(schema.TimeoutCreate),
-				}
-
-				if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-					return diag.Errorf("error waiting for password change (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
-				}
-
-				// Get task details for logging
-				taskResp, err := newPrismClient.TaskRefAPI.GetTaskById(taskUUID, nil)
-				if err != nil {
-					return diag.Errorf("error while fetching password change task: %v", err)
-				}
-				taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
-				aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
-				log.Printf("[DEBUG] Create Password Manager Task Details: %s", string(aJSON))
-
-				// This is an action resource that does not maintain state.
-				// The resource ID is set to the task ExtId for traceability.
-				d.SetId(utils.StringValue(taskDetails.ExtId))
-				return resourceNutanixPasswordManagerV2Read(ctx, d, meta)
-			}
+		_, taskErr = newTaskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		if taskErr != nil {
 			return diag.Errorf("error while fetching task by ID %s: %v", utils.StringValue(taskUUID), taskErr)
 		}
+		// Wait for the password change to complete
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, newPrismClient, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutCreate),
+		}
+
+		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+			return diag.Errorf("error waiting for password change (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
+		}
+
+		// Get task details for logging
+		taskResp, err := newPrismClient.TaskRefAPI.GetTaskById(taskUUID, nil)
+		if err != nil {
+			return diag.Errorf("error while fetching password change task: %v", err)
+		}
+		taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+		aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+		log.Printf("[DEBUG] Create Password Manager Task Details: %s", string(aJSON))
+
+		// This is an action resource that does not maintain state.
+		// The resource ID is set to the task ExtId for traceability.
+		d.SetId(utils.StringValue(taskDetails.ExtId))
+		return resourceNutanixPasswordManagerV2Read(ctx, d, meta)
+	}
+	if taskErr != nil {
+		return diag.Errorf("error while fetching task by ID %s: %v", utils.StringValue(taskUUID), taskErr)
 	}
 
 	// The password change is not for the user configured in the provider configuration
