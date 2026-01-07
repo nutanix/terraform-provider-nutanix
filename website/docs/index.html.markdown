@@ -13,17 +13,36 @@ The provider is used to interact with the many resources and data sources suppor
 Use the navigation on the left to read about the available resources and data sources this provider can use.
 
 
-## Introducing Nutanix Terraform Provider Version v2.3.4
+## Introducing Nutanix Terraform Provider Version v2.4.0
 
-We're excited to announce the release of Nutanix Terraform Provider Version 2.3.4!
+We're excited to announce the release of Nutanix Terraform Provider Version 2.4.0!
 
-### What's New in v2.3.4
+### What's New in v2.4.0
+
+- **New Resource Support**
+  - **Key Management Server (Security)**: Manage and configure external Key Management Servers for securing workloads.
+  - **Security Technical Implementation Guide controls details (Security)**: View compliance with technical security controls.
+  - **SSL Certification (Cluster Management)**: Add and manage SSL certificates for secure cluster communications.
+  - **Cluster Profile (Cluster Management)**: Define and manage cluster configuration profiles for consistent deployments.
+  - **Associate/Disassociate Cluster from Cluster Profile (Cluster Management)**: Link or unlink clusters to profiles for streamlined management.
+  - **Associate/Disassociate Categories to Cluster (Cluster Management)**: Assign or remove custom categories to clusters.
+  - **Storage Policies (Data Policies)**: Create and manage storage policy rules to optimize resource allocation.
 
 - **Enhancements:**
-  - Support for Ejecting ISO from CD-ROM [\#1006](https://github.com/nutanix/terraform-provider-nutanix/issues/1006)
+  - Add Support for Package-Specific Acceptance Tests via /ok-to-test -p Command [#1014](https://github.com/nutanix/terraform-provider-nutanix/issues/1014)
+  - Centralize task entity type and completion detail constants for reliable UUID extraction [#1029](https://github.com/nutanix/terraform-provider-nutanix/issues/1029)
 
 - **Fixed Bugs:**
-   - Subnet entity is not saved in Terraform State due to plugin crash [\#894](https://github.com/nutanix/terraform-provider-nutanix/issues/894)
+   - Unable to list VPC using data "nutanix_vpcs_v2" "list_vpcs" [#1000](https://github.com/nutanix/terraform-provider-nutanix/issues/1000)
+   - virtual_machine_v2: VM creation fails with multiple NICs ("invalid input arguments") [#994](https://github.com/nutanix/terraform-provider-nutanix/issues/994)
+   - V3: Project: Revisit the Project Module resources [#962](https://github.com/nutanix/terraform-provider-nutanix/issues/962)
+      - Projects: ACP: Order changes in API response lead to data inconsistency in state file. [#1042](https://github.com/nutanix/terraform-provider-nutanix/issues/1042)
+      - Projects: ACP: Removing a ACP causing index shifting issues. [#1044](https://github.com/nutanix/terraform-provider-nutanix/issues/1044)
+      - Project: ACP: Adding a new user or new user group to existing ACP is failed. [#1043](https://github.com/nutanix/terraform-provider-nutanix/issues/1043)
+   - Bug Report: resource "nutanix_user_groups_v2" [#947](https://github.com/nutanix/terraform-provider-nutanix/issues/947)
+
+- **Breaking Chnages:**
+   - From PC version 7.5 onwards, the resource domain is not supported for Projects resources. As a result, Terraform support for this functionality has been removed starting with the 2.4.0 release. [#1049](https://github.com/nutanix/terraform-provider-nutanix/issues/1049)
 
 
 ~> **Important Notice:** Upcoming Deprecation of Legacy Nutanix Terraform Provider Resources. Starting with the Nutanix Terraform Provider release planned for Q4-CY2026, legacy resources which are based on v0.8,v1,v2 and v3 APIs will be deprecated and no longer supported. For more information, visit [Legacy API Deprecation Announcement](https://portal.nutanix.com/page/documents/eol/list?type=announcement) [Legacy API Deprecation - FAQs](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA0VO0000005rgP0AQ). Nutanix strongly encourages you to migrate your scripts and applications to the latest v2 version of the Nutanix Terraform Provider resources, which are built on our v4 APIs/SDKs. By adopting the latest v2 version based on v4 APIs and SDKs, our users can leverage the enhanced capabilities and latest innovations from Nutanix. We understand that this transition may require some effort, and we are committed to supporting you throughout the process. Please refer to our documentation and support channels for guidance and assistance.
@@ -37,6 +56,7 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
+| 2.4.0 | 7.5 | pc7.5 or later | Self Service  v4.3.0 | yes |
 | 2.3.4 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.3 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.2 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
@@ -172,6 +192,10 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_object_store_v2 |
 | - | nutanix_object_store_certificate_v2 |
 | - | nutanix_password_change_request_v2 |
+| - | nutanix_key_management_server_v2 |
+| - | nutanix_ssl_certificate_v2 |
+| - | nutanix_cluster_profile_v2 |
+| - | nutanix_storage_policy_v2 |
 
 ## Data Sources
 
@@ -309,6 +333,14 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_certificate_v2 |
 | - | nutanix_certificates_v2 |
 | - | nutanix_system_user_passwords_v2 |
+| - | nutanix_key_management_server_v2 |
+| - | nutanix_key_management_servers_v2 |
+| - | nutanix_stigs_v2 |
+| - | nutanix_ssl_certificate_v2 |
+| - | nutanix_cluster_profile_v2 |
+| - | nutanix_cluster_profiles_v2 |
+| - | nutanix_storage_policy_v2 |
+| - | nutanix_storage_policies_v2 |
 
 ## Example Usage
 
