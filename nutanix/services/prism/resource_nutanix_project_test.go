@@ -702,7 +702,7 @@ data "nutanix_role" "backup_admin" {
 	}(), name, description, testVars.AccountUUID, usersBlock, extraRefsBlock, acpBlock)
 }
 
-func testAccNutanixProjectConfig(subnetName, name, description, categoryName, categoryVal, limit, rsType string) string {
+func testAccNutanixProjectConfig(subnetName, name, description, categoryName, categoryVal string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
