@@ -3,7 +3,6 @@ package volumesv2
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -14,7 +13,7 @@ import (
 	volumesPrism "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/prism/v4/config"
 	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -358,32 +357,34 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
+	// Wait for the volume group to be created
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Volume Group (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for volume group (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Volume Group UUID : %v", err)
+		return diag.Errorf("error while fetching volume group task (%s): %v", utils.StringValue(taskUUID), err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
+	taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Create Volume Group Task Details: %s", string(aJSON))
 
-	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Volume Group Task Details: %s", aJSON)
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeVolumeGroup, "Volume group")
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
-	d.Set("ext_id", *uuid)
+	d.SetId(utils.StringValue(uuid))
+	d.Set("ext_id", utils.StringValue(uuid))
 
 	return ResourceNutanixVolumeGroupV2Read(ctx, d, meta)
 }
@@ -391,7 +392,7 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 func ResourceNutanixVolumeGroupV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
-	resp, err := conn.VolumeAPIInstance.GetVolumeGroupById(utils.StringPtr(d.Id()))
+	resp, err := conn.VolumeAPIInstance.GetVolumeGroupById(utils.StringPtr(d.Id()), nil)
 	if err != nil {
 		return diag.Errorf("error while fetching Volume Group : %v", err)
 	}
@@ -461,17 +462,27 @@ func ResourceNutanixVolumeGroupV2Delete(ctx context.Context, d *schema.ResourceD
 
 	// calling group API to poll for completion of task
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
+	// Wait for the volume group to be deleted
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Volume Group (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for volume group (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
+
+	// Get task details for logging
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching volume group delete task (%s): %v", utils.StringValue(taskUUID), err)
+	}
+	taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Delete Volume Group Task Details: %s", string(aJSON))
+
 	return nil
 }
 
@@ -564,45 +575,4 @@ func expandDisks(disks []interface{}) []volumesClient.VolumeDisk {
 		disksList[k] = disk
 	}
 	return disksList
-}
-
-func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-		if err != nil {
-			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
-		}
-
-		// get the group results
-
-		v := vresp.Data.GetValue().(taskPoll.Task)
-
-		if getTaskStatus(v.Status) == "CANCELED" || getTaskStatus(v.Status) == "FAILED" {
-			return v, getTaskStatus(v.Status),
-				fmt.Errorf("error_detail: %s, progress_message: %d", utils.StringValue(v.ErrorMessages[0].Message), utils.IntValue(v.ProgressPercentage))
-		}
-		return v, getTaskStatus(v.Status), nil
-	}
-}
-
-func getTaskStatus(taskStatus *taskPoll.TaskStatus) string {
-	if taskStatus != nil {
-		const two, three, five, six, seven = 2, 3, 5, 6, 7
-		if *taskStatus == taskPoll.TaskStatus(six) {
-			return "FAILED"
-		}
-		if *taskStatus == taskPoll.TaskStatus(seven) {
-			return "CANCELED"
-		}
-		if *taskStatus == taskPoll.TaskStatus(two) {
-			return "QUEUED"
-		}
-		if *taskStatus == taskPoll.TaskStatus(three) {
-			return "RUNNING"
-		}
-		if *taskStatus == taskPoll.TaskStatus(five) {
-			return "SUCCEEDED"
-		}
-	}
-	return "UNKNOWN"
 }

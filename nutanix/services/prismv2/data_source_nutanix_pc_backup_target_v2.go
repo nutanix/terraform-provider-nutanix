@@ -171,9 +171,11 @@ func DatasourceNutanixBackupTargetV2Read(ctx context.Context, d *schema.Resource
 func flattenClusterLocation(location management.ClusterLocation) []map[string]interface{} {
 	clusterLocation := make([]map[string]interface{}, 0)
 	clusterLocationMap := make(map[string]interface{})
-	clusterLocationMap["config"] = flattenClusterReference(location.Config)
-
-	clusterLocation = append(clusterLocation, clusterLocationMap)
+	if location.Config != nil {
+		clsRef := location.Config.GetValue().(management.ClusterReference)
+		clusterLocationMap["config"] = flattenClusterReference(&clsRef)
+		clusterLocation = append(clusterLocation, clusterLocationMap)
+	}
 
 	return clusterLocation
 }

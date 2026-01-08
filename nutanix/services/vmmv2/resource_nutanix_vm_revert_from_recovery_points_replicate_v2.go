@@ -12,6 +12,7 @@ import (
 	vmmPrismConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -69,35 +70,37 @@ func ResourceNutanixRevertVMRecoveryPointV2Create(ctx context.Context, d *schema
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the VM to be reverted
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for vm: (%s) to revert: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for VM revert (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching revert vm UUID : %v", err)
+		return diag.Errorf("error while fetching VM revert task (%s): %v", utils.StringValue(taskUUID), err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Revert VM Task Details: %s", string(aJSON))
 
-	aJSON, _ := json.Marshal(rUUID)
-	log.Printf("[DEBUG] revert vm task Details: %v", string(aJSON))
-
-	if err = d.Set("status", getTaskStatus(rUUID.Status)); err != nil {
+	if err = d.Set("status", common.FlattenPtrEnum(taskDetails.Status)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	uuid := rUUID.CompletionDetails[0].Value
-	d.SetId(uuid.GetValue().(string))
+	values := common.ExtractCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameVmRecoveryPoint)
+	if len(values) == 0 {
+		return diag.Errorf("VM not found in task completion details")
+	}
+	uuid := values[0]
+	d.SetId(uuid)
 
 	return ResourceNutanixRevertVMRecoveryPointV2Read(ctx, d, meta)
 }
@@ -113,46 +116,3 @@ func ResourceNutanixRevertVMRecoveryPointV2Update(ctx context.Context, d *schema
 func ResourceNutanixRevertVMRecoveryPointV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
-
-// func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
-// 	return func() (interface{}, string, error) {
-// 		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
-// 		// encodeUUID := data + ":" + taskUUID
-// 		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-
-// 		if err != nil {
-// 			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
-// 		}
-
-// 		// get the group results
-
-// 		v := vresp.Data.GetValue().(prismConfig.Task)
-
-// 		if getTaskStatus(v.Status) == "CANCELED" || getTaskStatus(v.Status) == "FAILED" {
-// 			return v, getTaskStatus(v.Status),
-// 				fmt.Errorf("error_detail: %s, progress_message: %d", utils.StringValue(v.ErrorMessages[0].Message), utils.IntValue(v.ProgressPercentage))
-// 		}
-// 		return v, getTaskStatus(v.Status), nil
-// 	}
-// }
-
-// func getTaskStatus(pr *prismConfig.TaskStatus) string {
-// 	if pr != nil {
-// 		if *pr == prismConfig.TaskStatus(6) {
-// 			return "FAILED"
-// 		}
-// 		if *pr == prismConfig.TaskStatus(7) {
-// 			return "CANCELED"
-// 		}
-// 		if *pr == prismConfig.TaskStatus(2) {
-// 			return "QUEUED"
-// 		}
-// 		if *pr == prismConfig.TaskStatus(3) {
-// 			return "RUNNING"
-// 		}
-// 		if *pr == prismConfig.TaskStatus(5) {
-// 			return "SUCCEEDED"
-// 		}
-// 	}
-// 	return "UNKNOWN"
-// }

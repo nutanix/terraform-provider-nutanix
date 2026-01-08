@@ -3,9 +3,15 @@ package common
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"hash/crc32"
 	"log"
+	"reflect"
+	"strconv"
+	"strings"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
@@ -28,6 +34,40 @@ func ExpandListOfString(list []interface{}) []string {
 	return stringListStr
 }
 
+// DiffStringSets compares two string slices and returns the added and removed items.
+// added contains items that are in newSet but not in oldSet.
+// removed contains items that are in oldSet but not in newSet.
+func DiffStringSets(oldSet, newSet []string) (added, removed []string) {
+	// Create maps for easier lookup
+	oldSetMap := make(map[string]bool, len(oldSet))
+	for _, item := range oldSet {
+		oldSetMap[item] = true
+	}
+
+	newSetMap := make(map[string]bool, len(newSet))
+	for _, item := range newSet {
+		newSetMap[item] = true
+	}
+
+	// Find items to add (in new but not in old)
+	added = make([]string, 0)
+	for _, item := range newSet {
+		if !oldSetMap[item] {
+			added = append(added, item)
+		}
+	}
+
+	// Find items to remove (in old but not in new)
+	removed = make([]string, 0)
+	for _, item := range oldSet {
+		if !newSetMap[item] {
+			removed = append(removed, item)
+		}
+	}
+
+	return added, removed
+}
+
 // IsExplicitlySet defined to determine whether a particular key (or configuration attribute) within a Terraform resource configuration has been explicitly set by the user.
 // Returns a Boolean (true or false). true indicates that the key was explicitly set with a non-null value; false implies it was either not set, is unknown, or explicitly set to null.
 func IsExplicitlySet(d *schema.ResourceData, key string) bool {
@@ -36,20 +76,79 @@ func IsExplicitlySet(d *schema.ResourceData, key string) bool {
 		return false // If rawConfig is null/unknown, key wasn't explicitly set
 	}
 
-	// Convert rawConfig to map and check if key exists
-	configMap := rawConfig.AsValueMap()
-	if val, exists := configMap[key]; exists {
-		log.Printf("[DEBUG] Key: %s, Value: %s", key, val)
-		return !val.IsNull() // Ensure key exists and isn't explicitly null
+	val, ok := getRawConfigValueAtPath(rawConfig, key)
+	if !ok {
+		return false
 	}
-	return false
+
+	log.Printf("[DEBUG] Key: %s, Value: %s", key, val)
+	return !val.IsNull() // Ensure key exists and isn't explicitly null
+}
+
+func getRawConfigValueAtPath(root cty.Value, path string) (cty.Value, bool) {
+	if root.IsNull() || !root.IsKnown() {
+		return cty.NilVal, false
+	}
+	if path == "" {
+		return cty.NilVal, false
+	}
+
+	cur := root
+	parts := strings.Split(path, ".")
+	for _, p := range parts {
+		if p == "" {
+			return cty.NilVal, false
+		}
+
+		if cur.IsNull() || !cur.IsKnown() {
+			return cty.NilVal, false
+		}
+
+		// Handle list/tuple index (e.g. "node_params.0.foo")
+		if idx, err := strconv.Atoi(p); err == nil {
+			t := cur.Type()
+			if !(t.IsListType() || t.IsTupleType()) {
+				return cty.NilVal, false
+			}
+
+			lenVal := cur.Length()
+			if lenVal.IsNull() || !lenVal.IsKnown() {
+				return cty.NilVal, false
+			}
+
+			bf := lenVal.AsBigFloat()
+			li, _ := bf.Int64()
+			if idx < 0 || int64(idx) >= li {
+				return cty.NilVal, false
+			}
+
+			cur = cur.Index(cty.NumberIntVal(int64(idx)))
+			continue
+		}
+
+		// Handle object/map attribute (top-level and nested)
+		t := cur.Type()
+		if t.IsObjectType() || t.IsMapType() {
+			m := cur.AsValueMap()
+			child, exists := m[p]
+			if !exists {
+				return cty.NilVal, false
+			}
+			cur = child
+			continue
+		}
+
+		return cty.NilVal, false
+	}
+
+	return cur, true
 }
 
 func TaskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
 		if err != nil {
-			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
+			return "", "", fmt.Errorf("error while polling prism task: %v", err)
 		}
 
 		// get the group results
@@ -186,4 +285,122 @@ func InterfaceToSlice(v interface{}) []interface{} {
 		// single element provided
 		return []interface{}{v}
 	}
+}
+
+// ExtractEntityUUIDFromTask extracts the UUID of an entity from task details based on the entity type.
+// It searches through the EntitiesAffected list and returns the ExtId of the first entity matching the specified entityType.
+// Returns an error if no matching entity is found.
+func ExtractEntityUUIDFromTask(task prismConfig.Task, entityType string, resourceName string) (*string, error) {
+	for _, entity := range task.EntitiesAffected {
+		if entity.Rel != nil && utils.StringValue(entity.Rel) == entityType {
+			return entity.ExtId, nil
+		}
+	}
+	// Debug log the entities affected
+	log.Printf("[DEBUG] No matching entity found for entity type: %s", entityType)
+	aJSON, _ := json.MarshalIndent(task.EntitiesAffected, "", "  ")
+	log.Printf("[DEBUG] Entities Affected: %s", string(aJSON))
+
+	// If no matching entity is found, return an error
+	return nil, fmt.Errorf("%s UUID not found in entities affected", resourceName)
+}
+
+// ExtractCompletionDetailsFromTask extracts all values from task completion details based on the completion detail name.
+// It searches through the CompletionDetails list and returns all values matching the specified name.
+// Use constants from utils package (e.g., utils.CompletionDetailsNameVMExtIDs, utils.CompletionDetailsNameVGExtIDs,
+// utils.CompletionDetailsNameRecoveryPoint, utils.CompletionDetailsNameProtectionPolicy).
+// Returns an empty slice if no matching completion details are found (and logs completion details for debugging).
+func ExtractCompletionDetailsFromTask(task prismConfig.Task, completionDetailName string) []string {
+	values := make([]string, 0)
+	for _, detail := range task.CompletionDetails {
+		if utils.StringValue(detail.Name) == completionDetailName {
+			if detail.Value != nil {
+				values = append(values, detail.Value.GetValue().(string))
+			}
+		}
+	}
+
+	if len(values) == 0 {
+		log.Printf("[DEBUG] No matching completion detail found for name: %s", completionDetailName)
+		aJSON, _ := json.MarshalIndent(task.CompletionDetails, "", "  ")
+		log.Printf("[DEBUG] Completion Details: %s", string(aJSON))
+	}
+
+	return values
+}
+
+// HashStringItem returns a hash for a string value to ensure uniqueness in schema.TypeSet
+func HashStringItem(v interface{}) int {
+	if v == nil {
+		return 0
+	}
+	str, ok := v.(string)
+	if !ok {
+		return 0
+	}
+	return int(crc32.ChecksumIEEE(fmt.Appendf(nil, "%s-", str)))
+}
+
+// FlattenLinks is a generic function that flattens a slice of ApiLink types into a slice of maps.
+// It works with any ApiLink type that has Href and Rel fields (accessed via reflection).
+// This function replaces duplicate flattenLinks implementations across different service packages.
+// The function accepts any slice type where each element has Href and Rel fields (typically *string pointers).
+func FlattenLinks(links interface{}) []map[string]interface{} {
+	if links == nil {
+		return nil
+	}
+
+	// Use reflection to handle any slice type
+	val := reflect.ValueOf(links)
+	if val.Kind() != reflect.Slice {
+		return nil
+	}
+
+	if val.Len() == 0 {
+		return nil
+	}
+
+	linkList := make([]map[string]interface{}, val.Len())
+
+	for i := 0; i < val.Len(); i++ {
+		link := val.Index(i).Interface()
+		linkMap := make(map[string]interface{})
+
+		// Use reflection to access Href and Rel fields
+		linkVal := reflect.ValueOf(link)
+		if linkVal.Kind() == reflect.Ptr {
+			if linkVal.IsNil() {
+				continue
+			}
+			linkVal = linkVal.Elem()
+		}
+
+		// Get Href field
+		hrefField := linkVal.FieldByName("Href")
+		if hrefField.IsValid() {
+			if hrefField.Kind() == reflect.Ptr {
+				if !hrefField.IsNil() {
+					linkMap["href"] = hrefField.Elem().Interface()
+				}
+			} else {
+				linkMap["href"] = hrefField.Interface()
+			}
+		}
+
+		// Get Rel field
+		relField := linkVal.FieldByName("Rel")
+		if relField.IsValid() {
+			if relField.Kind() == reflect.Ptr {
+				if !relField.IsNil() {
+					linkMap["rel"] = relField.Elem().Interface()
+				}
+			} else {
+				linkMap["rel"] = relField.Interface()
+			}
+		}
+
+		linkList[i] = linkMap
+	}
+
+	return linkList
 }

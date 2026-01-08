@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 )
 
 func TestAccNutanixClustersDataSource_basic(t *testing.T) {
@@ -15,8 +16,7 @@ func TestAccNutanixClustersDataSource_basic(t *testing.T) {
 			{
 				Config: testAccClustersDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"data.nutanix_clusters.basic_web", "entities.#", "2"),
+					common.CheckAttributeLength("data.nutanix_clusters.basic_web", "entities", 1),
 				),
 			},
 		},

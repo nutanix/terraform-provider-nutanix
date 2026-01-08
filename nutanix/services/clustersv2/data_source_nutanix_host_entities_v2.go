@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -116,7 +117,7 @@ func flattenHostEntities(pr []import1.Host) []interface{} {
 
 			host["ext_id"] = v.ExtId
 			host["tenant_id"] = v.TenantId
-			host["links"] = flattenLinks(v.Links)
+			host["links"] = common.FlattenLinks(v.Links)
 			host["host_name"] = v.HostName
 			host["host_type"] = flattenHostTypeEnum(v.HostType)
 			host["hypervisor"] = flattenHypervisorReference(v.Hypervisor)

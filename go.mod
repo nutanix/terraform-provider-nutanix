@@ -6,21 +6,23 @@ require (
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint v1.25.0
+	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-uuid v1.0.2
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
 	github.com/jinzhu/copier v0.4.0
 	github.com/mitchellh/gox v1.0.1
-	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.1.1
-	github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4 v4.1.1
-	github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4 v4.1.1
-	github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4 v4.0.1
-	github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.1.1
-	github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.1.1
-	github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.1.1
-	github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4 v4.0.1
-	github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.1.1
-	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.1.1
-	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.1.1
+	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.2.1
+	github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4 v4.2.1
+	github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4 v4.2.1
+	github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4 v4.1.1-beta.2
+	github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.2.1
+	github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.2.1
+	github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.2.1
+	github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4 v4.0.2
+	github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.2.1
+	github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4 v4.1.1
+	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.2.1
+	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.2.1
 	github.com/spf13/cast v1.8.0
 	github.com/stretchr/testify v1.7.2
 	gopkg.in/yaml.v2 v2.4.0
@@ -71,7 +73,6 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.4.1 // indirect
