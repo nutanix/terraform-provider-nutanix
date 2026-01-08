@@ -10,6 +10,8 @@ description: |-
 
 Provides a Nutanix Project resource to Create a Project.
 
+> **Note:** When removing the acps from the project, the ACP blocks are index-based. Removing an ACP from the middle of the list causes Terraform to shift subsequent ACPs. While the backend update succeeds without impact, the plan may show unexpected updates due to index reordering.
+
 ## Example Usage
 
 ```hcl
