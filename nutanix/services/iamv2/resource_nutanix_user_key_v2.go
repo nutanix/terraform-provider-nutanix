@@ -217,7 +217,7 @@ func resourceNutanixUserKeyV2Create(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error while creating User Key: %v", err)
 	}
 	getResp := resp.Data.GetValue().(import1.Key)
-	d.SetId(*getResp.ExtId)
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return resourceNutanixUserKeyV2Read(ctx, d, meta)
 }
 
@@ -288,7 +288,7 @@ func resourceNutanixUserKeyV2Read(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("key_details", flattenKeyDetails(keyConfig.KeyDetails)); err != nil {
 		return diag.Errorf("error while setting key_details: %v", err)
 	}
-	d.SetId(*keyConfig.ExtId)
+	d.SetId(utils.StringValue(keyConfig.ExtId))
 	return nil
 }
 

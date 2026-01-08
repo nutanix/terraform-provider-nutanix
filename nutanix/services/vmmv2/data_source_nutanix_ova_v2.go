@@ -357,7 +357,7 @@ func datasourceNutanixOvaV2Read(ctx context.Context, d *schema.ResourceData, met
 	if diags.HasError() {
 		return diags
 	}
-	d.SetId(*ova.ExtId)
+	d.SetId(utils.StringValue(ova.ExtId))
 	return nil
 }
 

@@ -10,6 +10,7 @@ import (
 type TestConfig struct {
 	SubnetName                     string `json:"subnet_name"`
 	DefaultContainerName           string `json:"default_container_name"`
+	AccountUUID                    string `json:"account_uuid"`
 	UserGroupWithDistinguishedName []struct {
 		DistinguishedName string `json:"distinguished_name"`
 		DisplayName       string `json:"display_name"`

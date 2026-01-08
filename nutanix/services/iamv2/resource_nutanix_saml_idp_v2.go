@@ -186,7 +186,7 @@ func ResourceNutanixSamlIdpV2Create(ctx context.Context, d *schema.ResourceData,
 
 	getResp := resp.Data.GetValue().(import1.SamlIdentityProvider)
 
-	d.SetId(*getResp.ExtId)
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return ResourceNutanixSamlIdpV2Read(ctx, d, meta)
 }
 

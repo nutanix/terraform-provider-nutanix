@@ -218,7 +218,7 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 
 	getResp := resp.Data.GetValue().(import1.DirectoryService)
 
-	d.SetId(*getResp.ExtId)
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return ResourceNutanixDirectoryServicesV2Read(ctx, d, meta)
 }
 

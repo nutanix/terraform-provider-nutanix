@@ -157,7 +157,7 @@ func ResourceNutanixRolesV4Create(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	getResp := resp.Data.GetValue().(iamConfig.Role)
-	d.SetId(*getResp.ExtId)
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return ResourceNutanixRolesV4Read(ctx, d, meta)
 }
 

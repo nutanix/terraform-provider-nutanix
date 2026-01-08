@@ -287,54 +287,50 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Create(ctx context.Context, 
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the  node to be available
+	// Wait for the fetch node networking details operation to complete
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "QUEUED"},
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for  node (%s) to add: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for fetch node networking details (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching task : %v", err)
+		return diag.Errorf("error while fetching node networking details task: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Fetch Node Networking Details Task Details: %s", string(aJSON))
 
-	bJSON, _ := json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Fetch Network Info Task Details: %s", string(bJSON))
+	uuid := strings.Split(utils.StringValue(taskDetails.ExtId), "=:")[1]
 
-	uuid := strings.Split(utils.StringValue(rUUID.ExtId), "=:")[1]
-
-	const networkingDetails = 3
+	networkingDetails := config.TASKRESPONSETYPE_NETWORKING_DETAILS
 	taskResponseType := config.TaskResponseType(networkingDetails)
 	networkDetailsResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr)
 	}
 
-	taskResp := networkDetailsResp.Data.GetValue().(config.TaskResponse)
+	networkDetailsTaskResp := networkDetailsResp.Data.GetValue().(config.TaskResponse)
 
-	if *taskResp.TaskResponseType != config.TaskResponseType(networkingDetails) {
+	if *networkDetailsTaskResp.TaskResponseType != config.TaskResponseType(networkingDetails) {
 		return diag.Errorf("error while fetching Task Response for Network Detail Nodes : %v", "task response type mismatch")
 	}
 
-	nodeNetworkDetails := taskResp.Response.GetValue().(config.NodeNetworkingDetails)
+	nodeNetworkDetails := networkDetailsTaskResp.Response.GetValue().(config.NodeNetworkingDetails)
 
 	if err := d.Set("nodes_networking_details", flattenNodesNetworkDetails(nodeNetworkDetails)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	aJSON, _ = json.MarshalIndent(networkDetailsResp, "", " ")
-	log.Printf("[DEBUG] fetching Task Response for Unconfigured Nodes Task Details: %s\n", string(aJSON))
+	bJSON, _ := json.MarshalIndent(networkDetailsResp, "", "  ")
+	log.Printf("[DEBUG] Fetch Task Response for Node Networking Details: %s", string(bJSON))
 
-	d.SetId(utils.GenUUID())
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 	return nil
 }
 

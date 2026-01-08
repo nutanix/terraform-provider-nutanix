@@ -32,12 +32,7 @@ The entities attribute element contains the followings attributes:
 * `description` A description for project.
 
 ### Resource Domain
-* `resource_domain` The status for a resource domain (limits and values)
-* `resource_domain.resources` Array of the utilization/limit for resource types
-* `resource_domain.resources.#.limit` The resource consumption limit (unspecified is unlimited)
-* `resource_domain.resources.#.resource_type` The type of resource (for example storage, CPUs)
-* `resource_domain.resources.#.units` - The units of the resource type
-* `resource_domain.resources.#.value` - The amount of resource consumed
+* `resource_domain` (Deprecated) Not supported starting from provider version `2.4.0` and expected to be empty. Remove any usage from configuration/scripts.
 
 ### Account Reference List
 * `account_reference_list` - List of accounts associated with the project.
@@ -81,8 +76,7 @@ The entities attribute element contains the followings attributes:
 * `external_network_list.#.name` - The name of a network.
 
 ### Resource Domain
-* `resource_domain.resources.#.units` - The units of the resource type
-* `resource_domain.resources.#.value` - The amount of resource consumed
+* `resource_domain` - (Deprecated) Not supported starting from provider version `2.4.0` and expected to be empty.
 
 ### Metadata
 The metadata attribute exports the following:

@@ -1467,7 +1467,7 @@ func DatasourceNutanixVirtualMachineV4Read(ctx context.Context, d *schema.Resour
 	}
 
 	log.Printf("[INFO] Successfully read vm with ext_id %s", extID)
-	d.SetId(*getResp.ExtId)
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return nil
 }
 

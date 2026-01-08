@@ -56,7 +56,9 @@ func ResourceNutanixOvaDownloadV2Create(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("error setting ova_file_path: %v", err)
 	}
 
-	d.SetId(utils.GenUUID())
+	// This is an action resource that does not maintain state and has no associated task.
+	// The resource ID is set to the OVA ext_id for traceability.
+	d.SetId(ovaExtID.(string))
 	return ResourceNutanixOvaDownloadV2Read(ctx, d, meta)
 }
 

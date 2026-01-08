@@ -138,7 +138,7 @@ func DatasourceNutanixAuthorizationPolicyV2Read(ctx context.Context, d *schema.R
 		return diag.FromErr(err)
 	}
 
-	d.SetId(*getResp.ExtId)
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return nil
 }
 

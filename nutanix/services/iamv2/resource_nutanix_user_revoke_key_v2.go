@@ -100,7 +100,7 @@ func resourceNutanixUserRevokeKeyV2Create(ctx context.Context, d *schema.Resourc
 	} else {
 		d.Set("arguments_map", []map[string]interface{}{})
 	}
-	d.SetId(*ExtID)
+	d.SetId(utils.StringValue(ExtID))
 	return nil
 }
 

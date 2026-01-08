@@ -12,6 +12,7 @@ import (
 	taskRef "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -125,29 +126,30 @@ func ResourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceDat
 	// calling group API to poll for completion of task
 	taskconn := meta.(*conns.Client).PrismAPI
 
-	// Wait for the Config Update to be successful
+	// Wait for the LCM config to be updated
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroup(taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("Config Update task failed: %s", errWaitTask)
+		return diag.Errorf("error waiting for LCM config (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	// Get task details from TASK API
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching the Lcm upgrade task : %v", err)
+		return diag.Errorf("error while fetching LCM config update task: %v", err)
 	}
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Update LCM Config Task Details: %s", string(aJSON))
 
-	task := resourceUUID.Data.GetValue().(prismConfig.Task)
-	aJSON, _ = json.MarshalIndent(task, "", "  ")
-	log.Printf("[DEBUG] LCM Config update Task Details: %s", string(aJSON))
-
-	// randomly generating the id
-	d.SetId(utils.GenUUID())
+	// This is an action resource that does not maintain state.
+	// The resource ID is set to the task ExtId for traceability.
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 	return nil
 }
 
