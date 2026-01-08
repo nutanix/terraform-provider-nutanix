@@ -391,13 +391,13 @@ func DataSourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema
 	if err := d.Set("name", getResp.Name); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("type", flattenSecurityPolicyType(getResp.Type)); err != nil {
+	if err := d.Set("type", getResp.Type.GetName()); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("description", getResp.Description); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("state", flattenPolicyState(getResp.State)); err != nil {
+	if err := d.Set("state", getResp.State.GetName()); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -411,7 +411,7 @@ func DataSourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema
 	if err := d.Set("is_hitlog_enabled", getResp.IsHitlogEnabled); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("scope", flattenSecurityPolicyScope(getResp.Scope)); err != nil {
+	if err := d.Set("scope", getResp.Scope.GetName()); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -467,7 +467,7 @@ func flattenNetworkSecurityPolicyRule(pr []import1.NetworkSecurityPolicyRule) []
 				net["description"] = utils.StringValue(v.Description)
 			}
 			if v.Type != nil {
-				net["type"] = flattenRuleType(v.Type)
+				net["type"] = v.Type.GetName()
 			}
 			if v.Spec != nil {
 				net["spec"] = flattenOneOfNetworkSecurityPolicyRuleSpec(v.Spec)
@@ -517,7 +517,7 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 			appRuleValue := pr.GetValue().(import1.ApplicationRuleSpec)
 
 			if appRuleValue.SecuredGroupCategoryAssociatedEntityType != nil {
-				app["secured_group_category_associated_entity_type"] = flattenEntityType(appRuleValue.SecuredGroupCategoryAssociatedEntityType)
+				app["secured_group_category_associated_entity_type"] = appRuleValue.SecuredGroupCategoryAssociatedEntityType.GetName()
 			}
 			if appRuleValue.SecuredGroupCategoryReferences != nil {
 				app["secured_group_category_references"] = appRuleValue.SecuredGroupCategoryReferences
@@ -526,13 +526,13 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 				app["secured_group_entity_group_reference"] = utils.StringValue(appRuleValue.SecuredGroupEntityGroupReference)
 			}
 			if appRuleValue.SrcAllowSpec != nil {
-				app["src_allow_spec"] = flattenAllowType(appRuleValue.SrcAllowSpec)
+				app["src_allow_spec"] = appRuleValue.SrcAllowSpec.GetName()
 			}
 			if appRuleValue.DestAllowSpec != nil {
-				app["dest_allow_spec"] = flattenAllowType(appRuleValue.DestAllowSpec)
+				app["dest_allow_spec"] = appRuleValue.DestAllowSpec.GetName()
 			}
 			if appRuleValue.SrcCategoryAssociatedEntityType != nil {
-				app["src_category_associated_entity_type"] = flattenEntityType(appRuleValue.SrcCategoryAssociatedEntityType)
+				app["src_category_associated_entity_type"] = appRuleValue.SrcCategoryAssociatedEntityType.GetName()
 			}
 			if appRuleValue.SrcCategoryReferences != nil {
 				app["src_category_references"] = appRuleValue.SrcCategoryReferences
@@ -541,7 +541,7 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 				app["src_entity_group_reference"] = utils.StringValue(appRuleValue.SrcEntityGroupReference)
 			}
 			if appRuleValue.DestCategoryAssociatedEntityType != nil {
-				app["dest_category_associated_entity_type"] = flattenEntityType(appRuleValue.DestCategoryAssociatedEntityType)
+				app["dest_category_associated_entity_type"] = appRuleValue.DestCategoryAssociatedEntityType.GetName()
 			}
 			if appRuleValue.DestCategoryReferences != nil {
 				app["dest_category_references"] = appRuleValue.DestCategoryReferences
@@ -597,7 +597,7 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 			intraRuleValue := pr.GetValue().(import1.IntraEntityGroupRuleSpec)
 
 			if intraRuleValue.SecuredGroupCategoryAssociatedEntityType != nil {
-				intra["secured_group_category_associated_entity_type"] = flattenEntityType(intraRuleValue.SecuredGroupCategoryAssociatedEntityType)
+				intra["secured_group_category_associated_entity_type"] = intraRuleValue.SecuredGroupCategoryAssociatedEntityType.GetName()
 			}
 			if intraRuleValue.SecuredGroupCategoryReferences != nil {
 				intra["secured_group_category_references"] = intraRuleValue.SecuredGroupCategoryReferences
@@ -606,7 +606,7 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 				intra["secured_group_entity_group_reference"] = utils.StringValue(intraRuleValue.SecuredGroupEntityGroupReference)
 			}
 			if intraRuleValue.SecuredGroupAction != nil {
-				intra["secured_group_action"] = flattenIntraEntityGroupRuleAction(intraRuleValue.SecuredGroupAction)
+				intra["secured_group_action"] = intraRuleValue.SecuredGroupAction.GetName()
 			}
 			if intraRuleValue.SecuredGroupServiceReferences != nil {
 				intra["secured_group_service_references"] = intraRuleValue.SecuredGroupServiceReferences
@@ -637,7 +637,7 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 			for _, group := range allIsolationGroupValue.IsolationGroups {
 				groupMap := make(map[string]interface{})
 				if group.GroupCategoryAssociatedEntityType != nil {
-					groupMap["group_category_associated_entity_type"] = flattenEntityType(group.GroupCategoryAssociatedEntityType)
+					groupMap["group_category_associated_entity_type"] = group.GroupCategoryAssociatedEntityType.GetName()
 				}
 				groupMap["group_category_references"] = group.GroupCategoryReferences
 				if group.GroupEntityGroupReference != nil {
@@ -693,32 +693,4 @@ func flattenIPv4AddressMicroSegList(pr *config.IPv4Address) []interface{} {
 		return ipv4
 	}
 	return nil
-}
-
-func flattenAllowType(allowType *import1.AllowType) string {
-	return allowType.GetName()
-}
-
-func flattenPolicyState(securityPolicyState *import1.SecurityPolicyState) string {
-	return securityPolicyState.GetName()
-}
-
-func flattenRuleType(ruleType *import1.RuleType) string {
-	return ruleType.GetName()
-}
-
-func flattenSecurityPolicyType(securityPolicyType *import1.SecurityPolicyType) string {
-	return securityPolicyType.GetName()
-}
-
-func flattenSecurityPolicyScope(securityPolicyScope *import1.SecurityPolicyScope) string {
-	return securityPolicyScope.GetName()
-}
-
-func flattenIntraEntityGroupRuleAction(intraEntityGroupRuleAction *import1.IntraEntityGroupRuleAction) string {
-	return intraEntityGroupRuleAction.GetName()
-}
-
-func flattenEntityType(entityType *config.EntityType) string {
-	return entityType.GetName()
 }

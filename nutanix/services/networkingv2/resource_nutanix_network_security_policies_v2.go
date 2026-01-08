@@ -337,11 +337,6 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 														Type: schema.TypeString,
 													},
 												},
-												"secured_group_entity_group_reference": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
 												"secured_group_service_references": {
 													Type:     schema.TypeList,
 													Required: true,
@@ -667,13 +662,13 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 	if err := d.Set("name", utils.StringValue(getResp.Name)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("type", flattenSecurityPolicyType(getResp.Type)); err != nil {
+	if err := d.Set("type", getResp.Type.GetName()); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("description", utils.StringValue(getResp.Description)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("state", flattenPolicyState(getResp.State)); err != nil {
+	if err := d.Set("state", getResp.State.GetName()); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -689,7 +684,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 		// convert local operations to string slice
 		localOperationsStr := make([]string, len(localOperations))
 		for i, v := range localOperations {
-			localOperationsStr[i] = (flattenRuleType(v.Type))
+			localOperationsStr[i] = (v.Type.GetName())
 		}
 
 		log.Printf("[DEBUG] localOperationsStr: %v", localOperationsStr)
@@ -724,7 +719,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 	if err := d.Set("is_hitlog_enabled", utils.BoolValue(getResp.IsHitlogEnabled)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("scope", flattenSecurityPolicyScope(getResp.Scope)); err != nil {
+	if err := d.Set("scope", getResp.Scope.GetName()); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("vpc_reference", utils.StringSlice(getResp.VpcReferences)); err != nil {
@@ -953,7 +948,7 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 					"VPC":    three,
 				}
 				pInt := subMap[secGroupCatAssocEntityType.(string)]
-				p := config.EntityType(pInt.(int))
+				p := import1.CategoryAssociatedEntityType(pInt.(int))
 				app.SecuredGroupCategoryAssociatedEntityType = &p
 			}
 			if secGroup, ok := appVal["secured_group_category_references"]; ok && len(secGroup.([]interface{})) > 0 {
@@ -990,7 +985,7 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 					"VPC":    three,
 				}
 				pInt := subMap[srcCatAssocEntityType.(string)]
-				p := config.EntityType(pInt.(int))
+				p := import1.CategoryAssociatedEntityType(pInt.(int))
 				app.SrcCategoryAssociatedEntityType = &p
 			}
 			if srcCatRef, ok := appVal["src_category_references"]; ok && len(srcCatRef.([]interface{})) > 0 {
@@ -1007,7 +1002,7 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 					"VPC":    three,
 				}
 				pInt := subMap[destCatAssocEntityType.(string)]
-				p := config.EntityType(pInt.(int))
+				p := import1.CategoryAssociatedEntityType(pInt.(int))
 				app.DestCategoryAssociatedEntityType = &p
 			}
 			if destCatRef, ok := appVal["dest_category_references"]; ok && len(destCatRef.([]interface{})) > 0 {
@@ -1067,7 +1062,7 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 					"VPC":    three,
 				}
 				pInt := subMap[secGroupCatAssocEntityType.(string)]
-				p := config.EntityType(pInt.(int))
+				p := import1.CategoryAssociatedEntityType(pInt.(int))
 				intra.SecuredGroupCategoryAssociatedEntityType = &p
 			}
 			if secGroup, ok := intraVal["secured_group_category_references"]; ok && len(secGroup.([]interface{})) > 0 {
@@ -1179,7 +1174,7 @@ func expandIsolationGroup(isolationGroup []interface{}) []import1.IsolationGroup
 					"VPC":    three,
 				}
 				pInt := subMap[groupCatAssocEntityType.(string)]
-				p := config.EntityType(pInt.(int))
+				p := import1.CategoryAssociatedEntityType(pInt.(int))
 				iso.GroupCategoryAssociatedEntityType = &p
 			}
 			if groupCat, ok := val["group_category_references"]; ok && len(groupCat.([]interface{})) > 0 {
