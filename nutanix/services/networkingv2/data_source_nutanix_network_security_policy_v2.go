@@ -391,13 +391,13 @@ func DataSourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema
 	if err := d.Set("name", getResp.Name); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("type", flattenSecurityPolicyType(getResp.Type)); err != nil {
+	if err := d.Set("type", getResp.Type.GetName()); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("description", getResp.Description); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("state", flattenPolicyState(getResp.State)); err != nil {
+	if err := d.Set("state", getResp.State.GetName()); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -411,7 +411,7 @@ func DataSourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema
 	if err := d.Set("is_hitlog_enabled", getResp.IsHitlogEnabled); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("scope", flattenSecurityPolicyScope(getResp.Scope)); err != nil {
+	if err := d.Set("scope", getResp.Scope.GetName()); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -467,7 +467,7 @@ func flattenNetworkSecurityPolicyRule(pr []import1.NetworkSecurityPolicyRule) []
 				net["description"] = utils.StringValue(v.Description)
 			}
 			if v.Type != nil {
-				net["type"] = flattenRuleType(v.Type)
+				net["type"] = v.Type.GetName()
 			}
 			if v.Spec != nil {
 				net["spec"] = flattenOneOfNetworkSecurityPolicyRuleSpec(v.Spec)
@@ -516,20 +516,38 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 
 			appRuleValue := pr.GetValue().(import1.ApplicationRuleSpec)
 
+			if appRuleValue.SecuredGroupCategoryAssociatedEntityType != nil {
+				app["secured_group_category_associated_entity_type"] = appRuleValue.SecuredGroupCategoryAssociatedEntityType.GetName()
+			}
 			if appRuleValue.SecuredGroupCategoryReferences != nil {
 				app["secured_group_category_references"] = appRuleValue.SecuredGroupCategoryReferences
 			}
+			if appRuleValue.SecuredGroupEntityGroupReference != nil {
+				app["secured_group_entity_group_reference"] = utils.StringValue(appRuleValue.SecuredGroupEntityGroupReference)
+			}
 			if appRuleValue.SrcAllowSpec != nil {
-				app["src_allow_spec"] = flattenAllowType(appRuleValue.SrcAllowSpec)
+				app["src_allow_spec"] = appRuleValue.SrcAllowSpec.GetName()
 			}
 			if appRuleValue.DestAllowSpec != nil {
-				app["dest_allow_spec"] = flattenAllowType(appRuleValue.DestAllowSpec)
+				app["dest_allow_spec"] = appRuleValue.DestAllowSpec.GetName()
+			}
+			if appRuleValue.SrcCategoryAssociatedEntityType != nil {
+				app["src_category_associated_entity_type"] = appRuleValue.SrcCategoryAssociatedEntityType.GetName()
 			}
 			if appRuleValue.SrcCategoryReferences != nil {
 				app["src_category_references"] = appRuleValue.SrcCategoryReferences
 			}
+			if appRuleValue.SrcEntityGroupReference != nil {
+				app["src_entity_group_reference"] = utils.StringValue(appRuleValue.SrcEntityGroupReference)
+			}
+			if appRuleValue.DestCategoryAssociatedEntityType != nil {
+				app["dest_category_associated_entity_type"] = appRuleValue.DestCategoryAssociatedEntityType.GetName()
+			}
 			if appRuleValue.DestCategoryReferences != nil {
 				app["dest_category_references"] = appRuleValue.DestCategoryReferences
+			}
+			if appRuleValue.DestEntityGroupReference != nil {
+				app["dest_entity_group_reference"] = utils.StringValue(appRuleValue.DestEntityGroupReference)
 			}
 			if appRuleValue.SrcSubnet != nil {
 				app["src_subnet"] = flattenIPv4AddressMicroSegList(appRuleValue.SrcSubnet)
@@ -561,6 +579,9 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 			if appRuleValue.NetworkFunctionChainReference != nil {
 				app["network_function_chain_reference"] = appRuleValue.NetworkFunctionChainReference
 			}
+			if appRuleValue.NetworkFunctionReference != nil {
+				app["network_function_reference"] = utils.StringValue(appRuleValue.NetworkFunctionReference)
+			}
 
 			appList = append(appList, app)
 
@@ -575,11 +596,29 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 
 			intraRuleValue := pr.GetValue().(import1.IntraEntityGroupRuleSpec)
 
-			if intraRuleValue.SecuredGroupAction != nil {
-				intra["secured_group_action"] = flattenIntraEntityGroupRuleAction(intraRuleValue.SecuredGroupAction)
+			if intraRuleValue.SecuredGroupCategoryAssociatedEntityType != nil {
+				intra["secured_group_category_associated_entity_type"] = intraRuleValue.SecuredGroupCategoryAssociatedEntityType.GetName()
 			}
 			if intraRuleValue.SecuredGroupCategoryReferences != nil {
 				intra["secured_group_category_references"] = intraRuleValue.SecuredGroupCategoryReferences
+			}
+			if intraRuleValue.SecuredGroupEntityGroupReference != nil {
+				intra["secured_group_entity_group_reference"] = utils.StringValue(intraRuleValue.SecuredGroupEntityGroupReference)
+			}
+			if intraRuleValue.SecuredGroupAction != nil {
+				intra["secured_group_action"] = intraRuleValue.SecuredGroupAction.GetName()
+			}
+			if intraRuleValue.SecuredGroupServiceReferences != nil {
+				intra["secured_group_service_references"] = intraRuleValue.SecuredGroupServiceReferences
+			}
+			if intraRuleValue.TcpServices != nil {
+				intra["tcp_services"] = flattenTCPPortRangeSpec(intraRuleValue.TcpServices)
+			}
+			if intraRuleValue.UdpServices != nil {
+				intra["udp_services"] = flattenUDPPortRangeSpec(intraRuleValue.UdpServices)
+			}
+			if intraRuleValue.IcmpServices != nil {
+				intra["icmp_services"] = flattenIcmpTypeCodeSpec(intraRuleValue.IcmpServices)
 			}
 
 			intraList = append(intraList, intra)
@@ -597,7 +636,13 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 			isolationGroups := make([]interface{}, 0)
 			for _, group := range allIsolationGroupValue.IsolationGroups {
 				groupMap := make(map[string]interface{})
+				if group.GroupCategoryAssociatedEntityType != nil {
+					groupMap["group_category_associated_entity_type"] = group.GroupCategoryAssociatedEntityType.GetName()
+				}
 				groupMap["group_category_references"] = group.GroupCategoryReferences
+				if group.GroupEntityGroupReference != nil {
+					groupMap["group_entity_group_reference"] = utils.StringValue(group.GroupEntityGroupReference)
+				}
 				isolationGroups = append(isolationGroups, groupMap)
 			}
 
@@ -648,28 +693,4 @@ func flattenIPv4AddressMicroSegList(pr *config.IPv4Address) []interface{} {
 		return ipv4
 	}
 	return nil
-}
-
-func flattenAllowType(allowType *import1.AllowType) string {
-	return allowType.GetName()
-}
-
-func flattenPolicyState(securityPolicyState *import1.SecurityPolicyState) string {
-	return securityPolicyState.GetName()
-}
-
-func flattenRuleType(ruleType *import1.RuleType) string {
-	return ruleType.GetName()
-}
-
-func flattenSecurityPolicyType(securityPolicyType *import1.SecurityPolicyType) string {
-	return securityPolicyType.GetName()
-}
-
-func flattenSecurityPolicyScope(securityPolicyScope *import1.SecurityPolicyScope) string {
-	return securityPolicyScope.GetName()
-}
-
-func flattenIntraEntityGroupRuleAction(intraEntityGroupRuleAction *import1.IntraEntityGroupRuleAction) string {
-	return intraEntityGroupRuleAction.GetName()
 }

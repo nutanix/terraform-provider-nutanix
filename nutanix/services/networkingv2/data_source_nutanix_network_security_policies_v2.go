@@ -475,14 +475,14 @@ func flattenNetworkSecurityPolicy(pr []import1.NetworkSecurityPolicy) []interfac
 
 			net["ext_id"] = v.ExtId
 			net["name"] = v.Name
-			net["type"] = flattenSecurityPolicyType(v.Type)
+			net["type"] = v.Type.GetName()
 			net["description"] = v.Description
-			net["state"] = flattenPolicyState(v.State)
+			net["state"] = v.State.GetName()
 			net["rules"] = flattenNetworkSecurityPolicyRule(v.Rules)
 			net["is_ipv6_traffic_allowed"] = v.IsIpv6TrafficAllowed
 			net["is_hitlog_enabled"] = v.IsHitlogEnabled
 			if v.Scope != nil {
-				net["scope"] = flattenSecurityPolicyScope(v.Scope)
+				net["scope"] = v.Scope.GetName()
 			}
 			if v.VpcReferences != nil {
 				net["vpc_reference"] = v.VpcReferences
