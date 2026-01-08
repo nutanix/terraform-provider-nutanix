@@ -20,13 +20,13 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.4.
 ### What's New in v2.4.0
 
 - **New Resource Support**
-  - **Key Management Server (Security)**: Manage and configure external Key Management Servers for securing workloads.
-  - **Security Technical Implementation Guide controls details (Security)**: View compliance with technical security controls.
-  - **SSL Certification (Cluster Management)**: Add and manage SSL certificates for secure cluster communications.
-  - **Cluster Profile (Cluster Management)**: Define and manage cluster configuration profiles for consistent deployments.
-  - **Associate/Disassociate Cluster from Cluster Profile (Cluster Management)**: Link or unlink clusters to profiles for streamlined management.
-  - **Associate/Disassociate Categories to Cluster (Cluster Management)**: Assign or remove custom categories to clusters.
-  - **Storage Policies (Data Policies)**: Create and manage storage policy rules to optimize resource allocation.
+  - **Key Management Server (Security)**: Create, Update, Read and Delete Key Management Servers secure data encryption keys when encryption is enabled.
+  - **Security Technical Implementation Guide controls details (Security)**: Fetch the STIG controls details for STIG rules on each cluster.
+  - **SSL Certification (Cluster Management)**: Provides the ability to manage SSL certificates for clusters. This includes the ability to retrieve and update SSL certificates for clusters.
+  - **Cluster Profile (Cluster Management)**: Create, Update, Read and Delete cluster configuration profiles for consistent deployments.
+  - **Associate/Disassociate Cluster from Cluster Profile (Cluster Management)**: Associate or Disassociate clusters to profiles for streamlined management.
+  - **Associate/Disassociate Categories to Cluster (Cluster Management)**: Associate or Disassociate categories to clusters.
+  - **Storage Policies (Data Policies)**: Create, Update, Read and Delete Storage Policy which helps in ease of storage management at scale.
 
 - **Enhancements:**
   - Add Support for Package-Specific Acceptance Tests via /ok-to-test -p Command [#1014](https://github.com/nutanix/terraform-provider-nutanix/issues/1014)
@@ -42,7 +42,7 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.4.
    - Bug Report: resource "nutanix_user_groups_v2" [#947](https://github.com/nutanix/terraform-provider-nutanix/issues/947)
 
 - **Breaking Chnages:**
-   - From PC version 7.5 onwards, the resource domain is not supported for Projects resources. As a result, Terraform support for this functionality has been removed starting with the 2.4.0 release. [#1049](https://github.com/nutanix/terraform-provider-nutanix/issues/1049)
+   - From PC version 7.5 onwards, the resource domain is not supported by Projects API. As a result, Terraform support for this functionality (resource_doamin attribute) has been removed starting with the 2.4.0 release. [#1049](https://github.com/nutanix/terraform-provider-nutanix/issues/1049)
 
 
 ~> **Important Notice:** Upcoming Deprecation of Legacy Nutanix Terraform Provider Resources. Starting with the Nutanix Terraform Provider release planned for Q4-CY2026, legacy resources which are based on v0.8,v1,v2 and v3 APIs will be deprecated and no longer supported. For more information, visit [Legacy API Deprecation Announcement](https://portal.nutanix.com/page/documents/eol/list?type=announcement) [Legacy API Deprecation - FAQs](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA0VO0000005rgP0AQ). Nutanix strongly encourages you to migrate your scripts and applications to the latest v2 version of the Nutanix Terraform Provider resources, which are built on our v4 APIs/SDKs. By adopting the latest v2 version based on v4 APIs and SDKs, our users can leverage the enhanced capabilities and latest innovations from Nutanix. We understand that this transition may require some effort, and we are committed to supporting you throughout the process. Please refer to our documentation and support channels for guidance and assistance.

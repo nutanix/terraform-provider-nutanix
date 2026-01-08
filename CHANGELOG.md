@@ -2,13 +2,13 @@
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.4...v2.4.0)
 
 **New Features:**
-- **Key Management Server (Security)**: Manage and configure external Key Management Servers for securing workloads.
-- **Security Technical Implementation Guide controls details (Security)**: View compliance with technical security controls.
-- **SSL Certification (Cluster Management)**: Add and manage SSL certificates for secure cluster communications.
-- **Cluster Profile (Cluster Management)**: Define and manage cluster configuration profiles for consistent deployments.
-- **Associate/Disassociate Cluster from Cluster Profile (Cluster Management)**: Link or unlink clusters to profiles for streamlined management.
-- **Associate/Disassociate Categories to Cluster (Cluster Management)**: Assign or remove custom categories to clusters.
-- **Storage Policies (Data Policies)**: Create and manage storage policy rules to optimize resource allocation.
+- **Key Management Server (Security)**: Create, Update, Read and Delete Key Management Servers secure data encryption keys when encryption is enabled.
+- **Security Technical Implementation Guide controls details (Security)**: Fetch the STIG controls details for STIG rules on each cluster.
+- **SSL Certification (Cluster Management)**: Provides the ability to manage SSL certificates for clusters. This includes the ability to retrieve and update SSL certificates for clusters.
+- **Cluster Profile (Cluster Management)**: Create, Update, Read and Delete cluster configuration profiles for consistent deployments.
+- **Associate/Disassociate Cluster from Cluster Profile (Cluster Management)**: Associate or Disassociate clusters to profiles for streamlined management.
+- **Associate/Disassociate Categories to Cluster (Cluster Management)**: Associate or Disassociate categories to clusters.
+- **Storage Policies (Data Policies)**: Create, Update, Read and Delete Storage Policy which helps in ease of storage management at scale.
 
 **Enhancements:**
 - Add Support for Package-Specific Acceptance Tests via /ok-to-test -p Command [#1014](https://github.com/nutanix/terraform-provider-nutanix/issues/1014)
@@ -24,7 +24,7 @@
 - Bug Report: resource "nutanix_user_groups_v2" [#947](https://github.com/nutanix/terraform-provider-nutanix/issues/947)
 
 **Breaking Chnages:**
-- From PC version 7.5 onwards, the resource domain is not supported for Projects resources. As a result, Terraform support for this functionality has been removed starting with the 2.4.0 release. [#1049](https://github.com/nutanix/terraform-provider-nutanix/issues/1049)
+- From PC version 7.5 onwards, the resource domain is not supported by Projects API. As a result, Terraform support for this functionality (resource_doamin attribute) has been removed starting with the 2.4.0 release. [#1049](https://github.com/nutanix/terraform-provider-nutanix/issues/1049)
 
 ## 2.3.4 (November 14, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.3...v2.3.4)
