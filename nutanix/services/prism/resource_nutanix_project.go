@@ -2,6 +2,7 @@ package prism
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -31,6 +32,7 @@ func ResourceNutanixProject() *schema.Resource {
 			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
 			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
 		},
+		CustomizeDiff: customizeDiffProjectACP,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -53,9 +55,13 @@ func ResourceNutanixProject() *schema.Resource {
 				Optional: true,
 			},
 			"resource_domain": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:       schema.TypeList,
+				Optional:   true,
+				MaxItems:   1,
+				Deprecated: "Deprecated since v2.4.0. Prism Central no longer supports `resource_domain` for projects; remove this block from your configuration/scripts.",
+				// `resource_domain` is no longer supported by Prism Central, but we keep it in the schema to avoid
+				// breaking existing customer configurations. We also suppress diffs so it does not trigger updates.
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool { return true },
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"resources": {
@@ -378,6 +384,7 @@ func ResourceNutanixProject() *schema.Resource {
 			"acp": {
 				Type:         schema.TypeList,
 				Optional:     true,
+				Computed:     true,
 				RequiredWith: []string{"use_project_internal"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -409,6 +416,7 @@ func ResourceNutanixProject() *schema.Resource {
 									},
 								},
 							},
+							Set: acpReferenceHash,
 						},
 						"user_group_reference_list": {
 							Type:     schema.TypeSet,
@@ -429,6 +437,7 @@ func ResourceNutanixProject() *schema.Resource {
 									},
 								},
 							},
+							Set: acpReferenceHash,
 						},
 						"role_reference": {
 							Type:     schema.TypeList,
@@ -755,8 +764,7 @@ func ResourceNutanixProject() *schema.Resource {
 func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).API
 
-	uuid := ""
-	taskUUID := ""
+	var uuid, taskUUID string
 	// if use project internal flag is set ,  we will use projects_internal API
 	//nolint:staticcheck
 	if _, ok := d.GetOkExists("use_project_internal"); ok {
@@ -831,7 +839,8 @@ func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, m
 			}
 
 			if acp, ok := d.GetOk("acp"); ok {
-				accessControlPolicy = expandCreateAcp(acp.([]interface{}), d, d.Id(), clusterUUID, meta)
+				acp := acp.([]interface{})
+				accessControlPolicy = expandCreateAcp(acp, d, d.Id(), clusterUUID, meta)
 			}
 			spec.AccessControlPolicyList = accessControlPolicy
 			spec.ProjectDetail = projDetails
@@ -900,6 +909,8 @@ func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).API
+	diags := diag.Diagnostics{}
+
 	//nolint:staticcheck
 	if _, ok := d.GetOkExists("use_project_internal"); ok {
 		project, err := conn.V3.GetProjectInternal(ctx, d.Id())
@@ -925,9 +936,7 @@ func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, met
 		if err := d.Set("is_default", project.Status.ProjectStatus.Resources.IsDefault); err != nil {
 			return diag.Errorf("error setting `is_default` for Project(%s): %s", d.Id(), err)
 		}
-		if err := d.Set("resource_domain", flattenResourceDomain(project.Spec.ProjectDetail.Resources.ResourceDomain)); err != nil {
-			return diag.Errorf("error setting `resource_domain` for Project(%s): %s", d.Id(), err)
-		}
+		// Deprecated since v2.4.0. Prism Central no longer supports `resource_domain` for projects; remove this block from your configuration/scripts.
 		if err := d.Set("account_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.AccountReferenceList)); err != nil {
 			return diag.Errorf("error setting `account_reference_list` for Project(%s): %s", d.Id(), err)
 		}
@@ -978,8 +987,30 @@ func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, met
 		if err := d.Set("default_environment_reference", flattenReferenceValuesList(project.Spec.ProjectDetail.Resources.DefaultEnvironmentReference)); err != nil {
 			return diag.Errorf("error setting `default_environment_reference` for Project(%s): %s", d.Id(), err)
 		}
-		if err := d.Set("acp", flattenProjectAcp(project.Status.AccessControlPolicyListStatus)); err != nil {
+		remoteACPFlat := flattenProjectAcp(project.Status.AccessControlPolicyListStatus)
+		if err := d.Set("acp", orderACPsLikeState(d, remoteACPFlat)); err != nil {
 			return diag.Errorf("error setting `acp` for Project(%s): %s", d.Id(), err)
+		}
+
+		// During plan, Terraform runs a refresh (Read). If the user explicitly set `acp`
+		// in config and removed an ACP from the middle, subsequent ACPs shift indices and
+		// the plan can look noisy. We detect this by comparing the ACP role order from the
+		// API with the ACP role order in raw config, then emit a warning so it shows up in
+		// plan output.
+		if newConfigRoles, set := rawConfigACPRoleUUIDs(d); set {
+			oldRoles := make([]string, 0, len(remoteACPFlat))
+			for _, acp := range remoteACPFlat {
+				if role := getACPRoleUUID(acp); role != "" {
+					oldRoles = append(oldRoles, role)
+				}
+			}
+			if acpRemovalFromMiddleRoles(oldRoles, newConfigRoles) {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  acpIndexWarningSummary,
+					Detail:   acpIndexWarningDetail,
+				})
+			}
 		}
 	} else {
 		project, err := conn.V3.GetProject(d.Id())
@@ -1004,9 +1035,6 @@ func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, met
 		}
 		if err := d.Set("is_default", project.Status.Resources.IsDefault); err != nil {
 			return diag.Errorf("error setting `is_default` for Project(%s): %s", d.Id(), err)
-		}
-		if err := d.Set("resource_domain", flattenResourceDomain(project.Spec.Resources.ResourceDomain)); err != nil {
-			return diag.Errorf("error setting `resource_domain` for Project(%s): %s", d.Id(), err)
 		}
 		if err := d.Set("account_reference_list", flattenReferenceList(project.Spec.Resources.AccountReferenceList)); err != nil {
 			return diag.Errorf("error setting `account_reference_list` for Project(%s): %s", d.Id(), err)
@@ -1046,14 +1074,14 @@ func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, met
 			return diag.Errorf("error setting `api_version` for Project(%s): %s", d.Id(), err)
 		}
 	}
-	return nil
+	return diags
 }
 
 func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).API
+	diags := diag.Diagnostics{}
 
-	uuid := ""
-	taskUUID := ""
+	var uuid, taskUUID string
 	//nolint:staticcheck
 	if _, ok := d.GetOkExists("use_project_internal"); ok {
 		request := &v3.ProjectInternalIntentInput{}
@@ -1080,12 +1108,6 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 			if response.Spec.ProjectDetail != nil || response.Spec.AccessControlPolicyList != nil {
 				projDetails = response.Spec.ProjectDetail
 			}
-
-			if len(response.Spec.ProjectDetail.Resources.ResourceDomain.Resources) > 0 {
-				projDetails.Resources.ResourceDomain = response.Spec.ProjectDetail.Resources.ResourceDomain
-			} else {
-				projDetails.Resources.ResourceDomain = nil
-			}
 		}
 		var clusterUUID string
 		if clusterID, ok := d.GetOk("cluster_uuid"); ok {
@@ -1097,9 +1119,6 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 		if d.HasChange("description") {
 			projDetails.Description = utils.StringPtr(d.Get("description").(string))
-		}
-		if d.HasChange("resource_domain") {
-			projDetails.Resources.ResourceDomain = expandProjectInternalResourceDomain(d.Get("resource_domain"))
 		}
 		if d.HasChange("account_reference_list") {
 			projDetails.Resources.AccountReferenceList = expandReferenceList(d, "account_reference_list")
@@ -1146,8 +1165,27 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if d.HasChange("acp") {
-			acp := d.Get("acp")
-			accessControlPolicy = UpdateExpandAcpRM(acp.([]interface{}), response, d, meta, d.Id(), clusterUUID)
+			// Emit a targeted warning when ACPs are removed from the middle of the list,
+			// which causes positional index shifting and noisy diffs.
+			if oldRaw, newRaw := d.GetChange("acp"); oldRaw != nil && newRaw != nil {
+				if oldList, ok1 := oldRaw.([]interface{}); ok1 {
+					if newList, ok2 := newRaw.([]interface{}); ok2 {
+						if acpRemovalFromMiddle(oldList, newList) {
+							diags = append(diags, diag.Diagnostic{
+								Severity: diag.Warning,
+								Summary:  acpIndexWarningSummary,
+								Detail:   acpIndexWarningDetail,
+							})
+						}
+					}
+				}
+			}
+
+			acp := d.Get("acp").([]interface{})
+			log.Printf("[DEBUG] acp has changed")
+			aJSON, _ := json.MarshalIndent(acp, "", "  ")
+			log.Printf("[DEBUG] acp: %s", string(aJSON))
+			accessControlPolicy = UpdateExpandAcpRM(acp, response, d, meta, d.Id(), clusterUUID)
 		} else {
 			accessControlPolicy = UpdateACPNoChange(response)
 		}
@@ -1181,9 +1219,6 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 		if d.HasChange("description") {
 			project.Spec.Descripion = d.Get("description").(string)
-		}
-		if d.HasChange("resource_domain") {
-			project.Spec.Resources.ResourceDomain = expandResourceDomain(d)
 		}
 		if d.HasChange("account_reference_list") {
 			project.Spec.Resources.AccountReferenceList = expandReferenceList(d, "account_reference_list")
@@ -1242,7 +1277,7 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("error waiting for project(%s) to update: %s", uuid, errWaitTask)
 	}
 
-	return resourceNutanixProjectRead(ctx, d, meta)
+	return append(diags, resourceNutanixProjectRead(ctx, d, meta)...)
 }
 
 func resourceNutanixProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -1276,7 +1311,6 @@ func expandProjectSpec(d *schema.ResourceData) *v3.ProjectSpec {
 		Name:       d.Get("name").(string),
 		Descripion: d.Get("description").(string),
 		Resources: &v3.ProjectResources{
-			ResourceDomain:                 expandResourceDomain(d),
 			AccountReferenceList:           expandReferenceList(d, "account_reference_list"),
 			EnvironmentReferenceList:       expandReferenceList(d, "environment_reference_list"),
 			DefaultSubnetReference:         expandReferenceList(d, "default_subnet_reference")[0],
@@ -1367,7 +1401,6 @@ func expandProjectDetails(d *schema.ResourceData) *v3.ProjectDetails {
 		Name:        utils.StringPtr(d.Get("name").(string)),
 		Description: utils.StringPtr(d.Get("description").(string)),
 		Resources: &v3.ProjectInternalResources{
-			ResourceDomain:                 expandResourceDomain(d),
 			AccountReferenceList:           expandReferenceList(d, "account_reference_list"),
 			EnvironmentReferenceList:       expandReferenceList(d, "environment_reference_list"),
 			DefaultSubnetReference:         expandReferenceList(d, "default_subnet_reference")[0],
@@ -1720,12 +1753,36 @@ func expandCreateAcp(pr []interface{}, d *schema.ResourceData, projectUUID strin
 			if v1, ok1 := v["description"]; ok1 {
 				acpSpec.Description = utils.StringPtr(v1.(string))
 			}
+			// Handle multiple users in user_reference_list (TypeSet)
 			if v1, ok := v["user_reference_list"]; ok {
-				acpRes.UserReferenceList = validateArrayRef(v1.(*schema.Set), utils.StringPtr("user"))
+				if userSet, ok := v1.(*schema.Set); ok && userSet.Len() > 0 {
+					userRefs := userSet.List()
+					refList := make([]*v3.Reference, 0, len(userRefs))
+					for _, userRef := range userRefs {
+						ref := expandReference(userRef.(map[string]interface{}))
+						if ref != nil {
+							ref.Kind = utils.StringPtr("user")
+							refList = append(refList, ref)
+						}
+					}
+					acpRes.UserReferenceList = refList
+				}
 			}
 
+			// Handle multiple user groups in user_group_reference_list (TypeSet)
 			if v1, ok := v["user_group_reference_list"]; ok {
-				acpRes.UserGroupReferenceList = validateArrayRef(v1.(*schema.Set), utils.StringPtr("user_group"))
+				if groupSet, ok := v1.(*schema.Set); ok && groupSet.Len() > 0 {
+					groupRefs := groupSet.List()
+					refList := make([]*v3.Reference, 0, len(groupRefs))
+					for _, groupRef := range groupRefs {
+						ref := expandReference(groupRef.(map[string]interface{}))
+						if ref != nil {
+							ref.Kind = utils.StringPtr("user_group")
+							refList = append(refList, ref)
+						}
+					}
+					acpRes.UserGroupReferenceList = refList
+				}
 			}
 
 			if v, ok := v["role_reference"]; ok {
@@ -1770,8 +1827,21 @@ func expandCreateAcp(pr []interface{}, d *schema.ResourceData, projectUUID strin
 
 func UpdateExpandAcpRM(pr []interface{}, res *v3.ProjectInternalIntentResponse, d *schema.ResourceData, meta interface{}, projectUUID string, clusterUUID string) []*v3.AccessControlPolicyList {
 	if len(pr) > 0 {
+		// When "acp" is schema.TypeList, Terraform compares positionally. However, the API may
+		// return ACPs in a different order, so we must update ACPs by stable identity (role UUID),
+		// not by list index.
+		existingByRole := make(map[string]*v3.AccessControlPolicyList)
+		for _, existing := range res.Spec.AccessControlPolicyList {
+			if existing == nil || existing.ACP == nil || existing.ACP.Resources == nil || existing.ACP.Resources.RoleReference == nil {
+				continue
+			}
+			if existing.ACP.Resources.RoleReference.UUID == nil {
+				continue
+			}
+			existingByRole[*existing.ACP.Resources.RoleReference.UUID] = existing
+		}
+
 		acpList := make([]*v3.AccessControlPolicyList, len(pr))
-		oldACPExists := len(res.Spec.AccessControlPolicyList)
 		for k, val := range pr {
 			acps := &v3.AccessControlPolicyList{}
 			acpSpec := &v3.AccessControlPolicySpec{}
@@ -1785,12 +1855,36 @@ func UpdateExpandAcpRM(pr []interface{}, res *v3.ProjectInternalIntentResponse, 
 			if v1, ok1 := v["description"]; ok1 {
 				acpSpec.Description = utils.StringPtr(v1.(string))
 			}
+			// Handle multiple users in user_reference_list (TypeSet)
 			if v, ok := v["user_reference_list"]; ok {
-				acpRes.UserReferenceList = validateArrayRef(v.(*schema.Set), utils.StringPtr("user"))
+				if userSet, ok := v.(*schema.Set); ok && userSet.Len() > 0 {
+					userRefs := userSet.List()
+					refList := make([]*v3.Reference, 0, len(userRefs))
+					for _, userRef := range userRefs {
+						ref := expandReference(userRef.(map[string]interface{}))
+						if ref != nil {
+							ref.Kind = utils.StringPtr("user")
+							refList = append(refList, ref)
+						}
+					}
+					acpRes.UserReferenceList = refList
+				}
 			}
 
+			// Handle multiple user groups in user_group_reference_list (TypeSet)
 			if v, ok := v["user_group_reference_list"]; ok {
-				acpRes.UserGroupReferenceList = validateArrayRef(v.(*schema.Set), utils.StringPtr("user_group"))
+				if groupSet, ok := v.(*schema.Set); ok && groupSet.Len() > 0 {
+					groupRefs := groupSet.List()
+					refList := make([]*v3.Reference, 0, len(groupRefs))
+					for _, groupRef := range groupRefs {
+						ref := expandReference(groupRef.(map[string]interface{}))
+						if ref != nil {
+							ref.Kind = utils.StringPtr("user_group")
+							refList = append(refList, ref)
+						}
+					}
+					acpRes.UserGroupReferenceList = refList
+				}
 			}
 
 			if v, ok := v["role_reference"]; ok {
@@ -1818,13 +1912,18 @@ func UpdateExpandAcpRM(pr []interface{}, res *v3.ProjectInternalIntentResponse, 
 			}
 
 			metadata := &v3.Metadata{}
-			if k < oldACPExists {
-				acps.Operation = utils.StringPtr("UPDATE")
-
-				metadata.Kind = res.Spec.AccessControlPolicyList[k].Metadata.Kind
-				metadata.UUID = res.Spec.AccessControlPolicyList[k].Metadata.UUID
-				metadata.Categories = nil
-				metadata.ProjectReference = nil
+			// Match existing ACP by role UUID; if found, UPDATE with correct metadata UUID.
+			if acpRes.RoleReference != nil && acpRes.RoleReference.UUID != nil {
+				if existing, ok := existingByRole[*acpRes.RoleReference.UUID]; ok && existing.Metadata != nil {
+					acps.Operation = utils.StringPtr("UPDATE")
+					metadata.Kind = existing.Metadata.Kind
+					metadata.UUID = existing.Metadata.UUID
+					metadata.Categories = nil
+					metadata.ProjectReference = nil
+				} else {
+					acps.Operation = utils.StringPtr("ADD")
+					metadata.Kind = utils.StringPtr("access_control_policy")
+				}
 			} else {
 				acps.Operation = utils.StringPtr("ADD")
 				metadata.Kind = utils.StringPtr("access_control_policy")

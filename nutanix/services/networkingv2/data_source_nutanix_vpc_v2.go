@@ -202,7 +202,9 @@ func dataSourceNutanixVPCv2Read(ctx context.Context, d *schema.ResourceData, met
 	if err := d.Set("description", getResp.Description); err != nil {
 		return diag.FromErr(err)
 	}
-
+	if err := d.Set("vpc_type", getResp.VpcType.GetName()); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
@@ -229,6 +231,6 @@ func dataSourceNutanixVPCv2Read(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(err)
 	}
 
-	d.SetId(*getResp.ExtId)
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return nil
 }

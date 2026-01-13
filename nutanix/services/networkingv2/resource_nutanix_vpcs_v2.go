@@ -2,6 +2,8 @@ package networkingv2
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -9,8 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -34,10 +37,12 @@ func ResourceNutanixVPCsV2() *schema.Resource {
 			},
 			"description": {
 				Type:     schema.TypeString,
+				Computed: true,
 				Optional: true,
 			},
 			"vpc_type": {
 				Type:         schema.TypeString,
+				Computed:     true,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"REGULAR", "TRANSIT"}, false),
 			},
@@ -183,6 +188,7 @@ func ResourceNutanixVPCsV2() *schema.Resource {
 			},
 			"metadata": {
 				Type:     schema.TypeList,
+				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: DatasourceMetadataSchemaV2(),
@@ -211,6 +217,9 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 
 	inputSpec := import1.Vpc{}
 
+	if metadata, ok := d.GetOk("metadata"); ok {
+		inputSpec.Metadata = expandMetadata(metadata.([]interface{}))
+	}
 	if name, ok := d.GetOk("name"); ok {
 		inputSpec.Name = utils.StringPtr(name.(string))
 	}
@@ -245,6 +254,9 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 		inputSpec.ExternallyRoutablePrefixes = expandIPSubnet(externallyRoutablePrefixes.([]interface{}))
 	}
 
+	aJSON, _ := json.MarshalIndent(inputSpec, "", " ")
+	log.Printf("[DEBUG] VPC create payload : %s", string(aJSON))
+
 	resp, err := conn.VpcAPIInstance.CreateVpc(&inputSpec)
 	if err != nil {
 		return diag.Errorf("error while creating floating IPs : %v", err)
@@ -254,30 +266,34 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VPC to be available
+
+	// Wait for the VPC to be created
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for vpc (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for VPC (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching vpc UUID : %v", err)
+		return diag.Errorf("error while fetching VPC task: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Create VPC Task Details: %s", string(aJSON))
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeVPC, "VPC")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(utils.StringValue(uuid))
 	return ResourceNutanixVPCsV2Read(ctx, d, meta)
 }
 
@@ -303,7 +319,9 @@ func ResourceNutanixVPCsV2Read(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("description", getResp.Description); err != nil {
 		return diag.FromErr(err)
 	}
-
+	if err := d.Set("vpc_type", getResp.VpcType.GetName()); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
@@ -386,18 +404,18 @@ func ResourceNutanixVPCsV2Update(ctx context.Context, d *schema.ResourceData, me
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the FileServer to be available
+
+	// Wait for the VPC to be updated
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for vpc (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for VPC (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	return ResourceNutanixVPCsV2Read(ctx, d, meta)
 }
@@ -413,18 +431,18 @@ func ResourceNutanixVPCsV2Delete(ctx context.Context, d *schema.ResourceData, me
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Subnet to be available
+
+	// Wait for the VPC to be deleted
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for vpc (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for VPC (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	return nil
 }

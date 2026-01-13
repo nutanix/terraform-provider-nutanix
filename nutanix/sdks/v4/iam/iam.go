@@ -1,9 +1,12 @@
 package iam
 
 import (
+	"strconv"
+
 	"github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/api"
 	iam "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/sdkconfig"
 )
 
 type Client struct {
@@ -27,9 +30,14 @@ func NewIamClient(credentials client.Credentials) (*Client, error) {
 		pcClient.Host = credentials.Endpoint
 		pcClient.Password = credentials.Password
 		pcClient.Username = credentials.Username
-		pcClient.Port = 9440
+		pcClient.Port = sdkconfig.DefaultPort
+		if credentials.Port != "" {
+			if p, err := strconv.Atoi(credentials.Port); err == nil {
+				pcClient.Port = p
+			}
+		}
 		pcClient.VerifySSL = false
-
+		pcClient.AllowVersionNegotiation = sdkconfig.AllowVersionNegotiation
 		baseClient = pcClient
 	}
 

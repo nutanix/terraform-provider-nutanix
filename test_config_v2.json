@@ -296,8 +296,18 @@
     "subnet_name": "",
     "bucket_name": "",
     "domain": "",
-    "public_network_ips":[""],
-    "storage_network_dns_ip": "",
-    "storage_network_vip": ""
+    "public_network_ips": ["", ""],
+    "storage_network_dns_ip": ["", ""],
+    "storage_network_vip": ["", ""]
+  },
+  "security": {
+    "kms": {
+      "endpoint_url": "",
+      "key_id": "",
+      "tenant_id": "",
+      "client_id": "",
+      "client_secret": "",
+      "credential_expiry_date": ""
+    }
   }
 }
