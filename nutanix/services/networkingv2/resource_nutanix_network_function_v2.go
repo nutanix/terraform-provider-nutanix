@@ -26,12 +26,100 @@ func ResourceNutanixNetworkFunctionV2() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"metadata": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: DatasourceMetadataSchemaV2(),
+				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"nic_pairs": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 2,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ingress_nic_reference": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"egress_nic_reference": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"is_enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"vm_reference": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						// these are computed attributes because they are set by the system
+						// come from the API response to indicate the current state of the network function
+						// indicates whether the pair is healthy or unhealthy
+						"data_plane_health_status": {Type: schema.TypeString, Computed: true},
+						// this is computed attribute because it is set by the system
+						// come from the API response to indicate the current state of the network function
+						// indicates whether the pair is active or passive
+						"high_availability_state": {Type: schema.TypeString, Computed: true},
+					},
+				},
+			},
+			"high_availability_mode": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(networkFunctionHighAvailabilityModeAllowed, false),
+			},
+			"failure_handling": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(networkFunctionFailureHandlingAllowed, false),
+			},
+			"traffic_forwarding_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(networkFunctionTrafficForwardingModeAllowed, false),
+			},
+			"data_plane_health_check_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"failure_threshold": {Type: schema.TypeInt, Optional: true, Computed: true},
+						"interval_secs":     {Type: schema.TypeInt, Optional: true, Computed: true},
+						"success_threshold": {Type: schema.TypeInt, Optional: true, Computed: true},
+						"timeout_secs":      {Type: schema.TypeInt, Optional: true, Computed: true},
+					},
+				},
+			},
+
+			// Computed attributes
 			"ext_id": {
 				Optional: true,
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tenant_id": {Type: schema.TypeString, Computed: true},
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"links": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -39,58 +127,6 @@ func ResourceNutanixNetworkFunctionV2() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"href": {Type: schema.TypeString, Computed: true},
 						"rel":  {Type: schema.TypeString, Computed: true},
-					},
-				},
-			},
-			"metadata": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: DatasourceMetadataSchemaV2(),
-				},
-			},
-			"name":        {Type: schema.TypeString, Required: true},
-			"description": {Type: schema.TypeString, Optional: true},
-			"failure_handling": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"NO_ACTION", "FAIL_CLOSE", "FAIL_OPEN"}, false),
-			},
-			"high_availability_mode": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"ACTIVE_PASSIVE"}, false),
-			},
-			"traffic_forwarding_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"INLINE", "VTAP"}, false),
-			},
-			"data_plane_health_check_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"failure_threshold": {Type: schema.TypeInt, Optional: true},
-						"interval_secs":     {Type: schema.TypeInt, Optional: true},
-						"success_threshold": {Type: schema.TypeInt, Optional: true},
-						"timeout_secs":      {Type: schema.TypeInt, Optional: true},
-					},
-				},
-			},
-			"nic_pairs": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ingress_nic_reference":    {Type: schema.TypeString, Required: true},
-						"egress_nic_reference":     {Type: schema.TypeString, Optional: true},
-						"is_enabled":               {Type: schema.TypeBool, Required: true},
-						"vm_reference":             {Type: schema.TypeString, Optional: true, Computed: true},
-						"data_plane_health_status": {Type: schema.TypeString, Computed: true},
-						"high_availability_state":  {Type: schema.TypeString, Computed: true},
 					},
 				},
 			},
@@ -111,17 +147,17 @@ func ResourceNutanixNetworkFunctionV2Create(ctx context.Context, d *schema.Resou
 	}
 
 	if v, ok := d.GetOk("failure_handling"); ok {
-		inputSpec.FailureHandling = common.ExpandEnum(v.(string), networkFunctionFailureHandlingMap, "failure_handling")
+		inputSpec.FailureHandling = common.ExpandEnum[import1.FailureHandling](v.(string))
 	}
 
-	ha := common.ExpandEnum(d.Get("high_availability_mode").(string), networkFunctionHighAvailabilityModeMap, "high_availability_mode")
+	ha := common.ExpandEnum[import1.HighAvailabilityMode](d.Get("high_availability_mode").(string))
 	if ha == nil {
 		return diag.Errorf("invalid high_availability_mode: %s", d.Get("high_availability_mode").(string))
 	}
 	inputSpec.HighAvailabilityMode = ha
 
 	if v, ok := d.GetOk("traffic_forwarding_mode"); ok {
-		inputSpec.TrafficForwardingMode = common.ExpandEnum(v.(string), networkFunctionTrafficForwardingModeMap, "traffic_forwarding_mode")
+		inputSpec.TrafficForwardingMode = common.ExpandEnum[import1.TrafficForwardingMode](v.(string))
 	}
 
 	if v, ok := d.GetOk("data_plane_health_check_config"); ok {
@@ -274,17 +310,17 @@ func ResourceNutanixNetworkFunctionV2Update(ctx context.Context, d *schema.Resou
 	}
 	if d.HasChange("failure_handling") {
 		if v, ok := d.GetOk("failure_handling"); ok {
-			updateSpec.FailureHandling = common.ExpandEnum(v.(string), networkFunctionFailureHandlingMap, "failure_handling")
+			updateSpec.FailureHandling = common.ExpandEnum[import1.FailureHandling](v.(string))
 		} else {
 			updateSpec.FailureHandling = nil
 		}
 	}
 	if d.HasChange("high_availability_mode") {
-		updateSpec.HighAvailabilityMode = common.ExpandEnum(d.Get("high_availability_mode").(string), networkFunctionHighAvailabilityModeMap, "high_availability_mode")
+		updateSpec.HighAvailabilityMode = common.ExpandEnum[import1.HighAvailabilityMode](d.Get("high_availability_mode").(string))
 	}
 	if d.HasChange("traffic_forwarding_mode") {
 		if v, ok := d.GetOk("traffic_forwarding_mode"); ok {
-			updateSpec.TrafficForwardingMode = common.ExpandEnum(v.(string), networkFunctionTrafficForwardingModeMap, "traffic_forwarding_mode")
+			updateSpec.TrafficForwardingMode = common.ExpandEnum[import1.TrafficForwardingMode](v.(string))
 		} else {
 			updateSpec.TrafficForwardingMode = nil
 		}

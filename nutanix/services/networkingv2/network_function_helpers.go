@@ -11,12 +11,24 @@ var (
 		import1.FAILUREHANDLING_FAIL_CLOSE,
 		import1.FAILUREHANDLING_FAIL_OPEN,
 	})
+	networkFunctionFailureHandlingAllowed = common.EnumToStrings([]import1.FailureHandling{
+		import1.FAILUREHANDLING_NO_ACTION,
+		import1.FAILUREHANDLING_FAIL_CLOSE,
+		import1.FAILUREHANDLING_FAIL_OPEN,
+	})
 
 	networkFunctionHighAvailabilityModeMap = common.EnumToMap([]import1.HighAvailabilityMode{
 		import1.HIGHAVAILABILITYMODE_ACTIVE_PASSIVE,
 	})
+	networkFunctionHighAvailabilityModeAllowed = common.EnumToStrings([]import1.HighAvailabilityMode{
+		import1.HIGHAVAILABILITYMODE_ACTIVE_PASSIVE,
+	})
 
 	networkFunctionTrafficForwardingModeMap = common.EnumToMap([]import1.TrafficForwardingMode{
+		import1.TRAFFICFORWARDINGMODE_INLINE,
+		import1.TRAFFICFORWARDINGMODE_VTAP,
+	})
+	networkFunctionTrafficForwardingModeAllowed = common.EnumToStrings([]import1.TrafficForwardingMode{
 		import1.TRAFFICFORWARDINGMODE_INLINE,
 		import1.TRAFFICFORWARDINGMODE_VTAP,
 	})
