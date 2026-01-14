@@ -31,3 +31,11 @@ jobs:
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 🟩 Backup artifacts (runs always)
+      - name: Backup artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: goreleaser-artifacts-backup
+          path: dist/
+          retention-days: 400
