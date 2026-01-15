@@ -1026,7 +1026,7 @@ func DatasourceNutanixVirtualMachineV4() *schema.Resource {
 			"nics": {
 				Type:     schema.TypeList,
 				Computed: true,
-			Elem: nicsElemSchemaV2WithTenantLinks(),
+				Elem:     nicsElemSchemaV2WithTenantLinks(),
 			},
 			"gpus": {
 				Type:     schema.TypeList,

@@ -1840,7 +1840,7 @@ func schemaForNics() *schema.Schema {
 		Type:     schema.TypeList,
 		Optional: true,
 		Computed: true,
-		Elem: nicsElemSchemaV2WithTenantLinks(),
+		Elem:     nicsElemSchemaV2WithTenantLinks(),
 	}
 }
 
