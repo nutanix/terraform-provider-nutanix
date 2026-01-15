@@ -436,7 +436,7 @@ func expandNodeListNetworkingDetails(pr []interface{}) []config.NodeListNetworki
 				node.NodePosition = utils.StringPtr(nodePosition.(string))
 			}
 			if hypervisorType, ok := val["hypervisor_type"]; ok {
-				node.HypervisorType = common.ExpandEnum(hypervisorType, HypervisorTypeMap, "hypervisor_type")
+				node.HypervisorType = common.ExpandEnum[config.HypervisorType](hypervisorType)
 			}
 			if roboMixedHypervisor, ok := val["is_robo_mixed_hypervisor"]; ok {
 				node.IsRoboMixedHypervisor = utils.BoolPtr(roboMixedHypervisor.(bool))

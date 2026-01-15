@@ -27,7 +27,7 @@ const (
 )
 
 func ResourceNutanixVirtualMachineV2() *schema.Resource {
-	return &schema.Resource{
+	r := &schema.Resource{
 		CreateContext: ResourceNutanixVirtualMachineV2Create,
 		ReadContext:   ResourceNutanixVirtualMachineV2Read,
 		UpdateContext: ResourceNutanixVirtualMachineV2Update,
@@ -1085,9 +1085,10 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 							Computed: true,
 						},
 						"backing_info": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
+							Type:       schema.TypeList,
+							Optional:   true,
+							Computed:   true,
+							Deprecated: "Use `nic_backing_info` instead. This field will be removed in a future release.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"model": {
@@ -1115,9 +1116,10 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 							},
 						},
 						"network_info": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
+							Type:       schema.TypeList,
+							Optional:   true,
+							Computed:   true,
+							Deprecated: "Use `nic_backing_info` instead. This field will be removed in a future release.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"nic_type": {
@@ -1258,6 +1260,503 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 																Type:     schema.TypeInt,
 																Optional: true,
 																Default:  defaultValue,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						// new field added in v2.4.1 since backing_info and network_info are deprecated
+						"nic_backing_info": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"virtual_ethernet_nic": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"model": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.StringInSlice([]string{"VIRTIO", "E1000"}, false),
+												},
+												"mac_address": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+												"is_connected": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Computed: true,
+												},
+												"num_queues": {
+													Type:     schema.TypeInt,
+													Optional: true,
+													Default:  1,
+												},
+											},
+										},
+									},
+									"sriov_nic": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"sriov_profile_reference": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"ext_id": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+														},
+													},
+												},
+												"host_pcie_device_reference": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"ext_id": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+														},
+													},
+												},
+												"is_connected": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Computed: true,
+												},
+												"mac_address": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"dp_offload_nic": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"dp_offload_profile_reference": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"ext_id": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+														},
+													},
+												},
+												"host_pcie_device_reference": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"ext_id": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+														},
+													},
+												},
+												"is_connected": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Computed: true,
+												},
+												"mac_address": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"nic_network_info": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"virtual_ethernet_nic_network_info": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"nic_type": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														"SPAN_DESTINATION_NIC",
+														"NORMAL_NIC", "DIRECT_NIC", "NETWORK_FUNCTION_NIC",
+													}, false),
+												},
+												"network_function_chain": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"ext_id": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+														},
+													},
+												},
+												"network_function_nic_type": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														"TAP", "EGRESS",
+														"INGRESS",
+													}, false),
+												},
+												"subnet": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"ext_id": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+														},
+													},
+												},
+												"vlan_mode": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.StringInSlice([]string{"TRUNK", "ACCESS"}, false),
+												},
+												"trunked_vlans": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeInt,
+													},
+												},
+												"should_allow_unknown_macs": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Computed: true,
+												},
+												"ipv4_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"should_assign_ip": {
+																Type:     schema.TypeBool,
+																Optional: true,
+																Computed: true,
+															},
+															"ip_address": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"value": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																			Computed: true,
+																		},
+																		"prefix_length": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																			Default:  defaultValue,
+																		},
+																	},
+																},
+															},
+															"secondary_ip_address_list": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"value": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																			Computed: true,
+																		},
+																		"prefix_length": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																			Default:  defaultValue,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												// not visible in API reference
+												"ipv4_info": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"learned_ip_addresses": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"value": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"prefix_length": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																			Default:  defaultValue,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												// not visible in API reference
+												"ipv6_info": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"learned_ipv6_addresses": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"value": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"prefix_length": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																			Default:  defaultValue,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"sriov_nic_network_info": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"vlan_id": {
+													Type:     schema.TypeInt,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"dp_offload_nic_network_info": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"subnet": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"ext_id": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+														},
+													},
+												},
+												"vlan_mode": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.StringInSlice([]string{"TRUNK", "ACCESS"}, false),
+												},
+												"trunked_vlans": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeInt,
+													},
+												},
+												"should_allow_unknown_macs": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Computed: true,
+												},
+												"ipv4_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"should_assign_ip": {
+																Type:     schema.TypeBool,
+																Optional: true,
+																Computed: true,
+															},
+															"ip_address": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"value": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																			Computed: true,
+																		},
+																		"prefix_length": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																			Default:  defaultValue,
+																		},
+																	},
+																},
+															},
+															"secondary_ip_address_list": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"value": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																			Computed: true,
+																		},
+																		"prefix_length": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																			Default:  defaultValue,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												// not visible in API reference
+												"ipv4_info": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"learned_ip_addresses": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"value": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"prefix_length": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																			Default:  defaultValue,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												// not visible in API reference
+												"ipv6_info": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"learned_ipv6_addresses": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"value": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"prefix_length": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																			Default:  defaultValue,
+																		},
+																	},
+																},
 															},
 														},
 													},
@@ -1417,6 +1916,18 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 			},
 		},
 	}
+
+	// v1: migrate deprecated NIC fields into new nic_* fields to avoid diffs after upgrade.
+	r.SchemaVersion = 1
+	r.StateUpgraders = []schema.StateUpgrader{
+		{
+			Type:    r.CoreConfigSchema().ImpliedType(),
+			Upgrade: resourceNutanixVirtualMachineV2StateUpgradeV0,
+			Version: 0,
+		},
+	}
+
+	return r
 }
 
 func schemaForGuestCustomization() *schema.Schema {
@@ -3535,8 +4046,8 @@ func diffConfig(oldValue []interface{}, newValue []interface{}) ([]interface{}, 
 
 // Check if VM is in power off state to perform update operations
 func checkForHotPlugChanges(d *schema.ResourceData) bool {
-	if d.HasChange(("num_sockets")) || d.HasChange(("num_cores_per_socket")) || d.HasChange(("memory_size_bytes")) ||
-		d.HasChange(("num_threads_per_core")) || d.HasChange(("cd_rom")) || d.HasChange(("num_numa_nodes")) ||
+	if d.HasChange("num_sockets") || d.HasChange("num_cores_per_socket") || d.HasChange("memory_size_bytes") ||
+		d.HasChange("num_threads_per_core") || d.HasChange("cd_rom") || d.HasChange("num_numa_nodes") ||
 		d.HasChange("cluster") || d.HasChange("is_cpu_passthrough_enabled") || d.HasChange("enabled_cpu_features") ||
 		d.HasChange("is_vcpu_hard_pinning_enabled") || d.HasChange("guest_customization") || d.HasChange("guest_tools") ||
 		d.HasChange("serial_ports") || d.HasChange("gpus") || d.HasChange("boot_config") {
@@ -3553,6 +4064,75 @@ func isVMPowerOff(d *schema.ResourceData, conn *vmm.Client) bool {
 	vmResp := readResp.Data.GetValue().(config.Vm)
 
 	return vmResp.PowerState.GetName() == "OFF"
+}
+
+// resourceNutanixVirtualMachineV2StateUpgradeV0 migrates legacy NIC backing fields into the new schema.
+// Specifically:
+// - nics[*].backing_info -> nics[*].nic_backing_info[0].virtual_ethernet_nic
+func resourceNutanixVirtualMachineV2StateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	nicsRaw, ok := rawState["nics"]
+	if !ok || nicsRaw == nil {
+		return rawState, nil
+	}
+
+	nics, ok := nicsRaw.([]interface{})
+	if !ok || len(nics) == 0 {
+		return rawState, nil
+	}
+
+	for _, nicItem := range nics {
+		nicMap, ok := nicItem.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		// If new field already present, do nothing.
+		if v, ok := nicMap["nic_backing_info"]; ok {
+			if list, ok := v.([]interface{}); ok && len(list) > 0 {
+				continue
+			}
+		}
+
+		// Migrate legacy backing_info into nic_backing_info.virtual_ethernet_nic.
+		backingRaw, ok := nicMap["backing_info"]
+		if !ok || backingRaw == nil {
+			// don't return; we may still migrate network_info below
+		} else {
+			backingList, ok := backingRaw.([]interface{})
+			if ok && len(backingList) > 0 {
+				nicMap["nic_backing_info"] = []interface{}{
+					map[string]interface{}{
+						"virtual_ethernet_nic": backingList,
+					},
+				}
+			}
+		}
+
+		// If new field already present, do nothing.
+		if v, ok := nicMap["nic_network_info"]; ok {
+			if list, ok := v.([]interface{}); ok && len(list) > 0 {
+				continue
+			}
+		}
+
+		// Migrate legacy network_info into nic_network_info.virtual_ethernet_nic_network_info.
+		networkRaw, ok := nicMap["network_info"]
+		if !ok || networkRaw == nil {
+			continue
+		}
+		networkList, ok := networkRaw.([]interface{})
+		if !ok || len(networkList) == 0 {
+			continue
+		}
+
+		nicMap["nic_network_info"] = []interface{}{
+			map[string]interface{}{
+				"virtual_ethernet_nic_network_info": networkList,
+			},
+		}
+	}
+
+	return rawState, nil
 }
 
 // getFirstIPAddress returns the first available IP address from a NIC.
@@ -3711,18 +4291,7 @@ func prepareVMConfigFromMap(m map[string]interface{}) *config.Vm {
 		body.IsVgaConsoleEnabled = utils.BoolPtr(vgaConsole.(bool))
 	}
 	if machineType, ok := m["machine_type"]; ok {
-		const two, three, four = 2, 3, 4
-		subMap := map[string]interface{}{
-			"PC":      two,
-			"PSERIES": three,
-			"Q35":     four,
-		}
-		if val, ok := machineType.(string); ok {
-			if pVal, exists := subMap[val]; exists {
-				p := config.MachineType(pVal.(int))
-				body.MachineType = &p
-			}
-		}
+		body.MachineType = common.ExpandEnum[config.MachineType](machineType)
 	}
 	if vtpmConfig, ok := m["vtpm_config"]; ok {
 		body.VtpmConfig = expandVtpmConfig(vtpmConfig)
@@ -3752,18 +4321,7 @@ func prepareVMConfigFromMap(m map[string]interface{}) *config.Vm {
 		body.SerialPorts = expandSerialPort(serialPorts.([]interface{}))
 	}
 	if protectionType, ok := m["protection_type"]; ok {
-		const two, three, four = 2, 3, 4
-		subMap := map[string]interface{}{
-			"UNPROTECTED":    two,
-			"PD_PROTECTED":   three,
-			"RULE_PROTECTED": four,
-		}
-		if val, ok := protectionType.(string); ok {
-			if pVal, exists := subMap[val]; exists {
-				p := config.ProtectionType(pVal.(int))
-				body.ProtectionType = &p
-			}
-		}
+		body.ProtectionType = common.ExpandEnum[config.ProtectionType](protectionType)
 	}
 	if protectionPolicyState, ok := m["protection_policy_state"]; ok {
 		body.ProtectionPolicyState = expandProtectionPolicyState(protectionPolicyState)

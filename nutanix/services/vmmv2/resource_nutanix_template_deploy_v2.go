@@ -367,25 +367,327 @@ func expandNic(pr []interface{}) []config.Nic {
 		nicList := make([]config.Nic, len(pr))
 
 		for k, v := range pr {
-			nic := config.Nic{}
+			nic := config.NewNic()
 
 			val := v.(map[string]interface{})
 
 			if extID, ok := val["ext_id"]; ok && len(extID.(string)) > 0 {
 				nic.ExtId = utils.StringPtr(extID.(string))
 			}
-			if backingInfo, ok := val["backing_info"]; ok && len(backingInfo.([]interface{})) > 0 {
+			// Prefer new nic_backing_info (v2.4.1+). If not present, fall back to legacy backing_info and
+			// treat it as nic_backing_info.virtual_ethernet_nic to keep old configs working.
+			if nbiRaw, ok := val["nic_backing_info"]; ok && nbiRaw != nil && len(nbiRaw.([]interface{})) > 0 {
+				nbi := nbiRaw.([]interface{})[0].(map[string]interface{})
+				nicBackingInfo := config.NewOneOfNicNicBackingInfo()
+
+				if venRaw, ok := nbi["virtual_ethernet_nic"]; ok && venRaw != nil && len(venRaw.([]interface{})) > 0 {
+					ven := expandVirtualEthernetNic(venRaw)
+					if err := nicBackingInfo.SetValue(ven); err != nil {
+						log.Printf("[ERROR] Error setting value for nic_backing_info.virtual_ethernet_nic: %v", err)
+						diag.Errorf("Error setting value for nic_backing_info.virtual_ethernet_nic: %v", err)
+						continue
+					}
+				} else if sriovRaw, ok := nbi["sriov_nic"]; ok && sriovRaw != nil && len(sriovRaw.([]interface{})) > 0 {
+					sriov := expandSriovNic(sriovRaw)
+					if err := nicBackingInfo.SetValue(sriov); err != nil {
+						log.Printf("[ERROR] Error setting value for nic_backing_info.sriov_nic: %v", err)
+						diag.Errorf("Error setting value for nic_backing_info.sriov_nic: %v", err)
+						continue
+					}
+				} else if dpOffloadRaw, ok := nbi["dp_offload_nic"]; ok && dpOffloadRaw != nil && len(dpOffloadRaw.([]interface{})) > 0 {
+					dpOffload := expandDpOffloadNic(dpOffloadRaw)
+					if err := nicBackingInfo.SetValue(dpOffload); err != nil {
+						log.Printf("[ERROR] Error setting value for nic_backing_info.dp_offload_nic: %v", err)
+						diag.Errorf("Error setting value for nic_backing_info.dp_offload_nic: %v", err)
+						continue
+					}
+				}
+				// The v4 SDK provides SetNicNetworkInfo but not SetNicBackingInfo; set the oneof field directly.
+				nic.NicBackingInfo = nicBackingInfo
+				if nicBackingInfo != nil && nicBackingInfo.Discriminator != nil {
+					if nic.NicBackingInfoItemDiscriminator_ == nil {
+						nic.NicBackingInfoItemDiscriminator_ = new(string)
+					}
+					*nic.NicBackingInfoItemDiscriminator_ = *nicBackingInfo.Discriminator
+				}
+			} else if backingInfo, ok := val["backing_info"]; ok && backingInfo != nil && len(backingInfo.([]interface{})) > 0 {
+				log.Printf("[DEBUG] Expanding legacy backing_info")
 				nic.BackingInfo = expandEmulatedNic(backingInfo)
 			}
-			if ntwkInfo, ok := val["network_info"]; ok && len(ntwkInfo.([]interface{})) > 0 {
-				nic.NetworkInfo = expandNicNetworkInfo(ntwkInfo)
+			// Prefer new nic_network_info (v2.4.1+). If not present, fall back to legacy network_info and
+			// treat it as nic_network_info.virtual_ethernet_nic_network_info to keep old configs working.
+			if nniRaw, ok := val["nic_network_info"]; ok && nniRaw != nil && len(nniRaw.([]interface{})) > 0 {
+				nni := nniRaw.([]interface{})[0].(map[string]interface{})
+				if venNI, ok := nni["virtual_ethernet_nic_network_info"]; ok && venNI != nil && len(venNI.([]interface{})) > 0 {
+					log.Printf("[DEBUG] Expanding new nic_network_info")
+					ven := expandVirtualEthernetNic(venNI)
+					if err := nic.SetNicNetworkInfo(ven); err != nil {
+						log.Printf("[ERROR] Error setting value for nic_network_info.virtual_ethernet_nic_network_info: %v", err)
+						diag.Errorf("Error setting value for nic_network_info.virtual_ethernet_nic_network_info: %v", err)
+						continue
+					}
+				} else if sriovNI, ok := nni["sriov_nic_network_info"]; ok && sriovNI != nil && len(sriovNI.([]interface{})) > 0 {
+					log.Printf("[DEBUG] Expanding new nic_network_info")
+					sriov := expandSriovNic(sriovNI)
+					if err := nic.SetNicNetworkInfo(sriov); err != nil {
+						log.Printf("[ERROR] Error setting value for nic_network_info.sriov_nic_network_info: %v", err)
+						diag.Errorf("Error setting value for nic_network_info.sriov_nic_network_info: %v", err)
+						continue
+					}
+				} else if dpOffloadNI, ok := nni["dp_offload_nic_network_info"]; ok && dpOffloadNI != nil && len(dpOffloadNI.([]interface{})) > 0 {
+					log.Printf("[DEBUG] Expanding new nic_network_info")
+					dpOffload := expandDpOffloadNic(dpOffloadNI)
+					if err := nic.SetNicNetworkInfo(dpOffload); err != nil {
+						log.Printf("[ERROR] Error setting value for nic_network_info.dp_offload_nic_network_info: %v", err)
+						diag.Errorf("Error setting value for nic_network_info.dp_offload_nic_network_info: %v", err)
+						continue
+					}
+				}
+			} else if ntwkInfo, ok := val["network_info"]; ok && ntwkInfo != nil && len(ntwkInfo.([]interface{})) > 0 {
+				log.Printf("[DEBUG] Expanding legacy network_info")
+				nicNetworkInfo := expandNicNetworkInfo(ntwkInfo)
+				if err := nic.SetNicNetworkInfo(nicNetworkInfo); err != nil {
+					log.Printf("[ERROR] Error setting value for network_info: %v", err)
+					diag.Errorf("Error setting value for network_info: %v", err)
+					continue
+				}
 			}
 
-			nicList[k] = nic
+			nicList[k] = *nic
 		}
 		return nicList
 	}
 	return nil
+}
+
+// expandVirtualEthernetNic expands either:
+// - nic_backing_info.virtual_ethernet_nic (VirtualEthernetNic), OR
+// - nic_network_info.virtual_ethernet_nic_network_info (VirtualEthernetNicNetworkInfo).
+//
+// It returns the concrete (non-pointer) SDK object to satisfy OneOf setters, or nil if empty.
+func expandVirtualEthernetNic(pr interface{}) interface{} {
+	if pr == nil {
+		return nil
+	}
+	list, ok := pr.([]interface{})
+	if !ok || len(list) == 0 || list[0] == nil {
+		return nil
+	}
+	val, ok := list[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	// Backing object uses model/mac/is_connected/num_queues keys.
+	if _, hasModel := val["model"]; hasModel || val["mac_address"] != nil || val["num_queues"] != nil || val["is_connected"] != nil {
+		ven := config.NewVirtualEthernetNic()
+
+		if model, ok := val["model"]; ok && model != nil && model.(string) != "" {
+			ven.Model = common.ExpandEnum[config.VirtualEthernetNicModel](model.(string))
+		}
+		if mac, ok := val["mac_address"]; ok && mac != nil && mac.(string) != "" {
+			ven.MacAddress = utils.StringPtr(mac.(string))
+		}
+		if isConn, ok := val["is_connected"]; ok && isConn != nil {
+			ven.IsConnected = utils.BoolPtr(isConn.(bool))
+		}
+		if nq, ok := val["num_queues"]; ok && nq != nil {
+			ven.NumQueues = utils.IntPtr(nq.(int))
+		}
+		return *ven
+	}
+
+	// Otherwise treat as network info object.
+	venNI := config.NewVirtualEthernetNicNetworkInfo()
+
+	// nic_type (optional; defaults to NORMAL_NIC server-side, but we infer to avoid "missing NIC" diffs)
+	if nicType, ok := val["nic_type"]; ok && nicType != nil && nicType.(string) != "" {
+		venNI.NicType = common.ExpandEnum[config.NicType](nicType.(string))
+	}
+	if ntwkFunc, ok := val["network_function_chain"]; ok && ntwkFunc != nil {
+		venNI.NetworkFunctionChain = expandNetworkFunctionChainReference(ntwkFunc)
+	}
+	if ntwkFuncNicType, ok := val["network_function_nic_type"]; ok && ntwkFuncNicType != nil && ntwkFuncNicType.(string) != "" {
+		venNI.NetworkFunctionNicType = common.ExpandEnum[config.NetworkFunctionNicType](ntwkFuncNicType.(string))
+	}
+	if subnet, ok := val["subnet"]; ok && subnet != nil {
+		venNI.Subnet = expandSubnetReference(subnet)
+	}
+	if vlanMode, ok := val["vlan_mode"]; ok && vlanMode != nil && vlanMode.(string) != "" {
+		venNI.VlanMode = common.ExpandEnum[config.VlanMode](vlanMode.(string))
+	}
+	if trunkedVlans, ok := val["trunked_vlans"]; ok && trunkedVlans != nil {
+		vlansList := trunkedVlans.([]interface{})
+		trunkInts := make([]int, len(vlansList))
+		for i, v := range vlansList {
+			trunkInts[i] = v.(int)
+		}
+		venNI.TrunkedVlans = trunkInts
+	}
+	if unknownMacs, ok := val["should_allow_unknown_macs"]; ok && unknownMacs != nil {
+		venNI.ShouldAllowUnknownMacs = utils.BoolPtr(unknownMacs.(bool))
+	}
+	if ipv4, ok := val["ipv4_config"]; ok && ipv4 != nil {
+		venNI.Ipv4Config = expandIpv4Config(ipv4)
+	}
+	if ipv4Info, ok := val["ipv4_info"]; ok && ipv4Info != nil {
+		venNI.Ipv4Info = expandIPv4Info(ipv4Info)
+	}
+
+	// Infer nic_type if absent (helps avoid perpetual "nics { ... }" diffs when config sets subnet/ipv4 only).
+	if venNI.NicType == nil {
+		if venNI.NetworkFunctionNicType != nil || venNI.NetworkFunctionChain != nil {
+			p := config.NICTYPE_NETWORK_FUNCTION_NIC
+			venNI.NicType = p.Ref()
+		} else if venNI.Subnet != nil || venNI.Ipv4Config != nil || venNI.VlanMode != nil || len(venNI.TrunkedVlans) > 0 || venNI.ShouldAllowUnknownMacs != nil {
+			p := config.NICTYPE_NORMAL_NIC
+			venNI.NicType = p.Ref()
+		}
+	}
+
+	return *venNI
+}
+
+// expandSriovNic expands either:
+// - nic_backing_info.sriov_nic (SriovNic), OR
+// - nic_network_info.sriov_nic_network_info (SriovNicNetworkInfo).
+func expandSriovNic(pr interface{}) interface{} {
+	if pr == nil {
+		return nil
+	}
+	list, ok := pr.([]interface{})
+	if !ok || len(list) == 0 || list[0] == nil {
+		return nil
+	}
+	val, ok := list[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	// Network info is only vlan_id.
+	if _, hasVlanID := val["vlan_id"]; hasVlanID {
+		ni := config.NewSriovNicNetworkInfo()
+		if vlanID, ok := val["vlan_id"]; ok && vlanID != nil {
+			ni.VlanId = utils.IntPtr(vlanID.(int))
+		}
+		return *ni
+	}
+
+	// Backing info.
+	sriov := config.NewSriovNic()
+	if mac, ok := val["mac_address"]; ok && mac != nil && mac.(string) != "" {
+		sriov.MacAddress = utils.StringPtr(mac.(string))
+	}
+	if isConn, ok := val["is_connected"]; ok && isConn != nil {
+		sriov.IsConnected = utils.BoolPtr(isConn.(bool))
+	}
+	if hostRef, ok := val["host_pcie_device_reference"]; ok && hostRef != nil {
+		sriov.HostPcieDeviceReference = expandHostPcieDeviceReference(hostRef)
+	}
+	if prof, ok := val["sriov_profile_reference"]; ok && prof != nil {
+		sriov.SriovProfileReference = expandNicProfileReference(prof)
+	}
+	return *sriov
+}
+
+// expandDpOffloadNic expands either:
+// - nic_backing_info.dp_offload_nic (DpOffloadNic), OR
+// - nic_network_info.dp_offload_nic_network_info (DpOffloadNicNetworkInfo).
+func expandDpOffloadNic(pr interface{}) interface{} {
+	if pr == nil {
+		return nil
+	}
+	list, ok := pr.([]interface{})
+	if !ok || len(list) == 0 || list[0] == nil {
+		return nil
+	}
+	val, ok := list[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	// Backing info contains dp_offload_profile_reference / host_pcie_device_reference / mac/is_connected.
+	if _, hasProfile := val["dp_offload_profile_reference"]; hasProfile || val["host_pcie_device_reference"] != nil || val["mac_address"] != nil || val["is_connected"] != nil {
+		dp := config.NewDpOffloadNic()
+		if mac, ok := val["mac_address"]; ok && mac != nil && mac.(string) != "" {
+			dp.MacAddress = utils.StringPtr(mac.(string))
+		}
+		if isConn, ok := val["is_connected"]; ok && isConn != nil {
+			dp.IsConnected = utils.BoolPtr(isConn.(bool))
+		}
+		if hostRef, ok := val["host_pcie_device_reference"]; ok && hostRef != nil {
+			dp.HostPcieDeviceReference = expandHostPcieDeviceReference(hostRef)
+		}
+		if prof, ok := val["dp_offload_profile_reference"]; ok && prof != nil {
+			dp.DpOffloadProfileReference = expandNicProfileReference(prof)
+		}
+		return *dp
+	}
+
+	// Otherwise network info.
+	ni := config.NewDpOffloadNicNetworkInfo()
+	if subnet, ok := val["subnet"]; ok && subnet != nil {
+		ni.Subnet = expandSubnetReference(subnet)
+	}
+	if vlanMode, ok := val["vlan_mode"]; ok && vlanMode != nil && vlanMode.(string) != "" {
+		ni.VlanMode = common.ExpandEnum[config.VlanMode](vlanMode.(string))
+	}
+	if trunkedVlans, ok := val["trunked_vlans"]; ok && trunkedVlans != nil {
+		vlansList := trunkedVlans.([]interface{})
+		trunkInts := make([]int, len(vlansList))
+		for i, v := range vlansList {
+			trunkInts[i] = v.(int)
+		}
+		ni.TrunkedVlans = trunkInts
+	}
+	if unknownMacs, ok := val["should_allow_unknown_macs"]; ok && unknownMacs != nil {
+		ni.ShouldAllowUnknownMacs = utils.BoolPtr(unknownMacs.(bool))
+	}
+	if ipv4, ok := val["ipv4_config"]; ok && ipv4 != nil {
+		ni.Ipv4Config = expandIpv4Config(ipv4)
+	}
+	if ipv4Info, ok := val["ipv4_info"]; ok && ipv4Info != nil {
+		ni.Ipv4Info = expandIPv4Info(ipv4Info)
+	}
+	return *ni
+}
+
+func expandHostPcieDeviceReference(pr interface{}) *config.HostPcieDeviceReference {
+	if pr == nil {
+		return nil
+	}
+	list, ok := pr.([]interface{})
+	if !ok || len(list) == 0 || list[0] == nil {
+		return nil
+	}
+	val, ok := list[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	ref := config.NewHostPcieDeviceReference()
+	if extID, ok := val["ext_id"]; ok && extID != nil && extID.(string) != "" {
+		ref.ExtId = utils.StringPtr(extID.(string))
+	}
+	return ref
+}
+
+func expandNicProfileReference(pr interface{}) *config.NicProfileReference {
+	if pr == nil {
+		return nil
+	}
+	list, ok := pr.([]interface{})
+	if !ok || len(list) == 0 || list[0] == nil {
+		return nil
+	}
+	val, ok := list[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	ref := config.NewNicProfileReference()
+	if extID, ok := val["ext_id"]; ok && extID != nil && extID.(string) != "" {
+		ref.ExtId = utils.StringPtr(extID.(string))
+	}
+	return ref
 }
 
 func expandEmulatedNic(pr interface{}) *config.EmulatedNic {
@@ -395,14 +697,7 @@ func expandEmulatedNic(pr interface{}) *config.EmulatedNic {
 		val := prI[0].(map[string]interface{})
 
 		if model, ok := val["model"]; ok && len(model.(string)) > 0 {
-			const two, three = 2, 3
-			subMap := map[string]interface{}{
-				"VIRTIO": two,
-				"E1000":  three,
-			}
-			pVal := subMap[model.(string)]
-			p := config.EmulatedNicModel(pVal.(int))
-			nic.Model = &p
+			nic.Model = common.ExpandEnum[config.EmulatedNicModel](model.(string))
 		}
 		if macAdd, ok := val["mac_address"]; ok && len(macAdd.(string)) > 0 {
 			nic.MacAddress = utils.StringPtr(macAdd.(string))
@@ -425,43 +720,19 @@ func expandNicNetworkInfo(pr interface{}) *config.NicNetworkInfo {
 		val := prI[0].(map[string]interface{})
 
 		if nicType, ok := val["nic_type"]; ok && len(nicType.(string)) > 0 {
-			const two, three, four, five = 2, 3, 4, 5
-			subMap := map[string]interface{}{
-				"NORMAL_NIC":           two,
-				"DIRECT_NIC":           three,
-				"NETWORK_FUNCTION_NIC": four,
-				"SPAN_DESTINATION_NIC": five,
-			}
-			pVal := subMap[nicType.(string)]
-			p := config.NicType(pVal.(int))
-			nic.NicType = &p
+			nic.NicType = common.ExpandEnum[config.NicType](nicType.(string))
 		}
 		if ntwkFunc, ok := val["network_function_chain"]; ok {
 			nic.NetworkFunctionChain = expandNetworkFunctionChainReference(ntwkFunc)
 		}
 		if ntwkFuncNicType, ok := val["network_function_nic_type"]; ok && len(ntwkFuncNicType.(string)) > 0 {
-			const two, three, four = 2, 3, 4
-			subMap := map[string]interface{}{
-				"INGRESS": two,
-				"EGRESS":  three,
-				"TAP":     four,
-			}
-			pVal := subMap[ntwkFuncNicType.(string)]
-			p := config.NetworkFunctionNicType(pVal.(int))
-			nic.NetworkFunctionNicType = &p
+			nic.NetworkFunctionNicType = common.ExpandEnum[config.NetworkFunctionNicType](ntwkFuncNicType.(string))
 		}
 		if subnet, ok := val["subnet"]; ok {
 			nic.Subnet = expandSubnetReference(subnet)
 		}
 		if vlanMode, ok := val["vlan_mode"]; ok && len(vlanMode.(string)) > 0 {
-			const two, three = 2, 3
-			subMap := map[string]interface{}{
-				"ACCESS": two,
-				"TRUNK":  three,
-			}
-			pVal := subMap[vlanMode.(string)]
-			p := config.VlanMode(pVal.(int))
-			nic.VlanMode = &p
+			nic.VlanMode = common.ExpandEnum[config.VlanMode](vlanMode.(string))
 		}
 		if trunkedVlans, ok := val["trunked_vlans"]; ok {
 			vlansList := trunkedVlans.([]interface{})
@@ -483,6 +754,20 @@ func expandNicNetworkInfo(pr interface{}) *config.NicNetworkInfo {
 		if ipv4Info, ok := val["ipv4_info"]; ok {
 			nic.Ipv4Info = expandIPv4Info(ipv4Info)
 		}
+
+		// If nic_type wasn't provided, infer a sensible default.
+		// This prevents perpetual diffs where a NIC in config never gets created because the API expects a nic_type.
+		if nic.NicType == nil {
+			// If any network-function-specific field is set, assume a network function NIC.
+			if nic.NetworkFunctionNicType != nil || nic.NetworkFunctionChain != nil {
+				p := config.NICTYPE_NETWORK_FUNCTION_NIC
+				nic.NicType = p.Ref()
+			} else if nic.Subnet != nil || nic.Ipv4Config != nil || nic.VlanMode != nil || len(nic.TrunkedVlans) > 0 || nic.ShouldAllowUnknownMacs != nil {
+				p := config.NICTYPE_NORMAL_NIC
+				nic.NicType = p.Ref()
+			}
+		}
+
 		return nic
 	}
 	return nil

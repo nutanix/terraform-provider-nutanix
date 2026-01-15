@@ -2449,9 +2449,21 @@ func flattenNic(nic []config.Nic) []interface{} {
 			}
 			if v.BackingInfo != nil {
 				nics["backing_info"] = flattenEmulatedNic(v.BackingInfo)
+				// Also populate new field to avoid diffs when users migrate to nic_backing_info.
+				nics["nic_backing_info"] = []interface{}{
+					map[string]interface{}{
+						"virtual_ethernet_nic": flattenEmulatedNic(v.BackingInfo),
+					},
+				}
 			}
 			if v.NetworkInfo != nil {
 				nics["network_info"] = flattenNicNetworkInfo(v.NetworkInfo)
+				// Also populate new field to avoid diffs when users migrate to nic_network_info.
+				nics["nic_network_info"] = []interface{}{
+					map[string]interface{}{
+						"virtual_ethernet_nic_network_info": flattenNicNetworkInfo(v.NetworkInfo),
+					},
+				}
 			}
 			nicList[k] = nics
 		}
