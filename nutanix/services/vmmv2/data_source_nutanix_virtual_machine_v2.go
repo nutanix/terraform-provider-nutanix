@@ -1026,162 +1026,7 @@ func DatasourceNutanixVirtualMachineV4() *schema.Resource {
 			"nics": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ext_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"backing_info": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"model": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"mac_address": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"is_connected": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"num_queues": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"network_info": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"nic_type": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"network_function_chain": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ext_id": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"network_function_nic_type": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"subnet": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ext_id": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"vlan_mode": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"trunked_vlans": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeInt,
-										},
-									},
-									"should_allow_unknown_macs": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"ipv4_config": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"should_assign_ip": {
-													Type:     schema.TypeBool,
-													Computed: true,
-												},
-												"ip_address": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"value": {
-																Type:     schema.TypeString,
-																Computed: true,
-															},
-															"prefix_length": {
-																Type:     schema.TypeInt,
-																Computed: true,
-															},
-														},
-													},
-												},
-												"secondary_ip_address_list": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"value": {
-																Type:     schema.TypeString,
-																Computed: true,
-															},
-															"prefix_length": {
-																Type:     schema.TypeInt,
-																Computed: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									// not visible in API reference
-									"ipv4_info": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"learned_ip_addresses": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"value": {
-																Type:     schema.TypeString,
-																Computed: true,
-															},
-															"prefix_length": {
-																Type:     schema.TypeInt,
-																Computed: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
+				Elem:     nicsElemSchemaV2WithTenantLinks(),
 			},
 			"gpus": {
 				Type:     schema.TypeList,
@@ -2447,12 +2292,43 @@ func flattenNic(nic []config.Nic) []interface{} {
 			if v.ExtId != nil {
 				nics["ext_id"] = v.ExtId
 			}
-			if v.BackingInfo != nil {
+
+			if v.NicBackingInfo != nil {
+				nicBackingInfo := make(map[string]interface{})
+				if backing := v.NicBackingInfo.GetValue(); backing != nil {
+					switch bi := backing.(type) {
+					case config.VirtualEthernetNic:
+						nicBackingInfo["virtual_ethernet_nic"] = flattenVirtualEthernetNicAsBackingInfo(&bi)
+					case config.SriovNic:
+						nicBackingInfo["sriov_nic"] = flattenSriovNicAsBackingInfo(&bi)
+					case config.DpOffloadNic:
+						nicBackingInfo["dp_offload_nic"] = flattenDpOffloadNicAsBackingInfo(&bi)
+					}
+				}
+				nics["nic_backing_info"] = []interface{}{nicBackingInfo}
+			}
+			// Prefer new nic_backing_info (v2.4.1+). If not present, fall back to legacy backing_info.
+			if _, ok := nics["backing_info"]; !ok && v.BackingInfo != nil {
 				nics["backing_info"] = flattenEmulatedNic(v.BackingInfo)
 			}
-			if v.NetworkInfo != nil {
+
+			// Prefer new nic_network_info (v2.4.1+). If not present, fall back to legacy network_info.
+			if network := v.GetNicNetworkInfo(); network != nil {
+				nicNetworkInfo := make(map[string]interface{})
+				switch ni := network.(type) {
+				case config.VirtualEthernetNicNetworkInfo:
+					nicNetworkInfo["virtual_ethernet_nic_network_info"] = flattenVirtualEthernetNicNetworkInfo(&ni)
+				case config.SriovNicNetworkInfo:
+					nicNetworkInfo["sriov_nic_network_info"] = flattenSriovNicNetworkInfo(&ni)
+				case config.DpOffloadNicNetworkInfo:
+					nicNetworkInfo["dp_offload_nic_network_info"] = flattenDpOffloadNicNetworkInfo(&ni)
+				}
+				nics["nic_network_info"] = []interface{}{nicNetworkInfo}
+			}
+			if _, ok := nics["network_info"]; !ok && v.NetworkInfo != nil {
 				nics["network_info"] = flattenNicNetworkInfo(v.NetworkInfo)
 			}
+
 			nicList[k] = nics
 		}
 		return nicList
