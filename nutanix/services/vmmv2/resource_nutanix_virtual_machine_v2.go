@@ -93,10 +93,18 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 				Computed: true,
 			},
 			"memory_size_bytes": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntAtLeast(1),
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validation.IntAtLeast(1),
+				ConflictsWith: []string{"memory_size_gib"},
+			},
+			"memory_size_gib": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validation.IntAtLeast(1),
+				ConflictsWith: []string{"memory_size_bytes"},
 			},
 			"is_vcpu_hard_pinning_enabled": {
 				Type:     schema.TypeBool,
@@ -417,6 +425,11 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 																Computed: true,
 															},
 															"disk_size_bytes": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"disk_size_gib": {
 																Type:     schema.TypeInt,
 																Optional: true,
 																Computed: true,
@@ -764,6 +777,11 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 													Optional: true,
 													Computed: true,
 												},
+												"disk_size_gib": {
+													Type:     schema.TypeInt,
+													Optional: true,
+													Computed: true,
+												},
 												"storage_container": {
 													Type:     schema.TypeList,
 													Optional: true,
@@ -943,6 +961,11 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 										Computed: true,
 									},
 									"disk_size_bytes": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+									},
+									"disk_size_gib": {
 										Type:     schema.TypeInt,
 										Optional: true,
 										Computed: true,
@@ -1708,8 +1731,12 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		updateSpec.NumNumaNodes = utils.IntPtr(d.Get("num_numa_nodes").(int))
 		checkForUpdateParams = true
 	}
-	if d.HasChange("memory_size_bytes") {
-		updateSpec.MemorySizeBytes = utils.Int64Ptr(int64(d.Get("memory_size_bytes").(int)))
+	if d.HasChange("memory_size_bytes") || d.HasChange("memory_size_gib") {
+		if v, ok := d.GetOk("memory_size_gib"); ok {
+			updateSpec.MemorySizeBytes = utils.Int64Ptr(int64(v.(int)) * 1024 * 1024 * 1024)
+		} else if v, ok := d.GetOk("memory_size_bytes"); ok {
+			updateSpec.MemorySizeBytes = utils.Int64Ptr(int64(v.(int)))
+		}
 		checkForUpdateParams = true
 	}
 	if d.HasChange("is_vcpu_hard_pinning_enabled") {
@@ -3535,7 +3562,7 @@ func diffConfig(oldValue []interface{}, newValue []interface{}) ([]interface{}, 
 
 // Check if VM is in power off state to perform update operations
 func checkForHotPlugChanges(d *schema.ResourceData) bool {
-	if d.HasChange(("num_sockets")) || d.HasChange(("num_cores_per_socket")) || d.HasChange(("memory_size_bytes")) ||
+	if d.HasChange(("num_sockets")) || d.HasChange(("num_cores_per_socket")) || d.HasChange(("memory_size_bytes")) || d.HasChange(("memory_size_gib")) ||
 		d.HasChange(("num_threads_per_core")) || d.HasChange(("cd_rom")) || d.HasChange(("num_numa_nodes")) ||
 		d.HasChange("cluster") || d.HasChange("is_cpu_passthrough_enabled") || d.HasChange("enabled_cpu_features") ||
 		d.HasChange("is_vcpu_hard_pinning_enabled") || d.HasChange("guest_customization") || d.HasChange("guest_tools") ||
@@ -3644,7 +3671,9 @@ func prepareVMConfigFromMap(m map[string]interface{}) *config.Vm {
 	if numNumaNodes, ok := m["num_numa_nodes"]; ok {
 		body.NumNumaNodes = utils.IntPtr(numNumaNodes.(int))
 	}
-	if memorySize, ok := m["memory_size_bytes"]; ok {
+	if memorySizeGib, ok := m["memory_size_gib"]; ok && memorySizeGib.(int) > 0 {
+		body.MemorySizeBytes = utils.Int64Ptr(int64(memorySizeGib.(int)) * 1024 * 1024 * 1024)
+	} else if memorySize, ok := m["memory_size_bytes"]; ok {
 		body.MemorySizeBytes = utils.Int64Ptr(int64(memorySize.(int)))
 	}
 	if isVcpuEnabled, ok := m["is_vcpu_hard_pinning_enabled"]; ok {
@@ -3867,6 +3896,11 @@ func setVMConfig(d *schema.ResourceData, getResp config.Vm) diag.Diagnostics {
 	}
 	if err := d.Set("memory_size_bytes", getResp.MemorySizeBytes); err != nil {
 		return diag.FromErr(err)
+	}
+	if getResp.MemorySizeBytes != nil {
+		if err := d.Set("memory_size_gib", *getResp.MemorySizeBytes/(1024*1024*1024)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if err := d.Set("is_vcpu_hard_pinning_enabled", getResp.IsVcpuHardPinningEnabled); err != nil {
 		return diag.FromErr(err)
