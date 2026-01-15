@@ -2302,3 +2302,118 @@ func testVmsV4ConfigWithTwoNics(name, desc string, r int) string {
 		}
 `, name, desc, r, filepath)
 }
+
+func TestAccV2NutanixVmsResource_WithMemorySizeGib(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-vm-gib-%d", r)
+	desc := "test vm with memory_size_gib"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testVmsV4ConfigWithMemorySizeGib(name, desc, 4),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", name),
+					resource.TestCheckResourceAttr(resourceNameVms, "memory_size_gib", "4"),
+					resource.TestCheckResourceAttr(resourceNameVms, "memory_size_bytes", strconv.Itoa(4*1024*1024*1024)),
+				),
+			},
+			{
+				Config: testVmsV4ConfigWithMemorySizeGib(name, desc, 8),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", name),
+					resource.TestCheckResourceAttr(resourceNameVms, "memory_size_gib", "8"),
+					resource.TestCheckResourceAttr(resourceNameVms, "memory_size_bytes", strconv.Itoa(8*1024*1024*1024)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccV2NutanixVmsResource_WithDiskSizeGib(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-vm-disk-gib-%d", r)
+	desc := "test vm with disk_size_gib"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testVmsV4ConfigWithDiskSizeGib(name, desc, 10),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", name),
+					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.backing_info.0.vm_disk.0.disk_size_gib", "10"),
+					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.backing_info.0.vm_disk.0.disk_size_bytes", strconv.FormatInt(10*1024*1024*1024, 10)),
+				),
+			},
+		},
+	})
+}
+
+func testVmsV4ConfigWithMemorySizeGib(name, desc string, memorySizeGib int) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+			cluster0 = [
+				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
+		}
+
+		resource "nutanix_virtual_machine_v2" "test" {
+			name                 = "%[1]s"
+			description          = "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets          = 1
+			memory_size_gib      = %[3]d
+			cluster {
+				ext_id = local.cluster0
+			}
+		}
+`, name, desc, memorySizeGib)
+}
+
+func testVmsV4ConfigWithDiskSizeGib(name, desc string, diskSizeGib int) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+			cluster0 = [
+				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
+		}
+
+		data "nutanix_storage_containers_v2" "sc" {
+			filter = "clusterExtId eq '${local.cluster0}'"
+			limit  = 1
+		}
+
+		resource "nutanix_virtual_machine_v2" "test" {
+			name                 = "%[1]s"
+			description          = "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets          = 1
+			power_state          = "OFF"
+			cluster {
+				ext_id = local.cluster0
+			}
+			disks {
+				disk_address {
+					bus_type = "SCSI"
+					index    = 0
+				}
+				backing_info {
+					vm_disk {
+						disk_size_gib = %[3]d
+						storage_container {
+							ext_id = data.nutanix_storage_containers_v2.sc.storage_containers[0].ext_id
+						}
+					}
+				}
+			}
+		}
+`, name, desc, diskSizeGib)
+}
