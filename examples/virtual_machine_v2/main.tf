@@ -153,12 +153,14 @@ resource "nutanix_virtual_machine_v2" "example-4" {
     }
   }
   nics {
-    network_info {
-      nic_type = "NORMAL_NIC"
-      subnet {
-        ext_id = data.nutanix_subnets_v2.vm-subnet.subnets[0].ext_id
+    nic_network_info {
+      virtual_ethernet_nic_network_info {
+        nic_type = "NORMAL_NIC"
+        subnet {
+          ext_id = data.nutanix_subnets_v2.vm-subnet.subnets[0].ext_id
+        }
+        vlan_mode = "ACCESS"
       }
-      vlan_mode = "ACCESS"
     }
   }
   power_state = "ON"
@@ -266,12 +268,14 @@ resource "nutanix_virtual_machine_v2" "example-8" {
     }
   }
   nics {
-    network_info {
-      nic_type = "NORMAL_NIC"
-      subnet {
-        ext_id = data.nutanix_subnets_v2.vm-subnet.subnets[0].ext_id
+    nic_network_info {
+      virtual_ethernet_nic_network_info {
+        nic_type = "NORMAL_NIC"
+        subnet {
+          ext_id = data.nutanix_subnets_v2.vm-subnet.subnets[0].ext_id
+        }
+        vlan_mode = "ACCESS"
       }
-      vlan_mode = "ACCESS"
     }
   }
   guest_customization {
@@ -303,12 +307,14 @@ resource "nutanix_virtual_machine_v2" "example-9" {
     ext_id = local.cluster_ext_id
   }
   nics {
-    network_info {
-      nic_type = "NORMAL_NIC"
-      subnet {
-        ext_id = data.nutanix_subnets_v2.vm-subnet.subnets[0].ext_id
+    nic_network_info {
+      virtual_ethernet_nic_network_info {
+        nic_type = "NORMAL_NIC"
+        subnet {
+          ext_id = data.nutanix_subnets_v2.vm-subnet.subnets[0].ext_id
+        }
+        vlan_mode = "ACCESS"
       }
-      vlan_mode = "ACCESS"
     }
   }
   categories {
@@ -333,12 +339,14 @@ resource "nutanix_virtual_machine_v2" "example-10" {
     ext_id = local.cluster_ext_id
   }
   nics {
-    network_info {
-      nic_type = "NORMAL_NIC"
-      subnet {
-        ext_id = data.nutanix_subnets_v2.vm-subnet.subnets[0].ext_id
+    nic_network_info {
+      virtual_ethernet_nic_network_info {
+        nic_type = "NORMAL_NIC"
+        subnet {
+          ext_id = data.nutanix_subnets_v2.vm-subnet.subnets[0].ext_id
+        }
+        vlan_mode = "ACCESS"
       }
-      vlan_mode = "ACCESS"
     }
   }
   serial_ports {
@@ -390,12 +398,14 @@ resource "nutanix_virtual_machine_v2" "example-12" {
     }
   }
   nics {
-    network_info {
-      nic_type = "NORMAL_NIC"
-      subnet {
-        ext_id = data.nutanix_subnets_v2.vm-subnet.subnets[0].ext_id
+    nic_network_info {
+      virtual_ethernet_nic_network_info {
+        nic_type = "NORMAL_NIC"
+        subnet {
+          ext_id = data.nutanix_subnets_v2.vm-subnet.subnets[0].ext_id
+        }
+        vlan_mode = "ACCESS"
       }
-      vlan_mode = "ACCESS"
     }
   }
   guest_customization {

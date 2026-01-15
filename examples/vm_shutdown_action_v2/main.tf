@@ -85,12 +85,14 @@ resource "nutanix_virtual_machine_v2" "ngt-vm" {
   }
 
   nics {
-    network_info {
-      nic_type = "NORMAL_NIC"
-      subnet {
-        ext_id = data.nutanix_subnets_v2.subnet.subnets[0].ext_id
+    nic_network_info {
+      virtual_ethernet_nic_network_info {
+        nic_type = "NORMAL_NIC"
+        subnet {
+          ext_id = data.nutanix_subnets_v2.subnet.subnets[0].ext_id
+        }
+        vlan_mode = "ACCESS"
       }
-      vlan_mode = "ACCESS"
     }
   }
 
