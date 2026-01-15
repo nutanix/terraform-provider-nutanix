@@ -365,3 +365,51 @@ func testAccVMDataSourceConfigV4WithCdromBackingInfo(name, desc string) string {
 		}
 `, name, desc, filepath)
 }
+
+func TestAccV2NutanixVmsDatasource_WithMemorySizeGib(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-vm-ds-gib-%d", r)
+	desc := "test vm datasource with memory_size_gib"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVMDataSourceConfigV4WithMemorySizeGib(name, desc, 4),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceNameVMs, "name", name),
+					resource.TestCheckResourceAttr(datasourceNameVMs, "memory_size_gib", "4"),
+					resource.TestCheckResourceAttrSet(datasourceNameVMs, "memory_size_bytes"),
+				),
+			},
+		},
+	})
+}
+
+func testAccVMDataSourceConfigV4WithMemorySizeGib(name, desc string, memorySizeGib int) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+			cluster0 = [
+				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
+		}
+
+		resource "nutanix_virtual_machine_v2" "test_res" {
+			name                 = "%[1]s"
+			description          = "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets          = 1
+			memory_size_gib      = %[3]d
+			cluster {
+				ext_id = local.cluster0
+			}
+		}
+
+		data "nutanix_virtual_machine_v2" "test" {
+			ext_id = nutanix_virtual_machine_v2.test_res.id
+		}
+`, name, desc, memorySizeGib)
+}

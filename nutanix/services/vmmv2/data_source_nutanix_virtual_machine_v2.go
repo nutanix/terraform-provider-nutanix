@@ -74,6 +74,10 @@ func DatasourceNutanixVirtualMachineV4() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"memory_size_gib": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"is_vcpu_hard_pinning_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -473,6 +477,10 @@ func DatasourceNutanixVirtualMachineV4() *schema.Resource {
 																Computed: true,
 															},
 															"disk_size_bytes": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
+															"disk_size_gib": {
 																Type:     schema.TypeInt,
 																Computed: true,
 															},
@@ -1359,6 +1367,11 @@ func DatasourceNutanixVirtualMachineV4Read(ctx context.Context, d *schema.Resour
 	if err := d.Set("memory_size_bytes", getResp.MemorySizeBytes); err != nil {
 		return diag.FromErr(err)
 	}
+	if getResp.MemorySizeBytes != nil {
+		if err := d.Set("memory_size_gib", *getResp.MemorySizeBytes/(1024*1024*1024)); err != nil {
+			return diag.FromErr(err)
+		}
+	}
 	if err := d.Set("is_vcpu_hard_pinning_enabled", getResp.IsVcpuHardPinningEnabled); err != nil {
 		return diag.FromErr(err)
 	}
@@ -2034,6 +2047,7 @@ func flattenVMDisk(pr *config.VmDisk) []map[string]interface{} {
 
 		if pr.DiskSizeBytes != nil {
 			disks["disk_size_bytes"] = pr.DiskSizeBytes
+			disks["disk_size_gib"] = *pr.DiskSizeBytes / (1024 * 1024 * 1024)
 		}
 		if pr.StorageContainer != nil {
 			disks["storage_container"] = flattenVMDiskContainerReference(pr.StorageContainer)
@@ -2311,6 +2325,7 @@ func flattenOneOfDiskBackingInfo(pr *config.OneOfDiskBackingInfo) []map[string]i
 
 			if vmDiskVal.DiskSizeBytes != nil {
 				vmDiskObj["disk_size_bytes"] = vmDiskVal.DiskSizeBytes
+				vmDiskObj["disk_size_gib"] = *vmDiskVal.DiskSizeBytes / (1024 * 1024 * 1024)
 			}
 			if vmDiskVal.StorageContainer != nil {
 				vmDiskObj["storage_container"] = flattenVMDiskContainerReference(vmDiskVal.StorageContainer)
