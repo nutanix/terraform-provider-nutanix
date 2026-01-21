@@ -138,7 +138,7 @@ func TestAccV2NutanixNetworkFunctionResource_Egress_Ingress(t *testing.T) {
 			},
 			// Update Network Function
 			{
-				Config: networkFunctionConfig + testAccNetworkFunctionV2EgressIngressUpdateConfig(name),
+				Config: testAccNetworkFunctionV2ConfigPrerequisites(subnet_name, vmm_1_name, vmm_2_name) + testAccNetworkFunctionV2EgressIngressUpdateConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameNetworkFunctionV2_1, "id"),
 					resource.TestCheckResourceAttr(resourceNameNetworkFunctionV2_1, "name", name+"_updated"),
