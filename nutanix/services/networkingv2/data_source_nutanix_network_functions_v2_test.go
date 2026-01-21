@@ -56,6 +56,12 @@ func TestAccV2NutanixNetworkFunctionsDataSource_FilterAndLimit(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
+				Config: networkFunctionConfig,
+				Check: resource.ComposeTestCheckFunc(
+					waitForNetworkFunctionHealth(resourceNameNetworkFunctionV2_1, "data_plane_health_status", "HEALTHY"),
+				),
+			},
+			{
 				Config: networkFunctionConfig + testAccNetworkFunctionsV2DataSourceConfigFilterAndLimit(),
 				Check: resource.ComposeTestCheckFunc(
 					common.CheckAttributeLengthEqual(datasourceNameNetworkFunctionsV2, "network_functions", 1),
