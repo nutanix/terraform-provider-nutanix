@@ -228,6 +228,10 @@ func testAccCheckNetworkFunctionPair(resourceName, vmResourceName, ingressAttr, 
 }
 
 func testAccCheckNetworkFunctionDataSourcePair(resourceName, vmResourceName, ingressAttr, egressAttr string) resource.TestCheckFunc {
+	return testAccCheckNetworkFunctionDataSourcePairWithPrefix(resourceName, "", vmResourceName, ingressAttr, egressAttr)
+}
+
+func testAccCheckNetworkFunctionDataSourcePairWithPrefix(resourceName, prefix, vmResourceName, ingressAttr, egressAttr string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		resourceState, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -250,31 +254,31 @@ func testAccCheckNetworkFunctionDataSourcePair(resourceName, vmResourceName, ing
 			}
 		}
 
-		count, err := strconv.Atoi(resourceState.Primary.Attributes["nic_pairs.#"])
+		count, err := strconv.Atoi(resourceState.Primary.Attributes[prefix+"nic_pairs.#"])
 		if err != nil {
 			return fmt.Errorf("invalid nic_pairs count: %w", err)
 		}
 
 		for i := 0; i < count; i++ {
-			prefix := fmt.Sprintf("nic_pairs.%d.", i)
-			if resourceState.Primary.Attributes[prefix+"vm_reference"] != expectedVM {
+			pairPrefix := fmt.Sprintf("%snic_pairs.%d.", prefix, i)
+			if resourceState.Primary.Attributes[pairPrefix+"vm_reference"] != expectedVM {
 				continue
 			}
-			ingressValue := resourceState.Primary.Attributes[prefix+"ingress_nic_reference"]
+			ingressValue := resourceState.Primary.Attributes[pairPrefix+"ingress_nic_reference"]
 			if ingressValue == "" {
 				continue
 			}
 			if _, ok := vmNicExtIDs[ingressValue]; !ok {
 				continue
 			}
-			egressValue := resourceState.Primary.Attributes[prefix+"egress_nic_reference"]
+			egressValue := resourceState.Primary.Attributes[pairPrefix+"egress_nic_reference"]
 			if egressValue == "" {
 				continue
 			}
 			if _, ok := vmNicExtIDs[egressValue]; !ok {
 				continue
 			}
-			if resourceState.Primary.Attributes[prefix+"is_enabled"] != "true" {
+			if resourceState.Primary.Attributes[pairPrefix+"is_enabled"] != "true" {
 				continue
 			}
 			return nil
@@ -290,20 +294,24 @@ func testAccCheckNetworkFunctionDataSourcePair(resourceName, vmResourceName, ing
 }
 
 func testAccCheckNetworkFunctionNICPairHAStateCounts(resourceName string, expected map[string]int) resource.TestCheckFunc {
+	return testAccCheckNetworkFunctionNICPairHAStateCountsWithPrefix(resourceName, "", expected)
+}
+
+func testAccCheckNetworkFunctionNICPairHAStateCountsWithPrefix(resourceName, prefix string, expected map[string]int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		resourceState, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("resource %q not found in state", resourceName)
 		}
 
-		count, err := strconv.Atoi(resourceState.Primary.Attributes["nic_pairs.#"])
+		count, err := strconv.Atoi(resourceState.Primary.Attributes[prefix+"nic_pairs.#"])
 		if err != nil {
 			return fmt.Errorf("invalid nic_pairs count: %w", err)
 		}
 
 		actual := make(map[string]int)
 		for i := 0; i < count; i++ {
-			state := resourceState.Primary.Attributes[fmt.Sprintf("nic_pairs.%d.high_availability_state", i)]
+			state := resourceState.Primary.Attributes[fmt.Sprintf("%snic_pairs.%d.high_availability_state", prefix, i)]
 			if state == "" {
 				continue
 			}

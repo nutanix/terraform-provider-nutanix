@@ -11,7 +11,6 @@ import (
 )
 
 const resourceNameNetworkFunctionV2_1 = "nutanix_network_function_v2.ntf-1"
-const resourceNameNetworkFunctionV2_2 = "nutanix_network_function_v2.ntf-2"
 
 func TestAccV2NutanixNetworkFunctionResource_Egress_Ingress(t *testing.T) {
 	r := acctest.RandInt()
@@ -71,6 +70,7 @@ func TestAccV2NutanixNetworkFunctionResource_Egress_Ingress(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameNetworkFunctionV2_1, "id"),
 					resource.TestCheckResourceAttr(resourceNameNetworkFunctionV2_1, "name", name),
+          resource.TestCheckResourceAttr(resourceNameNetworkFunctionV2_1, "description", "First Network function managed by Terraform"),
 					resource.TestCheckResourceAttr(
 						resourceNameNetworkFunctionV2_1,
 						"description",
