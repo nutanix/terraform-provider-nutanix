@@ -8,6 +8,7 @@ import (
 )
 
 type TestConfig struct {
+	UbuntuImage string `json:"ubuntu_image"`
 	Networking struct {
 		FloatingIP struct {
 			VMNicReference string `json:"vm_nic_reference"`

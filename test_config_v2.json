@@ -1,4 +1,5 @@
 {
+  "ubuntu_image": "",
   "pre_env": {
     "ngt_image": {
       "name": "",
