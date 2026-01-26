@@ -274,8 +274,14 @@ func expandNic(pr []interface{}) []config.Nic {
 				}
 			} else if ntwkInfo, ok := val["network_info"]; ok && ntwkInfo != nil && len(ntwkInfo.([]interface{})) > 0 {
 				log.Printf("[DEBUG] Expanding legacy network_info")
-				nicNetworkInfo := expandNicNetworkInfo(ntwkInfo)
-				if err := nic.SetNicNetworkInfo(nicNetworkInfo); err != nil {
+				// SetNicNetworkInfo expects VirtualEthernetNicNetworkInfo (or other oneof types), not *config.NicNetworkInfo.
+				// expandVirtualEthernetNic maps legacy network_info fields to VirtualEthernetNicNetworkInfo.
+				venNI := expandVirtualEthernetNic(ntwkInfo)
+				if venNI == nil {
+					log.Printf("[ERROR] Failed to expand legacy network_info")
+					continue
+				}
+				if err := nic.SetNicNetworkInfo(venNI); err != nil {
 					log.Printf("[ERROR] Error setting value for network_info: %v", err)
 					diag.Errorf("Error setting value for network_info: %v", err)
 					continue
