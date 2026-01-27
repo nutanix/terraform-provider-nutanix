@@ -51,12 +51,14 @@ func resourceSchemaForAllowedEntity() *schema.Resource {
 			"addresses": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ipv4_addresses": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"value": {
@@ -66,6 +68,7 @@ func resourceSchemaForAllowedEntity() *schema.Resource {
 									"prefix_length": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										Computed: true,
 									},
 								},
 							},
@@ -76,12 +79,14 @@ func resourceSchemaForAllowedEntity() *schema.Resource {
 			"ip_ranges": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ipv4_ranges": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"start_ip": {
@@ -101,6 +106,7 @@ func resourceSchemaForAllowedEntity() *schema.Resource {
 			"kube_entities": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -108,6 +114,7 @@ func resourceSchemaForAllowedEntity() *schema.Resource {
 			"reference_ext_ids": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -120,12 +127,14 @@ func resourceSchemaForExceptConfig() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
+		Computed: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"entities": {
 					Type:     schema.TypeList,
 					Optional: true,
+					Computed: true,
 					Elem:     resourceSchemaForExceptEntity(),
 				},
 			},
@@ -151,12 +160,14 @@ func resourceSchemaForExceptEntity() *schema.Resource {
 			"addresses": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ipv4_addresses": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"value": {
@@ -166,6 +177,7 @@ func resourceSchemaForExceptEntity() *schema.Resource {
 									"prefix_length": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										Computed: true,
 									},
 								},
 							},
@@ -183,6 +195,7 @@ func resourceSchemaForExceptEntity() *schema.Resource {
 						"ipv4_ranges": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"start_ip": {
@@ -202,6 +215,7 @@ func resourceSchemaForExceptEntity() *schema.Resource {
 			"reference_ext_ids": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -413,12 +427,14 @@ func resourceSchemaForAllowedConfig() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
+		Computed: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"entities": {
 					Type:     schema.TypeList,
 					Optional: true,
+					Computed: true,
 					MaxItems: 3,
 					MinItems: 1,
 					Elem:     resourceSchemaForAllowedEntity(),
