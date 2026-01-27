@@ -2,6 +2,7 @@ package microsegv2_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -26,6 +27,23 @@ func TestAccNutanixEntityGroupV2Datasource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceNameEntityGroupV2, "ext_id"),
 					resource.TestCheckResourceAttr(dataSourceNameEntityGroupV2, "name", name),
 				),
+			},
+		},
+	})
+}
+
+// TestAccNutanixEntityGroupV2Datasource_WrongExtID tests that the data source fails
+// as expected when given a non-existent ext_id.
+func TestAccNutanixEntityGroupV2Datasource_WrongExtID(t *testing.T) {
+	wrongExtID := "83cbf00d-782f-4efc-87c8-4129f5942aaa"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccEntityGroupV2DatasourceConfigWrongExtID(wrongExtID),
+				ExpectError: regexp.MustCompile("Api Exception raised while fetching entity group info using ext_id"),
 			},
 		},
 	})
@@ -60,4 +78,12 @@ data "nutanix_entity_group_v2" "test" {
   ext_id = nutanix_entity_group_v2.test.id
 }
 `, r, name)
+}
+
+func testAccEntityGroupV2DatasourceConfigWrongExtID(extID string) string {
+	return fmt.Sprintf(`
+data "nutanix_entity_group_v2" "test" {
+  ext_id = "%s"
+}
+`, extID)
 }
