@@ -440,6 +440,43 @@ The Nutanix Provider for Terraform is the work of many contributors. We apprecia
 * [Contribution Guidelines](./CONTRIBUTING.md)
 * [Code of Conduct](./CODE_OF_CONDUCT.md)
 
+### Running acceptance tests locally (same as /ok-to-test on GitHub)
+
+From the **repository root**:
+
+1. **Set environment variables** (required by `TestAccPreCheck`):
+   - `NUTANIX_USERNAME`, `NUTANIX_PASSWORD`, `NUTANIX_ENDPOINT`
+   - `NUTANIX_INSECURE`, `NUTANIX_PORT`, `NUTANIX_STORAGE_CONTAINER`
+
+2. **Config files** (for V4/vmmv2 tests): ensure `test_config_v2.json` exists at the repo root (same content as the `V4_CONFIG` secret used in CI).
+
+3. **Run tests** (from repo root; `.env` is loaded automatically by `make acc-test`):
+
+   Output streams to the terminal in real time and to `test_output.log`; a test summary is appended at the end of the same file. To watch the log in another Cursor terminal: `tail -f test_output.log`.
+
+   ```bash
+   # Single test case
+   make acc-test TestAccV2NutanixOvaVmDeployResource_DeployVMFromOva
+
+   # All tests in a package
+   make acc-test PKG=vmmv2
+
+   # V4 test cases (TestAccV2Nutanix*)
+   make acc-test v4
+
+   # V3 test cases (TestAccNutanix*)
+   make acc-test v3
+   ```
+
+   Use a different log file: `make acc-test PKG=vmmv2 ACC_TEST_LOG=my_tests.log`
+
+   Or use the script (also loads env if you `source .env` first):
+
+   ```bash
+   source .env
+   ./scripts/run-acceptance-test.sh -p vmmv2 TestAccV2NutanixOvaVmDeployResource_DeployVMFromOva
+   ```
+
 
 ## Support
 

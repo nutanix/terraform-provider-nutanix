@@ -16,6 +16,48 @@ testacc: fmtcheck
 	@echo "TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=count"
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=count
 
+# Acceptance tests with .env loaded (same as /ok-to-test). Loads .env from repo root before running.
+# Output streams to terminal in real time and to ACC_TEST_LOG (default: test_output.log); summary appended at end.
+# Usage:
+#   make acc-test TestAccV2NutanixOvaVmDeployResource_DeployVMFromOva   # single test (vmmv2)
+#   make acc-test PKG=vmmv2                                             # all tests in vmmv2
+#   make acc-test v4                                                   # all TestAccV2Nutanix* tests
+#   make acc-test v3                                                   # all TestAccNutanix* tests
+ACC_ARG := $(firstword $(filter-out acc-test,$(MAKECMDGOALS)))
+ACC_TEST_LOG ?= test_output.log
+acc-test:
+	@bash -c '\
+		arg="$(ACC_ARG)"; logfile="$(ACC_TEST_LOG)"; \
+		: > "$$logfile"; \
+		echo "==> Loading .env and running acceptance tests (output to $$logfile only; summary at end)..." >> "$$logfile"; \
+		[ -f .env ] && set -a && . ./.env && set +a; \
+		export TF_ACC=1 GOTRACEBACK=all; \
+		run_pattern="."; pkg=""; \
+		case "$$arg" in \
+			v4) run_pattern="TestAccV2Nutanix*" ;; \
+			v3) run_pattern="TestAccNutanix*" ;; \
+			foundation) run_pattern="TestAccFoundation*" ;; \
+			foundation_central) run_pattern="TestAccFC*" ;; \
+			karbon) run_pattern="TestAccKarbon*" ;; \
+			lcm) run_pattern="TestAccV2NutanixLcm*" ;; \
+			era) run_pattern="TestAccEra*" ;; \
+			PKG=*) pkg="$${arg#PKG=}"; run_pattern="." ;; \
+			"") run_pattern="." ;; \
+			*) run_pattern="$$arg"; [ -d nutanix/services/vmmv2 ] && pkg="vmmv2" ;; \
+		esac; \
+		if [ -n "$$pkg" ]; then \
+			(cd nutanix/services/$$pkg && go test . -v -run="$$run_pattern" -timeout 500m -count=1 2>&1) | while IFS= read -r line; do echo "$$line" >> "$$logfile"; done; \
+		else \
+			go test ./... -v -run="$$run_pattern" -timeout 500m -count=1 2>&1 | while IFS= read -r line; do echo "$$line" >> "$$logfile"; done; \
+		fi; \
+		if [ -f "$$logfile" ] && grep -qE "^--- (PASS|FAIL|SKIP):" "$$logfile" 2>/dev/null; then \
+			"$(CURDIR)/scripts/acc-test-summary.sh" "$$logfile"; \
+		fi'
+	@echo "==> Log file: $(ACC_TEST_LOG)"
+# Dummy target so "make acc-test v4" etc. do not fail (argument is consumed by ACC_ARG)
+%: acc-test
+	@true
+
 fmt:
 	@echo "==> Fixing source code with gofmt..."
 	goimports -w ./$(PKG_NAME)
@@ -104,4 +146,4 @@ endif
 
 .NOTPARALLEL:
 
-.PHONY: default build test testacc fmt fmtcheck errcheck lint tools vet test-compile cibuild citest website website-lint website-test
+.PHONY: default build test testacc acc-test fmt fmtcheck errcheck lint tools vet test-compile cibuild citest website website-lint website-test
