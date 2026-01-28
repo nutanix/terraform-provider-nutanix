@@ -240,8 +240,22 @@ func expandNic(pr []interface{}) []config.Nic {
 					*nic.NicBackingInfoItemDiscriminator_ = *nicBackingInfo.Discriminator
 				}
 			} else if backingInfo, ok := val["backing_info"]; ok && backingInfo != nil && len(backingInfo.([]interface{})) > 0 {
-				log.Printf("[DEBUG] Expanding legacy backing_info")
-				nic.BackingInfo = expandEmulatedNic(backingInfo)
+				log.Printf("[DEBUG] Expanding legacy backing_info as nic_backing_info")
+				nicBackingInfo := config.NewOneOfNicNicBackingInfo()
+				ven := expandVirtualEthernetNic(backingInfo)
+				if ven != nil {
+					if err := nicBackingInfo.SetValue(ven); err != nil {
+						log.Printf("[ERROR] Error setting value for nic_backing_info from legacy backing_info: %v", err)
+						continue
+					}
+					nic.NicBackingInfo = nicBackingInfo
+					if nicBackingInfo.Discriminator != nil {
+						if nic.NicBackingInfoItemDiscriminator_ == nil {
+							nic.NicBackingInfoItemDiscriminator_ = new(string)
+						}
+						*nic.NicBackingInfoItemDiscriminator_ = *nicBackingInfo.Discriminator
+					}
+				}
 			}
 			// Prefer new nic_network_info (v2.4.1+). If not present, fall back to legacy network_info and
 			// treat it as nic_network_info.virtual_ethernet_nic_network_info to keep old configs working.
