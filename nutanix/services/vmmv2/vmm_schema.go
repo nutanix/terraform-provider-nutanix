@@ -8,7 +8,6 @@ import (
 func nicsElemSchemaV2() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			// TODO: keep in sync with v2 VM resource NIC schema.
 			"ext_id": {
 				Type:     schema.TypeString,
 				Optional: true,
