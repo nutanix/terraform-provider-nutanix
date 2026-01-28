@@ -17,12 +17,13 @@ testacc: fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=count
 
 # Acceptance tests with .env loaded (same as /ok-to-test). Loads .env from repo root before running.
-# Output streams to terminal in real time and to ACC_TEST_LOG (default: test_output.log); summary appended at end.
-# Usage:
-#   make acc-test TestAccV2NutanixOvaVmDeployResource_DeployVMFromOva   # single test (vmmv2)
-#   make acc-test PKG=vmmv2                                             # all tests in vmmv2
-#   make acc-test v4                                                   # all TestAccV2Nutanix* tests
-#   make acc-test v3                                                   # all TestAccNutanix* tests
+# Output to ACC_TEST_LOG only; summary appended at end. Matches workflow: -p package → package only.
+# Usage (like .github/workflows/acceptance-test.yml /ok-to-test -p <package>):
+#   make acc-test vmmv2                                                # all tests in package vmmv2 (same as -p vmmv2)
+#   make acc-test p=vmmv2                                             # same (make reserves -p, use p=)
+#   make acc-test TestAccV2NutanixOvaVmDeployResource_DeployVMFromOva # single test (vmmv2)
+#   make acc-test v4                                                  # all TestAccV2Nutanix* tests
+#   make acc-test v3                                                  # all TestAccNutanix* tests
 ACC_ARG := $(firstword $(filter-out acc-test,$(MAKECMDGOALS)))
 ACC_TEST_LOG ?= test_output.log
 acc-test:
@@ -45,6 +46,10 @@ acc-test:
 			"") run_pattern="." ;; \
 			*) run_pattern="$$arg"; [ -d nutanix/services/vmmv2 ] && pkg="vmmv2" ;; \
 		esac; \
+		[ -d "nutanix/services/$$arg" ] && pkg="$$arg" && run_pattern="."; \
+		[ -z "$$pkg" ] && [ -n "$(PKG)" ] && pkg="$(PKG)"; \
+		[ -z "$$pkg" ] && [ -n "$(p)" ] && pkg="$(p)"; \
+		[ -n "$(RUN)" ] && run_pattern="$(RUN)"; \
 		if [ -n "$$pkg" ]; then \
 			(cd nutanix/services/$$pkg && go test . -v -run="$$run_pattern" -timeout 500m -count=1 2>&1) | while IFS= read -r line; do echo "$$line" >> "$$logfile"; done; \
 		else \
