@@ -452,23 +452,18 @@ From the **repository root**:
 
 3. **Run tests** (from repo root; `.env` is loaded automatically by `make acc-test`):
 
-   Output streams to the terminal in real time and to `test_output.log`; a test summary is appended at the end of the same file. To watch the log in another Cursor terminal: `tail -f test_output.log`.
+   Output goes to `test_output.log`; a test summary is appended at the end. To watch the log: `tail -f test_output.log`.
 
-   ```bash
-   # Single test case
-   make acc-test TestAccV2NutanixOvaVmDeployResource_DeployVMFromOva
+   | Command | What it does |
+   | :--- | :--- |
+   | `make acc-test networkingv2` | All tests in networkingv2 package (auto-detected) |
+   | `make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic` | Specific test in networkingv2 package |
+   | `make acc-test TestAccV2NutanixSubnetResource_Basic` | Search all packages for test |
+   | `make acc-test p=networkingv2` | All tests in networkingv2 (explicit package) |
+   | `make acc-test v4` | All V4 tests (`TestAccV2Nutanix*`) |
+   | `make acc-test v3` | All V3 tests (`TestAccNutanix*`) |
 
-   # All tests in a package
-   make acc-test PKG=vmmv2
-
-   # V4 test cases (TestAccV2Nutanix*)
-   make acc-test v4
-
-   # V3 test cases (TestAccNutanix*)
-   make acc-test v3
-   ```
-
-   Use a different log file: `make acc-test PKG=vmmv2 ACC_TEST_LOG=my_tests.log`
+   Use a different log file: `make acc-test networkingv2 ACC_TEST_LOG=my_tests.log`
 
    Or use the script (also loads env if you `source .env` first):
 

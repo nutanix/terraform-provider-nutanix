@@ -17,49 +17,69 @@ testacc: fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=count
 
 # Acceptance tests with .env loaded (same as /ok-to-test). Loads .env from repo root before running.
-# Output to ACC_TEST_LOG only; summary appended at end. Matches workflow: -p package → package only.
-# Usage (like .github/workflows/acceptance-test.yml /ok-to-test -p <package>):
-#   make acc-test vmmv2                                                # all tests in package vmmv2 (same as -p vmmv2)
-#   make acc-test p=vmmv2                                             # same (make reserves -p, use p=)
-#   make acc-test TestAccV2NutanixOvaVmDeployResource_DeployVMFromOva # single test (vmmv2)
-#   make acc-test v4                                                  # all TestAccV2Nutanix* tests
-#   make acc-test v3                                                  # all TestAccNutanix* tests
-ACC_ARG := $(firstword $(filter-out acc-test,$(MAKECMDGOALS)))
+# Output to ACC_TEST_LOG only; summary appended at end. Matches workflow logic from acceptance-test.yml.
+# Usage:
+#   make acc-test networkingv2                                         # all tests in package networkingv2 (auto-detected)
+#   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic    # single test in specific package
+#   make acc-test p=networkingv2                                       # all tests in package (explicit)
+#   make acc-test p=networkingv2 TestAccV2NutanixSubnetResource_Basic  # single test in specific package (explicit)
+#   make acc-test v4                                                   # all TestAccV2Nutanix* tests
+#   make acc-test v3                                                   # all TestAccNutanix* tests
+#   make acc-test TestAccV2NutanixSubnetResource_Basic                 # single test (searches all packages)
+#   make acc-test TestAccV2NutanixSubnet TestAccV2NutanixVpc           # multiple tests (combined with |)
+# Note: Don't use -p flag (it's a Make built-in). Use p= or just the package name directly.
 ACC_TEST_LOG ?= test_output.log
 acc-test:
 	@bash -c '\
-		arg="$(ACC_ARG)"; logfile="$(ACC_TEST_LOG)"; \
+		logfile="$(ACC_TEST_LOG)"; \
 		: > "$$logfile"; \
 		echo "==> Loading .env and running acceptance tests (output to $$logfile only; summary at end)..." >> "$$logfile"; \
 		[ -f .env ] && set -a && . ./.env && set +a; \
 		export TF_ACC=1 GOTRACEBACK=all; \
-		run_pattern="."; pkg=""; \
-		case "$$arg" in \
-			v4) run_pattern="TestAccV2Nutanix*" ;; \
-			v3) run_pattern="TestAccNutanix*" ;; \
-			foundation) run_pattern="TestAccFoundation*" ;; \
-			foundation_central) run_pattern="TestAccFC*" ;; \
-			karbon) run_pattern="TestAccKarbon*" ;; \
-			lcm) run_pattern="TestAccV2NutanixLcm*" ;; \
-			era) run_pattern="TestAccEra*" ;; \
-			PKG=*) pkg="$${arg#PKG=}"; run_pattern="." ;; \
-			"") run_pattern="." ;; \
-			*) run_pattern="$$arg"; [ -d nutanix/services/vmmv2 ] && pkg="vmmv2" ;; \
-		esac; \
-		[ -d "nutanix/services/$$arg" ] && pkg="$$arg" && run_pattern="."; \
-		[ -z "$$pkg" ] && [ -n "$(PKG)" ] && pkg="$(PKG)"; \
-		[ -z "$$pkg" ] && [ -n "$(p)" ] && pkg="$(p)"; \
-		[ -n "$(RUN)" ] && run_pattern="$(RUN)"; \
-		if [ -n "$$pkg" ]; then \
-			(cd nutanix/services/$$pkg && go test . -v -run="$$run_pattern" -timeout 500m -count=1 2>&1) | while IFS= read -r line; do echo "$$line" >> "$$logfile"; done; \
-		else \
-			go test ./... -v -run="$$run_pattern" -timeout 500m -count=1 2>&1 | while IFS= read -r line; do echo "$$line" >> "$$logfile"; done; \
+		args="$(filter-out acc-test,$(MAKECMDGOALS))"; \
+		package_path="./..."; \
+		run_flag=""; \
+		if [ -n "$(p)" ]; then \
+			package_path="./nutanix/services/$(p)"; \
+			echo "📦 Running tests only in package: $$package_path" >> "$$logfile"; \
 		fi; \
+		for arg in $$args; do \
+			if [ -d "nutanix/services/$$arg" ]; then \
+				package_path="./nutanix/services/$$arg"; \
+				echo "📦 Running tests only in package: $$package_path (auto-detected)" >> "$$logfile"; \
+				continue; \
+			fi; \
+			case "$$arg" in \
+				foundation) pattern="TestAccFoundation*" ;; \
+				foundation_central) pattern="TestAccFC*" ;; \
+				karbon) pattern="TestAccKarbon*" ;; \
+				v3) pattern="TestAccNutanix*" ;; \
+				v4) pattern="TestAccV2Nutanix*" ;; \
+				lcm) pattern="TestAccV2NutanixLcm*" ;; \
+				era) pattern="TestAccEra*" ;; \
+				*) pattern="$$arg" ;; \
+			esac; \
+			if [ -n "$$run_flag" ]; then \
+				run_flag="$$run_flag|$$pattern"; \
+			else \
+				run_flag="$$pattern"; \
+			fi; \
+		done; \
+		if [ "$$package_path" != "./..." ] && [ -z "$$run_flag" ]; then \
+			test_args="-run=."; \
+		elif [ -n "$$run_flag" ]; then \
+			test_args="-run=$$run_flag"; \
+		else \
+			test_args="-run=."; \
+		fi; \
+		echo "==> TESTARGS = $$test_args" >> "$$logfile"; \
+		echo "==> Package path = $$package_path" >> "$$logfile"; \
+		go test "$$package_path" -v $$test_args -timeout 500m -count=1 2>&1 | while IFS= read -r line; do echo "$$line" >> "$$logfile"; done; \
 		if [ -f "$$logfile" ] && grep -qE "^--- (PASS|FAIL|SKIP):" "$$logfile" 2>/dev/null; then \
 			"$(CURDIR)/scripts/acc-test-summary.sh" "$$logfile"; \
 		fi'
 	@echo "==> Log file: $(ACC_TEST_LOG)"
-# Dummy target so "make acc-test v4" etc. do not fail (argument is consumed by ACC_ARG)
+# Dummy target so "make acc-test v4" etc. do not fail (arguments are consumed)
 %: acc-test
 	@true
 
