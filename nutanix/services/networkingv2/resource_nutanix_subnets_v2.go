@@ -714,8 +714,6 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 	}
 	if d.HasChange("dhcp_options") {
 		updateSpec.DhcpOptions = expandDhcpOptions(d.Get("dhcp_options").([]interface{}))
-	} else {
-		updateSpec.DhcpOptions = nil
 	}
 	if d.HasChange("cluster_reference") {
 		updateSpec.ClusterReference = utils.StringPtr(d.Get("cluster_reference").(string))
@@ -768,8 +766,6 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 	}
 	if d.HasChange("ip_config") {
 		updateSpec.IpConfig = expandIPConfig(d.Get("ip_config").([]interface{}))
-	} else {
-		updateSpec.IpConfig = nil
 	}
 
 	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
