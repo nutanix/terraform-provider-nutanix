@@ -205,41 +205,52 @@ jobs:
                   exit 1  # Ignore missing file instead of failing
               fi
 
-              # Extract total test cases executed safely
+              # Extract total test cases executed safely (top-level RUN count)
               TOTAL_RUN=$(grep -c '^=== RUN' test_output.log)
               if [ "$TOTAL_RUN" -eq 0 ]; then
                   echo "No test cases executed. Exiting..."
                   exit 1
               fi
 
-              # Extract counts of passed, failed, and skipped tests
-              TOTAL_PASSED=$(grep -c '^--- PASS' test_output.log)
-              TOTAL_FAILED=$(grep -c '^--- FAIL' test_output.log)
-              TOTAL_SKIPPED=$(grep -c '^--- SKIP' test_output.log)
+              # Use last result per test name so tests that run in a subprocess (e.g. NGT Insert ISO retry wrapper)
+              # are counted and listed only once. The last result is the authoritative one (parent test).
+              awk '
+                /^--- (PASS|FAIL|SKIP): / {
+                  result = $2; sub(/:$/, "", result);
+                  name = $3;
+                  last_result[name] = result;
+                  last_line[name] = NR;
+                }
+                END {
+                  for (n in last_result) {
+                    print last_line[n], last_result[n], n
+                  }
+                }
+              ' test_output.log | sort -n > test_results_by_last.txt
+
+              # Count by last result (each test counted once)
+              TOTAL_PASSED=$(awk '$2 == "PASS"' test_results_by_last.txt | wc -l)
+              TOTAL_FAILED=$(awk '$2 == "FAIL"' test_results_by_last.txt | wc -l)
+              TOTAL_SKIPPED=$(awk '$2 == "SKIP"' test_results_by_last.txt | wc -l)
 
               # Set output as successful for GitHub Actions which will be used in subsequent steps, Set only if tests were executed
               echo "tests_executed=tests_execution_successful" >> $GITHUB_OUTPUT
 
-              # Calculate percentages safely
+              # Calculate percentages safely (use unique test count)
+              UNIQUE_TESTS=$((TOTAL_PASSED + TOTAL_FAILED + TOTAL_SKIPPED))
               PASS_PERCENT=0
               FAIL_PERCENT=0
               SKIP_PERCENT=0
-              if [ "$TOTAL_RUN" -gt 0 ]; then
-                  if [ "$TOTAL_PASSED" -gt 0 ]; then
-                      PASS_PERCENT=$((TOTAL_PASSED * 100 / TOTAL_RUN))
-                  fi
-                  if [ "$TOTAL_FAILED" -gt 0 ]; then
-                      FAIL_PERCENT=$((TOTAL_FAILED * 100 / TOTAL_RUN))
-                  fi
-                  if [ "$TOTAL_SKIPPED" -gt 0 ]; then
-                      SKIP_PERCENT=$((TOTAL_SKIPPED * 100 / TOTAL_RUN))
-                  fi
+              if [ "$UNIQUE_TESTS" -gt 0 ]; then
+                  [ "$TOTAL_PASSED" -gt 0 ] && PASS_PERCENT=$((TOTAL_PASSED * 100 / UNIQUE_TESTS))
+                  [ "$TOTAL_FAILED" -gt 0 ] && FAIL_PERCENT=$((TOTAL_FAILED * 100 / UNIQUE_TESTS))
+                  [ "$TOTAL_SKIPPED" -gt 0 ] && SKIP_PERCENT=$((TOTAL_SKIPPED * 100 / UNIQUE_TESTS))
               fi
 
-              # Write summary to a file
+              # Write summary to a file (each test appears only once, under its last result)
               {
                 echo "==================================================🧪 TEST SUMMARY 🧪================================================================================="
-                echo "Total Test Cases Run 🚀: $TOTAL_RUN"
+                echo "Total Test Cases Run 🚀: $UNIQUE_TESTS"
                 echo "Total Test Cases Passed ✅: $TOTAL_PASSED ($PASS_PERCENT %)" 
                 echo "Total Test Cases Failed ❌: $TOTAL_FAILED ($FAIL_PERCENT %)"
                 echo "Total Test Cases Skipped ⚠️: $TOTAL_SKIPPED ($SKIP_PERCENT %)"
@@ -248,7 +259,7 @@ jobs:
                 echo "================================================== TESTS SUCCEEDED ✅ ============================================================================="
                 if [ "$TOTAL_PASSED" -gt 0 ]; then
                     echo ""
-                    grep '^--- PASS' test_output.log | awk '{print "✅ " $3}' || true
+                    awk '$2 == "PASS" { print "✅ " $3 }' test_results_by_last.txt || true
                 else
                     echo "No tests passed 😞❗"
                 fi
@@ -257,7 +268,7 @@ jobs:
                 echo "================================================== TESTS FAILED ❌ ================================================================================"
                 if [ "$TOTAL_FAILED" -gt 0 ]; then
                     echo ""
-                    grep '^--- FAIL' test_output.log | awk '{print "❌ " $3}' || true
+                    awk '$2 == "FAIL" { print "❌ " $3 }' test_results_by_last.txt || true
                 else
                     echo "🎉💃 No tests failed 🕺🎉"
                 fi
@@ -265,10 +276,8 @@ jobs:
                 echo ""
                 echo "================================================== TESTS SKIPPED ⚠️ =============================================================================="
                 if [ "$TOTAL_SKIPPED" -gt 0 ]; then
-                    awk '
-                      /^=== RUN/ { testname=$3; reason="No reason provided" }
-                      /--- SKIP/ { print "⚠️ " testname "   : Reason: ➡️ :  " reason }
-                      /^[[:space:]]+/ { reason=$0 }' test_output.log || true
+                    echo ""
+                    awk '$2 == "SKIP" { print "⚠️ " $3 "   : Reason: ➡️ :  See log for details" }' test_results_by_last.txt || true
                 else
                     echo "🎉💃 No tests skipped 🕺🎉"
                 fi
@@ -276,6 +285,7 @@ jobs:
                 echo ""
 
               } > test_summary.txt
+              rm -f test_results_by_last.txt
               echo "TEST_SUMMARY_FILE=test_summary.txt" >> $GITHUB_ENV
 
               # Write to GitHub output for PR comment
