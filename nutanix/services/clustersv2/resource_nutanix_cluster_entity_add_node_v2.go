@@ -978,7 +978,7 @@ func expandDetails(pr interface{}) *config.UserInfo {
 }
 
 func expandHypervisorType(hypervisorType interface{}) *config.HypervisorType {
-	return common.ExpandEnum(hypervisorType, HypervisorTypeMap, "hypervisor_type")
+	return common.ExpandEnum[config.HypervisorType](hypervisorType)
 }
 
 func expandExtraParams(pr interface{}) *config.NodeRemovalExtraParam {
