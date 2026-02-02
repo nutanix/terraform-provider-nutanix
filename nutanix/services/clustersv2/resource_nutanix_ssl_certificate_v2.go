@@ -91,7 +91,7 @@ func ResourceNutanixSSLCertificateV2Create(ctx context.Context, d *schema.Resour
 		updateSpec.CaChain = utils.StringPtr(value)
 	}
 	if value, ok := utils.IsStringSetAndNotEmpty(d.Get("private_key_algorithm")); ok {
-		updateSpec.PrivateKeyAlgorithm = common.ExpandEnum(value, PrivateKeyAlgorithmMap, "private_key_algorithm")
+		updateSpec.PrivateKeyAlgorithm = common.ExpandEnum[config.PrivateKeyAlgorithm](value)
 	}
 
 	// Log the update payload

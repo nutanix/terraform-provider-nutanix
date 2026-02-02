@@ -589,7 +589,7 @@ func ResourceNutanixClusterProfileV2Update(ctx context.Context, d *schema.Resour
 	}
 	if d.HasChange("allowed_overrides") {
 		aoList, _ := d.GetOk("allowed_overrides")
-		body.AllowedOverrides = common.ExpandEnumList(aoList, AllowedOverridesMap, "allowed_override")
+		body.AllowedOverrides = common.ExpandEnumList[config.ConfigType](aoList)
 	}
 	if d.HasChange("name_server_ip_list") {
 		nameServerIPRaw, _ := d.GetOk("name_server_ip_list")
@@ -732,7 +732,7 @@ func expandClusterProfile(d *schema.ResourceData) *config.ClusterProfile {
 
 	// Enum list
 	if aoList, ok := d.GetOk("allowed_overrides"); ok {
-		body.AllowedOverrides = common.ExpandEnumList(aoList, AllowedOverridesMap, "allowed_override")
+		body.AllowedOverrides = common.ExpandEnumList[config.ConfigType](aoList)
 	}
 
 	// Name server IP list
@@ -804,7 +804,7 @@ func expandSNMPConfig(snmpConfigList []interface{}) *config.SnmpConfig {
 			userMap := u.(map[string]interface{})
 			user := config.SnmpUser{
 				Username: utils.StringPtr(userMap["username"].(string)),
-				AuthType: common.ExpandEnum(userMap["auth_type"].(string), SnmpAuthTypeMap, "auth_type"),
+				AuthType: common.ExpandEnum[config.SnmpAuthType](userMap["auth_type"].(string)),
 			}
 
 			// Only set AuthKey if it exists and is non-empty
@@ -814,7 +814,7 @@ func expandSNMPConfig(snmpConfigList []interface{}) *config.SnmpConfig {
 
 			// Only set PrivType if it exists and is non-empty
 			if v, ok := userMap["priv_type"].(string); ok && v != "" {
-				user.PrivType = common.ExpandEnum(v, SnmpPrivTypeMap, "priv_type")
+				user.PrivType = common.ExpandEnum[config.SnmpPrivType](v)
 			}
 
 			// Only set PrivKey if it exists and is non-empty
@@ -833,7 +833,7 @@ func expandSNMPConfig(snmpConfigList []interface{}) *config.SnmpConfig {
 		for _, t := range transports {
 			tMap := t.(map[string]interface{})
 			transport := config.SnmpTransport{
-				Protocol: common.ExpandEnum(tMap["protocol"].(string), SnmpProtocolMap, "protocol"),
+				Protocol: common.ExpandEnum[config.SnmpProtocol](tMap["protocol"].(string)),
 				Port:     utils.IntPtr(int(tMap["port"].(int))),
 			}
 			snmp.Transports = append(snmp.Transports, transport)
@@ -849,11 +849,11 @@ func expandSNMPConfig(snmpConfigList []interface{}) *config.SnmpConfig {
 			trap := config.SnmpTrap{
 				Address:         expandIPAddress(trMap["address"]),
 				Username:        utils.StringPtr(trMap["username"].(string)),
-				Protocol:        common.ExpandEnum(trMap["protocol"].(string), SnmpProtocolMap, "protocol"),
+				Protocol:        common.ExpandEnum[config.SnmpProtocol](trMap["protocol"].(string)),
 				Port:            utils.IntPtr(int(trMap["port"].(int))),
 				ShouldInform:    utils.BoolPtr(trMap["should_inform"].(bool)),
 				EngineId:        utils.StringPtr(trMap["engine_id"].(string)),
-				Version:         common.ExpandEnum(trMap["version"].(string), SnmpTrapVersionMap, "version"),
+				Version:         common.ExpandEnum[config.SnmpTrapVersion](trMap["version"].(string)),
 				RecieverName:    utils.StringPtr(trMap["receiver_name"].(string)),
 				CommunityString: utils.StringPtr(trMap["community_string"].(string)),
 			}
@@ -877,7 +877,7 @@ func expandRsyslogServerList(rsyslogServerList []interface{}) []config.RsyslogSe
 		server := config.RsyslogServer{
 			ServerName:      utils.StringPtr(serverMap["server_name"].(string)),
 			Port:            utils.IntPtr(int(serverMap["port"].(int))),
-			NetworkProtocol: common.ExpandEnum(serverMap["network_protocol"].(string), RsyslogNetworkProtocolMap, "network_protocol"),
+			NetworkProtocol: common.ExpandEnum[config.RsyslogNetworkProtocol](serverMap["network_protocol"].(string)),
 		}
 
 		// IP Address
@@ -896,8 +896,8 @@ func expandRsyslogServerList(rsyslogServerList []interface{}) []config.RsyslogSe
 			for _, m := range modules {
 				modMap := m.(map[string]interface{})
 				module := config.RsyslogModuleItem{
-					Name:                  common.ExpandEnum(modMap["name"].(string), RsyslogModuleNameMap, "name"),
-					LogSeverityLevel:      common.ExpandEnum(modMap["log_severity_level"].(string), RsyslogLogSeverityLevelMap, "log_severity_level"),
+					Name:                  common.ExpandEnum[config.RsyslogModuleName](modMap["name"].(string)),
+					LogSeverityLevel:      common.ExpandEnum[config.RsyslogModuleLogSeverityLevel](modMap["log_severity_level"].(string)),
 					ShouldLogMonitorFiles: utils.BoolPtr(modMap["should_log_monitor_files"].(bool)),
 				}
 				server.Modules = append(server.Modules, module)

@@ -52,8 +52,10 @@ The following arguments are supported:
 ### nics
 
 * `ext_id`: (Optional) A globally unique identifier of an instance that is suitable for external consumption.
-* `backing_info`: (Optional) Defines a NIC emulated by the hypervisor
-* `network_info`: (Optional) Network information for a NIC.
+* `nic_backing_info`: (Optional) New NIC backing info (v2.4.1+). One of `virtual_ethernet_nic`, `sriov_nic`, `dp_offload_nic`.
+* `nic_network_info`: (Optional) New NIC network info (v2.4.1+). One of `virtual_ethernet_nic_network_info`, `sriov_nic_network_info`, `dp_offload_nic_network_info`.
+* `backing_info`: (Optional, Deprecated) Use `nic_backing_info.virtual_ethernet_nic` instead.
+* `network_info`: (Optional, Deprecated) Use `nic_network_info.virtual_ethernet_nic_network_info` instead.
 
 ### nics.backing_info
 * `model`: (Optional) Options for the NIC emulation. Valid values "VIRTIO" , "E1000".

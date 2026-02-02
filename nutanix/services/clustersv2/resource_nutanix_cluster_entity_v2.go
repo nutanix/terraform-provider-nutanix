@@ -859,7 +859,7 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 		body.Config = expandClusterConfigReference(configVar, d)
 	}
 	if upgradeStatus, ok := d.GetOk("upgrade_status"); ok {
-		body.UpgradeStatus = common.ExpandEnum(upgradeStatus, UpgradeStatusMap, "upgrade_status")
+		body.UpgradeStatus = common.ExpandEnum[config.UpgradeStatus](upgradeStatus)
 	}
 
 	if containerName, ok := d.GetOk("container_name"); ok {
@@ -1259,7 +1259,7 @@ func expandClusterNetworkReference(pr interface{}) *config.ClusterNetworkReferen
 			cls.Fqdn = utils.StringPtr(fqdn.(string))
 		}
 		if keyManagementServerType, ok := val["key_management_server_type"]; ok {
-			cls.KeyManagementServerType = common.ExpandEnum(keyManagementServerType, KeyManagementServerTypeMap, "key_management_server_type")
+			cls.KeyManagementServerType = common.ExpandEnum[config.KeyManagementServerType](keyManagementServerType)
 		}
 		if backplane, ok := val["backplane"]; ok {
 			cls.Backplane = expandBackplaneNetworkParams(backplane)
@@ -1288,7 +1288,7 @@ func expandHTTPProxyWhiteList(proxyTypesWhiteList []interface{}) []config.HttpPr
 			if target, ok := val["target"]; ok {
 				httpProxy.Target = utils.StringPtr(target.(string))
 			}
-			httpProxy.TargetType = common.ExpandEnum(val["target_type"], HTTPProxyWhiteListTargetMap, "target_type")
+			httpProxy.TargetType = common.ExpandEnum[config.HttpProxyWhiteListTargetType](val["target_type"])
 
 			httpProxyWhiteList[k] = *httpProxy
 		}
@@ -1320,7 +1320,7 @@ func expandHTTPProxyList(httpProxyList []interface{}) []config.HttpProxyConfig {
 			if name, ok := val["name"]; ok {
 				httpProxy.Name = utils.StringPtr(name.(string))
 			}
-			httpProxy.ProxyTypes = common.ExpandEnumList(val["proxy_types"], HTTPProxyTypeMap, "proxy_type")
+			httpProxy.ProxyTypes = common.ExpandEnumList[config.HttpProxyType](val["proxy_types"])
 
 			httpProxyConfig[k] = *httpProxy
 		}
@@ -1338,7 +1338,7 @@ func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *confi
 		if buildInfo, ok := val["build_info"]; ok && d.HasChange("config.0.build_info") {
 			clsConf.BuildInfo = expandBuildReference(buildInfo)
 		}
-		clsConf.ClusterFunction = common.ExpandEnumList(val["cluster_function"], ClusterFunctionMap, "cluster_function")
+		clsConf.ClusterFunction = common.ExpandEnumList[config.ClusterFunctionRef](val["cluster_function"])
 
 		if _, ok := val["authorized_public_key_list"]; ok && d.HasChange("config.0.authorized_public_key_list") {
 			_, newObj := d.GetChange("config.0.authorized_public_key_list")
@@ -1347,17 +1347,17 @@ func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *confi
 		if redundancyFactor, ok := val["redundancy_factor"]; ok && d.HasChange("config.0.redundancy_factor") {
 			clsConf.RedundancyFactor = utils.Int64Ptr(int64(redundancyFactor.(int)))
 		}
-		clsConf.ClusterArch = common.ExpandEnum(val["cluster_arch"], ClusterArchMap, "cluster_arch")
+		clsConf.ClusterArch = common.ExpandEnum[config.ClusterArchReference](val["cluster_arch"])
 
 		if faultToleranceState, ok := val["fault_tolerance_state"]; ok && d.HasChange("config.0.fault_tolerance_state") {
 			clsConf.FaultToleranceState = expandFaultToleranceState(faultToleranceState)
 		}
 		if operationMode, ok := val["operation_mode"]; ok && d.HasChange("config.0.operation_mode") {
-			clsConf.OperationMode = common.ExpandEnum(operationMode, OperationModeMap, "operation_mode")
+			clsConf.OperationMode = common.ExpandEnum[config.OperationMode](operationMode)
 		}
 
 		if encryptionInTransitStatus, ok := val["encryption_in_transit_status"]; ok && d.HasChange("config.0.encryption_in_transit_status") {
-			clsConf.EncryptionInTransitStatus = common.ExpandEnum(encryptionInTransitStatus, EncryptionStatusMap, "encryption_in_transit_status")
+			clsConf.EncryptionInTransitStatus = common.ExpandEnum[config.EncryptionStatus](encryptionInTransitStatus)
 		}
 
 		if pulseStatus, ok := val["pulse_status"]; ok && d.HasChange("config.0.pulse_status") {
@@ -1383,7 +1383,7 @@ func expandPulseStatus(status interface{}) *config.PulseStatus {
 		pulse.IsEnabled = utils.BoolPtr(isEnabled.(bool))
 	}
 	if piiScrubbingLevel, ok := val["pii_scrubbing_level"]; ok {
-		pulse.PiiScrubbingLevel = common.ExpandEnum(piiScrubbingLevel, PIIScrubbingLevelMap, "pii_scrubbing_level")
+		pulse.PiiScrubbingLevel = common.ExpandEnum[config.PIIScrubbingLevel](piiScrubbingLevel)
 	}
 
 	return pulse
@@ -1523,7 +1523,7 @@ func expandSMTPServerRef(pr interface{}) *config.SmtpServerRef {
 			smtp.Server = expandSMTPNetwork(server.([]interface{}))
 		}
 		if smtpType, ok := val["type"]; ok {
-			smtp.Type = common.ExpandEnum(smtpType, SMTPTypeMap, "smtp_type")
+			smtp.Type = common.ExpandEnum[config.SmtpType](smtpType)
 		}
 
 		return smtp
@@ -1570,7 +1570,7 @@ func expandManagementServerRef(pr interface{}) *config.ManagementServerRef {
 			mgm.Ip = expandIPAddress(ip.([]interface{}))
 		}
 		if mgmType, ok := val["type"]; ok {
-			mgm.Type = common.ExpandEnum(mgmType, ManagementServerTypeMap, "management_server_type")
+			mgm.Type = common.ExpandEnum[config.ManagementServerType](mgmType)
 		}
 		if drsEnabled, ok := val["is_drs_enabled"]; ok {
 			mgm.IsDrsEnabled = utils.BoolPtr(drsEnabled.(bool))
@@ -1698,23 +1698,15 @@ func expandFaultToleranceState(pr interface{}) *config.FaultToleranceState {
 		val := prI[0].(map[string]interface{})
 
 		if domainAwarenessLevel, ok := val["domain_awareness_level"]; ok {
-			fts.DomainAwarenessLevel = common.ExpandEnum(domainAwarenessLevel, DomainAwarenessLevelMap, "domain_awareness_level")
+			fts.DomainAwarenessLevel = common.ExpandEnum[config.DomainAwarenessLevel](domainAwarenessLevel)
 		}
 
 		if currentClusterFaultTolerance, ok := val["current_cluster_fault_tolerance"]; ok {
-			fts.CurrentClusterFaultTolerance = common.ExpandEnum(
-				currentClusterFaultTolerance,
-				ClusterFaultToleranceMap,
-				"current_cluster_fault_tolerance",
-			)
+			fts.CurrentClusterFaultTolerance = common.ExpandEnum[config.ClusterFaultToleranceRef](currentClusterFaultTolerance)
 		}
 
 		if desiredClusterFaultTolerance, ok := val["desired_cluster_fault_tolerance"]; ok {
-			fts.DesiredClusterFaultTolerance = common.ExpandEnum(
-				desiredClusterFaultTolerance,
-				ClusterFaultToleranceMap,
-				"desired_cluster_fault_tolerance",
-			)
+			fts.DesiredClusterFaultTolerance = common.ExpandEnum[config.ClusterFaultToleranceRef](desiredClusterFaultTolerance)
 		}
 
 		return fts
@@ -1932,7 +1924,7 @@ func handleClusterFieldUpdate(d *schema.ResourceData) (config.Cluster, bool) {
 	}
 	if d.HasChange("upgrade_status") {
 		hasChanges = true
-		updateSpec.UpgradeStatus = common.ExpandEnum(d.Get("upgrade_status"), UpgradeStatusMap, "upgrade_status")
+		updateSpec.UpgradeStatus = common.ExpandEnum[config.UpgradeStatus](d.Get("upgrade_status"))
 	}
 	if d.HasChange("container_name") {
 		hasChanges = true
