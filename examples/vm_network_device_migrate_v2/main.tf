@@ -81,12 +81,14 @@ resource "nutanix_virtual_machine_v2" "vm" {
     }
   }
   nics {
-    network_info {
-      nic_type = "DIRECT_NIC"
-      subnet {
-        ext_id = nutanix_subnet_v2.subnet.id
+    nic_network_info {
+      virtual_ethernet_nic_network_info {
+        nic_type = "DIRECT_NIC"
+        subnet {
+          ext_id = nutanix_subnet_v2.subnet.id
+        }
+        vlan_mode = "ACCESS"
       }
-      vlan_mode = "ACCESS"
     }
   }
   power_state = "OFF"
