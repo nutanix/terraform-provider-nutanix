@@ -422,7 +422,6 @@ func schemaForExceptEntity() *schema.Resource {
 	}
 }
 
-
 func resourceSchemaForAllowedConfig() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -443,7 +442,6 @@ func resourceSchemaForAllowedConfig() *schema.Schema {
 		},
 	}
 }
-
 
 func resourceEntityGroupSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
