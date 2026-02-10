@@ -185,38 +185,56 @@ func EnumToMap[T interface{ GetName() string }](enums []T) map[string]T {
 	return m
 }
 
-// ExpandEnum expands a single string value to an enum pointer
-func ExpandEnum[T any](val interface{}, enumMap map[string]T, fieldName string) *T {
+// ExpandEnum expands a single string value to an enum pointer.
+// It relies on the SDK-generated enum's UnmarshalJSON for correctness (preferred approach).
+func ExpandEnum[T any](val interface{}) *T {
 	if val == nil {
 		return nil
 	}
 
-	if str, ok := val.(string); ok && str != "" {
-		if enumVal, found := enumMap[str]; found {
-			return &enumVal
-		} else {
-			log.Printf("[WARN] unknown %s: %s", fieldName, str)
+	str, ok := val.(string)
+	if !ok || str == "" {
+		return nil
+	}
+
+	var out T
+	if u, ok := any(&out).(interface{ UnmarshalJSON([]byte) error }); ok {
+		b, err := json.Marshal(str)
+		if err == nil {
+			if err := u.UnmarshalJSON(b); err == nil {
+				return &out
+			}
 		}
 	}
 
+	log.Printf("[WARN] unknown enum value: %s", str)
 	return nil
 }
 
 // ExpandEnumList expands a list of strings to enum values
-func ExpandEnumList[T any](val interface{}, enumMap map[string]T, fieldName string) []T {
+func ExpandEnumList[T any](val interface{}) []T {
 	if val == nil {
 		return nil
 	}
 
 	list := make([]T, 0)
 	for _, item := range val.([]interface{}) {
-		if str, ok := item.(string); ok && str != "" {
-			if enumVal, found := enumMap[str]; found {
-				list = append(list, enumVal)
-			} else {
-				log.Printf("[WARN] unknown %s: %s", fieldName, str)
+		str, ok := item.(string)
+		if !ok || str == "" {
+			continue
+		}
+
+		var out T
+		if u, ok := any(&out).(interface{ UnmarshalJSON([]byte) error }); ok {
+			if b, err := json.Marshal(str); err == nil {
+				if err := u.UnmarshalJSON(b); err == nil {
+					list = append(list, out)
+					continue
+				}
 			}
 		}
+
+		log.Printf("[WARN] unknown enum value: %s", str)
 	}
 
 	if len(list) == 0 {
