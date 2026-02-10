@@ -17,6 +17,7 @@ const (
 	RelEntityTypeSecurityPolicy         = "microseg:config:policy"
 	RelEntityTypeServiceGroup           = "microseg:config:service-group"
 	RelEntityTypeAddressGroup           = "microseg:config:address-group"
+	RelEntityTypeEntityGroup            = "microseg:config:entity-group"
 	RelEntityTypeVMDisk                 = "vmm:ahv:config:vm:disk"
 	RelEntityTypeCDROM                  = "vmm:ahv:config:vm:cdrom"
 	RelEntityTypeSerialPort             = "vmm:ahv:config:vm:serialport"
