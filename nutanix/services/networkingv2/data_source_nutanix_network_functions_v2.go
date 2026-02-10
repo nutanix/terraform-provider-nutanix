@@ -23,7 +23,7 @@ func DataSourceNutanixNetworkFunctionsV2() *schema.Resource {
 			"network_functions": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: DataSourceNutanixNetworkFunctionV2(),
+				Elem:     DataSourceNutanixNetworkFunctionV2(),
 			},
 		},
 	}
