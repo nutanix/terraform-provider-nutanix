@@ -61,7 +61,6 @@ func TestAccV2NutanixEntitiesDatasource_ListWithFilter(t *testing.T) {
 	})
 }
 
-
 func testEntitiesDatasourceV2Config() string {
 	return `
 		data "nutanix_entities_v2" "test" {}
