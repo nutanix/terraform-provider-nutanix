@@ -115,9 +115,8 @@ func Provider() *schema.Provider {
 			},
 			"port": {
 				Type:        schema.TypeString,
-				Default:     "9440",
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_PORT", false),
+				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_PORT", "9440"),
 				Description: descriptions["port"],
 			},
 			"endpoint": {
