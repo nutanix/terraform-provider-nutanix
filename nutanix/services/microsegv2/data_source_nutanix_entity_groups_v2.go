@@ -58,8 +58,8 @@ func schemaForEntityGroupListElem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"allowed_config":  schemaForAllowedConfig(),
-			"except_config":   schemaForExceptConfig(),
+			"allowed_config": schemaForAllowedConfig(),
+			"except_config":  schemaForExceptConfig(),
 			"policy_ext_ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -147,12 +147,12 @@ func flattenEntityGroups(groups []import2.EntityGroup) []map[string]interface{} 
 	result := make([]map[string]interface{}, 0, len(groups))
 	for _, g := range groups {
 		m := map[string]interface{}{
-			"ext_id":          utils.StringValue(g.ExtId),
-			"name":            utils.StringValue(g.Name),
-			"description":     utils.StringValue(g.Description),
-			"allowed_config":  flattenAllowedConfig(g.AllowedConfig),
-			"except_config":   flattenExceptConfig(g.ExceptConfig),
-			"policy_ext_ids":  g.PolicyExtIds,
+			"ext_id":         utils.StringValue(g.ExtId),
+			"name":           utils.StringValue(g.Name),
+			"description":    utils.StringValue(g.Description),
+			"allowed_config": flattenAllowedConfig(g.AllowedConfig),
+			"except_config":  flattenExceptConfig(g.ExceptConfig),
+			"policy_ext_ids": g.PolicyExtIds,
 			"owner_ext_id":   utils.StringValue(g.OwnerExtId),
 			"tenant_id":      utils.StringValue(g.TenantId),
 			"links":          flattenLinksEntityGroup(g.Links),
