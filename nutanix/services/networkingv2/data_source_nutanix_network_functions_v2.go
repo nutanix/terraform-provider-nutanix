@@ -23,60 +23,7 @@ func DataSourceNutanixNetworkFunctionsV2() *schema.Resource {
 			"network_functions": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ext_id":    {Type: schema.TypeString, Computed: true},
-						"tenant_id": {Type: schema.TypeString, Computed: true},
-						"links": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"href": {Type: schema.TypeString, Computed: true},
-									"rel":  {Type: schema.TypeString, Computed: true},
-								},
-							},
-						},
-						"metadata": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: DatasourceMetadataSchemaV2(),
-							},
-						},
-						"name":                    {Type: schema.TypeString, Computed: true},
-						"description":             {Type: schema.TypeString, Computed: true},
-						"failure_handling":        {Type: schema.TypeString, Computed: true},
-						"high_availability_mode":  {Type: schema.TypeString, Computed: true},
-						"traffic_forwarding_mode": {Type: schema.TypeString, Computed: true},
-						"data_plane_health_check_config": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"failure_threshold": {Type: schema.TypeInt, Computed: true},
-									"interval_secs":     {Type: schema.TypeInt, Computed: true},
-									"success_threshold": {Type: schema.TypeInt, Computed: true},
-									"timeout_secs":      {Type: schema.TypeInt, Computed: true},
-								},
-							},
-						},
-						"nic_pairs": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ingress_nic_reference":    {Type: schema.TypeString, Computed: true},
-									"egress_nic_reference":     {Type: schema.TypeString, Computed: true},
-									"is_enabled":               {Type: schema.TypeBool, Computed: true},
-									"vm_reference":             {Type: schema.TypeString, Computed: true},
-									"data_plane_health_status": {Type: schema.TypeString, Computed: true},
-									"high_availability_state":  {Type: schema.TypeString, Computed: true},
-								},
-							},
-						},
-					},
-				},
+				Elem: DataSourceNutanixNetworkFunctionV2(),
 			},
 		},
 	}
