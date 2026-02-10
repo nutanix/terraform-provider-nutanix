@@ -70,7 +70,7 @@ func TestAccV2NutanixNetworkFunctionResource_Egress_Ingress(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameNetworkFunctionV2_1, "id"),
 					resource.TestCheckResourceAttr(resourceNameNetworkFunctionV2_1, "name", name),
-          resource.TestCheckResourceAttr(resourceNameNetworkFunctionV2_1, "description", "First Network function managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceNameNetworkFunctionV2_1, "description", "First Network function managed by Terraform"),
 					resource.TestCheckResourceAttr(
 						resourceNameNetworkFunctionV2_1,
 						"description",
