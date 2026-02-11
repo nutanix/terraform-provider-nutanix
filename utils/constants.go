@@ -14,6 +14,7 @@ const (
 	RelEntityTypeSubnet                 = "networking:config:subnet"
 	RelEntityTypeFloatingIP             = "networking:config:floating-ip"
 	RelEntityTypePBRS                   = "networking:config:routing-policy"
+	RelEntityTypeNetworkFunction        = "networking:config:network-function"
 	RelEntityTypeSecurityPolicy         = "microseg:config:policy"
 	RelEntityTypeServiceGroup           = "microseg:config:service-group"
 	RelEntityTypeAddressGroup           = "microseg:config:address-group"
