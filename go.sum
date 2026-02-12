@@ -463,8 +463,8 @@ github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17 v1
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17 v17.6.0-17657/go.mod h1:J2B5VUjWe4WZEJZf33ye29+RyiqBrY+G3UdArtAPJuU=
 github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.2.1 h1:Gy1DxJII0eIqeONeTx+kfKlcV4d+56X6Pi5agOHblJM=
 github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.2.1/go.mod h1:sd4Fnk6MVfEDVY+8WyRoQTmLhi2SgZ3riySWErVHf8E=
-github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4 v4.2.1 h1:nbWHd6GtqGiDg7q0nI3Ibx0fVSff2BqqphG0x7/9CCY=
-github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4 v4.2.1/go.mod h1:S07bx9/6uUbMOY/OUJsaIUdvZ/LDaE46Kx9VX7Pt7Ek=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17 v4.2.1 h1:nbWHd6GtqGiDg7q0nI3Ibx0fVSff2BqqphG0x7/9CCY=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17 v4.2.1/go.mod h1:S07bx9/6uUbMOY/OUJsaIUdvZ/LDaE46Kx9VX7Pt7Ek=
 github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.2.1 h1:0jj9dZt1Po1u+J6aq1uOdzcGDEM05yvhNTQV+2VT39o=
 github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.2.1/go.mod h1:fQTNQlfh5g4SavaQn+sDoMn29K+Lur5lHWtnbq3uA28=
 github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.2.1 h1:mPwqYXTo3kNoINBLGaz/adB4Lzer4XkmAA5o/i9dl7I=

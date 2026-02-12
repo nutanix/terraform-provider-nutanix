@@ -8,9 +8,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/common/v1/response"
-	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/common"
-	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/common/v1/response"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/common"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -58,6 +58,10 @@ func DatasourceNutanixRecoveryPointV2() *schema.Resource {
 				Computed: true,
 			},
 			"owner_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"project_ext_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -289,6 +293,9 @@ func DatasourceNutanixRecoveryPointV2Read(ctx context.Context, d *schema.Resourc
 		return diag.FromErr(err)
 	}
 	if err := d.Set("owner_ext_id", getResp.OwnerExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("location_references", flattenLocationReferences(getResp.LocationReferences)); err != nil {

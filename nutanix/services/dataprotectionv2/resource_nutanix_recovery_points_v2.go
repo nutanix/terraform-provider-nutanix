@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/common"
-	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/config"
-	dataprtotectionPrismConfig "github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/common"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/config"
+	dataprtotectionPrismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	commonUtils "github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -72,6 +72,10 @@ func ResourceNutanixRecoveryPointsV2() *schema.Resource {
 			"owner_ext_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"location_references": {
 				Type:     schema.TypeList,
@@ -349,6 +353,9 @@ func ResourceNutanixRecoveryPointsV2Create(ctx context.Context, d *schema.Resour
 	if volumeGroupRecoveryPoints, ok := d.GetOk("volume_group_recovery_points"); ok {
 		body.VolumeGroupRecoveryPoints = expandVolumeGroupRecoveryPoints(volumeGroupRecoveryPoints.([]interface{}))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		body.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] RecoveryPoint Body: %v", string(aJSON))
@@ -437,6 +444,9 @@ func ResourceNutanixRecoveryPointsV2Read(ctx context.Context, d *schema.Resource
 	if err := d.Set("owner_ext_id", getResp.OwnerExtId); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("location_references", flattenLocationReferences(getResp.LocationReferences)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -521,6 +531,9 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 		}
 	} else {
 		return diag.Errorf("expiration_time is the only field that can be updated")
+	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
