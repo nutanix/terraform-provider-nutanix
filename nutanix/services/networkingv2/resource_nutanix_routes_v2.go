@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	networkingCommon "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
-	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
-	networkingPrism "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
+	networkingCommon "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/common/v1/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	networkingPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -52,6 +52,10 @@ func ResourceNutanixRoutesV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"destination": {
 				Type:     schema.TypeList,
@@ -213,6 +217,9 @@ func ResourceNutanixRoutesV2Create(ctx context.Context, d *schema.ResourceData, 
 	if description, ok := d.GetOk("description"); ok {
 		reqBody.Description = utils.StringPtr(description.(string))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		reqBody.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 	if destination, ok := d.GetOk("destination"); ok {
 		reqBody.Destination = expandDestination(destination)
 	}
@@ -316,6 +323,9 @@ func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, 
 	}
 	if d.HasChange("description") {
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
+	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 	if d.HasChange("destination") {
 		updateSpec.Destination = expandDestination(d.Get("destination"))
@@ -608,6 +618,9 @@ func routeRead(d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("description", getResp.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("destination", flattenDestination(getResp.Destination)); err != nil {

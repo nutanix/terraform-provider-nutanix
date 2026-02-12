@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	config "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
-	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
+	config "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/common/v1/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -66,6 +66,10 @@ func ResourceNutanixPbrsV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"priority": {
 				Type:     schema.TypeInt,
@@ -395,6 +399,9 @@ func ResourceNutanixPbrsV2Create(ctx context.Context, d *schema.ResourceData, me
 	if description, ok := d.GetOk("description"); ok {
 		inputSpec.Description = utils.StringPtr(description.(string))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		inputSpec.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 	if priority, ok := d.GetOk("priority"); ok {
 		inputSpec.Priority = utils.IntPtr(priority.(int))
 		pbrPriority = priority.(int)
@@ -466,6 +473,9 @@ func ResourceNutanixPbrsV2Read(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("description", getResp.Description); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
 
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
@@ -505,6 +515,9 @@ func ResourceNutanixPbrsV2Update(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("description") {
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
+	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 	if d.HasChange("priority") {
 		updateSpec.Priority = utils.IntPtr(d.Get("priority").(int))

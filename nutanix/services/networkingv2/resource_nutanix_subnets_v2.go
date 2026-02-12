@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
-	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/common/v1/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -38,6 +38,10 @@ func ResourceNutanixSubnetV2() *schema.Resource {
 				Required: true,
 			},
 			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"project_ext_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -466,6 +470,9 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	if desc, ok := d.GetOk("description"); ok {
 		inputSpec.Description = utils.StringPtr(desc.(string))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		inputSpec.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 	if subType, ok := d.GetOk("subnet_type"); ok {
 		const two, three = 2, 3
 		subMap := map[string]interface{}{
@@ -611,6 +618,9 @@ func ResourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, me
 	if err := d.Set("description", getResp.Description); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("subnet_type", flattenSubnetType(getResp.SubnetType)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -701,6 +711,9 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 	}
 	if d.HasChange("description") {
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
+	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 	if d.HasChange("subnet_type") {
 		const two, three = 2, 3

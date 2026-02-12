@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
-	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -38,6 +38,10 @@ func ResourceNutanixVPCsV2() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
+				Optional: true,
+			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"vpc_type": {
@@ -226,6 +230,9 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 	if description, ok := d.GetOk("description"); ok {
 		inputSpec.Description = utils.StringPtr(description.(string))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		inputSpec.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 	if vpcType, ok := d.GetOk("vpc_type"); ok {
 		const two, three = 2, 3
 		subMap := map[string]interface{}{
@@ -319,6 +326,9 @@ func ResourceNutanixVPCsV2Read(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("description", getResp.Description); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("vpc_type", getResp.VpcType.GetName()); err != nil {
 		return diag.FromErr(err)
 	}
@@ -367,6 +377,9 @@ func ResourceNutanixVPCsV2Update(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("description") {
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
+	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 	if d.HasChange("vpc_type") {
 		const two, three = 2, 3

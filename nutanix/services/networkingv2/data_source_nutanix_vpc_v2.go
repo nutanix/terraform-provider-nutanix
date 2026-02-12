@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -50,6 +50,10 @@ func DataSourceNutanixVPCv2() *schema.Resource {
 				Computed: true,
 			},
 			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"project_ext_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -200,6 +204,9 @@ func dataSourceNutanixVPCv2Read(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(err)
 	}
 	if err := d.Set("description", getResp.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("vpc_type", getResp.VpcType.GetName()); err != nil {
