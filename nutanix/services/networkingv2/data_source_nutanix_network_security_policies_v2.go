@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -398,6 +398,10 @@ func DataSourceNutanixNetworkSecurityPoliciesV2() *schema.Resource {
 								},
 							},
 						},
+						"project_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -507,6 +511,7 @@ func flattenNetworkSecurityPolicy(pr []import1.NetworkSecurityPolicy) []interfac
 			if v.Links != nil {
 				net["links"] = flattenLinksMicroSeg(v.Links)
 			}
+			net["project_ext_id"] = v.ProjectExtId
 
 			nets[k] = net
 		}
