@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	volumesClientResponse "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/common/v1/response"
-	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
+	volumesClientResponse "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v17/models/common/v1/response"
+	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v17/models/volumes/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -168,6 +168,10 @@ func DatasourceNutanixVolumeGroupsV2() *schema.Resource {
 							Type:        schema.TypeBool,
 							Computed:    true,
 						},
+						"project_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -294,6 +298,7 @@ func flattenVolumesEntities(volumeGroups []volumesClient.VolumeGroup) []interfac
 			if v.IsHidden != nil {
 				volumeGroup["is_hidden"] = v.IsHidden
 			}
+			volumeGroup["project_ext_id"] = v.ProjectExtId
 
 			volumeGroupList[k] = volumeGroup
 		}

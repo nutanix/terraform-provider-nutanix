@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	taskPoll "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-	volumesPrism "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/prism/v4/config"
-	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
+	volumesPrism "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v17/models/prism/v4/config"
+	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v17/models/volumes/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -237,6 +237,10 @@ func ResourceNutanixVolumeGroupV2() *schema.Resource {
 					},
 				},
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -348,6 +352,9 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 	if disks, ok := d.GetOk("disks"); ok {
 		body.Disks = expandDisks(disks.([]interface{}))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		body.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 	resp, err := conn.VolumeAPIInstance.CreateVolumeGroup(&body)
 	if err != nil {
 		return diag.Errorf("error while creating Volume Group : %v", err)
@@ -441,11 +448,17 @@ func ResourceNutanixVolumeGroupV2Read(ctx context.Context, d *schema.ResourceDat
 	if err := d.Set("is_hidden", getResp.IsHidden); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
 
 func ResourceNutanixVolumeGroupV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 	return nil
 }
 

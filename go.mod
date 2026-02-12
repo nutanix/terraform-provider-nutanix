@@ -22,7 +22,7 @@ require (
 	github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.2.1
 	github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4 v4.1.1
 	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.2.1
-	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.2.1
+	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v17 v4.2.1
 	github.com/spf13/cast v1.8.0
 	github.com/stretchr/testify v1.7.2
 	gopkg.in/yaml.v2 v2.4.0

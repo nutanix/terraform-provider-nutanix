@@ -3,8 +3,8 @@ package volumes
 import (
 	"strconv"
 
-	"github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/api"
-	prism "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/client"
+	"github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v17/api"
+	prism "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v17/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/sdkconfig"
 )
