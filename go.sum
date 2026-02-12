@@ -465,6 +465,8 @@ github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17 v17.
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17 v17.6.0-17517/go.mod h1:vYrjhLq714ukYD7z37aYzN6+IdiyZQSgzuACpfGTR8s=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17 v17.6.0-17657 h1:4xYJU7N5wDm2chfgPV14bl8sWe2qvKg4lQ7gCAALdTE=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17 v17.6.0-17657/go.mod h1:J2B5VUjWe4WZEJZf33ye29+RyiqBrY+G3UdArtAPJuU=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17 v17.6.0-17576 h1:jkxzQ5c4SIkYjl0KNdUthqq/i/+E+wfSNEqsXdUy3Ms=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17 v17.6.0-17576/go.mod h1:IbiGIHGN4Pvmlv3WguUsTniKYEIbwRF2kxdlkkYc1oc=
 github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.2.1 h1:Gy1DxJII0eIqeONeTx+kfKlcV4d+56X6Pi5agOHblJM=
 github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.2.1/go.mod h1:sd4Fnk6MVfEDVY+8WyRoQTmLhi2SgZ3riySWErVHf8E=
 github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.2.1 h1:0jj9dZt1Po1u+J6aq1uOdzcGDEM05yvhNTQV+2VT39o=
@@ -477,8 +479,6 @@ github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4 v4.1.1 h1:t97gS
 github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4 v4.1.1/go.mod h1:DkXaQFMmKfzqAOVb6fHjY6v5VIvAr1uItS9ffZFYbGY=
 github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.2.1 h1:19TMD8K90FjnIZtcstr93NvDTt+oJJsIC57FaG1YXy8=
 github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.2.1/go.mod h1:CaWm4GFpAjQQDc6YXl/dUDrHpuW54h8j6Cj7EslE4Qk=
-github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v17 v4.2.1 h1:wnQR6ytrZh/kS/mVu04Ig2be9i3/sa8U+noIzAnj6oc=
-github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v17 v4.2.1/go.mod h1:Z+RKLwsHYxAcFbZPy2ft3QAK9kBPt9bQdqXSp7eYWkY=
 github.com/oklog/run v1.0.0 h1:Ru7dDtJNOyC66gQ5dQmaCa0qIsAUFY3sFpK1Xk8igrw=
 github.com/oklog/run v1.0.0/go.mod h1:dlhp/R75TPv97u0XWUtDeV/lRKWPKSdTuV0TZvrmrQA=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
