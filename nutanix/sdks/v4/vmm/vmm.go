@@ -3,8 +3,8 @@ package vmm
 import (
 	"strconv"
 
-	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/api"
-	vmm "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/client"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/api"
+	vmm "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/sdkconfig"
 )

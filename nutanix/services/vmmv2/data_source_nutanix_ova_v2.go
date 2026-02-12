@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/content"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -338,6 +338,10 @@ func DatasourceNutanixOvaV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -414,6 +418,9 @@ func setOva(d *schema.ResourceData, ova import1.Ova) diag.Diagnostics {
 		if err := d.Set("last_update_time", t.String()); err != nil {
 			return diag.FromErr(err)
 		}
+	}
+	if err := d.Set("project_ext_id", ova.ProjectExtId); err != nil {
+		return diag.FromErr(err)
 	}
 	return nil
 }

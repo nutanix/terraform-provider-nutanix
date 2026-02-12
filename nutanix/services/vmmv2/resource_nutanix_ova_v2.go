@@ -11,10 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/iam/v4/authn"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/content"
 	import3 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-	import4 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/iam/v4/authn"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -301,6 +301,11 @@ func ResourceNutanixOvaV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -334,6 +339,9 @@ func ResourceNutanixOvaV2Create(ctx context.Context, d *schema.ResourceData, met
 				body.DiskFormat = &enumValue
 			}
 		}
+	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		body.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] OVA body: %s", string(aJSON))
@@ -440,6 +448,9 @@ func ResourceNutanixOvaV2Read(ctx context.Context, d *schema.ResourceData, meta 
 			return diag.FromErr(err)
 		}
 	}
+	if err := d.Set("project_ext_id", ova.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
 
 	log.Printf("[DEBUG] OVA (%s) read successfully", d.Id())
 	return nil
@@ -447,6 +458,10 @@ func ResourceNutanixOvaV2Read(ctx context.Context, d *schema.ResourceData, meta 
 
 func ResourceNutanixOvaV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
+
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 
 	getResp, err := conn.OvasAPIInstance.GetOvaById(utils.StringPtr(d.Id()))
 	if err != nil {
