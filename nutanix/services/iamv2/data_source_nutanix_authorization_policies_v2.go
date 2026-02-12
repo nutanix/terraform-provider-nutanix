@@ -111,6 +111,10 @@ func DatasourceNutanixAuthorizationPoliciesV2() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"project_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -224,6 +228,7 @@ func flattenAuthorizationPolicyEntities(pr []import1.AuthorizationPolicyProjecti
 			auth["created_by"] = v.CreatedBy
 			auth["is_system_defined"] = v.IsSystemDefined
 			auth["authorization_policy_type"] = flattenAuthorizationPolicyType(v.AuthorizationPolicyType)
+			auth["project_ext_id"] = v.ProjectExtId
 
 			auths[k] = auth
 		}

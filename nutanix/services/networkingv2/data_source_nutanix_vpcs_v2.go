@@ -204,6 +204,10 @@ func DataSourceNutanixVPCsv2() *schema.Resource {
 								},
 							},
 						},
+						"project_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -291,6 +295,7 @@ func flattenVPCsEntities(pr []import1.Vpc) []map[string]interface{} {
 			vpc["external_subnets"] = flattenExternalSubnets(v.ExternalSubnets)
 			vpc["external_routing_domain_reference"] = v.ExternalRoutingDomainReference
 			vpc["externally_routable_prefixes"] = flattenExternallyRoutablePrefixes(v.ExternallyRoutablePrefixes)
+			vpc["project_ext_id"] = v.ProjectExtId
 
 			vpcs[k] = vpc
 		}

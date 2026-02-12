@@ -351,6 +351,10 @@ func DatasourceNutanixPbrsV2() *schema.Resource {
 								},
 							},
 						},
+						"project_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -432,7 +436,7 @@ func flattenRoutingEntities(pr []import1.RoutingPolicy) []interface{} {
 			entity["policies"] = flattenPolicies(v.Policies)
 			entity["vpc_ext_id"] = v.VpcExtId
 			entity["vpc"] = flattenVpcName(v.Vpc)
-
+			entity["project_ext_id"] = v.ProjectExtId
 			routingEnts[k] = entity
 		}
 		return routingEnts

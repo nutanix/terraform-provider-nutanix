@@ -124,6 +124,7 @@ func flattenProtectionPolicies(protectionPolicies []config.ProtectionPolicy) []m
 		protectionPolicyMap["category_ids"] = protectionPolicy.CategoryIds
 		protectionPolicyMap["is_approval_policy_needed"] = utils.BoolValue(protectionPolicy.IsApprovalPolicyNeeded)
 		protectionPolicyMap["owner_ext_id"] = utils.StringValue(protectionPolicy.OwnerExtId)
+		protectionPolicyMap["project_ext_id"] = protectionPolicy.ProjectExtId
 
 		protectionPoliciesList = append(protectionPoliciesList, protectionPolicyMap)
 	}

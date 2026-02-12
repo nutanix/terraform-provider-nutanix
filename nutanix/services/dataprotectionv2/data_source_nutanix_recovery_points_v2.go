@@ -138,6 +138,7 @@ func flattenRecoveryPoints(recoveryPoints []config.RecoveryPoint) []interface{} 
 			"location_references":          flattenLocationReferences(recoveryPoint.LocationReferences),
 			"vm_recovery_points":           flattenVMRecoveryPoints(recoveryPoint.VmRecoveryPoints),
 			"volume_group_recovery_points": flattenVolumeGroupRecoveryPoints(recoveryPoint.VolumeGroupRecoveryPoints),
+			"project_ext_id":               recoveryPoint.ProjectExtId,
 		}
 	}
 	return result

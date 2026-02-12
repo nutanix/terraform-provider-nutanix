@@ -410,6 +410,10 @@ func DataSourceNutanixSubnetsV2() *schema.Resource {
 								},
 							},
 						},
+						"project_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -516,7 +520,7 @@ func flattenSubnetEntities(pr []import1.Subnet) []interface{} {
 			sub["ip_prefix"] = v.IpPrefix
 			sub["ip_usage"] = flattenIPUsage(v.IpUsage)
 			sub["migration_state"] = flattenMigrationState(v.MigrationState)
-
+			sub["project_ext_id"] = v.ProjectExtId
 			subnets[k] = sub
 		}
 		return subnets

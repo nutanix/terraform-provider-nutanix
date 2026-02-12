@@ -135,6 +135,7 @@ func flattenRoutes(routes []config.Route) []interface{} {
 			"route_type":                        flattenRouteType(route.RouteType),
 			"is_active":                         route.IsActive,
 			"priority":                          route.Priority,
+			"project_ext_id":                    route.ProjectExtId,
 		}
 	}
 

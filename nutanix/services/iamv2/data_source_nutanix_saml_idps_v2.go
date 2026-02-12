@@ -125,6 +125,10 @@ func DatasourceNutanixSamlIDPsV2() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"project_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -249,6 +253,7 @@ func flattenIdentityProvidersEntities(pr []import1.SamlIdentityProvider) []inter
 			if v.CreatedBy != nil {
 				idp["created_by"] = v.CreatedBy
 			}
+			idp["project_ext_id"] = v.ProjectExtId
 			idps[k] = idp
 		}
 		return idps

@@ -160,6 +160,10 @@ func DatasourceNutanixDirectoryServicesV2() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"project_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -280,6 +284,7 @@ func flattenDirectoryServicesEntities(pr []import1.DirectoryService) []interface
 			if v.CreatedBy != nil {
 				ds["created_by"] = v.CreatedBy
 			}
+			ds["project_ext_id"] = v.ProjectExtId
 
 			dsList[k] = ds
 		}

@@ -183,6 +183,10 @@ func DatasourceNutanixFloatingIPsV2() *schema.Resource {
 								Schema: DatasourceMetadataSchemaV2(),
 							},
 						},
+						"project_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -275,6 +279,7 @@ func flattenFloatingIPsEntities(pr []import1.FloatingIp) []map[string]interface{
 			fip["links"] = flattenLinks(v.Links)
 			fip["tenant_id"] = v.TenantId
 			fip["metadata"] = flattenMetadata(v.Metadata)
+			fip["project_ext_id"] = v.ProjectExtId
 
 			fips[k] = fip
 		}
