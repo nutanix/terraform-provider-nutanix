@@ -11,12 +11,11 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
 	github.com/jinzhu/copier v0.4.0
 	github.com/mitchellh/gox v1.0.1
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17 v17.6.0-17603
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17 v17.6.0-17659
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17 v17.6.0-17657
 	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.2.1
-	github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4 v4.2.1
 	github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4 v4.2.1
-	// github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17 v4.1.1-beta.2
 	github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.2.1
 	github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.2.1
 	github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4 v4.0.2

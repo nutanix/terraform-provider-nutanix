@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/datapolicies/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/dataprotection/v4/common"
-	prism "github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/dataprotection/v4/common"
+	prism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	commonUtils "github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -77,6 +77,10 @@ func ResourceNutanixProtectionPoliciesV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -100,6 +104,9 @@ func ResourceNutanixProtectionPoliciesV2Create(ctx context.Context, d *schema.Re
 	}
 	if categoryIds, ok := d.GetOk("category_ids"); ok {
 		bodySpec.CategoryIds = commonUtils.ExpandListOfString(categoryIds.([]interface{}))
+	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		bodySpec.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
 
 	aJSON, _ := json.MarshalIndent(bodySpec, "", "  ")
@@ -189,6 +196,9 @@ func ResourceNutanixProtectionPoliciesV2Read(ctx context.Context, d *schema.Reso
 	if err := d.Set("owner_ext_id", getResp.OwnerExtId); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -221,6 +231,9 @@ func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.Re
 	}
 	if categoryIds, ok := d.GetOk("category_ids"); ok {
 		updateSpec.CategoryIds = commonUtils.ExpandListOfString(categoryIds.([]interface{}))
+	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 
 	resp, err := conn.ProtectionPolicies.UpdateProtectionPolicyById(utils.StringPtr(d.Id()), updateSpec, args)

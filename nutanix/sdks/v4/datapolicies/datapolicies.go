@@ -3,8 +3,8 @@ package datapolicies
 import (
 	"strconv"
 
-	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/api"
-	datapolicies "github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/client"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/api"
+	datapolicies "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/sdkconfig"
 )
