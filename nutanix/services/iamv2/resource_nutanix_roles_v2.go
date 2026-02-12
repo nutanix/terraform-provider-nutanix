@@ -6,8 +6,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/common/v1/config"
-	iamConfig "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/common/v1/config"
+	iamConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authz"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -121,6 +121,10 @@ func ResourceNutanixRolesV2() *schema.Resource {
 				Description: "Flag identifying if the Role is system defined or not.",
 				Type:        schema.TypeBool,
 				Computed:    true,
+			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 	}
@@ -256,6 +260,9 @@ func ResourceNutanixRolesV4Read(ctx context.Context, d *schema.ResourceData, met
 	if err := d.Set("is_system_defined", getResp.IsSystemDefined); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -295,6 +302,9 @@ func ResourceNutanixRolesV4Update(ctx context.Context, d *schema.ResourceData, m
 			operationsListStr[i] = v.(string)
 		}
 		updatedSpec.Operations = operationsListStr
+	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 
 	updateResp, err := conn.RolesAPIInstance.UpdateRoleById(extID, &updatedSpec, headers)

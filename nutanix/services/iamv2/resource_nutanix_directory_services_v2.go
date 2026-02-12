@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authn"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -146,6 +146,10 @@ func ResourceNutanixDirectoryServicesV2() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -206,6 +210,9 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 			whitelistedGrpListStr[i] = v.(string)
 		}
 		input.WhiteListedGroups = whitelistedGrpListStr
+	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		input.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
 
 	aJSON, _ := json.MarshalIndent(input, "", " ")
@@ -288,6 +295,9 @@ func ResourceNutanixDirectoryServicesV2Read(ctx context.Context, d *schema.Resou
 	}
 
 	if err := d.Set("created_by", getResp.CreatedBy); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
 		return diag.FromErr(err)
 	}
 	return nil
@@ -394,6 +404,9 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 			whitelistedGrpListStr[i] = v.(string)
 		}
 		updatedSpec.WhiteListedGroups = whitelistedGrpListStr
+	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 
 	aJSON, _ := json.MarshalIndent(updatedSpec, "", " ")

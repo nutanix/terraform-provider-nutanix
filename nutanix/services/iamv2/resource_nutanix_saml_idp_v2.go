@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authn"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -131,6 +131,10 @@ func ResourceNutanixSamlIdpV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -177,6 +181,9 @@ func ResourceNutanixSamlIdpV2Create(ctx context.Context, d *schema.ResourceData,
 	}
 	if isSigned, ok := d.GetOk("is_signed_authn_req_enabled"); ok {
 		input.IsSignedAuthnReqEnabled = utils.BoolPtr(isSigned.(bool))
+	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		input.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
 
 	resp, err := conn.SamlIdentityAPIInstance.CreateSamlIdentityProvider(input)
@@ -248,6 +255,9 @@ func ResourceNutanixSamlIdpV2Read(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("created_by", getResp.CreatedBy); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
@@ -304,6 +314,9 @@ func ResourceNutanixSamlIdpV2Update(ctx context.Context, d *schema.ResourceData,
 	}
 	if d.HasChange("is_signed_authn_req_enabled") {
 		updatedInput.IsSignedAuthnReqEnabled = utils.BoolPtr(d.Get("is_signed_authn_req_enabled").(bool))
+	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 
 	updateResp, err := conn.SamlIdentityAPIInstance.UpdateSamlIdentityProviderById(utils.StringPtr(d.Id()), &updatedInput, headers)
