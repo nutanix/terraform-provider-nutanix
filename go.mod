@@ -12,10 +12,10 @@ require (
 	github.com/jinzhu/copier v0.4.0
 	github.com/mitchellh/gox v1.0.1
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17 v17.6.0-17603
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17 v17.6.0-17659
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17 v17.6.0-17657
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17 v17.6.0-17605
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17 v17.6.0-17517 
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17 v17.6.0-17659
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17 v17.6.0-17517
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17 v17.6.0-17657
 	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.2.1
 	github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.2.1
 	github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4 v4.0.2
