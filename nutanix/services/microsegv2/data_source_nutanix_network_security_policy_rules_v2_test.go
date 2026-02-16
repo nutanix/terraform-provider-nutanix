@@ -2,6 +2,7 @@ package microsegv2_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -78,6 +79,47 @@ func TestAccV2NutanixNetworkSecurityPolicyRulesDataSource_WithPagination(t *test
 		},
 	})
 }
+
+// TestAccV2NutanixNetworkSecurityPolicyRulesDataSource_InvalidPolicyExtID tests error handling
+// when a non-existent policy ext_id is provided to the datasource.
+func TestAccV2NutanixNetworkSecurityPolicyRulesDataSource_InvalidPolicyExtID(t *testing.T) {
+	invalidPolicyExtID := "00000000-0000-0000-0000-000000000000"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccNetworkSecurityPolicyRulesDataSourceInvalidPolicyExtIDConfig(invalidPolicyExtID),
+				ExpectError: regexp.MustCompile(`error listing network security policy rules`),
+			},
+		},
+	})
+}
+
+// TestAccV2NutanixNetworkSecurityPolicyRulesDataSource_InvalidPolicyExtIDFormat tests error handling
+// when an invalid policy_ext_id format is provided (e.g. not a valid UUID).
+func TestAccV2NutanixNetworkSecurityPolicyRulesDataSource_InvalidPolicyExtIDFormat(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccNetworkSecurityPolicyRulesDataSourceInvalidPolicyExtIDConfig("invalid-ext-id"),
+				ExpectError: regexp.MustCompile(`(?s)(error listing network security policy rules|SchemaValidationError|ECMA 262 regex|regular expression|regex).*invalid`),
+			},
+		},
+	})
+}
+
+func testAccNetworkSecurityPolicyRulesDataSourceInvalidPolicyExtIDConfig(policyExtID string) string {
+	return fmt.Sprintf(`
+data "nutanix_network_security_policy_rules_v2" "test" {
+  policy_ext_id = "%s"
+}
+`, policyExtID)
+}
+
 
 func testAccNetworkSecurityPolicyRulesDataSourceConfig(name string) string {
 	return fmt.Sprintf(`
