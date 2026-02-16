@@ -21,6 +21,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/lcmv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/ndb"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networking"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/microsegv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networkingv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/nke"
 	objectstoresv2 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/objectsv2"
@@ -248,6 +249,7 @@ func Provider() *schema.Provider {
 			"nutanix_floating_ips_v2":                         networkingv2.DatasourceNutanixFloatingIPsV2(),
 			"nutanix_network_security_policy_v2":              networkingv2.DataSourceNutanixNetworkSecurityPolicyV2(),
 			"nutanix_network_security_policies_v2":            networkingv2.DataSourceNutanixNetworkSecurityPoliciesV2(),
+			"nutanix_network_security_policy_rules_v2":        microsegv2.DataSourceNutanixNetworkSecurityPolicyRulesV2(),
 			"nutanix_route_table_v2":                          networkingv2.DatasourceNutanixRouteTableV2(),
 			"nutanix_route_tables_v2":                         networkingv2.DatasourceNutanixRouteTablesV2(),
 			"nutanix_route_v2":                                networkingv2.DatasourceNutanixRouteV2(),
