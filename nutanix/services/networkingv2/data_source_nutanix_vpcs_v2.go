@@ -38,7 +38,7 @@ func DataSourceNutanixVPCsv2() *schema.Resource {
 			"vpcs": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: DataSourceNutanixVPCv2(),
+				Elem:     DataSourceNutanixVPCv2(),
 			},
 		},
 	}

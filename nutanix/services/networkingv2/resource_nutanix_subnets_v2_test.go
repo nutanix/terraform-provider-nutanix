@@ -155,6 +155,22 @@ func TestAccV2NutanixSubnetResource_WithMetadata(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceNameSubnet, "metadata.0.category_ids.0", "nutanix_category_v2.test", "id"),
 				),
 			},
+			{
+				Config: testSubnetV2ConfigwithMetadataUpdate(name, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameSubnet, "name", name),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "subnet_type", "VLAN"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "network_id", "112"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "metadata.0.category_ids.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceNameSubnet, "metadata.0.category_ids.0", "nutanix_category_v2.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceNameSubnet, "metadata.0.category_ids.1", "nutanix_category_v2.test2", "id"),
+					// data source check
+					resource.TestCheckResourceAttr(datasourceNameSubnet, "metadata.0.category_ids.#", "2"),
+					resource.TestCheckResourceAttrPair(datasourceNameSubnet, "metadata.0.category_ids.0", "nutanix_category_v2.test", "id"),
+					resource.TestCheckResourceAttrPair(datasourceNameSubnet, "metadata.0.category_ids.1", "nutanix_category_v2.test2", "id"),
+				),
+			},
 		},
 	})
 }
@@ -355,6 +371,45 @@ func testSubnetV2ConfigwithMetadata(name, desc string) string {
 			network_id = 112
 			metadata {
 				category_ids = [nutanix_category_v2.test.id]
+			}
+		}
+		data "nutanix_subnet_v2" "test" {
+			ext_id = nutanix_subnet_v2.test.id
+		}
+`, name, desc)
+}
+
+func testSubnetV2ConfigwithMetadataUpdate(name, desc string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+		cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
+		}
+
+		resource "nutanix_category_v2" "test" {
+			key = "tf-test-category-key-%[1]s"
+			value = "tf-test-category-value-%[1]s"
+			description = "test category for subnet"
+		}
+
+		resource "nutanix_category_v2" "test2" {
+			key = "tf-test-category-key-%[1]s-2"
+			value = "tf-test-category-value-%[1]s-2"
+			description = "test category for subnet 2"
+		}
+
+		resource "nutanix_subnet_v2" "test" {
+			name = "%[1]s"
+			description = "%[2]s"
+			cluster_reference = local.cluster0
+			subnet_type = "VLAN"
+			network_id = 112
+			metadata {
+				category_ids = [nutanix_category_v2.test.id, nutanix_category_v2.test2.id]
 			}
 		}
 		data "nutanix_subnet_v2" "test" {
