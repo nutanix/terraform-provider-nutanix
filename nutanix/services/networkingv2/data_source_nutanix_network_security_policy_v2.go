@@ -87,6 +87,10 @@ func DataSourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"secured_group_category_associated_entity_type": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
 												"secured_group_category_references": {
 													Type:     schema.TypeList,
 													Computed: true,
@@ -94,11 +98,19 @@ func DataSourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 														Type: schema.TypeString,
 													},
 												},
+												"secured_group_entity_group_reference": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
 												"src_allow_spec": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
 												"dest_allow_spec": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"src_category_associated_entity_type": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -109,12 +121,24 @@ func DataSourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 														Type: schema.TypeString,
 													},
 												},
+												"src_entity_group_reference": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"dest_category_associated_entity_type": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
 												"dest_category_references": {
 													Type:     schema.TypeList,
 													Computed: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
+												},
+												"dest_entity_group_reference": {
+													Type:     schema.TypeString,
+													Computed: true,
 												},
 												"src_subnet": {
 													Type:     schema.TypeList,
@@ -229,6 +253,10 @@ func DataSourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
+												"network_function_reference": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
 											},
 										},
 									},
@@ -237,6 +265,14 @@ func DataSourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"secured_group_category_associated_entity_type": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"secured_group_entity_group_reference": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
 												"secured_group_action": {
 													Type:     schema.TypeString,
 													Computed: true,
@@ -246,6 +282,65 @@ func DataSourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 													Computed: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
+													},
+												},
+												"secured_group_service_references": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"tcp_services": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"start_port": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
+															"end_port": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
+														},
+													},
+												},
+												"udp_services": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"start_port": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
+															"end_port": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
+														},
+													},
+												},
+												"icmp_services": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"is_all_allowed": {
+																Type:     schema.TypeBool,
+																Computed: true,
+															},
+															"type": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
+															"code": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
+														},
 													},
 												},
 											},
@@ -271,12 +366,20 @@ func DataSourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 																			Computed: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
+																					"group_category_associated_entity_type": {
+																						Type:     schema.TypeString,
+																						Computed: true,
+																					},
 																					"group_category_references": {
 																						Type:     schema.TypeList,
 																						Computed: true,
 																						Elem: &schema.Schema{
 																							Type: schema.TypeString,
 																						},
+																					},
+																					"group_entity_group_reference": {
+																						Type:     schema.TypeString,
+																						Computed: true,
 																					},
 																				},
 																			},
