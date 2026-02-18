@@ -321,8 +321,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 												},
 												"secured_group_action": {
 													Type:         schema.TypeString,
-													Optional:     true,
-													Computed:     true,
+													Required:     true,
 													ValidateFunc: validation.StringInSlice([]string{"ALLOW", "DENY"}, false),
 												},
 												"secured_group_category_references": {
@@ -335,7 +334,8 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 												},
 												"secured_group_service_references": {
 													Type:     schema.TypeList,
-													Required: true,
+													Computed: true,
+													Optional: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},

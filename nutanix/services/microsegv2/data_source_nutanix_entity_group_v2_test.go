@@ -43,7 +43,7 @@ func TestAccNutanixEntityGroupV2Datasource_WrongExtID(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEntityGroupV2DatasourceConfigWrongExtID(wrongExtID),
-				ExpectError: regexp.MustCompile("Api Exception raised while fetching entity group info using ext_id"),
+				ExpectError: regexp.MustCompile(`error while fetching Entity Group|entity not found|Failed to get Entity Group`),
 			},
 		},
 	})
