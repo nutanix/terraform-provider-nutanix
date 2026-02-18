@@ -3,6 +3,8 @@ package iamv2
 import (
 	"context"
 	"log"
+	"regexp"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -40,11 +42,23 @@ func ResourceNutanixUserGroupsV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ValidateDiagFunc: validation.ToDiagFunc(
+					validation.StringMatch(
+						regexp.MustCompile(`^[^A-Z]*$`),
+						"The `name` must be in lowercase because the backend normalizes name to lowercase. Using uppercase will cause configuration drift.",
+					),
+				),
 			},
 			"distinguished_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ValidateDiagFunc: validation.ToDiagFunc(
+					validation.StringMatch(
+						regexp.MustCompile(`^[^A-Z]*$`),
+						"The `distinguished_name` must be in lowercase because the backend normalizes distinguished name to lowercase. Using uppercase will cause configuration drift.",
+					),
+				),
 			},
 			"created_time": {
 				Type:     schema.TypeString,
@@ -81,6 +95,13 @@ func ResourceNutanixUserGroupsV4Create(ctx context.Context, d *schema.ResourceDa
 		input.IdpId = utils.StringPtr(idp.(string))
 	}
 	if name, ok := d.GetOk("name"); ok {
+		if dName, ok := d.GetOk("distinguished_name"); ok {
+			cn := extractCN(dName.(string))
+			log.Printf("[DEBUG] CN: %s, Name: %s", cn, name.(string))
+			if cn != name.(string) {
+				return diag.Errorf("The `name` must be equal to the cn part of the distinguished name. Got: %s, Expected: %s.", name.(string), cn)
+			}
+		}
 		input.Name = utils.StringPtr(name.(string))
 	}
 	if dName, ok := d.GetOk("distinguished_name"); ok {
@@ -93,13 +114,12 @@ func ResourceNutanixUserGroupsV4Create(ctx context.Context, d *schema.ResourceDa
 	}
 
 	getResp := resp.Data.GetValue().(import1.UserGroup)
-	d.SetId(*getResp.ExtId)
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return ResourceNutanixUserGroupsV4Read(ctx, d, meta)
 }
 
 func ResourceNutanixUserGroupsV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
-
 	resp, err := conn.UserGroupsAPIInstance.GetUserGroupById(utils.StringPtr(d.Id()))
 	if err != nil {
 		return diag.Errorf("error while fetching user groups: %v", err)
@@ -164,4 +184,13 @@ func ResourceNutanixUserGroupsV4Delete(ctx context.Context, d *schema.ResourceDa
 		log.Println("[DEBUG] User group deleted successfully.")
 	}
 	return nil
+}
+
+func extractCN(dn string) string {
+	parts := strings.SplitN(dn, ",", 2)
+	if len(parts) == 0 {
+		return ""
+	}
+	cnPart := parts[0]
+	return strings.TrimPrefix(strings.ToLower(cnPart), "cn=")
 }

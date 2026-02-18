@@ -10,9 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -233,13 +232,13 @@ func ResourceNutanixFloatingIPv2Create(ctx context.Context, d *schema.ResourceDa
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Routing Policy to be available
+
+	// Wait for the floating IP to be created
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -255,7 +254,7 @@ func ResourceNutanixFloatingIPv2Create(ctx context.Context, d *schema.ResourceDa
 
 	getAllFipResp := readResp.Data.GetValue().([]import1.FloatingIp)
 
-	d.SetId(*getAllFipResp[0].ExtId)
+	d.SetId(utils.StringValue(getAllFipResp[0].ExtId))
 	return ResourceNutanixFloatingIPv2Read(ctx, d, meta)
 }
 
@@ -302,7 +301,7 @@ func ResourceNutanixFloatingIPv2Read(ctx context.Context, d *schema.ResourceData
 	if err := d.Set("floating_ip_value", getResp.FloatingIpValue); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("association_status", getResp.AssociationStatus); err != nil {
+	if err := d.Set("association_status", getResp.AssociationStatus.GetName()); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -386,14 +385,14 @@ func ResourceNutanixFloatingIPv2Update(ctx context.Context, d *schema.ResourceDa
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Floating IP to be available
+
+	// Wait for the floating IP to be updated
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -413,14 +412,14 @@ func ResourceNutanixFloatingIPv2Delete(ctx context.Context, d *schema.ResourceDa
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Floating IP to be available
+
+	// Wait for the floating IP to be deleted
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -644,48 +643,4 @@ func expandVMNic(pr interface{}) *import1.VmNic {
 		return nics
 	}
 	return nil
-}
-
-func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-		if err != nil {
-			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
-		}
-
-		// get the group results
-
-		v := vresp.Data.GetValue().(import2.Task)
-
-		if getTaskStatus(v.Status) == "CANCELED" || getTaskStatus(v.Status) == "FAILED" {
-			return v, getTaskStatus(v.Status),
-				fmt.Errorf("error_detail: %s, progress_message: %d", utils.StringValue(v.ErrorMessages[0].Message), utils.IntValue(v.ProgressPercentage))
-		}
-		return v, getTaskStatus(v.Status), nil
-	}
-}
-
-func getTaskStatus(pr *import2.TaskStatus) string {
-	if pr != nil {
-		const two, three, four, five, six, seven = 2, 3, 4, 5, 6, 7
-		if *pr == import2.TaskStatus(two) {
-			return "QUEUED"
-		}
-		if *pr == import2.TaskStatus(three) {
-			return "RUNNING"
-		}
-		if *pr == import2.TaskStatus(four) {
-			return "CANCELING"
-		}
-		if *pr == import2.TaskStatus(five) {
-			return "SUCCEEDED"
-		}
-		if *pr == import2.TaskStatus(six) {
-			return "FAILED"
-		}
-		if *pr == import2.TaskStatus(seven) {
-			return "CANCELED"
-		}
-	}
-	return "UNKNOWN"
 }

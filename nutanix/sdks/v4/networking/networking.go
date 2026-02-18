@@ -1,9 +1,12 @@
 package networking
 
 import (
+	"strconv"
+
 	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/api"
 	network "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/sdkconfig"
 )
 
 type Client struct {
@@ -11,6 +14,7 @@ type Client struct {
 	RoutesTable           *api.RouteTablesApi
 	APIClientInstance     *network.ApiClient
 	RoutingPolicy         *api.RoutingPoliciesApi
+	NetworkFunctionAPI    *api.NetworkFunctionsApi
 	SubnetAPIInstance     *api.SubnetsApi
 	VpcAPIInstance        *api.VpcsApi
 	FloatingIPAPIInstance *api.FloatingIpsApi
@@ -26,9 +30,14 @@ func NewNetworkingClient(credentials client.Credentials) (*Client, error) {
 		pcClient.Host = credentials.Endpoint
 		pcClient.Password = credentials.Password
 		pcClient.Username = credentials.Username
-		pcClient.Port = 9440
+		pcClient.Port = sdkconfig.DefaultPort
+		if credentials.Port != "" {
+			if p, err := strconv.Atoi(credentials.Port); err == nil {
+				pcClient.Port = p
+			}
+		}
 		pcClient.VerifySSL = false
-
+		pcClient.AllowVersionNegotiation = sdkconfig.AllowVersionNegotiation
 		baseClient = pcClient
 	}
 
@@ -36,6 +45,7 @@ func NewNetworkingClient(credentials client.Credentials) (*Client, error) {
 		Routes:                api.NewRoutesApi(baseClient),
 		RoutesTable:           api.NewRouteTablesApi(baseClient),
 		RoutingPolicy:         api.NewRoutingPoliciesApi(baseClient),
+		NetworkFunctionAPI:    api.NewNetworkFunctionsApi(baseClient),
 		SubnetAPIInstance:     api.NewSubnetsApi(baseClient),
 		VpcAPIInstance:        api.NewVpcsApi(baseClient),
 		FloatingIPAPIInstance: api.NewFloatingIpsApi(baseClient),

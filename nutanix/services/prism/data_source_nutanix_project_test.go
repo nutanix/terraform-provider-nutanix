@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/spf13/cast"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -18,15 +17,11 @@ func TestAccNutanixProjectDataSourceByID_basic(t *testing.T) {
 	description := acctest.RandomWithPrefix("test-project-desc-dou")
 	categoryName := "Environment"
 	categoryVal := "Staging"
-	limit := cast.ToString(acctest.RandIntRange(2, 4))
-	rsType := "STORAGE"
 
 	updateName := acctest.RandomWithPrefix("test-project-name-dou")
 	updateDescription := acctest.RandomWithPrefix("test-project-desc-dou")
 	updateCategoryName := "Environment"
 	updateCategoryVal := "Production"
-	updateLimit := cast.ToString(acctest.RandIntRange(4, 8))
-	updateRSType := "MEMORY"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
@@ -34,30 +29,21 @@ func TestAccNutanixProjectDataSourceByID_basic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectDataSourceByIDConfig(subnetName, name, description, categoryName, categoryVal, limit, rsType),
+				Config: testAccProjectDataSourceByIDConfig(subnetName, name, description, categoryName, categoryVal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixProjectExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.limit", limit),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.resource_type", rsType),
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "api_version", "3.1"),
 				),
 			},
 			{
-				Config: testAccProjectDataSourceByIDConfig(
-					subnetName, updateName, updateDescription, updateCategoryName, updateCategoryVal, updateLimit, updateRSType),
+				Config: testAccProjectDataSourceByIDConfig(subnetName, updateName, updateDescription, updateCategoryName, updateCategoryVal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixProjectExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", updateName),
 					resource.TestCheckResourceAttr(resourceName, "description", updateDescription),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.limit", updateLimit),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.resource_type", updateRSType),
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "api_version", "3.1"),
 				),
@@ -74,15 +60,11 @@ func TestAccNutanixProjectDataSourceByName_basic(t *testing.T) {
 	description := acctest.RandomWithPrefix("test-project-desc-dou")
 	categoryName := "Environment"
 	categoryVal := "Staging"
-	limit := cast.ToString(acctest.RandIntRange(2, 4))
-	rsType := "STORAGE"
 
 	updateName := acctest.RandomWithPrefix("test-project-name-dou")
 	updateDescription := acctest.RandomWithPrefix("test-project-desc-dou")
 	updateCategoryName := "Environment"
 	updateCategoryVal := "Production"
-	updateLimit := cast.ToString(acctest.RandIntRange(4, 8))
-	updateRSType := "MEMORY"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
@@ -90,30 +72,21 @@ func TestAccNutanixProjectDataSourceByName_basic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectDataSourceByNameConfig(subnetName, name, description, categoryName, categoryVal, limit, rsType),
+				Config: testAccProjectDataSourceByNameConfig(subnetName, name, description, categoryName, categoryVal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixProjectExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.limit", limit),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.resource_type", rsType),
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "api_version", "3.1"),
 				),
 			},
 			{
-				Config: testAccProjectDataSourceByNameConfig(
-					subnetName, updateName, updateDescription, updateCategoryName, updateCategoryVal, updateLimit, updateRSType),
+				Config: testAccProjectDataSourceByNameConfig(subnetName, updateName, updateDescription, updateCategoryName, updateCategoryVal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixProjectExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", updateName),
 					resource.TestCheckResourceAttr(resourceName, "description", updateDescription),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.limit", updateLimit),
-					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.resource_type", updateRSType),
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "api_version", "3.1"),
 				),
@@ -122,7 +95,7 @@ func TestAccNutanixProjectDataSourceByName_basic(t *testing.T) {
 	})
 }
 
-func testAccProjectDataSourceByIDConfig(subnetName, name, description, categoryName, categoryVal, limit, rsType string) string {
+func testAccProjectDataSourceByIDConfig(subnetName, name, description, categoryName, categoryVal string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -160,13 +133,6 @@ func testAccProjectDataSourceByIDConfig(subnetName, name, description, categoryN
 			categories {
 				name  = "%s"
 				value = "%s"
-			}
-
-			resource_domain {
-				resources {
-					limit         = %s
-					resource_type = "%s"
-				}
 			}
 
 			default_subnet_reference {
@@ -183,10 +149,10 @@ func testAccProjectDataSourceByIDConfig(subnetName, name, description, categoryN
 		data "nutanix_project" "test" {
 			project_id = nutanix_project.project_test.id
 		}
-	`, subnetName, name, description, categoryName, categoryVal, limit, rsType)
+	`, subnetName, name, description, categoryName, categoryVal)
 }
 
-func testAccProjectDataSourceByNameConfig(subnetName, name, description, categoryName, categoryVal, limit, rsType string) string {
+func testAccProjectDataSourceByNameConfig(subnetName, name, description, categoryName, categoryVal string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -226,13 +192,6 @@ func testAccProjectDataSourceByNameConfig(subnetName, name, description, categor
 				value = "%s"
 			}
 
-			resource_domain {
-				resources {
-					limit         = %s
-					resource_type = "%s"
-				}
-			}
-
 			default_subnet_reference {
 				uuid = nutanix_subnet.subnet.metadata.uuid
 			}
@@ -247,5 +206,5 @@ func testAccProjectDataSourceByNameConfig(subnetName, name, description, categor
 		data "nutanix_project" "test" {
 			project_name = nutanix_project.project_test.name
 		}
-	`, subnetName, name, description, categoryName, categoryVal, limit, rsType)
+	`, subnetName, name, description, categoryName, categoryVal)
 }

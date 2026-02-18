@@ -33,10 +33,17 @@ func TestAccNutanixCalmSnapshotGetDatasource(t *testing.T) {
 
 func testSnapshotDataSourceConfig(name string) string {
 	return fmt.Sprintf(`
+		resource "nutanix_self_service_app_recovery_point" "test" {
+			app_name = "%[1]s"
+			action_name = "Snapshot_s1"
+			recovery_point_name = "snap1"
+		}
+			
 		data "nutanix_self_service_app_snapshots" "test" {
 			app_name = "%[1]s"
 			length = 250
 			offset = 0
+			depends_on = [nutanix_self_service_app_recovery_point.test]
 		}
 `, name)
 }

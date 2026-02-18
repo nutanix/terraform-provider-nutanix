@@ -171,7 +171,7 @@ func DatasourceNutanixTemplateV2Read(ctx context.Context, d *schema.ResourceData
 	if err := d.Set("category_ext_ids", getResp.CategoryExtIds); err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(*getResp.ExtId)
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return nil
 }
 

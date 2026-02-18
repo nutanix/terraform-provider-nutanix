@@ -164,7 +164,14 @@ func DatasourceNutanixStorageContainerV2Read(ctx context.Context, d *schema.Reso
 
 	getResp := resp.Data.GetValue().(clustermgmt.StorageContainer)
 
-	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+	var containerExtId string
+	if getResp.ExtId != nil {
+		containerExtId = utils.StringValue(getResp.ExtId)
+	} else {
+		containerExtId = utils.StringValue(getResp.ContainerExtId)
+	}
+
+	if err := d.Set("ext_id", containerExtId); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
@@ -252,7 +259,7 @@ func DatasourceNutanixStorageContainerV2Read(ctx context.Context, d *schema.Reso
 		return diag.FromErr(err)
 	}
 
-	d.SetId(*getResp.ContainerExtId)
+	d.SetId(utils.StringValue(getResp.ContainerExtId))
 	return nil
 }
 

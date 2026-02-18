@@ -13,6 +13,7 @@ import (
 	dataprtotectionPrismConfig "github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -109,56 +110,47 @@ func ResourceNutanixRecoveryPointRestoreV2Create(ctx context.Context, d *schema.
 		return diag.Errorf("error while replicating recovery point: %v", err)
 	}
 
-	TaskRef := resp.Data.GetValue().(dataprtotectionPrismConfig.TaskReference)
-	taskUUID := TaskRef.ExtId
+	taskRef := resp.Data.GetValue().(dataprtotectionPrismConfig.TaskReference)
+	taskUUID := taskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the recovery point restore operation to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for restore point: (%s) to replicate: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for recovery point restore (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching restore recovery point UUID : %v", err)
+		return diag.Errorf("error while fetching restore recovery point task: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 
-	aJSON, _ := json.Marshal(rUUID)
-	log.Printf("[DEBUG] Restore Recovery Point Task Details: %v", string(aJSON))
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Restore Recovery Point Task Details: %s", string(aJSON))
+
+	// Extract VM and Volume Group ExtIds from completion details
 	vmExtIds := make([]string, 0)
-	volumeGroupExtIds := make([]string, 0)
-	for _, entity := range rUUID.CompletionDetails {
-		if utils.StringValue(entity.Name) == "vmExtIds" {
-			vmIDs := entity.Value.GetValue().(string)
-			vmExtIds = strings.Split(vmIDs, ",")
-		} else if utils.StringValue(entity.Name) == "volumeGroupExtIds" {
-			vgIDs := entity.Value.GetValue().(string)
-			volumeGroupExtIds = strings.Split(vgIDs, ",")
-		}
+	vgExtIds := make([]string, 0)
+	vmExtIdsStrs := common.ExtractCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameVMExtIDs)
+	for _, vmExtIdsStr := range vmExtIdsStrs {
+		vmExtIds = append(vmExtIds, strings.Split(vmExtIdsStr, ",")...)
 	}
-	err = d.Set("vm_ext_ids", vmExtIds)
-	if err != nil {
-		return diag.Errorf("error while setting vm_ext_ids : %v", err)
+	vgExtIdsStrs := common.ExtractCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameVGExtIDs)
+	for _, vgExtIdsStr := range vgExtIdsStrs {
+		vgExtIds = append(vgExtIds, strings.Split(vgExtIdsStr, ",")...)
 	}
-	err = d.Set("volume_group_ext_ids", volumeGroupExtIds)
-	if err != nil {
-		return diag.Errorf("error while setting volume_group_ext_ids: %v", err)
-	}
+	d.Set("vm_ext_ids", vmExtIds)
+	d.Set("volume_group_ext_ids", vgExtIds)
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
-
-	//return ResourceNutanixRecoveryPointRestoreV2Read(ctx, d, meta)
 	return nil
 }
 
