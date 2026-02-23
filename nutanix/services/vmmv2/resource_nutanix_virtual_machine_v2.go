@@ -3204,6 +3204,7 @@ func powerOnVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (im
 				case <-ctx.Done():
 					return import1.TaskReference{}, fmt.Errorf("context cancelled while fetching VM for power on: %v", ctx.Err())
 				case <-time.After(retryDelay):
+					log.Printf("[DEBUG] Attempt %d/%d failed to fetch VM for power on, retrying in %v: %v", attempt+1, maxRetries, retryDelay, errR)
 					continue
 				}
 			}
@@ -3226,6 +3227,7 @@ func powerOnVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (im
 				return import1.TaskReference{}, fmt.Errorf("context cancelled while powering on VM: %v", ctx.Err())
 			case <-time.After(retryDelay):
 				// Continue to next retry
+				log.Printf("[DEBUG] Attempt %d/%d failed to power on VM, retrying in %v: %v", attempt+1, maxRetries, retryDelay, err)
 			}
 		}
 	}
@@ -3238,6 +3240,7 @@ func powerOnVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (im
 	if err != nil {
 		return import1.TaskReference{}, fmt.Errorf("error extracting task reference from power on response: %v", err)
 	}
+	log.Printf("[DEBUG] PowerOn Response: TaskReference ExtId: %s", utils.StringValue(taskRef.ExtId))
 	return taskRef, nil
 }
 
@@ -3259,6 +3262,7 @@ func powerOffVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (i
 				case <-ctx.Done():
 					return import1.TaskReference{}, fmt.Errorf("context cancelled while fetching VM for power off: %v", ctx.Err())
 				case <-time.After(retryDelay):
+					log.Printf("[DEBUG] Attempt %d/%d failed to fetch VM for power off, retrying in %v: %v", attempt+1, maxRetries, retryDelay, errR)
 					continue
 				}
 			}
@@ -3281,6 +3285,7 @@ func powerOffVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (i
 				return import1.TaskReference{}, fmt.Errorf("context cancelled while powering off VM: %v", ctx.Err())
 			case <-time.After(retryDelay):
 				// Continue to next retry
+				log.Printf("[DEBUG] Attempt %d/%d failed to power off VM, retrying in %v: %v", attempt+1, maxRetries, retryDelay, err)
 			}
 		}
 	}
@@ -3288,11 +3293,11 @@ func powerOffVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (i
 	if err != nil {
 		return import1.TaskReference{}, fmt.Errorf("error while powering off Virtual Machine after %d attempts: %v", maxRetries, err)
 	}
-
 	taskRef, err := extractTaskReferenceFromResponse(resp)
 	if err != nil {
 		return import1.TaskReference{}, fmt.Errorf("error extracting task reference from power off response: %v", err)
 	}
+	log.Printf("[DEBUG] PowerOff Response: TaskReference ExtId: %s", utils.StringValue(taskRef.ExtId))
 	return taskRef, nil
 }
 
