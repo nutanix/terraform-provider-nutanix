@@ -3,6 +3,7 @@ package networkingv2_test
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -275,6 +276,46 @@ func TestAccV2NutanixNetworkFunctionResource_InvalidConfig(t *testing.T) {
 			},
 		},
 	})
+}
+
+// testAccNetworkFunctionV2ConfigPrerequisitesNoPostcondition returns the same
+// prerequisites as testAccNetworkFunctionV2ConfigPrerequisites but with VM
+// postconditions removed. Use for tests that only need VMs and NF to exist
+// (e.g. NSP with network_function_reference) and cannot wait for DHCP on the
+// VM NORMAL_NIC.
+func testAccNetworkFunctionV2ConfigPrerequisitesNoPostcondition(subnet_name, vmm_1_name, vmm_2_name string) string {
+	s := testAccNetworkFunctionV2ConfigPrerequisites(subnet_name, vmm_1_name, vmm_2_name)
+	// Replace full lifecycle block (including postcondition) with lifecycle that only has ignore_changes.
+	lifecycleWithPostcondition1 := `  lifecycle {
+    ignore_changes = [cd_roms, guest_customization, nics.3.nic_network_info.0.virtual_ethernet_nic_network_info.0.ipv4_config]
+
+    postcondition {
+      condition = length([
+        for nic in self.nics : 1
+        if try(length(nic.nic_network_info[0].virtual_ethernet_nic_network_info[0].ipv4_info[0].learned_ip_addresses[0].value), 0) > 0
+      ]) > 0
+      error_message = "The first VM must have at least one NIC with an assigned IPv4 address."
+    }
+  }
+`
+	lifecycleWithPostcondition2 := `  lifecycle {
+    ignore_changes = [cd_roms, guest_customization, nics.3.nic_network_info.0.virtual_ethernet_nic_network_info.0.ipv4_config]
+    postcondition {
+      condition = length([
+        for nic in self.nics : 1
+        if try(length(nic.nic_network_info[0].virtual_ethernet_nic_network_info[0].ipv4_info[0].learned_ip_addresses[0].value), 0) > 0
+      ]) > 0
+      error_message = "The second VM must have at least one NIC with an assigned IPv4 address."
+    }
+  }
+`
+	lifecycleIgnoreOnly := `  lifecycle {
+    ignore_changes = [cd_roms, guest_customization, nics.3.nic_network_info.0.virtual_ethernet_nic_network_info.0.ipv4_config]
+  }
+`
+	s = strings.Replace(s, lifecycleWithPostcondition1, lifecycleIgnoreOnly, 1)
+	s = strings.Replace(s, lifecycleWithPostcondition2, lifecycleIgnoreOnly, 1)
+	return s
 }
 
 func testAccNetworkFunctionV2ConfigPrerequisites(subnet_name, vmm_1_name, vmm_2_name string) string {

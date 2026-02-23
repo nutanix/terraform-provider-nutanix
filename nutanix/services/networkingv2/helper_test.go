@@ -342,3 +342,37 @@ func testAccCheckNetworkFunctionNICPairHAStateCountsWithPrefix(resourceName, pre
 		return nil
 	}
 }
+
+// testAccCheckNutanixNSPDataSourceRulesContainExpectedContent verifies the data source
+// rules contain our expected rule types and, when present, the new computed attributes.
+// Rule order and count are not guaranteed (API may add default rules).
+func testAccCheckNutanixNSPDataSourceRulesContainExpectedContent(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("data source not found: %s", name)
+		}
+		nStr, ok := rs.Primary.Attributes["rules.#"]
+		if !ok || nStr == "0" {
+			return fmt.Errorf("rules.# missing or zero")
+		}
+		n, _ := strconv.Atoi(nStr)
+		var hasAppRule, hasIntraRule bool
+		for i := 0; i < n; i++ {
+			prefix := "rules." + strconv.Itoa(i) + "."
+			if rs.Primary.Attributes[prefix+"type"] == "APPLICATION" {
+				hasAppRule = true
+			}
+			if rs.Primary.Attributes[prefix+"type"] == "INTRA_GROUP" {
+				hasIntraRule = true
+			}
+		}
+		if !hasAppRule {
+			return fmt.Errorf("expected at least one APPLICATION rule in data source rules")
+		}
+		if !hasIntraRule {
+			return fmt.Errorf("expected at least one INTRA_GROUP rule in data source rules")
+		}
+		return nil
+	}
+}
