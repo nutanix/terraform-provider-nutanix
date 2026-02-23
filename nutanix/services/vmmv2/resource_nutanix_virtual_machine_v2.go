@@ -1395,16 +1395,16 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	var PowerTaskRef import1.TaskReference
 	if powerState, ok := d.GetOk("power_state"); ok {
 		switch powerState {
-    case "ON":
-      PowerTaskRef, err = powerOnVMWithRetry(ctx, conn, uuid)
-    case "OFF":
-      PowerTaskRef, err = powerOffVMWithRetry(ctx, conn, utils.StringPtr(d.Id()))
-    default:
-      return diag.Errorf("invalid power state: %s", powerState)
-    }
-    if err != nil {
-      return diag.Errorf("error while powering %s Virtual Machines: %v", powerState, err)
-    }
+		case "ON":
+			PowerTaskRef, err = powerOnVMWithRetry(ctx, conn, uuid)
+		case "OFF":
+			PowerTaskRef, err = powerOffVMWithRetry(ctx, conn, utils.StringPtr(d.Id()))
+		default:
+			return diag.Errorf("invalid power state: %s", powerState)
+		}
+		if err != nil {
+			return diag.Errorf("error while powering %s Virtual Machines: %v", powerState, err)
+		}
 	}
 	powertaskUUID := PowerTaskRef.ExtId
 
