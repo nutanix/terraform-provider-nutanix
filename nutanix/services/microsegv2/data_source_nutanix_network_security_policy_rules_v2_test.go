@@ -120,7 +120,6 @@ data "nutanix_network_security_policy_rules_v2" "test" {
 `, policyExtID)
 }
 
-
 func testAccNetworkSecurityPolicyRulesDataSourceConfig(name string) string {
 	return fmt.Sprintf(`
 data "nutanix_categories_v2" "test" {}

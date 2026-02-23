@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	config "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/common/v1/config"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/common/v1/response"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -18,8 +18,8 @@ func DataSourceNutanixNetworkSecurityPolicyRulesV2() *schema.Resource {
 		ReadContext: DataSourceNutanixNetworkSecurityPolicyRulesV2Read,
 		Schema: map[string]*schema.Schema{
 			"policy_ext_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 				Description: "ExtId of the network security policy to list rules for.",
 			},
 			"page": {
@@ -61,12 +61,12 @@ func DataSourceNutanixNetworkSecurityPolicyRulesV2() *schema.Resource {
 
 func networkSecurityPolicyRuleSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"ext_id":       {Type: schema.TypeString, Computed: true},
-		"description":  {Type: schema.TypeString, Computed: true},
-		"tenant_id":    {Type: schema.TypeString, Computed: true},
-		"type":         {Type: schema.TypeString, Computed: true},
-		"links":        {Type: schema.TypeList, Computed: true, Elem: &schema.Resource{Schema: map[string]*schema.Schema{"href": {Type: schema.TypeString, Computed: true}, "rel": {Type: schema.TypeString, Computed: true}}}},
-		"spec":         {Type: schema.TypeList, Computed: true, Elem: &schema.Resource{Schema: ruleSpecSchema()}},
+		"ext_id":      {Type: schema.TypeString, Computed: true},
+		"description": {Type: schema.TypeString, Computed: true},
+		"tenant_id":   {Type: schema.TypeString, Computed: true},
+		"type":        {Type: schema.TypeString, Computed: true},
+		"links":       {Type: schema.TypeList, Computed: true, Elem: &schema.Resource{Schema: map[string]*schema.Schema{"href": {Type: schema.TypeString, Computed: true}, "rel": {Type: schema.TypeString, Computed: true}}}},
+		"spec":        {Type: schema.TypeList, Computed: true, Elem: &schema.Resource{Schema: ruleSpecSchema()}},
 	}
 }
 
@@ -99,7 +99,7 @@ func ruleSpecSchema() map[string]*schema.Schema {
 					"tcp_services":                      {Type: schema.TypeList, Computed: true, Elem: &schema.Resource{Schema: map[string]*schema.Schema{"start_port": {Type: schema.TypeInt, Computed: true}, "end_port": {Type: schema.TypeInt, Computed: true}}}},
 					"udp_services":                      {Type: schema.TypeList, Computed: true, Elem: &schema.Resource{Schema: map[string]*schema.Schema{"start_port": {Type: schema.TypeInt, Computed: true}, "end_port": {Type: schema.TypeInt, Computed: true}}}},
 					"icmp_services":                     {Type: schema.TypeList, Computed: true, Elem: &schema.Resource{Schema: map[string]*schema.Schema{"is_all_allowed": {Type: schema.TypeBool, Computed: true}, "type": {Type: schema.TypeInt, Computed: true}, "code": {Type: schema.TypeInt, Computed: true}}}},
-					"network_function_chain_reference":   {Type: schema.TypeString, Computed: true},
+					"network_function_chain_reference":  {Type: schema.TypeString, Computed: true},
 				},
 			},
 		},
@@ -107,7 +107,7 @@ func ruleSpecSchema() map[string]*schema.Schema {
 			Type: schema.TypeList, Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"secured_group_action":               {Type: schema.TypeString, Computed: true},
+					"secured_group_action":              {Type: schema.TypeString, Computed: true},
 					"secured_group_category_references": {Type: schema.TypeList, Computed: true, Elem: &schema.Schema{Type: schema.TypeString}},
 				},
 			},
@@ -273,7 +273,7 @@ func flattenOneOfNetworkSecurityPolicyRuleSpecMicroseg(pr *import1.OneOfNetworkS
 			"src_category_references":           v.SrcCategoryReferences,
 			"dest_category_references":          v.DestCategoryReferences,
 			"src_address_group_references":      v.SrcAddressGroupReferences,
-			"dest_address_group_references":    v.DestAddressGroupReferences,
+			"dest_address_group_references":     v.DestAddressGroupReferences,
 			"service_group_references":          v.ServiceGroupReferences,
 			"network_function_chain_reference":  v.NetworkFunctionChainReference,
 		}
