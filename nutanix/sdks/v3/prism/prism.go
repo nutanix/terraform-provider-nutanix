@@ -36,7 +36,7 @@ func NewV3Client(credentials client.Credentials) (*Client, error) {
 		}
 		baseClient = c
 	} else {
-		errorMsg := fmt.Sprintf("Prism Central (PC) Client is missing. "+
+		errorMsg := fmt.Sprintf("Prism Central (PC) Client is missing. " +
 			"Please provide endpoint and either (username + password) or api_key in provider configuration.")
 
 		baseClient = &client.Client{UserAgent: userAgent, ErrorMsg: errorMsg}
