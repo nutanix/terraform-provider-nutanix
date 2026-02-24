@@ -108,13 +108,16 @@ Long term, once this is upstream, no pre-compiled binaries will be needed, as te
 The following keys can be used to configure the provider.
 
 * **endpoint** - (Required) IP address for the Nutanix Prism Central.
-* **username** - (Required) Username for Nutanix Prism Central. Could be local cluster auth (e.g. `auth`) or directory auth.
-* **password** - (Required) Password for the provided username.
-* **port** - (Optional) Port for the Nutanix Prism Central. Default port is 9440.
+* **username** - (Optional) Username for Nutanix Prism Central. Could be local cluster auth (e.g. `auth`) or directory auth. Required if `api_key` is not set.
+* **password** - (Optional) Password for the provided username. Required if `api_key` is not set.
+* **api_key** - (Optional) API key for Nutanix Prism Central authentication. Can be used as an alternative to `username`/`password`. When set, the `X-Ntnx-Api-Key` header is used instead of Basic Authentication.
+* **port** - (Optional) Port for the Nutanix Prism Central. Default port is 9440. Can also be set via the `NUTANIX_PORT` environment variable.
 * **insecure** - (Optional) Explicitly allow the provider to perform insecure SSL requests. If omitted, default value is false.
-* **wait_timeout** - (optional) Set if you know that the creation o update of a resource may take long time (minutes).
+* **wait_timeout** - (Optional) Set if you know that the creation or update of a resource may take long time (minutes).
+* **custom_headers** - (Optional) Map of custom HTTP headers to add to all API requests. Useful for environments that require additional headers such as Cloudflare Access service tokens. Headers can also be set via environment variables with the `NUTANIX_HEADER_` prefix (e.g. `NUTANIX_HEADER_CF_ACCESS_CLIENT_ID` becomes `Cf-Access-Client-Id`). Values defined in config take precedence over environment variables.
 
 ```hcl
+# Basic authentication
 provider "nutanix" {
   username     = "admin"
   password     = "myPassword"
@@ -123,9 +126,22 @@ provider "nutanix" {
   insecure     = true
   wait_timeout = 10
 }
+
+# API key authentication with custom headers (e.g. Cloudflare Access)
+provider "nutanix" {
+  api_key      = "my-api-key"
+  port         = 443
+  endpoint     = "10.36.7.201"
+  insecure     = true
+  wait_timeout = 10
+  custom_headers = {
+    "Cf-Access-Client-Id"     = "my-client-id"
+    "Cf-Access-Client-Secret" = "my-client-secret"
+  }
+}
 ```
 
-## From terraform-provider-nutanix v1.5.0-beta :
+## From terraform-provider-nutanix v1.5.0-beta
 
 The following keys can be used to configure the provider.
 
@@ -151,7 +167,7 @@ provider "nutanix" {
 }
 ```
 
-## Additional fields for using Nutanix Database Service:
+## Additional fields for using Nutanix Database Service
 
 * **ndb_username** - (Optional) Username of Nutanix Database Service server
 * **ndb_password** - (Optional) Password of Nutanix Database Service server
@@ -166,10 +182,10 @@ provider "nutanix" {
 ```
 
 ### Provider Configuration Requirements & Warnings
-From foundation getting released in 1.5.0-beta, provider configuration will accomodate prism central and foundation apis connection details. **It will show warnings for disabled api connections as per the attributes given in provider configuration in above mentioned format**. The below are the required attributes for corresponding provider componenets :
-* endpoint, username and password are required fields for using Prism Central & Karbon based resources and data sources
-* foundation_endpoint is required field for using Foundation based resources and data sources
-* ndb_username, ndb_password and ndb_endpoint are required fields for using NDB based resources and data sources
+From foundation getting released in 1.5.0-beta, provider configuration will accommodate Prism Central and foundation API connection details. **It will show warnings for disabled API connections as per the attributes given in provider configuration in above mentioned format**. The below are the required attributes for corresponding provider components:
+* `endpoint` and either (`username` + `password`) or `api_key` are required for using Prism Central & Karbon based resources and data sources.
+* `foundation_endpoint` is required field for using Foundation based resources and data sources
+* `ndb_username`, `ndb_password` and `ndb_endpoint` are required fields for using NDB based resources and data sources
 
 
 ## Resources

@@ -508,13 +508,29 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	hasBasicAuth := username != "" && password != ""
 	hasAPIKey := apiKey != ""
 
+	if (username != "") != (password != "") {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid authentication configuration",
+			Detail:   "Both username and password must be provided together.",
+		})
+		return nil, diags
+	}
+
 	if endpoint != "" && !hasBasicAuth && !hasAPIKey {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Authentication required",
-			Detail:   "Either (username and password) or api_key must be provided for Prism Central authentication.",
+			Detail:   "Either username and password or api_key must be provided for Prism Central authentication.",
 		})
 		return nil, diags
+	}
+
+	if hasBasicAuth && hasAPIKey {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "Both username/password and api_key are set. api_key takes precedence; username and password will be ignored.",
+		})
 	}
 
 	for k, v := range requiredProviderFields {
