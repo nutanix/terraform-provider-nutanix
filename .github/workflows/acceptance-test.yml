@@ -91,6 +91,7 @@ jobs:
             echo "NUTANIX_PE_USERNAME=${{ secrets.NUTANIX_PE_USERNAME }}" >> $GITHUB_ENV
             echo "NUTANIX_USERNAME=${{ secrets.NUTANIX_USERNAME }}" >> $GITHUB_ENV
             echo "NUTANIX_PASSWORD=${{ secrets.NUTANIX_PASSWORD }}" >> $GITHUB_ENV
+            echo "NUTANIX_API_KEY=${{ secrets.NUTANIX_API_KEY }}" >> $GITHUB_ENV
             echo "NUTANIX_INSECURE=${{ secrets.NUTANIX_INSECURE }}" >> $GITHUB_ENV
             echo "NUTANIX_PORT=${{ secrets.NUTANIX_PORT }}" >> $GITHUB_ENV
             echo "NUTANIX_ENDPOINT=${{ secrets.NUTANIX_ENDPOINT }}" >> $GITHUB_ENV
