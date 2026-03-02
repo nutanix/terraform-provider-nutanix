@@ -32,6 +32,25 @@ resource "nutanix_network_security_policy_v2" "isolation-nsp" {
   is_hitlog_enabled = true
 }
 
+# Network Security Policy with GLOBAL scope (VMs resolved by category across all VPCs)
+resource "nutanix_network_security_policy_v2" "global-nsp" {
+  name        = "my-global-policy"
+  description = "Application policy with global scope"
+  state       = "SAVE"
+  type        = "APPLICATION"
+  scope       = "GLOBAL"
+  rules {
+    type = "APPLICATION"
+    spec {
+      application_rule_spec {
+        secured_group_category_references = [nutanix_category_v2.example.id]
+        service_group_references          = [nutanix_service_groups_v2.example.id]
+        src_address_group_references      = [nutanix_address_groups_v2.example.id]
+      }
+    }
+  }
+}
+
 ```
 
 ## Argument Reference
@@ -45,7 +64,7 @@ The following arguments are supported:
 - `rules`: (Optional) A list of rules that form a policy. For isolation policies, use isolation rules; for application or quarantine policies, use application rules.
 - `is_ipv6_traffic_allowed`: (Optional) If Ipv6 Traffic is allowed.
 - `is_hitlog_enabled`: (Optional) If Hitlog is enabled.
-- `scope`: Defines the scope of the policy. Currently, only ALL_VLAN and VPC_LIST are supported. If scope is not provided, the default is set based on whether vpcReferences field is provided or not.
+- `scope`: (Optional) Defines the scope of the policy. Acceptable values are "ALL_VLAN", "ALL_VPC", "VPC_LIST", and "GLOBAL".
 - `vpc_reference`: (Optional) A list of external ids for VPCs, used only when the scope of policy is a list of VPCs.
 
 ### rules

@@ -106,12 +106,39 @@ resource "nutanix_network_security_policy_v2" "isolation-nsp" {
   is_hitlog_enabled = true
 }
 
-# Network Security Policy APPLICATION Rule and INTRA_GROUP Rule
+# Network Security Policy APPLICATION Rule with GLOBAL scope (category-based across all VPCs)
+resource "nutanix_network_security_policy_v2" "global-application-nsp" {
+  name        = "global_application_policy"
+  description = "Application policy with GLOBAL scope - VMs resolved by category across all VPCs"
+  type        = "APPLICATION"
+  state       = "SAVE"
+  scope       = "GLOBAL"
+  rules {
+    description = "global application rule"
+    type        = "APPLICATION"
+    spec {
+      application_rule_spec {
+        secured_group_category_references = [
+          data.nutanix_categories_v2.category-list.categories.0.ext_id,
+          data.nutanix_categories_v2.category-list.categories.1.ext_id
+        ]
+        src_category_references = [
+          data.nutanix_categories_v2.category-list.categories.2.ext_id
+        ]
+        is_all_protocol_allowed = true
+      }
+    }
+  }
+  is_hitlog_enabled = false
+}
+
+# Network Security Policy APPLICATION Rule and INTRA_GROUP Rule (VPC_LIST scope)
 resource "nutanix_network_security_policy_v2" "application-nsp" {
   name        = "application_policy"
   description = "application policy example"
   type        = "APPLICATION"
   state       = "SAVE"
+  scope       = "VPC_LIST"
   rules {
     description = "test"
     type        = "APPLICATION"
@@ -204,7 +231,12 @@ resource "nutanix_network_security_policy_v2" "multi-env-isolation-nsp" {
 
 # get network security policies
 data "nutanix_network_security_policies_v2" "list-nsps" {
-  depends_on = [nutanix_network_security_policy_v2.application-nsp, nutanix_network_security_policy_v2.isolation-nsp, nutanix_network_security_policy_v2.multi-env-isolation-nsp]
+  depends_on = [
+    nutanix_network_security_policy_v2.application-nsp,
+    nutanix_network_security_policy_v2.isolation-nsp,
+    nutanix_network_security_policy_v2.multi-env-isolation-nsp,
+    nutanix_network_security_policy_v2.global-application-nsp,
+  ]
 }
 
 # get network security policies with filter

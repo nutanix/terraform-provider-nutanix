@@ -87,8 +87,8 @@ The following attributes are exported:
 - `rules`: A list of rules that form a policy. For isolation policies, use isolation rules; for application or quarantine policies, use application rules.
 - `is_ipv6_traffic_allowed`: If Ipv6 Traffic is allowed.
 - `is_hitlog_enabled`: If Hitlog is enabled.
-- `scope`: Defines the scope of the policy. Currently, only ALL_VLAN and VPC_LIST are supported. If scope is not provided, the default is set based on whether vpcReferences field is provided or not.
-- `vpc_reference`: A list of external ids for VPCs, used only when the scope of policy is a list of VPCs.
+- `scope`: Defines the scope of the policy. Values include "ALL_VLAN", "ALL_VPC", "VPC_LIST", and "GLOBAL".
+- `vpc_reference`: A list of external ids for VPCs, used when the scope of the policy is VPC_LIST.
 - `secured_groups`: Uuids of the secured groups in the NSP.
 - `last_update_time`: last updated time
 - `creation_time`: creation time of NSP
