@@ -46,6 +46,11 @@ func ResourceNutanixCategoriesV2() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"associations": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -128,6 +133,9 @@ func ResourceNutanixCategoriesV2Create(ctx context.Context, d *schema.ResourceDa
 	if ownerUUID, ok := d.GetOk("owner_uuid"); ok {
 		input.OwnerUuid = utils.StringPtr(ownerUUID.(string))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		input.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 
 	resp, err := conn.CategoriesAPIInstance.CreateCategory(input)
 	if err != nil {
@@ -163,6 +171,9 @@ func ResourceNutanixCategoriesV2Read(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 	if err := d.Set("owner_uuid", getResp.OwnerUuid); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("associations", flattenAssociationSummary(getResp.Associations)); err != nil {
@@ -204,6 +215,9 @@ func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceDa
 	}
 	if d.HasChange("owner_uuid") {
 		updatedInput.OwnerUuid = utils.StringPtr(d.Get("owner_uuid").(string))
+	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 
 	_, er := conn.CategoriesAPIInstance.UpdateCategoryById(utils.StringPtr(d.Id()), &updatedInput)

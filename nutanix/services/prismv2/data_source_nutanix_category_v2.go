@@ -43,6 +43,10 @@ func DatasourceNutanixCategoryV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"associations": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -145,6 +149,9 @@ func DatasourceNutanixCategoryV2Read(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 	if err := d.Set("owner_uuid", getResp.OwnerUuid); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("associations", flattenAssociationSummary(getResp.Associations)); err != nil {
