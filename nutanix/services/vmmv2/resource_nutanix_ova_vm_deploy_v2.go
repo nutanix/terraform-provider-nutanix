@@ -1002,18 +1002,18 @@ func handlePowerStateChanges(ctx context.Context, d *schema.ResourceData, meta i
 
 		switch newPowerState {
 		case "ON":
-			powerResp, err = vmmConn.VMAPIInstance.PowerOnVm(utils.StringPtr(d.Id()), args)
+			powerResp, err := vmmConn.VMAPIInstance.PowerOnVm(utils.StringPtr(d.Id()), args)
 			if err != nil {
 				return diag.Errorf("error powering on VM: %v", err)
 			}
-			TaskRef := powerResp.(*import3.TaskReference)
+			TaskRef := powerResp.Data.GetValue().(import3.TaskReference)
 			taskUUID = TaskRef.ExtId
 		case "OFF":
-			powerResp, err = vmmConn.VMAPIInstance.PowerOffVm(utils.StringPtr(d.Id()), args)
+			powerResp, err := vmmConn.VMAPIInstance.PowerOffVm(utils.StringPtr(d.Id()), args)
 			if err != nil {
 				return diag.Errorf("error powering off VM: %v", err)
 			}
-			TaskRef := powerResp.(*import3.TaskReference)
+			TaskRef := powerResp.Data.GetValue().(import3.TaskReference)
 			taskUUID = TaskRef.ExtId
 		default:
 			return diag.Errorf("unsupported power state: %s", newPowerState)
