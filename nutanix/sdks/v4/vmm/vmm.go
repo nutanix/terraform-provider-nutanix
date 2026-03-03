@@ -10,11 +10,11 @@ import (
 )
 
 type Client struct {
-	ImagesAPIInstance          *api.ImagesApi
-	TemplatesAPIInstance       *api.TemplatesApi
-	VMAPIInstance              *api.VmApi
-	ImagesPlacementAPIInstance *api.ImagePlacementPoliciesApi
-	OvasAPIInstance            *api.OvasApi
+	ImagesAPIInstance          *api.ImagesServiceApi
+	TemplatesAPIInstance       *api.TemplatesServiceApi
+	VMAPIInstance              *api.VmServiceApi
+	ImagesPlacementAPIInstance *api.ImagePlacementPoliciesServiceApi
+	OvasAPIInstance            *api.OvasServiceApi
 }
 
 func NewVmmClient(credentials client.Credentials) (*Client, error) {
@@ -39,11 +39,11 @@ func NewVmmClient(credentials client.Credentials) (*Client, error) {
 	}
 
 	f := &Client{
-		ImagesAPIInstance:          api.NewImagesApi(baseClient),
-		TemplatesAPIInstance:       api.NewTemplatesApi(baseClient),
-		VMAPIInstance:              api.NewVmApi(baseClient),
-		ImagesPlacementAPIInstance: api.NewImagePlacementPoliciesApi(baseClient),
-		OvasAPIInstance:            api.NewOvasApi(baseClient),
+		ImagesAPIInstance:          api.NewImagesServiceApi(baseClient),
+		TemplatesAPIInstance:       api.NewTemplatesServiceApi(baseClient),
+		VMAPIInstance:              api.NewVmServiceApi(baseClient),
+		ImagesPlacementAPIInstance: api.NewImagePlacementPoliciesServiceApi(baseClient),
+		OvasAPIInstance:            api.NewOvasServiceApi(baseClient),
 	}
 
 	return f, nil

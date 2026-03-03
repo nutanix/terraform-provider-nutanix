@@ -10,8 +10,8 @@ import (
 )
 
 type Client struct {
-	VolumeAPIInstance      *api.VolumeGroupsApi
-	IscsiClientAPIInstance *api.IscsiClientsApi
+	VolumeAPIInstance      *api.VolumeGroupsServiceApi
+	IscsiClientAPIInstance *api.IscsiClientsServiceApi
 }
 
 func NewVolumeClient(credentials client.Credentials) (*Client, error) {
@@ -36,8 +36,8 @@ func NewVolumeClient(credentials client.Credentials) (*Client, error) {
 	}
 
 	f := &Client{
-		VolumeAPIInstance:      api.NewVolumeGroupsApi(baseClient),
-		IscsiClientAPIInstance: api.NewIscsiClientsApi(baseClient),
+		VolumeAPIInstance:      api.NewVolumeGroupsServiceApi(baseClient),
+		IscsiClientAPIInstance: api.NewIscsiClientsServiceApi(baseClient),
 	}
 
 	return f, nil
