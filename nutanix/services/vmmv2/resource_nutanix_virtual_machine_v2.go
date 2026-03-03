@@ -1396,7 +1396,7 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	if powerState, ok := d.GetOk("power_state"); ok {
 		switch powerState {
 		case "ON":
-			PowerTaskRef, err = powerOnVMWithRetry(ctx, conn, uuid)
+			PowerTaskRef, err = powerOnVMWithRetry(ctx, conn, utils.StringPtr(d.Id()))
 		case "OFF":
 			PowerTaskRef, err = powerOffVMWithRetry(ctx, conn, utils.StringPtr(d.Id()))
 		default:
@@ -3210,14 +3210,13 @@ func powerOnVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (im
 			break
 		}
 
-		if attempt < maxRetries-1 {
-			log.Printf("[DEBUG] Attempt %d/%d failed to power on VM, retrying in %v: %v", attempt+1, maxRetries, retryDelay, err)
+		if attempt < maxRetries {
+			log.Printf("[DEBUG] Attempt %d/%d failed to power on VM, retrying in %v: %v", attempt + 1, maxRetries, retryDelay, err)
 			select {
 			case <-ctx.Done():
 				return import1.TaskReference{}, fmt.Errorf("context cancelled while powering on VM: %v", ctx.Err())
 			case <-time.After(retryDelay):
 				// Continue to next retry
-				log.Printf("[DEBUG] Attempt %d/%d failed to power on VM, retrying in %v: %v", attempt+1, maxRetries, retryDelay, err)
 			}
 		}
 	}
@@ -3258,14 +3257,13 @@ func powerOffVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (i
 			break
 		}
 
-		if attempt < maxRetries-1 {
-			log.Printf("[DEBUG] Attempt %d/%d failed to power off VM, retrying in %v: %v", attempt+1, maxRetries, retryDelay, err)
+		if attempt < maxRetries {
+			log.Printf("[DEBUG] Attempt %d/%d failed to power off VM, retrying in %v: %v", attempt + 1, maxRetries, retryDelay, err)
 			select {
 			case <-ctx.Done():
 				return import1.TaskReference{}, fmt.Errorf("context cancelled while powering off VM: %v", ctx.Err())
 			case <-time.After(retryDelay):
 				// Continue to next retry
-				log.Printf("[DEBUG] Attempt %d/%d failed to power off VM, retrying in %v: %v", attempt+1, maxRetries, retryDelay, err)
 			}
 		}
 	}
