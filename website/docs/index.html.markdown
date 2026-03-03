@@ -385,7 +385,7 @@ The following arguments are used to configure the Nutanix Provider:
 * `username` - (Optional) This is the username for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_USERNAME` environment variable. Required if `api_key` is not provided.
 * `password` - (Optional) This is the password for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_PASSWORD` environment variable. Required if `api_key` is not provided.
 * `endpoint` - **(Required)** This is the endpoint for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_ENDPOINT` environment variable.
-* `api_key` - (Optional) This is an API key for Prism Central authentication. Can be used as an alternative to `username`/`password`. When set, the `X-Ntnx-Api-Key` header will be used instead of Basic Authentication. This can also be specified with the `NUTANIX_API_KEY` environment variable.
+* `api_key` - (Optional) This is an API key for Prism Central authentication. Can be used as an alternative to `username`/`password` when connecting to a Prism Central instance. **Not supported by Prism Elements**, which requires `username` and `password`. When set, the `X-Ntnx-Api-Key` header will be used instead of Basic Authentication. This can also be specified with the `NUTANIX_API_KEY` environment variable.
 * `custom_headers` - (Optional) A map of custom HTTP headers to add to all API requests. Useful for environments that require additional headers such as Cloudflare Access service tokens. Headers can also be set via environment variables with the `NUTANIX_HEADER_` prefix (e.g., `NUTANIX_HEADER_CF_ACCESS_CLIENT_ID` becomes `Cf-Access-Client-Id`). Config values take precedence over environment variables.
 * `insecure` - (Optional) This specifies whether to allow verify ssl certificates. This can also be specified with `NUTANIX_INSECURE`. Defaults to `false`.
 * `port` - (Optional) This is the port for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_PORT` environment variable. Defaults to `9440`.
@@ -410,7 +410,9 @@ provider "nutanix" {
 
 ### API Key Authentication
 
-API key authentication can be used as an alternative to username/password authentication. When an API key is provided, the `X-Ntnx-Api-Key` header is used for authentication instead of Basic Authentication.
+API key authentication can be used as an alternative to username/password authentication when connecting to a **Prism Central** instance. When an API key is provided, the `X-Ntnx-Api-Key` header is used for authentication instead of Basic Authentication.
+
+-> **Note:** API key authentication is a Prism Central feature and is not supported by Prism Elements. Use `username` and `password` when connecting to a Prism Elements endpoint.
 
 Usage:
 

@@ -110,7 +110,7 @@ The following keys can be used to configure the provider.
 * **endpoint** - (Required) IP address for the Nutanix Prism Central.
 * **username** - (Optional) Username for Nutanix Prism Central. Could be local cluster auth (e.g. `auth`) or directory auth. Required if `api_key` is not set.
 * **password** - (Optional) Password for the provided username. Required if `api_key` is not set.
-* **api_key** - (Optional) API key for Nutanix Prism Central authentication. Can be used as an alternative to `username`/`password`. When set, the `X-Ntnx-Api-Key` header is used instead of Basic Authentication.
+* **api_key** - (Optional) API key for Prism Central authentication. Can be used as an alternative to `username`/`password` when connecting to a Prism Central instance. **Not supported by Prism Elements**, which requires `username` and `password`. When set, the `X-Ntnx-Api-Key` header is used instead of Basic Authentication.
 * **port** - (Optional) Port for the Nutanix Prism Central. Default port is 9440. Can also be set via the `NUTANIX_PORT` environment variable.
 * **insecure** - (Optional) Explicitly allow the provider to perform insecure SSL requests. If omitted, default value is false.
 * **wait_timeout** - (Optional) Set if you know that the creation or update of a resource may take long time (minutes).
