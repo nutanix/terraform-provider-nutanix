@@ -3189,7 +3189,7 @@ func extractTaskReferenceFromResponse(resp interface{}) (import1.TaskReference, 
 // powerOnVMWithRetry attempts to power on a VM with retry logic
 // It fetches the VM and ETag header for each retry attempt to ensure we have the latest ETag
 func powerOnVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (import1.TaskReference, error) {
-	maxRetries := 5
+	maxRetries := 10
 	retryDelay := 2500 * time.Millisecond // 2.5 seconds
 	var resp interface{}
 	var err error
@@ -3198,17 +3198,7 @@ func powerOnVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (im
 		// Fetch VM to get latest ETag for each retry attempt
 		readResp, errR := conn.VMAPIInstance.GetVmById(vmID)
 		if errR != nil {
-			if attempt < maxRetries-1 {
-				log.Printf("[DEBUG] Attempt %d/%d failed to fetch VM for power on, retrying in %v: %v", attempt+1, maxRetries, retryDelay, errR)
-				select {
-				case <-ctx.Done():
-					return import1.TaskReference{}, fmt.Errorf("context cancelled while fetching VM for power on: %v", ctx.Err())
-				case <-time.After(retryDelay):
-					log.Printf("[DEBUG] Attempt %d/%d failed to fetch VM for power on, retrying in %v: %v", attempt+1, maxRetries, retryDelay, errR)
-					continue
-				}
-			}
-			return import1.TaskReference{}, fmt.Errorf("error while fetching VM for power on after %d attempts: %v", maxRetries, errR)
+			return import1.TaskReference{}, fmt.Errorf("error while fetching vm : %v", errR)
 		}
 
 		// Build args with fresh ETag for this attempt
@@ -3247,7 +3237,7 @@ func powerOnVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (im
 // powerOffVMWithRetry attempts to power off a VM with retry logic
 // It fetches the VM and ETag header for each retry attempt to ensure we have the latest ETag
 func powerOffVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (import1.TaskReference, error) {
-	maxRetries := 5
+	maxRetries := 10
 	retryDelay := 2500 * time.Millisecond // 2.5 seconds
 	var resp interface{}
 	var err error
@@ -3256,17 +3246,7 @@ func powerOffVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (i
 		// Fetch VM to get latest ETag for each retry attempt
 		readResp, errR := conn.VMAPIInstance.GetVmById(vmID)
 		if errR != nil {
-			if attempt < maxRetries-1 {
-				log.Printf("[DEBUG] Attempt %d/%d failed to fetch VM for power off, retrying in %v: %v", attempt+1, maxRetries, retryDelay, errR)
-				select {
-				case <-ctx.Done():
-					return import1.TaskReference{}, fmt.Errorf("context cancelled while fetching VM for power off: %v", ctx.Err())
-				case <-time.After(retryDelay):
-					log.Printf("[DEBUG] Attempt %d/%d failed to fetch VM for power off, retrying in %v: %v", attempt+1, maxRetries, retryDelay, errR)
-					continue
-				}
-			}
-			return import1.TaskReference{}, fmt.Errorf("error while fetching VM for power off after %d attempts: %v", maxRetries, errR)
+			return import1.TaskReference{}, fmt.Errorf("error while fetching vm : %v", errR)
 		}
 
 		// Build args with fresh ETag for this attempt
