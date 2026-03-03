@@ -3211,7 +3211,7 @@ func powerOnVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (im
 		}
 
 		if attempt < maxRetries {
-			log.Printf("[DEBUG] Attempt %d/%d failed to power on VM, retrying in %v: %v", attempt + 1, maxRetries, retryDelay, err)
+			log.Printf("[DEBUG] Attempt %d/%d failed to power on VM, retrying in %v: %v", attempt+1, maxRetries, retryDelay, err)
 			select {
 			case <-ctx.Done():
 				return import1.TaskReference{}, fmt.Errorf("context cancelled while powering on VM: %v", ctx.Err())
@@ -3258,7 +3258,7 @@ func powerOffVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (i
 		}
 
 		if attempt < maxRetries {
-			log.Printf("[DEBUG] Attempt %d/%d failed to power off VM, retrying in %v: %v", attempt + 1, maxRetries, retryDelay, err)
+			log.Printf("[DEBUG] Attempt %d/%d failed to power off VM, retrying in %v: %v", attempt+1, maxRetries, retryDelay, err)
 			select {
 			case <-ctx.Done():
 				return import1.TaskReference{}, fmt.Errorf("context cancelled while powering off VM: %v", ctx.Err())
