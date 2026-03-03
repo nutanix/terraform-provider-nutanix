@@ -550,8 +550,8 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 					log.Printf("[DEBUG] Adding %d disks to OVA VM", len(disksList))
 					for _, disk := range disksList {
 						diskInput := expandDisk([]interface{}{disk})[0]
-aJSON, _ := json.MarshalIndent(diskInput, "", "  ")
-log.Printf("[DEBUG] disk input: %s", string(aJSON))
+						aJSON, _ := json.MarshalIndent(diskInput, "", "  ")
+						log.Printf("[DEBUG] disk input: %s", string(aJSON))
 						readVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
 						if err != nil {
 							return diag.Errorf("error reading VM for disk creation: %v", err)
@@ -751,7 +751,7 @@ func setOvaVMConfig(d *schema.ResourceData, vm import2.Vm) diag.Diagnostics {
 				}
 
 				// Update disks to capture ext_id from API by matching bus_type and index
-// Set disks: only refresh from API when state already had disks (so removing disks in config is recognized as a change).
+				// Set disks: only refresh from API when state already had disks (so removing disks in config is recognized as a change).
 				// If state has no disks, keep state disks empty so plan will show update and Update can delete disks on the VM.
 				if existingDisks, ok := existingConfig["disks"].([]interface{}); ok && len(existingDisks) > 0 {
 					if len(vm.Disks) > 0 {
@@ -772,126 +772,6 @@ func setOvaVMConfig(d *schema.ResourceData, vm import2.Vm) diag.Diagnostics {
 						overrideConfig["nics"] = nicsList
 						log.Printf("[DEBUG] Updated NICs configuration with %d NICs", len(nicsList))
 					}
-				}
-					if existingDisks, ok := overrideConfig["disks"].([]interface{}); ok {
-						for _, apiDisk := range vm.Disks {
-							if apiDisk.ExtId == nil || apiDisk.DiskAddress == nil {
-								continue
-							}
-
-							var apiBusType string
-							var apiIndex *int
-							if apiDisk.DiskAddress.BusType != nil {
-								switch *apiDisk.DiskAddress.BusType {
-								case import2.DISKBUSTYPE_SCSI:
-									apiBusType = "SCSI"
-								case import2.DISKBUSTYPE_IDE:
-									apiBusType = "IDE"
-								case import2.DISKBUSTYPE_PCI:
-									apiBusType = "PCI"
-								case import2.DISKBUSTYPE_SATA:
-									apiBusType = "SATA"
-								case import2.DISKBUSTYPE_SPAPR:
-									apiBusType = "SPAPR"
-								}
-							}
-							if apiDisk.DiskAddress.Index != nil {
-								apiIndex = apiDisk.DiskAddress.Index
-							}
-
-							for i, existingDiskInterface := range existingDisks {
-								if existingDisk, ok := existingDiskInterface.(map[string]interface{}); ok {
-									var configBusType string
-									var configIndex *int
-
-									if diskAddress, exists := existingDisk["disk_address"]; exists {
-										if diskAddressList, ok := diskAddress.([]interface{}); ok && len(diskAddressList) > 0 {
-											if diskAddressMap, ok := diskAddressList[0].(map[string]interface{}); ok {
-												if busType, exists := diskAddressMap["bus_type"]; exists {
-													configBusType = busType.(string)
-												}
-												if index, exists := diskAddressMap["index"]; exists {
-													if indexInt, ok := index.(int); ok {
-														configIndex = &indexInt
-													}
-												}
-											}
-										}
-									}
-
-									busTypeMatches := apiBusType == configBusType
-									indexMatches := (apiIndex == nil && configIndex == nil) ||
-										(apiIndex != nil && configIndex != nil && *apiIndex == *configIndex)
-
-									if busTypeMatches && indexMatches {
-										existingDisk["ext_id"] = utils.StringValue(apiDisk.ExtId)
-										log.Printf("[DEBUG] Matched and updated disk %d with bus_type=%s, index=%v, ext_id=%s",
-											i, apiBusType, apiIndex, utils.StringValue(apiDisk.ExtId))
-										break
-									}
-								}
-							}
-						}
-					}
-				}
-
-				if len(vm.Nics) > 0 {
-					nicsList := make([]interface{}, 0)
-
-					for _, nic := range vm.Nics {
-						nicMap := make(map[string]interface{})
-
-						if nic.ExtId != nil {
-							nicMap["ext_id"] = utils.StringValue(nic.ExtId)
-						}
-
-						if existingNics, ok := existingConfig["nics"].([]interface{}); ok && len(existingNics) > len(nicsList) {
-							if existingNic, ok := existingNics[len(nicsList)].(map[string]interface{}); ok {
-								if existingBackingInfo, ok := existingNic["backing_info"]; ok {
-									nicMap["backing_info"] = existingBackingInfo
-								}
-							}
-						}
-
-						if nic.NetworkInfo != nil {
-							networkInfoList := make([]map[string]interface{}, 0)
-							networkInfo := make(map[string]interface{})
-
-							if nic.NetworkInfo.NicType != nil {
-								networkInfo["nic_type"] = nic.NetworkInfo.NicType.GetName()
-							}
-
-							if nic.NetworkInfo.Subnet != nil && nic.NetworkInfo.Subnet.ExtId != nil {
-								subnetList := make([]map[string]interface{}, 0)
-								subnet := make(map[string]interface{})
-								subnet["ext_id"] = utils.StringValue(nic.NetworkInfo.Subnet.ExtId)
-								subnetList = append(subnetList, subnet)
-								networkInfo["subnet"] = subnetList
-							}
-
-							if nic.NetworkInfo.VlanMode != nil {
-								networkInfo["vlan_mode"] = nic.NetworkInfo.VlanMode.GetName()
-							}
-
-							if len(nic.NetworkInfo.TrunkedVlans) > 0 {
-								networkInfo["trunked_vlans"] = nic.NetworkInfo.TrunkedVlans
-							} else {
-								networkInfo["trunked_vlans"] = []int{}
-							}
-
-							if nic.NetworkInfo.ShouldAllowUnknownMacs != nil {
-								networkInfo["should_allow_unknown_macs"] = utils.BoolValue(nic.NetworkInfo.ShouldAllowUnknownMacs)
-							}
-
-							networkInfoList = append(networkInfoList, networkInfo)
-							nicMap["network_info"] = networkInfoList
-						}
-
-						nicsList = append(nicsList, nicMap)
-					}
-
-					overrideConfig["nics"] = nicsList
-					log.Printf("[DEBUG] Updated NICs configuration with %d NICs", len(nicsList))
 				}
 
 				// Set the complete override_vm_config with preserved user settings
@@ -985,7 +865,7 @@ func handleDiskUpdates(ctx context.Context, d *schema.ResourceData, meta interfa
 			}
 		}
 
-diskInput := expandDisk([]interface{}{disk})[0]
+		diskInput := expandDisk([]interface{}{disk})[0]
 
 		aJSON, _ := json.MarshalIndent(diskInput, "", "  ")
 		log.Printf("[DEBUG] disk input: %s", string(aJSON))
