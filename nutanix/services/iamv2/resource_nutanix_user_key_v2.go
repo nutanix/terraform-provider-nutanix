@@ -63,7 +63,7 @@ func ResourceNutanixUserKeyV2() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"API_KEY", "OBJECT_KEY"}, false),
-				ForceNew: true,
+				ForceNew:     true,
 			},
 			"created_time": {
 				Type:     schema.TypeString,
