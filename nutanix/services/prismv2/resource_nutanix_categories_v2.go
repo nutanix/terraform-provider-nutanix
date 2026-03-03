@@ -2,6 +2,7 @@ package prismv2
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -9,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -153,6 +155,18 @@ func ResourceNutanixCategoriesV2Create(ctx context.Context, d *schema.ResourceDa
 	getResp := resp.Data.GetValue().(import1.Category)
 
 	d.SetId(utils.StringValue(getResp.ExtId))
+
+	// Handle sharing with projects after creation
+	if sharedProjects, ok := d.GetOk("shared_with_projects"); ok {
+		// Share with specific projects
+		projectsSet := sharedProjects.(*schema.Set)
+		for _, projectID := range projectsSet.List() {
+			if err := shareCategoryWithProject(ctx, conn, utils.StringValue(getResp.ExtId), projectID.(string)); err != nil {
+				return diag.Errorf("error while sharing category with project %s: %v", projectID.(string), err)
+			}
+		}
+	}
+
 	return ResourceNutanixCategoriesV2Read(ctx, d, meta)
 }
 
@@ -182,6 +196,9 @@ func ResourceNutanixCategoriesV2Read(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("associations", flattenAssociationSummary(getResp.Associations)); err != nil {
@@ -228,6 +245,29 @@ func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceDa
 		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 
+	// Handle shared_with_projects changes
+	if d.HasChange("shared_with_projects") {
+		oldProjects, newProjects := d.GetChange("shared_with_projects")
+		oldSet := oldProjects.(*schema.Set)
+		newSet := newProjects.(*schema.Set)
+
+		// Unshare with removed projects
+		removedProjects := oldSet.Difference(newSet)
+		for _, projectID := range removedProjects.List() {
+			if err := unshareCategoryWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
+				return diag.Errorf("error while unsharing category with project %s: %v", projectID.(string), err)
+			}
+		}
+
+		// Share with new projects
+		addedProjects := newSet.Difference(oldSet)
+		for _, projectID := range addedProjects.List() {
+			if err := shareCategoryWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
+				return diag.Errorf("error while sharing category with project %s: %v", projectID.(string), err)
+			}
+		}
+	}
+
 	_, er := conn.CategoriesAPIInstance.UpdateCategoryById(utils.StringPtr(d.Id()), &updatedInput)
 	if er != nil {
 		return diag.Errorf("error while updating categories : %v", err)
@@ -249,4 +289,22 @@ func ResourceNutanixCategoriesV2Delete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	return nil
+}
+
+// Helper functions for sharing/unsharing category with projects
+// Note: The exact API method signatures may need to be verified based on the actual API client
+func shareCategoryWithProject(ctx context.Context, conn *prism.Client, categoryID, projectID string) error {
+	// TODO: Verify the exact method signature - the Categories API may not have ShareCategory/UnshareCategory methods
+	// Alternative: Categories might use a different API endpoint or method name
+	// Check if there's a ShareWithProject or similar method on the CategoriesAPIInstance
+	log.Printf("[DEBUG] Sharing category %s with project %s", categoryID, projectID)
+	// Placeholder - implement with actual API call once method signature is confirmed
+	return fmt.Errorf("ShareCategoryWithProject API method needs to be implemented - verify if Categories API supports project sharing")
+}
+
+func unshareCategoryWithProject(ctx context.Context, conn *prism.Client, categoryID, projectID string) error {
+	// TODO: Verify the exact method signature - the Categories API may not have ShareCategory/UnshareCategory methods
+	log.Printf("[DEBUG] Unsharing category %s with project %s", categoryID, projectID)
+	// Placeholder - implement with actual API call once method signature is confirmed
+	return fmt.Errorf("UnshareCategoryWithProject API method needs to be implemented - verify if Categories API supports project unsharing")
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -602,6 +603,18 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	} else {
 		return diag.Errorf("error while fetching subnet ExtId: subnet entity not found in EntitiesAffected")
 	}
+
+	// Handle sharing with projects after creation
+	if sharedProjects, ok := d.GetOk("shared_with_projects"); ok {
+		// Share with specific projects
+		projectsSet := sharedProjects.(*schema.Set)
+		for _, projectID := range projectsSet.List() {
+			if err := shareSubnetWithProject(ctx, conn, utils.StringValue(subnetExtID), projectID.(string)); err != nil {
+				return diag.Errorf("error while sharing subnet with project %s: %v", projectID.(string), err)
+			}
+		}
+	}
+
 	return ResourceNutanixSubnetV2Read(ctx, d, meta)
 }
 
@@ -628,6 +641,9 @@ func ResourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("subnet_type", flattenSubnetType(getResp.SubnetType)); err != nil {
@@ -724,6 +740,30 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 	if d.HasChange("project_ext_id") {
 		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
+
+	// Handle shared_with_projects changes
+	if d.HasChange("shared_with_projects") {
+		oldProjects, newProjects := d.GetChange("shared_with_projects")
+		oldSet := oldProjects.(*schema.Set)
+		newSet := newProjects.(*schema.Set)
+
+		// Unshare with removed projects
+		removedProjects := oldSet.Difference(newSet)
+		for _, projectID := range removedProjects.List() {
+			if err := unshareSubnetWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
+				return diag.Errorf("error while unsharing subnet with project %s: %v", projectID.(string), err)
+			}
+		}
+
+		// Share with new projects
+		addedProjects := newSet.Difference(oldSet)
+		for _, projectID := range addedProjects.List() {
+			if err := shareSubnetWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
+				return diag.Errorf("error while sharing subnet with project %s: %v", projectID.(string), err)
+			}
+		}
+	}
+
 	if d.HasChange("subnet_type") {
 		const two, three = 2, 3
 		subMap := map[string]interface{}{
@@ -1485,5 +1525,24 @@ func expandIPv6Pool(pr []interface{}) []import1.IPv6Pool {
 		}
 		return pools
 	}
+	return nil
+}
+
+// Helper functions for sharing/unsharing subnet with projects
+func shareSubnetWithProject(ctx context.Context, conn *networking.Client, subnetID, projectID string) error {
+	resp, err := conn.SubnetAPIInstance.ShareSubnet(subnetID, projectID)
+	if err != nil {
+		return fmt.Errorf("error while sharing subnet with project %s: %w", projectID, err)
+	}
+	log.Printf("[DEBUG] Sharing subnet %s with project %s response: %v", subnetID, projectID, resp)
+	return nil
+}
+
+func unshareSubnetWithProject(ctx context.Context, conn *networking.Client, subnetID, projectID string) error {
+	resp, err := conn.SubnetAPIInstance.UnshareSubnet(subnetID, projectID)
+	if err != nil {
+		return fmt.Errorf("error while unsharing subnet with project %s: %w", projectID, err)
+	}
+	log.Printf("[DEBUG] Unsharing subnet %s with project %s response: %v", subnetID, projectID, resp)
 	return nil
 }

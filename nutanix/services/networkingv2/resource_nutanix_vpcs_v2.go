@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -310,6 +311,18 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 	d.SetId(utils.StringValue(uuid))
+
+	// Handle sharing with projects after creation
+	if sharedProjects, ok := d.GetOk("shared_with_projects"); ok {
+		// Share with specific projects
+		projectsSet := sharedProjects.(*schema.Set)
+		for _, projectID := range projectsSet.List() {
+			if err := shareVpcWithProject(ctx, conn, utils.StringValue(uuid), projectID.(string)); err != nil {
+				return diag.Errorf("error while sharing VPC with project %s: %v", projectID.(string), err)
+			}
+		}
+	}
+
 	return ResourceNutanixVPCsV2Read(ctx, d, meta)
 }
 
@@ -336,6 +349,9 @@ func ResourceNutanixVPCsV2Read(ctx context.Context, d *schema.ResourceData, meta
 		return diag.FromErr(err)
 	}
 	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("vpc_type", getResp.VpcType.GetName()); err != nil {
@@ -390,6 +406,30 @@ func ResourceNutanixVPCsV2Update(ctx context.Context, d *schema.ResourceData, me
 	if d.HasChange("project_ext_id") {
 		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
+
+	// Handle shared_with_projects changes
+	if d.HasChange("shared_with_projects") {
+		oldProjects, newProjects := d.GetChange("shared_with_projects")
+		oldSet := oldProjects.(*schema.Set)
+		newSet := newProjects.(*schema.Set)
+
+		// Unshare with removed projects
+		removedProjects := oldSet.Difference(newSet)
+		for _, projectID := range removedProjects.List() {
+			if err := unshareVpcWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
+				return diag.Errorf("error while unsharing VPC with project %s: %v", projectID.(string), err)
+			}
+		}
+
+		// Share with new projects
+		addedProjects := newSet.Difference(oldSet)
+		for _, projectID := range addedProjects.List() {
+			if err := shareVpcWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
+				return diag.Errorf("error while sharing VPC with project %s: %v", projectID.(string), err)
+			}
+		}
+	}
+
 	if d.HasChange("vpc_type") {
 		const two, three = 2, 3
 		subMap := map[string]interface{}{
@@ -466,5 +506,24 @@ func ResourceNutanixVPCsV2Delete(ctx context.Context, d *schema.ResourceData, me
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for VPC (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
+	return nil
+}
+
+// Helper functions for sharing/unsharing VPC with projects
+func shareVpcWithProject(ctx context.Context, conn *networking.Client, vpcID, projectID string) error {
+	resp, err := conn.VpcAPIInstance.ShareVpcById(vpcID, projectID)
+	if err != nil {
+		return fmt.Errorf("error while sharing VPC with project %s: %w", projectID, err)
+	}
+	log.Printf("[DEBUG] Sharing VPC %s with project %s response: %v", vpcID, projectID, resp)
+	return nil
+}
+
+func unshareVpcWithProject(ctx context.Context, conn *networking.Client, vpcID, projectID string) error {
+	resp, err := conn.VpcAPIInstance.UnshareVpcById(vpcID, projectID)
+	if err != nil {
+		return fmt.Errorf("error while unsharing VPC with project %s: %w", projectID, err)
+	}
+	log.Printf("[DEBUG] Unsharing VPC %s with project %s response: %v", vpcID, projectID, resp)
 	return nil
 }
