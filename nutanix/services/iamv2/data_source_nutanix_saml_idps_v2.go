@@ -129,6 +129,17 @@ func DatasourceNutanixSamlIDPsV2() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"shared_with_projects": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"share_with_all_projects": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -254,6 +265,8 @@ func flattenIdentityProvidersEntities(pr []import1.SamlIdentityProvider) []inter
 				idp["created_by"] = v.CreatedBy
 			}
 			idp["project_ext_id"] = v.ProjectExtId
+			idp["shared_with_projects"] = v.SharedWithProjects
+			idp["share_with_all_projects"] = v.ShareWithAllProjects
 			idps[k] = idp
 		}
 		return idps

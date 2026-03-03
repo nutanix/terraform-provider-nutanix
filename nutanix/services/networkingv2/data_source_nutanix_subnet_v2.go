@@ -32,6 +32,13 @@ func DataSourceNutanixSubnetV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"shared_with_projects": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"subnet_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -411,6 +418,9 @@ func dataSourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("subnet_type", flattenSubnetType(getResp.SubnetType)); err != nil {

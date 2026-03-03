@@ -102,6 +102,17 @@ func DatasourceNutanixSamlIDPV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"shared_with_projects": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"share_with_all_projects": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -169,6 +180,12 @@ func DatasourceNutanixSamlIDPV2Read(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("share_with_all_projects", getResp.ShareWithAllProjects); err != nil {
 		return diag.FromErr(err)
 	}
 

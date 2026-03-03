@@ -72,6 +72,13 @@ func DatasourceNutanixCategoriesV2() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"shared_with_projects": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 						"associations": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -227,6 +234,7 @@ func flattenCategoriesEntities(pr []import1.Category) []interface{} {
 			ctg["description"] = v.Description
 			ctg["owner_uuid"] = v.OwnerUuid
 			ctg["project_ext_id"] = v.ProjectExtId
+			ctg["shared_with_projects"] = v.SharedWithProjects
 			ctg["associations"] = flattenAssociationSummary(v.Associations)
 			ctg["detailed_associations"] = flattenAssociationDetail(v.DetailedAssociations)
 			ctg["tenant_id"] = v.TenantId

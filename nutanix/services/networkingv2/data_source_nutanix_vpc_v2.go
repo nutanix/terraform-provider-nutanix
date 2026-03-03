@@ -57,6 +57,13 @@ func DataSourceNutanixVPCv2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"shared_with_projects": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"common_dhcp_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -207,6 +214,9 @@ func dataSourceNutanixVPCv2Read(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(err)
 	}
 	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("vpc_type", getResp.VpcType.GetName()); err != nil {

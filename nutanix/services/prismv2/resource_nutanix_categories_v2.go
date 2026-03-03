@@ -51,6 +51,14 @@ func ResourceNutanixCategoriesV2() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"shared_with_projects": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"associations": {
 				Type:     schema.TypeList,
 				Computed: true,

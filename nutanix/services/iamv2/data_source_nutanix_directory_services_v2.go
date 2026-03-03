@@ -164,6 +164,17 @@ func DatasourceNutanixDirectoryServicesV2() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"shared_with_projects": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"share_with_all_projects": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -285,6 +296,8 @@ func flattenDirectoryServicesEntities(pr []import1.DirectoryService) []interface
 				ds["created_by"] = v.CreatedBy
 			}
 			ds["project_ext_id"] = v.ProjectExtId
+			ds["shared_with_projects"] = v.SharedWithProjects
+			ds["share_with_all_projects"] = v.ShareWithAllProjects
 
 			dsList[k] = ds
 		}
