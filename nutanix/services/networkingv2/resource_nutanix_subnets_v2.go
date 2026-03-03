@@ -33,6 +33,14 @@ func ResourceNutanixSubnetV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"metadata": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: DatasourceMetadataSchemaV2(),
+				},
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -463,6 +471,9 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	if name, nok := d.GetOk("name"); nok {
 		inputSpec.Name = utils.StringPtr(name.(string))
 	}
+	if metadata, ok := d.GetOk("metadata"); ok {
+		inputSpec.Metadata = expandMetadata(metadata.([]interface{}))
+	}
 	if desc, ok := d.GetOk("description"); ok {
 		inputSpec.Description = utils.StringPtr(desc.(string))
 	}
@@ -602,6 +613,9 @@ func ResourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, me
 	if err := d.Set("ext_id", getResp.ExtId); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("metadata", flattenMetadata(getResp.Metadata)); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("name", getResp.Name); err != nil {
 		return diag.FromErr(err)
 	}
@@ -696,6 +710,9 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 	args := make(map[string]interface{})
 	args["If-Match"] = utils.StringPtr(etagValue)
 
+	if d.HasChange("metadata") {
+		updateSpec.Metadata = expandMetadata(d.Get("metadata").([]interface{}))
+	}
 	if d.HasChange("name") {
 		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
 	}
