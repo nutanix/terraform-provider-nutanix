@@ -997,7 +997,6 @@ func handlePowerStateChanges(ctx context.Context, d *schema.ResourceData, meta i
 		args := make(map[string]interface{})
 		args["If-Match"] = getEtagHeader(readResp, vmmConn)
 
-		var powerResp interface{}
 		var taskUUID *string
 
 		switch newPowerState {
