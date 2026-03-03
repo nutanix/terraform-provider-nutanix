@@ -550,7 +550,8 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 					log.Printf("[DEBUG] Adding %d disks to OVA VM", len(disksList))
 					for _, disk := range disksList {
 						diskInput := expandDisk([]interface{}{disk})[0]
-
+aJSON, _ := json.MarshalIndent(diskInput, "", "  ")
+log.Printf("[DEBUG] disk input: %s", string(aJSON))
 						readVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
 						if err != nil {
 							return diag.Errorf("error reading VM for disk creation: %v", err)
@@ -750,7 +751,28 @@ func setOvaVMConfig(d *schema.ResourceData, vm import2.Vm) diag.Diagnostics {
 				}
 
 				// Update disks to capture ext_id from API by matching bus_type and index
-				if len(vm.Disks) > 0 && overrideConfig["disks"] != nil {
+// Set disks: only refresh from API when state already had disks (so removing disks in config is recognized as a change).
+				// If state has no disks, keep state disks empty so plan will show update and Update can delete disks on the VM.
+				if existingDisks, ok := existingConfig["disks"].([]interface{}); ok && len(existingDisks) > 0 {
+					if len(vm.Disks) > 0 {
+						disksList := flattenDisk(vm.Disks)
+						if disksList != nil {
+							overrideConfig["disks"] = disksList
+							log.Printf("[DEBUG] Updated disks configuration with %d disks", len(disksList))
+						}
+					}
+				} else {
+					overrideConfig["disks"] = []interface{}{}
+					log.Printf("[DEBUG] No disks in config/state, setting disks to empty")
+				}
+
+				if len(vm.Nics) > 0 {
+					nicsList := flattenNic(vm.Nics)
+					if nicsList != nil {
+						overrideConfig["nics"] = nicsList
+						log.Printf("[DEBUG] Updated NICs configuration with %d NICs", len(nicsList))
+					}
+				}
 					if existingDisks, ok := overrideConfig["disks"].([]interface{}); ok {
 						for _, apiDisk := range vm.Disks {
 							if apiDisk.ExtId == nil || apiDisk.DiskAddress == nil {
@@ -912,6 +934,9 @@ func handleDiskDeletions(ctx context.Context, d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Handling deletion of %d disks", len(deletedDisks))
 	for _, disk := range deletedDisks {
 		diskInput := expandDisk([]interface{}{disk})[0]
+		aJSON, _ := json.MarshalIndent(diskInput, "", "  ")
+		log.Printf("[DEBUG] disk input: %s", string(aJSON))
+
 		diskExtID := diskInput.ExtId
 
 		readVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
@@ -960,7 +985,11 @@ func handleDiskUpdates(ctx context.Context, d *schema.ResourceData, meta interfa
 			}
 		}
 
-		diskInput := expandDisk([]interface{}{disk})[0]
+diskInput := expandDisk([]interface{}{disk})[0]
+
+		aJSON, _ := json.MarshalIndent(diskInput, "", "  ")
+		log.Printf("[DEBUG] disk input: %s", string(aJSON))
+
 		diskExtID := diskInput.ExtId
 
 		readVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
@@ -994,6 +1023,8 @@ func handleDiskAdditions(ctx context.Context, d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Handling addition of %d disks", len(newDisks))
 	for _, disk := range newDisks {
 		diskInput := expandDisk([]interface{}{disk})[0]
+		aJSON, _ := json.MarshalIndent(diskInput, "", "  ")
+		log.Printf("[DEBUG] disk input: %s", string(aJSON))
 
 		readVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
 		if err != nil {
