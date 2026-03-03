@@ -130,6 +130,7 @@ func ResourceNutanixAuthPoliciesV2() *schema.Resource {
 			"project_ext_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 		},
 	}

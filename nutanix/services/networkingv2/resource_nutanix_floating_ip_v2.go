@@ -41,6 +41,7 @@ func ResourceNutanixFloatingIPv2() *schema.Resource {
 			"project_ext_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"association": {
 				Type:     schema.TypeList,
