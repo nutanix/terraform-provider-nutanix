@@ -65,7 +65,7 @@ func ResourceNutanixObjectStoresV2() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 50),
+				ValidateFunc: validation.StringLenBetween(1, 16),
 			},
 			"description": {
 				Type:     schema.TypeString,
