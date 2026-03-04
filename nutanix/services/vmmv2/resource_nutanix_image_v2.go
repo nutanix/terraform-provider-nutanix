@@ -13,6 +13,8 @@ import (
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
 	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/content"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/images"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -270,7 +272,10 @@ func ResourceNutanixImageV4Create(ctx context.Context, d *schema.ResourceData, m
 		body.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
 
-	resp, err := conn.ImagesAPIInstance.CreateImage(body)
+	createImageRequest := import3.CreateImageRequest{
+		Body: body,
+	}
+	resp, err := conn.ImagesAPIInstance.CreateImage(ctx, &createImageRequest)
 	if err != nil {
 		return diag.Errorf("error while creating Image : %v", err)
 	}
@@ -292,7 +297,10 @@ func ResourceNutanixImageV4Create(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching image create task (%s): %v", utils.StringValue(taskUUID), err)
 	}
@@ -312,7 +320,10 @@ func ResourceNutanixImageV4Create(ctx context.Context, d *schema.ResourceData, m
 func ResourceNutanixImageV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	resp, err := conn.ImagesAPIInstance.GetImageById(utils.StringPtr(d.Id()))
+	getImageByIdRequest := import3.GetImageByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ImagesAPIInstance.GetImageById(ctx, &getImageByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching images : %v", err)
 	}
@@ -384,7 +395,10 @@ func ResourceNutanixImageV4Update(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 
-	resp, err := conn.ImagesAPIInstance.GetImageById(utils.StringPtr(d.Id()))
+	getImageByIdRequest := import3.GetImageByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ImagesAPIInstance.GetImageById(ctx, &getImageByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching images : %v", err)
 	}
@@ -421,7 +435,11 @@ func ResourceNutanixImageV4Update(ctx context.Context, d *schema.ResourceData, m
 		updateSpec.ClusterLocationExtIds = flattenStringValue(d.Get("cluster_location_ext_ids").([]interface{}))
 	}
 
-	updateResp, er := conn.ImagesAPIInstance.UpdateImageById(utils.StringPtr(d.Id()), &updateSpec)
+	updateImageByIdRequest := import3.UpdateImageByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updateSpec,
+	}
+	updateResp, er := conn.ImagesAPIInstance.UpdateImageById(ctx, &updateImageByIdRequest)
 	if er != nil {
 		return diag.Errorf("error while updating images : %v", err)
 	}

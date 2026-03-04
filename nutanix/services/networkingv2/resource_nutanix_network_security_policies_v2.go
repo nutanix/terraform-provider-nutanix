@@ -13,6 +13,8 @@ import (
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/config"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/prism/v4/config"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/request/networksecuritypolicies"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -490,7 +492,10 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 	aJSON, _ := json.MarshalIndent(spec, "", "  ")
 	log.Printf("[DEBUG] Create Network Security Policy Payload: %s", string(aJSON))
 
-	resp, err := conn.NetworkingSecurityInstance.CreateNetworkSecurityPolicy(&spec)
+	createNetworkSecurityPolicyRequest := import3.CreateNetworkSecurityPolicyRequest{
+		Body: &spec,
+	}
+	resp, err := conn.NetworkingSecurityInstance.CreateNetworkSecurityPolicy(ctx, &createNetworkSecurityPolicyRequest)
 	if err != nil {
 		return diag.Errorf("error while creating network security policy: %v", err)
 	}
@@ -534,7 +539,10 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	resp, err := conn.NetworkingSecurityInstance.GetNetworkSecurityPolicyById(utils.StringPtr((d.Id())))
+	getNetworkSecurityPolicyByIdRequest := import3.GetNetworkSecurityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.NetworkingSecurityInstance.GetNetworkSecurityPolicyById(ctx, &getNetworkSecurityPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching network security policy: %v", err)
 	}
@@ -647,7 +655,10 @@ func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema
 
 	updatedSpec := import1.NetworkSecurityPolicy{}
 
-	resp, err := conn.NetworkingSecurityInstance.GetNetworkSecurityPolicyById(utils.StringPtr((d.Id())))
+	getNetworkSecurityPolicyByIdRequest := import3.GetNetworkSecurityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.NetworkingSecurityInstance.GetNetworkSecurityPolicyById(ctx, &getNetworkSecurityPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching network security : %v", err)
 	}
@@ -713,7 +724,11 @@ func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema
 	aJSON, _ := json.MarshalIndent(updatedSpec, "", "  ")
 	log.Printf("[DEBUG] Update Network Security Policy Payload: %s", string(aJSON))
 
-	updatedResp, err := conn.NetworkingSecurityInstance.UpdateNetworkSecurityPolicyById(utils.StringPtr(d.Id()), &updatedSpec)
+	updateNetworkSecurityPolicyByIdRequest := import3.UpdateNetworkSecurityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updatedSpec,
+	}
+	updatedResp, err := conn.NetworkingSecurityInstance.UpdateNetworkSecurityPolicyById(ctx, &updateNetworkSecurityPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while updating network security: %v", err)
 	}
@@ -741,7 +756,10 @@ func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema
 func ResourceNutanixNetworkSecurityPolicyV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	resp, err := conn.NetworkingSecurityInstance.DeleteNetworkSecurityPolicyById(utils.StringPtr(d.Id()))
+	deleteNetworkSecurityPolicyByIdRequest := import3.DeleteNetworkSecurityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.NetworkingSecurityInstance.DeleteNetworkSecurityPolicyById(ctx, &deleteNetworkSecurityPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting network security: %v", err)
 	}

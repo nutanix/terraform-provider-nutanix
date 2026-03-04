@@ -9,9 +9,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/config"
-	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/vm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -83,7 +85,10 @@ func ResourceNutanixVmsShutdownActionV2Create(ctx context.Context, d *schema.Res
 		body.GuestPowerStateTransitionConfig = &gstVal
 	}
 
-	readResp, errR := conn.VMAPIInstance.GetVmById(utils.StringPtr(vmExtID.(string)))
+	getVmByIdRequest := import3.GetVmByIdRequest{
+		ExtId: utils.StringPtr(vmExtID.(string)),
+	}
+	readResp, errR := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 	if errR != nil {
 		return diag.Errorf("error while reading vm : %v", errR)
 	}
@@ -94,25 +99,39 @@ func ResourceNutanixVmsShutdownActionV2Create(ctx context.Context, d *schema.Res
 	var TaskRef import1.TaskReference
 	//nolint:gocritic // Keeping if-else for clarity in this specific case
 	if action == "shutdown" {
-		resp, err := conn.VMAPIInstance.ShutdownVm(utils.StringPtr(vmExtID.(string)), args)
+		shutdownVmRequest := import3.ShutdownVmRequest{
+			ExtId: utils.StringPtr(vmExtID.(string)),
+		}
+		resp, err := conn.VMAPIInstance.ShutdownVm(ctx, &shutdownVmRequest, args)
 		if err != nil {
 			return diag.Errorf("error while Shutdown VM : %v", err)
 		}
 		TaskRef = resp.Data.GetValue().(import1.TaskReference)
 	} else if action == "guest_shutdown" {
-		resp, err := conn.VMAPIInstance.ShutdownGuestVm(utils.StringPtr(vmExtID.(string)), &body, args)
+		shutdownGuestVmRequest := import3.ShutdownGuestVmRequest{
+			ExtId: utils.StringPtr(vmExtID.(string)),
+			Body:  &body,
+		}
+		resp, err := conn.VMAPIInstance.ShutdownGuestVm(ctx, &shutdownGuestVmRequest, args)
 		if err != nil {
 			return diag.Errorf("error while Shutdown Guest VM : %v", err)
 		}
 		TaskRef = resp.Data.GetValue().(import1.TaskReference)
 	} else if action == "reboot" {
-		resp, err := conn.VMAPIInstance.RebootVm(utils.StringPtr(vmExtID.(string)), args)
+		rebootVmRequest := import3.RebootVmRequest{
+			ExtId: utils.StringPtr(vmExtID.(string)),
+		}
+		resp, err := conn.VMAPIInstance.RebootVm(ctx, &rebootVmRequest, args)
 		if err != nil {
 			return diag.Errorf("error while performing Reboot VM  : %v", err)
 		}
 		TaskRef = resp.Data.GetValue().(import1.TaskReference)
 	} else if action == "guest_reboot" {
-		resp, err := conn.VMAPIInstance.RebootGuestVm(utils.StringPtr(vmExtID.(string)), &body, args)
+		rebootGuestVmRequest := import3.RebootGuestVmRequest{
+			ExtId: utils.StringPtr(vmExtID.(string)),
+			Body:  &body,
+		}
+		resp, err := conn.VMAPIInstance.RebootGuestVm(ctx, &rebootGuestVmRequest, args)
 		if err != nil {
 			return diag.Errorf("error while performing Reboot Guest VM : %v", err)
 		}
@@ -136,7 +155,10 @@ func ResourceNutanixVmsShutdownActionV2Create(ctx context.Context, d *schema.Res
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching VM action task (%s): %v", utils.StringValue(taskUUID), err)
 	}

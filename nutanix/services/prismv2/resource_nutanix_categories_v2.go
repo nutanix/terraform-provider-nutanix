@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/categories"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -147,7 +148,10 @@ func ResourceNutanixCategoriesV2Create(ctx context.Context, d *schema.ResourceDa
 		input.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
 
-	resp, err := conn.CategoriesAPIInstance.CreateCategory(input)
+	createCategoryRequest := import2.CreateCategoryRequest{
+		Body: input,
+	}
+	resp, err := conn.CategoriesAPIInstance.CreateCategory(ctx, &createCategoryRequest)
 	if err != nil {
 		return diag.Errorf("error while creating category: %v", err)
 	}
@@ -173,7 +177,10 @@ func ResourceNutanixCategoriesV2Create(ctx context.Context, d *schema.ResourceDa
 func ResourceNutanixCategoriesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).PrismAPI
 
-	resp, err := conn.CategoriesAPIInstance.GetCategoryById(utils.StringPtr(d.Id()), nil)
+	getCategoryByIdRequest := import2.GetCategoryByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.CategoriesAPIInstance.GetCategoryById(ctx, &getCategoryByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching category : %v", err)
 	}
@@ -213,7 +220,10 @@ func ResourceNutanixCategoriesV2Read(ctx context.Context, d *schema.ResourceData
 func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).PrismAPI
 	updatedInput := import1.Category{}
-	resp, err := conn.CategoriesAPIInstance.GetCategoryById(utils.StringPtr(d.Id()), nil)
+	getCategoryByIdRequest := import2.GetCategoryByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.CategoriesAPIInstance.GetCategoryById(ctx, &getCategoryByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching categories : %v", err)
 	}
@@ -268,7 +278,11 @@ func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	_, er := conn.CategoriesAPIInstance.UpdateCategoryById(utils.StringPtr(d.Id()), &updatedInput)
+	updateCategoryByIdRequest := import2.UpdateCategoryByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updatedInput,
+	}
+	_, er := conn.CategoriesAPIInstance.UpdateCategoryById(ctx, &updateCategoryByIdRequest)
 	if er != nil {
 		return diag.Errorf("error while updating categories : %v", err)
 	}
@@ -279,7 +293,10 @@ func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceDa
 func ResourceNutanixCategoriesV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).PrismAPI
 
-	resp, err := conn.CategoriesAPIInstance.DeleteCategoryById(utils.StringPtr(d.Id()))
+	deleteCategoryByIdRequest := import2.DeleteCategoryByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.CategoriesAPIInstance.DeleteCategoryById(ctx, &deleteCategoryByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting category : %v", err)
 	}

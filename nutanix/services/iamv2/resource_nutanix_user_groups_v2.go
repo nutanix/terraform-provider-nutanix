@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authn"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/usergroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -108,7 +109,10 @@ func ResourceNutanixUserGroupsV4Create(ctx context.Context, d *schema.ResourceDa
 		input.DistinguishedName = utils.StringPtr(dName.(string))
 	}
 
-	resp, err := conn.UserGroupsAPIInstance.CreateUserGroup(input)
+	createUserGroupRequest := import2.CreateUserGroupRequest{
+		Body: input,
+	}
+	resp, err := conn.UserGroupsAPIInstance.CreateUserGroup(ctx, &createUserGroupRequest)
 	if err != nil {
 		return diag.Errorf("error while creating user groups: %v", err)
 	}
@@ -120,7 +124,10 @@ func ResourceNutanixUserGroupsV4Create(ctx context.Context, d *schema.ResourceDa
 
 func ResourceNutanixUserGroupsV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
-	resp, err := conn.UserGroupsAPIInstance.GetUserGroupById(utils.StringPtr(d.Id()))
+	getUserGroupByIdRequest := import2.GetUserGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.UserGroupsAPIInstance.GetUserGroupById(ctx, &getUserGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching user groups: %v", err)
 	}
@@ -166,7 +173,10 @@ func ResourceNutanixUserGroupsV4Update(ctx context.Context, d *schema.ResourceDa
 func ResourceNutanixUserGroupsV4Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	readResp, err := conn.UserGroupsAPIInstance.GetUserGroupById(utils.StringPtr(d.Id()))
+	getUserGroupByIdRequest := import2.GetUserGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.UserGroupsAPIInstance.GetUserGroupById(ctx, &getUserGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching role: %v", err)
 	}
@@ -175,7 +185,10 @@ func ResourceNutanixUserGroupsV4Delete(ctx context.Context, d *schema.ResourceDa
 	headers := make(map[string]interface{})
 	headers["If-Match"] = utils.StringPtr(etagValue)
 
-	resp, err := conn.UserGroupsAPIInstance.DeleteUserGroupById(utils.StringPtr(d.Id()), headers)
+	deleteUserGroupByIdRequest := import2.DeleteUserGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.UserGroupsAPIInstance.DeleteUserGroupById(ctx, &deleteUserGroupByIdRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while deleting user group : %v", err)
 	}

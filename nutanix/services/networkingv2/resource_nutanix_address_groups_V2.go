@@ -12,6 +12,8 @@ import (
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/config"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/request/addressgroups"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -113,7 +115,10 @@ func ResourceNutanixAddressGroupsV2Create(ctx context.Context, d *schema.Resourc
 		input.IpRanges = expandIPv4Range(ipranges.([]interface{}))
 	}
 
-	resp, err := conn.AddressGroupAPIInstance.CreateAddressGroup(input)
+	createAddressGroupRequest := import2.CreateAddressGroupRequest{
+		Body: input,
+	}
+	resp, err := conn.AddressGroupAPIInstance.CreateAddressGroup(ctx, &createAddressGroupRequest)
 	if err != nil {
 		return diag.Errorf("error while creating address groups : %v", err)
 	}
@@ -137,7 +142,10 @@ func ResourceNutanixAddressGroupsV2Create(ctx context.Context, d *schema.Resourc
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import5.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching address group task: %v", err)
 	}
@@ -156,7 +164,10 @@ func ResourceNutanixAddressGroupsV2Create(ctx context.Context, d *schema.Resourc
 func ResourceNutanixAddressGroupsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	resp, err := conn.AddressGroupAPIInstance.GetAddressGroupById(utils.StringPtr(d.Id()))
+	getAddressGroupByIdRequest := import2.GetAddressGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.AddressGroupAPIInstance.GetAddressGroupById(ctx, &getAddressGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching address group : %v", err)
 	}
@@ -200,7 +211,10 @@ func ResourceNutanixAddressGroupsV2Read(ctx context.Context, d *schema.ResourceD
 func ResourceNutanixAddressGroupsV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	resp, err := conn.AddressGroupAPIInstance.GetAddressGroupById(utils.StringPtr(d.Id()))
+	getAddressGroupByIdRequest := import2.GetAddressGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.AddressGroupAPIInstance.GetAddressGroupById(ctx, &getAddressGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching address group : %v", err)
 	}
@@ -222,7 +236,11 @@ func ResourceNutanixAddressGroupsV2Update(ctx context.Context, d *schema.Resourc
 		updateInput.IpRanges = expandIPv4Range(d.Get("ip_ranges").([]interface{}))
 	}
 
-	updatedResp, err := conn.AddressGroupAPIInstance.UpdateAddressGroupById(utils.StringPtr(d.Id()), updateInput)
+	updateAddressGroupByIdRequest := import2.UpdateAddressGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  updateInput,
+	}
+	updatedResp, err := conn.AddressGroupAPIInstance.UpdateAddressGroupById(ctx, &updateAddressGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while updating Address groups : %v", err)
 	}
@@ -250,7 +268,10 @@ func ResourceNutanixAddressGroupsV2Update(ctx context.Context, d *schema.Resourc
 func ResourceNutanixAddressGroupsV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	resp, err := conn.AddressGroupAPIInstance.DeleteAddressGroupById(utils.StringPtr(d.Id()))
+	deleteAddressGroupByIdRequest := import2.DeleteAddressGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.AddressGroupAPIInstance.DeleteAddressGroupById(ctx, &deleteAddressGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting address group: %v", err)
 	}

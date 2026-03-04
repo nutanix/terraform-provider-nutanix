@@ -12,6 +12,8 @@ import (
 	volumesPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/prism/v4/config"
 	volumesClient "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/config"
 	taskPoll "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/request/volumegroups"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -356,7 +358,10 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
 		body.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
-	resp, err := conn.VolumeAPIInstance.CreateVolumeGroup(&body)
+	createVolumeGroupRequest := import1.CreateVolumeGroupRequest{
+		Body: &body,
+	}
+	resp, err := conn.VolumeAPIInstance.CreateVolumeGroup(ctx, &createVolumeGroupRequest)
 	if err != nil {
 		return diag.Errorf("error while creating Volume Group : %v", err)
 	}
@@ -378,7 +383,10 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import2.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching volume group task (%s): %v", utils.StringValue(taskUUID), err)
 	}
@@ -400,7 +408,10 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 func ResourceNutanixVolumeGroupV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
-	resp, err := conn.VolumeAPIInstance.GetVolumeGroupById(utils.StringPtr(d.Id()), nil)
+	getVolumeGroupByIdRequest := import1.GetVolumeGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.VolumeAPIInstance.GetVolumeGroupById(ctx, &getVolumeGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Volume Group : %v", err)
 	}
@@ -466,7 +477,10 @@ func ResourceNutanixVolumeGroupV2Update(ctx context.Context, d *schema.ResourceD
 func ResourceNutanixVolumeGroupV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
-	resp, err := conn.VolumeAPIInstance.DeleteVolumeGroupById(utils.StringPtr(d.Id()))
+	deleteVolumeGroupByIdRequest := import1.DeleteVolumeGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.VolumeAPIInstance.DeleteVolumeGroupById(ctx, &deleteVolumeGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while Deleting Volume group : %v", err)
 	}
@@ -489,7 +503,10 @@ func ResourceNutanixVolumeGroupV2Delete(ctx context.Context, d *schema.ResourceD
 	}
 
 	// Get task details for logging
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import2.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching volume group delete task (%s): %v", utils.StringValue(taskUUID), err)
 	}

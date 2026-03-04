@@ -9,8 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	preCheckConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/lifecycle/v4/common"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/lifecycle/v4/request/prechecks"
 	taskRef "github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -100,7 +102,12 @@ func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.Resource
 	}
 
 	// pass nil for the new dyRun flag
-	resp, err := conn.LcmPreChecksAPIInstance.PerformPrechecks(body, utils.StringPtr(clusterExtID), nil)
+	performPrechecksRequest := import1.PerformPrechecksRequest{
+		Body:       body,
+		XClusterId: utils.StringPtr(clusterExtID),
+		Dryrun_:    nil,
+	}
+	resp, err := conn.LcmPreChecksAPIInstance.PerformPrechecks(ctx, &performPrechecksRequest)
 	if err != nil {
 		return diag.Errorf("error while performing the prechecks: %v", err)
 	}
@@ -123,7 +130,10 @@ func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.Resource
 	}
 
 	// Get task details from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching LCM prechecks task: %v", err)
 	}

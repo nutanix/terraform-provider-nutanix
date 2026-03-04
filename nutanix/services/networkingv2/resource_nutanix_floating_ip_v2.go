@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/floatingips"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -231,7 +232,10 @@ func ResourceNutanixFloatingIPv2Create(ctx context.Context, d *schema.ResourceDa
 		inputSpec.VmNic = expandVMNic(vmNic)
 	}
 
-	resp, err := conn.FloatingIPAPIInstance.CreateFloatingIp(&inputSpec)
+	createFloatingIpRequest := import2.CreateFloatingIpRequest{
+		Body: &inputSpec,
+	}
+	resp, err := conn.FloatingIPAPIInstance.CreateFloatingIp(ctx, &createFloatingIpRequest)
 	if err != nil {
 		return diag.Errorf("error while creating floating IPs : %v", err)
 	}
@@ -255,7 +259,10 @@ func ResourceNutanixFloatingIPv2Create(ctx context.Context, d *schema.ResourceDa
 	}
 
 	filter := fmt.Sprintf("name eq  '%s'", fipName)
-	readResp, err := conn.FloatingIPAPIInstance.ListFloatingIps(nil, nil, &filter, nil, nil, nil)
+	listFloatingIpsRequest := import2.ListFloatingIpsRequest{
+		Filter_: utils.StringPtr(filter),
+	}
+	readResp, err := conn.FloatingIPAPIInstance.ListFloatingIps(ctx, &listFloatingIpsRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching fips : %v", err)
 	}
@@ -269,7 +276,10 @@ func ResourceNutanixFloatingIPv2Create(ctx context.Context, d *schema.ResourceDa
 func ResourceNutanixFloatingIPv2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.FloatingIPAPIInstance.GetFloatingIpById(utils.StringPtr(d.Id()))
+	getFloatingIpByIdRequest := import2.GetFloatingIpByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.FloatingIPAPIInstance.GetFloatingIpById(ctx, &getFloatingIpByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching floating ips : %v", err)
 	}
@@ -342,7 +352,10 @@ func ResourceNutanixFloatingIPv2Read(ctx context.Context, d *schema.ResourceData
 func ResourceNutanixFloatingIPv2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.FloatingIPAPIInstance.GetFloatingIpById(utils.StringPtr(d.Id()))
+	getFloatingIpByIdRequest := import2.GetFloatingIpByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.FloatingIPAPIInstance.GetFloatingIpById(ctx, &getFloatingIpByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching floating ips : %v", err)
 	}
@@ -391,7 +404,11 @@ func ResourceNutanixFloatingIPv2Update(ctx context.Context, d *schema.ResourceDa
 		updateSpec.VmNic = expandVMNic(d.Get("vm_nic"))
 	}
 
-	getResp, err := conn.FloatingIPAPIInstance.UpdateFloatingIpById(utils.StringPtr(d.Id()), &updateSpec)
+	updateFloatingIpByIdRequest := import2.UpdateFloatingIpByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updateSpec,
+	}
+	getResp, err := conn.FloatingIPAPIInstance.UpdateFloatingIpById(ctx, &updateFloatingIpByIdRequest)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -418,7 +435,10 @@ func ResourceNutanixFloatingIPv2Update(ctx context.Context, d *schema.ResourceDa
 func ResourceNutanixFloatingIPv2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.FloatingIPAPIInstance.DeleteFloatingIpById(utils.StringPtr(d.Id()))
+	deleteFloatingIpByIdRequest := import2.DeleteFloatingIpByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.FloatingIPAPIInstance.DeleteFloatingIpById(ctx, &deleteFloatingIpByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting floating ip : %v", err)
 	}

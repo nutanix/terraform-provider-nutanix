@@ -11,6 +11,8 @@ import (
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/common/v1/config"
 	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/request/entitygroups"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	commonUtils "github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 
@@ -93,7 +95,10 @@ func ResourceNutanixEntityGroupV2Create(ctx context.Context, d *schema.ResourceD
 	aJSON, _ := json.MarshalIndent(bodySpec, "", "  ")
 	log.Printf("[DEBUG] Create Entity Group Body Spec: %s", string(aJSON))
 
-	resp, err := conn.EntityGroupsAPIInstance.CreateEntityGroup(bodySpec)
+	createEntityGroupRequest := import4.CreateEntityGroupRequest{
+		Body: bodySpec,
+	}
+	resp, err := conn.EntityGroupsAPIInstance.CreateEntityGroup(ctx, &createEntityGroupRequest)
 	if err != nil {
 		return diag.Errorf("error while creating Entity Group: %v", err)
 	}
@@ -115,7 +120,10 @@ func ResourceNutanixEntityGroupV2Create(ctx context.Context, d *schema.ResourceD
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import5.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Entity Group Task : %v", err)
 	}
@@ -135,7 +143,10 @@ func ResourceNutanixEntityGroupV2Read(ctx context.Context, d *schema.ResourceDat
 
 	extID := d.Id()
 
-	resp, err := conn.EntityGroupsAPIInstance.GetEntityGroupById(utils.StringPtr(extID))
+	getEntityGroupByIdRequest := import4.GetEntityGroupByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	resp, err := conn.EntityGroupsAPIInstance.GetEntityGroupById(ctx, &getEntityGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Entity Group: %s", err)
 	}
@@ -176,7 +187,10 @@ func ResourceNutanixEntityGroupV2Read(ctx context.Context, d *schema.ResourceDat
 func ResourceNutanixEntityGroupV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	readResp, err := conn.EntityGroupsAPIInstance.GetEntityGroupById(utils.StringPtr(d.Id()))
+	getEntityGroupByIdRequest := import4.GetEntityGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.EntityGroupsAPIInstance.GetEntityGroupById(ctx, &getEntityGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Entity Group: %v", err)
 	}
@@ -203,7 +217,11 @@ func ResourceNutanixEntityGroupV2Update(ctx context.Context, d *schema.ResourceD
 		updateSpec.AllowedConfig = expandAllowedConfig(allowedConfig.([]interface{}))
 	}
 
-	resp, err := conn.EntityGroupsAPIInstance.UpdateEntityGroupById(utils.StringPtr(d.Id()), updateSpec, args)
+	updateEntityGroupByIdRequest := import4.UpdateEntityGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  updateSpec,
+	}
+	resp, err := conn.EntityGroupsAPIInstance.UpdateEntityGroupById(ctx, &updateEntityGroupByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while updating Entity Group: %v", err)
 	}
@@ -225,7 +243,10 @@ func ResourceNutanixEntityGroupV2Update(ctx context.Context, d *schema.ResourceD
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import5.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Entity Group Task : %v", err)
 	}
@@ -240,7 +261,10 @@ func ResourceNutanixEntityGroupV2Update(ctx context.Context, d *schema.ResourceD
 func ResourceNutanixEntityGroupV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	resp, err := conn.EntityGroupsAPIInstance.DeleteEntityGroupById(utils.StringPtr(d.Id()))
+	deleteEntityGroupByIdRequest := import4.DeleteEntityGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.EntityGroupsAPIInstance.DeleteEntityGroupById(ctx, &deleteEntityGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting Entity Group: %v", err)
 	}
@@ -261,7 +285,10 @@ func ResourceNutanixEntityGroupV2Delete(ctx context.Context, d *schema.ResourceD
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import5.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting Entity Group Task : %v", err)
 	}

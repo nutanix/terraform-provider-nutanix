@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authn"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/samlidentityproviders"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -202,7 +203,10 @@ func ResourceNutanixSamlIdpV2Create(ctx context.Context, d *schema.ResourceData,
 		input.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
 
-	resp, err := conn.SamlIdentityAPIInstance.CreateSamlIdentityProvider(input)
+	createSamlIdentityProviderRequest := import2.CreateSamlIdentityProviderRequest{
+		Body: input,
+	}
+	resp, err := conn.SamlIdentityAPIInstance.CreateSamlIdentityProvider(ctx, &createSamlIdentityProviderRequest)
 	if err != nil {
 		return diag.Errorf("error while creating saml identity providers: %v", err)
 	}
@@ -233,7 +237,10 @@ func ResourceNutanixSamlIdpV2Create(ctx context.Context, d *schema.ResourceData,
 func ResourceNutanixSamlIdpV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	resp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(utils.StringPtr(d.Id()))
+	getSamlIdentityProviderByIdRequest := import2.GetSamlIdentityProviderByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(ctx, &getSamlIdentityProviderByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching saml identity providers: %v", err)
 	}
@@ -294,16 +301,17 @@ func ResourceNutanixSamlIdpV2Read(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("share_with_all_projects", getResp.ShareWithAllProjects); err != nil {
-		return diag.FromErr(err)
-	}
+	// Note: ShareWithAllProjects field is not available in the model
 	return nil
 }
 
 func ResourceNutanixSamlIdpV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 	updatedInput := import1.SamlIdentityProvider{}
-	resp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(utils.StringPtr(d.Id()))
+	getSamlIdentityProviderByIdRequest := import2.GetSamlIdentityProviderByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(ctx, &getSamlIdentityProviderByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching saml identity providers: %v", err)
 	}
@@ -395,7 +403,11 @@ func ResourceNutanixSamlIdpV2Update(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	updateResp, err := conn.SamlIdentityAPIInstance.UpdateSamlIdentityProviderById(utils.StringPtr(d.Id()), &updatedInput, headers)
+	updateSamlIdentityProviderByIdRequest := import2.UpdateSamlIdentityProviderByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updatedInput,
+	}
+	updateResp, err := conn.SamlIdentityAPIInstance.UpdateSamlIdentityProviderById(ctx, &updateSamlIdentityProviderByIdRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while updating saml identity providers: %v", err)
 	}
@@ -411,7 +423,10 @@ func ResourceNutanixSamlIdpV2Update(ctx context.Context, d *schema.ResourceData,
 func ResourceNutanixSamlIdpV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	readResp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(utils.StringPtr(d.Id()))
+	getSamlIdentityProviderByIdRequest := import2.GetSamlIdentityProviderByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(ctx, &getSamlIdentityProviderByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching saml identity providers: %v", err)
 	}
@@ -420,7 +435,10 @@ func ResourceNutanixSamlIdpV2Delete(ctx context.Context, d *schema.ResourceData,
 	headers := make(map[string]interface{})
 	headers["If-Match"] = utils.StringPtr(etagValue)
 
-	resp, err := conn.SamlIdentityAPIInstance.DeleteSamlIdentityProviderById(utils.StringPtr(d.Id()), headers)
+	deleteSamlIdentityProviderByIdRequest := import2.DeleteSamlIdentityProviderByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.SamlIdentityAPIInstance.DeleteSamlIdentityProviderById(ctx, &deleteSamlIdentityProviderByIdRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while deleting saml idp : %v", err)
 	}

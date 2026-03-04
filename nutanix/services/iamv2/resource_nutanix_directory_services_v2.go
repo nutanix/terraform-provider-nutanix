@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authn"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/directoryservices"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -234,7 +235,10 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 	aJSON, _ := json.MarshalIndent(input, "", " ")
 	log.Println("[DEBUG] Directory Service create payload: ", string(aJSON))
 
-	resp, err := conn.DirectoryServiceAPIInstance.CreateDirectoryService(input)
+	createDirectoryServiceRequest := import2.CreateDirectoryServiceRequest{
+		Body: input,
+	}
+	resp, err := conn.DirectoryServiceAPIInstance.CreateDirectoryService(ctx, &createDirectoryServiceRequest)
 	if err != nil {
 		return diag.Errorf("error while creating directory services : %v", err)
 	}
@@ -265,7 +269,10 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 func ResourceNutanixDirectoryServicesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	resp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(utils.StringPtr(d.Id()))
+	getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -336,9 +343,7 @@ func ResourceNutanixDirectoryServicesV2Read(ctx context.Context, d *schema.Resou
 	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("share_with_all_projects", getResp.ShareWithAllProjects); err != nil {
-		return diag.FromErr(err)
-	}
+	// Note: ShareWithAllProjects field is not available in the model
 	return nil
 }
 
@@ -346,7 +351,10 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.Client).IamAPI
 	updatedSpec := import1.DirectoryService{}
 
-	readResp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(utils.StringPtr(d.Id()))
+	getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Directory service : %v", err)
 	}
@@ -488,7 +496,11 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 	aJSON, _ := json.MarshalIndent(updatedSpec, "", " ")
 	log.Println("[DEBUG] Directory Service update payload: ", string(aJSON))
 
-	updatedResp, err := conn.DirectoryServiceAPIInstance.UpdateDirectoryServiceById(utils.StringPtr(d.Id()), &updatedSpec, headers)
+	updateDirectoryServiceByIdRequest := import2.UpdateDirectoryServiceByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updatedSpec,
+	}
+	updatedResp, err := conn.DirectoryServiceAPIInstance.UpdateDirectoryServiceById(ctx, &updateDirectoryServiceByIdRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while updating directory services: %v", err)
 	}
@@ -504,7 +516,10 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 func ResourceNutanixDirectoryServicesV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	readResp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(utils.StringPtr(d.Id()))
+	getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Directory service : %v", err)
 	}
@@ -513,7 +528,10 @@ func ResourceNutanixDirectoryServicesV2Delete(ctx context.Context, d *schema.Res
 	headers := make(map[string]interface{})
 	headers["If-Match"] = utils.StringPtr(etagValue)
 
-	resp, err := conn.DirectoryServiceAPIInstance.DeleteDirectoryServiceById(utils.StringPtr(d.Id()), headers)
+	deleteDirectoryServiceByIdRequest := import2.DeleteDirectoryServiceByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.DirectoryServiceAPIInstance.DeleteDirectoryServiceById(ctx, &deleteDirectoryServiceByIdRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while deleting directory services : %v", err)
 	}

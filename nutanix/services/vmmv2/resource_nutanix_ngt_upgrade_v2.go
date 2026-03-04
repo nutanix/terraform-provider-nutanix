@@ -10,9 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	taskPoll "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	vmmPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
 	vmmConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/config"
-	taskPoll "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/vm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -110,7 +112,10 @@ func ResourceNutanixNGTUpgradeV2Create(ctx context.Context, d *schema.ResourceDa
 
 	extID := d.Get("ext_id")
 
-	readResp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID.(string)))
+	getGuestToolsByIdRequest := import3.GetGuestToolsByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	readResp, err := conn.VMAPIInstance.GetGuestToolsById(ctx, &getGuestToolsByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Vm : %v", err)
 	}
@@ -146,7 +151,11 @@ func ResourceNutanixNGTUpgradeV2Create(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	resp, err := conn.VMAPIInstance.UpgradeVmGuestTools(utils.StringPtr(extID.(string)), body, args)
+	upgradeVmGuestToolsRequest := import3.UpgradeVmGuestToolsRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+		Body:  body,
+	}
+	resp, err := conn.VMAPIInstance.UpgradeVmGuestTools(ctx, &upgradeVmGuestToolsRequest, args)
 	if err != nil {
 		return diag.Errorf("error while Upgrading gest tools  : %v", err)
 	}
@@ -168,7 +177,10 @@ func ResourceNutanixNGTUpgradeV2Create(ctx context.Context, d *schema.ResourceDa
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching NGT upgrade task (%s): %v", utils.StringValue(taskUUID), err)
 	}
@@ -191,7 +203,10 @@ func ResourceNutanixNGTUpgradeV2Read(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.Client).VmmAPI
 
 	extID := d.Id()
-	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID))
+	getGuestToolsByIdRequest := import3.GetGuestToolsByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	resp, err := conn.VMAPIInstance.GetGuestToolsById(ctx, &getGuestToolsByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Gest Tool : %v", err)
 	}

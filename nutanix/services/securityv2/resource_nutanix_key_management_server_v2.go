@@ -16,6 +16,8 @@ import (
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	commonCfg "github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/common/v1/config"
 	securityPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/security/v4/request/keymanagementservers"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/security/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -183,11 +185,14 @@ func ResourceNutanixKeyManagementServerV2Create(ctx context.Context, d *schema.R
 			return diag.FromErr(err)
 		}
 	}
-
-	aJSON, _ := json.MarshalIndent(body, "", "  ")
+  
+	createKeyManagementServerRequest := import1.CreateKeyManagementServerRequest{
+		Body: body,
+	}
+	aJSON, _ := json.MarshalIndent(createKeyManagementServerRequest, "", "  ")
 	log.Printf("[DEBUG] key management server payload: %s", aJSON)
 
-	resp, err := conn.KeyManagementServersAPIInstance.CreateKeyManagementServer(body)
+	resp, err := conn.KeyManagementServersAPIInstance.CreateKeyManagementServer(ctx, &createKeyManagementServerRequest)
 	if err != nil {
 		return diag.Errorf("error while creating Key Management Server : %v", err)
 	}
@@ -214,7 +219,10 @@ func ResourceNutanixKeyManagementServerV2Create(ctx context.Context, d *schema.R
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import2.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching key management server create task (%s): %v", utils.StringValue(taskUUID), err)
 	}
@@ -238,7 +246,10 @@ func ResourceNutanixKeyManagementServerV2Create(ctx context.Context, d *schema.R
 func ResourceNutanixKeyManagementServerV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).SecurityAPI
 
-	resp, err := conn.KeyManagementServersAPIInstance.GetKeyManagementServerById(utils.StringPtr(d.Id()))
+	getKeyManagementServerByIdRequest := import1.GetKeyManagementServerByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.KeyManagementServersAPIInstance.GetKeyManagementServerById(ctx, &getKeyManagementServerByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching key management server : %v", err)
 	}
@@ -284,7 +295,10 @@ func ResourceNutanixKeyManagementServerV2Read(ctx context.Context, d *schema.Res
 func ResourceNutanixKeyManagementServerV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).SecurityAPI
 
-	resp, err := conn.KeyManagementServersAPIInstance.GetKeyManagementServerById(utils.StringPtr(d.Id()))
+	getKeyManagementServerByIdRequest := import1.GetKeyManagementServerByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.KeyManagementServersAPIInstance.GetKeyManagementServerById(ctx, &getKeyManagementServerByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching key management server : %v", err)
 	}
@@ -371,7 +385,11 @@ func ResourceNutanixKeyManagementServerV2Update(ctx context.Context, d *schema.R
 	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
 	log.Printf("[DEBUG] update key management server payload: %s", aJSON)
 
-	updateResp, err := conn.KeyManagementServersAPIInstance.UpdateKeyManagementServerById(utils.StringPtr(d.Id()), &updateSpec, args)
+	updateKeyManagementServerByIdRequest := import1.UpdateKeyManagementServerByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updateSpec,
+	}
+	updateResp, err := conn.KeyManagementServersAPIInstance.UpdateKeyManagementServerById(ctx, &updateKeyManagementServerByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while updating key management server : %v", err)
 	}
@@ -397,7 +415,10 @@ func ResourceNutanixKeyManagementServerV2Update(ctx context.Context, d *schema.R
 	}
 
 	// Get task details for logging
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import2.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching key management server update task (%s): %v", utils.StringValue(taskUUID), err)
 	}
@@ -411,7 +432,10 @@ func ResourceNutanixKeyManagementServerV2Update(ctx context.Context, d *schema.R
 func ResourceNutanixKeyManagementServerV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).SecurityAPI
 
-	resp, err := conn.KeyManagementServersAPIInstance.DeleteKeyManagementServerById(utils.StringPtr(d.Id()))
+	deleteKeyManagementServerByIdRequest := import1.DeleteKeyManagementServerByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.KeyManagementServersAPIInstance.DeleteKeyManagementServerById(ctx, &deleteKeyManagementServerByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting key management server : %v", err)
 	}
@@ -437,7 +461,10 @@ func ResourceNutanixKeyManagementServerV2Delete(ctx context.Context, d *schema.R
 	}
 
 	// Get task details for logging
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import2.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching key management server delete task (%s): %v", utils.StringValue(taskUUID), err)
 	}

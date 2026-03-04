@@ -15,6 +15,8 @@ import (
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
 	networkingPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/routes"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -250,7 +252,11 @@ func ResourceNutanixRoutesV2Create(ctx context.Context, d *schema.ResourceData, 
 	aJSON, _ := json.Marshal(reqBody)
 	log.Printf("[DEBUG] Route Request Body: %v", string(aJSON))
 
-	resp, err := conn.Routes.CreateRouteForRouteTable(&routeTableExtID, reqBody)
+	createRouteForRouteTableRequest := import2.CreateRouteForRouteTableRequest{
+		RouteTableExtId: &routeTableExtID,
+		Body:            reqBody,
+	}
+	resp, err := conn.Routes.CreateRouteForRouteTable(ctx, &createRouteForRouteTableRequest)
 	if err != nil {
 		return diag.Errorf("error while creating route for table : %v, error: %v", routeTableExtID, err)
 	}
@@ -272,7 +278,10 @@ func ResourceNutanixRoutesV2Create(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import3.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching route task: %v", err)
 	}
@@ -302,7 +311,11 @@ func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, 
 	routeTableExtID := d.Get("route_table_ext_id").(string)
 
 	// Get Etag
-	routResp, err := conn.Routes.GetRouteForRouteTableById(utils.StringPtr(d.Id()), &routeTableExtID)
+	getRouteForRouteTableByIdRequest := import2.GetRouteForRouteTableByIdRequest{
+		ExtId:           utils.StringPtr(d.Id()),
+		RouteTableExtId: &routeTableExtID,
+	}
+	routResp, err := conn.Routes.GetRouteForRouteTableById(ctx, &getRouteForRouteTableByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching route : %v", err)
 	}
@@ -358,7 +371,12 @@ func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, 
 	aJSON, _ := json.Marshal(updateSpec)
 	log.Printf("[DEBUG] Update Route Request Body: %v", string(aJSON))
 
-	updateResp, err := conn.Routes.UpdateRouteForRouteTableById(utils.StringPtr(d.Id()), &routeTableExtID, updateSpec, args)
+	updateRouteForRouteTableByIdRequest := import2.UpdateRouteForRouteTableByIdRequest{
+		ExtId:           utils.StringPtr(d.Id()),
+		RouteTableExtId: &routeTableExtID,
+		Body:            updateSpec,
+	}
+	updateResp, err := conn.Routes.UpdateRouteForRouteTableById(ctx, &updateRouteForRouteTableByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while updating route : %v", err)
 	}
@@ -380,7 +398,10 @@ func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Get task details from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import3.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching route update task: %v", err)
 	}
@@ -419,7 +440,10 @@ func ResourceNutanixRoutesV2Delete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Get task details for logging
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import3.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching route delete task: %v", err)
 	}

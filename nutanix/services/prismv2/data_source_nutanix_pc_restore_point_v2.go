@@ -118,7 +118,7 @@ func DatasourceNutanixRestorePointV2Read(ctx context.Context, d *schema.Resource
 		return diag.Errorf("error setting domain_manager: %s", err)
 	}
 
-	d.SetId(utils.StringValue(extID))
+	d.SetId(utils.StringValue(utils.StringPtr(extID)))
 	return nil
 }
 

@@ -11,6 +11,8 @@ import (
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/config"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/request/servicegroups"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -152,7 +154,10 @@ func ResourceNutanixServiceGroupsV2Create(ctx context.Context, d *schema.Resourc
 		spec.IcmpServices = expandIcmpTypeCodeSpec(icmp.([]interface{}))
 	}
 
-	resp, err := conn.ServiceGroupAPIInstance.CreateServiceGroup(spec)
+	createServiceGroupRequest := import2.CreateServiceGroupRequest{
+		Body: spec,
+	}
+	resp, err := conn.ServiceGroupAPIInstance.CreateServiceGroup(ctx, &createServiceGroupRequest)
 	if err != nil {
 		return diag.Errorf("error while creating service groups : %v", err)
 	}
@@ -176,7 +181,10 @@ func ResourceNutanixServiceGroupsV2Create(ctx context.Context, d *schema.Resourc
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import5.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching service group task: %v", err)
 	}
@@ -196,7 +204,10 @@ func ResourceNutanixServiceGroupsV2Create(ctx context.Context, d *schema.Resourc
 func ResourceNutanixServiceGroupsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	resp, err := conn.ServiceGroupAPIInstance.GetServiceGroupById(utils.StringPtr(d.Id()))
+	getServiceGroupByIdRequest := import2.GetServiceGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ServiceGroupAPIInstance.GetServiceGroupById(ctx, &getServiceGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching service groups : %v", err)
 	}
@@ -247,7 +258,10 @@ func ResourceNutanixServiceGroupsV2Update(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.Client).MicroSegAPI
 	updatedSpec := import1.ServiceGroup{}
 
-	resp, err := conn.ServiceGroupAPIInstance.GetServiceGroupById(utils.StringPtr(d.Id()))
+	getServiceGroupByIdRequest := import2.GetServiceGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ServiceGroupAPIInstance.GetServiceGroupById(ctx, &getServiceGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching service groups : %v", err)
 	}
@@ -279,7 +293,11 @@ func ResourceNutanixServiceGroupsV2Update(ctx context.Context, d *schema.Resourc
 	// removing read only attribute from spec
 	updatedSpec.IsSystemDefined = nil
 
-	updatedResp, err := conn.ServiceGroupAPIInstance.UpdateServiceGroupById(utils.StringPtr(d.Id()), &updatedSpec, args)
+	updateServiceGroupByIdRequest := import2.UpdateServiceGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updatedSpec,
+	}
+	updatedResp, err := conn.ServiceGroupAPIInstance.UpdateServiceGroupById(ctx, &updateServiceGroupByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while updating service groups : %v", err)
 	}
@@ -307,7 +325,10 @@ func ResourceNutanixServiceGroupsV2Update(ctx context.Context, d *schema.Resourc
 func ResourceNutanixServiceGroupsV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	resp, err := conn.ServiceGroupAPIInstance.DeleteServiceGroupById(utils.StringPtr(d.Id()))
+	deleteServiceGroupByIdRequest := import2.DeleteServiceGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ServiceGroupAPIInstance.DeleteServiceGroupById(ctx, &deleteServiceGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting service group: %v", err)
 	}

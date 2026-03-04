@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/management"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/domainmanagerbackups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -192,7 +193,10 @@ func ResourceNutanixRestoreSourceV2Create(ctx context.Context, d *schema.Resourc
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Restore Source Create Payload: %s", string(aJSON))
 
-	resp, err := conn.DomainManagerBackupsAPIInstance.CreateRestoreSource(&body)
+	createRestoreSourceRequest := import3.CreateRestoreSourceRequest{
+		Body: &body,
+	}
+	resp, err := conn.DomainManagerBackupsAPIInstance.CreateRestoreSource(ctx, &createRestoreSourceRequest)
 
 	if err != nil {
 		return diag.Errorf("error while creating restore source: %s", err)
@@ -211,7 +215,10 @@ func ResourceNutanixRestoreSourceV2Create(ctx context.Context, d *schema.Resourc
 func ResourceNutanixRestoreSourceV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).PrismAPI
 
-	resp, err := conn.DomainManagerBackupsAPIInstance.GetRestoreSourceById(utils.StringPtr(d.Id()))
+	getRestoreSourceByIdRequest := import3.GetRestoreSourceByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.DomainManagerBackupsAPIInstance.GetRestoreSourceById(ctx, &getRestoreSourceByIdRequest)
 
 	if err != nil {
 		log.Printf("[DEBUG] Restore Source read error: %s", err)

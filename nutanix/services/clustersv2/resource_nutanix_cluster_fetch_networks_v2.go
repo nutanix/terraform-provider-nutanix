@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusters"
 	clsMangPrismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -268,7 +269,11 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Create(ctx context.Context, 
 		body.RequestType = utils.StringPtr(requestType.(string))
 	}
 
-	readResp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(clusterExtID.(string)), expand)
+	getClusterByIdRequest := import3.GetClusterByIdRequest{
+		ExtId:    utils.StringPtr(clusterExtID.(string)),
+		Expand_:  expand,
+	}
+	readResp, err := conn.ClusterEntityAPI.GetClusterById(ctx, &getClusterByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while reading cluster : %v", err)
 	}
@@ -278,7 +283,11 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Create(ctx context.Context, 
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] Fetch Network info Request Body: %s\n", string(aJSON))
 
-	resp, err := conn.ClusterEntityAPI.FetchNodeNetworkingDetails(utils.StringPtr(clusterExtID.(string)), body, args)
+	fetchNodeNetworkingDetailsRequest := import3.FetchNodeNetworkingDetailsRequest{
+		ClusterExtId: utils.StringPtr(clusterExtID.(string)),
+		Body:         body,
+	}
+	resp, err := conn.ClusterEntityAPI.FetchNodeNetworkingDetails(ctx, &fetchNodeNetworkingDetailsRequest, args)
 	if err != nil {
 		return diag.Errorf("error while Fetching Node Networking Details : %v", err)
 	}
@@ -310,7 +319,11 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Create(ctx context.Context, 
 
 	networkingDetails := config.TASKRESPONSETYPE_NETWORKING_DETAILS
 	taskResponseType := config.TaskResponseType(networkingDetails)
-	networkDetailsResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
+	fetchTaskResponseRequest := import3.FetchTaskResponseRequest{
+		ExtId:            utils.StringPtr(uuid),
+		TaskResponseType: &taskResponseType,
+	}
+	networkDetailsResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(ctx, &fetchTaskResponseRequest)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr)
 	}

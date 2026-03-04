@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/management"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/domainmanagerbackups"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -104,7 +106,13 @@ func ResourceNutanixRestorePcCreate(ctx context.Context, d *schema.ResourceData,
 	aJSON, _ := json.MarshalIndent(restoreSpec, "", "  ")
 	log.Printf("[DEBUG] Restore PC Body: %s", string(aJSON))
 
-	resp, err := conn.DomainManagerBackupsAPIInstance.Restore(utils.StringPtr(restoreSourceExtID), utils.StringPtr(restorableDomainManagerExtID), utils.StringPtr(restorePointExtID), restoreSpec)
+	restoreRequest := import3.RestoreRequest{
+		RestoreSourceExtId:         utils.StringPtr(restoreSourceExtID),
+		RestorableDomainManagerExtId: utils.StringPtr(restorableDomainManagerExtID),
+		ExtId:                      utils.StringPtr(restorePointExtID),
+		Body:                       restoreSpec,
+	}
+	resp, err := conn.DomainManagerBackupsAPIInstance.Restore(ctx, &restoreRequest)
 	if err != nil {
 		return diag.Errorf("error while restoring PC: %s", err)
 	}
@@ -125,7 +133,10 @@ func ResourceNutanixRestorePcCreate(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error waiting for PC (%s) to be restored: %s", utils.StringValue(taskUUID), err)
 	}
 
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching PC restore task (%s): %v", utils.StringValue(taskUUID), err)
 	}

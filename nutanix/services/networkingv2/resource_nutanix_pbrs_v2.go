@@ -11,6 +11,7 @@ import (
 	config "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/common/v1/config"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/routingpolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -415,7 +416,10 @@ func ResourceNutanixPbrsV2Create(ctx context.Context, d *schema.ResourceData, me
 		vpcRef = vpcExtID.(string)
 	}
 
-	resp, err := conn.RoutingPolicy.CreateRoutingPolicy(&inputSpec)
+	createRoutingPolicyRequest := import2.CreateRoutingPolicyRequest{
+		Body: &inputSpec,
+	}
+	resp, err := conn.RoutingPolicy.CreateRoutingPolicy(ctx, &createRoutingPolicyRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting routing policy : %v", err)
 	}
@@ -440,7 +444,10 @@ func ResourceNutanixPbrsV2Create(ctx context.Context, d *schema.ResourceData, me
 
 	// Get UUID from List Routing Policy API as Currently task entities does not return uuid
 	filter := fmt.Sprintf("vpcExtId eq  '%s'", vpcRef)
-	readResp, err := conn.RoutingPolicy.ListRoutingPolicies(nil, nil, &filter, nil, nil, nil)
+	listRoutingPoliciesRequest := import2.ListRoutingPoliciesRequest{
+		Filter_: utils.StringPtr(filter),
+	}
+	readResp, err := conn.RoutingPolicy.ListRoutingPolicies(ctx, &listRoutingPoliciesRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching routing policies : %v", err)
 	}
@@ -458,7 +465,10 @@ func ResourceNutanixPbrsV2Create(ctx context.Context, d *schema.ResourceData, me
 func ResourceNutanixPbrsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.RoutingPolicy.GetRoutingPolicyById(utils.StringPtr(d.Id()))
+	getRoutingPolicyByIdRequest := import2.GetRoutingPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.RoutingPolicy.GetRoutingPolicyById(ctx, &getRoutingPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching routing policy : %v", err)
 	}
@@ -502,7 +512,10 @@ func ResourceNutanixPbrsV2Read(ctx context.Context, d *schema.ResourceData, meta
 func ResourceNutanixPbrsV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.RoutingPolicy.GetRoutingPolicyById(utils.StringPtr(d.Id()))
+	getRoutingPolicyByIdRequest := import2.GetRoutingPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.RoutingPolicy.GetRoutingPolicyById(ctx, &getRoutingPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching routing policy : %v", err)
 	}
@@ -530,7 +543,11 @@ func ResourceNutanixPbrsV2Update(ctx context.Context, d *schema.ResourceData, me
 		updateSpec.VpcExtId = utils.StringPtr(d.Get("vpc_ext_id").(string))
 	}
 
-	updateResp, err := conn.RoutingPolicy.UpdateRoutingPolicyById(utils.StringPtr(d.Id()), &updateSpec)
+	updateRoutingPolicyByIdRequest := import2.UpdateRoutingPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updateSpec,
+	}
+	updateResp, err := conn.RoutingPolicy.UpdateRoutingPolicyById(ctx, &updateRoutingPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while updating routing policy : %v", err)
 	}
@@ -557,7 +574,10 @@ func ResourceNutanixPbrsV2Update(ctx context.Context, d *schema.ResourceData, me
 func ResourceNutanixPbrsV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.RoutingPolicy.DeleteRoutingPolicyById(utils.StringPtr(d.Id()))
+	deleteRoutingPolicyByIdRequest := import2.DeleteRoutingPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.RoutingPolicy.DeleteRoutingPolicyById(ctx, &deleteRoutingPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting routing policy : %v", err)
 	}

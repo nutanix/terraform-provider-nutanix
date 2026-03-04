@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/config"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/dataprotection/v4/common"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/request/protectionpolicies"
 	prism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -113,7 +114,10 @@ func ResourceNutanixProtectionPoliciesV2Create(ctx context.Context, d *schema.Re
 	aJSON, _ := json.MarshalIndent(bodySpec, "", "  ")
 	log.Printf("[DEBUG] Create Protection Policy Body Spec: %s", string(aJSON))
 
-	resp, err := conn.ProtectionPolicies.CreateProtectionPolicy(bodySpec)
+	createProtectionPolicyRequest := import2.CreateProtectionPolicyRequest{
+		Body: bodySpec,
+	}
+	resp, err := conn.ProtectionPolicies.CreateProtectionPolicy(ctx, &createProtectionPolicyRequest)
 	if err != nil {
 		return diag.Errorf("error while creating Protection Policy: %v", err)
 	}
@@ -157,7 +161,10 @@ func ResourceNutanixProtectionPoliciesV2Read(ctx context.Context, d *schema.Reso
 
 	extID := d.Id()
 
-	resp, err := conn.ProtectionPolicies.GetProtectionPolicyById(utils.StringPtr(extID))
+	getProtectionPolicyByIdRequest := import2.GetProtectionPolicyByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	resp, err := conn.ProtectionPolicies.GetProtectionPolicyById(ctx, &getProtectionPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Protection Policy: %s", err)
 	}
@@ -207,7 +214,10 @@ func ResourceNutanixProtectionPoliciesV2Read(ctx context.Context, d *schema.Reso
 func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataPoliciesAPI
 
-	readResp, err := conn.ProtectionPolicies.GetProtectionPolicyById(utils.StringPtr(d.Id()))
+	getProtectionPolicyByIdRequest := import2.GetProtectionPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.ProtectionPolicies.GetProtectionPolicyById(ctx, &getProtectionPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Protection Policy: %v", err)
 	}
@@ -237,7 +247,11 @@ func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.Re
 		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 
-	resp, err := conn.ProtectionPolicies.UpdateProtectionPolicyById(utils.StringPtr(d.Id()), updateSpec, args)
+	updateProtectionPolicyByIdRequest := import2.UpdateProtectionPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  updateSpec,
+	}
+	resp, err := conn.ProtectionPolicies.UpdateProtectionPolicyById(ctx, &updateProtectionPolicyByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while updating Protection Policy: %v", err)
 	}
@@ -271,7 +285,10 @@ func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.Re
 func ResourceNutanixProtectionPoliciesV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataPoliciesAPI
 
-	resp, err := conn.ProtectionPolicies.DeleteProtectionPolicyById(utils.StringPtr(d.Id()))
+	deleteProtectionPolicyByIdRequest := import2.DeleteProtectionPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ProtectionPolicies.DeleteProtectionPolicyById(ctx, &deleteProtectionPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting Protection Policy: %v", err)
 	}

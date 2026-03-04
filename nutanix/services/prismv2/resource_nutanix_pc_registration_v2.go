@@ -12,6 +12,8 @@ import (
 	prismCommon "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/common/v1/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	prismManagment "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/management"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/domainmanager"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -218,7 +220,10 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 
 	pcExtID := d.Get("pc_ext_id").(string)
 
-	readResp, err := conn.DomainManagerAPIInstance.GetDomainManagerById(&pcExtID)
+	getDomainManagerByIdRequest := import3.GetDomainManagerByIdRequest{
+		ExtId: &pcExtID,
+	}
+	readResp, err := conn.DomainManagerAPIInstance.GetDomainManagerById(ctx, &getDomainManagerByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching domain manager with id %s : %v", pcExtID, err)
 	}
@@ -298,8 +303,11 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 	aJSON, _ := json.Marshal(body)
 	log.Printf("[DEBUG] PC Registration Request Body: %s", string(aJSON))
 
-	// pass nil for the new dyRun flag
-	resp, err := conn.DomainManagerAPIInstance.Register(&pcExtID, body, nil, args)
+	registerRequest := import3.RegisterRequest{
+		ExtId: &pcExtID,
+		Body:  body,
+	}
+	resp, err := conn.DomainManagerAPIInstance.Register(ctx, &registerRequest, args)
 	if err != nil {
 		return diag.Errorf("error while registering remote cluster with id %s : %v", pcExtID, err)
 	}
@@ -320,7 +328,10 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 		return diag.Errorf("error waiting for PC registration (%s) to complete: %v", utils.StringValue(taskUUID), err)
 	}
 
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching PC registration task (%s): %v", utils.StringValue(taskUUID), err)
 	}
@@ -339,7 +350,10 @@ func ResourceNutanixClusterPCRegistrationV2Read(ctx context.Context, d *schema.R
 
 	pcExtID := d.Id()
 
-	readResp, err := conn.DomainManagerAPIInstance.GetDomainManagerById(&pcExtID)
+	getDomainManagerByIdRequest := import3.GetDomainManagerByIdRequest{
+		ExtId: &pcExtID,
+	}
+	readResp, err := conn.DomainManagerAPIInstance.GetDomainManagerById(ctx, &getDomainManagerByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching domain manager with id %s : %v", pcExtID, err)
 	}

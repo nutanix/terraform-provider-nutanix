@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authn"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/users"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -212,7 +213,11 @@ func resourceNutanixUserKeyV2Create(ctx context.Context, d *schema.ResourceData,
 		spec.AssignedTo = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.UsersAPIInstance.CreateUserKey(userExtID, spec)
+	createUserKeyRequest := import2.CreateUserKeyRequest{
+		UserExtId: userExtID,
+		Body:      spec,
+	}
+	resp, err := conn.UsersAPIInstance.CreateUserKey(ctx, &createUserKeyRequest)
 	if err != nil {
 		return diag.Errorf("error while creating User Key: %v", err)
 	}
@@ -230,7 +235,11 @@ func resourceNutanixUserKeyV2Read(ctx context.Context, d *schema.ResourceData, m
 		userExtID = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.UsersAPIInstance.GetUserKeyById(userExtID, utils.StringPtr(d.Id()))
+	getUserKeyByIdRequest := import2.GetUserKeyByIdRequest{
+		UserExtId: userExtID,
+		ExtId:     utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.UsersAPIInstance.GetUserKeyById(ctx, &getUserKeyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching the user key: %v", err)
 	}
@@ -338,7 +347,11 @@ func resourceNutanixUserKeyV2Delete(ctx context.Context, d *schema.ResourceData,
 		userExtID = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.UsersAPIInstance.GetUserKeyById(userExtID, utils.StringPtr(d.Id()))
+	getUserKeyByIdRequest := import2.GetUserKeyByIdRequest{
+		UserExtId: userExtID,
+		ExtId:     utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.UsersAPIInstance.GetUserKeyById(ctx, &getUserKeyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching the user key: %v", err)
 	}
@@ -348,7 +361,11 @@ func resourceNutanixUserKeyV2Delete(ctx context.Context, d *schema.ResourceData,
 	etagValue := conn.UsersAPIInstance.ApiClient.GetEtag(resp)
 	args["If-Match"] = utils.StringPtr(etagValue)
 
-	_, delErr := conn.UsersAPIInstance.DeleteUserKeyById(userExtID, utils.StringPtr(d.Id()), args)
+	deleteUserKeyByIdRequest := import2.DeleteUserKeyByIdRequest{
+		UserExtId: userExtID,
+		ExtId:     utils.StringPtr(d.Id()),
+	}
+	_, delErr := conn.UsersAPIInstance.DeleteUserKeyById(ctx, &deleteUserKeyByIdRequest, args)
 	if delErr != nil {
 		return diag.Errorf("error while deleting the user key: %v", delErr)
 	}

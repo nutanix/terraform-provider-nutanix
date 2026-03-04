@@ -11,6 +11,8 @@ import (
 	volumesPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/prism/v4/config"
 	volumesClient "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/config"
 	taskPoll "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/request/volumegroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -64,8 +66,11 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Create(ctx context.Context, d *
 	if index, ok := d.GetOk("index"); ok {
 		body.Index = utils.IntPtr(index.(int))
 	}
-
-	resp, err := conn.VolumeAPIInstance.AttachVm(utils.StringPtr(volumeGroupExtID.(string)), &body)
+	attachVmRequest := import1.AttachVmRequest{
+		ExtId: utils.StringPtr(volumeGroupExtID.(string)),
+		Body:             &body,
+	}
+	resp, err := conn.VolumeAPIInstance.AttachVm(ctx, &attachVmRequest)
 	if err != nil {
 		return diag.Errorf("error while Attaching Vm to Volume Group : %v", err)
 	}
@@ -87,8 +92,10 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Create(ctx context.Context, d *
 	}
 
 	// Get UUID from TASK API
-
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import2.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while Attaching Vm to Volume Group: %v", err)
 	}
@@ -130,7 +137,11 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Delete(ctx context.Context, d *
 		body.Index = utils.IntPtr(index.(int))
 	}
 
-	resp, err := conn.VolumeAPIInstance.DetachVm(utils.StringPtr(volumeGroupExtID.(string)), &body)
+	detachVmRequest := import1.DetachVmRequest{
+		ExtId: utils.StringPtr(volumeGroupExtID.(string)),
+		Body:  &body,
+	}
+	resp, err := conn.VolumeAPIInstance.DetachVm(ctx, &detachVmRequest)
 	if err != nil {
 		return diag.Errorf("error while Detaching Vm to Volume Group : %v", err)
 	}
@@ -152,7 +163,10 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Delete(ctx context.Context, d *
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import2.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while Detaching Vm to Volume Group: %v", err)
 	}

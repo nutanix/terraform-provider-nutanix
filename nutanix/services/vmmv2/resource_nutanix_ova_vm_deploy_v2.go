@@ -10,6 +10,7 @@ import (
 	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/config"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/content"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/ovas"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -267,7 +268,11 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 		}
 	}
 
-	resp, err := conn.OvasAPIInstance.DeployOva(&extID, vmDeploymentSpec)
+	deployOvaRequest := import4.DeployOvaRequest{
+		ExtId: &extID,
+		Body:  vmDeploymentSpec,
+	}
+	resp, err := conn.OvasAPIInstance.DeployOva(ctx, &deployOvaRequest)
 	if err != nil {
 		return diag.FromErr(err)
 	}

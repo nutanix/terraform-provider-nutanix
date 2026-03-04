@@ -15,6 +15,8 @@ import (
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/content"
 	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/ovas"
+	import6 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -346,7 +348,10 @@ func ResourceNutanixOvaV2Create(ctx context.Context, d *schema.ResourceData, met
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] OVA body: %s", string(aJSON))
 
-	resp, err := conn.OvasAPIInstance.CreateOva(body)
+	createOvaRequest := import5.CreateOvaRequest{
+		Body: body,
+	}
+	resp, err := conn.OvasAPIInstance.CreateOva(ctx, &createOvaRequest)
 	if err != nil {
 		return diag.Errorf("error creating OVA: %v", err)
 	}
@@ -368,7 +373,10 @@ func ResourceNutanixOvaV2Create(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import6.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching OVA create task (%s): %v", utils.StringValue(taskUUID), err)
 	}
@@ -388,7 +396,10 @@ func ResourceNutanixOvaV2Create(ctx context.Context, d *schema.ResourceData, met
 
 func ResourceNutanixOvaV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
-	getResp, err := conn.OvasAPIInstance.GetOvaById(utils.StringPtr(d.Id()))
+	getOvaByIdRequest := import5.GetOvaByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	getResp, err := conn.OvasAPIInstance.GetOvaById(ctx, &getOvaByIdRequest)
 	if err != nil {
 		return diag.Errorf("error reading OVA (%s): %v", d.Id(), err)
 	}
@@ -463,7 +474,10 @@ func ResourceNutanixOvaV2Update(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 
-	getResp, err := conn.OvasAPIInstance.GetOvaById(utils.StringPtr(d.Id()))
+	getOvaByIdRequest := import5.GetOvaByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	getResp, err := conn.OvasAPIInstance.GetOvaById(ctx, &getOvaByIdRequest)
 	if err != nil {
 		return diag.Errorf("error reading OVA (%s): %v", d.Id(), err)
 	}

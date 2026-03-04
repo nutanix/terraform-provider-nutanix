@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/common/v1/config"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusters"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/prism/v4/config"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -876,7 +877,11 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Create Cluster Request Body: %s", string(aJSON))
 
-	resp, err := conn.ClusterEntityAPI.CreateCluster(body, dryRun)
+	createClusterRequest := import5.CreateClusterRequest{
+		Body:    body,
+		Dryrun_: dryRun,
+	}
+	resp, err := conn.ClusterEntityAPI.CreateCluster(ctx, &createClusterRequest)
 	if err != nil {
 		return diag.Errorf("error while creating clusters : %v", err)
 	}
@@ -1012,13 +1017,21 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
 	log.Printf("[DEBUG] cluster update: update payload: %s", string(aJSON))
 
-	resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(d.Id()), expand)
+	getClusterByIdRequest := import5.GetClusterByIdRequest{
+		ExtId:   utils.StringPtr(d.Id()),
+		Expand_: expand,
+	}
+	resp, err := conn.ClusterEntityAPI.GetClusterById(ctx, &getClusterByIdRequest)
 	if err != nil {
 		return diag.Errorf("error fetching cluster: %v", err)
 	}
 
 	args := getEtagHeader(resp, conn)
-	updateResp, err := conn.ClusterEntityAPI.UpdateClusterById(utils.StringPtr(d.Id()), &updateSpec, args)
+	updateClusterByIdRequest := import5.UpdateClusterByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updateSpec,
+	}
+	updateResp, err := conn.ClusterEntityAPI.UpdateClusterById(ctx, &updateClusterByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error updating cluster: %v", err)
 	}
@@ -1081,7 +1094,11 @@ func ResourceNutanixClusterV2Delete(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	readResp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(d.Id()), expand)
+	getClusterByIdRequest := import5.GetClusterByIdRequest{
+		ExtId:   utils.StringPtr(d.Id()),
+		Expand_: expand,
+	}
+	readResp, err := conn.ClusterEntityAPI.GetClusterById(ctx, &getClusterByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while reading cluster : %v", err)
 	}
@@ -1717,7 +1734,11 @@ func expandFaultToleranceState(pr interface{}) *config.FaultToleranceState {
 func handleNodeChanges(ctx context.Context, d *schema.ResourceData, meta interface{}, conn *clusters.Client, expand *string) diag.Diagnostics {
 	log.Printf("[DEBUG] Handling node changes for cluster: %s", d.Id())
 
-	resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(d.Id()), expand)
+	getClusterByIdRequest := import5.GetClusterByIdRequest{
+		ExtId:   utils.StringPtr(d.Id()),
+		Expand_: expand,
+	}
+	resp, err := conn.ClusterEntityAPI.GetClusterById(ctx, &getClusterByIdRequest)
 	if err != nil {
 		return diag.Errorf("error fetching cluster for node diff: %v", err)
 	}
@@ -2135,7 +2156,11 @@ func expandClusterWithNewNode(ctx context.Context, d *schema.ResourceData, meta 
 
 func fetchNetworkDetailsForNodes(ctx context.Context, d *schema.ResourceData, meta interface{},
 	conn clusters.Client, node config.UnconfigureNodeDetails) (diag.Diagnostics, *config.NodeNetworkingDetails) {
-	readResp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(d.Id()), nil)
+	getClusterByIdRequest := import5.GetClusterByIdRequest{
+		ExtId:   utils.StringPtr(d.Id()),
+		Expand_: nil,
+	}
+	readResp, err := conn.ClusterEntityAPI.GetClusterById(ctx, &getClusterByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while reading cluster : %v", err), nil
 	}
@@ -2307,7 +2332,11 @@ func clusterRead(d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	} else {
 		expand = nil
 	}
-	resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(d.Id()), expand)
+	getClusterByIdRequest := import5.GetClusterByIdRequest{
+		ExtId:   utils.StringPtr(d.Id()),
+		Expand_: expand,
+	}
+	resp, err := conn.ClusterEntityAPI.GetClusterById(ctx, &getClusterByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching cluster : %v: Please register the cluster to Prism Central if not.", err)
 	}
