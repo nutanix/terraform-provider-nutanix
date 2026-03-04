@@ -229,7 +229,7 @@ func DatasourceNutanixDirectoryServiceV2Read(ctx context.Context, d *schema.Reso
 	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("share_with_all_projects", getResp.ShareWithAllProjects); err != nil {
+	if err := d.Set("share_with_all_projects", getResp.SharedWithAllProjects); err != nil {
 		return diag.FromErr(err)
 	}
 

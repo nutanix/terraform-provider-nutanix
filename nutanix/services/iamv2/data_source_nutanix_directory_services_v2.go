@@ -285,7 +285,7 @@ func flattenDirectoryServicesEntities(pr []import1.DirectoryService) []interface
 			}
 			ds["project_ext_id"] = v.ProjectExtId
 			ds["shared_with_projects"] = v.SharedWithProjects
-			ds["share_with_all_projects"] = v.ShareWithAllProjects
+			ds["share_with_all_projects"] = v.SharedWithAllProjects
 
 			dsList[k] = ds
 		}
