@@ -10,7 +10,7 @@ import (
 )
 
 type Client struct {
-	ObjectStoresAPIInstance *api.ObjectStoresApi
+	ObjectStoresAPIInstance *api.ObjectStoresServiceApi
 }
 
 func NewObjectStoresClient(credentials client.Credentials) (*Client, error) {
@@ -35,7 +35,7 @@ func NewObjectStoresClient(credentials client.Credentials) (*Client, error) {
 	}
 
 	f := &Client{
-		ObjectStoresAPIInstance: api.NewObjectStoresApi(baseClient),
+		ObjectStoresAPIInstance: api.NewObjectStoresServiceApi(baseClient),
 	}
 
 	return f, nil

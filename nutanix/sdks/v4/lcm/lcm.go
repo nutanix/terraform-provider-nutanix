@@ -10,12 +10,12 @@ import (
 )
 
 type Client struct {
-	LcmConfigAPIInstance    *api.ConfigApi
-	LcmInventoryAPIInstance *api.InventoryApi
-	LcmPreChecksAPIInstance *api.PrechecksApi
-	LcmStatusAPIInstance    *api.StatusApi
-	LcmEntitiesAPIInstance  *api.EntitiesApi
-	LcmUpgradeAPIInstance   *api.UpgradesApi
+	LcmConfigAPIInstance    *api.ConfigServiceApi
+	LcmInventoryAPIInstance *api.InventoryServiceApi
+	LcmPreChecksAPIInstance *api.PrechecksServiceApi
+	LcmStatusAPIInstance    *api.StatusServiceApi
+	LcmEntitiesAPIInstance  *api.EntitiesServiceApi
+	LcmUpgradeAPIInstance   *api.UpgradesServiceApi
 }
 
 func NewLcmClient(credentials client.Credentials) (*Client, error) {
@@ -40,12 +40,12 @@ func NewLcmClient(credentials client.Credentials) (*Client, error) {
 	}
 
 	f := &Client{
-		LcmInventoryAPIInstance: api.NewInventoryApi(baseClient),
-		LcmConfigAPIInstance:    api.NewConfigApi(baseClient),
-		LcmPreChecksAPIInstance: api.NewPrechecksApi(baseClient),
-		LcmStatusAPIInstance:    api.NewStatusApi(baseClient),
-		LcmEntitiesAPIInstance:  api.NewEntitiesApi(baseClient),
-		LcmUpgradeAPIInstance:   api.NewUpgradesApi(baseClient),
+		LcmInventoryAPIInstance: api.NewInventoryServiceApi(baseClient),
+		LcmConfigAPIInstance:    api.NewConfigServiceApi(baseClient),
+		LcmPreChecksAPIInstance: api.NewPrechecksServiceApi(baseClient),
+		LcmStatusAPIInstance:    api.NewStatusServiceApi(baseClient),
+		LcmEntitiesAPIInstance:  api.NewEntitiesServiceApi(baseClient),
+		LcmUpgradeAPIInstance:   api.NewUpgradesServiceApi(baseClient),
 	}
 	return f, nil
 }
