@@ -8,9 +8,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	commonCfg "github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/models/common/v1/config"
-	"github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/models/common/v1/response"
-	"github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/models/security/v4/config"
+	commonCfg "github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/common/v1/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/common/v1/response"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/security/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 

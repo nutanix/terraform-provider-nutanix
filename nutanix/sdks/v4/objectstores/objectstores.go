@@ -3,8 +3,8 @@ package objectstores
 import (
 	"strconv"
 
-	"github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4/api"
-	object "github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4/client"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/api"
+	object "github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/sdkconfig"
 )

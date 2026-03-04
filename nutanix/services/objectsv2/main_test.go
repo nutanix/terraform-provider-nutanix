@@ -7,10 +7,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4/models/objects/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/models/objects/v4/config"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
-	import1 "github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4/models/common/v1/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/models/common/v1/config"
 )
 
 type TestConfig struct {
