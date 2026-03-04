@@ -13,7 +13,7 @@ Run the prechecks, create and start the deployment of an Object store on Prism C
 > ⚠️ **Warning:** Before deleting the Object Store, make sure to delete all buckets inside it manually.
 > Currently, the Terraform provider does not support the Delete Bucket API.
 
-> ⚠️ **Warning:** The Object Store **update** operation does **not** allow modification of any configuration parameters (including `name` and `description`). Apart from retrying a failed deployment, no other changes can be performed through update.
+> ⚠️ **Warning:** The Object Store **update** operation does **not** allow modification of any configuration parameters (including `name` and `description`). As per the API design, the update operation is supported exclusively for retrying a failed deployment. No other changes can be performed through update.
 > It should be used when the Object Store is in the `OBJECT_STORE_DEPLOYMENT_FAILED` state.
 > Triggering an update in this state will attempt to resume the deployment process.
 
