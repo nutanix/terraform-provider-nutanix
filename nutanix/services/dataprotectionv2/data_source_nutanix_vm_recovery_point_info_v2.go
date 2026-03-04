@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/request/recoverypoints"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -91,8 +92,11 @@ func DatasourceNutanixVMRecoveryPointInfoV2Read(ctx context.Context, d *schema.R
 
 	recoveryPointExtID := d.Get("recovery_point_ext_id").(string)
 	extID := d.Get("ext_id").(string)
-
-	resp, err := conn.RecoveryPoint.GetVmRecoveryPointById(&recoveryPointExtID, &extID)
+	getVmRecoveryPointByIdRequest := import1.GetVmRecoveryPointByIdRequest{
+		RecoveryPointExtId: utils.StringPtr(recoveryPointExtID),
+		ExtId:              utils.StringPtr(extID),
+	}
+	resp, err := conn.RecoveryPoint.GetVmRecoveryPointById(ctx, &getVmRecoveryPointByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching vm recovery point: %v", err)
 	}

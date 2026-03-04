@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	commonConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/common/v1/config"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/domainmanager"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -54,7 +55,10 @@ func DatasourceNutanixPcV2Read(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.Client).PrismAPI
 
 	pcExtID := d.Get("ext_id").(string)
-	resp, err := conn.DomainManagerAPIInstance.GetDomainManagerById(utils.StringPtr(pcExtID))
+	getDomainManagerByIdRequest := import1.GetDomainManagerByIdRequest{
+		ExtId: utils.StringPtr(pcExtID),
+	}
+	resp, err := conn.DomainManagerAPIInstance.GetDomainManagerById(ctx, &getDomainManagerByIdRequest)
 
 	if err != nil {
 		return diag.Errorf("error while fetching Domain Manager Configuration Detail: %s", err)

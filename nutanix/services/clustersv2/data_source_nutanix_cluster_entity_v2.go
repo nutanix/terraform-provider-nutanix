@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/common/v1/config"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusters"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -542,7 +543,11 @@ func DatasourceNutanixClusterEntityV2Read(ctx context.Context, d *schema.Resourc
 	} else {
 		expand = nil
 	}
-	resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(extID.(string)), expand)
+	getClusterByIdRequest := import5.GetClusterByIdRequest{
+		ExtId:   utils.StringPtr(extID.(string)),
+		Expand_: expand,
+	}
+	resp, err := conn.ClusterEntityAPI.GetClusterById(ctx, &getClusterByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching cluster entity : %v", err)
 	}

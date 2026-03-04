@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/content"
+	import6 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/images"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -189,8 +190,10 @@ func DatasourceNutanixImageV4Read(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.Client).VmmAPI
 
 	extID := d.Get("ext_id")
-
-	resp, err := conn.ImagesAPIInstance.GetImageById(utils.StringPtr(extID.(string)))
+	getImageByIdRequest := import6.GetImageByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.ImagesAPIInstance.GetImageById(ctx, &getImageByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching images : %v", err)
 	}

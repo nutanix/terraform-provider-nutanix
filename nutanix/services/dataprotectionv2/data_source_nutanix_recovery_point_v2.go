@@ -11,6 +11,7 @@ import (
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/common/v1/response"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/common"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/request/recoverypoints"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -251,8 +252,10 @@ func DatasourceNutanixRecoveryPointV2Read(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.Client).DataProtectionAPI
 
 	recoveryPointExtID := d.Get("ext_id").(string)
-
-	resp, err := conn.RecoveryPoint.GetRecoveryPointById(&recoveryPointExtID)
+	getRecoveryPointByIdRequest := import1.GetRecoveryPointByIdRequest{
+		ExtId: utils.StringPtr(recoveryPointExtID),
+	}
+	resp, err := conn.RecoveryPoint.GetRecoveryPointById(ctx, &getRecoveryPointByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching recovery point: %v", err)
 	}

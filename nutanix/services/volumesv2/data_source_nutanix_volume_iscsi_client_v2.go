@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	volumesClient "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/request/iscsiclients"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -119,9 +120,11 @@ func DatasourceNutanixVolumeIscsiClientV2Read(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.Client).VolumeAPI
 
 	extID := d.Get("ext_id")
-
+	getIscsiClientByIdRequest := import1.GetIscsiClientByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
 	// get the volume group iscsi clients
-	resp, err := conn.IscsiClientAPIInstance.GetIscsiClientById(utils.StringPtr(extID.(string)))
+	resp, err := conn.IscsiClientAPIInstance.GetIscsiClientById(ctx, &getIscsiClientByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Iscsi Client : %v", err)
 	}

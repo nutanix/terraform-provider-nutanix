@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/request/protectedresources"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -67,8 +68,10 @@ func DatasourceNutanixGetProtectedResourceV2Create(ctx context.Context, d *schem
 	conn := meta.(*conns.Client).DataProtectionAPI
 
 	extID := d.Get("ext_id").(string)
-
-	resp, err := conn.ProtectedResource.GetProtectedResourceById(utils.StringPtr(extID))
+	getProtectedResourceByIdRequest := import1.GetProtectedResourceByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	resp, err := conn.ProtectedResource.GetProtectedResourceById(ctx, &getProtectedResourceByIdRequest)
 	if err != nil {
 		return diag.Errorf("Error while fetching protected resource: %s", err)
 	}

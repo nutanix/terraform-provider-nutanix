@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/common/v1/response"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/categories"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -136,7 +137,11 @@ func DatasourceNutanixCategoryV2Read(ctx context.Context, d *schema.ResourceData
 	} else {
 		expand = nil
 	}
-	resp, err := conn.CategoriesAPIInstance.GetCategoryById(utils.StringPtr(extID.(string)), expand)
+	getCategoryByIdRequest := import3.GetCategoryByIdRequest{
+		ExtId:   utils.StringPtr(extID.(string)),
+		Expand_: expand,
+	}
+	resp, err := conn.CategoriesAPIInstance.GetCategoryById(ctx, &getCategoryByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching category : %v", err)
 	}

@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/routetables"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -61,7 +62,10 @@ func DatasourceNutanixRouteTableV2Read(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	extID := d.Get("ext_id")
-	resp, err := conn.RoutesTable.GetRouteTableById(utils.StringPtr(extID.(string)))
+	getRouteTableByIdRequest := import2.GetRouteTableByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.RoutesTable.GetRouteTableById(ctx, &getRouteTableByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching route table : %v", err)
 	}

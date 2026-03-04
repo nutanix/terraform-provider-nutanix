@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authn"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/usergroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -60,7 +61,10 @@ func DatasourceNutanixUserGroupV4Read(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.Client).IamAPI
 
 	extID := d.Get("ext_id")
-	resp, err := conn.UserGroupsAPIInstance.GetUserGroupById(utils.StringPtr(extID.(string)))
+	getUserGroupByIdRequest := import2.GetUserGroupByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.UserGroupsAPIInstance.GetUserGroupById(ctx, &getUserGroupByIdRequest)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)

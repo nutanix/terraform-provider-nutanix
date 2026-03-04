@@ -8,6 +8,7 @@ import (
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/common/v1/response"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/config"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/dataprotection/v4/common"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/request/protectionpolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -70,8 +71,10 @@ func DatasourceNutanixProtectionPolicyV2Read(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.Client).DataPoliciesAPI
 
 	extID := d.Get("ext_id")
-
-	resp, err := conn.ProtectionPolicies.GetProtectionPolicyById(utils.StringPtr(extID.(string)))
+	getProtectionPolicyByIdRequest := import1.GetProtectionPolicyByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.ProtectionPolicies.GetProtectionPolicyById(ctx, &getProtectionPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Protection Policy: %s", err)
 	}

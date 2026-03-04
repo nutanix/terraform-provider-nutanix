@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	lcmconfigimport1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/lifecycle/v4/resources"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/lifecycle/v4/request/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -92,7 +93,10 @@ func DatasourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceD
 	} else {
 		clusterID = nil
 	}
-	resp, err := conn.LcmConfigAPIInstance.GetConfig(clusterID)
+	getConfigRequest := import1.GetConfigRequest{
+		XClusterId: clusterID,
+	}
+	resp, err := conn.LcmConfigAPIInstance.GetConfig(ctx, &getConfigRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching the Lcm config : %v", err)
 	}

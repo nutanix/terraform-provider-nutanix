@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	config "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/common/v1/config"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/floatingips"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -170,7 +171,10 @@ func DatasourceNutanixFloatingIPV2Read(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	extID := d.Get("ext_id")
-	resp, err := conn.FloatingIPAPIInstance.GetFloatingIpById(utils.StringPtr(extID.(string)))
+	getFloatingIpByIdRequest := import2.GetFloatingIpByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.FloatingIPAPIInstance.GetFloatingIpById(ctx, &getFloatingIpByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching subnets : %v", err)
 	}

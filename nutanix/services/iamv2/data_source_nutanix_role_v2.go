@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	iamConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authz"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/roles"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -127,8 +128,10 @@ func DatasourceNutanixRoleV2Read(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.Client).IamAPI
 
 	roleExtID := d.Get("ext_id").(string)
-
-	resp, err := conn.RolesAPIInstance.GetRoleById(&roleExtID)
+	getRoleByIdRequest := import1.GetRoleByIdRequest{
+		ExtId: utils.StringPtr(roleExtID),
+	}
+	resp, err := conn.RolesAPIInstance.GetRoleById(ctx, &getRoleByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching role: %v", err)
 	}

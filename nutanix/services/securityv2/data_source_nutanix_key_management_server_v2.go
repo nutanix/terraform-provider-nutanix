@@ -11,6 +11,7 @@ import (
 	commonCfg "github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/common/v1/config"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/common/v1/response"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/security/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/security/v4/request/keymanagementservers"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 
@@ -130,8 +131,10 @@ func DatasourceNutanixKeyManagementServerV2Read(ctx context.Context, d *schema.R
 	conn := meta.(*conns.Client).SecurityAPI
 
 	extID := d.Get("ext_id").(string)
-
-	resp, err := conn.KeyManagementServersAPIInstance.GetKeyManagementServerById(utils.StringPtr(extID))
+	getKeyManagementServerByIdRequest := import1.GetKeyManagementServerByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	resp, err := conn.KeyManagementServersAPIInstance.GetKeyManagementServerById(ctx, &getKeyManagementServerByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching key management server : %v", err)
 	}

@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/vpcs"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -197,7 +198,10 @@ func dataSourceNutanixVPCv2Read(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	extID := d.Get("ext_id")
-	resp, err := conn.VpcAPIInstance.GetVpcById(utils.StringPtr(extID.(string)))
+	getVpcByIdRequest := import2.GetVpcByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.VpcAPIInstance.GetVpcById(ctx, &getVpcByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching vpc : %v", err)
 	}

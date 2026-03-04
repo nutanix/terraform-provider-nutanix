@@ -8,6 +8,7 @@ import (
 	config "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/common/v1/config"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/common/v1/response"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/subnets"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -401,7 +402,10 @@ func dataSourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	extID := d.Get("ext_id")
-	resp, err := conn.SubnetAPIInstance.GetSubnetById(utils.StringPtr(extID.(string)))
+	getSubnetByIdRequest := import3.GetSubnetByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.SubnetAPIInstance.GetSubnetById(ctx, &getSubnetByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching subnets : %v", err)
 	}

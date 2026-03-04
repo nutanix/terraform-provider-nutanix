@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	vmmAhvConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/vm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -72,7 +73,10 @@ func DatasourceNutanixNGTConfigurationV4Read(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.Client).VmmAPI
 
 	extID := d.Get("ext_id")
-	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID.(string)))
+	getGuestToolsByIdRequest := import1.GetGuestToolsByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.VMAPIInstance.GetGuestToolsById(ctx, &getGuestToolsByIdRequest)
 	log.Printf("[DEBUG] GetGuestToolsById : %v", resp)
 	if err != nil {
 		return diag.Errorf("error while fetching Gest Tool : %v", err)

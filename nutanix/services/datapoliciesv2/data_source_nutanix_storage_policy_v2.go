@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/request/storagepolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -92,7 +93,10 @@ func DataSourceNutanixStoragePolicyV2() *schema.Resource {
 
 func dataSourceNutanixStoragePolicyV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataPoliciesAPI
-	resp, err := conn.StoragePolicies.GetStoragePolicyById(utils.StringPtr(d.Get("ext_id").(string)))
+	getStoragePolicyByIdRequest := import2.GetStoragePolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Get("ext_id").(string)),
+	}
+	resp, err := conn.StoragePolicies.GetStoragePolicyById(ctx, &getStoragePolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while reading Storage Policy: %v", err)
 	}

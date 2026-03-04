@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	volumesClient "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/request/volumegroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -134,8 +135,11 @@ func DatasourceNutanixVolumeDiskV2Read(ctx context.Context, d *schema.ResourceDa
 
 	volumeGroupExtID := d.Get("volume_group_ext_id")
 	volumeDiskExtID := d.Get("ext_id")
-
-	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(utils.StringPtr(volumeGroupExtID.(string)), utils.StringPtr(volumeDiskExtID.(string)))
+	getVolumeDiskByIdRequest := import1.GetVolumeDiskByIdRequest{
+		VolumeGroupExtId: utils.StringPtr(volumeGroupExtID.(string)),
+		ExtId:            utils.StringPtr(volumeDiskExtID.(string)),
+	}
+	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(ctx, &getVolumeDiskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching volume Disk : %v", err)
 	}

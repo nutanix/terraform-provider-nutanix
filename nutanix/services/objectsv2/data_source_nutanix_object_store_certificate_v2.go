@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/models/objects/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/models/objects/v4/request/objectstores"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -80,8 +81,11 @@ func DatasourceNutanixObjectStoreCertificateV2Read(ctx context.Context, d *schem
 
 	objectStoreExtID := d.Get("object_store_ext_id").(string)
 	certificateExtID := d.Get("ext_id").(string)
-
-	resp, err := conn.ObjectStoresAPIInstance.GetCertificateById(utils.StringPtr(objectStoreExtID), utils.StringPtr(certificateExtID))
+	getCertificateByIdRequest := import1.GetCertificateByIdRequest{
+		ObjectStoreExtId: utils.StringPtr(objectStoreExtID),
+		ExtId:            utils.StringPtr(certificateExtID),
+	}
+	resp, err := conn.ObjectStoresAPIInstance.GetCertificateById(ctx, &getCertificateByIdRequest)
 	if err != nil {
 		return diag.Errorf("Error reading object store certificate : %s", err)
 	}

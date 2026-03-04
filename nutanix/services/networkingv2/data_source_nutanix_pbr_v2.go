@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/routingpolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -341,7 +342,10 @@ func DatasourceNutanixPbrV2Read(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	extID := d.Get("ext_id")
-	resp, err := conn.RoutingPolicy.GetRoutingPolicyById(utils.StringPtr(extID.(string)))
+	getRoutingPolicyByIdRequest := import2.GetRoutingPolicyByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.RoutingPolicy.GetRoutingPolicyById(ctx, &getRoutingPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching routing policy : %v", err)
 	}

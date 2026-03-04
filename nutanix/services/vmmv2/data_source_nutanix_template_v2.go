@@ -10,6 +10,7 @@ import (
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/iam/v4/authn"
 	import6 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/config"
 	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/content"
+	import7 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/templates"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -121,8 +122,10 @@ func DatasourceNutanixTemplateV2Read(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.Client).VmmAPI
 
 	extID := d.Get("ext_id")
-
-	resp, err := conn.TemplatesAPIInstance.GetTemplateById(utils.StringPtr(extID.(string)))
+	getTemplateByIdRequest := import7.GetTemplateByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.TemplatesAPIInstance.GetTemplateById(ctx, &getTemplateByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching template : %v", err)
 	}

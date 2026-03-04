@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/common/v1/config"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/common/v1/response"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/request/entitygroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -56,8 +57,10 @@ func DatasourceNutanixEntityGroupV2Read(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.Client).MicroSegAPI
 
 	extID := d.Get("ext_id")
-
-	resp, err := conn.EntityGroupsAPIInstance.GetEntityGroupById(utils.StringPtr(extID.(string)))
+	getEntityGroupByIdRequest := import3.GetEntityGroupByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.EntityGroupsAPIInstance.GetEntityGroupById(ctx, &getEntityGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Entity Group: %s", err)
 	}

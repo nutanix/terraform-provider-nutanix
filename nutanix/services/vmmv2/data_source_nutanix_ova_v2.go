@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/content"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/ovas"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -351,7 +352,10 @@ func datasourceNutanixOvaV2Read(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.Client).VmmAPI
 
 	extID := d.Get("ext_id").(string)
-	resp, err := conn.OvasAPIInstance.GetOvaById(utils.StringPtr(extID))
+	getOvaByIdRequest := import2.GetOvaByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	resp, err := conn.OvasAPIInstance.GetOvaById(ctx, &getOvaByIdRequest)
 	if err != nil {
 		return diag.Errorf("error reading OVA: %v", err)
 	}

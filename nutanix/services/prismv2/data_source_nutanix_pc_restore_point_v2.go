@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/management"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/domainmanagerbackups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -88,11 +89,15 @@ func DatasourceNutanixFetchRestorePointV2() *schema.Resource {
 func DatasourceNutanixRestorePointV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).PrismAPI
 
-	restoreSourceExtID := utils.StringPtr(d.Get("restore_source_ext_id").(string))
-	restorableDomainManagerExtID := utils.StringPtr(d.Get("restorable_domain_manager_ext_id").(string))
-	extID := utils.StringPtr(d.Get("ext_id").(string))
-
-	resp, err := conn.DomainManagerBackupsAPIInstance.GetRestorePointById(restoreSourceExtID, restorableDomainManagerExtID, extID)
+	restoreSourceExtID := d.Get("restore_source_ext_id").(string)
+	restorableDomainManagerExtID := d.Get("restorable_domain_manager_ext_id").(string)
+	extID := d.Get("ext_id").(string)
+	getRestorePointByIdRequest := import1.GetRestorePointByIdRequest{
+		RestoreSourceExtId:         utils.StringPtr(restoreSourceExtID),
+		RestorableDomainManagerExtId: utils.StringPtr(restorableDomainManagerExtID),
+		ExtId:                       utils.StringPtr(extID),
+	}
+	resp, err := conn.DomainManagerBackupsAPIInstance.GetRestorePointById(ctx, &getRestorePointByIdRequest)
 
 	if err != nil {
 		return diag.Errorf("error while fetching Domain Manager Restore Point Detail: %s", err)

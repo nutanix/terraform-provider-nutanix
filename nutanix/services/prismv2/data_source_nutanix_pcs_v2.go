@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/domainmanager"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -36,8 +37,10 @@ func DatasourceNutanixListPcsV2Read(ctx context.Context, d *schema.ResourceData,
 	} else {
 		selects = nil
 	}
-
-	resp, err := conn.DomainManagerAPIInstance.ListDomainManagers(selects)
+	listDomainManagersRequest := import1.ListDomainManagersRequest{
+		Select_: selects,
+	}
+	resp, err := conn.DomainManagerAPIInstance.ListDomainManagers(ctx, &listDomainManagersRequest)
 	if err != nil {
 		return diag.Errorf("Error while Listing Domain Managers configurations Details: %v", err)
 	}
