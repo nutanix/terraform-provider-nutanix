@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/management"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/domainmanagerbackups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -59,39 +60,31 @@ func DatasourceNutanixFetchRestorePointsV2() *schema.Resource {
 func DatasourceNutanixRestorePointsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).PrismAPI
 
-	restoreSourceExtID := utils.StringPtr(d.Get("restore_source_ext_id").(string))
-	restorableDomainManagerExtID := utils.StringPtr(d.Get("restorable_domain_manager_ext_id").(string))
+	restoreSourceExtID := d.Get("restore_source_ext_id").(string)
+	restorableDomainManagerExtID := d.Get("restorable_domain_manager_ext_id").(string)
 
-	var selects, orderBy, filter *string
-	var page, limit *int
-
-	if selectf, ok := d.GetOk("select"); ok {
-		selects = utils.StringPtr(selectf.(string))
-	} else {
-		selects = nil
-	}
-	if orderByf, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(orderByf.(string))
-	} else {
-		orderBy = nil
-	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
-	}
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
-	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
+	listRestorePointsRequest := import1.ListRestorePointsRequest{
+		RestoreSourceExtId:            utils.StringPtr(restoreSourceExtID),
+		RestorableDomainManagerExtId:   utils.StringPtr(restorableDomainManagerExtID),
 	}
 
-	resp, err := conn.DomainManagerBackupsAPIInstance.ListRestorePoints(restoreSourceExtID, restorableDomainManagerExtID, page, limit, filter, orderBy, selects)
+	if v, ok := d.GetOk("page"); ok {
+		listRestorePointsRequest.Page_ = utils.IntPtr(v.(int))
+	}
+	if v, ok := d.GetOk("limit"); ok {
+		listRestorePointsRequest.Limit_ = utils.IntPtr(v.(int))
+	}
+	if v, ok := d.GetOk("filter"); ok {
+		listRestorePointsRequest.Filter_ = utils.StringPtr(v.(string))
+	}
+	if v, ok := d.GetOk("order_by"); ok {
+		listRestorePointsRequest.Orderby_ = utils.StringPtr(v.(string))
+	}
+	if v, ok := d.GetOk("select"); ok {
+		listRestorePointsRequest.Select_ = utils.StringPtr(v.(string))
+	}
+
+	resp, err := conn.DomainManagerBackupsAPIInstance.ListRestorePoints(ctx, &listRestorePointsRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Domain Manager Restore Point Detail: %s", err)
 	}

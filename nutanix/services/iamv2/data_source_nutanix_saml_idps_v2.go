@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authn"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/samlidentityproviders"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -150,37 +151,24 @@ func DatasourceNutanixSamlIDPsV2() *schema.Resource {
 func DatasourceNutanixSamlIDPsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	// initialize query params
-	var filter, orderBy, selects *string
-	var page, limit *int
-
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
+	listSamlIdentityProvidersRequest := import2.ListSamlIdentityProvidersRequest{}
+	if v, ok := d.GetOk("page"); ok {
+		listSamlIdentityProvidersRequest.Page_ = utils.IntPtr(v.(int))
 	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
+	if v, ok := d.GetOk("limit"); ok {
+		listSamlIdentityProvidersRequest.Limit_ = utils.IntPtr(v.(int))
 	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
+	if v, ok := d.GetOk("filter"); ok {
+		listSamlIdentityProvidersRequest.Filter_ = utils.StringPtr(v.(string))
 	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
+	if v, ok := d.GetOk("order_by"); ok {
+		listSamlIdentityProvidersRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
-	if selectf, ok := d.GetOk("select"); ok {
-		selects = utils.StringPtr(selectf.(string))
-	} else {
-		selects = nil
+	if v, ok := d.GetOk("select"); ok {
+		listSamlIdentityProvidersRequest.Select_ = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.SamlIdentityAPIInstance.ListSamlIdentityProviders(page, limit, filter, orderBy, selects)
+	resp, err := conn.SamlIdentityAPIInstance.ListSamlIdentityProviders(ctx, &listSamlIdentityProvidersRequest)
 	if err != nil {
 		fmt.Println(err)
 		var errordata map[string]interface{}
@@ -266,7 +254,7 @@ func flattenIdentityProvidersEntities(pr []import1.SamlIdentityProvider) []inter
 			}
 			idp["project_ext_id"] = v.ProjectExtId
 			idp["shared_with_projects"] = v.SharedWithProjects
-			idp["share_with_all_projects"] = v.ShareWithAllProjects
+			idp["share_with_all_projects"] = v.SharedWithAllProjects
 			idps[k] = idp
 		}
 		return idps

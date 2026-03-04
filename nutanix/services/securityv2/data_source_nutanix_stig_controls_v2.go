@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/security/v4/report"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/security/v4/request/stigs"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -109,37 +110,25 @@ func DatasourceNutanixStigsControlsV2() *schema.Resource {
 func DatasourceNutanixStigsControlsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).SecurityAPI
 
-	// initialize query params
-	var filter, orderBy, selectQ *string
-	var page, limit *int
+	listStigsRequest := import1.ListStigsRequest{}
 
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
+	if v, ok := d.GetOk("page"); ok {
+		listStigsRequest.Page_ = utils.IntPtr(v.(int))
 	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
+	if v, ok := d.GetOk("limit"); ok {
+		listStigsRequest.Limit_ = utils.IntPtr(v.(int))
 	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
+	if v, ok := d.GetOk("filter"); ok {
+		listStigsRequest.Filter_ = utils.StringPtr(v.(string))
 	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
+	if v, ok := d.GetOk("order_by"); ok {
+		listStigsRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
-	if selectVal, ok := d.GetOk("select"); ok {
-		selectQ = utils.StringPtr(selectVal.(string))
-	} else {
-		selectQ = nil
+	if v, ok := d.GetOk("select"); ok {
+		listStigsRequest.Select_ = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.STIGsAPI.ListStigs(page, limit, filter, orderBy, selectQ)
+	resp, err := conn.STIGsAPI.ListStigs(ctx, &listStigsRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching STIGs : %v", err)
 	}

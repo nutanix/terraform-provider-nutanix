@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	clusterConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/passwordmanager"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/common/v1/response"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -102,33 +103,25 @@ func DataSourceNutanixPasswordManagersV2() *schema.Resource {
 
 func dataSourceNutanixPasswordManagerV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ClusterAPI
-	// initialize query params
-	var filter, orderBy, selects *string
-	var page, limit *int
+	listSystemUserPasswordsRequest := import2.ListSystemUserPasswordsRequest{}
 
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
+	if v, ok := d.GetOk("page"); ok {
+		listSystemUserPasswordsRequest.Page_ = utils.IntPtr(v.(int))
 	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
+	if v, ok := d.GetOk("limit"); ok {
+		listSystemUserPasswordsRequest.Limit_ = utils.IntPtr(v.(int))
 	}
-
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
+	if v, ok := d.GetOk("filter"); ok {
+		listSystemUserPasswordsRequest.Filter_ = utils.StringPtr(v.(string))
 	}
-
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
+	if v, ok := d.GetOk("order_by"); ok {
+		listSystemUserPasswordsRequest.Orderby_ = utils.StringPtr(v.(string))
+	}
+	if v, ok := d.GetOk("select"); ok {
+		listSystemUserPasswordsRequest.Select_ = utils.StringPtr(v.(string))
 	}
 
-	if selectf, ok := d.GetOk("select"); ok {
-		selects = utils.StringPtr(selectf.(string))
-	}
-
-	var extraParam *string = nil
-	resp, err := conn.PasswordManagerAPI.ListSystemUserPasswords(page, limit, filter, orderBy, selects, extraParam)
+	resp, err := conn.PasswordManagerAPI.ListSystemUserPasswords(ctx, &listSystemUserPasswordsRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching system user passwords: %v", err)
 	}

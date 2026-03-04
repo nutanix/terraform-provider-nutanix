@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/common/v1/config"
 	volumesClient "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/request/iscsiclients"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -157,43 +158,28 @@ func DatasourceNutanixVolumeIscsiClientsV2() *schema.Resource {
 func DatasourceNutanixVolumeIscsiClientsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
-	var filter, orderBy, expand, selects *string
-	var page, limit *int
+	listIscsiClientsRequest := import1.ListIscsiClientsRequest{}
 
-	// initialize the query parameters
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
+	if v, ok := d.GetOk("page"); ok {
+		listIscsiClientsRequest.Page_ = utils.IntPtr(v.(int))
 	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
+	if v, ok := d.GetOk("limit"); ok {
+		listIscsiClientsRequest.Limit_ = utils.IntPtr(v.(int))
 	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
+	if v, ok := d.GetOk("filter"); ok {
+		listIscsiClientsRequest.Filter_ = utils.StringPtr(v.(string))
 	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
+	if v, ok := d.GetOk("orderby"); ok {
+		listIscsiClientsRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
-	if expandf, ok := d.GetOk("expand"); ok {
-		expand = utils.StringPtr(expandf.(string))
-	} else {
-		expand = nil
+	if v, ok := d.GetOk("expand"); ok {
+		listIscsiClientsRequest.Expand_ = utils.StringPtr(v.(string))
 	}
-	if selectf, ok := d.GetOk("select"); ok {
-		selects = utils.StringPtr(selectf.(string))
-	} else {
-		selects = nil
+	if v, ok := d.GetOk("select"); ok {
+		listIscsiClientsRequest.Select_ = utils.StringPtr(v.(string))
 	}
 
-	// get the volume group iscsi clients
-	resp, err := conn.IscsiClientAPIInstance.ListIscsiClients(page, limit, filter, orderBy, expand, selects)
+	resp, err := conn.IscsiClientAPIInstance.ListIscsiClients(ctx, &listIscsiClientsRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Iscsi Clients : %v", err)
 	}

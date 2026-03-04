@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusters"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -52,42 +53,28 @@ func DatasourceNutanixHostEntitiesV2() *schema.Resource {
 func DatasourceNutanixHostEntitiesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ClusterAPI
 
-	// initialize query params
-	var filter, orderBy, apply, selectQ *string
-	var page, limit *int
+	listHostsRequest := import2.ListHostsRequest{}
 
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
+	if v, ok := d.GetOk("page"); ok {
+		listHostsRequest.Page_ = utils.IntPtr(v.(int))
 	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
+	if v, ok := d.GetOk("limit"); ok {
+		listHostsRequest.Limit_ = utils.IntPtr(v.(int))
 	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
+	if v, ok := d.GetOk("filter"); ok {
+		listHostsRequest.Filter_ = utils.StringPtr(v.(string))
 	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
+	if v, ok := d.GetOk("order_by"); ok {
+		listHostsRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
-	if applyf, ok := d.GetOk("apply"); ok {
-		apply = utils.StringPtr(applyf.(string))
-	} else {
-		apply = nil
+	if v, ok := d.GetOk("apply"); ok {
+		listHostsRequest.Apply_ = utils.StringPtr(v.(string))
 	}
-	if selectQy, ok := d.GetOk("apply"); ok {
-		selectQ = utils.StringPtr(selectQy.(string))
-	} else {
-		selectQ = nil
+	if v, ok := d.GetOk("select"); ok {
+		listHostsRequest.Select_ = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.ClusterEntityAPI.ListHosts(page, limit, filter, orderBy, apply, selectQ)
+	resp, err := conn.ClusterEntityAPI.ListHosts(ctx, &listHostsRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching host entities : %v", err)
 	}

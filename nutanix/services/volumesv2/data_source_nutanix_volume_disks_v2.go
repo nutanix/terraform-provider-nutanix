@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/common/v1/config"
 	volumesClient "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/request/volumegroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -168,40 +169,29 @@ func DatasourceNutanixVolumeDisksV2() *schema.Resource {
 func DatasourceNutanixVolumeDisksV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
-	var filter, orderBy, selects *string
-	var page, limit *int
+	volumeGroupExtID := d.Get("volume_group_ext_id").(string)
 
-	volumeGroupExtID := d.Get("volume_group_ext_id")
-
-	// initialize the query parameters
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
-	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
-	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
-	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
-	}
-	if selectf, ok := d.GetOk("select"); ok {
-		selects = utils.StringPtr(selectf.(string))
-	} else {
-		selects = nil
+	listVolumeDisksRequest := import1.ListVolumeDisksByVolumeGroupIdRequest{
+		VolumeGroupExtId: utils.StringPtr(volumeGroupExtID),
 	}
 
-	// get the volume disks response
-	resp, err := conn.VolumeAPIInstance.ListVolumeDisksByVolumeGroupId(utils.StringPtr(volumeGroupExtID.(string)), page, limit, filter, orderBy, selects)
+	if v, ok := d.GetOk("page"); ok {
+		listVolumeDisksRequest.Page_ = utils.IntPtr(v.(int))
+	}
+	if v, ok := d.GetOk("limit"); ok {
+		listVolumeDisksRequest.Limit_ = utils.IntPtr(v.(int))
+	}
+	if v, ok := d.GetOk("filter"); ok {
+		listVolumeDisksRequest.Filter_ = utils.StringPtr(v.(string))
+	}
+	if v, ok := d.GetOk("orderby"); ok {
+		listVolumeDisksRequest.Orderby_ = utils.StringPtr(v.(string))
+	}
+	if v, ok := d.GetOk("select"); ok {
+		listVolumeDisksRequest.Select_ = utils.StringPtr(v.(string))
+	}
+
+	resp, err := conn.VolumeAPIInstance.ListVolumeDisksByVolumeGroupId(ctx, &listVolumeDisksRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Disks attached to the volume group : %v", err)
 	}
