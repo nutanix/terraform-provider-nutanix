@@ -364,7 +364,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{"ALL_VLAN", "ALL_VPC", "VPC_LIST"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"ALL_VLAN", "ALL_VPC", "VPC_LIST", "GLOBAL"}, false),
 			},
 			"vpc_reference": {
 				Type:     schema.TypeList,
@@ -438,29 +438,13 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 		spec.Name = utils.StringPtr(name.(string))
 	}
 	if types, ok := d.GetOk("type"); ok {
-		const two, three, four = 2, 3, 4
-		subMap := map[string]interface{}{
-			"QUARANTINE":  two,
-			"ISOLATION":   three,
-			"APPLICATION": four,
-		}
-		pInt := subMap[types.(string)]
-		p := import1.SecurityPolicyType(pInt.(int))
-		spec.Type = &p
+		spec.Type = common.ExpandEnum[import1.SecurityPolicyType](types.(string))
 	}
 	if desc, ok := d.GetOk("description"); ok {
 		spec.Description = utils.StringPtr(desc.(string))
 	}
 	if state, ok := d.GetOk("state"); ok {
-		const two, three, four = 2, 3, 4
-		subMap := map[string]interface{}{
-			"SAVE":    two,
-			"MONITOR": three,
-			"ENFORCE": four,
-		}
-		pInt := subMap[state.(string)]
-		p := import1.SecurityPolicyState(pInt.(int))
-		spec.State = &p
+		spec.State = common.ExpandEnum[import1.SecurityPolicyState](state.(string))
 	}
 	if rules, ok := d.GetOk("rules"); ok {
 		spec.Rules = expandNetworkSecurityPolicyRule(rules.([]interface{}))
@@ -472,15 +456,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 		spec.IsHitlogEnabled = utils.BoolPtr(ishitlog.(bool))
 	}
 	if scope, ok := d.GetOk("scope"); ok {
-		const two, three, four = 2, 3, 4
-		subMap := map[string]interface{}{
-			"ALL_VLAN": two,
-			"ALL_VPC":  three,
-			"VPC_LIST": four,
-		}
-		pInt := subMap[scope.(string)]
-		p := import1.SecurityPolicyScope(pInt.(int))
-		spec.Scope = &p
+		spec.Scope = common.ExpandEnum[import1.SecurityPolicyScope](scope.(string))
 	}
 	if vpcRef, ok := d.GetOk("vpc_reference"); ok {
 		spec.VpcReferences = common.ExpandListOfString(vpcRef.([]interface{}))
@@ -554,13 +530,13 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 	if err := d.Set("name", utils.StringValue(getResp.Name)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("type", flattenSecurityPolicyType(getResp.Type)); err != nil {
+	if err := d.Set("type", common.FlattenPtrEnum(getResp.Type)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("description", utils.StringValue(getResp.Description)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("state", flattenPolicyState(getResp.State)); err != nil {
+	if err := d.Set("state", common.FlattenPtrEnum(getResp.State)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -576,7 +552,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 		// convert local operations to string slice
 		localOperationsStr := make([]string, len(localOperations))
 		for i, v := range localOperations {
-			localOperationsStr[i] = (flattenRuleType(v.Type))
+			localOperationsStr[i] = (common.FlattenPtrEnum(v.Type))
 		}
 
 		log.Printf("[DEBUG] localOperationsStr: %v", localOperationsStr)
@@ -611,7 +587,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 	if err := d.Set("is_hitlog_enabled", utils.BoolValue(getResp.IsHitlogEnabled)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("scope", flattenSecurityPolicyScope(getResp.Scope)); err != nil {
+	if err := d.Set("scope", common.FlattenPtrEnum(getResp.Scope)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("vpc_reference", utils.StringSlice(getResp.VpcReferences)); err != nil {
@@ -672,16 +648,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema
 		updatedSpec.Name = utils.StringPtr(d.Get("name").(string))
 	}
 	if d.HasChange("type") {
-		state := d.Get("type")
-		const two, three, four = 2, 3, 4
-		subMap := map[string]interface{}{
-			"QUARANTINE":  two,
-			"ISOLATION":   three,
-			"APPLICATION": four,
-		}
-		pInt := subMap[state.(string)]
-		p := import1.SecurityPolicyType(pInt.(int))
-		updatedSpec.Type = &p
+		updatedSpec.Type = common.ExpandEnum[import1.SecurityPolicyType](d.Get("type").(string))
 	}
 	if d.HasChange("description") {
 		updatedSpec.Description = utils.StringPtr(d.Get("description").(string))
@@ -690,15 +657,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema
 		updatedSpec.Rules = expandNetworkSecurityPolicyRule(d.Get("rules").([]interface{}))
 	}
 	if d.HasChange("state") {
-		const two, three, four = 2, 3, 4
-		subMap := map[string]interface{}{
-			"SAVE":    two,
-			"MONITOR": three,
-			"ENFORCE": four,
-		}
-		pInt := subMap[d.Get("state").(string)]
-		p := import1.SecurityPolicyState(pInt.(int))
-		updatedSpec.State = &p
+		updatedSpec.State = common.ExpandEnum[import1.SecurityPolicyState](d.Get("state").(string))
 	}
 	if d.HasChange("is_ipv6_traffic_allowed") {
 		updatedSpec.IsIpv6TrafficAllowed = utils.BoolPtr(d.Get("is_ipv6_traffic_allowed").(bool))
@@ -707,15 +666,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema
 		updatedSpec.IsHitlogEnabled = utils.BoolPtr(d.Get("is_hitlog_enabled").(bool))
 	}
 	if d.HasChange("scope") {
-		const two, three, four = 2, 3, 4
-		subMap := map[string]interface{}{
-			"ALL_VLAN": two,
-			"ALL_VPC":  three,
-			"VPC_LIST": four,
-		}
-		pInt := subMap[d.Get("scope").(string)]
-		p := import1.SecurityPolicyScope(pInt.(int))
-		updatedSpec.Scope = &p
+		updatedSpec.Scope = common.ExpandEnum[import1.SecurityPolicyScope](d.Get("scope").(string))
 	}
 	if d.HasChange("vpc_reference") {
 		updatedSpec.VpcReferences = common.ExpandListOfString(d.Get("vpc_reference").([]interface{}))
@@ -799,17 +750,7 @@ func expandNetworkSecurityPolicyRule(pr []interface{}) []import1.NetworkSecurity
 				net.Description = utils.StringPtr(desc.(string))
 			}
 			if ty, ok := val["type"]; ok {
-				const two, three, four, five, six = 2, 3, 4, 5, 6
-				subMap := map[string]interface{}{
-					"QUARANTINE":          two,
-					"TWO_ENV_ISOLATION":   three,
-					"APPLICATION":         four,
-					"INTRA_GROUP":         five,
-					"MULTI_ENV_ISOLATION": six,
-				}
-				pInt := subMap[ty.(string)]
-				p := import1.RuleType(pInt.(int))
-				net.Type = &p
+				net.Type = common.ExpandEnum[import1.RuleType](ty.(string))
 			}
 			if spec, ok := val["spec"]; ok {
 				net.Spec = expandOneOfNetworkSecurityPolicyRuleSpec(spec)
@@ -852,24 +793,10 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 				app.SecuredGroupCategoryReferences = common.ExpandListOfString(secGroup.([]interface{}))
 			}
 			if srcAllow, ok := appVal["src_allow_spec"]; ok && len(srcAllow.(string)) > 0 {
-				const two, three = 2, 3
-				subMap := map[string]interface{}{
-					"ALL":  two,
-					"NONE": three,
-				}
-				pInt := subMap[srcAllow.(string)]
-				p := import1.AllowType(pInt.(int))
-				app.SrcAllowSpec = &p
+				app.SrcAllowSpec = common.ExpandEnum[import1.AllowType](srcAllow.(string))
 			}
 			if denyAllow, ok := appVal["dest_allow_spec"]; ok && len(denyAllow.(string)) > 0 {
-				const two, three = 2, 3
-				subMap := map[string]interface{}{
-					"ALL":  two,
-					"NONE": three,
-				}
-				pInt := subMap[denyAllow.(string)]
-				p := import1.AllowType(pInt.(int))
-				app.DestAllowSpec = &p
+				app.DestAllowSpec = common.ExpandEnum[import1.AllowType](denyAllow.(string))
 			}
 			if srcCatRef, ok := appVal["src_category_references"]; ok && len(srcCatRef.([]interface{})) > 0 {
 				app.SrcCategoryReferences = common.ExpandListOfString(srcCatRef.([]interface{}))
@@ -921,14 +848,7 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 				intra.SecuredGroupCategoryReferences = common.ExpandListOfString(secGroup.([]interface{}))
 			}
 			if secGroupAction, ok := intraVal["secured_group_action"]; ok && len(secGroupAction.(string)) > 0 {
-				const two, three = 2, 3
-				subMap := map[string]interface{}{
-					"ALLOW": two,
-					"DENY":  three,
-				}
-				pInt := subMap[secGroupAction.(string)]
-				p := import1.IntraEntityGroupRuleAction(pInt.(int))
-				intra.SecuredGroupAction = &p
+				intra.SecuredGroupAction = common.ExpandEnum[import1.IntraEntityGroupRuleAction](secGroupAction.(string))
 			}
 			policyRules.SetValue(*intra)
 		}

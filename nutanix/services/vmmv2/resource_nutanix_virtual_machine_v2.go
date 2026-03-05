@@ -1400,37 +1400,18 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	}
 	d.SetId(utils.StringValue(uuid))
 
-	// read VM
-	getVmByIdRequest := import3.GetVmByIdRequest{
-		ExtId: utils.StringPtr(*uuid),
-	}
-	readResp, errR := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
-	if errR != nil {
-		return diag.Errorf("error while reading vm : %v", errR)
-	}
-	args := make(map[string]interface{})
-	args["If-Match"] = getEtagHeader(readResp, conn)
-
 	var PowerTaskRef import1.TaskReference
 	if powerState, ok := d.GetOk("power_state"); ok {
-		if powerState == "ON" {
-			powerOnVmRequest := import3.PowerOnVmRequest{
-				ExtId: uuid,
-			}
-			resp, err := conn.VMAPIInstance.PowerOnVm(ctx, &powerOnVmRequest, args)
-			if err != nil {
-				return diag.Errorf("error while powering on Virtual Machines : %v", err)
-			}
-			PowerTaskRef = resp.Data.GetValue().(import1.TaskReference)
-		} else if powerState == "OFF" {
-			powerOffVmRequest := import3.PowerOffVmRequest{
-				ExtId: utils.StringPtr(d.Id()),
-			}
-			resp, err := conn.VMAPIInstance.PowerOffVm(ctx, &powerOffVmRequest, args)
-			if err != nil {
-				return diag.Errorf("error while powering OFF : %v", err)
-			}
-			PowerTaskRef = resp.Data.GetValue().(import1.TaskReference)
+		switch powerState {
+		case "ON":
+			PowerTaskRef, err = powerOnVMWithRetry(ctx, conn, utils.StringPtr(d.Id()))
+		case "OFF":
+			PowerTaskRef, err = powerOffVMWithRetry(ctx, conn, utils.StringPtr(d.Id()))
+		default:
+			return diag.Errorf("invalid power state: %s", powerState)
+		}
+		if err != nil {
+			return diag.Errorf("error while powering %s Virtual Machines: %v", powerState, err)
 		}
 	}
 	powertaskUUID := PowerTaskRef.ExtId
@@ -3315,6 +3296,121 @@ func expandPolicyReference(pr interface{}) *config.PolicyReference {
 	return nil
 }
 
+// extractTaskReferenceFromResponse extracts TaskReference from API response using reflection
+func extractTaskReferenceFromResponse(resp interface{}) (import1.TaskReference, error) {
+	respValue := reflect.ValueOf(resp)
+	if respValue.Kind() == reflect.Ptr {
+		respValue = respValue.Elem()
+	}
+	dataField := respValue.FieldByName("Data")
+	if !dataField.IsValid() {
+		return import1.TaskReference{}, fmt.Errorf("unexpected response structure: Data field not found")
+	}
+	getValueMethod := dataField.MethodByName("GetValue")
+	if !getValueMethod.IsValid() {
+		return import1.TaskReference{}, fmt.Errorf("unexpected response structure: GetValue method not found")
+	}
+	result := getValueMethod.Call(nil)[0].Interface()
+	taskRef, ok := result.(import1.TaskReference)
+	if !ok {
+		return import1.TaskReference{}, fmt.Errorf("unexpected response type: expected TaskReference")
+	}
+	return taskRef, nil
+}
+
+// powerOnVMWithRetry attempts to power on a VM with retry logic
+// It fetches the VM and ETag header for each retry attempt to ensure we have the latest ETag
+func powerOnVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (import1.TaskReference, error) {
+	maxRetries := 10
+	retryDelay := 2500 * time.Millisecond // 2.5 seconds
+	var resp interface{}
+	var err error
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		// Fetch VM to get latest ETag for each retry attempt
+		readResp, errR := conn.VMAPIInstance.GetVmById(vmID)
+		if errR != nil {
+			return import1.TaskReference{}, fmt.Errorf("error while fetching vm : %v", errR)
+		}
+
+		// Build args with fresh ETag for this attempt
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(readResp, conn)
+
+		resp, err = conn.VMAPIInstance.PowerOnVm(vmID, args)
+		if err == nil {
+			break
+		}
+
+		if attempt < maxRetries {
+			log.Printf("[DEBUG] Attempt %d/%d failed to power on VM, retrying in %v: %v", attempt+1, maxRetries, retryDelay, err)
+			select {
+			case <-ctx.Done():
+				return import1.TaskReference{}, fmt.Errorf("context cancelled while powering on VM: %v", ctx.Err())
+			case <-time.After(retryDelay):
+				// Continue to next retry
+			}
+		}
+	}
+
+	if err != nil {
+		return import1.TaskReference{}, fmt.Errorf("error while powering on Virtual Machine after %d attempts: %v", maxRetries, err)
+	}
+
+	taskRef, err := extractTaskReferenceFromResponse(resp)
+	if err != nil {
+		return import1.TaskReference{}, fmt.Errorf("error extracting task reference from power on response: %v", err)
+	}
+	log.Printf("[DEBUG] PowerOn Response: TaskReference ExtId: %s", utils.StringValue(taskRef.ExtId))
+	return taskRef, nil
+}
+
+// powerOffVMWithRetry attempts to power off a VM with retry logic
+// It fetches the VM and ETag header for each retry attempt to ensure we have the latest ETag
+func powerOffVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (import1.TaskReference, error) {
+	maxRetries := 10
+	retryDelay := 2500 * time.Millisecond // 2.5 seconds
+	var resp interface{}
+	var err error
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		// Fetch VM to get latest ETag for each retry attempt
+		readResp, errR := conn.VMAPIInstance.GetVmById(vmID)
+		if errR != nil {
+			return import1.TaskReference{}, fmt.Errorf("error while fetching vm : %v", errR)
+		}
+
+		// Build args with fresh ETag for this attempt
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(readResp, conn)
+
+		resp, err = conn.VMAPIInstance.PowerOffVm(vmID, args)
+		if err == nil {
+			break
+		}
+
+		if attempt < maxRetries {
+			log.Printf("[DEBUG] Attempt %d/%d failed to power off VM, retrying in %v: %v", attempt+1, maxRetries, retryDelay, err)
+			select {
+			case <-ctx.Done():
+				return import1.TaskReference{}, fmt.Errorf("context cancelled while powering off VM: %v", ctx.Err())
+			case <-time.After(retryDelay):
+				// Continue to next retry
+			}
+		}
+	}
+
+	if err != nil {
+		return import1.TaskReference{}, fmt.Errorf("error while powering off Virtual Machine after %d attempts: %v", maxRetries, err)
+	}
+	taskRef, err := extractTaskReferenceFromResponse(resp)
+	if err != nil {
+		return import1.TaskReference{}, fmt.Errorf("error extracting task reference from power off response: %v", err)
+	}
+	log.Printf("[DEBUG] PowerOff Response: TaskReference ExtId: %s", utils.StringValue(taskRef.ExtId))
+	return taskRef, nil
+}
+
 func flattenPowerState(pr *config.PowerState) string {
 	if pr != nil {
 		const two, three, four, five = 2, 3, 4, 5
@@ -3350,20 +3446,11 @@ func callForPowerOffVM(ctx context.Context, conn *vmm.Client, d *schema.Resource
 		return nil
 	}
 
-	// Extract E-Tag Header
-	args := make(map[string]interface{})
-	args["If-Match"] = getEtagHeader(readResp, conn)
-
-	// Power off the VM
-	powerOffVmRequest := import3.PowerOffVmRequest{
-		ExtId: utils.StringPtr(d.Id()),
-	}
-	powerOffResp, err := conn.VMAPIInstance.PowerOffVm(ctx, &powerOffVmRequest, args)
+	// Power off the VM with retry logic (ETag is fetched inside the retry function)
+	TaskRef, err := powerOffVMWithRetry(ctx, conn, utils.StringPtr(d.Id()))
 	if err != nil {
-		return diag.Errorf("error while powering off Virtual Machine : %v", err)
+		return diag.Errorf("error while powering off Virtual Machine: %v", err)
 	}
-
-	TaskRef := powerOffResp.Data.GetValue().(import1.TaskReference)
 	taskUUID := TaskRef.ExtId
 
 	prismConn := meta.(*conns.Client).PrismAPI
@@ -3398,22 +3485,13 @@ func callForPowerOnVM(ctx context.Context, conn *vmm.Client, d *schema.ResourceD
 		return nil
 	}
 
-	// Extract E-Tag Header
-	args := make(map[string]interface{})
-	args["If-Match"] = getEtagHeader(readResp, conn)
-	// Power on the VM
-	powerOnVmRequest := import3.PowerOnVmRequest{
-		ExtId: utils.StringPtr(d.Id()),
-	}
-	powerOnResp, err := conn.VMAPIInstance.PowerOnVm(ctx, &powerOnVmRequest, args)
+	// Power on the VM with retry logic (ETag is fetched inside the retry function)
+	TaskRef, err := powerOnVMWithRetry(ctx, conn, utils.StringPtr(d.Id()))
 	if err != nil {
-		return diag.Errorf("error while powering on Virtual Machine : %v", err)
+		return diag.Errorf("error while powering on Virtual Machine: %v", err)
 	}
 
-	aJSON, _ := json.Marshal(powerOnResp)
-	log.Printf("[DEBUG] PowerOn Response: %s", string(aJSON))
-
-	TaskRef := powerOnResp.Data.GetValue().(import1.TaskReference)
+	log.Printf("[DEBUG] PowerOn Response: TaskReference ExtId: %s", utils.StringValue(TaskRef.ExtId))
 	taskUUID := TaskRef.ExtId
 
 	prismConn := meta.(*conns.Client).PrismAPI

@@ -98,6 +98,32 @@ func TestAccV2NutanixNetworkSecurityResource_WithMultiEnvIsolationRuleSpecRule(t
 	})
 }
 
+func TestAccV2NutanixNetworkSecurityResource_GlobalScope(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-nsp-global-%d", r)
+	desc := "test nsp with GLOBAL scope"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testNetworkSecurityConfigGlobalScope(name, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameNs, "name", name),
+					resource.TestCheckResourceAttr(resourceNameNs, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameNs, "state", "SAVE"),
+					resource.TestCheckResourceAttr(resourceNameNs, "type", "APPLICATION"),
+					resource.TestCheckResourceAttr(resourceNameNs, "scope", "GLOBAL"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.type", "APPLICATION"),
+					resource.TestCheckResourceAttrSet(resourceNameNs, "ext_id"),
+					resource.TestCheckResourceAttrSet(resourceNameNs, "links.#"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccV2NutanixNetworkSecurityResource_InvalidExtIDReference(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-nsp-%d", r)
@@ -195,6 +221,36 @@ func testNetworkSecurityConfig(name, desc string) string {
 		}
 		is_hitlog_enabled = true
 	  }
+`, name, desc)
+}
+
+func testNetworkSecurityConfigGlobalScope(name, desc string) string {
+	return fmt.Sprintf(`
+	data "nutanix_categories_v2" "test" {}
+
+	resource "nutanix_network_security_policy_v2" "test" {
+		name        = "%[1]s"
+		description = "%[2]s"
+		state       = "SAVE"
+		type        = "APPLICATION"
+		scope       = "GLOBAL"
+		rules {
+			type = "APPLICATION"
+			spec {
+				application_rule_spec {
+					secured_group_category_references = [
+						data.nutanix_categories_v2.test.categories.0.ext_id,
+						data.nutanix_categories_v2.test.categories.1.ext_id,
+					]
+					src_category_references = [
+						data.nutanix_categories_v2.test.categories.2.ext_id,
+					]
+					is_all_protocol_allowed = true
+				}
+			}
+		}
+		is_hitlog_enabled = false
+	}
 `, name, desc)
 }
 
