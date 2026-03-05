@@ -3328,7 +3328,10 @@ func powerOnVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (im
 
 	for attempt := 0; attempt < maxRetries; attempt++ {
 		// Fetch VM to get latest ETag for each retry attempt
-		readResp, errR := conn.VMAPIInstance.GetVmById(vmID)
+		getVmByIdRequest := import3.GetVmByIdRequest{
+			ExtId: vmID,
+		}
+		readResp, errR := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 		if errR != nil {
 			return import1.TaskReference{}, fmt.Errorf("error while fetching vm : %v", errR)
 		}
@@ -3337,7 +3340,10 @@ func powerOnVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (im
 		args := make(map[string]interface{})
 		args["If-Match"] = getEtagHeader(readResp, conn)
 
-		resp, err = conn.VMAPIInstance.PowerOnVm(vmID, args)
+		powerOnVmRequest := import3.PowerOnVmRequest{
+			ExtId: vmID,
+		}
+		resp, err = conn.VMAPIInstance.PowerOnVm(ctx, &powerOnVmRequest, args)
 		if err == nil {
 			break
 		}
@@ -3375,7 +3381,10 @@ func powerOffVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (i
 
 	for attempt := 0; attempt < maxRetries; attempt++ {
 		// Fetch VM to get latest ETag for each retry attempt
-		readResp, errR := conn.VMAPIInstance.GetVmById(vmID)
+		getVmByIdRequest := import3.GetVmByIdRequest{
+			ExtId: vmID,
+		}
+		readResp, errR := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 		if errR != nil {
 			return import1.TaskReference{}, fmt.Errorf("error while fetching vm : %v", errR)
 		}
@@ -3383,8 +3392,10 @@ func powerOffVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (i
 		// Build args with fresh ETag for this attempt
 		args := make(map[string]interface{})
 		args["If-Match"] = getEtagHeader(readResp, conn)
-
-		resp, err = conn.VMAPIInstance.PowerOffVm(vmID, args)
+		powerOffVmRequest := import3.PowerOffVmRequest{
+			ExtId: vmID,
+		}
+		resp, err = conn.VMAPIInstance.PowerOffVm(ctx, &powerOffVmRequest, args)
 		if err == nil {
 			break
 		}
