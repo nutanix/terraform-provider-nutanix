@@ -113,14 +113,21 @@ func ResourceNutanixVMAntiAffinityPolicyV2Create(ctx context.Context, d *schema.
 
 	// Get UUID from TASK API
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching VM Anti-affinity policy UUID : %v", err)
+		return diag.Errorf("error while fetching VM-VM Anti-Affinity policy task: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] VM-VM Anti-Affinity Policy Task Details: %s", string(aJSON))
+
+	uuid,err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeVMAntiAffinityPolicy, "VM-VM Anti-Affinity Policy")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(utils.StringValue(uuid))
+
 	return ResourceNutanixVMAntiAffinityPolicyV2Read(ctx, d, meta)
 }
 

@@ -124,14 +124,20 @@ func ResourceNutanixVMHostAffinityPolicyV2Create(ctx context.Context, d *schema.
 
 	// Get UUID from TASK API
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching VM-Host Affinity policy UUID : %v", err)
+		return diag.Errorf("error while fetching VM-Host Affinity policy task: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] VM-Host Affinity Policy Task Details: %s", string(aJSON))
+
+	uuid,err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeVMHostAffinityPolicy, "VM-Host Affinity Policy")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(utils.StringValue(uuid))
 	return ResourceNutanixVMHostAffinityPolicyV2Read(ctx, d, meta)
 }
 
