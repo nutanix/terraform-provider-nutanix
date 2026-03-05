@@ -19,6 +19,7 @@ import (
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/common/v1/config"
 	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusters"
+	import7 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusterprofiles"
 	import6 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/prism/v4/config"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
@@ -931,7 +932,7 @@ func ResourceNutanixClusterV2Read(ctx context.Context, d *schema.ResourceData, m
 
 	if d.Get("ext_id").(string) == "" {
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Read : extID is empty")
-		err := getClusterExtID(d, conn)
+		err := getClusterExtID(ctx, d, conn)
 		if err != nil {
 			// Check if the error is a ClusterNotFoundError
 			if _, ok := err.(*ClusterNotFoundError); ok {
@@ -950,7 +951,7 @@ func ResourceNutanixClusterV2Read(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 	// Clusters READ context
-	return clusterRead(d, meta)
+	return clusterRead(ctx, d, meta)
 }
 
 func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -966,7 +967,7 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 
 	if d.Get("ext_id").(string) == "" {
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster not found, extID is empty")
-		err := getClusterExtID(d, conn)
+		err := getClusterExtID(ctx, d, conn)
 
 		// Check if the error is a ClusterNotFoundError
 		if err != nil {
@@ -1082,7 +1083,7 @@ func ResourceNutanixClusterV2Delete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if d.Get("ext_id").(string) == "" {
-		err := getClusterExtID(d, conn)
+		err := getClusterExtID(ctx, d, conn)
 		if err != nil {
 			// Check if the error is a ClusterNotFoundError
 			if _, ok := err.(*ClusterNotFoundError); ok {
@@ -1120,7 +1121,11 @@ func ResourceNutanixClusterV2Delete(ctx context.Context, d *schema.ResourceData,
 		dryRun = utils.BoolPtr(false)
 	}
 
-	resp, err := conn.ClusterEntityAPI.DeleteClusterById(utils.StringPtr(d.Id()), dryRun, args)
+	deleteClusterByIdRequest := import5.DeleteClusterByIdRequest{
+		ExtId:   utils.StringPtr(d.Id()),
+		Dryrun_: dryRun,
+	}
+	resp, err := conn.ClusterEntityAPI.DeleteClusterById(ctx, &deleteClusterByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while deleting cluster : %v", err)
 	}
@@ -1152,7 +1157,7 @@ func ResourceNutanixClusterV2Delete(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func getClusterExtID(d *schema.ResourceData, conn *clusters.Client) error {
+func getClusterExtID(ctx context.Context, d *schema.ResourceData, conn *clusters.Client) error {
 	var filter string
 	if d.HasChange("name") {
 		// if name changed, get the old name to fetch the cluster, since the name will be updated after update request
@@ -1165,7 +1170,10 @@ func getClusterExtID(d *schema.ResourceData, conn *clusters.Client) error {
 	log.Printf("[DEBUG] getClusterExtID filter : %s", filter)
 
 	// get Cluster Ext Id
-	listResp, err := conn.ClusterEntityAPI.ListClusters(nil, nil, utils.StringPtr(filter), nil, nil, nil, nil)
+	listClustersRequest := import5.ListClustersRequest{
+		Filter_: utils.StringPtr(filter),
+	}
+	listResp, err := conn.ClusterEntityAPI.ListClusters(ctx, &listClustersRequest)
 	if err != nil {
 		return fmt.Errorf("error while fetching cluster : %v", err)
 	}
@@ -1873,7 +1881,11 @@ func handleClusterProfileAssociationUpdate(ctx context.Context, d *schema.Resour
 	// Disassociate from old profile if it was set and is different from new
 	if oldProfileExtID != "" && oldProfileExtID != newProfileExtID {
 		log.Printf("[DEBUG] Disassociating cluster %s from cluster profile %s", clusterUUID, oldProfileExtID)
-		disassociateResp, disassociateErr := conn.ClusterProfilesAPI.DisassociateClusterFromClusterProfile(utils.StringPtr(oldProfileExtID), ClusterReferenceListSpec)
+		disassociateClusterFromClusterProfileRequest := import7.DisassociateClusterFromClusterProfileRequest{
+			ExtId: utils.StringPtr(oldProfileExtID),
+			Body:  ClusterReferenceListSpec,
+		}
+		disassociateResp, disassociateErr := conn.ClusterProfilesAPI.DisassociateClusterFromClusterProfile(ctx, &disassociateClusterFromClusterProfileRequest)
 		if disassociateErr != nil {
 			return diag.Errorf("error disassociating cluster from cluster profile: %v", disassociateErr)
 		}
@@ -1908,7 +1920,12 @@ func handleClusterProfileAssociationUpdate(ctx context.Context, d *schema.Resour
 	// Associate with new profile if it's set and different from old
 	if newProfileExtID != "" && newProfileExtID != oldProfileExtID {
 		log.Printf("[DEBUG] Associating cluster %s with cluster profile %s", clusterUUID, newProfileExtID)
-		associateResp, associateErr := conn.ClusterProfilesAPI.ApplyClusterProfile(utils.StringPtr(newProfileExtID), ClusterReferenceListSpec, utils.BoolPtr(false))
+		applyClusterProfileRequest := import7.ApplyClusterProfileRequest{
+			ExtId:   utils.StringPtr(newProfileExtID),
+			Body:    ClusterReferenceListSpec,
+			Dryrun_: utils.BoolPtr(false),
+		}
+		associateResp, associateErr := conn.ClusterProfilesAPI.ApplyClusterProfile(ctx, &applyClusterProfileRequest)
 		if associateErr != nil {
 			return diag.Errorf("error associating cluster to cluster profile: %v", associateErr)
 		}
@@ -2027,7 +2044,11 @@ func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta int
 
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] cluster update: remove node request body: %s", string(aJSON))
-	resp, err := conn.ClusterEntityAPI.RemoveNode(utils.StringPtr(d.Id()), body)
+	removeNodeRequest := import5.RemoveNodeRequest{
+		ClusterExtId: utils.StringPtr(d.Id()),
+		Body:         body,
+	}
+	resp, err := conn.ClusterEntityAPI.RemoveNode(ctx, &removeNodeRequest)
 	if err != nil {
 		return diag.Errorf("error while Removing node : %v", err)
 	}
@@ -2146,7 +2167,11 @@ func expandClusterWithNewNode(ctx context.Context, d *schema.ResourceData, meta 
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] Add Node Request Body: %s", string(aJSON))
 
-	resp, err := conn.ClusterEntityAPI.ExpandCluster(utils.StringPtr(d.Id()), body)
+	expandClusterRequest := import5.ExpandClusterRequest{
+		ClusterExtId: utils.StringPtr(d.Id()),
+		Body:         body,
+	}
+	resp, err := conn.ClusterEntityAPI.ExpandCluster(ctx, &expandClusterRequest)
 	if err != nil {
 		return diag.Errorf("error while adding node : %v", err)
 	}
@@ -2217,7 +2242,11 @@ func fetchNetworkDetailsForNodes(ctx context.Context, d *schema.ResourceData, me
 	aJSON, _ := json.MarshalIndent(nodeNetworkDetailsBody, "", " ")
 	log.Printf("[DEBUG] Fetch Network Info for Node to be added body : %s", string(aJSON))
 
-	networkDetailsResp, err := conn.ClusterEntityAPI.FetchNodeNetworkingDetails(utils.StringPtr(d.Id()), &nodeNetworkDetailsBody, args)
+	fetchNodeNetworkingDetailsRequest := import5.FetchNodeNetworkingDetailsRequest{
+		ClusterExtId: utils.StringPtr(d.Id()),
+		Body:         &nodeNetworkDetailsBody,
+	}
+	networkDetailsResp, err := conn.ClusterEntityAPI.FetchNodeNetworkingDetails(ctx, &fetchNodeNetworkingDetailsRequest, args)
 	if err != nil {
 		return diag.Errorf("error while Fetching Node Networking Details : %v", err), nil
 	}
@@ -2252,7 +2281,11 @@ func fetchNetworkDetailsForNodes(ctx context.Context, d *schema.ResourceData, me
 
 	const networkingDetails = config.TASKRESPONSETYPE_NETWORKING_DETAILS
 	taskResponseType := config.TaskResponseType(networkingDetails)
-	networkDetailsTaskResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
+	fetchTaskResponseRequest := import5.FetchTaskResponseRequest{
+		ExtId:           utils.StringPtr(uuid),
+		TaskResponseType: &taskResponseType,
+	}
+	networkDetailsTaskResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(ctx, &fetchTaskResponseRequest)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr), nil
 	}
@@ -2290,7 +2323,11 @@ func discoverUnconfiguredNode(ctx context.Context, d *schema.ResourceData, meta 
 	aJSON, _ := json.MarshalIndent(unconfiguredNodeBody, "", " ")
 	log.Printf("[DEBUG] Discover Unconfigured Nodes body : %s", string(aJSON))
 
-	discoverUnconfiguredNodesResp, err := conn.ClusterEntityAPI.DiscoverUnconfiguredNodes(utils.StringPtr(d.Id()), unconfiguredNodeBody)
+	discoverUnconfiguredNodesRequest := import5.DiscoverUnconfiguredNodesRequest{
+		ClusterExtId: utils.StringPtr(d.Id()),
+		Body:         unconfiguredNodeBody,
+	}
+	discoverUnconfiguredNodesResp, err := conn.ClusterEntityAPI.DiscoverUnconfiguredNodes(ctx, &discoverUnconfiguredNodesRequest)
 	if err != nil {
 		return diag.Errorf("error while Discover Unconfigured Nodes : %v", err), nil
 	}
@@ -2324,7 +2361,11 @@ func discoverUnconfiguredNode(ctx context.Context, d *schema.ResourceData, meta 
 
 	const unconfiguredNodes = config.TASKRESPONSETYPE_UNCONFIGURED_NODES
 	taskResponseType := config.TaskResponseType(unconfiguredNodes)
-	unconfiguredNodesResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
+	fetchTaskResponseRequest := import5.FetchTaskResponseRequest{
+		ExtId:           utils.StringPtr(uuid),
+		TaskResponseType: &taskResponseType,
+	}
+	unconfiguredNodesResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(ctx, &fetchTaskResponseRequest)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr), nil
 	}
@@ -2345,7 +2386,7 @@ func discoverUnconfiguredNode(ctx context.Context, d *schema.ResourceData, meta 
 
 func clusterImportFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	// calling read logic here
-	diags := clusterRead(d, meta)
+	diags := clusterRead(ctx, d, meta)
 	if diags.HasError() {
 		// convert diagnostics to error
 		return nil, fmt.Errorf("failed to import cluster: %v", diags)
@@ -2353,7 +2394,7 @@ func clusterImportFunc(ctx context.Context, d *schema.ResourceData, meta interfa
 	return []*schema.ResourceData{d}, nil
 }
 
-func clusterRead(d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func clusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ClusterAPI
 
 	var expand *string

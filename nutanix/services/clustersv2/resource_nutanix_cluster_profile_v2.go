@@ -707,7 +707,10 @@ func ResourceNutanixClusterProfileV2Update(ctx context.Context, d *schema.Resour
 func ResourceNutanixClusterProfileV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ClusterAPI
 
-	deleteResp, deleteErr := conn.ClusterProfilesAPI.DeleteClusterProfileById(utils.StringPtr(d.Id()))
+	deleteClusterProfileByIdRequest := import4.DeleteClusterProfileByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	deleteResp, deleteErr := conn.ClusterProfilesAPI.DeleteClusterProfileById(ctx, &deleteClusterProfileByIdRequest)
 	if deleteErr != nil {
 		return diag.FromErr(deleteErr)
 	}

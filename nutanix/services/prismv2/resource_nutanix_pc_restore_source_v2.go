@@ -257,7 +257,10 @@ func ResourceNutanixRestoreSourceV2Update(ctx context.Context, d *schema.Resourc
 func ResourceNutanixRestoreSourceV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).PrismAPI
 
-	readResp, err := conn.DomainManagerBackupsAPIInstance.GetRestoreSourceById(utils.StringPtr(d.Id()))
+	getRestoreSourceByIdRequest := import3.GetRestoreSourceByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.DomainManagerBackupsAPIInstance.GetRestoreSourceById(ctx, &getRestoreSourceByIdRequest)
 	if err != nil {
 		log.Printf("[DEBUG] Restore Source Read Error: %s", err)
 		errMessage := utils.ExtractErrorFromV4APIResponse(err)
@@ -274,7 +277,10 @@ func ResourceNutanixRestoreSourceV2Delete(ctx context.Context, d *schema.Resourc
 	eTag := conn.DomainManagerBackupsAPIInstance.ApiClient.GetEtag(readResp)
 	args["If-Match"] = utils.StringPtr(eTag)
 
-	resp, err := conn.DomainManagerBackupsAPIInstance.DeleteRestoreSourceById(utils.StringPtr(d.Id()), args)
+	deleteRestoreSourceByIdRequest := import3.DeleteRestoreSourceByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.DomainManagerBackupsAPIInstance.DeleteRestoreSourceById(ctx, &deleteRestoreSourceByIdRequest, args)
 
 	if err != nil {
 		return diag.Errorf("error while deleting restore source: %s", err)
