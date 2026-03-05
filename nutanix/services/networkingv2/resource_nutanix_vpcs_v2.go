@@ -14,6 +14,7 @@ import (
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/vpcs"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
@@ -302,7 +303,7 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Get UUID from TASK API
-	getTaskByIdRequest := import4.GetTaskByIdRequest{
+	getTaskByIdRequest := import5.GetTaskByIdRequest{
 		ExtId: utils.StringPtr(*taskUUID),
 	}
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)

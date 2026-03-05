@@ -14,6 +14,7 @@ import (
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/config"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/dataprotection/v4/common"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/request/protectionpolicies"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	prism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -137,7 +138,10 @@ func ResourceNutanixProtectionPoliciesV2Create(ctx context.Context, d *schema.Re
 		return diag.Errorf("error waiting for protection policy (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import3.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching protection policy task: %v", err)
 	}
@@ -271,7 +275,10 @@ func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.Re
 		return diag.Errorf("error waiting for protection policy (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import3.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching protection policy task: %v", err)
 	}
@@ -307,7 +314,10 @@ func ResourceNutanixProtectionPoliciesV2Delete(ctx context.Context, d *schema.Re
 		return diag.Errorf("error waiting for protection policy (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import3.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching protection policy delete task: %v", err)
 	}

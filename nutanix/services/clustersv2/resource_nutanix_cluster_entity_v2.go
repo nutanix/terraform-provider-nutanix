@@ -19,6 +19,7 @@ import (
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/common/v1/config"
 	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusters"
+	import6 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/prism/v4/config"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -901,7 +902,10 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error waiting for cluster (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import6.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching cluster task: %v", err)
 	}
@@ -1052,7 +1056,10 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error waiting for cluster (%s) to update: %s", utils.StringValue(taskUUID), errWait)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import6.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching cluster update task: %v", err)
 	}
@@ -1132,7 +1139,10 @@ func ResourceNutanixClusterV2Delete(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error waiting for cluster (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import6.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching cluster delete task: %v", err)
 	}
@@ -1883,7 +1893,10 @@ func handleClusterProfileAssociationUpdate(ctx context.Context, d *schema.Resour
 		}
 		log.Printf("[DEBUG] Cluster profile disassociation task %s completed", utils.StringValue(taskUUID))
 		// Get UUID from TASK API
-		taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		getTaskByIdRequest := import6.GetTaskByIdRequest{
+			ExtId: taskUUID,
+		}
+		taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 		if err != nil {
 			return diag.Errorf("error while fetching cluster profile disassociation task: %v", err)
 		}
@@ -1915,7 +1928,10 @@ func handleClusterProfileAssociationUpdate(ctx context.Context, d *schema.Resour
 		}
 		log.Printf("[DEBUG] Cluster profile association task %s completed", utils.StringValue(taskUUID))
 		// Get UUID from TASK API
-		taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		getTaskByIdRequest := import6.GetTaskByIdRequest{
+			ExtId: taskUUID,
+		}
+		taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 		if err != nil {
 			return diag.Errorf("error while fetching cluster profile association task: %v", err)
 		}
@@ -2028,14 +2044,20 @@ func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta int
 		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		taskResp, _ := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		getTaskByIdRequest := import6.GetTaskByIdRequest{
+			ExtId: taskUUID,
+		}
+		taskResp, _ := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 		taskDetails := taskResp.Data.GetValue().(import2.Task)
 		aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
 		log.Printf("[ERROR] Remove Node Task Details: %s", string(aJSON))
 		return diag.Errorf("error waiting for node (%s) to remove: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import6.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching node removal task: %v", err)
 	}
@@ -2144,7 +2166,10 @@ func expandClusterWithNewNode(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("error waiting for node (%s) to add: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import6.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching add node task: %v", err)
 	}
@@ -2212,7 +2237,10 @@ func fetchNetworkDetailsForNodes(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("error waiting for fetch node networking details (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask), nil
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import6.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching node networking details task: %v", err), nil
 	}
@@ -2282,7 +2310,10 @@ func discoverUnconfiguredNode(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("error waiting for unconfigured nodes (%s) to discover: %s", utils.StringValue(taskUUID), errWaitTask), nil
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import6.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching discover unconfigured nodes task: %v", err), nil
 	}

@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/config"
 	dataprtotectionPrismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/request/recoverypoints"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -104,8 +106,12 @@ func ResourceNutanixRecoveryPointRestoreV2Create(ctx context.Context, d *schema.
 	if volumeGroupRecoveryPointRestoreOverrides, ok := d.GetOk("volume_group_recovery_point_restore_overrides"); ok {
 		body.VolumeGroupRecoveryPointRestoreOverrides = expandVolumeGroupRecoveryPointRestoreOverrides(volumeGroupRecoveryPointRestoreOverrides)
 	}
-
-	resp, err := conn.RecoveryPoint.RestoreRecoveryPoint(utils.StringPtr(rpExtID), &body)
+  
+  restoreRecoveryPointRequest := import2.RestoreRecoveryPointRequest{
+		ExtId: utils.StringPtr(rpExtID),
+		Body:  &body,
+	}
+	resp, err := conn.RecoveryPoint.RestoreRecoveryPoint(ctx, &restoreRecoveryPointRequest)
 	if err != nil {
 		return diag.Errorf("error while replicating recovery point: %v", err)
 	}
@@ -127,7 +133,10 @@ func ResourceNutanixRecoveryPointRestoreV2Create(ctx context.Context, d *schema.
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import1.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching restore recovery point task: %v", err)
 	}

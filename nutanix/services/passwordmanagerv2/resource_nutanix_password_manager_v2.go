@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	clusterConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/passwordmanager"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
@@ -73,8 +75,12 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Change Password Request body: %s", aJSON)
-
-	resp, err := conn.PasswordManagerAPI.ChangeSystemUserPasswordById(extID, body)
+  
+	changeSystemUserPasswordByIdRequest := import3.ChangeSystemUserPasswordByIdRequest{
+		ExtId: extID,
+		Body:  body,
+	}
+	resp, err := conn.PasswordManagerAPI.ChangeSystemUserPasswordById(ctx, &changeSystemUserPasswordByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while performing password change: %v", err)
 	}
@@ -88,7 +94,10 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 	// calling group API to poll for completion of task
 	taskconn := meta.(*conns.Client).PrismAPI
 
-	_, taskErr := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import2.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	_, taskErr := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if taskErr != nil && isUnauthorizedErr(taskErr) {
 		log.Printf("[DEBUG] prism task fetch returned unauthorized after password change; recreating prism client with new password and retrying")
 
@@ -116,7 +125,10 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 		// retry to fetch the task
 		log.Printf("[DEBUG]  creating new taskconn with new password and retrying to fetch the task: %s", utils.StringValue(taskUUID))
 
-		_, taskErr = newTaskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		getTaskByIdRequest := import2.GetTaskByIdRequest{
+			ExtId: taskUUID,
+		}
+		_, taskErr = newTaskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 		if taskErr != nil {
 			return diag.Errorf("error while fetching task by ID %s: %v", utils.StringValue(taskUUID), taskErr)
 		}
@@ -132,8 +144,7 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 			return diag.Errorf("error waiting for password change (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 		}
 
-		// Get task details for logging
-		taskResp, err := newPrismClient.TaskRefAPI.GetTaskById(taskUUID, nil)
+		taskResp, err := newTaskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 		if err != nil {
 			return diag.Errorf("error while fetching password change task: %v", err)
 		}
@@ -164,7 +175,7 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 	}
 
 	// Get task details for logging
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching password change task: %v", err)
 	}

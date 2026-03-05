@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	vmmPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
 	vmmConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	taskPoll "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -259,7 +260,10 @@ func ResourceNutanixNGTInstallationV4Create(ctx context.Context, d *schema.Resou
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import1.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching NGT installation task (%s): %v", utils.StringValue(taskUUID), err)
 	}
@@ -447,7 +451,10 @@ func ResourceNutanixNGTInstallationV4Delete(ctx context.Context, d *schema.Resou
 				time.Sleep(2 * time.Second)
 				continue
 			}
-			taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+			getTaskByIdRequest := import1.GetTaskByIdRequest{
+				ExtId: taskUUID,
+			}
+			taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 			if err != nil {
 				taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
 				aJSON, _ := json.MarshalIndent(taskDetails, "", " ")

@@ -301,7 +301,7 @@ func ResourceNutanixRoutesV2Create(ctx context.Context, d *schema.ResourceData, 
 func ResourceNutanixRoutesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] ResourceNutanixRoutesV2Read \n")
 
-	return routeRead(d, meta)
+	return routeRead(ctx, d, meta)
 }
 
 func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -416,8 +416,11 @@ func ResourceNutanixRoutesV2Delete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	routeTableExtID := d.Get("route_table_ext_id").(string)
-
-	resp, err := conn.Routes.DeleteRouteForRouteTableById(utils.StringPtr(d.Id()), &routeTableExtID)
+  deleteRouteForRouteTableByIdRequest := import2.DeleteRouteForRouteTableByIdRequest{
+		ExtId:           utils.StringPtr(d.Id()),
+		RouteTableExtId: &routeTableExtID,
+	}
+	resp, err := conn.Routes.DeleteRouteForRouteTableById(ctx, &deleteRouteForRouteTableByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting route: %v", err)
 	}
@@ -607,7 +610,7 @@ func importNutanixRouteV2(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil, fmt.Errorf("error setting route_table_ext_id during import: %v", err)
 	}
 
-	diags := routeRead(d, meta)
+	diags := routeRead(ctx, d, meta)
 	if diags.HasError() {
 		// convert diagnostics to error
 		return nil, fmt.Errorf("failed to import route: %v", diags)
@@ -615,12 +618,15 @@ func importNutanixRouteV2(ctx context.Context, d *schema.ResourceData, meta inte
 	return []*schema.ResourceData{d}, nil
 }
 
-func routeRead(d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func routeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	routeTableExtID := d.Get("route_table_ext_id").(string)
-
-	resp, err := conn.Routes.GetRouteForRouteTableById(utils.StringPtr(d.Id()), &routeTableExtID)
+  getRouteForRouteTableByIdRequest := import2.GetRouteForRouteTableByIdRequest{
+		ExtId:           utils.StringPtr(d.Id()),
+		RouteTableExtId: &routeTableExtID,
+	}
+	resp, err := conn.Routes.GetRouteForRouteTableById(ctx, &getRouteForRouteTableByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching route : %v", err)
 	}
