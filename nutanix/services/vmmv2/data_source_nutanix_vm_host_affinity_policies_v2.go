@@ -166,10 +166,10 @@ func flattenVMHostAffinityPolicyEntities(pr []policies.VmHostAffinityPolicy) []i
 				policy["description"] = v.Description
 			}
 			if v.CreateTime != nil {
-				policy["create_time"] = v.CreateTime.String()
+				policy["create_time"] = utils.TimeStringValue(v.CreateTime)
 			}
 			if v.UpdateTime != nil {
-				policy["update_time"] = v.UpdateTime.String()
+				policy["update_time"] = utils.TimeStringValue(v.UpdateTime)
 			}
 			if v.CreatedBy != nil {
 				if v.CreatedBy.ExtId != nil {

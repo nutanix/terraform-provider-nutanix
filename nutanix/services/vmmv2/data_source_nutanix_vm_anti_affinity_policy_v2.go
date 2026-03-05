@@ -81,17 +81,11 @@ func DatasourceNutanixVMAntiAffinityPolicyV2Read(ctx context.Context, d *schema.
 	if err := d.Set("description", getResp.Description); err != nil {
 		return diag.FromErr(err)
 	}
-	if getResp.CreateTime != nil {
-		t := getResp.CreateTime
-		if err := d.Set("create_time", t.String()); err != nil {
-			return diag.FromErr(err)
-		}
+	if err := d.Set("create_time", utils.TimeStringValue(getResp.CreateTime)); err != nil {
+		return diag.FromErr(err)
 	}
-	if getResp.UpdateTime != nil {
-		t := getResp.UpdateTime
-		if err := d.Set("update_time", t.String()); err != nil {
-			return diag.FromErr(err)
-		}
+	if err := d.Set("update_time", utils.TimeStringValue(getResp.UpdateTime)); err != nil {
+		return diag.FromErr(err)
 	}
 	if getResp.CreatedBy != nil {
 		createdBy := make(map[string]string)
