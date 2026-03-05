@@ -81,12 +81,13 @@ func ResourceNutanixVMAntiAffinityPolicyV2Create(ctx context.Context, d *schema.
 		body.Description = utils.StringPtr(desc.(string))
 	}
 	if cats, ok := d.GetOk("categories"); ok {
-		if catSet, ok := cats.(*schema.Set); ok {
-			body.Categories = expandPolicyCategoryReference(catSet.List())
-		} else if catList, ok := cats.([]interface{}); ok {
-			body.Categories = expandPolicyCategoryReference(catList)
-		}
+		catStrings := common.ExpandListOfString(common.InterfaceToSlice(cats))
+		body.Categories = expandPolicyCategoryReference(catStrings)
 	}
+
+
+
+	
 
 	resp, err := conn.VMAntiAffinityPolicyAPIInstance.CreateVmAntiAffinityPolicy(&body)
 
@@ -190,14 +191,15 @@ func ResourceNutanixVMAntiAffinityPolicyV2Update(ctx context.Context, d *schema.
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
 	}
 	if d.HasChange("categories") {
-		if cats := d.Get("categories"); cats != nil {
-			if catSet, ok := cats.(*schema.Set); ok {
-				updateSpec.Categories = expandPolicyCategoryReference(catSet.List())
-			} else if catList, ok := cats.([]interface{}); ok {
-				updateSpec.Categories = expandPolicyCategoryReference(catList)
-			}
+		if cats, ok := d.GetOk("categories"); ok {
+			catStrings := common.ExpandListOfString(common.InterfaceToSlice(cats))
+			updateSpec.Categories = expandPolicyCategoryReference(catStrings)
 		}
 	}
+
+
+	
+
 
 	updateResp, err := conn.VMAntiAffinityPolicyAPIInstance.UpdateVmAntiAffinityPolicyById(utils.StringPtr(d.Id()), &updateSpec)
 	if err != nil {
@@ -252,21 +254,21 @@ func ResourceNutanixVMAntiAffinityPolicyV2Delete(ctx context.Context, d *schema.
 	return nil
 }
 
-func expandPolicyCategoryReference(pr []interface{}) []policies.CategoryReference {
-	if len(pr) > 0 {
-		catsRef := make([]policies.CategoryReference, len(pr))
-
-		for k, v := range pr {
-			cat := policies.CategoryReference{}
-
-			if extID, ok := v.(string); ok && len(extID) > 0 {
-				cat.ExtId = utils.StringPtr(extID)
-			}
-			catsRef[k] = cat
-		}
-		return catsRef
+func expandPolicyCategoryReference(cats []string) []policies.CategoryReference {
+	if len(cats) == 0 {
+		return nil
 	}
-	return nil
+	catRefs := make([]policies.CategoryReference, len(cats))
+
+	for i, cat := range cats {
+		if cat != "" {
+			catRefs[i] = policies.CategoryReference{
+				ExtId: utils.StringPtr(cat),
+			}
+		}
+	}
+	return catRefs
+
 }
 
 func flattenPolicyCategoryReference(cats []policies.CategoryReference) []interface{} {

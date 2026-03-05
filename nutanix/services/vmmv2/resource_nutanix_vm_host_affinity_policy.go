@@ -88,19 +88,17 @@ func ResourceNutanixVMHostAffinityPolicyV2Create(ctx context.Context, d *schema.
 		body.Description = utils.StringPtr(desc.(string))
 	}
 	if vmCats, ok := d.GetOk("vm_categories"); ok {
-		if vmCatSet, ok := vmCats.(*schema.Set); ok {
-			body.VmCategories = expandPolicyCategoryReference(vmCatSet.List())
-		} else if vmCatList, ok := vmCats.([]interface{}); ok {
-			body.VmCategories = expandPolicyCategoryReference(vmCatList)
-		}
+		catStrings := common.ExpandListOfString(common.InterfaceToSlice(vmCats))
+		body.VmCategories = expandPolicyCategoryReference(catStrings)
 	}
 	if hostCats, ok := d.GetOk("host_categories"); ok {
-		if hostCatSet, ok := hostCats.(*schema.Set); ok {
-			body.HostCategories = expandPolicyCategoryReference(hostCatSet.List())
-		} else if hostCatList, ok := hostCats.([]interface{}); ok {
-			body.HostCategories = expandPolicyCategoryReference(hostCatList)
-		}
+		catStrings := common.ExpandListOfString(common.InterfaceToSlice(hostCats))
+		body.HostCategories = expandPolicyCategoryReference(catStrings)
 	}
+
+
+
+	
 
 	resp, err := conn.VMHostAffinityPolicyAPIInstance.CreateVmHostAffinityPolicy(&body)
 
@@ -207,23 +205,13 @@ func ResourceNutanixVMHostAffinityPolicyV2Update(ctx context.Context, d *schema.
 	if d.HasChange("description") {
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
 	}
-	if d.HasChange("vm_categories") {
-		if vmCats := d.Get("vm_categories"); vmCats != nil {
-			if vmCatSet, ok := vmCats.(*schema.Set); ok {
-				updateSpec.VmCategories = expandPolicyCategoryReference(vmCatSet.List())
-			} else if vmCatList, ok := vmCats.([]interface{}); ok {
-				updateSpec.VmCategories = expandPolicyCategoryReference(vmCatList)
-			}
-		}
+	if vmCats, ok := d.GetOk("vm_categories"); ok {
+		catStrings := common.ExpandListOfString(common.InterfaceToSlice(vmCats))
+		updateSpec.VmCategories = expandPolicyCategoryReference(catStrings)
 	}
-	if d.HasChange("host_categories") {
-		if hostCats := d.Get("host_categories"); hostCats != nil {
-			if hostCatSet, ok := hostCats.(*schema.Set); ok {
-				updateSpec.HostCategories = expandPolicyCategoryReference(hostCatSet.List())
-			} else if hostCatList, ok := hostCats.([]interface{}); ok {
-				updateSpec.HostCategories = expandPolicyCategoryReference(hostCatList)
-			}
-		}
+	if hostCats, ok := d.GetOk("host_categories"); ok {
+		catStrings := common.ExpandListOfString(common.InterfaceToSlice(hostCats))
+		updateSpec.HostCategories = expandPolicyCategoryReference(catStrings)
 	}
 
 	updateResp, err := conn.VMHostAffinityPolicyAPIInstance.UpdateVmHostAffinityPolicyById(utils.StringPtr(d.Id()), &updateSpec)
