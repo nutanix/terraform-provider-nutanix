@@ -2,6 +2,8 @@ package vmmv2
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -96,9 +98,8 @@ func ResourceNutanixVMHostAffinityPolicyV2Create(ctx context.Context, d *schema.
 		body.HostCategories = expandPolicyCategoryReference(catStrings)
 	}
 
-
-
-	
+	aJSON, _ := json.MarshalIndent(body, "", " ")
+	log.Printf("[DEBUG] VM-Host Affinity Policy Request Body: %s", string(aJSON))
 
 	resp, err := conn.VMHostAffinityPolicyAPIInstance.CreateVmHostAffinityPolicy(&body)
 
@@ -219,6 +220,9 @@ func ResourceNutanixVMHostAffinityPolicyV2Update(ctx context.Context, d *schema.
 		catStrings := common.ExpandListOfString(common.InterfaceToSlice(hostCats))
 		updateSpec.HostCategories = expandPolicyCategoryReference(catStrings)
 	}
+
+	aJSON, _ := json.MarshalIndent(updateSpec, "", " ")
+	log.Printf("[DEBUG] VM-Host Affinity Policy Update Request Body: %s", string(aJSON))
 
 	updateResp, err := conn.VMHostAffinityPolicyAPIInstance.UpdateVmHostAffinityPolicyById(utils.StringPtr(d.Id()), &updateSpec)
 	if err != nil {

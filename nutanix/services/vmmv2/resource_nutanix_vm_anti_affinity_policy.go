@@ -2,6 +2,8 @@ package vmmv2
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -85,9 +87,8 @@ func ResourceNutanixVMAntiAffinityPolicyV2Create(ctx context.Context, d *schema.
 		body.Categories = expandPolicyCategoryReference(catStrings)
 	}
 
-
-
-	
+	aJSON, _ := json.MarshalIndent(body, "", " ")
+	log.Printf("[DEBUG] VM-VM Anti-affinity Policy Request Body: %s", string(aJSON))
 
 	resp, err := conn.VMAntiAffinityPolicyAPIInstance.CreateVmAntiAffinityPolicy(&body)
 
@@ -204,9 +205,8 @@ func ResourceNutanixVMAntiAffinityPolicyV2Update(ctx context.Context, d *schema.
 		}
 	}
 
-
-	
-
+	aJSON, _ := json.MarshalIndent(updateSpec, "", " ")
+	log.Printf("[DEBUG] VM Anti Affinity Policy Update Request Body: %s", string(aJSON))
 
 	updateResp, err := conn.VMAntiAffinityPolicyAPIInstance.UpdateVmAntiAffinityPolicyById(utils.StringPtr(d.Id()), &updateSpec)
 	if err != nil {
