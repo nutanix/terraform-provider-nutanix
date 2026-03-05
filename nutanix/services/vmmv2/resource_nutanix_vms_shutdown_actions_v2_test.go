@@ -1,12 +1,14 @@
 package vmmv2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/vm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
@@ -164,15 +166,22 @@ func TestAccV2NutanixVmsShutdownResource_Basic(t *testing.T) {
 func testAccCheckNutanixVirtualMachineV2Destroy(s *terraform.State) error {
 	fmt.Println("Destroying VMs")
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	ctx := context.Background()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "nutanix_virtual_machine_v2" {
 			continue
 		}
-		_, err := conn.VmmAPI.VMAPIInstance.GetVmById(utils.StringPtr(rs.Primary.ID))
+		getVmByIdRequest := import1.GetVmByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		_, err := conn.VmmAPI.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 		if err == nil {
 			// delete the vm
 			fmt.Printf("Deleting VM with ID: %s\n", rs.Primary.ID)
-			_, errVM := conn.VmmAPI.VMAPIInstance.DeleteVmById(utils.StringPtr(rs.Primary.ID))
+			deleteVmByIdRequest := import1.DeleteVmByIdRequest{
+				ExtId: utils.StringPtr(rs.Primary.ID),
+			}
+			_, errVM := conn.VmmAPI.VMAPIInstance.DeleteVmById(ctx, &deleteVmByIdRequest)
 			if errVM != nil {
 				return errVM
 			}

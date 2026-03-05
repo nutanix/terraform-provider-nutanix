@@ -1,11 +1,13 @@
 package datapoliciesv2_test
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/request/protectionpolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -66,15 +68,22 @@ func checkAttributeLengthEqual(resourceName, attribute string, expectedLength in
 func testProtectionPolicyV2CheckDestroy(state *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 	client := conn.DataPoliciesAPI.ProtectionPolicies
+	ctx := context.Background()
 
 	for _, rs := range state.RootModule().Resources {
 		if rs.Type == resourceNameProtectionPolicy {
-			_, err := client.GetProtectionPolicyById(utils.StringPtr(rs.Primary.ID))
+			getProtectionPolicyByIdRequest := import1.GetProtectionPolicyByIdRequest{
+				ExtId: utils.StringPtr(rs.Primary.ID),
+			}
+			_, err := client.GetProtectionPolicyById(ctx, &getProtectionPolicyByIdRequest)
 			if err == nil {
 				return fmt.Errorf("protection policy still exists")
 			}
 			fmt.Printf("Protection Policy still exists")
-			_, err = client.DeleteProtectionPolicyById(utils.StringPtr(rs.Primary.ID))
+			deleteProtectionPolicyByIdRequest := import1.DeleteProtectionPolicyByIdRequest{
+				ExtId: utils.StringPtr(rs.Primary.ID),
+			}
+			_, err = client.DeleteProtectionPolicyById(ctx, &deleteProtectionPolicyByIdRequest)
 			if err != nil {
 				return fmt.Errorf("error: protection policy still exists : %v", err)
 			}
