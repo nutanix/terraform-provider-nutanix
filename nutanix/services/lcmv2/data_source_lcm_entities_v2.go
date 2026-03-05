@@ -5,7 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	lcmEntityPkg "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/resources"
+	lcmEntityPkg "github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/lifecycle/v4/resources"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/lifecycle/v4/request/entities"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -46,37 +47,25 @@ func DatasourceNutanixLcmEntitiesV2() *schema.Resource {
 func DatasourceNutanixLcmEntitiesV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
 
-	// initialize query params
-	var filter, orderBy, selects *string
-	var page, limit *int
+	listEntitiesRequest := import1.ListEntitiesRequest{}
 
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
+	if v, ok := d.GetOk("page"); ok {
+		listEntitiesRequest.Page_ = utils.IntPtr(v.(int))
 	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
+	if v, ok := d.GetOk("limit"); ok {
+		listEntitiesRequest.Limit_ = utils.IntPtr(v.(int))
 	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
+	if v, ok := d.GetOk("filter"); ok {
+		listEntitiesRequest.Filter_ = utils.StringPtr(v.(string))
 	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
+	if v, ok := d.GetOk("order_by"); ok {
+		listEntitiesRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
-	if selectf, ok := d.GetOk("select"); ok {
-		selects = utils.StringPtr(selectf.(string))
-	} else {
-		selects = nil
+	if v, ok := d.GetOk("select"); ok {
+		listEntitiesRequest.Select_ = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.LcmEntitiesAPIInstance.ListEntities(page, limit, filter, orderBy, selects)
+	resp, err := conn.LcmEntitiesAPIInstance.ListEntities(ctx, &listEntitiesRequest)
 	if err != nil {
 		return diag.Errorf("error while listing the Lcm entities : %v", err)
 	}

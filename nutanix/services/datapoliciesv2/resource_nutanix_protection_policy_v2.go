@@ -11,10 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/datapolicies/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/dataprotection/v4/common"
-	prism "github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/prism/v4/config"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/dataprotection/v4/common"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/request/protectionpolicies"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	prism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/prism/v4/config"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	commonUtils "github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -77,6 +79,11 @@ func ResourceNutanixProtectionPoliciesV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -101,11 +108,17 @@ func ResourceNutanixProtectionPoliciesV2Create(ctx context.Context, d *schema.Re
 	if categoryIds, ok := d.GetOk("category_ids"); ok {
 		bodySpec.CategoryIds = commonUtils.ExpandListOfString(categoryIds.([]interface{}))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		bodySpec.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 
 	aJSON, _ := json.MarshalIndent(bodySpec, "", "  ")
 	log.Printf("[DEBUG] Create Protection Policy Body Spec: %s", string(aJSON))
 
-	resp, err := conn.ProtectionPolicies.CreateProtectionPolicy(bodySpec)
+	createProtectionPolicyRequest := import2.CreateProtectionPolicyRequest{
+		Body: bodySpec,
+	}
+	resp, err := conn.ProtectionPolicies.CreateProtectionPolicy(ctx, &createProtectionPolicyRequest)
 	if err != nil {
 		return diag.Errorf("error while creating Protection Policy: %v", err)
 	}
@@ -125,7 +138,10 @@ func ResourceNutanixProtectionPoliciesV2Create(ctx context.Context, d *schema.Re
 		return diag.Errorf("error waiting for protection policy (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import3.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching protection policy task: %v", err)
 	}
@@ -149,7 +165,10 @@ func ResourceNutanixProtectionPoliciesV2Read(ctx context.Context, d *schema.Reso
 
 	extID := d.Id()
 
-	resp, err := conn.ProtectionPolicies.GetProtectionPolicyById(utils.StringPtr(extID))
+	getProtectionPolicyByIdRequest := import2.GetProtectionPolicyByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	resp, err := conn.ProtectionPolicies.GetProtectionPolicyById(ctx, &getProtectionPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Protection Policy: %s", err)
 	}
@@ -189,6 +208,9 @@ func ResourceNutanixProtectionPoliciesV2Read(ctx context.Context, d *schema.Reso
 	if err := d.Set("owner_ext_id", getResp.OwnerExtId); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -196,7 +218,10 @@ func ResourceNutanixProtectionPoliciesV2Read(ctx context.Context, d *schema.Reso
 func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataPoliciesAPI
 
-	readResp, err := conn.ProtectionPolicies.GetProtectionPolicyById(utils.StringPtr(d.Id()))
+	getProtectionPolicyByIdRequest := import2.GetProtectionPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.ProtectionPolicies.GetProtectionPolicyById(ctx, &getProtectionPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Protection Policy: %v", err)
 	}
@@ -222,8 +247,15 @@ func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.Re
 	if categoryIds, ok := d.GetOk("category_ids"); ok {
 		updateSpec.CategoryIds = commonUtils.ExpandListOfString(categoryIds.([]interface{}))
 	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 
-	resp, err := conn.ProtectionPolicies.UpdateProtectionPolicyById(utils.StringPtr(d.Id()), updateSpec, args)
+	updateProtectionPolicyByIdRequest := import2.UpdateProtectionPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  updateSpec,
+	}
+	resp, err := conn.ProtectionPolicies.UpdateProtectionPolicyById(ctx, &updateProtectionPolicyByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while updating Protection Policy: %v", err)
 	}
@@ -243,7 +275,10 @@ func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.Re
 		return diag.Errorf("error waiting for protection policy (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import3.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching protection policy task: %v", err)
 	}
@@ -257,7 +292,10 @@ func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.Re
 func ResourceNutanixProtectionPoliciesV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataPoliciesAPI
 
-	resp, err := conn.ProtectionPolicies.DeleteProtectionPolicyById(utils.StringPtr(d.Id()))
+	deleteProtectionPolicyByIdRequest := import2.DeleteProtectionPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ProtectionPolicies.DeleteProtectionPolicyById(ctx, &deleteProtectionPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting Protection Policy: %v", err)
 	}
@@ -276,7 +314,10 @@ func ResourceNutanixProtectionPoliciesV2Delete(ctx context.Context, d *schema.Re
 		return diag.Errorf("error waiting for protection policy (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import3.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching protection policy delete task: %v", err)
 	}

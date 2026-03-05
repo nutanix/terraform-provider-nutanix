@@ -7,8 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	config "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/common/v1/config"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
+	config "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/common/v1/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/request/networksecuritypolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -373,6 +374,10 @@ func DataSourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 					},
 				},
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -381,8 +386,10 @@ func DataSourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema
 	conn := meta.(*conns.Client).MicroSegAPI
 
 	extID := d.Get("ext_id")
-
-	resp, err := conn.NetworkingSecurityInstance.GetNetworkSecurityPolicyById(utils.StringPtr((extID.(string))))
+	getNetworkSecurityPolicyByIdRequest := import2.GetNetworkSecurityPolicyByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.NetworkingSecurityInstance.GetNetworkSecurityPolicyById(ctx, &getNetworkSecurityPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching network security policy: %v", err)
 	}
@@ -446,6 +453,9 @@ func DataSourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema
 		return diag.FromErr(err)
 	}
 	if err := d.Set("links", flattenLinksMicroSeg(getResp.Links)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
 		return diag.FromErr(err)
 	}
 

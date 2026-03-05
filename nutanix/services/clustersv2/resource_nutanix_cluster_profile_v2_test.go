@@ -1,6 +1,7 @@
 package clustersv2_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusterprofiles"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -573,12 +575,16 @@ resource "nutanix_cluster_profile_v2" "tf_second" {
 func testAccCheckClusterProfileDestroy(s *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 
+	ctx := context.Background()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "nutanix_cluster_profile_v2" {
 			continue
 		}
 		// Check API if resource exists
-		_, errRead := conn.ClusterAPI.ClusterProfilesAPI.GetClusterProfileById(utils.StringPtr(rs.Primary.ID))
+		getClusterProfileByIdRequest := import1.GetClusterProfileByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		_, errRead := conn.ClusterAPI.ClusterProfilesAPI.GetClusterProfileById(ctx, &getClusterProfileByIdRequest)
 		if errRead != nil {
 			if strings.Contains(fmt.Sprint(errRead), "profile "+rs.Primary.ID+" not found") {
 				return nil
@@ -586,7 +592,10 @@ func testAccCheckClusterProfileDestroy(s *terraform.State) error {
 			return errRead
 		}
 		log.Printf("[DEBUG] Cluster Profile %s still exists, destroying...", rs.Primary.ID)
-		_, err := conn.ClusterAPI.ClusterProfilesAPI.DeleteClusterProfileById(utils.StringPtr(rs.Primary.ID))
+		deleteClusterProfileByIdRequest := import1.DeleteClusterProfileByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		_, err := conn.ClusterAPI.ClusterProfilesAPI.DeleteClusterProfileById(ctx, &deleteClusterProfileByIdRequest)
 		if err != nil {
 			return err
 		}

@@ -1,6 +1,7 @@
 package volumesv2_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,7 +10,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
+	volumesClient "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/request/volumegroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -46,12 +48,16 @@ func testAccCheckResourceAttrListNotEmpty(resourceName, attrName, subAttr string
 
 func testAccCheckNutanixVolumeGroupV2Destroy(s *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "nutanix_volume_group_v2" {
 			continue
 		}
-		if _, err := conn.VolumeAPI.VolumeAPIInstance.DeleteVolumeGroupById(utils.StringPtr(rs.Primary.ID)); err != nil {
+		deleteVolumeGroupByIdRequest := import1.DeleteVolumeGroupByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		if _, err := conn.VolumeAPI.VolumeAPIInstance.DeleteVolumeGroupById(ctx, &deleteVolumeGroupByIdRequest); err != nil {
 			if strings.Contains(fmt.Sprint(err), "VOLUME_UNKNOWN_ENTITY_ERROR") {
 				return nil
 			}
@@ -63,9 +69,13 @@ func testAccCheckNutanixVolumeGroupV2Destroy(s *terraform.State) error {
 
 func resourceNutanixVolumeGroupV2Exists(conn *conns.Client, name string) (*string, error) {
 	var vgUUID *string
+	ctx := context.Background()
 
 	filter := fmt.Sprintf("name==%s", name)
-	vgList, err := conn.VolumeAPI.VolumeAPIInstance.ListVolumeGroups(nil, nil, &filter, nil, nil, nil)
+	listVolumeGroupsRequest := import1.ListVolumeGroupsRequest{
+		Filter_: &filter,
+	}
+	vgList, err := conn.VolumeAPI.VolumeAPIInstance.ListVolumeGroups(ctx, &listVolumeGroupsRequest)
 
 	log.Printf("Volume Group List: %v", vgList)
 

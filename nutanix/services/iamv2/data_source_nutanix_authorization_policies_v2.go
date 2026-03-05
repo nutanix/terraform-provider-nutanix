@@ -8,7 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authz"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/authorizationpolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -111,6 +112,10 @@ func DatasourceNutanixAuthorizationPoliciesV2() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"project_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -121,42 +126,28 @@ func DatasourceNutanixAuthorizationPoliciesV2() *schema.Resource {
 func DatasourceNutanixAuthorizationPoliciesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	// initialize query params
-	var filter, orderBy, selects, expand *string
-	var page, limit *int
+	listAuthorizationPoliciesRequest := import2.ListAuthorizationPoliciesRequest{}
 
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
+	if v, ok := d.GetOk("page"); ok {
+		listAuthorizationPoliciesRequest.Page_ = utils.IntPtr(v.(int))
 	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
+	if v, ok := d.GetOk("limit"); ok {
+		listAuthorizationPoliciesRequest.Limit_ = utils.IntPtr(v.(int))
 	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
+	if v, ok := d.GetOk("filter"); ok {
+		listAuthorizationPoliciesRequest.Filter_ = utils.StringPtr(v.(string))
 	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
+	if v, ok := d.GetOk("order_by"); ok {
+		listAuthorizationPoliciesRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
-	if selectf, ok := d.GetOk("select"); ok {
-		selects = utils.StringPtr(selectf.(string))
-	} else {
-		selects = nil
+	if v, ok := d.GetOk("select"); ok {
+		listAuthorizationPoliciesRequest.Select_ = utils.StringPtr(v.(string))
 	}
-	if expandf, ok := d.GetOk("expand"); ok {
-		expand = utils.StringPtr(expandf.(string))
-	} else {
-		expand = nil
+	if v, ok := d.GetOk("expand"); ok {
+		listAuthorizationPoliciesRequest.Expand_ = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.AuthAPIInstance.ListAuthorizationPolicies(page, limit, filter, orderBy, expand, selects)
+	resp, err := conn.AuthAPIInstance.ListAuthorizationPolicies(ctx, &listAuthorizationPoliciesRequest)
 	if err != nil {
 		fmt.Println(err)
 		return diag.Errorf("error while fetching auth policies: %v", err)
@@ -224,6 +215,7 @@ func flattenAuthorizationPolicyEntities(pr []import1.AuthorizationPolicyProjecti
 			auth["created_by"] = v.CreatedBy
 			auth["is_system_defined"] = v.IsSystemDefined
 			auth["authorization_policy_type"] = flattenAuthorizationPolicyType(v.AuthorizationPolicyType)
+			auth["project_ext_id"] = v.ProjectExtId
 
 			auths[k] = auth
 		}

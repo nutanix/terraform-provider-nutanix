@@ -8,8 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	taskRef "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/prism/v4/config"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/lifecycle/v4/request/inventory"
+	taskRef "github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/prism/v4/config"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -41,7 +43,12 @@ func ResourceNutanixLcmPerformInventoryV2Create(ctx context.Context, d *schema.R
 	}
 	// pass nil for the body as it is not required and its implemented in hercules Sdk
 	// it will be implemented in the future releases of terraform
-	resp, err := conn.LcmInventoryAPIInstance.PerformInventory(clusterID, nil, nil)
+	performInventoryRequest := import1.PerformInventoryRequest{
+		XClusterId: clusterID,
+		Body:       nil,
+		Dryrun_:    nil,
+	}
+	resp, err := conn.LcmInventoryAPIInstance.PerformInventory(ctx, &performInventoryRequest)
 	if err != nil {
 		return diag.Errorf("error while performing the inventory: %v", err)
 	}
@@ -65,7 +72,10 @@ func ResourceNutanixLcmPerformInventoryV2Create(ctx context.Context, d *schema.R
 	}
 
 	// Get task details from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching LCM inventory task: %v", err)
 	}

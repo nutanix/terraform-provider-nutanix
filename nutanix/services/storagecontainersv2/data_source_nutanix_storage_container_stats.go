@@ -7,8 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	clustermgmtStats "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/stats"
-	clsstats "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/stats"
+	clustermgmtStats "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/stats"
+	clsstats "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/common/v1/stats"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/storagecontainers"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -145,7 +146,10 @@ func DatasourceNutanixStorageStatsInfoV2Read(ctx context.Context, d *schema.Reso
 	if pVal != nil {
 		statType = clsstats.DownSamplingOperator(pVal.(int))
 	}
-	resp, err := conn.StorageContainersAPI.GetStorageContainerById(utils.StringPtr(extID.(string)))
+	getStorageContainerByIdRequest := import1.GetStorageContainerByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.StorageContainersAPI.GetStorageContainerById(ctx, &getStorageContainerByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Storage Container : %v", err)
 	}
@@ -164,8 +168,14 @@ func DatasourceNutanixStorageStatsInfoV2Read(ctx context.Context, d *schema.Reso
 	if err != nil {
 		return diag.Errorf("error while parsing end_time : %v", err)
 	}
-
-	statsResp, err := conn.StorageContainersAPI.GetStorageContainerStats(utils.StringPtr(extID.(string)), &startTimeVal, &endTimeVal, utils.IntPtr(samplingInterval.(int)), &statType, args)
+	getStorageContainerStatsRequest := import1.GetStorageContainerStatsRequest{
+		ExtId:             utils.StringPtr(extID.(string)),
+		StartTime_:        &startTimeVal,
+		EndTime_:          &endTimeVal,
+		SamplingInterval_: utils.IntPtr(samplingInterval.(int)),
+		StatType_:         &statType,
+	}
+	statsResp, err := conn.StorageContainersAPI.GetStorageContainerStats(ctx, &getStorageContainerStatsRequest, args)
 	if err != nil {
 		return diag.Errorf("error while fetching Storage Container : %v", err)
 	}

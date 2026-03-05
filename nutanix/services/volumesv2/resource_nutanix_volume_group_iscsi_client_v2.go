@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	taskPoll "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-	config "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/common/v1/config"
-	volumesPrism "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/prism/v4/config"
-	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
+	config "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/common/v1/config"
+	volumesPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/prism/v4/config"
+	volumesClient "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/config"
+	taskPoll "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/request/volumegroups"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -186,8 +188,12 @@ func ResourceNutanixVolumeGroupIscsiClientV2Create(ctx context.Context, d *schem
 		p := volumesClient.VolumeGroupAttachmentSite(pInt.(int))
 		body.AttachmentSite = &p
 	}
-
-	resp, err := conn.VolumeAPIInstance.AttachIscsiClient(utils.StringPtr(volumeGroupExtID.(string)), &body)
+  
+	attachIscsiClientRequest := import1.AttachIscsiClientRequest{
+		ExtId: utils.StringPtr(volumeGroupExtID.(string)),
+		Body:  &body,
+	}
+	resp, err := conn.VolumeAPIInstance.AttachIscsiClient(ctx, &attachIscsiClientRequest)
 	if err != nil {
 		return diag.Errorf("error while Attaching Iscsi Client to Volume Group: %v", err)
 	}
@@ -209,7 +215,10 @@ func ResourceNutanixVolumeGroupIscsiClientV2Create(ctx context.Context, d *schem
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import2.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while Attaching Iscsi Client to Volume Group: %v", err)
 	}
@@ -246,8 +255,12 @@ func ResourceNutanixVVolumeGroupIscsiClientV2Delete(ctx context.Context, d *sche
 	if extID, ok := d.GetOk("ext_id"); ok {
 		body.ExtId = utils.StringPtr(extID.(string))
 	}
-
-	resp, err := conn.VolumeAPIInstance.DetachIscsiClient(utils.StringPtr(volumeGroupExtID.(string)), &body)
+  
+	detachIscsiClientRequest := import1.DetachIscsiClientRequest{
+		ExtId: utils.StringPtr(volumeGroupExtID.(string)),
+		Body:  &body,
+	}
+	resp, err := conn.VolumeAPIInstance.DetachIscsiClient(ctx, &detachIscsiClientRequest)
 	if err != nil {
 		return diag.Errorf("error while Detaching Iscsi Client to Volume Group: %v", err)
 	}
@@ -269,7 +282,10 @@ func ResourceNutanixVVolumeGroupIscsiClientV2Delete(ctx context.Context, d *sche
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import2.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while Detaching Iscsi Client to Volume Group: %v", err)
 	}

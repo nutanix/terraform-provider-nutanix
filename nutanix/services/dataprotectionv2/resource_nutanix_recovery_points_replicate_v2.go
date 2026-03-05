@@ -8,9 +8,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/config"
-	dataprtotectionPrismConfig "github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/prism/v4/config"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/config"
+	dataprtotectionPrismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/request/recoverypoints"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -58,8 +60,11 @@ func ResourceNutanixRecoveryPointReplicateV2Create(ctx context.Context, d *schem
 	if clusterExtID, ok := d.GetOk("cluster_ext_id"); ok {
 		body.ClusterExtId = utils.StringPtr(clusterExtID.(string))
 	}
-
-	resp, err := conn.RecoveryPoint.ReplicateRecoveryPoint(utils.StringPtr(rpExtID), &body)
+  replicateRecoveryPointRequest := import2.ReplicateRecoveryPointRequest{
+		ExtId: utils.StringPtr(rpExtID),
+		Body:  &body,
+	}
+	resp, err := conn.RecoveryPoint.ReplicateRecoveryPoint(ctx, &replicateRecoveryPointRequest)
 	if err != nil {
 		return diag.Errorf("error while replicating recovery point: %v", err)
 	}
@@ -81,7 +86,10 @@ func ResourceNutanixRecoveryPointReplicateV2Create(ctx context.Context, d *schem
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import1.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching replicate recovery point task: %v", err)
 	}

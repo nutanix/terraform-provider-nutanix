@@ -11,8 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/management"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/domainmanagerbackups"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -234,7 +236,11 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Payload backup target Body: %s", string(aJSON))
 
-	resp, err := conn.DomainManagerBackupsAPIInstance.CreateBackupTarget(utils.StringPtr(domainManagerExtID), &body)
+	createBackupTargetRequest := import3.CreateBackupTargetRequest{
+		DomainManagerExtId: utils.StringPtr(domainManagerExtID),
+		Body:               &body,
+	}
+	resp, err := conn.DomainManagerBackupsAPIInstance.CreateBackupTarget(ctx, &createBackupTargetRequest)
 
 	if err != nil {
 		return diag.Errorf("error while creating backup target: %s", err)
@@ -256,7 +262,10 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 		return diag.Errorf("error waiting for backup target (%s) to be created: %s", utils.StringValue(taskUUID), err)
 	}
 
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching backup target create task (%s): %s", utils.StringValue(taskUUID), err)
 	}
@@ -265,7 +274,10 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Create backup target task details: %s", string(aJSON))
 
-	listBackupTargets, err := conn.DomainManagerBackupsAPIInstance.ListBackupTargets(utils.StringPtr(domainManagerExtID))
+	listBackupTargetsRequest := import3.ListBackupTargetsRequest{
+		DomainManagerExtId: utils.StringPtr(domainManagerExtID),
+	}
+	listBackupTargets, err := conn.DomainManagerBackupsAPIInstance.ListBackupTargets(ctx, &listBackupTargetsRequest)
 	if err != nil {
 		return diag.Errorf("error while Listing Backup Targets for : %s err: %s", domainManagerExtID, err)
 	}
@@ -310,7 +322,11 @@ func ResourceNutanixBackupTargetV2Read(ctx context.Context, d *schema.ResourceDa
 
 	domainManagerExtID := d.Get("domain_manager_ext_id").(string)
 
-	resp, err := conn.DomainManagerBackupsAPIInstance.GetBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(d.Id()), nil)
+	getBackupTargetByIdRequest := import3.GetBackupTargetByIdRequest{
+		DomainManagerExtId: utils.StringPtr(domainManagerExtID),
+		ExtId:               utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.DomainManagerBackupsAPIInstance.GetBackupTargetById(ctx, &getBackupTargetByIdRequest)
 
 	if err != nil {
 		return diag.Errorf("error while fetching backup target: %s", err)
@@ -408,7 +424,11 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.Client).PrismAPI
 	domainManagerExtID := d.Get("domain_manager_ext_id").(string)
 
-	readResp, err := conn.DomainManagerBackupsAPIInstance.GetBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(d.Id()), nil)
+	getBackupTargetByIdRequest := import3.GetBackupTargetByIdRequest{
+		DomainManagerExtId: utils.StringPtr(domainManagerExtID),
+		ExtId:               utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.DomainManagerBackupsAPIInstance.GetBackupTargetById(ctx, &getBackupTargetByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching backup target: %s", err)
 	}
@@ -471,7 +491,12 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
 	log.Printf("[DEBUG] Payload to update backup target: %s", string(aJSON))
 
-	resp, err := conn.DomainManagerBackupsAPIInstance.UpdateBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(d.Id()), &updateSpec, args)
+	updateBackupTargetByIdRequest := import3.UpdateBackupTargetByIdRequest{
+		DomainManagerExtId: utils.StringPtr(domainManagerExtID),
+		ExtId:               utils.StringPtr(d.Id()),
+		Body:                &updateSpec,
+	}
+	resp, err := conn.DomainManagerBackupsAPIInstance.UpdateBackupTargetById(ctx, &updateBackupTargetByIdRequest, args)
 
 	if err != nil {
 		return diag.Errorf("error while updating backup target: %s", err)
@@ -493,7 +518,10 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 		return diag.Errorf("error waiting for backup target (%s) to be updated: %s", utils.StringValue(taskUUID), err)
 	}
 
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching backup target update task (%s): %s", utils.StringValue(taskUUID), err)
 	}
@@ -510,7 +538,11 @@ func ResourceNutanixBackupTargetV2Delete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.Client).PrismAPI
 	domainManagerExtID := d.Get("domain_manager_ext_id").(string)
 
-	readResp, err := conn.DomainManagerBackupsAPIInstance.GetBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(d.Id()), nil)
+	getBackupTargetByIdRequest := import3.GetBackupTargetByIdRequest{
+		DomainManagerExtId: utils.StringPtr(domainManagerExtID),
+		ExtId:               utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.DomainManagerBackupsAPIInstance.GetBackupTargetById(ctx, &getBackupTargetByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching backup target: %s", err)
 	}
@@ -520,7 +552,11 @@ func ResourceNutanixBackupTargetV2Delete(ctx context.Context, d *schema.Resource
 	eTag := conn.DomainManagerBackupsAPIInstance.ApiClient.GetEtag(readResp)
 	args["If-Match"] = utils.StringPtr(eTag)
 
-	resp, err := conn.DomainManagerBackupsAPIInstance.DeleteBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(d.Id()), args)
+	deleteBackupTargetByIdRequest := import3.DeleteBackupTargetByIdRequest{
+		DomainManagerExtId: utils.StringPtr(domainManagerExtID),
+		ExtId:               utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.DomainManagerBackupsAPIInstance.DeleteBackupTargetById(ctx, &deleteBackupTargetByIdRequest, args)
 
 	if err != nil {
 		return diag.Errorf("error while deleting backup target: %s", err)
@@ -542,7 +578,10 @@ func ResourceNutanixBackupTargetV2Delete(ctx context.Context, d *schema.Resource
 		return diag.Errorf("error waiting for backup target (%s) to be deleted: %s", utils.StringValue(taskUUID), err)
 	}
 
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching backup target delete task (%s): %s", utils.StringValue(taskUUID), err)
 	}

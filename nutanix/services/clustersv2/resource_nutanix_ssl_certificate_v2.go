@@ -10,10 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
-	clustermgmtPrism "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/sslcertificate"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	clustermgmtPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/prism/v4/config"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -67,7 +69,10 @@ func ResourceNutanixSSLCertificateV2Create(ctx context.Context, d *schema.Resour
 	clusterExtID := d.Get("cluster_ext_id").(string)
 
 	// Extract the etag header
-	resp, err := conn.SSLCertificateAPI.GetSSLCertificate(utils.StringPtr(clusterExtID))
+	getSSLCertificateRequest := import2.GetSSLCertificateRequest{
+		ClusterExtId: utils.StringPtr(clusterExtID),
+	}
+	resp, err := conn.SSLCertificateAPI.GetSSLCertificate(ctx, &getSSLCertificateRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching SSL certificate: %v", err)
 	}
@@ -99,7 +104,11 @@ func ResourceNutanixSSLCertificateV2Create(ctx context.Context, d *schema.Resour
 	log.Printf("[DEBUG] SSL certificate update payload: %s", string(aJSON))
 
 	// Call the update API
-	updateResp, err := conn.SSLCertificateAPI.UpdateSSLCertificate(utils.StringPtr(clusterExtID), updateSpec, args)
+	updateSSLCertificateRequest := import2.UpdateSSLCertificateRequest{
+		ClusterExtId: utils.StringPtr(clusterExtID),
+		Body:         updateSpec,
+	}
+	updateResp, err := conn.SSLCertificateAPI.UpdateSSLCertificate(ctx, &updateSSLCertificateRequest, args)
 	if err != nil {
 		return diag.Errorf("error while updating SSL certificate: %v", err)
 	}
@@ -120,7 +129,10 @@ func ResourceNutanixSSLCertificateV2Create(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error waiting for SSL certificate (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import3.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching SSL certificate task: %v", err)
 	}
@@ -144,8 +156,11 @@ func ResourceNutanixSSLCertificateV2Read(ctx context.Context, d *schema.Resource
 	maxRetries := 10
 	retryDelay := 2 * time.Second
 
+	getSSLCertificateRequest := import2.GetSSLCertificateRequest{
+		ClusterExtId: utils.StringPtr(clusterExtID),
+	}
 	for attempt := 0; attempt < maxRetries; attempt++ {
-		resp, err = conn.SSLCertificateAPI.GetSSLCertificate(utils.StringPtr(clusterExtID))
+		resp, err = conn.SSLCertificateAPI.GetSSLCertificate(ctx, &getSSLCertificateRequest)
 		if err == nil {
 			break
 		}

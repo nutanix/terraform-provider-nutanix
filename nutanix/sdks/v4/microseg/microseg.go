@@ -3,16 +3,17 @@ package microseg
 import (
 	"strconv"
 
-	"github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/api"
-	microseg "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/client"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/api"
+	microseg "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/sdkconfig"
 )
 
 type Client struct {
-	AddressGroupAPIInstance    *api.AddressGroupsApi
-	ServiceGroupAPIInstance    *api.ServiceGroupsApi
-	NetworkingSecurityInstance *api.NetworkSecurityPoliciesApi
+	AddressGroupAPIInstance    *api.AddressGroupsServiceApi
+	ServiceGroupAPIInstance    *api.ServiceGroupsServiceApi
+	NetworkingSecurityInstance *api.NetworkSecurityPoliciesServiceApi
+	EntityGroupsAPIInstance    *api.EntityGroupsServiceApi
 }
 
 func NewMicrosegClient(credentials client.Credentials) (*Client, error) {
@@ -37,9 +38,10 @@ func NewMicrosegClient(credentials client.Credentials) (*Client, error) {
 	}
 
 	f := &Client{
-		AddressGroupAPIInstance:    api.NewAddressGroupsApi(baseClient),
-		ServiceGroupAPIInstance:    api.NewServiceGroupsApi(baseClient),
-		NetworkingSecurityInstance: api.NewNetworkSecurityPoliciesApi(baseClient),
+		AddressGroupAPIInstance:    api.NewAddressGroupsServiceApi(baseClient),
+		ServiceGroupAPIInstance:    api.NewServiceGroupsServiceApi(baseClient),
+		NetworkingSecurityInstance: api.NewNetworkSecurityPoliciesServiceApi(baseClient),
+		EntityGroupsAPIInstance:    api.NewEntityGroupsServiceApi(baseClient),
 	}
 
 	return f, nil

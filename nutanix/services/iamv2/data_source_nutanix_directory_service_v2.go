@@ -6,7 +6,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authn"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/directoryservices"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -133,6 +134,21 @@ func DatasourceNutanixDirectoryServiceV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"shared_with_projects": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"share_with_all_projects": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -141,7 +157,10 @@ func DatasourceNutanixDirectoryServiceV2Read(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.Client).IamAPI
 
 	extID := d.Get("ext_id")
-	resp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(utils.StringPtr(extID.(string)))
+	getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -202,6 +221,15 @@ func DatasourceNutanixDirectoryServiceV2Read(ctx context.Context, d *schema.Reso
 	}
 
 	if err := d.Set("created_by", getResp.CreatedBy); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("share_with_all_projects", getResp.SharedWithAllProjects); err != nil {
 		return diag.FromErr(err)
 	}
 

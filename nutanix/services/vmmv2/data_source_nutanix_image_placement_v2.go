@@ -5,7 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import7 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/images/config"
+	import7 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/images/config"
+	import8 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/imageplacementpolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -92,8 +93,10 @@ func DatasourceNutanixImagePlacementV4Read(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.Client).VmmAPI
 
 	extID := d.Get("ext_id")
-
-	resp, err := conn.ImagesPlacementAPIInstance.GetPlacementPolicyById(utils.StringPtr(extID.(string)))
+	getPlacementPolicyByIdRequest := import8.GetPlacementPolicyByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.ImagesPlacementAPIInstance.GetPlacementPolicyById(ctx, &getPlacementPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching image placement : %v", err)
 	}

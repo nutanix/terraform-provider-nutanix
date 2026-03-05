@@ -10,10 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
-	import3 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/common/v1/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusterprofiles"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -432,7 +434,10 @@ func ResourceNutanixClusterProfileV2Create(ctx context.Context, d *schema.Resour
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Cluster Profile Create Payload: %s", string(aJSON))
 
-	createResp, createErr := conn.ClusterProfilesAPI.CreateClusterProfile(body)
+	createClusterProfileRequest := import4.CreateClusterProfileRequest{
+		Body: body,
+	}
+	createResp, createErr := conn.ClusterProfilesAPI.CreateClusterProfile(ctx, &createClusterProfileRequest)
 	if createErr != nil {
 		return diag.FromErr(createErr)
 	}
@@ -452,7 +457,10 @@ func ResourceNutanixClusterProfileV2Create(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error waiting for cluster profile (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import5.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching cluster profile task: %v", err)
 	}
@@ -475,7 +483,10 @@ func ResourceNutanixClusterProfileV2Read(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.Client).ClusterAPI
 
 	// Fetch the Cluster Profile by UUID
-	clusterProfileResp, err := conn.ClusterProfilesAPI.GetClusterProfileById(utils.StringPtr(d.Id()))
+	getClusterProfileByIdRequest := import4.GetClusterProfileByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	clusterProfileResp, err := conn.ClusterProfilesAPI.GetClusterProfileById(ctx, &getClusterProfileByIdRequest)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -560,7 +571,10 @@ func ResourceNutanixClusterProfileV2Update(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.Client).ClusterAPI
 
 	// Fetch the Cluster Profile by UUID
-	clusterProfileResp, err := conn.ClusterProfilesAPI.GetClusterProfileById(utils.StringPtr(d.Id()))
+	getClusterProfileByIdRequest := import4.GetClusterProfileByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	clusterProfileResp, err := conn.ClusterProfilesAPI.GetClusterProfileById(ctx, &getClusterProfileByIdRequest)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -638,8 +652,9 @@ func ResourceNutanixClusterProfileV2Update(ctx context.Context, d *schema.Resour
 		dryRun = utils.BoolPtr(v.(bool))
 	}
 
-	// Extract E-tag from read response
-	getClusterProfileResp, getErr := conn.ClusterProfilesAPI.GetClusterProfileById(utils.StringPtr(d.Id()))
+	// Extract E-tag from read response (reuse existing request variable)
+	getClusterProfileByIdRequest.ExtId = utils.StringPtr(d.Id())
+	getClusterProfileResp, getErr := conn.ClusterProfilesAPI.GetClusterProfileById(ctx, &getClusterProfileByIdRequest)
 	if getErr != nil {
 		return diag.Errorf("error fetching cluster profile: %v", getErr)
 	}
@@ -650,7 +665,12 @@ func ResourceNutanixClusterProfileV2Update(ctx context.Context, d *schema.Resour
 	args["If-Match"] = utils.StringPtr(etagValue)
 
 	// Update Cluster Profile
-	updateResp, updateErr := conn.ClusterProfilesAPI.UpdateClusterProfileById(utils.StringPtr(d.Id()), body, dryRun, args)
+	updateClusterProfileByIdRequest := import4.UpdateClusterProfileByIdRequest{
+		ExtId:   utils.StringPtr(d.Id()),
+		Body:    body,
+		Dryrun_: dryRun,
+	}
+	updateResp, updateErr := conn.ClusterProfilesAPI.UpdateClusterProfileById(ctx, &updateClusterProfileByIdRequest, args)
 	if updateErr != nil {
 		return diag.FromErr(updateErr)
 	}
@@ -670,7 +690,10 @@ func ResourceNutanixClusterProfileV2Update(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error waiting for cluster profile (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import5.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching cluster profile task: %v", err)
 	}
@@ -684,7 +707,10 @@ func ResourceNutanixClusterProfileV2Update(ctx context.Context, d *schema.Resour
 func ResourceNutanixClusterProfileV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ClusterAPI
 
-	deleteResp, deleteErr := conn.ClusterProfilesAPI.DeleteClusterProfileById(utils.StringPtr(d.Id()))
+	deleteClusterProfileByIdRequest := import4.DeleteClusterProfileByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	deleteResp, deleteErr := conn.ClusterProfilesAPI.DeleteClusterProfileById(ctx, &deleteClusterProfileByIdRequest)
 	if deleteErr != nil {
 		return diag.FromErr(deleteErr)
 	}
@@ -703,7 +729,10 @@ func ResourceNutanixClusterProfileV2Delete(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error waiting for cluster profile (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import5.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching cluster profile delete task: %v", err)
 	}

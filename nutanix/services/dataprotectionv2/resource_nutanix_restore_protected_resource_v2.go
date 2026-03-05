@@ -9,9 +9,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/config"
-	dataprotectionPrismConfig "github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/prism/v4/config"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/config"
+	dataprotectionPrismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/request/protectedresources"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -56,8 +58,12 @@ func ResourceNutanixRestoreProtectedResourceV2Create(ctx context.Context, d *sch
 	if restoreTime, ok := d.GetOk("restore_time"); ok {
 		bodySpec.RestoreTime = utils.Time(restoreTime.(time.Time))
 	}
-
-	resp, err := conn.ProtectedResource.RestoreProtectedResource(utils.StringPtr(extID), bodySpec)
+  
+  restoreProtectedResourceRequest := import2.RestoreProtectedResourceRequest{
+		ExtId: utils.StringPtr(extID),
+		Body:  bodySpec,
+	}
+	resp, err := conn.ProtectedResource.RestoreProtectedResource(ctx, &restoreProtectedResourceRequest)
 	if err != nil {
 		return diag.Errorf("error while restoring protected resource: %s", err)
 	}
@@ -80,7 +86,10 @@ func ResourceNutanixRestoreProtectedResourceV2Create(ctx context.Context, d *sch
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import1.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching restore protected resource task: %v", err)
 	}

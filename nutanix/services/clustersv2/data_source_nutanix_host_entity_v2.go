@@ -5,8 +5,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/common/v1/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusters"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -307,7 +308,11 @@ func DatasourceNutanixHostEntityV2Read(ctx context.Context, d *schema.ResourceDa
 
 	extID := d.Get("ext_id")
 	clsID := d.Get("cluster_ext_id")
-	resp, err := conn.ClusterEntityAPI.GetHostById(utils.StringPtr(clsID.(string)), utils.StringPtr(extID.(string)))
+	getHostByIdRequest := import2.GetHostByIdRequest{
+		ClusterExtId: utils.StringPtr(clsID.(string)),
+		ExtId:        utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.ClusterEntityAPI.GetHostById(ctx, &getHostByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching host entity : %v", err)
 	}

@@ -8,10 +8,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	objectsCommon "github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4/models/common/v1/config"
-	"github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4/models/objects/v4/config"
-	objectPrismConfig "github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4/models/prism/v4/config"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	objectsCommon "github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/models/common/v1/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/models/objects/v4/config"
+	objectPrismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/models/prism/v4/config"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import6 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/models/objects/v4/request/objectstores"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -80,7 +82,10 @@ func ResourceNutanixObjectStoreCertificateV2Create(ctx context.Context, d *schem
 
 	objectStoreExtID := d.Get("object_store_ext_id").(string)
 
-	readResp, err := conn.ObjectStoresAPIInstance.GetObjectstoreById(utils.StringPtr(objectStoreExtID))
+	getObjectstoreByIdRequest := import6.GetObjectstoreByIdRequest{
+		ExtId: utils.StringPtr(objectStoreExtID),
+	}
+	readResp, err := conn.ObjectStoresAPIInstance.GetObjectstoreById(ctx, &getObjectstoreByIdRequest)
 	if err != nil {
 		return diag.Errorf("error reading object store: %s", err)
 	}
@@ -92,7 +97,11 @@ func ResourceNutanixObjectStoreCertificateV2Create(ctx context.Context, d *schem
 
 	filePath := d.Get("path").(string)
 
-	resp, err := conn.ObjectStoresAPIInstance.CreateCertificate(utils.StringPtr(objectStoreExtID), utils.StringPtr(filePath), args)
+	createCertificateRequest := import6.CreateCertificateRequest{
+		ObjectStoreExtId: utils.StringPtr(objectStoreExtID),
+		Path:             utils.StringPtr(filePath),
+	}
+	resp, err := conn.ObjectStoresAPIInstance.CreateCertificate(ctx, &createCertificateRequest, args)
 	if err != nil {
 		return diag.Errorf("error creating object store certificate: %s", err)
 	}
@@ -113,7 +122,10 @@ func ResourceNutanixObjectStoreCertificateV2Create(ctx context.Context, d *schem
 		return diag.Errorf("error waiting for object store certificate (%s) to be created: %s", utils.StringValue(taskUUID), err)
 	}
 
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching object store certificate create task (%s): %s", utils.StringValue(taskUUID), err)
 	}
@@ -136,7 +148,11 @@ func ResourceNutanixObjectStoreCertificateV2Read(ctx context.Context, d *schema.
 
 	objectStoreExtID := d.Get("object_store_ext_id").(string)
 
-	resp, err := conn.ObjectStoresAPIInstance.GetCertificateById(utils.StringPtr(objectStoreExtID), utils.StringPtr(d.Id()))
+	getCertificateByIdRequest := import6.GetCertificateByIdRequest{
+		ObjectStoreExtId: utils.StringPtr(objectStoreExtID),
+		ExtId:            utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ObjectStoresAPIInstance.GetCertificateById(ctx, &getCertificateByIdRequest)
 	if err != nil {
 		return diag.Errorf("error reading object store certificate: %s", err)
 	}

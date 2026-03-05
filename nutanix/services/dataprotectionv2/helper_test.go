@@ -1,14 +1,19 @@
 package dataprotectionv2_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
-	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/config"
+	volumesClient "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/vm"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/request/protectionpolicies"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/categories"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/request/volumegroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -19,6 +24,7 @@ func waitForVMToBeProtected(resourceName, attributeName, desiredValue string, ma
 		var lastValue string
 		conn := acc.TestAccProvider.Meta().(*conns.Client)
 		client := conn.VmmAPI.VMAPIInstance
+		ctx := context.Background()
 
 		for i := 0; i < maxRetries; i++ {
 			rs, ok := s.RootModule().Resources[resourceName]
@@ -26,7 +32,10 @@ func waitForVMToBeProtected(resourceName, attributeName, desiredValue string, ma
 				return fmt.Errorf("resource not found: %s", resourceName)
 			}
 
-			vmResp, err := client.GetVmById(utils.StringPtr(rs.Primary.ID))
+			getVmByIdRequest := import1.GetVmByIdRequest{
+				ExtId: utils.StringPtr(rs.Primary.ID),
+			}
+			vmResp, err := client.GetVmById(ctx, &getVmByIdRequest)
 			if err != nil {
 				return fmt.Errorf("error getting vm by id: %v", err)
 			}
@@ -54,6 +63,7 @@ func testCheckDestroyProtectedResourceAndCleanup(state *terraform.State) error {
 	vmClient := conn.VmmAPI.VMAPIInstance
 	categoryClient := conn.PrismAPI.CategoriesAPIInstance
 	ppClient := conn.DataPoliciesAPI.ProtectionPolicies
+	ctx := context.Background()
 
 	vmExtID := ""
 	ppExtID := ""
@@ -78,12 +88,18 @@ func testCheckDestroyProtectedResourceAndCleanup(state *terraform.State) error {
 
 	// delete vm
 	if vmExtID != "" {
-		readResp, err := vmClient.GetVmById(utils.StringPtr(vmExtID))
+		getVmByIdRequest := import1.GetVmByIdRequest{
+			ExtId: utils.StringPtr(vmExtID),
+		}
+		readResp, err := vmClient.GetVmById(ctx, &getVmByIdRequest)
 		if err == nil {
 			args := make(map[string]interface{})
 			etag := vmClient.ApiClient.GetEtag(readResp)
 			args["If-Match"] = utils.StringPtr(etag)
-			_, err = vmClient.DeleteVmById(utils.StringPtr(vmExtID), args)
+			deleteVmByIdRequest := import1.DeleteVmByIdRequest{
+				ExtId: utils.StringPtr(vmExtID),
+			}
+			_, err = vmClient.DeleteVmById(ctx, &deleteVmByIdRequest, args)
 			if err != nil {
 				return fmt.Errorf("error: VM still exists: %v", err)
 			}
@@ -93,10 +109,16 @@ func testCheckDestroyProtectedResourceAndCleanup(state *terraform.State) error {
 
 	// delete protection policy
 	if ppExtID != "" {
-		_, err := ppClient.GetProtectionPolicyById(utils.StringPtr(ppExtID))
+		getProtectionPolicyByIdRequest := import2.GetProtectionPolicyByIdRequest{
+			ExtId: utils.StringPtr(ppExtID),
+		}
+		_, err := ppClient.GetProtectionPolicyById(ctx, &getProtectionPolicyByIdRequest)
 		if err == nil {
 			log.Printf("[DEBUG] Protection Policy still exists")
-			_, err = ppClient.DeleteProtectionPolicyById(utils.StringPtr(ppExtID))
+			deleteProtectionPolicyByIdRequest := import2.DeleteProtectionPolicyByIdRequest{
+				ExtId: utils.StringPtr(ppExtID),
+			}
+			_, err = ppClient.DeleteProtectionPolicyById(ctx, &deleteProtectionPolicyByIdRequest)
 			if err != nil {
 				return fmt.Errorf("error: Protection Policy still exists : %v", err)
 			}
@@ -106,11 +128,16 @@ func testCheckDestroyProtectedResourceAndCleanup(state *terraform.State) error {
 
 	// delete category
 	if categoryExtID != "" {
-		_, err := categoryClient.GetCategoryById(utils.StringPtr(categoryExtID), nil)
+		getCategoryByIdRequest := import3.GetCategoryByIdRequest{
+			ExtId: utils.StringPtr(categoryExtID),
+		}
+		_, err := categoryClient.GetCategoryById(ctx, &getCategoryByIdRequest)
 		if err == nil {
 			log.Printf("[DEBUG] Category still exists")
-
-			_, err = categoryClient.DeleteCategoryById(utils.StringPtr(categoryExtID))
+			deleteCategoryByIdRequest := import3.DeleteCategoryByIdRequest{
+				ExtId: utils.StringPtr(categoryExtID),
+			}
+			_, err = categoryClient.DeleteCategoryById(ctx, &deleteCategoryByIdRequest)
 			if err != nil {
 				return fmt.Errorf("error: Category still exists : %v", err)
 			}
@@ -133,15 +160,22 @@ func testCheckDestroyProtectedResourceAndCleanupForPromoteVM(state *terraform.St
 
 			connRemote := acc.TestAccProvider2.Meta().(*conns.Client)
 			client := connRemote.VmmAPI.VMAPIInstance
+			ctx := context.Background()
 
-			readResp, err := client.GetVmById(utils.StringPtr(vmExtID))
+			getVmByIdRequest := import1.GetVmByIdRequest{
+				ExtId: utils.StringPtr(vmExtID),
+			}
+			readResp, err := client.GetVmById(ctx, &getVmByIdRequest)
 
 			if err == nil {
 				args := make(map[string]interface{})
 				etag := client.ApiClient.GetEtag(readResp)
 				args["If-Match"] = utils.StringPtr(etag)
 
-				_, err = client.DeleteVmById(utils.StringPtr(vmExtID), args)
+				deleteVmByIdRequest := import1.DeleteVmByIdRequest{
+					ExtId: utils.StringPtr(vmExtID),
+				}
+				_, err = client.DeleteVmById(ctx, &deleteVmByIdRequest, args)
 				if err != nil {
 					return fmt.Errorf("error: Promoted VM still exists: %v", err)
 				}
@@ -159,10 +193,14 @@ func deleteRestoredVM(vmName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acc.TestAccProvider2.Meta().(*conns.Client)
 		client := conn.VmmAPI.VMAPIInstance
+		ctx := context.Background()
 
 		filter := fmt.Sprintf("startswith(name, '%s')", vmName)
 
-		resp, err := client.ListVms(nil, nil, utils.StringPtr(filter), nil, nil)
+		listVmsRequest := import1.ListVmsRequest{
+			Filter_: utils.StringPtr(filter),
+		}
+		resp, err := client.ListVms(ctx, &listVmsRequest)
 		if err != nil {
 			return fmt.Errorf("%v", err)
 		}
@@ -173,12 +211,18 @@ func deleteRestoredVM(vmName string) resource.TestCheckFunc {
 		vms := resp.Data.GetValue().([]config.Vm)
 
 		vm := vms[0]
-		readResp, err := client.GetVmById(vm.ExtId)
+		getVmByIdRequest := import1.GetVmByIdRequest{
+			ExtId: vm.ExtId,
+		}
+		readResp, err := client.GetVmById(ctx, &getVmByIdRequest)
 		if err == nil {
 			args := make(map[string]interface{})
 			etag := client.ApiClient.GetEtag(readResp)
 			args["If-Match"] = utils.StringPtr(etag)
-			_, err = client.DeleteVmById(vm.ExtId, args)
+			deleteVmByIdRequest := import1.DeleteVmByIdRequest{
+				ExtId: vm.ExtId,
+			}
+			_, err = client.DeleteVmById(ctx, &deleteVmByIdRequest, args)
 			if err != nil {
 				return fmt.Errorf("error: Restored VM still exists: %v", err)
 			}
@@ -194,9 +238,13 @@ func deleteRestoredVg(vgName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acc.TestAccProvider2.Meta().(*conns.Client)
 		client := conn.VolumeAPI.VolumeAPIInstance
+		ctx := context.Background()
 		filter := fmt.Sprintf("startswith(name, '%s')", vgName)
 
-		resp, err := client.ListVolumeGroups(nil, nil, utils.StringPtr(filter), nil, nil, nil)
+		listVolumeGroupsRequest := import4.ListVolumeGroupsRequest{
+			Filter_: utils.StringPtr(filter),
+		}
+		resp, err := client.ListVolumeGroups(ctx, &listVolumeGroupsRequest)
 		if err != nil {
 			return fmt.Errorf("%v", err)
 		}
@@ -208,7 +256,10 @@ func deleteRestoredVg(vgName string) resource.TestCheckFunc {
 
 		vg := vgs[0]
 		if err == nil {
-			_, err = client.DeleteVolumeGroupById(vg.ExtId)
+			deleteVolumeGroupByIdRequest := import4.DeleteVolumeGroupByIdRequest{
+				ExtId: vg.ExtId,
+			}
+			_, err = client.DeleteVolumeGroupById(ctx, &deleteVolumeGroupByIdRequest)
 			if err != nil {
 				return fmt.Errorf("error: Restored Volume Group still exists: %v", err)
 			}

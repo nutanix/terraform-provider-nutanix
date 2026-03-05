@@ -3,20 +3,20 @@ package networking
 import (
 	"strconv"
 
-	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/api"
-	network "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/client"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/api"
+	network "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/sdkconfig"
 )
 
 type Client struct {
-	Routes                *api.RoutesApi
-	RoutesTable           *api.RouteTablesApi
+	Routes                *api.RoutesServiceApi
+	RoutesTable           *api.RouteTablesServiceApi
 	APIClientInstance     *network.ApiClient
-	RoutingPolicy         *api.RoutingPoliciesApi
-	SubnetAPIInstance     *api.SubnetsApi
-	VpcAPIInstance        *api.VpcsApi
-	FloatingIPAPIInstance *api.FloatingIpsApi
+	RoutingPolicy         *api.RoutingPoliciesServiceApi
+	SubnetAPIInstance     *api.SubnetsServiceApi
+	VpcAPIInstance        *api.VpcsServiceApi
+	FloatingIPAPIInstance *api.FloatingIpsServiceApi
 }
 
 func NewNetworkingClient(credentials client.Credentials) (*Client, error) {
@@ -41,12 +41,12 @@ func NewNetworkingClient(credentials client.Credentials) (*Client, error) {
 	}
 
 	f := &Client{
-		Routes:                api.NewRoutesApi(baseClient),
-		RoutesTable:           api.NewRouteTablesApi(baseClient),
-		RoutingPolicy:         api.NewRoutingPoliciesApi(baseClient),
-		SubnetAPIInstance:     api.NewSubnetsApi(baseClient),
-		VpcAPIInstance:        api.NewVpcsApi(baseClient),
-		FloatingIPAPIInstance: api.NewFloatingIpsApi(baseClient),
+		Routes:                api.NewRoutesServiceApi(baseClient),
+		RoutesTable:           api.NewRouteTablesServiceApi(baseClient),
+		RoutingPolicy:         api.NewRoutingPoliciesServiceApi(baseClient),
+		SubnetAPIInstance:     api.NewSubnetsServiceApi(baseClient),
+		VpcAPIInstance:        api.NewVpcsServiceApi(baseClient),
+		FloatingIPAPIInstance: api.NewFloatingIpsServiceApi(baseClient),
 	}
 
 	return f, nil

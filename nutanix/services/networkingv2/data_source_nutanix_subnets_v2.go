@@ -6,7 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/subnets"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -410,6 +411,17 @@ func DataSourceNutanixSubnetsV2() *schema.Resource {
 								},
 							},
 						},
+						"project_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"shared_with_projects": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 					},
 				},
 			},
@@ -420,42 +432,28 @@ func DataSourceNutanixSubnetsV2() *schema.Resource {
 func dataSourceNutanixSubnetsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	// initialize query params
-	var filter, orderBy, expand, selects *string
-	var page, limit *int
+	listSubnetsRequest := import2.ListSubnetsRequest{}
 
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
+	if v, ok := d.GetOk("page"); ok {
+		listSubnetsRequest.Page_ = utils.IntPtr(v.(int))
 	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
+	if v, ok := d.GetOk("limit"); ok {
+		listSubnetsRequest.Limit_ = utils.IntPtr(v.(int))
 	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
+	if v, ok := d.GetOk("filter"); ok {
+		listSubnetsRequest.Filter_ = utils.StringPtr(v.(string))
 	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
+	if v, ok := d.GetOk("order_by"); ok {
+		listSubnetsRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
-	if expandf, ok := d.GetOk("expand"); ok {
-		expand = utils.StringPtr(expandf.(string))
-	} else {
-		expand = nil
+	if v, ok := d.GetOk("expand"); ok {
+		listSubnetsRequest.Expand_ = utils.StringPtr(v.(string))
 	}
-	if selectf, ok := d.GetOk("select"); ok {
-		selects = utils.StringPtr(selectf.(string))
-	} else {
-		selects = nil
+	if v, ok := d.GetOk("select"); ok {
+		listSubnetsRequest.Select_ = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.SubnetAPIInstance.ListSubnets(page, limit, filter, orderBy, expand, selects)
+	resp, err := conn.SubnetAPIInstance.ListSubnets(ctx, &listSubnetsRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching subnets : %v", err)
 	}
@@ -516,7 +514,8 @@ func flattenSubnetEntities(pr []import1.Subnet) []interface{} {
 			sub["ip_prefix"] = v.IpPrefix
 			sub["ip_usage"] = flattenIPUsage(v.IpUsage)
 			sub["migration_state"] = flattenMigrationState(v.MigrationState)
-
+			sub["project_ext_id"] = v.ProjectExtId
+			sub["shared_with_projects"] = v.SharedWithProjects
 			subnets[k] = sub
 		}
 		return subnets

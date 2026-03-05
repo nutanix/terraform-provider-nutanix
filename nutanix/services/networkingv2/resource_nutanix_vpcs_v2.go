@@ -3,17 +3,21 @@ package networkingv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
-	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/vpcs"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/prism/v4/config"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -39,6 +43,19 @@ func ResourceNutanixVPCsV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
+			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"shared_with_projects": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"vpc_type": {
 				Type:         schema.TypeString,
@@ -226,6 +243,9 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 	if description, ok := d.GetOk("description"); ok {
 		inputSpec.Description = utils.StringPtr(description.(string))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		inputSpec.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 	if vpcType, ok := d.GetOk("vpc_type"); ok {
 		const two, three = 2, 3
 		subMap := map[string]interface{}{
@@ -253,11 +273,13 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 	if externallyRoutablePrefixes, ok := d.GetOk("externally_routable_prefixes"); ok {
 		inputSpec.ExternallyRoutablePrefixes = expandIPSubnet(externallyRoutablePrefixes.([]interface{}))
 	}
-
-	aJSON, _ := json.MarshalIndent(inputSpec, "", " ")
+	createVpcRequest := import2.CreateVpcRequest{
+		Body: &inputSpec,
+	}
+	aJSON, _ := json.MarshalIndent(createVpcRequest, "", " ")
 	log.Printf("[DEBUG] VPC create payload : %s", string(aJSON))
 
-	resp, err := conn.VpcAPIInstance.CreateVpc(&inputSpec)
+	resp, err := conn.VpcAPIInstance.CreateVpc(ctx, &createVpcRequest)
 	if err != nil {
 		return diag.Errorf("error while creating floating IPs : %v", err)
 	}
@@ -281,7 +303,10 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import5.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching VPC task: %v", err)
 	}
@@ -294,13 +319,28 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 	d.SetId(utils.StringValue(uuid))
+
+	// Handle sharing with projects after creation
+	if sharedProjects, ok := d.GetOk("shared_with_projects"); ok {
+		// Share with specific projects
+		projectsSet := sharedProjects.(*schema.Set)
+		for _, projectID := range projectsSet.List() {
+			if err := shareVpcWithProject(ctx, conn, utils.StringValue(uuid), projectID.(string)); err != nil {
+				return diag.Errorf("error while sharing VPC with project %s: %v", projectID.(string), err)
+			}
+		}
+	}
+
 	return ResourceNutanixVPCsV2Read(ctx, d, meta)
 }
 
 func ResourceNutanixVPCsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.VpcAPIInstance.GetVpcById(utils.StringPtr(d.Id()))
+	getVpcRequest := import2.GetVpcByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.VpcAPIInstance.GetVpcById(ctx, &getVpcRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching vpc : %v", err)
 	}
@@ -317,6 +357,12 @@ func ResourceNutanixVPCsV2Read(ctx context.Context, d *schema.ResourceData, meta
 		return diag.FromErr(err)
 	}
 	if err := d.Set("description", getResp.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("vpc_type", getResp.VpcType.GetName()); err != nil {
@@ -353,7 +399,10 @@ func ResourceNutanixVPCsV2Read(ctx context.Context, d *schema.ResourceData, meta
 func ResourceNutanixVPCsV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.VpcAPIInstance.GetVpcById(utils.StringPtr(d.Id()))
+	getVpcRequest := import2.GetVpcByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.VpcAPIInstance.GetVpcById(ctx, &getVpcRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching vpcs : %v", err)
 	}
@@ -368,6 +417,33 @@ func ResourceNutanixVPCsV2Update(ctx context.Context, d *schema.ResourceData, me
 	if d.HasChange("description") {
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
 	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
+
+	// Handle shared_with_projects changes
+	if d.HasChange("shared_with_projects") {
+		oldProjects, newProjects := d.GetChange("shared_with_projects")
+		oldSet := oldProjects.(*schema.Set)
+		newSet := newProjects.(*schema.Set)
+
+		// Unshare with removed projects
+		removedProjects := oldSet.Difference(newSet)
+		for _, projectID := range removedProjects.List() {
+			if err := unshareVpcWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
+				return diag.Errorf("error while unsharing VPC with project %s: %v", projectID.(string), err)
+			}
+		}
+
+		// Share with new projects
+		addedProjects := newSet.Difference(oldSet)
+		for _, projectID := range addedProjects.List() {
+			if err := shareVpcWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
+				return diag.Errorf("error while sharing VPC with project %s: %v", projectID.(string), err)
+			}
+		}
+	}
+
 	if d.HasChange("vpc_type") {
 		const two, three = 2, 3
 		subMap := map[string]interface{}{
@@ -395,7 +471,17 @@ func ResourceNutanixVPCsV2Update(ctx context.Context, d *schema.ResourceData, me
 		updateSpec.ExternallyRoutablePrefixes = expandIPSubnet(d.Get("externally_routable_prefixes").([]interface{}))
 	}
 
-	updateResp, err := conn.VpcAPIInstance.UpdateVpcById(utils.StringPtr(d.Id()), &updateSpec)
+	etagValue := conn.VpcAPIInstance.ApiClient.GetEtag(resp)
+	args := make(map[string]interface{})
+	args["If-Match"] = utils.StringPtr(etagValue)
+
+	updateVpcRequest := import2.UpdateVpcByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updateSpec,
+	}
+	aJSON, _ := json.MarshalIndent(updateVpcRequest, "", "  ")
+	log.Printf("[DEBUG] Update VPC Payload: %s", string(aJSON))
+	updateResp, err := conn.VpcAPIInstance.UpdateVpcById(ctx, &updateVpcRequest, args)
 	if err != nil {
 		return diag.Errorf("error while updating vpcs : %v", err)
 	}
@@ -423,7 +509,10 @@ func ResourceNutanixVPCsV2Update(ctx context.Context, d *schema.ResourceData, me
 func ResourceNutanixVPCsV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.VpcAPIInstance.DeleteVpcById(utils.StringPtr(d.Id()))
+	deleteVpcRequest := import2.DeleteVpcByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.VpcAPIInstance.DeleteVpcById(ctx, &deleteVpcRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting vpc : %v", err)
 	}
@@ -444,5 +533,66 @@ func ResourceNutanixVPCsV2Delete(ctx context.Context, d *schema.ResourceData, me
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for VPC (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
+	return nil
+}
+
+// Helper functions for sharing/unsharing VPC with projects
+func shareVpcWithProject(ctx context.Context, conn *networking.Client, vpcID, projectID string) error {
+	vpcExtID := utils.StringPtr(vpcID)
+	shareVpcRequest := import2.ShareVpcByIdRequest{
+		ExtId: vpcExtID,
+		Body: &import1.ProjectReference{
+			ProjectExtId: utils.StringPtr(projectID),
+		},
+	}
+
+	getVpcRequest := import2.GetVpcByIdRequest{
+		ExtId: vpcExtID,
+	}
+	readResp, err := conn.VpcAPIInstance.GetVpcById(ctx, &getVpcRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching VPC for etag value: %v", err)
+	}
+
+	// Extract E-Tag Header
+	etagValue := conn.VpcAPIInstance.ApiClient.GetEtag(readResp)
+	args := make(map[string]interface{})
+	args["If-Match"] = utils.StringPtr(etagValue)
+
+	resp, err := conn.VpcAPIInstance.ShareVpcById(ctx, &shareVpcRequest, args)
+	if err != nil {
+		return fmt.Errorf("error while sharing VPC %s with project %s: %w", vpcExtID, projectID, err)
+	}
+	log.Printf("[DEBUG] Sharing VPC %s with project %s response: %v", vpcExtID, projectID, resp)
+	return nil
+}
+
+func unshareVpcWithProject(ctx context.Context, conn *networking.Client, vpcID, projectID string) error {
+	vpcExtID := utils.StringPtr(vpcID)
+	unshareVpcRequest := import2.UnshareVpcByIdRequest{
+		ExtId: vpcExtID,
+		Body: &import1.ProjectReference{
+			ProjectExtId: utils.StringPtr(projectID),
+		},
+	}
+
+	getVpcRequest := import2.GetVpcByIdRequest{
+		ExtId: vpcExtID,
+	}
+	readResp, err := conn.VpcAPIInstance.GetVpcById(ctx, &getVpcRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching VPC for etag value: %v", err)
+	}
+
+	// Extract E-Tag Header
+	etagValue := conn.VpcAPIInstance.ApiClient.GetEtag(readResp)
+	args := make(map[string]interface{})
+	args["If-Match"] = utils.StringPtr(etagValue)
+
+	resp, err := conn.VpcAPIInstance.UnshareVpcById(ctx, &unshareVpcRequest, args)
+	if err != nil {
+		return fmt.Errorf("error while unsharing VPC %s with project %s: %w", vpcExtID, projectID, err)
+	}
+	log.Printf("[DEBUG] Unsharing VPC %s with project %s response: %v", vpcExtID, projectID, resp)
 	return nil
 }

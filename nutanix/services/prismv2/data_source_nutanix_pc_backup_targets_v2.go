@@ -5,7 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/management"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/domainmanagerbackups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -31,8 +32,10 @@ func DatasourceNutanixBackupTargetsV2Read(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.Client).PrismAPI
 
 	domainManagerExtID := d.Get("domain_manager_ext_id").(string)
-
-	resp, err := conn.DomainManagerBackupsAPIInstance.ListBackupTargets(utils.StringPtr(domainManagerExtID))
+	listBackupTargetsRequest := import1.ListBackupTargetsRequest{
+		DomainManagerExtId: utils.StringPtr(domainManagerExtID),
+	}
+	resp, err := conn.DomainManagerBackupsAPIInstance.ListBackupTargets(ctx, &listBackupTargetsRequest)
 
 	if err != nil {
 		return diag.Errorf("error while Listing Backup Targets for : %s err: %s", domainManagerExtID, err)

@@ -8,8 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/management"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/domainmanager"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -39,7 +41,10 @@ func ResourceNutanixUnregisterClusterV2Create(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.Client).PrismAPI
 	pcExtID := d.Get("pc_ext_id")
 
-	readClsResp, readErr := conn.DomainManagerAPIInstance.GetDomainManagerById(utils.StringPtr(pcExtID.(string)))
+	getDomainManagerByIdRequest := import3.GetDomainManagerByIdRequest{
+		ExtId: utils.StringPtr(pcExtID.(string)),
+	}
+	readClsResp, readErr := conn.DomainManagerAPIInstance.GetDomainManagerById(ctx, &getDomainManagerByIdRequest)
 	if readErr != nil {
 		return diag.Errorf("error while fetching PC: %v", readErr)
 	}
@@ -56,8 +61,11 @@ func ResourceNutanixUnregisterClusterV2Create(ctx context.Context, d *schema.Res
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Unregister Cluster Request payload: %s", string(aJSON))
 
-	// pass nil for the new dyRun flag
-	resp, err := conn.DomainManagerAPIInstance.Unregister(utils.StringPtr(pcExtID.(string)), &body, nil, args)
+	unregisterRequest := import3.UnregisterRequest{
+		ExtId: utils.StringPtr(pcExtID.(string)),
+		Body:  &body,
+	}
+	resp, err := conn.DomainManagerAPIInstance.Unregister(ctx, &unregisterRequest, args)
 
 	if err != nil {
 		return diag.Errorf("error while unregistering cluster : %v", err)
@@ -79,7 +87,10 @@ func ResourceNutanixUnregisterClusterV2Create(ctx context.Context, d *schema.Res
 		return diag.Errorf("error waiting for cluster unregistration (%s) to complete: %s", utils.StringValue(taskUUID), err)
 	}
 
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching cluster unregistration task (%s): %v", utils.StringValue(taskUUID), err)
 	}

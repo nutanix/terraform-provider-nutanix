@@ -1,6 +1,7 @@
 package vmmv2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -8,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/templates"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -228,11 +230,15 @@ func testTemplateV2CheckDestroy(state *terraform.State) error {
 	fmt.Println("testTemplateV2CheckDestroy")
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 	client := conn.VmmAPI.TemplatesAPIInstance
+	ctx := context.Background()
 	for _, rs := range state.RootModule().Resources {
 		if rs.Type != resourceNameTemplate {
 			continue
 		}
-		_, err := client.GetTemplateById(utils.StringPtr(rs.Primary.ID))
+		getTemplateByIdRequest := import1.GetTemplateByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		_, err := client.GetTemplateById(ctx, &getTemplateByIdRequest)
 		if err == nil {
 			return fmt.Errorf("template still exists")
 		}

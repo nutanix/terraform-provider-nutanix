@@ -9,9 +9,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/vm"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -1229,7 +1231,10 @@ func ResourceNutanixVMCloneV2Create(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.Client).VmmAPI
 	vmExtID := d.Get("vm_ext_id")
 
-	readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(vmExtID.(string)))
+	getVmByIdRequest := import3.GetVmByIdRequest{
+		ExtId: utils.StringPtr(vmExtID.(string)),
+	}
+	readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while reading vm : %v", err)
 	}
@@ -1261,7 +1266,11 @@ func ResourceNutanixVMCloneV2Create(ctx context.Context, d *schema.ResourceData,
 		body.BootConfig = expandOneOfCloneVMBootConfig(bootConfig)
 	}
 
-	resp, err := conn.VMAPIInstance.CloneVm(utils.StringPtr(vmExtID.(string)), body, args)
+	cloneVmRequest := import3.CloneVmRequest{
+		ExtId: utils.StringPtr(vmExtID.(string)),
+		Body:  body,
+	}
+	resp, err := conn.VMAPIInstance.CloneVm(ctx, &cloneVmRequest, args)
 	if err != nil {
 		return diag.Errorf("error while Cloning Vm : %v", err)
 	}
@@ -1283,7 +1292,10 @@ func ResourceNutanixVMCloneV2Create(ctx context.Context, d *schema.ResourceData,
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching VM clone task (%s): %v", utils.StringValue(taskUUID), err)
 	}
@@ -1302,7 +1314,10 @@ func ResourceNutanixVMCloneV2Create(ctx context.Context, d *schema.ResourceData,
 func ResourceNutanixVMCloneV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	resp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+	getVmByIdRequest := import3.GetVmByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)

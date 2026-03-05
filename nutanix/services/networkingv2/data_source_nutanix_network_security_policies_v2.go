@@ -6,7 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/request/networksecuritypolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -398,6 +399,10 @@ func DataSourceNutanixNetworkSecurityPoliciesV2() *schema.Resource {
 								},
 							},
 						},
+						"project_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -408,37 +413,25 @@ func DataSourceNutanixNetworkSecurityPoliciesV2() *schema.Resource {
 func DataSourceNutanixNetworkSecurityPoliciesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	// initialize query params
-	var filter, orderBy, selects *string
-	var page, limit *int
+	listNetworkSecurityPoliciesRequest := import2.ListNetworkSecurityPoliciesRequest{}
 
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
+	if v, ok := d.GetOk("page"); ok {
+		listNetworkSecurityPoliciesRequest.Page_ = utils.IntPtr(v.(int))
 	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
+	if v, ok := d.GetOk("limit"); ok {
+		listNetworkSecurityPoliciesRequest.Limit_ = utils.IntPtr(v.(int))
 	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
+	if v, ok := d.GetOk("filter"); ok {
+		listNetworkSecurityPoliciesRequest.Filter_ = utils.StringPtr(v.(string))
 	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
+	if v, ok := d.GetOk("order_by"); ok {
+		listNetworkSecurityPoliciesRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
-	if selectf, ok := d.GetOk("select"); ok {
-		selects = utils.StringPtr(selectf.(string))
-	} else {
-		selects = nil
+	if v, ok := d.GetOk("select"); ok {
+		listNetworkSecurityPoliciesRequest.Select_ = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.NetworkingSecurityInstance.ListNetworkSecurityPolicies(page, limit, filter, orderBy, selects)
+	resp, err := conn.NetworkingSecurityInstance.ListNetworkSecurityPolicies(ctx, &listNetworkSecurityPoliciesRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching network security policy: %v", err)
 	}
@@ -507,6 +500,7 @@ func flattenNetworkSecurityPolicy(pr []import1.NetworkSecurityPolicy) []interfac
 			if v.Links != nil {
 				net["links"] = flattenLinksMicroSeg(v.Links)
 			}
+			net["project_ext_id"] = v.ProjectExtId
 
 			nets[k] = net
 		}

@@ -11,10 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/common"
-	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/config"
-	dataprtotectionPrismConfig "github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/prism/v4/config"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/common"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/config"
+	dataprtotectionPrismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/request/recoverypoints"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	commonUtils "github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -71,6 +73,11 @@ func ResourceNutanixRecoveryPointsV2() *schema.Resource {
 			},
 			"owner_ext_id": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"location_references": {
@@ -349,11 +356,16 @@ func ResourceNutanixRecoveryPointsV2Create(ctx context.Context, d *schema.Resour
 	if volumeGroupRecoveryPoints, ok := d.GetOk("volume_group_recovery_points"); ok {
 		body.VolumeGroupRecoveryPoints = expandVolumeGroupRecoveryPoints(volumeGroupRecoveryPoints.([]interface{}))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		body.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 
-	aJSON, _ := json.MarshalIndent(body, "", "  ")
+  createRecoveryPointRequest := import2.CreateRecoveryPointRequest{
+		Body: &body,
+	}
+	aJSON, _ := json.MarshalIndent(createRecoveryPointRequest, "", "  ")
 	log.Printf("[DEBUG] RecoveryPoint Body: %v", string(aJSON))
-
-	resp, err := conn.RecoveryPoint.CreateRecoveryPoint(&body)
+	resp, err := conn.RecoveryPoint.CreateRecoveryPoint(ctx, &createRecoveryPointRequest)
 	if err != nil {
 		return diag.Errorf("error while creating recovery point: %v", err)
 	}
@@ -375,7 +387,10 @@ func ResourceNutanixRecoveryPointsV2Create(ctx context.Context, d *schema.Resour
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import1.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching recovery point task: %v", err)
 	}
@@ -399,8 +414,11 @@ func ResourceNutanixRecoveryPointsV2Read(ctx context.Context, d *schema.Resource
 	log.Printf("[DEBUG] DatasourceNutanixRecoveryPointV2Read \n")
 
 	conn := meta.(*conns.Client).DataProtectionAPI
-
-	resp, err := conn.RecoveryPoint.GetRecoveryPointById(utils.StringPtr(d.Id()))
+  
+  getRecoveryPointByIdRequest := import2.GetRecoveryPointByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.RecoveryPoint.GetRecoveryPointById(ctx, &getRecoveryPointByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching recovery point: %v", err)
 	}
@@ -435,6 +453,9 @@ func ResourceNutanixRecoveryPointsV2Read(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 	if err := d.Set("owner_ext_id", getResp.OwnerExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("location_references", flattenLocationReferences(getResp.LocationReferences)); err != nil {
@@ -496,8 +517,11 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 	log.Printf("[DEBUG] DatasourceNutanixRecoveryPointV2Update \n")
 
 	conn := meta.(*conns.Client).DataProtectionAPI
-
-	readResp, err := conn.RecoveryPoint.GetRecoveryPointById(utils.StringPtr(d.Id()))
+  
+  getRecoveryPointByIdRequest := import2.GetRecoveryPointByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.RecoveryPoint.GetRecoveryPointById(ctx, &getRecoveryPointByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching recovery point: %v", err)
 	}
@@ -522,11 +546,18 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 	} else {
 		return diag.Errorf("expiration_time is the only field that can be updated")
 	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] RecoveryPoint Body: %v", string(aJSON))
-
-	resp, err := conn.RecoveryPoint.SetRecoveryPointExpirationTime(utils.StringPtr(d.Id()), &body, args)
+  
+  setRecoveryPointExpirationTimeRequest := import2.SetRecoveryPointExpirationTimeRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &body,
+	}
+	resp, err := conn.RecoveryPoint.SetRecoveryPointExpirationTime(ctx, &setRecoveryPointExpirationTimeRequest, args)
 	if err != nil {
 		return diag.Errorf("error while updating recovery point: %v", err)
 	}
@@ -548,7 +579,10 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import1.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching recovery point task: %v", err)
 	}
@@ -562,8 +596,11 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 
 func ResourceNutanixRecoveryPointsV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataProtectionAPI
-
-	resp, err := conn.RecoveryPoint.DeleteRecoveryPointById(utils.StringPtr(d.Id()))
+  
+  deleteRecoveryPointByIdRequest := import2.DeleteRecoveryPointByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.RecoveryPoint.DeleteRecoveryPointById(ctx, &deleteRecoveryPointByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting recovery point: %v", err)
 	}
@@ -585,7 +622,10 @@ func ResourceNutanixRecoveryPointsV2Delete(ctx context.Context, d *schema.Resour
 	}
 
 	// Get task details for logging
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import1.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching recovery point delete task: %v", err)
 	}

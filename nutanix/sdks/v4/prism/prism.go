@@ -3,17 +3,17 @@ package prism
 import (
 	"strconv"
 
-	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/api"
-	prism "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/client"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/api"
+	prism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/sdkconfig"
 )
 
 type Client struct {
-	TaskRefAPI                      *api.TasksApi
-	CategoriesAPIInstance           *api.CategoriesApi
-	DomainManagerAPIInstance        *api.DomainManagerApi
-	DomainManagerBackupsAPIInstance *api.DomainManagerBackupsApi
+	TaskRefAPI                      *api.TasksServiceApi
+	CategoriesAPIInstance           *api.CategoriesServiceApi
+	DomainManagerAPIInstance        *api.DomainManagerServiceApi
+	DomainManagerBackupsAPIInstance *api.DomainManagerBackupsServiceApi
 }
 
 func NewPrismClient(credentials client.Credentials) (*Client, error) {
@@ -38,10 +38,10 @@ func NewPrismClient(credentials client.Credentials) (*Client, error) {
 	}
 
 	f := &Client{
-		TaskRefAPI:                      api.NewTasksApi(baseClient),
-		CategoriesAPIInstance:           api.NewCategoriesApi(baseClient),
-		DomainManagerAPIInstance:        api.NewDomainManagerApi(baseClient),
-		DomainManagerBackupsAPIInstance: api.NewDomainManagerBackupsApi(baseClient),
+		TaskRefAPI:                      api.NewTasksServiceApi(baseClient),
+		CategoriesAPIInstance:           api.NewCategoriesServiceApi(baseClient),
+		DomainManagerAPIInstance:        api.NewDomainManagerServiceApi(baseClient),
+		DomainManagerBackupsAPIInstance: api.NewDomainManagerBackupsServiceApi(baseClient),
 	}
 
 	return f, nil

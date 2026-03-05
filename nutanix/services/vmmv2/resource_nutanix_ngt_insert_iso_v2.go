@@ -10,9 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	taskPoll "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-	vmmPrism "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
-	vmmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
+	taskPoll "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	vmmPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
+	vmmConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/vm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -104,7 +106,10 @@ func ResourceNutanixNGTInsertIsoV2Create(ctx context.Context, d *schema.Resource
 
 	if action, ok := d.GetOk("action"); ok && action.(string) == "insert" {
 		extID := d.Get("ext_id")
-		readResp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID.(string)))
+		getGuestToolsByIdRequest := import3.GetGuestToolsByIdRequest{
+			ExtId: utils.StringPtr(extID.(string)),
+		}
+		readResp, err := conn.VMAPIInstance.GetGuestToolsById(ctx, &getGuestToolsByIdRequest)
 		if err != nil {
 			return diag.Errorf("error while fetching Vm : %v", err)
 		}
@@ -141,7 +146,11 @@ func ResourceNutanixNGTInsertIsoV2Create(ctx context.Context, d *schema.Resource
 			body.IsConfigOnly = utils.BoolPtr(isConfigOnly.(bool))
 		}
 
-		resp, err := conn.VMAPIInstance.InsertVmGuestTools(utils.StringPtr(extID.(string)), body, args)
+		insertVmGuestToolsRequest := import3.InsertVmGuestToolsRequest{
+			ExtId: utils.StringPtr(extID.(string)),
+			Body:  body,
+		}
+		resp, err := conn.VMAPIInstance.InsertVmGuestTools(ctx, &insertVmGuestToolsRequest, args)
 		if err != nil {
 			return diag.Errorf("error while Inserting  gest tools ISO : %v", err)
 		}
@@ -163,7 +172,10 @@ func ResourceNutanixNGTInsertIsoV2Create(ctx context.Context, d *schema.Resource
 		}
 
 		// Get UUID from TASK API
-		taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		getTaskByIdRequest := import4.GetTaskByIdRequest{
+			ExtId: utils.StringPtr(*taskUUID),
+		}
+		taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 		if err != nil {
 			return diag.Errorf("error while fetching NGT ISO insert task (%s): %v", utils.StringValue(taskUUID), err)
 		}
@@ -192,7 +204,10 @@ func ResourceNutanixNGTInsertIsoV2Read(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.Client).VmmAPI
 
 	extID := d.Get("ext_id").(string)
-	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID))
+	getGuestToolsByIdRequest := import3.GetGuestToolsByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	resp, err := conn.VMAPIInstance.GetGuestToolsById(ctx, &getGuestToolsByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Gest Tool : %v", err)
 	}
@@ -236,7 +251,10 @@ func ResourceNutanixNGTInsertIsoV2Read(ctx context.Context, d *schema.ResourceDa
 		}
 	} else {
 		// We need to find the CD-ROM ext id with iso_type GUEST_TOOLS, if possible
-		vmResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(extID))
+		getVmByIdRequest := import3.GetVmByIdRequest{
+			ExtId: utils.StringPtr(extID),
+		}
+		vmResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 		if err != nil {
 			return diag.Errorf("error while fetching vm details which helps us to set cdrom_ext_id : %v", err)
 		}
@@ -298,7 +316,10 @@ func ejectCdromISO(ctx context.Context, d *schema.ResourceData, meta interface{}
 	// VM_ETAG_MISMATCH failure. In that case, re-fetch the latest ETag and retry.
 	const maxAttempts = 5
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
-		readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(vmExtID))
+		getVmByIdRequest := import3.GetVmByIdRequest{
+			ExtId: utils.StringPtr(vmExtID),
+		}
+		readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 		if err != nil {
 			return diag.Errorf("error while reading vm : %v", err)
 		}
@@ -307,7 +328,11 @@ func ejectCdromISO(ctx context.Context, d *schema.ResourceData, meta interface{}
 		args["If-Match"] = getEtagHeader(readResp, conn)
 
 		// Eject the ISO from the CD-ROM of the VM
-		resp, err := conn.VMAPIInstance.EjectCdRomById(utils.StringPtr(vmExtID), utils.StringPtr(extID), args)
+		ejectCdRomByIdRequest := import3.EjectCdRomByIdRequest{
+			VmExtId: utils.StringPtr(vmExtID),
+			ExtId: utils.StringPtr(extID),
+		}
+		resp, err := conn.VMAPIInstance.EjectCdRomById(ctx, &ejectCdRomByIdRequest, args)
 		if err != nil {
 			return diag.Errorf("error while ejecting cd-rom : %v", err)
 		}

@@ -11,10 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	objectsCommon "github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4/models/common/v1/config"
-	"github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4/models/objects/v4/config"
-	objectPrismConfig "github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4/models/prism/v4/config"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	objectsCommon "github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/models/common/v1/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/models/objects/v4/config"
+	import6 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/models/objects/v4/request/objectstores"
+	objectPrismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/models/prism/v4/config"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -44,7 +46,10 @@ func ResourceNutanixObjectStoresV2() *schema.Resource {
 				return false
 			}
 			client := meta.(*conns.Client).ObjectStoreAPI
-			resp, err := client.ObjectStoresAPIInstance.GetObjectstoreById(utils.StringPtr(d.Id()))
+			getObjectstoreByIdRequest := import6.GetObjectstoreByIdRequest{
+				ExtId: utils.StringPtr(d.Id()),
+			}
+			resp, err := client.ObjectStoresAPIInstance.GetObjectstoreById(ctx, &getObjectstoreByIdRequest)
 			if err != nil {
 				return false
 			}
@@ -256,7 +261,10 @@ func ResourceNutanixObjectsV2Create(ctx context.Context, d *schema.ResourceData,
 	// change the timeout for the create operation
 	d.Timeout(schema.TimeoutCreate)
 
-	resp, err := conn.ObjectStoresAPIInstance.CreateObjectstore(objectStorePayload)
+	createObjectstoreRequest := import6.CreateObjectstoreRequest{
+		Body: objectStorePayload,
+	}
+	resp, err := conn.ObjectStoresAPIInstance.CreateObjectstore(ctx, &createObjectstoreRequest)
 	if err != nil {
 		return diag.Errorf("error creating object store: %s", err)
 	}
@@ -276,7 +284,10 @@ func ResourceNutanixObjectsV2Create(ctx context.Context, d *schema.ResourceData,
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
 		log.Printf("[DEBUG] deploy object store task error: %s", err)
 
-		taskResp, taskErr := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		getTaskByIdRequest := import4.GetTaskByIdRequest{
+			ExtId: utils.StringPtr(*taskUUID),
+		}
+		taskResp, taskErr := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 		if taskErr != nil {
 			return diag.Errorf("error while fetching deploy object store task (%s): %s", utils.StringValue(taskUUID), taskErr)
 		}
@@ -295,7 +306,10 @@ func ResourceNutanixObjectsV2Create(ctx context.Context, d *schema.ResourceData,
 		// If not deployed, then return error
 		// If deployed, save the object store details to the state
 		// this code to maintain the state of the object store when its failed and the object store is present in the PC
-		_, readErr := conn.ObjectStoresAPIInstance.GetObjectstoreById(objectStoreExtID)
+		getObjectstoreByIdRequest := import6.GetObjectstoreByIdRequest{
+			ExtId: objectStoreExtID,
+		}
+		_, readErr := conn.ObjectStoresAPIInstance.GetObjectstoreById(ctx, &getObjectstoreByIdRequest)
 		if readErr != nil {
 			log.Printf("[DEBUG] object store not found")
 			// If the object store is not found, object store is not deployed
@@ -305,7 +319,10 @@ func ResourceNutanixObjectsV2Create(ctx context.Context, d *schema.ResourceData,
 		// else, the object store instance exists in the system
 	}
 
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching object store create task (%s): %s", utils.StringValue(taskUUID), err)
 	}
@@ -328,7 +345,10 @@ func ResourceNutanixObjectsV2Read(ctx context.Context, d *schema.ResourceData, m
 	log.Printf("[DEBUG] Reading object store %s", d.Id())
 	conn := meta.(*conns.Client).ObjectStoreAPI
 
-	readResp, err := conn.ObjectStoresAPIInstance.GetObjectstoreById(utils.StringPtr(d.Id()))
+	getObjectstoreByIdRequest := import6.GetObjectstoreByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.ObjectStoresAPIInstance.GetObjectstoreById(ctx, &getObjectstoreByIdRequest)
 	if err != nil {
 		return diag.Errorf("error reading object store: %s", err)
 	}
@@ -405,7 +425,10 @@ func ResourceNutanixObjectsV2Read(ctx context.Context, d *schema.ResourceData, m
 func ResourceNutanixObjectsV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ObjectStoreAPI
 
-	readResp, err := conn.ObjectStoresAPIInstance.GetObjectstoreById(utils.StringPtr(d.Id()))
+	getObjectstoreByIdRequest := import6.GetObjectstoreByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.ObjectStoresAPIInstance.GetObjectstoreById(ctx, &getObjectstoreByIdRequest)
 	if err != nil {
 		return diag.Errorf("error reading object store: %s", err)
 	}
@@ -421,7 +444,11 @@ func ResourceNutanixObjectsV2Update(ctx context.Context, d *schema.ResourceData,
 	d.Timeout(schema.TimeoutUpdate)
 
 	// resume the object store deployment if the state is OBJECT_STORE_DEPLOYMENT_FAILED
-	resp, err := conn.ObjectStoresAPIInstance.UpdateObjectstoreById(utils.StringPtr(d.Id()), &objectStoreUpdatePayload, args)
+	updateObjectstoreByIdRequest := import6.UpdateObjectstoreByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &objectStoreUpdatePayload,
+	}
+	resp, err := conn.ObjectStoresAPIInstance.UpdateObjectstoreById(ctx, &updateObjectstoreByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error updating object store: %s", err)
 	}
@@ -438,7 +465,10 @@ func ResourceNutanixObjectsV2Update(ctx context.Context, d *schema.ResourceData,
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
 		return diag.Errorf("error waiting for object store (%s) to be updated: %s", utils.StringValue(taskUUID), err)
 	}
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching object store update task (%s): %s", utils.StringValue(taskUUID), err)
 	}
@@ -452,7 +482,10 @@ func ResourceNutanixObjectsV2Update(ctx context.Context, d *schema.ResourceData,
 func ResourceNutanixObjectsV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ObjectStoreAPI
 
-	readResp, err := conn.ObjectStoresAPIInstance.GetObjectstoreById(utils.StringPtr(d.Id()))
+	getObjectstoreByIdRequest := import6.GetObjectstoreByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.ObjectStoresAPIInstance.GetObjectstoreById(ctx, &getObjectstoreByIdRequest)
 	if err != nil {
 		return diag.Errorf("error reading object store: %s", err)
 	}
@@ -462,7 +495,10 @@ func ResourceNutanixObjectsV2Delete(ctx context.Context, d *schema.ResourceData,
 	etagValue := conn.ObjectStoresAPIInstance.ApiClient.GetEtag(readResp)
 	args["If-Match"] = utils.StringPtr(etagValue)
 
-	resp, err := conn.ObjectStoresAPIInstance.DeleteObjectstoreById(utils.StringPtr(d.Id()), args)
+	deleteObjectstoreByIdRequest := import6.DeleteObjectstoreByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ObjectStoresAPIInstance.DeleteObjectstoreById(ctx, &deleteObjectstoreByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error deleting object store: %s", err)
 	}
@@ -480,7 +516,10 @@ func ResourceNutanixObjectsV2Delete(ctx context.Context, d *schema.ResourceData,
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
 		return diag.Errorf("error waiting for object store (%s) to be deleted: %s", utils.StringValue(taskUUID), err)
 	}
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching object store delete task (%s): %s", utils.StringValue(taskUUID), err)
 	}

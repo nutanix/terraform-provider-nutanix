@@ -14,7 +14,8 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -146,7 +147,10 @@ func getRawConfigValueAtPath(root cty.Value, path string) (cty.Value, bool) {
 
 func TaskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
+		getTaskByIdRequest := import1.GetTaskByIdRequest{
+			ExtId: utils.StringPtr(taskUUID),
+		}
+		vresp, err := client.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 		if err != nil {
 			return "", "", fmt.Errorf("error while polling prism task: %v", err)
 		}

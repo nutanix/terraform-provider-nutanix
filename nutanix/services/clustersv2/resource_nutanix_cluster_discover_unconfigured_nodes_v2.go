@@ -10,10 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
-	clustermgmtConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
+	clustermgmtConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/common/v1/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusters"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -246,7 +248,11 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] Discover Unconfigured Nodes body : %s", string(aJSON))
 
-	resp, err := conn.ClusterEntityAPI.DiscoverUnconfiguredNodes(extID, body)
+	discoverUnconfiguredNodesRequest := import3.DiscoverUnconfiguredNodesRequest{
+		ClusterExtId: extID,
+		Body:         body,
+	}
+	resp, err := conn.ClusterEntityAPI.DiscoverUnconfiguredNodes(ctx, &discoverUnconfiguredNodesRequest)
 	if err != nil {
 		return diag.Errorf("error while Discover Unconfigured Nodes : %v", err)
 	}
@@ -266,7 +272,10 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 		return diag.Errorf("error waiting for unconfigured nodes (%s) to discover: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(utils.StringValue(taskUUID)),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching discover unconfigured nodes task: %v", err)
 	}
@@ -278,7 +287,11 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 
 	const unconfiguredNodes = config.TASKRESPONSETYPE_UNCONFIGURED_NODES
 	taskResponseType := config.TaskResponseType(unconfiguredNodes)
-	unconfiguredNodesResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
+	fetchTaskResponseRequest := import3.FetchTaskResponseRequest{
+		ExtId:            utils.StringPtr(uuid),
+		TaskResponseType: &taskResponseType,
+	}
+	unconfiguredNodesResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(ctx, &fetchTaskResponseRequest)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr)
 	}

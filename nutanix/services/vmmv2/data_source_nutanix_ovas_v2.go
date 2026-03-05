@@ -7,7 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/content"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/ovas"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -48,36 +49,25 @@ func DatasourceNutanixOvasV2() *schema.Resource {
 func datasourceNutanixOvasV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	// initialize query params
-	var filter, orderBy, selects *string
-	var page, limit *int
+	listOvasRequest := import2.ListOvasRequest{}
 
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
+	if v, ok := d.GetOk("page"); ok {
+		listOvasRequest.Page_ = utils.IntPtr(v.(int))
 	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
+	if v, ok := d.GetOk("limit"); ok {
+		listOvasRequest.Limit_ = utils.IntPtr(v.(int))
 	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
+	if v, ok := d.GetOk("filter"); ok {
+		listOvasRequest.Filter_ = utils.StringPtr(v.(string))
 	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
+	if v, ok := d.GetOk("order_by"); ok {
+		listOvasRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
-	if selectf, ok := d.GetOk("select"); ok {
-		selects = utils.StringPtr(selectf.(string))
-	} else {
-		selects = nil
+	if v, ok := d.GetOk("select"); ok {
+		listOvasRequest.Select_ = utils.StringPtr(v.(string))
 	}
-	resp, err := conn.OvasAPIInstance.ListOvas(page, limit, filter, orderBy, selects)
+
+	resp, err := conn.OvasAPIInstance.ListOvas(ctx, &listOvasRequest)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error retrieving OVA list: %w", err))
 	}
@@ -153,6 +143,7 @@ func flattenOvaEntities(ovas []import1.Ova) []interface{} {
 				t := v.LastUpdateTime
 				ova["last_update_time"] = t.String()
 			}
+			ova["project_ext_id"] = v.ProjectExtId
 			ovaList[k] = ova
 		}
 		return ovaList

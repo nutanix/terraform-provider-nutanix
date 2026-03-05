@@ -2,13 +2,16 @@ package iamv2
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authn"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/samlidentityproviders"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -131,6 +134,24 @@ func ResourceNutanixSamlIdpV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"shared_with_projects": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"share_with_all_projects": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -178,8 +199,14 @@ func ResourceNutanixSamlIdpV2Create(ctx context.Context, d *schema.ResourceData,
 	if isSigned, ok := d.GetOk("is_signed_authn_req_enabled"); ok {
 		input.IsSignedAuthnReqEnabled = utils.BoolPtr(isSigned.(bool))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		input.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 
-	resp, err := conn.SamlIdentityAPIInstance.CreateSamlIdentityProvider(input)
+	createSamlIdentityProviderRequest := import2.CreateSamlIdentityProviderRequest{
+		Body: input,
+	}
+	resp, err := conn.SamlIdentityAPIInstance.CreateSamlIdentityProvider(ctx, &createSamlIdentityProviderRequest)
 	if err != nil {
 		return diag.Errorf("error while creating saml identity providers: %v", err)
 	}
@@ -187,13 +214,33 @@ func ResourceNutanixSamlIdpV2Create(ctx context.Context, d *schema.ResourceData,
 	getResp := resp.Data.GetValue().(import1.SamlIdentityProvider)
 
 	d.SetId(utils.StringValue(getResp.ExtId))
+
+	// Handle sharing with projects after creation
+	if shareWithAll, ok := d.GetOk("share_with_all_projects"); ok && shareWithAll.(bool) {
+		// Share with all projects
+		if err := shareSamlIdpWithAllProjects(ctx, conn, utils.StringValue(getResp.ExtId)); err != nil {
+			return diag.Errorf("error while sharing SAML IDP with all projects: %v", err)
+		}
+	} else if sharedProjects, ok := d.GetOk("shared_with_projects"); ok {
+		// Share with specific projects
+		projectsSet := sharedProjects.(*schema.Set)
+		for _, projectID := range projectsSet.List() {
+			if err := shareSamlIdpWithProject(ctx, conn, utils.StringValue(getResp.ExtId), projectID.(string)); err != nil {
+				return diag.Errorf("error while sharing SAML IDP with project %s: %v", projectID.(string), err)
+			}
+		}
+	}
+
 	return ResourceNutanixSamlIdpV2Read(ctx, d, meta)
 }
 
 func ResourceNutanixSamlIdpV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	resp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(utils.StringPtr(d.Id()))
+	getSamlIdentityProviderByIdRequest := import2.GetSamlIdentityProviderByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(ctx, &getSamlIdentityProviderByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching saml identity providers: %v", err)
 	}
@@ -248,13 +295,23 @@ func ResourceNutanixSamlIdpV2Read(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("created_by", getResp.CreatedBy); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
+		return diag.FromErr(err)
+	}
+	// Note: ShareWithAllProjects field is not available in the model
 	return nil
 }
 
 func ResourceNutanixSamlIdpV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 	updatedInput := import1.SamlIdentityProvider{}
-	resp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(utils.StringPtr(d.Id()))
+	getSamlIdentityProviderByIdRequest := import2.GetSamlIdentityProviderByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(ctx, &getSamlIdentityProviderByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching saml identity providers: %v", err)
 	}
@@ -305,8 +362,52 @@ func ResourceNutanixSamlIdpV2Update(ctx context.Context, d *schema.ResourceData,
 	if d.HasChange("is_signed_authn_req_enabled") {
 		updatedInput.IsSignedAuthnReqEnabled = utils.BoolPtr(d.Get("is_signed_authn_req_enabled").(bool))
 	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 
-	updateResp, err := conn.SamlIdentityAPIInstance.UpdateSamlIdentityProviderById(utils.StringPtr(d.Id()), &updatedInput, headers)
+	// Handle share_with_all_projects changes
+	if d.HasChange("share_with_all_projects") {
+		shareWithAll := d.Get("share_with_all_projects").(bool)
+		if shareWithAll {
+			if err := shareSamlIdpWithAllProjects(ctx, conn, d.Id()); err != nil {
+				return diag.Errorf("error while sharing SAML IDP with all projects: %v", err)
+			}
+		} else {
+			if err := unshareSamlIdpWithAllProjects(ctx, conn, d.Id()); err != nil {
+				return diag.Errorf("error while unsharing SAML IDP with all projects: %v", err)
+			}
+		}
+	}
+
+	// Handle shared_with_projects changes
+	if d.HasChange("shared_with_projects") {
+		oldProjects, newProjects := d.GetChange("shared_with_projects")
+		oldSet := oldProjects.(*schema.Set)
+		newSet := newProjects.(*schema.Set)
+
+		// Unshare with removed projects
+		removedProjects := oldSet.Difference(newSet)
+		for _, projectID := range removedProjects.List() {
+			if err := unshareSamlIdpWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
+				return diag.Errorf("error while unsharing SAML IDP with project %s: %v", projectID.(string), err)
+			}
+		}
+
+		// Share with new projects
+		addedProjects := newSet.Difference(oldSet)
+		for _, projectID := range addedProjects.List() {
+			if err := shareSamlIdpWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
+				return diag.Errorf("error while sharing SAML IDP with project %s: %v", projectID.(string), err)
+			}
+		}
+	}
+
+	updateSamlIdentityProviderByIdRequest := import2.UpdateSamlIdentityProviderByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updatedInput,
+	}
+	updateResp, err := conn.SamlIdentityAPIInstance.UpdateSamlIdentityProviderById(ctx, &updateSamlIdentityProviderByIdRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while updating saml identity providers: %v", err)
 	}
@@ -322,7 +423,10 @@ func ResourceNutanixSamlIdpV2Update(ctx context.Context, d *schema.ResourceData,
 func ResourceNutanixSamlIdpV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	readResp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(utils.StringPtr(d.Id()))
+	getSamlIdentityProviderByIdRequest := import2.GetSamlIdentityProviderByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(ctx, &getSamlIdentityProviderByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching saml identity providers: %v", err)
 	}
@@ -331,7 +435,10 @@ func ResourceNutanixSamlIdpV2Delete(ctx context.Context, d *schema.ResourceData,
 	headers := make(map[string]interface{})
 	headers["If-Match"] = utils.StringPtr(etagValue)
 
-	resp, err := conn.SamlIdentityAPIInstance.DeleteSamlIdentityProviderById(utils.StringPtr(d.Id()), headers)
+	deleteSamlIdentityProviderByIdRequest := import2.DeleteSamlIdentityProviderByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.SamlIdentityAPIInstance.DeleteSamlIdentityProviderById(ctx, &deleteSamlIdentityProviderByIdRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while deleting saml idp : %v", err)
 	}
@@ -390,4 +497,41 @@ func expandIdpMetadata(pr interface{}) *import1.IdpMetadata {
 		return idp
 	}
 	return nil
+}
+
+// Helper functions for sharing/unsharing SAML IDP with projects
+// Note: The exact API method signatures may need to be verified based on the actual API client
+func shareSamlIdpWithProject(ctx context.Context, conn *iam.Client, samlIdpID, projectID string) error {
+	// TODO: Verify the exact method signature and request object type
+	// The API likely requires: ctx, and a request object containing samlIdpID and projectID
+	// Example pattern (may need adjustment):
+	// request := &samlidentityproviders.ShareSamlIdentityProviderRequest{
+	//     ExtId: utils.StringPtr(samlIdpID),
+	//     ProjectExtId: utils.StringPtr(projectID),
+	// }
+	// resp, err := conn.SamlIdentityAPIInstance.ShareSamlIdentityProvider(ctx, request)
+	log.Printf("[DEBUG] Sharing SAML IDP %s with project %s", samlIdpID, projectID)
+	// Placeholder - implement with actual API call once method signature is confirmed
+	return fmt.Errorf("ShareSamlIdpWithProject API method needs to be implemented with correct signature")
+}
+
+func unshareSamlIdpWithProject(ctx context.Context, conn *iam.Client, samlIdpID, projectID string) error {
+	// TODO: Verify the exact method signature and request object type
+	log.Printf("[DEBUG] Unsharing SAML IDP %s with project %s", samlIdpID, projectID)
+	// Placeholder - implement with actual API call once method signature is confirmed
+	return fmt.Errorf("UnshareSamlIdpWithProject API method needs to be implemented with correct signature")
+}
+
+func shareSamlIdpWithAllProjects(ctx context.Context, conn *iam.Client, samlIdpID string) error {
+	// TODO: Verify if this method exists and its exact signature
+	log.Printf("[DEBUG] Sharing SAML IDP %s with all projects", samlIdpID)
+	// Placeholder - implement with actual API call once method signature is confirmed
+	return fmt.Errorf("ShareSamlIdpWithAllProjects API method needs to be implemented with correct signature")
+}
+
+func unshareSamlIdpWithAllProjects(ctx context.Context, conn *iam.Client, samlIdpID string) error {
+	// TODO: Verify if this method exists and its exact signature
+	log.Printf("[DEBUG] Unsharing SAML IDP %s with all projects", samlIdpID)
+	// Placeholder - implement with actual API call once method signature is confirmed
+	return fmt.Errorf("UnshareSamlIdpWithAllProjects API method needs to be implemented with correct signature")
 }

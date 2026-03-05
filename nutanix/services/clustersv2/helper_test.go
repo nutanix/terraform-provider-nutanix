@@ -1,14 +1,18 @@
 package clustersv2_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	clusterPrism "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	clusterPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/prism/v4/config"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusters"
+	import6 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	import7 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/categories"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -19,11 +23,15 @@ const timeout = 3 * time.Minute
 // helper function to check the delete task
 func taskStateRefreshPrismTaskGroupFunc(taskUUID string) resource.StateRefreshFunc {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	ctx := context.Background()
 
 	return func() (interface{}, string, error) {
 		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
 		// encodeUUID := data + ":" + taskUUID
-		vresp, err := conn.PrismAPI.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
+		getTaskByIdRequest := import6.GetTaskByIdRequest{
+			ExtId: utils.StringPtr(taskUUID),
+		}
+		vresp, err := conn.PrismAPI.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 
 		if err != nil {
 			return "", "", fmt.Errorf("error while polling prism task: %v", err)
@@ -212,13 +220,17 @@ func checkNtpServerList(resourceName, ntpPath string, expectedNtpServers []strin
 // helper function to check if the cluster is destroyed
 func testAccCheckNutanixClusterDestroy(s *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "nutanix_cluster_v2" {
 			continue
 		}
 
-		readResp, err := conn.ClusterAPI.ClusterEntityAPI.GetClusterById(utils.StringPtr(rs.Primary.ID), nil)
+		getClusterByIdRequest := import5.GetClusterByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		readResp, err := conn.ClusterAPI.ClusterEntityAPI.GetClusterById(ctx, &getClusterByIdRequest)
 		if err == nil {
 			// delete the cluster
 			//extract etag from read response
@@ -226,7 +238,11 @@ func testAccCheckNutanixClusterDestroy(s *terraform.State) error {
 			etagValue := conn.ClusterAPI.ClusterEntityAPI.ApiClient.GetEtag(readResp)
 			args["If-Match"] = utils.StringPtr(etagValue)
 
-			deleteResp, err := conn.ClusterAPI.ClusterEntityAPI.DeleteClusterById(utils.StringPtr(rs.Primary.ID), utils.BoolPtr(false), args)
+			deleteClusterByIdRequest := import5.DeleteClusterByIdRequest{
+				ExtId:   utils.StringPtr(rs.Primary.ID),
+				Dryrun_: utils.BoolPtr(false),
+			}
+			deleteResp, err := conn.ClusterAPI.ClusterEntityAPI.DeleteClusterById(ctx, &deleteClusterByIdRequest, args)
 			if err != nil {
 				return err
 			}
@@ -246,7 +262,10 @@ func testAccCheckNutanixClusterDestroy(s *terraform.State) error {
 				return fmt.Errorf("error waiting for cluster deletion task to complete: %s", taskErr)
 			}
 
-			_, err = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+			getTaskByIdRequest := import6.GetTaskByIdRequest{
+				ExtId: taskUUID,
+			}
+			_, err = taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 			if err != nil {
 				return fmt.Errorf("error while fetching Cluster Deletion Task Details: %s", err)
 			}
@@ -262,6 +281,7 @@ func testAccCheckNutanixClusterDestroy(s *terraform.State) error {
 func testAccCheckNutanixClusterCategoriesDestroy(s *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 	categoryClient := conn.PrismAPI.CategoriesAPIInstance
+	ctx := context.Background()
 
 	// Collect all category IDs that should be destroyed
 	var categoryIDs []string
@@ -274,11 +294,17 @@ func testAccCheckNutanixClusterCategoriesDestroy(s *terraform.State) error {
 
 	// Check if categories still exist
 	for _, categoryID := range categoryIDs {
-		_, err := categoryClient.GetCategoryById(utils.StringPtr(categoryID), nil)
+		getCategoryByIdRequest := import7.GetCategoryByIdRequest{
+			ExtId: utils.StringPtr(categoryID),
+		}
+		_, err := categoryClient.GetCategoryById(ctx, &getCategoryByIdRequest)
 		if err == nil {
 			// Category still exists, try to delete it
 			fmt.Printf("[DEBUG] Category still exists, attempting to delete: %s\n", categoryID)
-			_, deleteErr := categoryClient.DeleteCategoryById(utils.StringPtr(categoryID))
+			deleteCategoryByIdRequest := import7.DeleteCategoryByIdRequest{
+				ExtId: utils.StringPtr(categoryID),
+			}
+			_, deleteErr := categoryClient.DeleteCategoryById(ctx, &deleteCategoryByIdRequest)
 			if deleteErr != nil {
 				return fmt.Errorf("error: Category %s still exists and could not be deleted: %v", categoryID, deleteErr)
 			}

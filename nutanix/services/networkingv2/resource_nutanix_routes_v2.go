@@ -11,10 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	networkingCommon "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
-	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
-	networkingPrism "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	networkingCommon "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/common/v1/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	networkingPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/prism/v4/config"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/routes"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -49,6 +51,11 @@ func ResourceNutanixRoutesV2() *schema.Resource {
 				Computed: true,
 			},
 			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"project_ext_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -213,6 +220,9 @@ func ResourceNutanixRoutesV2Create(ctx context.Context, d *schema.ResourceData, 
 	if description, ok := d.GetOk("description"); ok {
 		reqBody.Description = utils.StringPtr(description.(string))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		reqBody.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 	if destination, ok := d.GetOk("destination"); ok {
 		reqBody.Destination = expandDestination(destination)
 	}
@@ -242,7 +252,11 @@ func ResourceNutanixRoutesV2Create(ctx context.Context, d *schema.ResourceData, 
 	aJSON, _ := json.Marshal(reqBody)
 	log.Printf("[DEBUG] Route Request Body: %v", string(aJSON))
 
-	resp, err := conn.Routes.CreateRouteForRouteTable(&routeTableExtID, reqBody)
+	createRouteForRouteTableRequest := import2.CreateRouteForRouteTableRequest{
+		RouteTableExtId: &routeTableExtID,
+		Body:            reqBody,
+	}
+	resp, err := conn.Routes.CreateRouteForRouteTable(ctx, &createRouteForRouteTableRequest)
 	if err != nil {
 		return diag.Errorf("error while creating route for table : %v, error: %v", routeTableExtID, err)
 	}
@@ -264,7 +278,10 @@ func ResourceNutanixRoutesV2Create(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import3.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching route task: %v", err)
 	}
@@ -284,7 +301,7 @@ func ResourceNutanixRoutesV2Create(ctx context.Context, d *schema.ResourceData, 
 func ResourceNutanixRoutesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] ResourceNutanixRoutesV2Read \n")
 
-	return routeRead(d, meta)
+	return routeRead(ctx, d, meta)
 }
 
 func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -294,7 +311,11 @@ func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, 
 	routeTableExtID := d.Get("route_table_ext_id").(string)
 
 	// Get Etag
-	routResp, err := conn.Routes.GetRouteForRouteTableById(utils.StringPtr(d.Id()), &routeTableExtID)
+	getRouteForRouteTableByIdRequest := import2.GetRouteForRouteTableByIdRequest{
+		ExtId:           utils.StringPtr(d.Id()),
+		RouteTableExtId: &routeTableExtID,
+	}
+	routResp, err := conn.Routes.GetRouteForRouteTableById(ctx, &getRouteForRouteTableByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching route : %v", err)
 	}
@@ -316,6 +337,9 @@ func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, 
 	}
 	if d.HasChange("description") {
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
+	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 	if d.HasChange("destination") {
 		updateSpec.Destination = expandDestination(d.Get("destination"))
@@ -347,7 +371,12 @@ func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, 
 	aJSON, _ := json.Marshal(updateSpec)
 	log.Printf("[DEBUG] Update Route Request Body: %v", string(aJSON))
 
-	updateResp, err := conn.Routes.UpdateRouteForRouteTableById(utils.StringPtr(d.Id()), &routeTableExtID, updateSpec, args)
+	updateRouteForRouteTableByIdRequest := import2.UpdateRouteForRouteTableByIdRequest{
+		ExtId:           utils.StringPtr(d.Id()),
+		RouteTableExtId: &routeTableExtID,
+		Body:            updateSpec,
+	}
+	updateResp, err := conn.Routes.UpdateRouteForRouteTableById(ctx, &updateRouteForRouteTableByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while updating route : %v", err)
 	}
@@ -369,7 +398,10 @@ func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Get task details from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import3.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching route update task: %v", err)
 	}
@@ -384,8 +416,11 @@ func ResourceNutanixRoutesV2Delete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	routeTableExtID := d.Get("route_table_ext_id").(string)
-
-	resp, err := conn.Routes.DeleteRouteForRouteTableById(utils.StringPtr(d.Id()), &routeTableExtID)
+  deleteRouteForRouteTableByIdRequest := import2.DeleteRouteForRouteTableByIdRequest{
+		ExtId:           utils.StringPtr(d.Id()),
+		RouteTableExtId: &routeTableExtID,
+	}
+	resp, err := conn.Routes.DeleteRouteForRouteTableById(ctx, &deleteRouteForRouteTableByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting route: %v", err)
 	}
@@ -408,7 +443,10 @@ func ResourceNutanixRoutesV2Delete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Get task details for logging
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import3.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching route delete task: %v", err)
 	}
@@ -572,7 +610,7 @@ func importNutanixRouteV2(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil, fmt.Errorf("error setting route_table_ext_id during import: %v", err)
 	}
 
-	diags := routeRead(d, meta)
+	diags := routeRead(ctx, d, meta)
 	if diags.HasError() {
 		// convert diagnostics to error
 		return nil, fmt.Errorf("failed to import route: %v", diags)
@@ -580,12 +618,15 @@ func importNutanixRouteV2(ctx context.Context, d *schema.ResourceData, meta inte
 	return []*schema.ResourceData{d}, nil
 }
 
-func routeRead(d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func routeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	routeTableExtID := d.Get("route_table_ext_id").(string)
-
-	resp, err := conn.Routes.GetRouteForRouteTableById(utils.StringPtr(d.Id()), &routeTableExtID)
+  getRouteForRouteTableByIdRequest := import2.GetRouteForRouteTableByIdRequest{
+		ExtId:           utils.StringPtr(d.Id()),
+		RouteTableExtId: &routeTableExtID,
+	}
+	resp, err := conn.Routes.GetRouteForRouteTableById(ctx, &getRouteForRouteTableByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching route : %v", err)
 	}
@@ -608,6 +649,9 @@ func routeRead(d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("description", getResp.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("destination", flattenDestination(getResp.Destination)); err != nil {

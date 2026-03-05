@@ -11,10 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
-	import4 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/common/v1/config"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusters"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/prism/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/clusters"
@@ -617,7 +619,11 @@ func UpdateClusterCategories(ctx context.Context, d *schema.ResourceData, meta i
 		aJSON, _ := json.MarshalIndent(body, "", " ")
 		log.Printf("[DEBUG] Disassociate Categories from Cluster Request Body: %s", string(aJSON))
 
-		resp, err := conn.ClusterEntityAPI.DisassociateCategoriesFromCluster(utils.StringPtr(clusterExtID), body)
+		disassociateCategoriesFromClusterRequest := import5.DisassociateCategoriesFromClusterRequest{
+			ClusterExtId: utils.StringPtr(clusterExtID),
+			Body:         body,
+		}
+		resp, err := conn.ClusterEntityAPI.DisassociateCategoriesFromCluster(ctx, &disassociateCategoriesFromClusterRequest)
 		if err != nil {
 			return diag.Errorf("error while disassociating categories from cluster: %v", err)
 		}
@@ -634,7 +640,10 @@ func UpdateClusterCategories(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-			resourceUUID, _ := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+			getTaskByIdRequest := import3.GetTaskByIdRequest{
+				ExtId: taskUUID,
+			}
+			resourceUUID, _ := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 			if resourceUUID != nil {
 				rUUID := resourceUUID.Data.GetValue().(import2.Task)
 				aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
@@ -644,7 +653,10 @@ func UpdateClusterCategories(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		// Get task details
-		taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		getTaskByIdRequest := import3.GetTaskByIdRequest{
+			ExtId: taskUUID,
+		}
+		taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 		if err != nil {
 			return diag.Errorf("error while fetching disassociate categories from cluster task: %v", err)
 		}
@@ -662,7 +674,11 @@ func UpdateClusterCategories(ctx context.Context, d *schema.ResourceData, meta i
 		aJSON, _ := json.MarshalIndent(body, "", " ")
 		log.Printf("[DEBUG] Associate Categories to Cluster Request Body: %s", string(aJSON))
 
-		resp, err := conn.ClusterEntityAPI.AssociateCategoriesToCluster(utils.StringPtr(clusterExtID), &body)
+		associateCategoriesToClusterRequest := import5.AssociateCategoriesToClusterRequest{
+			ClusterExtId: utils.StringPtr(clusterExtID),
+			Body:         &body,
+		}
+		resp, err := conn.ClusterEntityAPI.AssociateCategoriesToCluster(ctx, &associateCategoriesToClusterRequest)
 		if err != nil {
 			return diag.Errorf("error while associating categories to cluster: %v", err)
 		}
@@ -683,7 +699,10 @@ func UpdateClusterCategories(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		// Get task details
-		taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		getTaskByIdRequest := import3.GetTaskByIdRequest{
+			ExtId: taskUUID,
+		}
+		taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 		if err != nil {
 			return diag.Errorf("error while fetching associate categories to cluster task: %v", err)
 		}

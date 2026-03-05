@@ -9,9 +9,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
-	import7 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/images/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
+	import7 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/images/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/imageplacementpolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
@@ -158,7 +160,10 @@ func ResourceNutanixImagePlacementV2Create(ctx context.Context, d *schema.Resour
 		p := import7.EnforcementState(pVal.(int))
 		body.EnforcementState = &p
 	}
-	resp, err := conn.ImagesPlacementAPIInstance.CreatePlacementPolicy(body)
+	createPlacementPolicyRequest := import3.CreatePlacementPolicyRequest{
+		Body: body,
+	}
+	resp, err := conn.ImagesPlacementAPIInstance.CreatePlacementPolicy(ctx, &createPlacementPolicyRequest)
 	if err != nil {
 		return diag.Errorf("error while creating Image placement policy : %v", err)
 	}
@@ -180,7 +185,10 @@ func ResourceNutanixImagePlacementV2Create(ctx context.Context, d *schema.Resour
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -208,7 +216,10 @@ func ResourceNutanixImagePlacementV2Create(ctx context.Context, d *schema.Resour
 func ResourceNutanixImagePlacementV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	resp, err := conn.ImagesPlacementAPIInstance.GetPlacementPolicyById(utils.StringPtr(d.Id()))
+	getPlacementPolicyByIdRequest := import3.GetPlacementPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ImagesPlacementAPIInstance.GetPlacementPolicyById(ctx, &getPlacementPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching image placement policy : %v", err)
 	}
@@ -258,7 +269,10 @@ func ResourceNutanixImagePlacementV2Read(ctx context.Context, d *schema.Resource
 func ResourceNutanixImagePlacementV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	resp, err := conn.ImagesPlacementAPIInstance.GetPlacementPolicyById(utils.StringPtr(d.Id()))
+	getPlacementPolicyByIdRequest := import3.GetPlacementPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ImagesPlacementAPIInstance.GetPlacementPolicyById(ctx, &getPlacementPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching image placement policy : %v", err)
 	}
@@ -316,7 +330,11 @@ func ResourceNutanixImagePlacementV2Update(ctx context.Context, d *schema.Resour
 	}
 
 	if changed {
-		updateResp, er := conn.ImagesPlacementAPIInstance.UpdatePlacementPolicyById(utils.StringPtr(d.Id()), &updateSpec)
+		updatePlacementPolicyByIdRequest := import3.UpdatePlacementPolicyByIdRequest{
+			ExtId: utils.StringPtr(d.Id()),
+			Body:  &updateSpec,
+		}
+		updateResp, er := conn.ImagesPlacementAPIInstance.UpdatePlacementPolicyById(ctx, &updatePlacementPolicyByIdRequest)
 		if er != nil {
 			return diag.Errorf("error while updating image placement policy : %v", err)
 		}
@@ -342,8 +360,11 @@ func ResourceNutanixImagePlacementV2Update(ctx context.Context, d *schema.Resour
 
 func suspendAction(ctx context.Context, conn *vmm.Client, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	extID := d.Id()
-
-	readResp, err := conn.ImagesPlacementAPIInstance.GetPlacementPolicyById(utils.StringPtr(extID))
+  
+	getPlacementPolicyByIdRequest := import3.GetPlacementPolicyByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	readResp, err := conn.ImagesPlacementAPIInstance.GetPlacementPolicyById(ctx, &getPlacementPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while reading placement policy : %v", err)
 	}
@@ -356,8 +377,12 @@ func suspendAction(ctx context.Context, conn *vmm.Client, d *schema.ResourceData
 	if shouldCancelRunningTasks, ok := d.GetOk("should_cancel_running_tasks"); ok {
 		body.ShouldCancelRunningTasks = utils.BoolPtr(shouldCancelRunningTasks.(bool))
 	}
-
-	resp, err := conn.ImagesPlacementAPIInstance.SuspendPlacementPolicy(utils.StringPtr(extID), body, args)
+  
+	suspendPlacementPolicyRequest := import3.SuspendPlacementPolicyRequest{
+		ExtId: utils.StringPtr(extID),
+		Body:  body,
+	}
+	resp, err := conn.ImagesPlacementAPIInstance.SuspendPlacementPolicy(ctx, &suspendPlacementPolicyRequest, args)
 	if err != nil {
 		return diag.Errorf("error while suspend Image placement policy : %v", err)
 	}
@@ -383,15 +408,21 @@ func suspendAction(ctx context.Context, conn *vmm.Client, d *schema.ResourceData
 
 func resumeAction(ctx context.Context, conn *vmm.Client, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	extID := d.Id()
-	readResp, err := conn.ImagesPlacementAPIInstance.GetPlacementPolicyById(utils.StringPtr(extID))
+	getPlacementPolicyByIdRequest := import3.GetPlacementPolicyByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	readResp, err := conn.ImagesPlacementAPIInstance.GetPlacementPolicyById(ctx, &getPlacementPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while reading placement policy : %v", err)
 	}
 	// Extract E-Tag Header
 	args := make(map[string]interface{})
 	args["If-Match"] = getEtagHeader(readResp, conn)
-
-	resp, err := conn.ImagesPlacementAPIInstance.ResumePlacementPolicy(utils.StringPtr(extID), args)
+  
+	resumePlacementPolicyRequest := import3.ResumePlacementPolicyRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	resp, err := conn.ImagesPlacementAPIInstance.ResumePlacementPolicy(ctx, &resumePlacementPolicyRequest, args)
 	if err != nil {
 		return diag.Errorf("error while resume Image placement policy : %v", err)
 	}
@@ -417,8 +448,11 @@ func resumeAction(ctx context.Context, conn *vmm.Client, d *schema.ResourceData,
 
 func ResourceNutanixImagePlacementV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
-
-	resp, err := conn.ImagesPlacementAPIInstance.DeletePlacementPolicyById(utils.StringPtr(d.Id()))
+  
+	deletePlacementPolicyByIdRequest := import3.DeletePlacementPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ImagesPlacementAPIInstance.DeletePlacementPolicyById(ctx, &deletePlacementPolicyByIdRequest)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)

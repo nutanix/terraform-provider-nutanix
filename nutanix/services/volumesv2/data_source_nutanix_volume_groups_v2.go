@@ -6,8 +6,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	volumesClientResponse "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/common/v1/response"
-	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
+	volumesClientResponse "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/common/v1/response"
+	volumesClient "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/request/volumegroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -168,6 +169,10 @@ func DatasourceNutanixVolumeGroupsV2() *schema.Resource {
 							Type:        schema.TypeBool,
 							Computed:    true,
 						},
+						"project_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -178,43 +183,28 @@ func DatasourceNutanixVolumeGroupsV2() *schema.Resource {
 func DatasourceNutanixVolumeGroupsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
-	var filter, orderBy, expand, selects *string
-	var page, limit *int
+	listVolumeGroupsRequest := import1.ListVolumeGroupsRequest{}
 
-	// initialize the query parameters
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
+	if v, ok := d.GetOk("page"); ok {
+		listVolumeGroupsRequest.Page_ = utils.IntPtr(v.(int))
 	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
+	if v, ok := d.GetOk("limit"); ok {
+		listVolumeGroupsRequest.Limit_ = utils.IntPtr(v.(int))
 	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
+	if v, ok := d.GetOk("filter"); ok {
+		listVolumeGroupsRequest.Filter_ = utils.StringPtr(v.(string))
 	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
+	if v, ok := d.GetOk("orderby"); ok {
+		listVolumeGroupsRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
-	if expandf, ok := d.GetOk("expand"); ok {
-		expand = utils.StringPtr(expandf.(string))
-	} else {
-		expand = nil
+	if v, ok := d.GetOk("expand"); ok {
+		listVolumeGroupsRequest.Expand_ = utils.StringPtr(v.(string))
 	}
-	if selectf, ok := d.GetOk("select"); ok {
-		selects = utils.StringPtr(selectf.(string))
-	} else {
-		selects = nil
+	if v, ok := d.GetOk("select"); ok {
+		listVolumeGroupsRequest.Select_ = utils.StringPtr(v.(string))
 	}
 
-	// get the volume groups response
-	resp, err := conn.VolumeAPIInstance.ListVolumeGroups(page, limit, filter, orderBy, expand, selects)
+	resp, err := conn.VolumeAPIInstance.ListVolumeGroups(ctx, &listVolumeGroupsRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching volumes : %v", err)
 	}
@@ -294,6 +284,7 @@ func flattenVolumesEntities(volumeGroups []volumesClient.VolumeGroup) []interfac
 			if v.IsHidden != nil {
 				volumeGroup["is_hidden"] = v.IsHidden
 			}
+			volumeGroup["project_ext_id"] = v.ProjectExtId
 
 			volumeGroupList[k] = volumeGroup
 		}

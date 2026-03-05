@@ -1,6 +1,7 @@
 package iamv2_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -8,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/directoryservices"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/usergroups"
 
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
@@ -66,13 +69,17 @@ func testAccCheckNutanixUserDestroy(s *terraform.State) error {
 
 func testAccCheckNutanixDirectoryServicesV2Destroy(s *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "nutanix_directory_services_v2" {
 			continue
 		}
 		fmt.Printf("Checking directory service : %s", rs.Primary.ID)
-		readResp, errRead := conn.IamAPI.DirectoryServiceAPIInstance.GetDirectoryServiceById(utils.StringPtr(rs.Primary.ID))
+		getDirectoryServiceByIdRequest := import1.GetDirectoryServiceByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		readResp, errRead := conn.IamAPI.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
 		if errRead != nil {
 			if strings.Contains(fmt.Sprint(errRead), "Directory service not found") {
 				return nil
@@ -86,7 +93,10 @@ func testAccCheckNutanixDirectoryServicesV2Destroy(s *terraform.State) error {
 
 		fmt.Println("Deleting directory service")
 
-		if _, err := conn.IamAPI.DirectoryServiceAPIInstance.DeleteDirectoryServiceById(utils.StringPtr(rs.Primary.ID), headers); err != nil {
+		deleteDirectoryServiceByIdRequest := import1.DeleteDirectoryServiceByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		if _, err := conn.IamAPI.DirectoryServiceAPIInstance.DeleteDirectoryServiceById(ctx, &deleteDirectoryServiceByIdRequest, headers); err != nil {
 			if strings.Contains(fmt.Sprint(err), "Directory service not found") {
 				return nil
 			}
@@ -98,13 +108,17 @@ func testAccCheckNutanixDirectoryServicesV2Destroy(s *terraform.State) error {
 
 func testAccCheckNutanixUserGroupsV2Destroy(s *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "nutanix_user_groups_v2" {
 			continue
 		}
 
-		readResp, errRead := conn.IamAPI.UserGroupsAPIInstance.GetUserGroupById(utils.StringPtr(rs.Primary.ID))
+		getUserGroupByIdRequest := import2.GetUserGroupByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		readResp, errRead := conn.IamAPI.UserGroupsAPIInstance.GetUserGroupById(ctx, &getUserGroupByIdRequest)
 		if errRead != nil {
 			if strings.Contains(fmt.Sprint(errRead), "the requested user group does not exist") {
 				return nil
@@ -117,7 +131,10 @@ func testAccCheckNutanixUserGroupsV2Destroy(s *terraform.State) error {
 		headers := make(map[string]interface{})
 		headers["If-Match"] = utils.StringPtr(etagValue)
 
-		if _, err := conn.IamAPI.UserGroupsAPIInstance.DeleteUserGroupById(utils.StringPtr(rs.Primary.ID), headers); err != nil {
+		deleteUserGroupByIdRequest := import2.DeleteUserGroupByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		if _, err := conn.IamAPI.UserGroupsAPIInstance.DeleteUserGroupById(ctx, &deleteUserGroupByIdRequest, headers); err != nil {
 			if strings.Contains(fmt.Sprint(err), "the requested user group does not exist") {
 				return nil
 			}

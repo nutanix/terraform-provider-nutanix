@@ -9,9 +9,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/vm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -181,7 +183,10 @@ func ResourceNutanixVMGCUpdateV2Create(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.Client).VmmAPI
 	vmExtID := d.Get("ext_id")
 
-	readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(vmExtID.(string)))
+	getVmByIdRequest := import3.GetVmByIdRequest{
+		ExtId: utils.StringPtr(vmExtID.(string)),
+	}
+	readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while reading vm : %v", err)
 	}
@@ -195,7 +200,11 @@ func ResourceNutanixVMGCUpdateV2Create(ctx context.Context, d *schema.ResourceDa
 		body.Config = expandOneOfGuestCustomizationParamsConfig(configData)
 	}
 
-	resp, err := conn.VMAPIInstance.CustomizeGuestVm(utils.StringPtr(vmExtID.(string)), body, args)
+	customizeGuestVmRequest := import3.CustomizeGuestVmRequest{
+		ExtId: utils.StringPtr(vmExtID.(string)),
+		Body:  body,
+	}
+	resp, err := conn.VMAPIInstance.CustomizeGuestVm(ctx, &customizeGuestVmRequest, args)
 	if err != nil {
 		return diag.Errorf("error while creating Vm's Customize Guest : %v", err)
 	}
@@ -217,7 +226,10 @@ func ResourceNutanixVMGCUpdateV2Create(ctx context.Context, d *schema.ResourceDa
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching guest customization task (%s): %v", utils.StringValue(taskUUID), err)
 	}

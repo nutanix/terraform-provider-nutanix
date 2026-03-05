@@ -6,7 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/categories"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -67,6 +68,17 @@ func DatasourceNutanixCategoriesV2() *schema.Resource {
 						"owner_uuid": {
 							Type:     schema.TypeString,
 							Computed: true,
+						},
+						"project_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"shared_with_projects": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
 						},
 						"associations": {
 							Type:     schema.TypeList,
@@ -146,41 +158,28 @@ func DatasourceNutanixCategoriesV2() *schema.Resource {
 func DatasourceNutanixCategoriesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).PrismAPI
 
-	// initialize query params
-	var filter, orderBy, expand, selects *string
-	var page, limit *int
+	listCategoriesRequest := import2.ListCategoriesRequest{}
 
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
+	if v, ok := d.GetOk("page"); ok {
+		listCategoriesRequest.Page_ = utils.IntPtr(v.(int))
 	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
+	if v, ok := d.GetOk("limit"); ok {
+		listCategoriesRequest.Limit_ = utils.IntPtr(v.(int))
 	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
+	if v, ok := d.GetOk("filter"); ok {
+		listCategoriesRequest.Filter_ = utils.StringPtr(v.(string))
 	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
+	if v, ok := d.GetOk("order_by"); ok {
+		listCategoriesRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
-	if expandf, ok := d.GetOk("expand"); ok {
-		expand = utils.StringPtr(expandf.(string))
-	} else {
-		expand = nil
+	if v, ok := d.GetOk("expand"); ok {
+		listCategoriesRequest.Expand_ = utils.StringPtr(v.(string))
 	}
-	if selectf, ok := d.GetOk("select"); ok {
-		selects = utils.StringPtr(selectf.(string))
-	} else {
-		selects = nil
+	if v, ok := d.GetOk("select"); ok {
+		listCategoriesRequest.Select_ = utils.StringPtr(v.(string))
 	}
-	resp, err := conn.CategoriesAPIInstance.ListCategories(page, limit, filter, orderBy, expand, selects)
+
+	resp, err := conn.CategoriesAPIInstance.ListCategories(ctx, &listCategoriesRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching categories : %v", err)
 	}
@@ -222,6 +221,8 @@ func flattenCategoriesEntities(pr []import1.Category) []interface{} {
 			ctg["type"] = flattenCategoryType(v.Type)
 			ctg["description"] = v.Description
 			ctg["owner_uuid"] = v.OwnerUuid
+			ctg["project_ext_id"] = v.ProjectExtId
+			ctg["shared_with_projects"] = v.SharedWithProjects
 			ctg["associations"] = flattenAssociationSummary(v.Associations)
 			ctg["detailed_associations"] = flattenAssociationDetail(v.DetailedAssociations)
 			ctg["tenant_id"] = v.TenantId

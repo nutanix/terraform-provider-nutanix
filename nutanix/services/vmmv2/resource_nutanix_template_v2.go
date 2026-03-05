@@ -9,12 +9,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-	vmmCommon "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/common/v1/config"
-	vmmAuthn "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/iam/v4/authn"
-	vmmProsmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
-	vmmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
-	vmmContent "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
+	vmmCommon "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/common/v1/config"
+	vmmAuthn "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/iam/v4/authn"
+	vmmProsmConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
+	vmmConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/config"
+	vmmContent "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/content"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/templates"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -209,7 +211,10 @@ func ResourceNutanixTemplatesV2Create(ctx context.Context, d *schema.ResourceDat
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Template create request body :\n %s", string(aJSON))
-	resp, err := conn.TemplatesAPIInstance.CreateTemplate(body)
+	createTemplateRequest := import3.CreateTemplateRequest{
+		Body: body,
+	}
+	resp, err := conn.TemplatesAPIInstance.CreateTemplate(ctx, &createTemplateRequest)
 	if err != nil {
 		return diag.Errorf("error while creating template : %v", err)
 	}
@@ -230,7 +235,10 @@ func ResourceNutanixTemplatesV2Create(ctx context.Context, d *schema.ResourceDat
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching template create task (%s): %v", utils.StringValue(taskUUID), err)
 	}
@@ -251,7 +259,10 @@ func ResourceNutanixTemplatesV2Read(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.Client).VmmAPI
 	tempVersionSpecData := d.Get("template_version_spec").([]interface{})
 	log.Printf("[DEBUG] tempVersionSpecData: %v", tempVersionSpecData)
-	resp, err := conn.TemplatesAPIInstance.GetTemplateById(utils.StringPtr(d.Id()))
+	getTemplateByIdRequest := import3.GetTemplateByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.TemplatesAPIInstance.GetTemplateById(ctx, &getTemplateByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching template : %v", err)
 	}
@@ -320,7 +331,10 @@ func ResourceNutanixTemplatesV2Read(ctx context.Context, d *schema.ResourceData,
 func ResourceNutanixTemplatesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	readResp, err := conn.TemplatesAPIInstance.GetTemplateById(utils.StringPtr(d.Id()))
+	getTemplateByIdRequest := import3.GetTemplateByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.TemplatesAPIInstance.GetTemplateById(ctx, &getTemplateByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching template : %v", err)
 	}
@@ -391,7 +405,10 @@ func ResourceNutanixTemplatesV2Update(ctx context.Context, d *schema.ResourceDat
 				log.Printf("[DEBUG] Template version Id provided in tf configuration")
 			}
 			log.Printf("[DEBUG] Template version Id not provided in tf configuration, will use the latest version as default")
-			templateVersions, errTempVersion := conn.TemplatesAPIInstance.ListTemplateVersions(utils.StringPtr(d.Id()), nil, nil, nil, nil, nil)
+			listTemplateVersionsRequest := import3.ListTemplateVersionsRequest{
+				TemplateExtId: utils.StringPtr(d.Id()),
+			}
+			templateVersions, errTempVersion := conn.TemplatesAPIInstance.ListTemplateVersions(ctx, &listTemplateVersionsRequest)
 			if errTempVersion != nil {
 				return diag.Errorf("error while fetching template versions : %v", errTempVersion)
 			}
@@ -421,7 +438,11 @@ func ResourceNutanixTemplatesV2Update(ctx context.Context, d *schema.ResourceDat
 	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
 	log.Printf("[DEBUG] Template update request body :\n %v", string(aJSON))
 
-	respUpdate, err := conn.TemplatesAPIInstance.UpdateTemplateById(utils.StringPtr(d.Id()), updateSpec, args)
+	updateTemplateByIdRequest := import3.UpdateTemplateByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  updateSpec,
+	}
+	respUpdate, err := conn.TemplatesAPIInstance.UpdateTemplateById(ctx, &updateTemplateByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while updating template : %v", err)
 	}
@@ -447,7 +468,10 @@ func ResourceNutanixTemplatesV2Update(ctx context.Context, d *schema.ResourceDat
 func ResourceNutanixTemplatesV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	resp, err := conn.TemplatesAPIInstance.DeleteTemplateById(utils.StringPtr(d.Id()))
+	deleteTemplateByIdRequest := import3.DeleteTemplateByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.TemplatesAPIInstance.DeleteTemplateById(ctx, &deleteTemplateByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting template : %v", err)
 	}

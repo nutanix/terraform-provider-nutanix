@@ -5,7 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4/models/objects/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/models/objects/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/models/objects/v4/request/objectstores"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -46,36 +47,26 @@ func DatasourceNutanixObjectStoreCertificatesV2() *schema.Resource {
 func DatasourceNutanixObjectStoreCertificatesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ObjectStoreAPI
 
-	// initialize query params
-	var filter, selects *string
-	var page, limit *int
-
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
-	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
-	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
-	}
-	if selectf, ok := d.GetOk("select"); ok {
-		selects = utils.StringPtr(selectf.(string))
-	} else {
-		selects = nil
-	}
-
-	// get object store ext id
 	objectStoreExtID := d.Get("object_store_ext_id").(string)
 
-	// list certificates
-	listResp, err := conn.ObjectStoresAPIInstance.ListCertificatesByObjectstoreId(utils.StringPtr(objectStoreExtID), page, limit, filter, selects)
+	listCertificatesRequest := import1.ListCertificatesByObjectstoreIdRequest{
+		ObjectStoreExtId: utils.StringPtr(objectStoreExtID),
+	}
+
+	if v, ok := d.GetOk("page"); ok {
+		listCertificatesRequest.Page_ = utils.IntPtr(v.(int))
+	}
+	if v, ok := d.GetOk("limit"); ok {
+		listCertificatesRequest.Limit_ = utils.IntPtr(v.(int))
+	}
+	if v, ok := d.GetOk("filter"); ok {
+		listCertificatesRequest.Filter_ = utils.StringPtr(v.(string))
+	}
+	if v, ok := d.GetOk("select"); ok {
+		listCertificatesRequest.Select_ = utils.StringPtr(v.(string))
+	}
+
+	listResp, err := conn.ObjectStoresAPIInstance.ListCertificatesByObjectstoreId(ctx, &listCertificatesRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching object stores : %v", err)
 	}

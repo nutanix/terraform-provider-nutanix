@@ -6,9 +6,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	clustermgmt "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
-	clsConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
-	clsResponse "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/response"
+	clustermgmt "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
+	clsConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/common/v1/config"
+	clsResponse "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/common/v1/response"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/storagecontainers"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -53,37 +54,25 @@ func DatasourceNutanixStorageContainersV2() *schema.Resource {
 func DatasourceNutanixStorageContainersV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ClusterAPI
 
-	// initialize query params
-	var filter, orderBy, selectQ *string
-	var page, limit *int
+	listStorageContainersRequest := import1.ListStorageContainersRequest{}
 
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
+	if v, ok := d.GetOk("page"); ok {
+		listStorageContainersRequest.Page_ = utils.IntPtr(v.(int))
 	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
+	if v, ok := d.GetOk("limit"); ok {
+		listStorageContainersRequest.Limit_ = utils.IntPtr(v.(int))
 	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
+	if v, ok := d.GetOk("filter"); ok {
+		listStorageContainersRequest.Filter_ = utils.StringPtr(v.(string))
 	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
+	if v, ok := d.GetOk("order_by"); ok {
+		listStorageContainersRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
-	if selectQy, ok := d.GetOk("apply"); ok {
-		selectQ = utils.StringPtr(selectQy.(string))
-	} else {
-		selectQ = nil
+	if v, ok := d.GetOk("select"); ok {
+		listStorageContainersRequest.Select_ = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.StorageContainersAPI.ListStorageContainers(page, limit, filter, orderBy, selectQ)
+	resp, err := conn.StorageContainersAPI.ListStorageContainers(ctx, &listStorageContainersRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Storage Containers : %v", err)
 	}

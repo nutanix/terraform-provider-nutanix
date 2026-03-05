@@ -6,7 +6,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/models/security/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/security/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/security/v4/request/keymanagementservers"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -28,7 +29,8 @@ func DatasourceNutanixKeyManagementServersV2() *schema.Resource {
 func DatasourceNutanixKeyManagementServersV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).SecurityAPI
 
-	resp, err := conn.KeyManagementServersAPIInstance.ListKeyManagementServers()
+	listKeyManagementServersRequest := import1.ListKeyManagementServersRequest{}
+	resp, err := conn.KeyManagementServersAPIInstance.ListKeyManagementServers(ctx, &listKeyManagementServersRequest)
 	if err != nil {
 		return diag.Errorf("error while listing key management server : %v", err)
 	}

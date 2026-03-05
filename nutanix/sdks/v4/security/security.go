@@ -3,15 +3,15 @@ package security
 import (
 	"strconv"
 
-	"github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/api"
-	prism "github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/client"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/api"
+	prism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/sdkconfig"
 )
 
 type Client struct {
-	KeyManagementServersAPIInstance *api.KeyManagementServersApi
-	STIGsAPI                        *api.STIGsApi
+	KeyManagementServersAPIInstance *api.KeyManagementServersServiceApi
+	STIGsAPI                        *api.STIGsServiceApi
 }
 
 func NewSecurityClient(credentials client.Credentials) (*Client, error) {
@@ -36,8 +36,8 @@ func NewSecurityClient(credentials client.Credentials) (*Client, error) {
 	}
 
 	f := &Client{
-		KeyManagementServersAPIInstance: api.NewKeyManagementServersApi(baseClient),
-		STIGsAPI:                        api.NewSTIGsApi(baseClient),
+		KeyManagementServersAPIInstance: api.NewKeyManagementServersServiceApi(baseClient),
+		STIGsAPI:                        api.NewSTIGsServiceApi(baseClient),
 	}
 
 	return f, nil

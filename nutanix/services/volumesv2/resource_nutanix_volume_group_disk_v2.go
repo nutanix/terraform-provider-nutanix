@@ -11,10 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	taskPoll "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/common/v1/config"
-	volumesPrism "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/prism/v4/config"
-	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/common/v1/config"
+	volumesPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/prism/v4/config"
+	volumesClient "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/config"
+	taskPoll "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/request/volumegroups"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -157,9 +159,12 @@ func ResourceNutanixVolumeGroupDiskV2Create(ctx context.Context, d *schema.Resou
 	if diskStorageFeatures, ok := d.GetOk("disk_storage_features"); ok {
 		body.DiskStorageFeatures = expandDiskStorageFeatures(diskStorageFeatures.([]interface{}))
 	}
-
+  createVolumeDiskRequest := import1.CreateVolumeDiskRequest{
+		VolumeGroupExtId: utils.StringPtr(volumeGroupExtID.(string)),
+		Body:  &body,
+	}
 	log.Printf("[DEBUG] Volume Disk Body body.DiskDataSourceReference.Uris : %v", body.DiskDataSourceReference.Uris)
-	resp, err := conn.VolumeAPIInstance.CreateVolumeDisk(utils.StringPtr(volumeGroupExtID.(string)), &body)
+	resp, err := conn.VolumeAPIInstance.CreateVolumeDisk(ctx, &createVolumeDiskRequest)
 	if err != nil {
 		return diag.Errorf("error while creating Volume Disk : %v", err)
 	}
@@ -181,7 +186,10 @@ func ResourceNutanixVolumeGroupDiskV2Create(ctx context.Context, d *schema.Resou
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import2.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching volume disk task (%s): %v", utils.StringValue(taskUUID), err)
 	}
@@ -206,7 +214,11 @@ func ResourceNutanixVolumeGroupDiskV2Read(ctx context.Context, d *schema.Resourc
 
 	volumeDiskExtID := d.Id() // d.Id gives volume_group_ext_id not volume_disk_ext_id
 
-	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(utils.StringPtr(volumeGroupExtID.(string)), utils.StringPtr(volumeDiskExtID))
+	getVolumeDiskByIdRequest := import1.GetVolumeDiskByIdRequest{
+		VolumeGroupExtId: utils.StringPtr(volumeGroupExtID.(string)),
+		ExtId: utils.StringPtr(volumeDiskExtID),
+	}
+	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(ctx, &getVolumeDiskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching volume Disk : %v", err)
 	}
@@ -241,7 +253,11 @@ func ResourceNutanixVolumeGroupDiskV2Update(ctx context.Context, d *schema.Resou
 	volumeGroupExtID := d.Get("volume_group_ext_id")
 	volumeDiskExtID := d.Id()
 
-	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(utils.StringPtr(volumeGroupExtID.(string)), utils.StringPtr(volumeDiskExtID))
+	getVolumeDiskByIdRequest := import1.GetVolumeDiskByIdRequest{
+		VolumeGroupExtId: utils.StringPtr(volumeGroupExtID.(string)),
+		ExtId: utils.StringPtr(volumeDiskExtID),
+	}
+	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(ctx, &getVolumeDiskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while updating Volume Disk : %v", err)
 	}
@@ -272,7 +288,12 @@ func ResourceNutanixVolumeGroupDiskV2Update(ctx context.Context, d *schema.Resou
 		updateSpec.DiskDataSourceReference = nil
 	}
 
-	updateResp, err := conn.VolumeAPIInstance.UpdateVolumeDiskById(utils.StringPtr(volumeGroupExtID.(string)), utils.StringPtr(volumeDiskExtID), &updateSpec)
+	updateVolumeDiskByIdRequest := import1.UpdateVolumeDiskByIdRequest{
+		VolumeGroupExtId: utils.StringPtr(volumeGroupExtID.(string)),
+		ExtId: utils.StringPtr(volumeDiskExtID),
+		Body: &updateSpec,
+	}
+	updateResp, err := conn.VolumeAPIInstance.UpdateVolumeDiskById(ctx, &updateVolumeDiskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while updating Volume Disk : %v", err)
 	}
@@ -296,7 +317,10 @@ func ResourceNutanixVolumeGroupDiskV2Update(ctx context.Context, d *schema.Resou
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import2.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching volume disk update task (%s): %v", utils.StringValue(taskUUID), err)
 	}
@@ -313,7 +337,11 @@ func ResourceNutanixVolumeGroupDiskV2Delete(ctx context.Context, d *schema.Resou
 	volumeGroupExtID := d.Get("volume_group_ext_id")
 	volumeDiskExtID := d.Get("ext_id")
 
-	resp, err := conn.VolumeAPIInstance.DeleteVolumeDiskById(utils.StringPtr(volumeGroupExtID.(string)), utils.StringPtr(volumeDiskExtID.(string)))
+	deleteVolumeDiskByIdRequest := import1.DeleteVolumeDiskByIdRequest{
+		VolumeGroupExtId: utils.StringPtr(volumeGroupExtID.(string)),
+		ExtId: utils.StringPtr(volumeDiskExtID.(string)),
+	}
+	resp, err := conn.VolumeAPIInstance.DeleteVolumeDiskById(ctx, &deleteVolumeDiskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching volume Disk : %v", err)
 	}
@@ -336,7 +364,10 @@ func ResourceNutanixVolumeGroupDiskV2Delete(ctx context.Context, d *schema.Resou
 	}
 
 	// Get task details for logging
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import2.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching volume disk delete task (%s): %v", utils.StringValue(taskUUID), err)
 	}

@@ -3,18 +3,22 @@ package networkingv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
-	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/common/v1/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/subnets"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import6 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -40,6 +44,19 @@ func ResourceNutanixSubnetV2() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"shared_with_projects": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"subnet_type": {
 				Type:         schema.TypeString,
@@ -458,13 +475,15 @@ func ResourceNutanixSubnetV2() *schema.Resource {
 
 func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
-
 	inputSpec := import1.Subnet{}
 	if name, nok := d.GetOk("name"); nok {
 		inputSpec.Name = utils.StringPtr(name.(string))
 	}
 	if desc, ok := d.GetOk("description"); ok {
 		inputSpec.Description = utils.StringPtr(desc.(string))
+	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		inputSpec.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
 	if subType, ok := d.GetOk("subnet_type"); ok {
 		const two, three = 2, 3
@@ -538,11 +557,12 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	if ipConfig, ok := d.GetOk("ip_config"); ok {
 		inputSpec.IpConfig = expandIPConfig(ipConfig.([]interface{}))
 	}
-
-	aJSON, _ := json.MarshalIndent(inputSpec, "", " ")
+	createSubnetRequest := import5.CreateSubnetRequest{
+		Body: &inputSpec,
+	}
+	aJSON, _ := json.MarshalIndent(createSubnetRequest, "", " ")
 	log.Printf("[DEBUG] Subnet create payload : %s", string(aJSON))
-
-	resp, err := conn.SubnetAPIInstance.CreateSubnet(&inputSpec)
+	resp, err := conn.SubnetAPIInstance.CreateSubnet(ctx, &createSubnetRequest)
 	if err != nil {
 		return diag.Errorf("error while creating subnets : %v", err)
 	}
@@ -566,7 +586,10 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import6.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching subnet task: %v", err)
 	}
@@ -586,13 +609,28 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	} else {
 		return diag.Errorf("error while fetching subnet ExtId: subnet entity not found in EntitiesAffected")
 	}
+
+	// Handle sharing with projects after creation
+	if sharedProjects, ok := d.GetOk("shared_with_projects"); ok {
+		// Share with specific projects
+		projectsSet := sharedProjects.(*schema.Set)
+		for _, projectID := range projectsSet.List() {
+			if err := shareSubnetWithProject(ctx, conn, utils.StringValue(subnetExtID), projectID.(string)); err != nil {
+				return diag.Errorf("error while sharing subnet with project %s: %v", projectID.(string), err)
+			}
+		}
+	}
+
 	return ResourceNutanixSubnetV2Read(ctx, d, meta)
 }
 
 func ResourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.SubnetAPIInstance.GetSubnetById(utils.StringPtr(d.Id()))
+	getSubnetRequest := import5.GetSubnetByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.SubnetAPIInstance.GetSubnetById(ctx, &getSubnetRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching subnets : %v", err)
 	}
@@ -609,6 +647,12 @@ func ResourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 	if err := d.Set("description", getResp.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("subnet_type", flattenSubnetType(getResp.SubnetType)); err != nil {
@@ -684,7 +728,10 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.Client).NetworkingAPI
 	updateSpec := import1.Subnet{}
 
-	readResp, err := conn.SubnetAPIInstance.GetSubnetById(utils.StringPtr(d.Id()))
+	getSubnetRequest := import5.GetSubnetByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.SubnetAPIInstance.GetSubnetById(ctx, &getSubnetRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching subnets : %v", err)
 	}
@@ -702,6 +749,33 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 	if d.HasChange("description") {
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
 	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
+
+	// Handle shared_with_projects changes
+	if d.HasChange("shared_with_projects") {
+		oldProjects, newProjects := d.GetChange("shared_with_projects")
+		oldSet := oldProjects.(*schema.Set)
+		newSet := newProjects.(*schema.Set)
+
+		// Unshare with removed projects
+		removedProjects := oldSet.Difference(newSet)
+		for _, projectID := range removedProjects.List() {
+			if err := unshareSubnetWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
+				return diag.Errorf("error while unsharing subnet with project %s: %v", projectID.(string), err)
+			}
+		}
+
+		// Share with new projects
+		addedProjects := newSet.Difference(oldSet)
+		for _, projectID := range addedProjects.List() {
+			if err := shareSubnetWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
+				return diag.Errorf("error while sharing subnet with project %s: %v", projectID.(string), err)
+			}
+		}
+	}
+
 	if d.HasChange("subnet_type") {
 		const two, three = 2, 3
 		subMap := map[string]interface{}{
@@ -771,7 +845,12 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
 	log.Printf("[DEBUG] Update Subnet Request: %s", string(aJSON))
 
-	updateResp, err := conn.SubnetAPIInstance.UpdateSubnetById(utils.StringPtr(d.Id()), &updateSpec, args)
+	updateSubnetRequest := import5.UpdateSubnetByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updateSpec,
+	}
+
+	updateResp, err := conn.SubnetAPIInstance.UpdateSubnetById(ctx, &updateSubnetRequest, args)
 	if err != nil {
 		return diag.Errorf("error while updating subnets : %v", err)
 	}
@@ -799,7 +878,10 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 func ResourceNutanixSubnetV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.SubnetAPIInstance.DeleteSubnetById(utils.StringPtr(d.Id()))
+	deleteSubnetRequest := import5.DeleteSubnetByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.SubnetAPIInstance.DeleteSubnetById(ctx, &deleteSubnetRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting subnet : %v", err)
 	}
@@ -1463,5 +1545,67 @@ func expandIPv6Pool(pr []interface{}) []import1.IPv6Pool {
 		}
 		return pools
 	}
+	return nil
+}
+
+// Helper functions for sharing/unsharing subnet with projects
+func shareSubnetWithProject(ctx context.Context, conn *networking.Client, subnetID, projectID string) error {
+
+	subnetExtID := utils.StringPtr(subnetID)
+	shareSubnetRequest := import5.ShareSubnetByIdRequest{
+		SubnetExtId: subnetExtID,
+		Body: &import1.ProjectReference{
+			ProjectExtId: utils.StringPtr(projectID),
+		},
+	}
+	getSubnetRequest := import5.GetSubnetByIdRequest{
+		ExtId: subnetExtID,
+	}
+	readResp, err := conn.SubnetAPIInstance.GetSubnetById(ctx, &getSubnetRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching subnets for etag value: %v", err)
+	}
+
+	// Extract E-Tag Header
+	etagValue := conn.SubnetAPIInstance.ApiClient.GetEtag(readResp)
+
+	args := make(map[string]interface{})
+	args["If-Match"] = utils.StringPtr(etagValue)
+	resp, err := conn.SubnetAPIInstance.ShareSubnetById(ctx, &shareSubnetRequest, args)
+	if err != nil {
+		return fmt.Errorf("error while sharing subnet %s with project %s: %w", subnetExtID, projectID, err)
+	}
+	log.Printf("[DEBUG] Sharing subnet %s with project %s response: %v", subnetID, projectID, resp)
+	return nil
+}
+
+func unshareSubnetWithProject(ctx context.Context, conn *networking.Client, subnetID, projectID string) error {
+	subnetExtID := utils.StringPtr(subnetID)
+	unshareSubnetRequest := import5.UnshareSubnetByIdRequest{
+		SubnetExtId: subnetExtID,
+		Body: &import1.ProjectReference{
+			ProjectExtId: utils.StringPtr(projectID),
+		},
+	}
+
+	getSubnetRequest := import5.GetSubnetByIdRequest{
+		ExtId: subnetExtID,
+	}
+	readResp, err := conn.SubnetAPIInstance.GetSubnetById(ctx, &getSubnetRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching subnets for etag value: %v", err)
+	}
+
+	// Extract E-Tag Header
+	etagValue := conn.SubnetAPIInstance.ApiClient.GetEtag(readResp)
+
+	args := make(map[string]interface{})
+	args["If-Match"] = utils.StringPtr(etagValue)
+
+	resp, err := conn.SubnetAPIInstance.UnshareSubnetById(ctx, &unshareSubnetRequest, args)
+	if err != nil {
+		return fmt.Errorf("error while unsharing subnet %s with project %s: %w", subnetExtID, projectID, err)
+	}
+	log.Printf("[DEBUG] Unsharing subnet %s with project %s response: %v", subnetExtID, projectID, resp)
 	return nil
 }

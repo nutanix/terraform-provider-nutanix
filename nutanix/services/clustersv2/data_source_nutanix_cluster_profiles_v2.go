@@ -6,7 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusterprofiles"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -48,37 +49,25 @@ func DatasourceNutanixClusterProfilesV2() *schema.Resource {
 func DatasourceNutanixClusterProfilesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ClusterAPI
 
-	// initialize query params
-	var filter, orderBy, selectQ *string
-	var page, limit *int
+	listClusterProfilesRequest := import2.ListClusterProfilesRequest{}
 
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
+	if v, ok := d.GetOk("page"); ok {
+		listClusterProfilesRequest.Page_ = utils.IntPtr(v.(int))
 	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
+	if v, ok := d.GetOk("limit"); ok {
+		listClusterProfilesRequest.Limit_ = utils.IntPtr(v.(int))
 	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
+	if v, ok := d.GetOk("filter"); ok {
+		listClusterProfilesRequest.Filter_ = utils.StringPtr(v.(string))
 	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
+	if v, ok := d.GetOk("order_by"); ok {
+		listClusterProfilesRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
-	if selectQy, ok := d.GetOk("select"); ok {
-		selectQ = utils.StringPtr(selectQy.(string))
-	} else {
-		selectQ = nil
+	if v, ok := d.GetOk("select"); ok {
+		listClusterProfilesRequest.Select_ = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.ClusterProfilesAPI.ListClusterProfiles(page, limit, filter, orderBy, selectQ)
+	resp, err := conn.ClusterProfilesAPI.ListClusterProfiles(ctx, &listClusterProfilesRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching cluster profiles : %v", err)
 	}

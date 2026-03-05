@@ -5,8 +5,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/common/v1/response"
-	lcmstatusimport1 "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/resources"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/common/v1/response"
+	lcmstatusimport1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/lifecycle/v4/resources"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/lifecycle/v4/request/status"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -83,8 +84,10 @@ func DatasourceNutanixLcmStatusV2Create(ctx context.Context, d *schema.ResourceD
 	if id := d.Get("x_cluster_id").(string); id != "" {
 		clusterID = &id
 	}
-
-	resp, err := conn.LcmStatusAPIInstance.GetStatus(clusterID)
+	getStatusRequest := import1.GetStatusRequest{
+		XClusterId: clusterID,
+	}
+	resp, err := conn.LcmStatusAPIInstance.GetStatus(ctx, &getStatusRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching the Lcm status : %v", err)
 	}

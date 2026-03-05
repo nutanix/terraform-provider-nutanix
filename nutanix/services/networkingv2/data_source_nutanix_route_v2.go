@@ -7,7 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/routes"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -57,6 +58,10 @@ func DatasourceNutanixRouteV2() *schema.Resource {
 				Computed: true,
 			},
 			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"project_ext_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -135,8 +140,11 @@ func DatasourceNutanixRouteV2Read(ctx context.Context, d *schema.ResourceData, m
 
 	routeTableExtID := d.Get("route_table_ext_id").(string)
 	extID := d.Get("ext_id").(string)
-
-	resp, err := conn.Routes.GetRouteForRouteTableById(&extID, &routeTableExtID)
+	getRouteForRouteTableByIdRequest := import1.GetRouteForRouteTableByIdRequest{
+		RouteTableExtId: utils.StringPtr(routeTableExtID),
+		ExtId:           utils.StringPtr(extID),
+	}
+	resp, err := conn.Routes.GetRouteForRouteTableById(ctx, &getRouteForRouteTableByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching route : %v", err)
 	}
@@ -159,6 +167,9 @@ func DatasourceNutanixRouteV2Read(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 	if err := d.Set("description", getResp.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("destination", flattenDestination(getResp.Destination)); err != nil {

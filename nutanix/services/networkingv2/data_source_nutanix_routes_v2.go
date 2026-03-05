@@ -7,7 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/routes"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -52,32 +53,24 @@ func DatasourceNutanixRoutesV2Read(ctx context.Context, d *schema.ResourceData, 
 
 	routeTableExtID := d.Get("route_table_ext_id").(string)
 
-	// initialize query params
-	var filter, orderBy *string
-	var page, limit *int
-
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
-	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
-	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
-	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
+	listRoutesRequest := import1.ListRoutesByRouteTableIdRequest{
+		RouteTableExtId: utils.StringPtr(routeTableExtID),
 	}
 
-	resp, err := conn.Routes.ListRoutesByRouteTableId(&routeTableExtID, page, limit, filter, orderBy)
+	if v, ok := d.GetOk("page"); ok {
+		listRoutesRequest.Page_ = utils.IntPtr(v.(int))
+	}
+	if v, ok := d.GetOk("limit"); ok {
+		listRoutesRequest.Limit_ = utils.IntPtr(v.(int))
+	}
+	if v, ok := d.GetOk("filter"); ok {
+		listRoutesRequest.Filter_ = utils.StringPtr(v.(string))
+	}
+	if v, ok := d.GetOk("order_by"); ok {
+		listRoutesRequest.Orderby_ = utils.StringPtr(v.(string))
+	}
+
+	resp, err := conn.Routes.ListRoutesByRouteTableId(ctx, &listRoutesRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching routes : %v", err)
 	}
@@ -135,6 +128,7 @@ func flattenRoutes(routes []config.Route) []interface{} {
 			"route_type":                        flattenRouteType(route.RouteType),
 			"is_active":                         route.IsActive,
 			"priority":                          route.Priority,
+			"project_ext_id":                    route.ProjectExtId,
 		}
 	}
 
