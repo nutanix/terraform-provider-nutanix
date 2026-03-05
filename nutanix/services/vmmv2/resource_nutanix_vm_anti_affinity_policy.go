@@ -123,7 +123,7 @@ func ResourceNutanixVMAntiAffinityPolicyV2Create(ctx context.Context, d *schema.
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] VM-VM Anti-Affinity Policy Task Details: %s", string(aJSON))
 
-	uuid,err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeVMAntiAffinityPolicy, "VM-VM Anti-Affinity Policy")
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeVMAntiAffinityPolicy, "VM-VM Anti-Affinity Policy")
 	if err != nil {
 		return diag.FromErr(err)
 	}

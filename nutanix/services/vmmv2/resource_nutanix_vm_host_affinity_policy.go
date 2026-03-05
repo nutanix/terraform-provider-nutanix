@@ -134,7 +134,7 @@ func ResourceNutanixVMHostAffinityPolicyV2Create(ctx context.Context, d *schema.
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] VM-Host Affinity Policy Task Details: %s", string(aJSON))
 
-	uuid,err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeVMHostAffinityPolicy, "VM-Host Affinity Policy")
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeVMHostAffinityPolicy, "VM-Host Affinity Policy")
 	if err != nil {
 		return diag.FromErr(err)
 	}
