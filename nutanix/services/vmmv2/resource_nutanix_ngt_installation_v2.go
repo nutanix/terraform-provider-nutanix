@@ -15,6 +15,7 @@ import (
 	vmmPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
 	vmmConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/config"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/vm"
 	taskPoll "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -172,8 +173,11 @@ func ResourceNutanixNGTInstallationV4Create(ctx context.Context, d *schema.Resou
 
 	log.Printf("[DEBUG] vmmExtId : %s", *vmmExtID)
 	body := &vmmConfig.GuestToolsInstallConfig{}
-
-	readResp, err := conn.VMAPIInstance.GetGuestToolsById(vmmExtID)
+  
+	getGuestToolsByIdRequest := import2.GetGuestToolsByIdRequest{
+		ExtId: vmmExtID,
+	}
+	readResp, err := conn.VMAPIInstance.GetGuestToolsById(ctx, &getGuestToolsByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Vm NGT Configuration : %v", err)
 	}
@@ -238,7 +242,11 @@ func ResourceNutanixNGTInstallationV4Create(ctx context.Context, d *schema.Resou
 
 	aJSON, _ := json.Marshal(body)
 	log.Printf("[DEBUG] Installing NGT Request Body: %s", aJSON)
-	installResp, err := conn.VMAPIInstance.InstallVmGuestTools(vmmExtID, body, args)
+	installVmGuestToolsRequest := import2.InstallVmGuestToolsRequest{
+		ExtId: vmmExtID,
+		Body:  body,
+	}
+	installResp, err := conn.VMAPIInstance.InstallVmGuestTools(ctx, &installVmGuestToolsRequest, args)
 	if err != nil {
 		return diag.Errorf("error while installing gest tools  : %v", err)
 	}
@@ -289,7 +297,10 @@ func ResourceNutanixNGTInstallationV4Read(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.Client).VmmAPI
 
 	extID := d.Id()
-	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID))
+	getGuestToolsByIdRequest := import2.GetGuestToolsByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	resp, err := conn.VMAPIInstance.GetGuestToolsById(ctx, &getGuestToolsByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Gest Tool : %v", err)
 	}
@@ -333,8 +344,11 @@ func ResourceNutanixNGTInstallationV4Update(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.Client).VmmAPI
 
 	extID := d.Get("ext_id").(string)
-
-	readResp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID))
+  
+	getGuestToolsByIdRequest := import2.GetGuestToolsByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	readResp, err := conn.VMAPIInstance.GetGuestToolsById(ctx, &getGuestToolsByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching NGT  : %v", err)
 	}
@@ -383,8 +397,12 @@ func ResourceNutanixNGTInstallationV4Update(ctx context.Context, d *schema.Resou
 		log.Printf("[DEBUG] NGT Configuration is same, no update required")
 		return nil
 	}
-
-	resp, err := conn.VMAPIInstance.UpdateGuestToolsById(utils.StringPtr(extID), &updateSpec, args)
+  
+	updateGuestToolsByIdRequest := import2.UpdateGuestToolsByIdRequest{
+		ExtId: utils.StringPtr(extID),
+		Body:  &updateSpec,
+	}
+	resp, err := conn.VMAPIInstance.UpdateGuestToolsById(ctx, &updateGuestToolsByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while updating gest tools  : %v", err)
 	}
@@ -422,14 +440,20 @@ func ResourceNutanixNGTInstallationV4Delete(ctx context.Context, d *schema.Resou
 	const maxAttempts = 5
 	var taskUUID *string
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
-		readResp, err := conn.VMAPIInstance.GetVmById(&extID)
+		getVmByIdRequest := import2.GetVmByIdRequest{
+			ExtId: utils.StringPtr(extID),
+		}
+		readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 		if err != nil {
 			return diag.Errorf("error while fetching Vm : %v", err)
 		}
 		args := make(map[string]interface{})
 		args["If-Match"] = getEtagHeader(readResp, conn)
 
-		resp, err := conn.VMAPIInstance.UninstallVmGuestTools(utils.StringPtr(extID), args)
+		uninstallVmGuestToolsRequest := import2.UninstallVmGuestToolsRequest{
+			ExtId: utils.StringPtr(extID),
+		}
+		resp, err := conn.VMAPIInstance.UninstallVmGuestTools(ctx, &uninstallVmGuestToolsRequest, args)
 		if err != nil {
 			return diag.Errorf("error while uninstalling gest tools  : %v", err)
 		}

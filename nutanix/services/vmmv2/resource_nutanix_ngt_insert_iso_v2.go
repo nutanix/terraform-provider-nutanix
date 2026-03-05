@@ -328,7 +328,11 @@ func ejectCdromISO(ctx context.Context, d *schema.ResourceData, meta interface{}
 		args["If-Match"] = getEtagHeader(readResp, conn)
 
 		// Eject the ISO from the CD-ROM of the VM
-		resp, err := conn.VMAPIInstance.EjectCdRomById(utils.StringPtr(vmExtID), utils.StringPtr(extID), args)
+		ejectCdRomByIdRequest := import3.EjectCdRomByIdRequest{
+			VmExtId: utils.StringPtr(vmExtID),
+			ExtId: utils.StringPtr(extID),
+		}
+		resp, err := conn.VMAPIInstance.EjectCdRomById(ctx, &ejectCdRomByIdRequest, args)
 		if err != nil {
 			return diag.Errorf("error while ejecting cd-rom : %v", err)
 		}

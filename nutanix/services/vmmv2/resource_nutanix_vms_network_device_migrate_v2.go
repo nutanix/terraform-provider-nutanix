@@ -108,7 +108,12 @@ func ResourceNutanixVmsNetworkDeviceMigrateV2Create(ctx context.Context, d *sche
 	args := make(map[string]interface{})
 	args["If-Match"] = getEtagHeader(readResp, conn)
 
-	resp, err := conn.VMAPIInstance.MigrateNicById(utils.StringPtr(vmExtID.(string)), utils.StringPtr(extID.(string)), &body, args)
+	migrateNicByIdRequest := import3.MigrateNicByIdRequest{
+		VmExtId: utils.StringPtr(vmExtID.(string)),
+		ExtId:   utils.StringPtr(extID.(string)),
+		Body:    &body,
+	}
+	resp, err := conn.VMAPIInstance.MigrateNicById(ctx, &migrateNicByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while migrate nic : %v", err)
 	}
@@ -183,7 +188,12 @@ func ResourceNutanixVmsNetworkDeviceMigrateV2Update(ctx context.Context, d *sche
 	args := make(map[string]interface{})
 	args["If-Match"] = getEtagHeader(readResp, conn)
 
-	resp, err := conn.VMAPIInstance.MigrateNicById(utils.StringPtr(vmExtID.(string)), utils.StringPtr(extID.(string)), &body, args)
+	migrateNicByIdRequest := import3.MigrateNicByIdRequest{
+		VmExtId: utils.StringPtr(vmExtID.(string)),
+		ExtId:   utils.StringPtr(extID.(string)),
+		Body:    &body,
+	}
+	resp, err := conn.VMAPIInstance.MigrateNicById(ctx, &migrateNicByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while migrate nic : %v", err)
 	}

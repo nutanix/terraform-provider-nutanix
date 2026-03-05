@@ -464,8 +464,11 @@ func ResourceNutanixImageV4Update(ctx context.Context, d *schema.ResourceData, m
 
 func ResourceNutanixImageV4Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
-
-	resp, err := conn.ImagesAPIInstance.DeleteImageById(utils.StringPtr(d.Id()))
+  
+	deleteImageByIdRequest := import3.DeleteImageByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ImagesAPIInstance.DeleteImageById(ctx, &deleteImageByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting images : %v", err)
 	}

@@ -1457,7 +1457,7 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 		waitIPConf := &resource.StateChangeConf{
 			Pending:    []string{"WAITING"},
 			Target:     []string{"AVAILABLE"},
-			Refresh:    waitForIPRefreshFunc(conn, utils.StringValue(uuid)),
+			Refresh:    waitForIPRefreshFunc(ctx, conn, utils.StringValue(uuid)),
 			Timeout:    timeout,
 			Delay:      delay,
 			MinTimeout: delay,
@@ -1506,7 +1506,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 	// respImages := resp.Data.GetValue().(config.Vm)
 	// updateSpec := respImages
 
-	if checkForHotPlugChanges(d) && !isVMPowerOff(d, conn) {
+	if checkForHotPlugChanges(d) && !isVMPowerOff(ctx, d, conn) {
 		log.Printf("[DEBUG] callingForPowerOffVM func")
 		callForPowerOffVM(ctx, conn, d, meta)
 	}
@@ -2336,7 +2336,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 			args := make(map[string]interface{})
 			args["If-Match"] = getEtagHeader(readResp, conn)
 
-			resp, err := conn.VMAPIInstance.DisassociateCategories(utils.StringPtr(d.Id()), &body, args)
+			disassociateCategoriesRequest := import3.DisassociateCategoriesRequest{
+				ExtId: utils.StringPtr(d.Id()),
+				Body:  &body,
+			}
+			resp, err := conn.VMAPIInstance.DisassociateCategories(ctx, &disassociateCategoriesRequest, args)
 			if err != nil {
 				return diag.Errorf("error while diassociate categories : %v", err)
 			}
@@ -2374,7 +2378,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 			args := make(map[string]interface{})
 			args["If-Match"] = getEtagHeader(readResp, conn)
 
-			resp, err := conn.VMAPIInstance.AssociateCategories(utils.StringPtr(d.Id()), &body, args)
+			associateCategoriesRequest := import3.AssociateCategoriesRequest{
+				ExtId: utils.StringPtr(d.Id()),
+				Body:  &body,
+			}
+			resp, err := conn.VMAPIInstance.AssociateCategories(ctx, &associateCategoriesRequest, args)
 			if err != nil {
 				return diag.Errorf("error while associating categories : %v", err)
 			}
@@ -3509,7 +3517,7 @@ func checkForHotPlugChanges(d *schema.ResourceData) bool {
 	return false
 }
 
-func isVMPowerOff(d *schema.ResourceData, conn *vmm.Client) bool {
+func isVMPowerOff(ctx context.Context, d *schema.ResourceData, conn *vmm.Client) bool {
 	getVmByIdRequest := import3.GetVmByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}
@@ -3610,9 +3618,12 @@ func getFirstIPAddress(nic config.Nic) string {
 	return ""
 }
 
-func waitForIPRefreshFunc(client *vmm.Client, vmUUID string) resource.StateRefreshFunc {
+func waitForIPRefreshFunc(ctx context.Context, client *vmm.Client, vmUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		resp, err := client.VMAPIInstance.GetVmById(utils.StringPtr(vmUUID))
+		getVmByIdRequest := import3.GetVmByIdRequest{
+			ExtId: utils.StringPtr(vmUUID),
+		}
+		resp, err := client.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 		if err != nil {
 			return nil, "", err
 		}

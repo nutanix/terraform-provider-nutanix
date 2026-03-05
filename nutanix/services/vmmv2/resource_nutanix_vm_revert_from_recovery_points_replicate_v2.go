@@ -66,7 +66,11 @@ func ResourceNutanixRevertVMRecoveryPointV2Create(ctx context.Context, d *schema
 		body.VmRecoveryPointExtId = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.VMAPIInstance.RevertVm(utils.StringPtr(rpExtID), &body, args)
+	revertVmRequest := import3.RevertVmRequest{
+		ExtId: utils.StringPtr(rpExtID),
+		Body:  &body,
+	}
+	resp, err := conn.VMAPIInstance.RevertVm(ctx, &revertVmRequest, args)
 	if err != nil {
 		return diag.Errorf("error while reverting vm : %v", err)
 	}

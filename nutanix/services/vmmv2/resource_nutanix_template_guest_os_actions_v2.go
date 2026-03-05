@@ -12,7 +12,8 @@ import (
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
 	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/content"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
-	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/templates"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -69,7 +70,11 @@ func ResourceNutanixTemplateActionsV2Create(ctx context.Context, d *schema.Resou
 		spec := import5.InitiateGuestUpdateSpec{}
 
 		spec.VersionId = &versionID
-		resp, err := conn.TemplatesAPIInstance.InitiateGuestUpdate(utils.StringPtr(extID), &spec)
+		initiateGuestUpdateRequest := import3.InitiateGuestUpdateRequest{
+			ExtId: utils.StringPtr(extID),
+			Body:  &spec,
+		}
+		resp, err := conn.TemplatesAPIInstance.InitiateGuestUpdate(ctx, &initiateGuestUpdateRequest)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -99,7 +104,11 @@ func ResourceNutanixTemplateActionsV2Create(ctx context.Context, d *schema.Resou
 		spec.VersionDescription = &versionDesc
 		spec.IsActiveVersion = &isActiveVersion
 
-		resp, err := conn.TemplatesAPIInstance.CompleteGuestUpdate(utils.StringPtr(extID), &spec)
+		completeGuestUpdateRequest := import3.CompleteGuestUpdateRequest{
+			ExtId: utils.StringPtr(extID),
+			Body:  &spec,
+		}
+		resp, err := conn.TemplatesAPIInstance.CompleteGuestUpdate(ctx, &completeGuestUpdateRequest)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -120,7 +129,10 @@ func ResourceNutanixTemplateActionsV2Create(ctx context.Context, d *schema.Resou
 	}
 
 	if action == "cancel" {
-		resp, err := conn.TemplatesAPIInstance.CancelGuestUpdate(utils.StringPtr(extID))
+		cancelGuestUpdateRequest := import3.CancelGuestUpdateRequest{
+			ExtId: utils.StringPtr(extID),
+		}
+		resp, err := conn.TemplatesAPIInstance.CancelGuestUpdate(ctx, &cancelGuestUpdateRequest)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -141,7 +153,7 @@ func ResourceNutanixTemplateActionsV2Create(ctx context.Context, d *schema.Resou
 	}
 
 	// Get UUID from TASK API
-	getTaskByIdRequest := import3.GetTaskByIdRequest{
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
 		ExtId: taskUUID,
 	}
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)

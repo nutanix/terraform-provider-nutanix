@@ -497,7 +497,11 @@ func ResourceNutanixOvaV2Update(ctx context.Context, d *schema.ResourceData, met
 	updateSpec.CreatedBy = nil
 
 	// Prepare the update request
-	updateResp, err := conn.OvasAPIInstance.UpdateOvaById(utils.StringPtr(d.Id()), &updateSpec)
+	updateOvaByIdRequest := import5.UpdateOvaByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updateSpec,
+	}
+	updateResp, err := conn.OvasAPIInstance.UpdateOvaById(ctx, &updateOvaByIdRequest)
 	if err != nil {
 		return diag.Errorf("error updating OVA (%s): %v", d.Id(), err)
 	}
@@ -527,7 +531,10 @@ func ResourceNutanixOvaV2Delete(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(errors.New("resource id is empty, cannot delete ova"))
 	}
 
-	deleteResp, err := conn.OvasAPIInstance.DeleteOvaById(utils.StringPtr(d.Id()))
+	deleteOvaByIdRequest := import5.DeleteOvaByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	deleteResp, err := conn.OvasAPIInstance.DeleteOvaById(ctx, &deleteOvaByIdRequest)
 	if err != nil {
 		return diag.Errorf("error deleting OVA (%s): %v", d.Id(), err)
 	}

@@ -1266,7 +1266,11 @@ func ResourceNutanixVMCloneV2Create(ctx context.Context, d *schema.ResourceData,
 		body.BootConfig = expandOneOfCloneVMBootConfig(bootConfig)
 	}
 
-	resp, err := conn.VMAPIInstance.CloneVm(utils.StringPtr(vmExtID.(string)), body, args)
+	cloneVmRequest := import3.CloneVmRequest{
+		ExtId: utils.StringPtr(vmExtID.(string)),
+		Body:  body,
+	}
+	resp, err := conn.VMAPIInstance.CloneVm(ctx, &cloneVmRequest, args)
 	if err != nil {
 		return diag.Errorf("error while Cloning Vm : %v", err)
 	}

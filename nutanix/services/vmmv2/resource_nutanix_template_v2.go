@@ -405,7 +405,10 @@ func ResourceNutanixTemplatesV2Update(ctx context.Context, d *schema.ResourceDat
 				log.Printf("[DEBUG] Template version Id provided in tf configuration")
 			}
 			log.Printf("[DEBUG] Template version Id not provided in tf configuration, will use the latest version as default")
-			templateVersions, errTempVersion := conn.TemplatesAPIInstance.ListTemplateVersions(utils.StringPtr(d.Id()), nil, nil, nil, nil, nil)
+			listTemplateVersionsRequest := import3.ListTemplateVersionsRequest{
+				TemplateExtId: utils.StringPtr(d.Id()),
+			}
+			templateVersions, errTempVersion := conn.TemplatesAPIInstance.ListTemplateVersions(ctx, &listTemplateVersionsRequest)
 			if errTempVersion != nil {
 				return diag.Errorf("error while fetching template versions : %v", errTempVersion)
 			}
@@ -465,7 +468,10 @@ func ResourceNutanixTemplatesV2Update(ctx context.Context, d *schema.ResourceDat
 func ResourceNutanixTemplatesV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	resp, err := conn.TemplatesAPIInstance.DeleteTemplateById(utils.StringPtr(d.Id()))
+	deleteTemplateByIdRequest := import3.DeleteTemplateByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.TemplatesAPIInstance.DeleteTemplateById(ctx, &deleteTemplateByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting template : %v", err)
 	}
