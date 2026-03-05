@@ -35,6 +35,7 @@ func ResourceNutanixVMAntiAffinityPolicyV2() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"create_time": {
 				Type:     schema.TypeString,

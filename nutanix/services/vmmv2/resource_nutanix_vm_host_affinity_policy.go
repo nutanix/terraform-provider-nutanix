@@ -34,6 +34,7 @@ func ResourceNutanixVMHostAffinityPolicyV2() *schema.Resource {
 			},
 			"description": {
 				Type:     schema.TypeString,
+				Computed: true,
 				Optional: true,
 			},
 			"create_time": {
