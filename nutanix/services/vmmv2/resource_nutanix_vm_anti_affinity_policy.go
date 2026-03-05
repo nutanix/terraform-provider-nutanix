@@ -92,7 +92,7 @@ func ResourceNutanixVMAntiAffinityPolicyV2Create(ctx context.Context, d *schema.
 	resp, err := conn.VMAntiAffinityPolicyAPIInstance.CreateVmAntiAffinityPolicy(&body)
 
 	if err != nil {
-		return diag.Errorf("error while creating Anti-affinity policy : %v", err)
+		return diag.Errorf("error while creating VM-VM Anti-Affinity policy : %v", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(vmmConfig.TaskReference)
@@ -108,7 +108,7 @@ func ResourceNutanixVMAntiAffinityPolicyV2Create(ctx context.Context, d *schema.
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for VM Anti-affinity policy (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for VM-VM Anti-Affinity policy (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
@@ -129,7 +129,7 @@ func ResourceNutanixVMAntiAffinityPolicyV2Read(ctx context.Context, d *schema.Re
 
 	resp, err := conn.VMAntiAffinityPolicyAPIInstance.GetVmAntiAffinityPolicyById(utils.StringPtr(d.Id()))
 	if err != nil {
-		return diag.Errorf("error while fetching Anti-affinity policy : %v", err)
+		return diag.Errorf("error while fetching VM-VM Anti-Affinity policy : %v", err)
 	}
 
 	getResp := resp.Data.GetValue().(policies.VmAntiAffinityPolicy)
@@ -178,7 +178,7 @@ func ResourceNutanixVMAntiAffinityPolicyV2Update(ctx context.Context, d *schema.
 
 	resp, err := conn.VMAntiAffinityPolicyAPIInstance.GetVmAntiAffinityPolicyById(utils.StringPtr(d.Id()))
 	if err != nil {
-		return diag.Errorf("error while fetching Anti-affinity policy : %v", err)
+		return diag.Errorf("error while fetching VM-VM Anti-Affinity policy : %v", err)
 	}
 
 	respPolicy := resp.Data.GetValue().(policies.VmAntiAffinityPolicy)
@@ -203,7 +203,7 @@ func ResourceNutanixVMAntiAffinityPolicyV2Update(ctx context.Context, d *schema.
 
 	updateResp, err := conn.VMAntiAffinityPolicyAPIInstance.UpdateVmAntiAffinityPolicyById(utils.StringPtr(d.Id()), &updateSpec)
 	if err != nil {
-		return diag.Errorf("error while updating Anti-affinity policy : %v", err)
+		return diag.Errorf("error while updating VM-VM Anti-Affinity policy : %v", err)
 	}
 	TaskRef := updateResp.Data.GetValue().(vmmConfig.TaskReference)
 	taskUUID := TaskRef.ExtId
@@ -217,7 +217,7 @@ func ResourceNutanixVMAntiAffinityPolicyV2Update(ctx context.Context, d *schema.
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for VM Anti-affinity policy (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for VM-VM Anti-Affinity policy (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	return ResourceNutanixVMAntiAffinityPolicyV2Read(ctx, d, meta)
 }
@@ -227,7 +227,7 @@ func ResourceNutanixVMAntiAffinityPolicyV2Delete(ctx context.Context, d *schema.
 
 	readResp, err := conn.VMAntiAffinityPolicyAPIInstance.GetVmAntiAffinityPolicyById(utils.StringPtr(d.Id()))
 	if err != nil {
-		return diag.Errorf("error while reading policy : %v", err)
+		return diag.Errorf("error while fetching VM-VM Anti-Affinity policy : %v", err)
 	}
 
 	args := make(map[string]interface{})
@@ -235,7 +235,7 @@ func ResourceNutanixVMAntiAffinityPolicyV2Delete(ctx context.Context, d *schema.
 
 	resp, err := conn.VMAntiAffinityPolicyAPIInstance.DeleteVmAntiAffinityPolicyById(utils.StringPtr(d.Id()), args)
 	if err != nil {
-		return diag.Errorf("error while deleting Anti-affinity policy : %v", err)
+		return diag.Errorf("error while deleting VM-VM Anti-Affinity policy : %v", err)
 	}
 	TaskRef := resp.Data.GetValue().(vmmConfig.TaskReference)
 	taskUUID := TaskRef.ExtId
@@ -249,7 +249,7 @@ func ResourceNutanixVMAntiAffinityPolicyV2Delete(ctx context.Context, d *schema.
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Anti-affinity policy (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for VM-VM Anti-Affinity policy (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	return nil
 }
