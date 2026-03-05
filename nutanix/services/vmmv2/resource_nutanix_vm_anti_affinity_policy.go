@@ -100,7 +100,7 @@ func ResourceNutanixVMAntiAffinityPolicyV2Create(ctx context.Context, d *schema.
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the Policy to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
@@ -208,7 +208,7 @@ func ResourceNutanixVMAntiAffinityPolicyV2Update(ctx context.Context, d *schema.
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the Policy to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
@@ -240,7 +240,7 @@ func ResourceNutanixVMAntiAffinityPolicyV2Delete(ctx context.Context, d *schema.
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the Policy to be deleted
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
