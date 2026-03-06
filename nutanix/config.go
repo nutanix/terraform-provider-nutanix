@@ -16,6 +16,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/lcm"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/microseg"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/multidomain"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/objectstores"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
@@ -136,6 +137,10 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	MultidomainClient, err := multidomain.NewMultidomainClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Client{
 		WaitTimeout:         c.WaitTimeout,
@@ -157,6 +162,7 @@ func (c *Config) Client() (*Client, error) {
 		CalmAPI:             calmClient,
 		ObjectStoreAPI:      ObjectStoreClient,
 		SecurityAPI:         SecurityClient,
+		MultidomainAPI:      MultidomainClient,
 	}, nil
 }
 
@@ -181,4 +187,5 @@ type Client struct {
 	CalmAPI             *selfservice.Client
 	ObjectStoreAPI      *objectstores.Client
 	SecurityAPI         *security.Client
+	MultidomainAPI      *multidomain.Client
 }
