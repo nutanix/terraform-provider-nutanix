@@ -41,4 +41,6 @@ const (
 	CompletionDetailsNameVMExtIDs         = "vmExtIds"
 	CompletionDetailsNameVGExtIDs         = "volumeGroupExtIds"
 	CompletionDetailsNameProtectionPolicy = "protectionPolicyExtId"
+	CompletionDetailsNameProject         = "projectExtId"
+	CompletionDetailsNameResourceGroup   = "resourceGroupExtId"
 )
