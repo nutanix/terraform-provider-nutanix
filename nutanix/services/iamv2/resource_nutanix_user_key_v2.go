@@ -51,16 +51,19 @@ func ResourceNutanixUserKeyV2() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"key_type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"API_KEY", "OBJECT_KEY"}, false),
+				ForceNew:     true,
 			},
 			"created_time": {
 				Type:     schema.TypeString,
@@ -82,6 +85,7 @@ func ResourceNutanixUserKeyV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"status": {
 				Type:         schema.TypeString,
@@ -108,6 +112,7 @@ func ResourceNutanixUserKeyV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"key_details": {
 				Type:     schema.TypeList,
@@ -327,7 +332,7 @@ func flattenKeyDetails(oneOfKeyKeyDetails *import1.OneOfKeyKeyDetails) interface
 }
 
 func resourceNutanixUserKeyV2Update(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return resourceNutanixUserKeyV2Create(ctx, d, m)
+	return nil
 }
 
 func resourceNutanixUserKeyV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
