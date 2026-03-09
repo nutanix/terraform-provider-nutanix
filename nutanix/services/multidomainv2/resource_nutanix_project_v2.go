@@ -32,6 +32,10 @@ func ResourceNutanixProjectV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"project_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -81,14 +85,17 @@ func ResourceNutanixProjectV2() *schema.Resource {
 func ResourceNutanixProjectV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MultidomainAPI
 
-	body := config.NewProject()
+	body := &config.Project{}
+	
 	if v, ok := d.GetOk("name"); ok {
 		body.Name = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("description"); ok {
 		body.Description = utils.StringPtr(v.(string))
 	}
-
+	if v, ok := d.GetOk("project_id"); ok {
+		body.Id = utils.StringPtr(v.(string))
+	}
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Create Project Body: %s", string(aJSON))
 
@@ -127,11 +134,11 @@ func ResourceNutanixProjectV2Create(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error parsing task response")
 	}
 
-	values := commonUtils.ExtractCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameProject)
-	if len(values) == 0 {
-		return diag.Errorf("project ext_id not found in task completion details")
+	uuid, err := commonUtils.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeProject, "Project")
+	if err != nil {
+		return diag.FromErr(err)
 	}
-	d.SetId(values[0])
+	d.SetId(utils.StringValue(uuid))
 
 	return ResourceNutanixProjectV2Read(ctx, d, meta)
 }
@@ -148,54 +155,93 @@ func ResourceNutanixProjectV2Read(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	if resp.Data == nil {
-		d.SetId("")
-		return nil
+	project := resp.Data.GetValue().(config.Project)
+	
+	if err := d.Set("name", utils.StringValue(project.Name)); err != nil {
+		return diag.FromErr(err)
 	}
-
-	project, ok := resp.Data.GetValue().(config.Project)
-	if !ok {
-		d.SetId("")
-		return nil
+	if err := d.Set("description", utils.StringValue(project.Description)); err != nil {
+		return diag.FromErr(err)
 	}
-
-	_ = d.Set("name", utils.StringValue(project.Name))
-	_ = d.Set("description", utils.StringValue(project.Description))
-	_ = d.Set("ext_id", utils.StringValue(project.ExtId))
-	_ = d.Set("tenant_id", utils.StringValue(project.TenantId))
-	_ = d.Set("state", utils.StringValue(project.State))
-	_ = d.Set("is_default", utils.BoolValue(project.IsDefault))
-	_ = d.Set("is_system_defined", utils.BoolValue(project.IsSystemDefined))
-	_ = d.Set("created_by", utils.StringValue(project.CreatedBy))
-	_ = d.Set("updated_by", utils.StringValue(project.UpdatedBy))
-	_ = d.Set("created_timestamp", utils.Int64Value(project.CreatedTimestamp))
-	_ = d.Set("modified_timestamp", utils.Int64Value(project.ModifiedTimestamp))
-	_ = d.Set("links", flattenLinks(project.Links))
-
+	if err := d.Set("project_id", utils.StringValue(project.Id)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("ext_id", utils.StringValue(project.ExtId)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("tenant_id", utils.StringValue(project.TenantId)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("state", project.State.GetName()); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("is_default", utils.BoolValue(project.IsDefault)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("is_system_defined", utils.BoolValue(project.IsSystemDefined)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("created_by", utils.StringValue(project.CreatedBy)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("updated_by", utils.StringValue(project.UpdatedBy)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("created_timestamp", utils.Int64Value(project.CreatedTimestamp)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("modified_timestamp", utils.Int64Value(project.ModifiedTimestamp)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("links", flattenLinks(project.Links)); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
 func ResourceNutanixProjectV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MultidomainAPI
-
-	body := config.NewProject()
-	if v, ok := d.GetOk("name"); ok {
-		body.Name = utils.StringPtr(v.(string))
+  extID := d.Get("ext_id").(string)
+	getReq := import1.GetProjectByIdRequest{
+		ExtId: utils.StringPtr(extID),
 	}
-	if v, ok := d.GetOk("description"); ok {
-		body.Description = utils.StringPtr(v.(string))
+	resp, err := conn.Projects.GetProjectById(ctx, &getReq)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+  
+	// Extract E-Tag Header
+	etagValue := conn.APIClientInstance.GetEtag(resp)
+	args := make(map[string]interface{})
+	args["If-Match"] = utils.StringPtr(etagValue)
+	getResp := resp.Data.GetValue().(config.Project)
+
+	if d.HasChange("name") {
+		return diag.Errorf("error while updating name: Update of name is not supported")
+	}
+	if d.HasChange("project_id") {
+		return diag.Errorf("error while updating project_id: Update of project_id is not supported")
+	}
+	updateSpec := &config.Project{
+		Name: getResp.Name,
+		Id: getResp.Id,
+	}
+	if d.HasChange("description") {
+		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
 	}
 
 	updateReq := import1.UpdateProjectByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
-		Body:  body,
+		Body:  updateSpec,
 	}
-	resp, err := conn.Projects.UpdateProjectById(ctx, &updateReq)
+	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
+	log.Printf("[DEBUG] Update Project Body: %s", string(aJSON))
+	updateResp, err := conn.Projects.UpdateProjectById(ctx, &updateReq, args)
 	if err != nil {
 		return diag.Errorf("error updating Project: %v", err)
 	}
 
-	taskRef, ok := resp.Data.GetValue().(multidomainPrism.TaskReference)
+	taskRef, ok := updateResp.Data.GetValue().(multidomainPrism.TaskReference)
 	if !ok {
 		return diag.Errorf("update project response did not contain task reference")
 	}
@@ -217,16 +263,30 @@ func ResourceNutanixProjectV2Update(ctx context.Context, d *schema.ResourceData,
 
 func ResourceNutanixProjectV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MultidomainAPI
-
-	deleteReq := import1.DeleteProjectByIdRequest{
-		ExtId: utils.StringPtr(d.Id()),
+  
+	extID := d.Get("ext_id").(string)
+	getReq := import1.GetProjectByIdRequest{
+		ExtId: utils.StringPtr(extID),
 	}
-	resp, err := conn.Projects.DeleteProjectById(ctx, &deleteReq)
+	resp, err := conn.Projects.GetProjectById(ctx, &getReq)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+  
+	// Extract E-Tag Header
+	etagValue := conn.APIClientInstance.GetEtag(resp)
+	args := make(map[string]interface{})
+	args["If-Match"] = utils.StringPtr(etagValue)
+	
+	deleteReq := import1.DeleteProjectByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	deleteResp, err := conn.Projects.DeleteProjectById(ctx, &deleteReq, args)
 	if err != nil {
 		return diag.Errorf("error deleting Project: %v", err)
 	}
 
-	taskRef, ok := resp.Data.GetValue().(multidomainPrism.TaskReference)
+	taskRef, ok := deleteResp.Data.GetValue().(multidomainPrism.TaskReference)
 	if !ok {
 		return diag.Errorf("delete project response did not contain task reference")
 	}

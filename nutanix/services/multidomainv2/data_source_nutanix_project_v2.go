@@ -2,7 +2,8 @@ package multidomainv2
 
 import (
 	"context"
-
+	"encoding/json"
+	"log"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/models/common/v1/response"
@@ -21,6 +22,10 @@ func DatasourceNutanixProjectV2() *schema.Resource {
 				Required: true,
 			},
 			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"project_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,26 +82,48 @@ func DatasourceNutanixProjectV2Read(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error while fetching Project: %s", err)
 	}
 
-	if resp.Data == nil {
-		return diag.Errorf("no project data in response")
+	project := resp.Data.GetValue().(config.Project)
+	aJSON, _ := json.MarshalIndent(project, "", "  ")
+	log.Printf("[DEBUG] Get Project Body: %s", string(aJSON))
+	if err := d.Set("name", project.Name); err != nil {
+		return diag.FromErr(err)
 	}
-
-	project, ok := resp.Data.GetValue().(config.Project)
-	if !ok {
-		return diag.Errorf("error parsing GetProjectById response data")
+	if err := d.Set("description", project.Description); err != nil {
+		return diag.FromErr(err)
 	}
-
-	_ = d.Set("name", utils.StringValue(project.Name))
-	_ = d.Set("description", utils.StringValue(project.Description))
-	_ = d.Set("tenant_id", utils.StringValue(project.TenantId))
-	_ = d.Set("state", utils.StringValue(project.State))
-	_ = d.Set("is_default", utils.BoolValue(project.IsDefault))
-	_ = d.Set("is_system_defined", utils.BoolValue(project.IsSystemDefined))
-	_ = d.Set("created_by", utils.StringValue(project.CreatedBy))
-	_ = d.Set("updated_by", utils.StringValue(project.UpdatedBy))
-	_ = d.Set("created_timestamp", utils.Int64Value(project.CreatedTimestamp))
-	_ = d.Set("modified_timestamp", utils.Int64Value(project.ModifiedTimestamp))
-	_ = d.Set("links", flattenLinks(project.Links))
+	if err := d.Set("project_id", project.Id); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("tenant_id", project.TenantId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("state", project.State.GetName()); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("is_default", project.IsDefault); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("is_system_defined", project.IsSystemDefined); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("created_by", project.CreatedBy); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("updated_by", project.UpdatedBy); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("created_timestamp", project.CreatedTimestamp); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("modified_timestamp", project.ModifiedTimestamp); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("links", flattenLinks(project.Links)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("ext_id", project.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
 
 	d.SetId(utils.StringValue(project.ExtId))
 	return nil

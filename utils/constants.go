@@ -32,6 +32,7 @@ const (
 	RelEntityTypeKMS                    = "security:encryption:key-management-server"
 	RelEntityTypeClusterProfile         = "clustermgmt:config:cluster-profile"
 	RelEntityTypeDomainManager          = "prism:config:domain_manager"
+	RelEntityTypeProject                = "multidomain:config:Project"
 )
 
 // CompletionDetailsName constants - Completion details name for the task entities affected

@@ -17,7 +17,7 @@ require (
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17 v17.6.0-18140
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17 v17.6.0-18125
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17 v17.6.0-18117
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17 v17.6.0-18168
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17 v17.6.0-17827
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17 v17.6.0-18058
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17 v17.6.0-17953
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17 v17.6.0-18158
