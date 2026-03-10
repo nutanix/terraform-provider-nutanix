@@ -44,6 +44,9 @@ In addition to the arguments above, the following attributes are exported:
 * `update_time` - The timestamp when the policy was last updated.
 * `created_by` - Information about the entity that created the policy.
 * `updated_by` - Information about the entity that last updated the policy.
+* `num_compliant_vms` - Number of compliant VMs which are part of the VM-VM anti-affinity policy.
+* `num_non_compliant_vms` - Number of non-compliant VMs which are part of the VM-VM anti-affinity policy.
+* `num_pending_vms` - Number of VMs with compliance state as pending, which are part of the VM-VM anti-affinity policy.
 
 ## Import
 
@@ -59,11 +62,12 @@ terraform import nutanix_vm_anti_affinity_policy_v2.example <ext_id>
 # First, get the ext_id of the policy
 data "nutanix_vm_anti_affinity_policies_v2" "policies" {}
 
+# Create the configuration
+resource "nutanix_vm_anti_affinity_policy_v2" "imported" {}
+
 # Then import using the ext_id
 # terraform import nutanix_vm_anti_affinity_policy_v2.imported <ext_id>
 
-# Create the configuration
-resource "nutanix_vm_anti_affinity_policy_v2" "imported" {}
 ```
 
 See detailed information in [Nutanix VM-VM Anti-Affinity Policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/VmAntiAffinityPolicies)

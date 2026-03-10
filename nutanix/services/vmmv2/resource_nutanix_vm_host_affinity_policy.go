@@ -75,6 +75,22 @@ func ResourceNutanixVMHostAffinityPolicyV2() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"num_vms": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"num_hosts": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"num_compliant_vms": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"num_non_compliant_vms": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -152,46 +168,14 @@ func ResourceNutanixVMHostAffinityPolicyV2Read(ctx context.Context, d *schema.Re
 
 	getResp := resp.Data.GetValue().(policies.VmHostAffinityPolicy)
 
-	if err := d.Set("ext_id", getResp.ExtId); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("name", getResp.Name); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("description", getResp.Description); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("create_time", utils.TimeStringValue(getResp.CreateTime)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("update_time", utils.TimeStringValue(getResp.UpdateTime)); err != nil {
-		return diag.FromErr(err)
-	}
-	if getResp.CreatedBy != nil {
-		createdBy := make(map[string]string)
-		if getResp.CreatedBy.ExtId != nil {
-			createdBy["ext_id"] = *getResp.CreatedBy.ExtId
-			if err := d.Set("created_by", createdBy); err != nil {
-				return diag.FromErr(err)
-			}
+	flattenedPolicy := flattenVMHostAffinityPolicyEntity(getResp)
+
+	for k, v := range flattenedPolicy {
+		if err := d.Set(k, v); err != nil {
+			return diag.FromErr(err)
 		}
-	}
-	if getResp.LastUpdatedBy != nil {
-		updatedBy := make(map[string]string)
-		if getResp.LastUpdatedBy.ExtId != nil {
-			updatedBy["ext_id"] = *getResp.LastUpdatedBy.ExtId
-			if err := d.Set("last_updated_by", updatedBy); err != nil {
-				return diag.FromErr(err)
-			}
-		}
-	}
-	if err := d.Set("vm_categories", flattenPolicyCategoryReference(getResp.VmCategories)); err != nil {
-		return diag.FromErr(err)
 	}
 
-	if err := d.Set("host_categories", flattenPolicyCategoryReference(getResp.HostCategories)); err != nil {
-		return diag.FromErr(err)
-	}
 	return nil
 }
 

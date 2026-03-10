@@ -55,6 +55,18 @@ func DatasourceNutanixVMAntiAffinityPolicyV2() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"num_compliant_vms": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"num_non_compliant_vms": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"num_pending_vms": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -72,44 +84,53 @@ func DatasourceNutanixVMAntiAffinityPolicyV2Read(ctx context.Context, d *schema.
 
 	getResp := resp.Data.GetValue().(policies.VmAntiAffinityPolicy)
 
-	if err := d.Set("ext_id", getResp.ExtId); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("name", getResp.Name); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("description", getResp.Description); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("create_time", utils.TimeStringValue(getResp.CreateTime)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("update_time", utils.TimeStringValue(getResp.UpdateTime)); err != nil {
-		return diag.FromErr(err)
-	}
-	if getResp.CreatedBy != nil {
-		createdBy := make(map[string]string)
-		if getResp.CreatedBy.ExtId != nil {
-			createdBy["ext_id"] = *getResp.CreatedBy.ExtId
-			if err := d.Set("created_by", createdBy); err != nil {
-				return diag.FromErr(err)
-			}
+	flattenedPolicy := flattenVMAntiAffinityPolicyEntity(getResp)
+
+	for k, v := range flattenedPolicy {
+		if err := d.Set(k, v); err != nil {
+			return diag.FromErr(err)
 		}
-	}
-	if getResp.UpdatedBy != nil {
-		updatedBy := make(map[string]string)
-		if getResp.UpdatedBy.ExtId != nil {
-			updatedBy["ext_id"] = *getResp.UpdatedBy.ExtId
-			if err := d.Set("updated_by", updatedBy); err != nil {
-				return diag.FromErr(err)
-			}
-		}
-	}
-	if err := d.Set("categories", flattenPolicyCategoryReference(getResp.Categories)); err != nil {
-		return diag.FromErr(err)
 	}
 
-	d.SetId(*getResp.ExtId)
+	d.SetId(flattenedPolicy["ext_id"].(string))
 
 	return nil
+}
+
+func flattenVMAntiAffinityPolicyEntity(policy policies.VmAntiAffinityPolicy) map[string]interface{} {
+	result := make(map[string]interface{})
+	if policy.ExtId != nil {
+		result["ext_id"] = *policy.ExtId
+	}
+	if policy.Name != nil {
+		result["name"] = *policy.Name
+	}
+	if policy.Description != nil {
+		result["description"] = *policy.Description
+	}
+	if policy.CreateTime != nil {
+		result["create_time"] = utils.TimeStringValue(policy.CreateTime)
+	}
+	if policy.UpdateTime != nil {
+		result["update_time"] = utils.TimeStringValue(policy.UpdateTime)
+	}
+	if policy.CreatedBy != nil && policy.CreatedBy.ExtId != nil {
+		result["created_by"] = map[string]string{"ext_id": *policy.CreatedBy.ExtId}
+	}
+	if policy.UpdatedBy != nil && policy.UpdatedBy.ExtId != nil {
+		result["updated_by"] = map[string]string{"ext_id": *policy.UpdatedBy.ExtId}
+	}
+	if policy.Categories != nil {
+		result["categories"] = flattenPolicyCategoryReference(policy.Categories)
+	}
+	if policy.NumCompliantVms != nil {
+		result["num_compliant_vms"] = *policy.NumCompliantVms
+	}
+	if policy.NumNonCompliantVms != nil {
+		result["num_non_compliant_vms"] = *policy.NumNonCompliantVms
+	}
+	if policy.NumPendingVms != nil {
+		result["num_pending_vms"] = *policy.NumPendingVms
+	}
+	return result
 }

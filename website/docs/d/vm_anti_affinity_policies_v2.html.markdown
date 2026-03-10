@@ -70,5 +70,8 @@ The `policies` object is a list of VM-VM Anti-Affinity policies. Each VM-VM Anti
 * `update_time` - The timestamp when the policy was last updated.
 * `created_by` - Information about the entity that created the policy.
 * `updated_by` - Information about the entity that last updated the policy.
+* `num_compliant_vms` - Number of compliant VMs which are part of the VM-VM anti-affinity policy.
+* `num_non_compliant_vms` - Number of non-compliant VMs which are part of the VM-VM anti-affinity policy.
+* `num_pending_vms` - Number of VMs with compliance state as pending, which are part of the VM-VM anti-affinity policy.
 
 See detailed information in [Nutanix List VM Anti-Affinity Policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/VmAntiAffinityPolicies/operation/listVmAntiAffinityPolicies)

@@ -40,6 +40,9 @@ The following attributes are exported:
 * `update_time` - The timestamp when the policy was last updated.
 * `created_by` - Information about the entity that created the policy.
 * `last_updated_by` - Information about the entity that last updated the policy.
-
+* `num_vms` - Number of VMs associated with the VM-host affinity policy.
+* `num_hosts` - Number of hosts associated with the VM-host affinity policy.
+* `num_compliant_vms` - Number of VMs which are compliant with the VM-host affinity policy.
+* `num_non_compliant_vms` - Number of VMs which are not compliant with the VM-host affinity policy.
 
 See detailed information in [Nutanix Get VM Host Affinity Policy V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/VmHostAffinityPolicies/operation/getVmHostAffinityPolicyById)

@@ -34,58 +34,7 @@ func DatasourceNutanixVMHostAffinityPoliciesV2() *schema.Resource {
 			"policies": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ext_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"description": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"create_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"update_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"created_by": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"last_updated_by": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"host_categories": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"vm_categories": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
+				Elem:     DatasourceNutanixVMHostAffinityPolicyV2(),
 			},
 		},
 	}
@@ -150,50 +99,13 @@ func DatasourceNutanixVMHostAffinityPoliciesV2Read(ctx context.Context, d *schem
 }
 
 func flattenVMHostAffinityPolicyEntities(pr []policies.VmHostAffinityPolicy) []interface{} {
-	if len(pr) > 0 {
-		policies := make([]interface{}, len(pr))
-
-		for k, v := range pr {
-			policy := make(map[string]interface{})
-
-			if v.ExtId != nil {
-				policy["ext_id"] = v.ExtId
-			}
-			if v.Name != nil {
-				policy["name"] = v.Name
-			}
-			if v.Description != nil {
-				policy["description"] = v.Description
-			}
-			if v.CreateTime != nil {
-				policy["create_time"] = utils.TimeStringValue(v.CreateTime)
-			}
-			if v.UpdateTime != nil {
-				policy["update_time"] = utils.TimeStringValue(v.UpdateTime)
-			}
-			if v.CreatedBy != nil {
-				if v.CreatedBy.ExtId != nil {
-					policy["created_by"] = map[string]string{
-						"ext_id": *v.CreatedBy.ExtId,
-					}
-				}
-			}
-			if v.LastUpdatedBy != nil {
-				if v.LastUpdatedBy.ExtId != nil {
-					policy["last_updated_by"] = map[string]string{
-						"ext_id": *v.LastUpdatedBy.ExtId,
-					}
-				}
-			}
-			if v.HostCategories != nil {
-				policy["host_categories"] = flattenPolicyCategoryReference(v.HostCategories)
-			}
-			if v.VmCategories != nil {
-				policy["vm_categories"] = flattenPolicyCategoryReference(v.VmCategories)
-			}
-			policies[k] = policy
-		}
-		return policies
+	if len(pr) == 0 {
+		return nil
 	}
-	return nil
+	policies := make([]interface{}, len(pr))
+
+	for k, v := range pr {
+		policies[k] = flattenVMHostAffinityPolicyEntity(v)
+	}
+	return policies
 }

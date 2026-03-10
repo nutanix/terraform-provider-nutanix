@@ -52,6 +52,10 @@ In addition to the arguments above, the following attributes are exported:
 * `update_time` - The timestamp when the policy was last updated.
 * `created_by` - Information about the entity that created the policy.
 * `last_updated_by` - Information about the entity that last updated the policy.
+* `num_vms` - Number of VMs associated with the VM-host affinity policy.
+* `num_hosts` - Number of hosts associated with the VM-host affinity policy.
+* `num_compliant_vms` - Number of VMs which are compliant with the VM-host affinity policy.
+* `num_non_compliant_vms` - Number of VMs which are not compliant with the VM-host affinity policy.
 
 ## Import
 
@@ -67,11 +71,12 @@ terraform import nutanix_vm_host_affinity_policy_v2.example <ext_id>
 # First, get the ext_id of the policy
 data "nutanix_vm_host_affinity_policies_v2" "policies" {}
 
+# Create the configuration
+resource "nutanix_vm_host_affinity_policy_v2" "imported" {}
+
 # Then import using the ext_id
 # terraform import nutanix_vm_host_affinity_policy_v2.imported <ext_id>
 
-# Create the configuration
-resource "nutanix_vm_host_affinity_policy_v2" "imported" {}
 ```
 
 See detailed information in [Nutanix VM-Host Affinity Policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/VmHostAffinityPolicies)

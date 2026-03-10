@@ -68,6 +68,18 @@ func ResourceNutanixVMAntiAffinityPolicyV2() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"num_compliant_vms": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"num_non_compliant_vms": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"num_pending_vms": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -142,42 +154,14 @@ func ResourceNutanixVMAntiAffinityPolicyV2Read(ctx context.Context, d *schema.Re
 
 	getResp := resp.Data.GetValue().(policies.VmAntiAffinityPolicy)
 
-	if err := d.Set("ext_id", getResp.ExtId); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("name", getResp.Name); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("description", getResp.Description); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("create_time", utils.TimeStringValue(getResp.CreateTime)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("update_time", utils.TimeStringValue(getResp.UpdateTime)); err != nil {
-		return diag.FromErr(err)
-	}
-	if getResp.CreatedBy != nil {
-		createdBy := make(map[string]string)
-		if getResp.CreatedBy.ExtId != nil {
-			createdBy["ext_id"] = *getResp.CreatedBy.ExtId
-			if err := d.Set("created_by", createdBy); err != nil {
-				return diag.FromErr(err)
-			}
+	flattenedPolicy := flattenVMAntiAffinityPolicyEntity(getResp)
+
+	for k, v := range flattenedPolicy {
+		if err := d.Set(k, v); err != nil {
+			return diag.FromErr(err)
 		}
 	}
-	if getResp.UpdatedBy != nil {
-		updatedBy := make(map[string]string)
-		if getResp.UpdatedBy.ExtId != nil {
-			updatedBy["ext_id"] = *getResp.UpdatedBy.ExtId
-			if err := d.Set("updated_by", updatedBy); err != nil {
-				return diag.FromErr(err)
-			}
-		}
-	}
-	if err := d.Set("categories", flattenPolicyCategoryReference(getResp.Categories)); err != nil {
-		return diag.FromErr(err)
-	}
+
 	return nil
 }
 
@@ -269,9 +253,7 @@ func expandPolicyCategoryReference(cats []string) []policies.CategoryReference {
 
 	for i, cat := range cats {
 		if cat != "" {
-			catRefs[i] = policies.CategoryReference{
-				ExtId: utils.StringPtr(cat),
-			}
+			catRefs[i] = policies.CategoryReference{ExtId: utils.StringPtr(cat)}
 		}
 	}
 	return catRefs
@@ -279,14 +261,16 @@ func expandPolicyCategoryReference(cats []string) []policies.CategoryReference {
 }
 
 func flattenPolicyCategoryReference(cats []policies.CategoryReference) []interface{} {
-	if len(cats) > 0 {
-		catList := make([]interface{}, len(cats))
-		for k, v := range cats {
-			if v.ExtId != nil {
-				catList[k] = v.ExtId
-			}
-		}
-		return catList
+	if len(cats) == 0 {
+		return nil
 	}
-	return nil
+
+	catList := make([]interface{}, len(cats))
+	for k, v := range cats {
+		if v.ExtId != nil {
+			catList[k] = v.ExtId
+		}
+	}
+	return catList
+
 }

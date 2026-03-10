@@ -62,6 +62,22 @@ func DatasourceNutanixVMHostAffinityPolicyV2() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"num_vms": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"num_hosts": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"num_compliant_vms": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"num_non_compliant_vms": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -79,47 +95,59 @@ func DatasourceNutanixVMHostAffinityPolicyV2Read(ctx context.Context, d *schema.
 
 	getResp := resp.Data.GetValue().(policies.VmHostAffinityPolicy)
 
-	if err := d.Set("ext_id", getResp.ExtId); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("name", getResp.Name); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("description", getResp.Description); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("create_time", utils.TimeStringValue(getResp.CreateTime)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("update_time", utils.TimeStringValue(getResp.UpdateTime)); err != nil {
-		return diag.FromErr(err)
-	}
-	if getResp.CreatedBy != nil {
-		createdBy := make(map[string]string)
-		if getResp.CreatedBy.ExtId != nil {
-			createdBy["ext_id"] = *getResp.CreatedBy.ExtId
-			if err := d.Set("created_by", createdBy); err != nil {
-				return diag.FromErr(err)
-			}
+	flattenedPolicy := flattenVMHostAffinityPolicyEntity(getResp)
+
+	for k, v := range flattenedPolicy {
+		if err := d.Set(k, v); err != nil {
+			return diag.FromErr(err)
 		}
-	}
-	if getResp.LastUpdatedBy != nil {
-		updatedBy := make(map[string]string)
-		if getResp.LastUpdatedBy.ExtId != nil {
-			updatedBy["ext_id"] = *getResp.LastUpdatedBy.ExtId
-			if err := d.Set("last_updated_by", updatedBy); err != nil {
-				return diag.FromErr(err)
-			}
-		}
-	}
-	if err := d.Set("host_categories", flattenPolicyCategoryReference(getResp.HostCategories)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("vm_categories", flattenPolicyCategoryReference(getResp.VmCategories)); err != nil {
-		return diag.FromErr(err)
 	}
 
-	d.SetId(*getResp.ExtId)
+	d.SetId(flattenedPolicy["ext_id"].(string))
 
 	return nil
+}
+
+func flattenVMHostAffinityPolicyEntity(policy policies.VmHostAffinityPolicy) map[string]interface{} {
+	result := make(map[string]interface{})
+	if policy.ExtId != nil {
+		result["ext_id"] = *policy.ExtId
+	}
+	if policy.Name != nil {
+		result["name"] = *policy.Name
+	}
+	if policy.Description != nil {
+		result["description"] = *policy.Description
+	}
+	if policy.CreateTime != nil {
+		result["create_time"] = utils.TimeStringValue(policy.CreateTime)
+	}
+	if policy.UpdateTime != nil {
+		result["update_time"] = utils.TimeStringValue(policy.UpdateTime)
+	}
+	if policy.CreatedBy != nil && policy.CreatedBy.ExtId != nil {
+		result["created_by"] = map[string]string{"ext_id": *policy.CreatedBy.ExtId}
+	}
+	if policy.LastUpdatedBy != nil && policy.LastUpdatedBy.ExtId != nil {
+		result["last_updated_by"] = map[string]string{"ext_id": *policy.LastUpdatedBy.ExtId}
+	}
+	if policy.HostCategories != nil {
+		result["host_categories"] = flattenPolicyCategoryReference(policy.HostCategories)
+	}
+	if policy.VmCategories != nil {
+		result["vm_categories"] = flattenPolicyCategoryReference(policy.VmCategories)
+	}
+	if policy.NumVms != nil {
+		result["num_vms"] = *policy.NumVms
+	}
+	if policy.NumHosts != nil {
+		result["num_hosts"] = *policy.NumHosts
+	}
+	if policy.NumCompliantVms != nil {
+		result["num_compliant_vms"] = *policy.NumCompliantVms
+	}
+	if policy.NumNonCompliantVms != nil {
+		result["num_non_compliant_vms"] = *policy.NumNonCompliantVms
+	}
+	return result
 }
