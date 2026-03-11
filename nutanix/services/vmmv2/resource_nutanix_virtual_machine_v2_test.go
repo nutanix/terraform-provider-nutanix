@@ -150,7 +150,7 @@ func TestAccV2NutanixVmsResource_WithNic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmsV4ConfigWithNic(r, desc),
+				Config: testVmsV4ConfigWithNic(r, desc, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVms, "name", fmt.Sprintf("tf-test-vm-%d", r)),
 					resource.TestCheckResourceAttr(resourceNameVms, "num_cores_per_socket", "1"),
@@ -167,6 +167,17 @@ func TestAccV2NutanixVmsResource_WithNic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameVms, "nics.#"),
 					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
 					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.vlan_mode", "ACCESS"),
+				),
+			},
+			{
+				Config: testVmsV4ConfigWithNic(r, desc, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", fmt.Sprintf("tf-test-vm-%d", r)),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_cores_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_backing_info.0.virtual_ethernet_nic.0.is_connected", "false"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_backing_info.0.virtual_ethernet_nic.0.model", "VIRTIO"),
 				),
 			},
 		},
@@ -1007,7 +1018,7 @@ func testVmsV4ConfigWithDiskWithDatasource(name string, desc string) string {
 `, name, desc, filepath)
 }
 
-func testVmsV4ConfigWithNic(r int, desc string) string {
+func testVmsV4ConfigWithNic(r int, desc string, isConnected bool) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
 
@@ -1061,10 +1072,16 @@ func testVmsV4ConfigWithNic(r int, desc string) string {
 						vlan_mode = "ACCESS"
 					}
 				}
+				nic_backing_info{
+					virtual_ethernet_nic{
+						is_connected = %[4]t
+						model = "VIRTIO"
+					}
+				}
 			}
 			power_state = "ON"
 		}
-`, r, desc, filepath)
+`, r, desc, filepath, isConnected)
 }
 
 func testVmsV4ConfigWithNicWithTrunkVlan(r int, desc string) string {

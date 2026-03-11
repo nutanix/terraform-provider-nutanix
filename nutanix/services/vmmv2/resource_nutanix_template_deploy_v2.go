@@ -208,6 +208,15 @@ func expandNic(pr []interface{}, d *schema.ResourceData, basePath string) []conf
 			if extID, ok := val["ext_id"]; ok && len(extID.(string)) > 0 {
 				nic.ExtId = utils.StringPtr(extID.(string))
 			}
+			// nicPath: when expanding a single nic, basePath may be the full path (e.g. "nics.0"); otherwise basePath is the list path and we append index.
+			nicPath := ""
+			if basePath != "" {
+				if len(pr) == 1 {
+					nicPath = basePath
+				} else {
+					nicPath = basePath + "." + strconv.Itoa(k)
+				}
+			}
 			// Prefer new nic_backing_info (v2.4.1+). If not present, fall back to legacy backing_info and
 			// treat it as nic_backing_info.virtual_ethernet_nic to keep old configs working.
 			if nbiRaw, ok := val["nic_backing_info"]; ok && nbiRaw != nil && len(nbiRaw.([]interface{})) > 0 {
@@ -216,14 +225,27 @@ func expandNic(pr []interface{}, d *schema.ResourceData, basePath string) []conf
 
 				if venRaw, ok := nbi["virtual_ethernet_nic"]; ok && venRaw != nil && len(venRaw.([]interface{})) > 0 {
 					var venOpts *VirtualEthernetNicExpandOpts
-					if d != nil && basePath != "" {
-						venPath := basePath + "." + strconv.Itoa(k) + ".nic_backing_info.0.virtual_ethernet_nic.0"
+					if d != nil && nicPath != "" {
+						venPath := nicPath + ".nic_backing_info.0.virtual_ethernet_nic.0"
+						legacyPath := nicPath + ".backing_info.0"
 						if common.IsExplicitlySet(d, venPath+".is_connected") {
 							venOpts = &VirtualEthernetNicExpandOpts{IsConnectedExplicitlySet: true}
 							if venList, ok := venRaw.([]interface{}); ok && len(venList) > 0 {
 								if venMap, ok := venList[0].(map[string]interface{}); ok {
 									if isConn, ok := venMap["is_connected"].(bool); ok {
 										venOpts.IsConnectedValue = isConn
+									}
+								}
+							}
+						} else if common.IsExplicitlySet(d, legacyPath+".is_connected") {
+							// User may set is_connected only in legacy backing_info; merged config can still have nic_backing_info from state.
+							venOpts = &VirtualEthernetNicExpandOpts{IsConnectedExplicitlySet: true}
+							if biRaw, ok := val["backing_info"]; ok && biRaw != nil {
+								if biList, ok := biRaw.([]interface{}); ok && len(biList) > 0 {
+									if biMap, ok := biList[0].(map[string]interface{}); ok {
+										if isConn, ok := biMap["is_connected"].(bool); ok {
+											venOpts.IsConnectedValue = isConn
+										}
 									}
 								}
 							}
@@ -262,8 +284,8 @@ func expandNic(pr []interface{}, d *schema.ResourceData, basePath string) []conf
 				log.Printf("[DEBUG] Expanding legacy backing_info as nic_backing_info")
 				nicBackingInfo := config.NewOneOfNicNicBackingInfo()
 				var venOpts *VirtualEthernetNicExpandOpts
-				if d != nil && basePath != "" {
-					venPath := basePath + "." + strconv.Itoa(k) + ".backing_info.0"
+				if d != nil && nicPath != "" {
+					venPath := nicPath + ".backing_info.0"
 					if common.IsExplicitlySet(d, venPath+".is_connected") {
 						venOpts = &VirtualEthernetNicExpandOpts{IsConnectedExplicitlySet: true}
 						if biList, ok := backingInfo.([]interface{}); ok && len(biList) > 0 {
