@@ -646,20 +646,20 @@ resource "nutanix_virtual_machine_v2" "ova-vm" {
   cluster {
     ext_id = local.cluster_ext_id
   }
-  disks {
-    disk_address {
-      bus_type = "SCSI"
-      index    = 0
-    }
-    backing_info {
-      vm_disk {
-        disk_size_bytes = 10 * 1024 * 1024 * 1024 # 10 GiB
-        storage_container {
-          ext_id = data.nutanix_storage_containers_v2.ngt-sc.storage_containers[0].ext_id
-        }
-      }
-    }
-  }
+  #disks {
+  #  disk_address {
+  #    bus_type = "SCSI"
+  #    index    = 0
+  #  }
+  #  backing_info {
+  #    vm_disk {
+  #      disk_size_bytes = 10 * 1024 * 1024 * 1024 # 10 GiB
+  #      storage_container {
+  #        ext_id = data.nutanix_storage_containers_v2.ngt-sc.storage_containers[0].ext_id
+  #      }
+  #    }
+  #  }
+  #}
   memory_size_bytes = 4 * 1024 * 1024 * 1024 # 4 GiB
   power_state = "OFF"
 }
