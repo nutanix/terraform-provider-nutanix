@@ -247,8 +247,7 @@ func ResourceNutanixOvaVMDeploymentV2() *schema.Resource {
 						"disks": {
 							Type:        schema.TypeList,
 							Optional:    true,
-							Computed:    true,
-							Description: "Additional disks to attach to the VM.",
+							Description: "Additional disks to attach to the VM. Omit or set to empty to remove all added disks.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ext_id": {
@@ -548,8 +547,9 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 				disksList := disks.([]interface{})
 				if len(disksList) > 0 {
 					log.Printf("[DEBUG] Adding %d disks to OVA VM", len(disksList))
-					for _, disk := range disksList {
-						diskInput := expandDisk([]interface{}{disk})[0]
+					opts := &ExpandDiskOpts{D: d, DisksPath: "override_vm_config.0.disks"}
+					diskInputs := expandDisk(disksList, opts)
+					for _, diskInput := range diskInputs {
 						aJSON, _ := json.MarshalIndent(diskInput, "", "  ")
 						log.Printf("[DEBUG] disk input: %s", string(aJSON))
 						readVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
@@ -645,7 +645,43 @@ func ResourceNutanixOvaVMDeploymentUpdate(ctx context.Context, d *schema.Resourc
 				return err
 			}
 		}
-		if err := handleDiskChanges(ctx, d, meta, meta, oldConfig, newConfig); err != nil {
+		// Handle disk changes the same way as nutanix_virtual_machine_v2 (deletions, updates, additions)
+		var oldDisks, newDisks []interface{}
+		if oldList, ok := oldConfig.([]interface{}); ok && len(oldList) > 0 {
+			if oldMap, ok := oldList[0].(map[string]interface{}); ok {
+				if disks, exists := oldMap["disks"]; exists && disks != nil {
+					oldDisks = disks.([]interface{})
+				}
+			}
+		}
+		if newList, ok := newConfig.([]interface{}); ok && len(newList) > 0 {
+			if newMap, ok := newList[0].(map[string]interface{}); ok {
+				if disks, exists := newMap["disks"]; exists && disks != nil {
+					newDisks = disks.([]interface{})
+				}
+			}
+		}
+		if common.IsConfigListEmptyOrMissingForUpdate(d, "override_vm_config.0.disks") {
+			newDisks = []interface{}{}
+			log.Printf("[DEBUG] Config has 0 disks or disks block omitted, forcing newDisks to empty for disk removal")
+		}
+		newAddedDisk, oldDeletedDisk, updatedDisk := diffConfig(oldDisks, newDisks)
+
+		aJSON, _ := json.MarshalIndent(newAddedDisk, "", "  ")
+		log.Println("[DEBUG] newAddedDisk diff config:", string(aJSON))
+		aJSON, _ = json.MarshalIndent(oldDeletedDisk, "", "  ")
+		log.Println("[DEBUG] oldDeletedDisk diff config:", string(aJSON))
+		aJSON, _ = json.MarshalIndent(updatedDisk, "", "  ")
+		log.Println("[DEBUG] updatedDisk diff config:", string(aJSON))
+
+		expandDiskFn := func(disks []interface{}) []import2.Disk { return expandDisk(disks, nil) }
+		if err := ApplyDiskDeletions(ctx, d, meta, conn, d.Id(), oldDeletedDisk, expandDiskFn); err != nil {
+			return err
+		}
+		if err := ApplyDiskUpdates(ctx, d, meta, conn, d.Id(), updatedDisk, expandDiskFn); err != nil {
+			return err
+		}
+		if err := ApplyDiskAdditions(ctx, d, meta, conn, d.Id(), newAddedDisk, expandDiskFn); err != nil {
 			return err
 		}
 
@@ -750,21 +786,24 @@ func setOvaVMConfig(d *schema.ResourceData, vm import2.Vm) diag.Diagnostics {
 					log.Printf("[DEBUG] Set power_state: %s", vm.PowerState.GetName())
 				}
 
-				// Update disks to capture ext_id from API by matching bus_type and index
+				if vm.Disks != nil {
+					overrideConfig["disks"] = flattenDisk(vm.Disks)
+					log.Printf("[DEBUG] Updated disks configuration with %d disks from API", len(vm.Disks))
+				}
 				// Set disks: only refresh from API when state already had disks (so removing disks in config is recognized as a change).
 				// If state has no disks, keep state disks empty so plan will show update and Update can delete disks on the VM.
-				if existingDisks, ok := existingConfig["disks"].([]interface{}); ok && len(existingDisks) > 0 {
-					if len(vm.Disks) > 0 {
-						disksList := flattenDisk(vm.Disks)
-						if disksList != nil {
-							overrideConfig["disks"] = disksList
-							log.Printf("[DEBUG] Updated disks configuration with %d disks", len(disksList))
-						}
-					}
-				} else {
-					overrideConfig["disks"] = []interface{}{}
-					log.Printf("[DEBUG] No disks in config/state, setting disks to empty")
-				}
+				// if existingDisks, ok := existingConfig["disks"].([]interface{}); ok && len(existingDisks) > 0 {
+				// 	if len(vm.Disks) > 0 {
+				// 		disksList := flattenDisk(vm.Disks)
+				// 		if disksList != nil {
+				// 			overrideConfig["disks"] = disksList
+				// 			log.Printf("[DEBUG] Updated disks configuration with %d disks", len(disksList))
+				// 		}
+				// 	}
+				// } else {
+				// 	overrideConfig["disks"] = []interface{}{}
+				// 	log.Printf("[DEBUG] No disks in config/state, setting disks to empty")
+				// }
 
 				if len(vm.Nics) > 0 {
 					nicsList := flattenNic(vm.Nics)
@@ -772,6 +811,7 @@ func setOvaVMConfig(d *schema.ResourceData, vm import2.Vm) diag.Diagnostics {
 						overrideConfig["nics"] = nicsList
 						log.Printf("[DEBUG] Updated NICs configuration with %d NICs", len(nicsList))
 					}
+					log.Printf("[DEBUG] nicsList: %+v", nicsList)
 				}
 
 				// Set the complete override_vm_config with preserved user settings
@@ -802,167 +842,6 @@ func waitForTask(ctx context.Context, d *schema.ResourceData, meta interface{}, 
 	}
 
 	log.Printf("[DEBUG] %s completed successfully", operation)
-	return nil
-}
-
-func handleDiskDeletions(ctx context.Context, d *schema.ResourceData, meta interface{}, vmmConn interface{}, deletedDisks []interface{}) diag.Diagnostics {
-	if len(deletedDisks) == 0 {
-		return nil
-	}
-
-	conn := vmmConn.(*conns.Client).VmmAPI
-	log.Printf("[DEBUG] Handling deletion of %d disks", len(deletedDisks))
-	for _, disk := range deletedDisks {
-		diskInput := expandDisk([]interface{}{disk})[0]
-		aJSON, _ := json.MarshalIndent(diskInput, "", "  ")
-		log.Printf("[DEBUG] disk input: %s", string(aJSON))
-
-		diskExtID := diskInput.ExtId
-
-		readVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-		if err != nil {
-			return diag.Errorf("error reading VM for disk deletion: %v", err)
-		}
-
-		args := make(map[string]interface{})
-		args["If-Match"] = getEtagHeader(readVMResp, conn)
-
-		resp, err := conn.VMAPIInstance.DeleteDiskById(utils.StringPtr(d.Id()), diskExtID, args)
-		if err != nil {
-			return diag.Errorf("error deleting disk: %v", err)
-		}
-		TaskRef := resp.Data.GetValue().(import3.TaskReference)
-		taskUUID := TaskRef.ExtId
-
-		if err := waitForTask(ctx, d, meta, taskUUID, schema.TimeoutUpdate, "disk deletion"); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func handleDiskUpdates(ctx context.Context, d *schema.ResourceData, meta interface{}, vmmConn interface{}, updatedDisks []interface{}) diag.Diagnostics {
-	if len(updatedDisks) == 0 {
-		return nil
-	}
-
-	conn := vmmConn.(*conns.Client).VmmAPI
-	log.Printf("[DEBUG] Handling updates of %d disks", len(updatedDisks))
-	for _, disk := range updatedDisks {
-		if diskMap, ok := disk.(map[string]interface{}); ok {
-			if backingInfoRaw, ok := diskMap["backing_info"]; ok {
-				if backingInfoSlice, ok := backingInfoRaw.([]interface{}); ok {
-					if backingInfoMap, ok := backingInfoSlice[0].(map[string]interface{}); ok {
-						if vmDiskArray, ok := backingInfoMap["vm_disk"].([]interface{}); ok {
-							if vmDiskMap, ok := vmDiskArray[0].(map[string]interface{}); ok {
-								if vmDiskMap["data_source"] != nil {
-									delete(vmDiskMap, "data_source")
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-
-		diskInput := expandDisk([]interface{}{disk})[0]
-
-		aJSON, _ := json.MarshalIndent(diskInput, "", "  ")
-		log.Printf("[DEBUG] disk input: %s", string(aJSON))
-
-		diskExtID := diskInput.ExtId
-
-		readVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-		if err != nil {
-			return diag.Errorf("error reading VM for disk update: %v", err)
-		}
-
-		args := make(map[string]interface{})
-		args["If-Match"] = getEtagHeader(readVMResp, conn)
-
-		resp, err := conn.VMAPIInstance.UpdateDiskById(utils.StringPtr(d.Id()), diskExtID, &diskInput, args)
-		if err != nil {
-			return diag.Errorf("error updating disk: %v", err)
-		}
-		TaskRef := resp.Data.GetValue().(import3.TaskReference)
-		taskUUID := TaskRef.ExtId
-
-		if err := waitForTask(ctx, d, meta, taskUUID, schema.TimeoutUpdate, "disk update"); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func handleDiskAdditions(ctx context.Context, d *schema.ResourceData, meta interface{}, vmmConn interface{}, newDisks []interface{}) diag.Diagnostics {
-	if len(newDisks) == 0 {
-		return nil
-	}
-
-	conn := vmmConn.(*conns.Client).VmmAPI
-	log.Printf("[DEBUG] Handling addition of %d disks", len(newDisks))
-	for _, disk := range newDisks {
-		diskInput := expandDisk([]interface{}{disk})[0]
-		aJSON, _ := json.MarshalIndent(diskInput, "", "  ")
-		log.Printf("[DEBUG] disk input: %s", string(aJSON))
-
-		readVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-		if err != nil {
-			return diag.Errorf("error reading VM for disk creation: %v", err)
-		}
-
-		args := make(map[string]interface{})
-		args["If-Match"] = getEtagHeader(readVMResp, conn)
-
-		resp, err := conn.VMAPIInstance.CreateDisk(utils.StringPtr(d.Id()), &diskInput, args)
-		if err != nil {
-			return diag.Errorf("error creating disk: %v", err)
-		}
-		TaskRef := resp.Data.GetValue().(import3.TaskReference)
-		taskUUID := TaskRef.ExtId
-
-		if err := waitForTask(ctx, d, meta, taskUUID, schema.TimeoutUpdate, "disk creation"); err != nil {
-			return err
-		}
-	}
-
-	log.Printf("[DEBUG] Reading VM after disk addition to update state")
-	return ResourceNutanixOvaVMDeploymentRead(ctx, d, meta)
-}
-
-func handleDiskChanges(ctx context.Context, d *schema.ResourceData, meta interface{}, vmmConn interface{}, oldConfig, newConfig interface{}) diag.Diagnostics {
-	var oldDisks, newDisks []interface{}
-
-	if oldList, ok := oldConfig.([]interface{}); ok && len(oldList) > 0 {
-		if oldMap, ok := oldList[0].(map[string]interface{}); ok {
-			if disks, exists := oldMap["disks"]; exists && disks != nil {
-				oldDisks = disks.([]interface{})
-			}
-		}
-	}
-
-	if newList, ok := newConfig.([]interface{}); ok && len(newList) > 0 {
-		if newMap, ok := newList[0].(map[string]interface{}); ok {
-			if disks, exists := newMap["disks"]; exists && disks != nil {
-				newDisks = disks.([]interface{})
-			}
-		}
-	}
-
-	newAddedDisk, oldDeletedDisk, updatedDisk := diffConfig(oldDisks, newDisks)
-
-	if err := handleDiskDeletions(ctx, d, meta, vmmConn, oldDeletedDisk); err != nil {
-		return err
-	}
-
-	if err := handleDiskUpdates(ctx, d, meta, vmmConn, updatedDisk); err != nil {
-		return err
-	}
-
-	if err := handleDiskAdditions(ctx, d, meta, vmmConn, newAddedDisk); err != nil {
-		return err
-	}
-
 	return nil
 }
 
