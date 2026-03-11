@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -97,7 +98,7 @@ func ResourceNutanixTemplateDeployV2Create(ctx context.Context, d *schema.Resour
 		body.ClusterReference = utils.StringPtr(clsRef.(string))
 	}
 	if overrideCfg, ok := d.GetOk("override_vm_config_map"); ok {
-		body.OverrideVmConfigMap = expandVMConfigOverride(overrideCfg)
+		body.OverrideVmConfigMap = expandVMConfigOverride(overrideCfg, d)
 	}
 
 	resp, err := conn.TemplatesAPIInstance.DeployTemplate(utils.StringPtr(extID.(string)), body)
@@ -152,7 +153,7 @@ func ResourceNutanixTemplateDeployV2Delete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func expandVMConfigOverride(pr interface{}) map[string]import5.VmConfigOverride {
+func expandVMConfigOverride(pr interface{}, d *schema.ResourceData) map[string]import5.VmConfigOverride {
 	if len(pr.([]interface{})) > 0 {
 		// vmcfg := import5.VmConfigOverride{}
 
@@ -179,7 +180,11 @@ func expandVMConfigOverride(pr interface{}) map[string]import5.VmConfigOverride 
 			vmConfig.MemorySizeBytes = utils.Int64Ptr(int64(mem.(int)))
 		}
 		if nics, ok := val["nics"]; ok {
-			vmConfig.Nics = expandNic(nics.([]interface{}))
+			nicBasePath := ""
+			if d != nil {
+				nicBasePath = "override_vm_config_map.0.nics"
+			}
+			vmConfig.Nics = expandNic(nics.([]interface{}), d, nicBasePath)
 		}
 		if guest, ok := val["guest_customization"]; ok {
 			vmConfig.GuestCustomization = expandTemplateGuestCustomizationParams(guest)
@@ -191,7 +196,7 @@ func expandVMConfigOverride(pr interface{}) map[string]import5.VmConfigOverride 
 	return nil
 }
 
-func expandNic(pr []interface{}) []config.Nic {
+func expandNic(pr []interface{}, d *schema.ResourceData, basePath string) []config.Nic {
 	if len(pr) > 0 {
 		nicList := make([]config.Nic, len(pr))
 
@@ -210,7 +215,21 @@ func expandNic(pr []interface{}) []config.Nic {
 				nicBackingInfo := config.NewOneOfNicNicBackingInfo()
 
 				if venRaw, ok := nbi["virtual_ethernet_nic"]; ok && venRaw != nil && len(venRaw.([]interface{})) > 0 {
-					ven := expandVirtualEthernetNic(venRaw)
+					var venOpts *VirtualEthernetNicExpandOpts
+					if d != nil && basePath != "" {
+						venPath := basePath + "." + strconv.Itoa(k) + ".nic_backing_info.0.virtual_ethernet_nic.0"
+						if common.IsExplicitlySet(d, venPath+".is_connected") {
+							venOpts = &VirtualEthernetNicExpandOpts{IsConnectedExplicitlySet: true}
+							if venList, ok := venRaw.([]interface{}); ok && len(venList) > 0 {
+								if venMap, ok := venList[0].(map[string]interface{}); ok {
+									if isConn, ok := venMap["is_connected"].(bool); ok {
+										venOpts.IsConnectedValue = isConn
+									}
+								}
+							}
+						}
+					}
+					ven := expandVirtualEthernetNic(venRaw, venOpts)
 					if err := nicBackingInfo.SetValue(ven); err != nil {
 						log.Printf("[ERROR] Error setting value for nic_backing_info.virtual_ethernet_nic: %v", err)
 						diag.Errorf("Error setting value for nic_backing_info.virtual_ethernet_nic: %v", err)
@@ -242,7 +261,21 @@ func expandNic(pr []interface{}) []config.Nic {
 			} else if backingInfo, ok := val["backing_info"]; ok && backingInfo != nil && len(backingInfo.([]interface{})) > 0 {
 				log.Printf("[DEBUG] Expanding legacy backing_info as nic_backing_info")
 				nicBackingInfo := config.NewOneOfNicNicBackingInfo()
-				ven := expandVirtualEthernetNic(backingInfo)
+				var venOpts *VirtualEthernetNicExpandOpts
+				if d != nil && basePath != "" {
+					venPath := basePath + "." + strconv.Itoa(k) + ".backing_info.0"
+					if common.IsExplicitlySet(d, venPath+".is_connected") {
+						venOpts = &VirtualEthernetNicExpandOpts{IsConnectedExplicitlySet: true}
+						if biList, ok := backingInfo.([]interface{}); ok && len(biList) > 0 {
+							if biMap, ok := biList[0].(map[string]interface{}); ok {
+								if isConn, ok := biMap["is_connected"].(bool); ok {
+									venOpts.IsConnectedValue = isConn
+								}
+							}
+						}
+					}
+				}
+				ven := expandVirtualEthernetNic(backingInfo, venOpts)
 				if ven != nil {
 					if err := nicBackingInfo.SetValue(ven); err != nil {
 						log.Printf("[ERROR] Error setting value for nic_backing_info from legacy backing_info: %v", err)
@@ -263,7 +296,7 @@ func expandNic(pr []interface{}) []config.Nic {
 				nni := nniRaw.([]interface{})[0].(map[string]interface{})
 				if venNI, ok := nni["virtual_ethernet_nic_network_info"]; ok && venNI != nil && len(venNI.([]interface{})) > 0 {
 					log.Printf("[DEBUG] Expanding new nic_network_info")
-					ven := expandVirtualEthernetNic(venNI)
+					ven := expandVirtualEthernetNic(venNI, nil)
 					if err := nic.SetNicNetworkInfo(ven); err != nil {
 						log.Printf("[ERROR] Error setting value for nic_network_info.virtual_ethernet_nic_network_info: %v", err)
 						diag.Errorf("Error setting value for nic_network_info.virtual_ethernet_nic_network_info: %v", err)
@@ -290,7 +323,7 @@ func expandNic(pr []interface{}) []config.Nic {
 				log.Printf("[DEBUG] Expanding legacy network_info")
 				// SetNicNetworkInfo expects VirtualEthernetNicNetworkInfo (or other oneof types), not *config.NicNetworkInfo.
 				// expandVirtualEthernetNic maps legacy network_info fields to VirtualEthernetNicNetworkInfo.
-				venNI := expandVirtualEthernetNic(ntwkInfo)
+				venNI := expandVirtualEthernetNic(ntwkInfo, nil)
 				if venNI == nil {
 					log.Printf("[ERROR] Failed to expand legacy network_info")
 					continue

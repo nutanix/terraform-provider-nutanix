@@ -165,8 +165,8 @@ func TestAccV2NutanixVmsResource_WithNic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.bus_type", "SCSI"),
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.index", "0"),
 					resource.TestCheckResourceAttrSet(resourceNameVms, "nics.#"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.vlan_mode", "ACCESS"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.vlan_mode", "ACCESS"),
 				),
 			},
 		},
@@ -196,9 +196,9 @@ func TestAccV2NutanixVmsResource_WithNicTrunk(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.bus_type", "SCSI"),
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.index", "0"),
 					resource.TestCheckResourceAttrSet(resourceNameVms, "nics.#"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.vlan_mode", "TRUNK"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.trunked_vlans.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.vlan_mode", "TRUNK"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.trunked_vlans.#", "1"),
 				),
 			},
 		},
@@ -226,8 +226,8 @@ func TestAccV2NutanixVmsResource_NicAddRemove(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
 					resource.TestCheckResourceAttr(resourceNameVms, "nics.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.vlan_mode", "ACCESS"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.vlan_mode", "ACCESS"),
 				),
 			},
 			// Step 2: Add a second NIC
@@ -237,10 +237,10 @@ func TestAccV2NutanixVmsResource_NicAddRemove(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
 					resource.TestCheckResourceAttr(resourceNameVms, "nics.#", "2"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.vlan_mode", "ACCESS"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.1.network_info.0.nic_type", "NORMAL_NIC"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.1.network_info.0.vlan_mode", "ACCESS"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.vlan_mode", "ACCESS"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.1.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.1.nic_network_info.0.virtual_ethernet_nic_network_info.0.vlan_mode", "ACCESS"),
 				),
 			},
 			// Step 3: Remove the second NIC (back to one NIC)
@@ -251,8 +251,8 @@ func TestAccV2NutanixVmsResource_NicAddRemove(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
 					resource.TestCheckResourceAttr(resourceNameVms, "nics.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.vlan_mode", "ACCESS"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.vlan_mode", "ACCESS"),
 				),
 			},
 		},
@@ -474,8 +474,8 @@ func TestAccV2NutanixVmsResource_WithCloudInit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.bus_type", "SCSI"),
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.index", "0"),
 					resource.TestCheckResourceAttrSet(resourceNameVms, "nics.#"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.vlan_mode", "ACCESS"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.vlan_mode", "ACCESS"),
 				),
 			},
 		},
@@ -505,8 +505,8 @@ func TestAccV2NutanixVmsResource_WithSysprep(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.bus_type", "SCSI"),
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.index", "0"),
 					resource.TestCheckResourceAttrSet(resourceNameVms, "nics.#"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.vlan_mode", "ACCESS"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.vlan_mode", "ACCESS"),
 					resource.TestCheckResourceAttrSet(resourceNameVms, "cd_roms.#"),
 					resource.TestCheckResourceAttr(resourceNameVms, "cd_roms.0.iso_type", "GUEST_CUSTOMIZATION"),
 				),
@@ -539,8 +539,8 @@ func TestAccV2NutanixVmsResource_WithCloudInitWithCustomKeys(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.bus_type", "SCSI"),
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.index", "0"),
 					resource.TestCheckResourceAttrSet(resourceNameVms, "nics.#"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.vlan_mode", "ACCESS"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.vlan_mode", "ACCESS"),
 				),
 			},
 		},
@@ -573,8 +573,8 @@ func TestAccV2NutanixVmsResource_UpdateDiskNics(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.bus_type", "SCSI"),
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.index", "0"),
 					resource.TestCheckResourceAttr(resourceNameVms, "nics.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.vlan_mode", "ACCESS"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.vlan_mode", "ACCESS"),
 				),
 			},
 			{
@@ -595,8 +595,8 @@ func TestAccV2NutanixVmsResource_UpdateDiskNics(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.1.disk_address.0.bus_type", "SCSI"),
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.1.disk_address.0.index", "1"),
 					resource.TestCheckResourceAttr(resourceNameVms, "nics.#", "2"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
-					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.vlan_mode", "ACCESS"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.vlan_mode", "ACCESS"),
 				),
 			},
 		},
@@ -903,12 +903,14 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 				}
 			}
 			nics{
-				network_info{
-					nic_type = "NORMAL_NIC"
-					subnet{
-						ext_id = local.subnetExtId
+				nic_network_info{
+					virtual_ethernet_nic_network_info{
+						nic_type = "NORMAL_NIC"
+						subnet{
+							ext_id = local.subnetExtId
+						}
+						vlan_mode = "ACCESS"
 					}
-					vlan_mode = "ACCESS"
 				}
 			}
 		}
@@ -1050,12 +1052,14 @@ func testVmsV4ConfigWithNic(r int, desc string) string {
 				}
 			}
 			nics{
-				network_info{
-					nic_type = "NORMAL_NIC"
-					subnet{
-						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+				nic_network_info{
+					virtual_ethernet_nic_network_info{
+						nic_type = "NORMAL_NIC"
+						subnet{
+							ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+						}
+						vlan_mode = "ACCESS"
 					}
-					vlan_mode = "ACCESS"
 				}
 			}
 			power_state = "ON"
@@ -1108,13 +1112,15 @@ func testVmsV4ConfigWithNicWithTrunkVlan(r int, desc string) string {
 				}
 			}
 			nics{
-				network_info{
-					nic_type = "NORMAL_NIC"
-					subnet{
-						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+				nic_network_info{
+					virtual_ethernet_nic_network_info{
+						nic_type = "NORMAL_NIC"
+						subnet{
+							ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+						}
+						vlan_mode = "TRUNK"
+						trunked_vlans = ["1"]
 					}
-					vlan_mode = "TRUNK"
-					trunked_vlans = ["1"]
 				}
 			}
 			power_state = "ON"
@@ -1510,12 +1516,14 @@ func testVmsV4ConfigWithCloudInit(r int, desc string) string {
 				}
 			}
 			nics{
-				network_info{
-					nic_type = "NORMAL_NIC"
-					subnet{
-						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+				nic_network_info{
+					virtual_ethernet_nic_network_info{
+						nic_type = "NORMAL_NIC"
+						subnet{
+							ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+						}
+						vlan_mode = "ACCESS"
 					}
-					vlan_mode = "ACCESS"
 				}
 			}
 			guest_customization{
@@ -1584,12 +1592,14 @@ resource "nutanix_virtual_machine_v2" "test"{
 		}
 	}
 	nics{
-		network_info{
-			nic_type = "NORMAL_NIC"
-			subnet{
-				ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+		nic_network_info{
+			virtual_ethernet_nic_network_info{
+				nic_type = "NORMAL_NIC"
+				subnet{
+					ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+				}
+				vlan_mode = "ACCESS"
 			}
-			vlan_mode = "ACCESS"
 		}
 	}
 	guest_customization {
@@ -1660,12 +1670,14 @@ func testVmsV4ConfigWithCloudInitWithCustomKeys(r int, desc string) string {
 				}
 			}
 			nics{
-				network_info{
-					nic_type = "NORMAL_NIC"
-					subnet{
-						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+				nic_network_info{
+					virtual_ethernet_nic_network_info{
+						nic_type = "NORMAL_NIC"
+						subnet{
+							ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+						}
+						vlan_mode = "ACCESS"
 					}
-					vlan_mode = "ACCESS"
 				}
 			}
 			guest_customization {
@@ -1738,12 +1750,14 @@ func testVmsV4ConfigWithDiskNic(name string, desc string) string {
 				}
 			}
 			nics{
-				network_info{
-					nic_type = "NORMAL_NIC"
-					subnet{
-						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+				nic_network_info{
+					virtual_ethernet_nic_network_info{
+						nic_type = "NORMAL_NIC"
+						subnet{
+							ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+						}
+						vlan_mode = "ACCESS"
 					}
-					vlan_mode = "ACCESS"
 				}
 			}
 			power_state = "ON"
@@ -1810,21 +1824,25 @@ func testVmsV4ConfigWitUpdatedDiskNic(name, desc string) string {
 				}
 			}
 			nics{
-				network_info{
-					nic_type = "NORMAL_NIC"
-					subnet{
-						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+				nic_network_info{
+					virtual_ethernet_nic_network_info{
+						nic_type = "NORMAL_NIC"
+						subnet{
+							ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+						}
+						vlan_mode = "ACCESS"
 					}
-					vlan_mode = "ACCESS"
 				}
 			}
 			nics{
-				network_info{
-					nic_type = "NORMAL_NIC"
-					subnet{
-						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+				nic_network_info{
+					virtual_ethernet_nic_network_info{
+						nic_type = "NORMAL_NIC"
+						subnet{
+							ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+						}
+						vlan_mode = "ACCESS"
 					}
-					vlan_mode = "ACCESS"
 				}
 			}
 			power_state = "ON"
@@ -1860,12 +1878,14 @@ func testVmsCategoriesV4Config(name, desc string) string {
 				ext_id = local.cluster0
 			}
 			nics{
-				network_info{
-					nic_type = "NORMAL_NIC"
-					subnet{
-						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+				nic_network_info{
+					virtual_ethernet_nic_network_info{
+						nic_type = "NORMAL_NIC"
+						subnet{
+							ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+						}
+						vlan_mode = "ACCESS"
 					}
-					vlan_mode = "ACCESS"
 				}
 			}
 			categories{
@@ -1910,12 +1930,14 @@ func testVmsCategoriesV4ConfigUpdate(name, desc string) string {
 				ext_id = local.cluster0
 			}
 			nics{
-				network_info{
-					nic_type = "NORMAL_NIC"
-					subnet{
-						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+				nic_network_info{
+					virtual_ethernet_nic_network_info{
+						nic_type = "NORMAL_NIC"
+						subnet{
+							ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+						}
+						vlan_mode = "ACCESS"
 					}
-					vlan_mode = "ACCESS"
 				}
 			}
 			categories{
@@ -2018,12 +2040,14 @@ func testVmsConfigWithSerialPorts(name, desc string, isconn bool) string {
 				ext_id = local.cluster0
 			}
 			nics{
-				network_info{
-					nic_type = "NORMAL_NIC"
-					subnet{
-						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+				nic_network_info{
+					virtual_ethernet_nic_network_info{
+						nic_type = "NORMAL_NIC"
+						subnet{
+							ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+						}
+						vlan_mode = "ACCESS"
 					}
-					vlan_mode = "ACCESS"
 				}
 			}
 			serial_ports{
@@ -2100,11 +2124,13 @@ func testVmsV4ConfigWithSingleNic(name, desc string, r int) string {
 				}
 			}
 			nics {
-				network_info {
-					nic_type  = "NORMAL_NIC"
-					vlan_mode = "ACCESS"
-					subnet {
-						ext_id = data.nutanix_subnets_v2.subnet1.subnets[0].ext_id
+				nic_network_info {
+					virtual_ethernet_nic_network_info {
+						nic_type  = "NORMAL_NIC"
+						vlan_mode = "ACCESS"
+						subnet {
+							ext_id = data.nutanix_subnets_v2.subnet1.subnets[0].ext_id
+						}
 					}
 				}
 			}
@@ -2191,11 +2217,13 @@ func testVmsV4ConfigWithSingleNicKeepSubnet(name, desc string, r int) string {
 			}
 			# Only one NIC - removed the second NIC
 			nics {
-				network_info {
-					nic_type  = "NORMAL_NIC"
-					vlan_mode = "ACCESS"
-					subnet {
-						ext_id = data.nutanix_subnets_v2.subnet1.subnets[0].ext_id
+				nic_network_info {
+					virtual_ethernet_nic_network_info {
+						nic_type  = "NORMAL_NIC"
+						vlan_mode = "ACCESS"
+						subnet {
+							ext_id = data.nutanix_subnets_v2.subnet1.subnets[0].ext_id
+						}
 					}
 				}
 			}
@@ -2280,21 +2308,25 @@ func testVmsV4ConfigWithTwoNics(name, desc string, r int) string {
 			}
 			# First NIC - existing subnet
 			nics {
-				network_info {
-					nic_type  = "NORMAL_NIC"
-					vlan_mode = "ACCESS"
-					subnet {
-						ext_id = data.nutanix_subnets_v2.subnet1.subnets[0].ext_id
+				nic_network_info {
+					virtual_ethernet_nic_network_info {
+						nic_type  = "NORMAL_NIC"
+						vlan_mode = "ACCESS"
+						subnet {
+							ext_id = data.nutanix_subnets_v2.subnet1.subnets[0].ext_id
+						}
 					}
 				}
 			}
 			# Second NIC - new test subnet
 			nics {
-				network_info {
-					nic_type  = "NORMAL_NIC"
-					vlan_mode = "ACCESS"
-					subnet {
-						ext_id = nutanix_subnet_v2.test_subnet.ext_id
+				nic_network_info {
+					virtual_ethernet_nic_network_info {
+						nic_type  = "NORMAL_NIC"
+						vlan_mode = "ACCESS"
+						subnet {
+							ext_id = nutanix_subnet_v2.test_subnet.ext_id
+						}
 					}
 				}
 			}

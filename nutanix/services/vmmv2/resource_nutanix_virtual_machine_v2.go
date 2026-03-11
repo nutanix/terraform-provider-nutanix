@@ -1809,7 +1809,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 		if len(oldDeletedNic) > 0 {
 			for _, nic := range oldDeletedNic {
-				nicInput := expandNic([]interface{}{nic})[0]
+				nicInput := expandNic([]interface{}{nic}, nil, "")[0]
 
 				nicExtID := nicInput.ExtId
 
@@ -1845,7 +1845,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		}
 		if len(updatedNic) > 0 {
 			for _, nic := range updatedNic {
-				nicInput := expandNic([]interface{}{nic})[0]
+				nicInput := expandNic([]interface{}{nic}, nil, "")[0]
 
 				nicExtID := nicInput.ExtId
 
@@ -1885,7 +1885,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		}
 		if len(newAddedNic) > 0 {
 			for _, nic := range newAddedNic {
-				nicInput := expandNic([]interface{}{nic})[0]
+				nicInput := expandNic([]interface{}{nic}, nil, "")[0]
 
 				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
 				if err != nil {
@@ -3713,7 +3713,7 @@ func prepareVMConfigFromMap(m map[string]interface{}) *config.Vm {
 		body.CdRoms = expandCdRom(cdroms.([]interface{}))
 	}
 	if nics, ok := m["nics"]; ok {
-		body.Nics = expandNic(nics.([]interface{}))
+		body.Nics = expandNic(nics.([]interface{}), nil, "")
 	}
 	if gpus, ok := m["gpus"]; ok {
 		body.Gpus = expandGpu(gpus.([]interface{}))

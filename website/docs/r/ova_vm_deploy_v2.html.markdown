@@ -23,16 +23,20 @@ resource "nutanix_ova_vm_deploy_v2" "test" {
     name              = "vm-from-ova"
     memory_size_bytes = 8 * 1024 * 1024 * 1024 # 8 GiB
     nics {
-      backing_info {
-        is_connected = true
-      }
-      network_info {
-        nic_type = "NORMAL_NIC"
-        subnet {
-          ext_id = "9bd6cbc2-a592-4728-ab89-473612f46b99"
+      nic_backing_info {
+        virtual_ethernet_nic {
+          is_connected = true
         }
-        vlan_mode     = "TRUNK"
-        trunked_vlans = ["1"]
+      }
+      nic_network_info {
+        virtual_ethernet_nic_network_info {
+          nic_type = "NORMAL_NIC"
+          subnet {
+            ext_id = "9bd6cbc2-a592-4728-ab89-473612f46b99"
+          }
+          vlan_mode     = "TRUNK"
+          trunked_vlans = ["1"]
+        }
       }
     }
     disks {
