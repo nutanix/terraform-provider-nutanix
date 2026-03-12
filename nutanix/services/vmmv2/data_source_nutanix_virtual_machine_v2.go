@@ -2326,12 +2326,12 @@ func flattenNic(nic []config.Nic) []interface{} {
 				nics["nic_network_info"] = []interface{}{nicNetworkInfo}
 			}
 			if _, ok := nics["network_info"]; !ok && v.NetworkInfo != nil {
-				flattened := flattenNicNetworkInfo(v.NetworkInfo)
-				nics["network_info"] = flattened
+				flattened_nic_network_info := flattenNicNetworkInfo(v.NetworkInfo)
+				nics["network_info"] = flattened_nic_network_info
 				// Also set nic_network_info so vm_config matches VM state shape (e.g. OVA returns legacy only).
 				if _, ok := nics["nic_network_info"]; !ok {
 					nicNetworkInfo := make(map[string]interface{})
-					nicNetworkInfo["virtual_ethernet_nic_network_info"] = flattened
+					nicNetworkInfo["virtual_ethernet_nic_network_info"] = flattened_nic_network_info
 					nics["nic_network_info"] = []interface{}{nicNetworkInfo}
 				}
 			}
