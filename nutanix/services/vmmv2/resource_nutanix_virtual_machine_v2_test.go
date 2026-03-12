@@ -344,7 +344,7 @@ func TestAccV2NutanixVmsResource_NicScenariosVlanModeAndIsConnected(t *testing.T
 			},
 			// Step 7: Update with new and old fields having different values -> new fields win
 			{
-				Config: testVmsV4ConfigNicScenariosStep4DifferentValues(r, name, desc),
+				Config:             testVmsV4ConfigNicScenariosStep4DifferentValues(r, name, desc),
 				ExpectNonEmptyPlan: true, // since the new fields are updated and the state is updated with new values for both blocks (expected behavior)
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_backing_info.0.virtual_ethernet_nic.0.is_connected", "true"),
@@ -444,7 +444,7 @@ func TestAccV2NutanixVmsResource_NicScenariosCreateWithSameValuesThenUpdates(t *
 			},
 			// 7: Update with new and old different values -> new fields win, state updated for both blocks
 			{
-				Config: testVmsV4ConfigNicScenariosStep4DifferentValues(r, name, desc),
+				Config:             testVmsV4ConfigNicScenariosStep4DifferentValues(r, name, desc),
 				ExpectNonEmptyPlan: true, // since the new fields are updated and the state is updated with new values for both blocks (expected behavior)
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_backing_info.0.virtual_ethernet_nic.0.is_connected", "true"),
@@ -1441,7 +1441,6 @@ func testVmsV4ConfigWithNicWithTrunkVlan(r int, desc string) string {
 		}
 `, r, desc, filepath)
 }
-
 
 // testVmsV4ConfigNicScenariosStep1Create: VM with both nic_* and legacy blocks, same values (is_connected=false, vlan_mode=TRUNK).
 func testVmsV4ConfigNicScenariosStep1Create(r int, name, desc string) string {

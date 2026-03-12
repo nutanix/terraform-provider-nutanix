@@ -231,7 +231,7 @@ func expandNic(pr []interface{}, d *schema.ResourceData, basePath string) []conf
 					nicPath = basePath + suffix
 				}
 			}
-			
+
 			// Backing: Use the block that the user set in config. When only legacy is set, val's legacy block has desired values; when only new is set, val's new block has them.
 			// Use IsNonEmptyBlockExplicitlySet so that an empty nic_backing_info block in config (e.g. from state merge) does not override legacy backing_info.
 			newBackingSet := d != nil && common.IsNonEmptyBlockExplicitlySet(d, nicPath+".nic_backing_info")
@@ -359,7 +359,7 @@ func expandNic(pr []interface{}, d *schema.ResourceData, basePath string) []conf
 						diag.Errorf("Error setting value for nic_network_info.dp_offload_nic_network_info: %v", err)
 						continue
 					}
-					
+
 				}
 			} else if ntwkInfo, ok := val["network_info"]; ok && ntwkInfo != nil && len(ntwkInfo.([]interface{})) > 0 {
 				log.Printf("[DEBUG] Expanding legacy network_info")
