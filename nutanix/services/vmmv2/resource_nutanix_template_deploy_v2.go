@@ -101,6 +101,8 @@ func ResourceNutanixTemplateDeployV2Create(ctx context.Context, d *schema.Resour
 		body.OverrideVmConfigMap = expandVMConfigOverride(overrideCfg, d)
 	}
 
+	aJSON, _ := json.MarshalIndent(body, "", "  ")
+	log.Printf("[DEBUG] Payload to deploy template: %s", string(aJSON))
 	resp, err := conn.TemplatesAPIInstance.DeployTemplate(utils.StringPtr(extID.(string)), body)
 	if err != nil {
 		return diag.Errorf("error while deploying template : %v", err)
@@ -129,7 +131,7 @@ func ResourceNutanixTemplateDeployV2Create(ctx context.Context, d *schema.Resour
 	}
 	taskDetails := taskResp.Data.GetValue().(import2.Task)
 
-	aJSON, _ := json.MarshalIndent(taskDetails, "", " ")
+	aJSON, _ = json.MarshalIndent(taskDetails, "", " ")
 	log.Printf("[DEBUG] Template Deploy Task Details: %s", string(aJSON))
 
 	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeVM, "VM")
@@ -167,8 +169,8 @@ func expandVMConfigOverride(pr interface{}, d *schema.ResourceData) map[string]i
 		if name, ok := val["name"]; ok {
 			vmConfig.Name = utils.StringPtr(name.(string))
 		}
-		if sockets, ok := val["sockets"]; ok {
-			vmConfig.NumSockets = utils.IntPtr(sockets.(int))
+		if numSockets, ok := val["num_sockets"]; ok {
+			vmConfig.NumSockets = utils.IntPtr(numSockets.(int))
 		}
 		if cores, ok := val["num_cores_per_socket"]; ok {
 			vmConfig.NumCoresPerSocket = utils.IntPtr(cores.(int))
@@ -218,13 +220,15 @@ func expandNic(pr []interface{}, d *schema.ResourceData, basePath string) []conf
 			if extID, ok := val["ext_id"]; ok && len(extID.(string)) > 0 {
 				nic.ExtId = utils.StringPtr(extID.(string))
 			}
-			// When expanding a single nic (e.g. update path), basePath is already "nics.0"
+			// Path to this NIC in config: either basePath is the list path (e.g. "override_vm_config_map.0.nics")
+			// and we append the index, or basePath is already the path to this nic (e.g. "nics.0" from VM update).
 			nicPath := ""
 			if basePath != "" {
-				if len(pr) == 1 {
-					nicPath = basePath // nicPath = "nics.0"
+				suffix := "." + strconv.Itoa(k)
+				if len(basePath) >= len(suffix) && basePath[len(basePath)-len(suffix):] == suffix {
+					nicPath = basePath
 				} else {
-					nicPath = basePath + "." + strconv.Itoa(k) // nicPath = "nics.1"
+					nicPath = basePath + suffix
 				}
 			}
 			
