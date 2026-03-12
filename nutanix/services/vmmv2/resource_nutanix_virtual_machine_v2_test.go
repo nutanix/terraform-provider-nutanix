@@ -850,15 +850,16 @@ func testVmsV4Config(name, desc string) string {
 
 func testVmsV4ConfigWithDisk(r int, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters_v2" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {
+			filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"		
+		}
 
-		data "nutanix_subnets_v2" "subnets" {}
+		data "nutanix_subnets_v2" "subnets" {
+			filter = "name eq '${local.vmm.subnet_name}'"
+		}
 
 		locals {
-			cluster0 = [
-			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-		  ][0]
+			cluster0 = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
 			subnetExtId = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
 			config = jsondecode(file("%[3]s"))
 			vmm = local.config.vmm
