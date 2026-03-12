@@ -196,6 +196,16 @@ func expandVMConfigOverride(pr interface{}, d *schema.ResourceData) map[string]i
 	return nil
 }
 
+// hasNonEmptyBlock returns true if m[key] is a non-empty list (e.g. one block set).
+func hasNonEmptyBlock(m map[string]interface{}, key string) bool {
+	v, ok := m[key]
+	if !ok || v == nil {
+		return false
+	}
+	list, ok := v.([]interface{})
+	return ok && len(list) > 0
+}
+
 func expandNic(pr []interface{}, d *schema.ResourceData, basePath string) []config.Nic {
 	if len(pr) > 0 {
 		nicList := make([]config.Nic, len(pr))
@@ -208,18 +218,21 @@ func expandNic(pr []interface{}, d *schema.ResourceData, basePath string) []conf
 			if extID, ok := val["ext_id"]; ok && len(extID.(string)) > 0 {
 				nic.ExtId = utils.StringPtr(extID.(string))
 			}
-			// nicPath: when expanding a single nic, basePath may be the full path (e.g. "nics.0"); otherwise basePath is the list path and we append index.
+			// When expanding a single nic (e.g. update path), basePath is already "nics.0"
 			nicPath := ""
 			if basePath != "" {
 				if len(pr) == 1 {
-					nicPath = basePath
+					nicPath = basePath // nicPath = "nics.0"
 				} else {
-					nicPath = basePath + "." + strconv.Itoa(k)
+					nicPath = basePath + "." + strconv.Itoa(k) // nicPath = "nics.1"
 				}
 			}
-			// Prefer new nic_backing_info (v2.4.1+). If not present, fall back to legacy backing_info and
-			// treat it as nic_backing_info.virtual_ethernet_nic to keep old configs working.
-			if nbiRaw, ok := val["nic_backing_info"]; ok && nbiRaw != nil && len(nbiRaw.([]interface{})) > 0 {
+			
+			// Backing: Use the block that the user set in config. When only legacy is set, val's legacy block has desired values; when only new is set, val's new block has them.
+			// Use IsNonEmptyBlockExplicitlySet so that an empty nic_backing_info block in config (e.g. from state merge) does not override legacy backing_info.
+			newBackingSet := d != nil && common.IsNonEmptyBlockExplicitlySet(d, nicPath+".nic_backing_info")
+			useNewBacking := hasNonEmptyBlock(val, "nic_backing_info") && (d == nil || newBackingSet)
+			if nbiRaw, ok := val["nic_backing_info"]; ok && useNewBacking && nbiRaw != nil && len(nbiRaw.([]interface{})) > 0 {
 				nbi := nbiRaw.([]interface{})[0].(map[string]interface{})
 				nicBackingInfo := config.NewOneOfNicNicBackingInfo()
 
@@ -312,9 +325,11 @@ func expandNic(pr []interface{}, d *schema.ResourceData, basePath string) []conf
 					}
 				}
 			}
-			// Prefer new nic_network_info (v2.4.1+). If not present, fall back to legacy network_info and
-			// treat it as nic_network_info.virtual_ethernet_nic_network_info to keep old configs working.
-			if nniRaw, ok := val["nic_network_info"]; ok && nniRaw != nil && len(nniRaw.([]interface{})) > 0 {
+			// Network: Use the block that the user set in config. When only legacy is set, val's legacy block has desired values; when only new is set, val's new block has them.
+			// Use IsNonEmptyBlockExplicitlySet so that an empty nic_network_info block in config (e.g. from state merge) does not override legacy network_info.
+			newNetworkSet := d != nil && common.IsNonEmptyBlockExplicitlySet(d, nicPath+".nic_network_info")
+			useNewNetwork := hasNonEmptyBlock(val, "nic_network_info") && (d == nil || newNetworkSet)
+			if nniRaw, ok := val["nic_network_info"]; ok && useNewNetwork && nniRaw != nil && len(nniRaw.([]interface{})) > 0 {
 				nni := nniRaw.([]interface{})[0].(map[string]interface{})
 				if venNI, ok := nni["virtual_ethernet_nic_network_info"]; ok && venNI != nil && len(venNI.([]interface{})) > 0 {
 					log.Printf("[DEBUG] Expanding new nic_network_info")
@@ -340,6 +355,7 @@ func expandNic(pr []interface{}, d *schema.ResourceData, basePath string) []conf
 						diag.Errorf("Error setting value for nic_network_info.dp_offload_nic_network_info: %v", err)
 						continue
 					}
+					
 				}
 			} else if ntwkInfo, ok := val["network_info"]; ok && ntwkInfo != nil && len(ntwkInfo.([]interface{})) > 0 {
 				log.Printf("[DEBUG] Expanding legacy network_info")
@@ -355,6 +371,7 @@ func expandNic(pr []interface{}, d *schema.ResourceData, basePath string) []conf
 					diag.Errorf("Error setting value for network_info: %v", err)
 					continue
 				}
+				log.Printf("[DEBUG] Network info set successfully")
 			}
 
 			nicList[k] = *nic
