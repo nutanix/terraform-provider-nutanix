@@ -2120,7 +2120,7 @@ func expandTemplateVMSpec(vmSpec interface{}) *vmmConfig.Vm {
 			vm.StorageConfig = expandADSFVmStorageConfig(storageConfig)
 		}
 		if disks, ok := vmVal["disks"]; ok {
-			vm.Disks = expandDisk(disks.([]interface{}))
+			vm.Disks = expandDisk(disks.([]interface{}), nil)
 		}
 		if cdRoms, ok := vmVal["cd_roms"]; ok {
 			vm.CdRoms = expandCdRom(cdRoms.([]interface{}))
