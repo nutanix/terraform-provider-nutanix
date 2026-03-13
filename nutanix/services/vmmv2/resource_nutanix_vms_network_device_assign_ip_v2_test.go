@@ -126,12 +126,14 @@ func testVMWithNicAndDiskConfig(vmName string) string {
 		  }
        
           nics {
-			network_info {
-			  nic_type = "DIRECT_NIC"
-			  subnet {
-				ext_id = nutanix_subnet_v2.subnet.ext_id
+			nic_network_info {
+			  virtual_ethernet_nic_network_info {
+				nic_type = "DIRECT_NIC"
+				subnet {
+				  ext_id = nutanix_subnet_v2.subnet.ext_id
+				}
+				vlan_mode = "ACCESS"
 			  }
-			  vlan_mode = "ACCESS"
 			}
 		  }	  
 				  

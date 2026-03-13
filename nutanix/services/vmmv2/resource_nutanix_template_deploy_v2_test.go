@@ -93,17 +93,21 @@ func testTemplateDeployV2Config(name, desc, tempName, tempDesc string) string {
 			  num_cores_per_socket=1
 			  num_threads_per_core=1
 			  nics{
-				backing_info{
-				  is_connected = true
-				  model = "VIRTIO"
-				}
-				network_info {
-				  nic_type = "NORMAL_NIC"
-				  subnet {
-					ext_id = data.nutanix_subnets_v2.subnets.subnets.0.ext_id
+				nic_backing_info{
+				  virtual_ethernet_nic {
+					is_connected = true
+					model = "VIRTIO"
 				  }
-				  vlan_mode = "ACCESS"
-				  should_allow_unknown_macs = false
+				}
+				nic_network_info {
+				  virtual_ethernet_nic_network_info {
+					nic_type = "NORMAL_NIC"
+					subnet {
+					  ext_id = data.nutanix_subnets_v2.subnets.subnets.0.ext_id
+					}
+					vlan_mode = "ACCESS"
+					should_allow_unknown_macs = false
+				  }
 				}
 			  }
 			}

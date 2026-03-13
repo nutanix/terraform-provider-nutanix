@@ -482,7 +482,7 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 				overrideSpec.Categories = expandCategoryReference(cats.([]interface{}))
 			}
 			if nics, ok := ovm["nics"]; ok {
-				overrideSpec.Nics = expandNic(nics.([]interface{}))
+				overrideSpec.Nics = expandNic(nics.([]interface{}), nil, "")
 			}
 			if cdroms, ok := ovm["cd_roms"]; ok {
 				overrideSpec.CdRoms = expandCdRom(cdroms.([]interface{}))

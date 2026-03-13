@@ -46,9 +46,9 @@ func TestAccV2NutanixOvaResource_CreateOvaFromVM(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameVMForOva, "disks.0.backing_info.0.vm_disk.0.storage_container.0.ext_id"),
 					resource.TestCheckResourceAttr(resourceNameVMForOva, "disks.0.disk_address.0.bus_type", "SCSI"),
 					resource.TestCheckResourceAttrSet(resourceNameVMForOva, "nics.0.ext_id"),
-					resource.TestCheckResourceAttr(resourceNameVMForOva, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
-					resource.TestCheckResourceAttrSet(resourceNameVMForOva, "nics.0.network_info.0.subnet.0.ext_id"),
-					resource.TestCheckResourceAttr(resourceNameVMForOva, "nics.0.network_info.0.vlan_mode", "TRUNK"),
+					resource.TestCheckResourceAttr(resourceNameVMForOva, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttrSet(resourceNameVMForOva, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.subnet.0.ext_id"),
+					resource.TestCheckResourceAttr(resourceNameVMForOva, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.vlan_mode", "TRUNK"),
 
 					// ova checks
 					resource.TestCheckResourceAttrSet(resourceNameOva, "ext_id"),
@@ -74,7 +74,7 @@ func TestAccV2NutanixOvaResource_CreateOvaFromVM(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceNameOva, "vm_config.0.disks.0.backing_info.0.vm_disk.0.disk_size_bytes", resourceNameVMForOva, "disks.0.backing_info.0.vm_disk.0.disk_size_bytes"),
 					resource.TestCheckResourceAttrPair(resourceNameOva, "vm_config.0.disks.0.disk_address.0.bus_type", resourceNameVMForOva, "disks.0.disk_address.0.bus_type"),
 					resource.TestCheckResourceAttrPair(resourceNameOva, "vm_config.0.nics.#", resourceNameVMForOva, "nics.#"),
-					resource.TestCheckResourceAttrPair(resourceNameOva, "vm_config.0.nics.0.network_info.0.nic_type", resourceNameVMForOva, "nics.0.network_info.0.nic_type"),
+					resource.TestCheckResourceAttrPair(resourceNameOva, "vm_config.0.nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", resourceNameVMForOva, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type"),
 				),
 			},
 			// update ova
@@ -228,13 +228,15 @@ resource "nutanix_virtual_machine_v2" "ova-vm" {
     }
   }
   nics {
-    network_info {
-      nic_type = "NORMAL_NIC"
-      subnet {
-        ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+    nic_network_info {
+      virtual_ethernet_nic_network_info {
+        nic_type = "NORMAL_NIC"
+        subnet {
+          ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+        }
+        vlan_mode     = "TRUNK"
+        trunked_vlans = ["1"]
       }
-      vlan_mode     = "TRUNK"
-      trunked_vlans = ["1"]
     }
   }
   memory_size_bytes = 4 * 1024 * 1024 * 1024 # 4 GiB

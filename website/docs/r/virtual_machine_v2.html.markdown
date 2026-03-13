@@ -131,12 +131,14 @@ resource "nutanix_virtual_machine_v2" "vm-3" {
   }
 
   nics {
-    network_info {
+    nic_network_info {
+      virtual_ethernet_nic_network_info {
       nic_type = "NORMAL_NIC"
-      subnet {
-        ext_id = "7f66e20f-67f4-473f-96bb-c4fcfd487f16"
+        subnet {
+          ext_id = "7f66e20f-67f4-473f-96bb-c4fcfd487f16"
+        }
+        vlan_mode = "ACCESS"
       }
-      vlan_mode = "ACCESS"
     }
   }
 

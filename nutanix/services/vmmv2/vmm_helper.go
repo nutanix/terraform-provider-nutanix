@@ -6,13 +6,21 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+// VirtualEthernetNicExpandOpts carries optional expansion hints from the Terraform config (e.g. whether is_connected was explicitly set).
+// Used so that updating is_connected from true to false is detected via common.IsExplicitlySet instead of relying on the config map alone.
+type VirtualEthernetNicExpandOpts struct {
+	IsConnectedExplicitlySet bool
+	IsConnectedValue         bool
+}
+
 // Expand helper functions for VMM v2
 // expandVirtualEthernetNic expands either:
 // - nic_backing_info.virtual_ethernet_nic (VirtualEthernetNic), OR
 // - nic_network_info.virtual_ethernet_nic_network_info (VirtualEthernetNicNetworkInfo).
 //
 // It returns the concrete (non-pointer) SDK object to satisfy OneOf setters, or nil if empty.
-func expandVirtualEthernetNic(pr interface{}) interface{} {
+// When opts is non-nil and IsConnectedExplicitlySet is true, is_connected is taken from opts (so false is applied correctly).
+func expandVirtualEthernetNic(pr interface{}, opts *VirtualEthernetNicExpandOpts) interface{} {
 	if pr == nil {
 		return nil
 	}
@@ -35,8 +43,12 @@ func expandVirtualEthernetNic(pr interface{}) interface{} {
 		if mac, ok := val["mac_address"]; ok && mac != nil && mac.(string) != "" {
 			ven.MacAddress = utils.StringPtr(mac.(string))
 		}
-		if isConn, ok := val["is_connected"]; ok && isConn != nil {
-			ven.IsConnected = utils.BoolPtr(isConn.(bool))
+		if opts != nil && opts.IsConnectedExplicitlySet {
+			ven.IsConnected = utils.BoolPtr(opts.IsConnectedValue)
+		} else if opts == nil {
+			if isConn, ok := val["is_connected"]; ok && isConn != nil {
+				ven.IsConnected = utils.BoolPtr(isConn.(bool))
+			}
 		}
 		if nq, ok := val["num_queues"]; ok && nq != nil {
 			ven.NumQueues = utils.IntPtr(nq.(int))

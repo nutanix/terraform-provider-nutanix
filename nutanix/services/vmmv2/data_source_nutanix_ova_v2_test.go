@@ -48,7 +48,7 @@ func TestAccV2NutanixOvaDatasource_GetOvaDetails(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceNameOva, "vm_config.0.disks.0.backing_info.0.vm_disk.0.disk_size_bytes", datasourceNameOva, "vm_config.0.disks.0.backing_info.0.vm_disk.0.disk_size_bytes"),
 					resource.TestCheckResourceAttrPair(resourceNameOva, "vm_config.0.disks.0.disk_address.0.bus_type", datasourceNameOva, "vm_config.0.disks.0.disk_address.0.bus_type"),
 					resource.TestCheckResourceAttrPair(resourceNameOva, "vm_config.0.nics.#", datasourceNameOva, "vm_config.0.nics.#"),
-					resource.TestCheckResourceAttrPair(resourceNameOva, "vm_config.0.nics.0.network_info.0.nic_type", datasourceNameOva, "vm_config.0.nics.0.network_info.0.nic_type"),
+					resource.TestCheckResourceAttrPair(resourceNameOva, "vm_config.0.nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", datasourceNameOva, "vm_config.0.nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type"),
 				),
 			},
 		},

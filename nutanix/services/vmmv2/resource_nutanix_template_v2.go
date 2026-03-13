@@ -2126,7 +2126,7 @@ func expandTemplateVMSpec(vmSpec interface{}) *vmmConfig.Vm {
 			vm.CdRoms = expandCdRom(cdRoms.([]interface{}))
 		}
 		if nics, ok := vmVal["nics"]; ok {
-			vm.Nics = expandNic(nics.([]interface{}))
+			vm.Nics = expandNic(nics.([]interface{}), nil, "")
 		}
 		if gpus, ok := vmVal["gpus"]; ok {
 			vm.Gpus = expandGpu(gpus.([]interface{}))
@@ -2489,7 +2489,7 @@ func expandVMConfigOverrideTemplate(pr interface{}) *vmmContent.VmConfigOverride
 			cfg.MemorySizeBytes = utils.Int64Ptr(int64(memorySizeBytes.(int)))
 		}
 		if nics, ok := val["nics"]; ok && len(nics.([]interface{})) > 0 {
-			cfg.Nics = expandNic(nics.([]interface{}))
+			cfg.Nics = expandNic(nics.([]interface{}), nil, "")
 		}
 		if guest, ok := val["guest_customization"]; ok && len(guest.([]interface{})) > 0 {
 			cfg.GuestCustomization = expandTemplateGuestCustomizationParams(guest)
