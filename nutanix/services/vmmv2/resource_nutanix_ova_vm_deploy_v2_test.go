@@ -31,7 +31,7 @@ func TestAccV2NutanixOvaVmDeployResource_DeployVMFromOva(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameOvaVMDeploy, "override_vm_config.0.name", fmt.Sprintf("%s-from-ova", vmName)),
 					resource.TestCheckResourceAttr(resourceNameOvaVMDeploy, "override_vm_config.0.memory_size_bytes", strconv.Itoa(8*1024*1024*1024)), // 8GB
 					resource.TestCheckResourceAttr(resourceNameOvaVMDeploy, "override_vm_config.0.nics.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameOvaVMDeploy, "override_vm_config.0.nics.0.network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameOvaVMDeploy, "override_vm_config.0.nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
 
 					// vm data source checks
 					resource.TestCheckResourceAttr(datasourceVMFromOva, "vms.#", "1"),
@@ -42,7 +42,7 @@ func TestAccV2NutanixOvaVmDeployResource_DeployVMFromOva(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceVMFromOva, "vms.0.disks.#", "1"),
 					resource.TestCheckResourceAttr(datasourceVMFromOva, "vms.0.disks.0.disk_address.0.bus_type", "SCSI"),
 					resource.TestCheckResourceAttr(datasourceVMFromOva, "vms.0.nics.#", "1"),
-					resource.TestCheckResourceAttr(datasourceVMFromOva, "vms.0.nics.0.network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(datasourceVMFromOva, "vms.0.nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
 					resource.TestCheckResourceAttr(datasourceVMFromOva, "vms.0.num_cores_per_socket", "4"),
 					resource.TestCheckResourceAttr(datasourceVMFromOva, "vms.0.num_sockets", "2"),
 					resource.TestCheckResourceAttr(datasourceVMFromOva, "vms.0.num_threads_per_core", "2"),
@@ -336,15 +336,19 @@ resource "nutanix_ova_vm_deploy_v2" "test" {
     num_threads_per_core = 2
     power_state          = "OFF"
     nics {
-      backing_info {
-        is_connected = true
-      }
-      network_info {
-        nic_type = "NORMAL_NIC"
-        subnet {
-          ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+      nic_backing_info {
+        virtual_ethernet_nic {
+          is_connected = true
         }
-        vlan_mode     = "ACCESS"
+      }
+      nic_network_info {
+        virtual_ethernet_nic_network_info {
+          nic_type = "NORMAL_NIC"
+          subnet {
+            ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+          }
+          vlan_mode     = "ACCESS"
+        }
       }
     }
   }
@@ -384,15 +388,19 @@ resource "nutanix_ova_vm_deploy_v2" "test" {
     name              = "tf-test-vm-ova-from-ova"
     memory_size_bytes = 8 * 1024 * 1024 * 1024 # 8 GiB
     nics {
-      backing_info {
-        is_connected = true
-      }
-      network_info {
-        nic_type = "NORMAL_NIC"
-        subnet {
-          ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+      nic_backing_info {
+        virtual_ethernet_nic {
+          is_connected = true
         }
-        vlan_mode     = "ACCESS"
+      }
+      nic_network_info {
+        virtual_ethernet_nic_network_info {
+          nic_type = "NORMAL_NIC"
+          subnet {
+            ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+          }
+          vlan_mode     = "ACCESS"
+        }
       }
     }
   }
@@ -472,15 +480,19 @@ resource "nutanix_ova_vm_deploy_v2" "test" {
     num_threads_per_core = 1                       # updated
     power_state          = "ON"                    # updated
     nics {
-      backing_info {
-        is_connected = true
-      }
-      network_info {
-        nic_type = "NORMAL_NIC"
-        subnet {
-          ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+      nic_backing_info {
+        virtual_ethernet_nic {
+          is_connected = true
         }
-        vlan_mode     = "ACCESS"
+      }
+      nic_network_info {
+        virtual_ethernet_nic_network_info {
+          nic_type = "NORMAL_NIC"
+          subnet {
+            ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+          }
+          vlan_mode     = "ACCESS"
+        }
       }
     }
   }
@@ -564,15 +576,19 @@ resource "nutanix_ova_vm_deploy_v2" "test" {
     num_threads_per_core = 1                       # initial config
     power_state          = "OFF"                   # initial state
     nics {
-      backing_info {
-        is_connected = true
-      }
-      network_info {
-        nic_type = "NORMAL_NIC"
-        subnet {
-          ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+      nic_backing_info {
+        virtual_ethernet_nic {
+          is_connected = true
         }
-        vlan_mode     = "ACCESS"
+      }
+      nic_network_info {
+        virtual_ethernet_nic_network_info {
+          nic_type = "NORMAL_NIC"
+          subnet {
+            ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+          }
+          vlan_mode     = "ACCESS"
+        }
       }
     }
   }
@@ -650,15 +666,19 @@ resource "nutanix_ova_vm_deploy_v2" "test" {
     num_threads_per_core = 2                        # updated config
     power_state          = "ON"                     # updated state
     nics {
-      backing_info {
-        is_connected = true
-      }
-      network_info {
-        nic_type = "NORMAL_NIC"
-        subnet {
-          ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+      nic_backing_info {
+        virtual_ethernet_nic {
+          is_connected = true
         }
-        vlan_mode     = "ACCESS"
+      }
+      nic_network_info {
+        virtual_ethernet_nic_network_info {
+          nic_type = "NORMAL_NIC"
+          subnet {
+            ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+          }
+          vlan_mode     = "ACCESS"
+        }
       }
     }
   }
@@ -701,20 +721,6 @@ resource "nutanix_virtual_machine_v2" "ova-vm" {
   cluster {
     ext_id = local.cluster_ext_id
   }
-  disks {
-    disk_address {
-      bus_type = "SCSI"
-      index    = 0
-    }
-    backing_info {
-      vm_disk {
-        disk_size_bytes = 10 * 1024 * 1024 * 1024 # 10 GiB
-        storage_container {
-          ext_id = data.nutanix_storage_containers_v2.ngt-sc.storage_containers[0].ext_id
-        }
-      }
-    }
-  }
   memory_size_bytes = 4 * 1024 * 1024 * 1024 # 4 GiB
   power_state = "OFF"
 }
@@ -739,15 +745,19 @@ resource "nutanix_ova_vm_deploy_v2" "test" {
     num_threads_per_core = 2
     power_state          = "OFF"
     nics {
-      backing_info {
-        is_connected = true
-      }
-      network_info {
-        nic_type = "NORMAL_NIC"
-        subnet {
-          ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+      nic_backing_info {
+        virtual_ethernet_nic {
+          is_connected = true
         }
-        vlan_mode     = "ACCESS"
+      }
+      nic_network_info {
+        virtual_ethernet_nic_network_info {
+          nic_type = "NORMAL_NIC"
+          subnet {
+            ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+          }
+          vlan_mode     = "ACCESS"
+        }
       }
     }
     disks {

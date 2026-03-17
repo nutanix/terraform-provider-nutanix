@@ -80,9 +80,58 @@ func IsExplicitlySet(d *schema.ResourceData, key string) bool {
 	if !ok {
 		return false
 	}
-
-	log.Printf("[DEBUG] Key: %s, Value: %s", key, val)
+	aJSON, _ := json.MarshalIndent(val, "", "  ")
+	log.Printf("[DEBUG] Key: %s, Value: %s", key, string(aJSON))
 	return !val.IsNull() // Ensure key exists and isn't explicitly null
+}
+
+// IsNonEmptyBlockExplicitlySet returns true only when the key exists in raw config and has meaningful content
+// (e.g. at least one nested attribute or block set). Used to prefer legacy blocks when the user only set
+// legacy fields and the new block is present in config as an empty block (e.g. from schema default).
+func IsNonEmptyBlockExplicitlySet(d *schema.ResourceData, key string) bool {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return false
+	}
+	val, ok := getRawConfigValueAtPath(rawConfig, key)
+	if !ok || val.IsNull() || !val.IsKnown() {
+		return false
+	}
+	return ctyValueHasContent(val)
+}
+
+// ctyValueHasContent returns true if the cty value has at least one non-null, known nested value.
+func ctyValueHasContent(v cty.Value) bool {
+	if v.IsNull() || !v.IsKnown() {
+		return false
+	}
+	ty := v.Type()
+	if ty.IsListType() || ty.IsTupleType() {
+		l := v.Length()
+		if l.IsNull() || !l.IsKnown() {
+			return false
+		}
+		bf := l.AsBigFloat()
+		n, _ := bf.Int64()
+		if n == 0 {
+			return false
+		}
+		return ctyValueHasContent(v.Index(cty.NumberIntVal(0)))
+	}
+	if ty.IsObjectType() || ty.IsMapType() {
+		for _, v := range v.AsValueMap() {
+			if !v.IsNull() && v.IsKnown() {
+				if v.Type().IsPrimitiveType() || v.Type().IsCapsuleType() {
+					return true
+				}
+				if ctyValueHasContent(v) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+	return true // primitive or other known type
 }
 
 func getRawConfigValueAtPath(root cty.Value, path string) (cty.Value, bool) {

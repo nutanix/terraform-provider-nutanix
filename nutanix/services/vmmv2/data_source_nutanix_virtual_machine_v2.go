@@ -2326,7 +2326,14 @@ func flattenNic(nic []config.Nic) []interface{} {
 				nics["nic_network_info"] = []interface{}{nicNetworkInfo}
 			}
 			if _, ok := nics["network_info"]; !ok && v.NetworkInfo != nil {
-				nics["network_info"] = flattenNicNetworkInfo(v.NetworkInfo)
+				flattened_nic_network_info := flattenNicNetworkInfo(v.NetworkInfo)
+				nics["network_info"] = flattened_nic_network_info
+				// Also set nic_network_info so vm_config matches VM state shape (e.g. OVA returns legacy only).
+				if _, ok := nics["nic_network_info"]; !ok {
+					nicNetworkInfo := make(map[string]interface{})
+					nicNetworkInfo["virtual_ethernet_nic_network_info"] = flattened_nic_network_info
+					nics["nic_network_info"] = []interface{}{nicNetworkInfo}
+				}
 			}
 
 			nicList[k] = nics
@@ -2413,22 +2420,7 @@ func flattenNicNetworkInfo(pr *config.NicNetworkInfo) []map[string]interface{} {
 }
 
 func flattenNicType(pr *config.NicType) string {
-	if pr != nil {
-		const two, three, four, five = 2, 3, 4, 5
-		if *pr == config.NicType(two) {
-			return "NORMAL_NIC"
-		}
-		if *pr == config.NicType(three) {
-			return "DIRECT_NIC"
-		}
-		if *pr == config.NicType(four) {
-			return "NETWORK_FUNCTION_NIC"
-		}
-		if *pr == config.NicType(five) {
-			return "SPAN_DESTINATION_NIC"
-		}
-	}
-	return "UNKNOWN"
+	return pr.GetName()
 }
 
 func flattenNetworkFunctionChainReference(ref *config.NetworkFunctionChainReference) []map[string]interface{} {
