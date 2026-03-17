@@ -3,12 +3,12 @@ layout: "nutanix"
 page_title: "NUTANIX: nutanix_resource_group_v2"
 sidebar_current: "docs-nutanix-datasource-resource-group-v2"
 description: |-
-  Fetches the multidomain resource group identified by an external identifier.
+  Fetches the resource group identified by an external identifier.
 ---
 
 # nutanix_resource_group_v2
 
-Fetches the multidomain resource group identified by an external identifier.
+Fetches the resource group identified by an external identifier.
 
 ## Example Usage
 
@@ -38,14 +38,19 @@ The following attributes are exported:
 * `placement_targets` - List of placement targets (cluster and storage containers).
 * `links` - A HATEOAS style link for the response.
 
-### Placement Targets
+## Placement Targets
 
-Each placement target supports:
+The `placement_targets` attribute supports the following:
 
-* `cluster_ext_id` - External identifier of the cluster.
-* `storage_containers` - List of storage container details, each with `ext_id`.
+* `cluster_ext_id`:- UUID of the AOS cluster.
+* `storage_containers`:- List of storage containers available for this cluster target.
 
-### Links
+## Storage Containers
+
+The `storage_containers` attribute supports the following:
+* `ext_id`:- UUID of the storage container.
+
+## Links
 
 The `links` attribute supports the following:
 
