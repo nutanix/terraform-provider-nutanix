@@ -50,14 +50,14 @@ func DatasourceNutanixResourceGroupV2() *schema.Resource {
 			"placement_targets": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     schemaResourceGroupPlacementTargets(),
+				Elem:     schemaDatasourceResourceGroupPlacementTargets(),
 			},
 			"links": schemaForLinks(),
 		},
 	}
 }
 
-func schemaResourceGroupPlacementTargets() *schema.Resource {
+func schemaDatasourceResourceGroupPlacementTargets() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"cluster_ext_id": {
@@ -92,37 +92,41 @@ func DatasourceNutanixResourceGroupV2Read(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("error while fetching ResourceGroup: %s", err)
 	}
 
-	if resp.Data == nil {
-		return diag.Errorf("no resource group data in response")
+	rg := resp.Data.GetValue().(config.ResourceGroup)
+	if err := d.Set("name", utils.StringValue(rg.Name)); err != nil {
+		return diag.FromErr(err)
 	}
-
-	var rg config.ResourceGroup
-	switch v := resp.Data.GetValue().(type) {
-	case config.ResourceGroup:
-		rg = v
-	case *config.ResourceGroup:
-		if v != nil {
-			rg = *v
-		} else {
-			return diag.Errorf("error parsing GetResourceGroupById response data")
-		}
-	default:
-		return diag.Errorf("error parsing GetResourceGroupById response data")
+	if err := d.Set("project_ext_id", utils.StringValue(rg.ProjectExtId)); err != nil {
+		return diag.FromErr(err)
 	}
-
-	_ = d.Set("name", utils.StringValue(rg.Name))
-	_ = d.Set("project_ext_id", utils.StringValue(rg.ProjectExtId))
-	_ = d.Set("tenant_id", utils.StringValue(rg.TenantId))
-	_ = d.Set("created_by", utils.StringValue(rg.CreatedBy))
-	_ = d.Set("last_updated_by", utils.StringValue(rg.LastUpdatedBy))
+	if err := d.Set("ext_id", utils.StringValue(rg.ExtId)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("tenant_id", utils.StringValue(rg.TenantId)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("created_by", utils.StringValue(rg.CreatedBy)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("last_updated_by", utils.StringValue(rg.LastUpdatedBy)); err != nil {
+		return diag.FromErr(err)
+	}
 	if rg.CreateTime != nil {
-		_ = d.Set("create_time", rg.CreateTime.Format("2006-01-02T15:04:05Z07:00"))
+		if err := d.Set("create_time", rg.CreateTime.Format("2006-01-02T15:04:05Z07:00")); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if rg.LastUpdateTime != nil {
-		_ = d.Set("last_update_time", rg.LastUpdateTime.Format("2006-01-02T15:04:05Z07:00"))
+		if err := d.Set("last_update_time", rg.LastUpdateTime.Format("2006-01-02T15:04:05Z07:00")); err != nil {
+			return diag.FromErr(err)
+		}
 	}
-	_ = d.Set("placement_targets", flattenResourceGroupPlacementTargets(rg.PlacementTargets))
-	_ = d.Set("links", flattenLinks(rg.Links))
+	if err := d.Set("placement_targets", flattenResourceGroupPlacementTargets(rg.PlacementTargets)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("links", flattenLinks(rg.Links)); err != nil {
+		return diag.FromErr(err)
+	}
 
 	d.SetId(utils.StringValue(rg.ExtId))
 	return nil

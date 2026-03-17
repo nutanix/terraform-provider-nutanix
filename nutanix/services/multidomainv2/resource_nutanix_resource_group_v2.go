@@ -45,7 +45,6 @@ func ResourceNutanixResourceGroupV2() *schema.Resource {
 			"placement_targets": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				Elem:     schemaResourceGroupPlacementTargets(),
 			},
 			"ext_id": {
@@ -128,11 +127,11 @@ func ResourceNutanixResourceGroupV2Create(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("error parsing task response")
 	}
 
-	values := commonUtils.ExtractCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameResourceGroup)
-	if len(values) == 0 {
-		return diag.Errorf("resource group ext_id not found in task completion details")
+	uuid, err := commonUtils.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeResourceGroup, "Resource group")
+	if err != nil {
+		return diag.FromErr(err)
 	}
-	d.SetId(values[0])
+	d.SetId(utils.StringValue(uuid))
 
 	return ResourceNutanixResourceGroupV2Read(ctx, d, meta)
 }
@@ -149,40 +148,41 @@ func ResourceNutanixResourceGroupV2Read(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
-	if resp.Data == nil {
-		d.SetId("")
-		return nil
+	rg := resp.Data.GetValue().(config.ResourceGroup)
+	if err := d.Set("name", utils.StringValue(rg.Name)); err != nil {
+		return diag.FromErr(err)
 	}
-
-	var rg config.ResourceGroup
-	switch v := resp.Data.GetValue().(type) {
-	case config.ResourceGroup:
-		rg = v
-	case *config.ResourceGroup:
-		if v == nil {
-			d.SetId("")
-			return nil
-		}
-		rg = *v
-	default:
-		d.SetId("")
-		return nil
+	if err := d.Set("project_ext_id", utils.StringValue(rg.ProjectExtId)); err != nil {
+		return diag.FromErr(err)
 	}
-
-	_ = d.Set("name", utils.StringValue(rg.Name))
-	_ = d.Set("project_ext_id", utils.StringValue(rg.ProjectExtId))
-	_ = d.Set("tenant_id", utils.StringValue(rg.TenantId))
-	_ = d.Set("ext_id", utils.StringValue(rg.ExtId))
-	_ = d.Set("created_by", utils.StringValue(rg.CreatedBy))
-	_ = d.Set("last_updated_by", utils.StringValue(rg.LastUpdatedBy))
+	if err := d.Set("tenant_id", utils.StringValue(rg.TenantId)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("ext_id", utils.StringValue(rg.ExtId)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("created_by", utils.StringValue(rg.CreatedBy)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("last_updated_by", utils.StringValue(rg.LastUpdatedBy)); err != nil {
+		return diag.FromErr(err)
+	}
 	if rg.CreateTime != nil {
-		_ = d.Set("create_time", rg.CreateTime.Format("2006-01-02T15:04:05Z07:00"))
+		if err := d.Set("create_time", rg.CreateTime.Format("2006-01-02T15:04:05Z07:00")); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if rg.LastUpdateTime != nil {
-		_ = d.Set("last_update_time", rg.LastUpdateTime.Format("2006-01-02T15:04:05Z07:00"))
+		if err := d.Set("last_update_time", rg.LastUpdateTime.Format("2006-01-02T15:04:05Z07:00")); err != nil {
+			return diag.FromErr(err)
+		}
 	}
-	_ = d.Set("placement_targets", flattenResourceGroupPlacementTargets(rg.PlacementTargets))
-	_ = d.Set("links", flattenLinks(rg.Links))
+	if err := d.Set("placement_targets", flattenResourceGroupPlacementTargets(rg.PlacementTargets)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("links", flattenLinks(rg.Links)); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -208,7 +208,19 @@ func ResourceNutanixResourceGroupV2Update(ctx context.Context, d *schema.Resourc
 		ExtId: utils.StringPtr(d.Id()),
 		Body:  body,
 	}
-	resp, err := conn.ResourceGroups.UpdateResourceGroupById(ctx, &updateReq)
+
+	extID := d.Id()
+	getReq := import1.GetResourceGroupByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	getResp, err := conn.ResourceGroups.GetResourceGroupById(ctx, &getReq)
+	args := make(map[string]interface{})
+	etagValue := conn.APIClientInstance.GetEtag(getResp)
+	args["If-Match"] = utils.StringPtr(etagValue)
+
+	aJSON, _ := json.MarshalIndent(body, "", "  ")
+	log.Printf("[DEBUG] Update ResourceGroup Body: %s", string(aJSON))
+	resp, err := conn.ResourceGroups.UpdateResourceGroupById(ctx, &updateReq, args)
 	if err != nil {
 		return diag.Errorf("error updating ResourceGroup: %v", err)
 	}
@@ -236,10 +248,23 @@ func ResourceNutanixResourceGroupV2Update(ctx context.Context, d *schema.Resourc
 func ResourceNutanixResourceGroupV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MultidomainAPI
 
-	deleteReq := import1.DeleteResourceGroupByIdRequest{
-		ExtId: utils.StringPtr(d.Id()),
+	extID := d.Id()
+	getReq := import1.GetResourceGroupByIdRequest{
+		ExtId: utils.StringPtr(extID),
 	}
-	resp, err := conn.ResourceGroups.DeleteResourceGroupById(ctx, &deleteReq)
+	getResp, err := conn.ResourceGroups.GetResourceGroupById(ctx, &getReq)
+	args := make(map[string]interface{})
+	etagValue := conn.APIClientInstance.GetEtag(getResp)
+	args["If-Match"] = utils.StringPtr(etagValue)
+	argsJSON, _ := json.MarshalIndent(args, "", "  ")
+	log.Printf("[DEBUG] Delete ResourceGroup Args: %s", string(argsJSON))
+
+	deleteReq := import1.DeleteResourceGroupByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	aJSON, _ := json.MarshalIndent(deleteReq, "", "  ")
+	log.Printf("[DEBUG] Delete ResourceGroup Body: %s", string(aJSON))
+	resp, err := conn.ResourceGroups.DeleteResourceGroupById(ctx, &deleteReq, args)
 	if err != nil {
 		return diag.Errorf("error deleting ResourceGroup: %v", err)
 	}
@@ -302,4 +327,27 @@ func expandResourceGroupStorageContainers(in []interface{}) []config.StorageCont
 		}
 	}
 	return out
+}
+
+func schemaResourceGroupPlacementTargets() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"cluster_ext_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"storage_containers": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ext_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+		},
+	}
 }

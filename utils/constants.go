@@ -33,6 +33,7 @@ const (
 	RelEntityTypeClusterProfile         = "clustermgmt:config:cluster-profile"
 	RelEntityTypeDomainManager          = "prism:config:domain_manager"
 	RelEntityTypeProject                = "multidomain:config:Project"
+	RelEntityTypeResourceGroup          = "multidomain:config:nutanix-resource-group"
 )
 
 // CompletionDetailsName constants - Completion details name for the task entities affected
