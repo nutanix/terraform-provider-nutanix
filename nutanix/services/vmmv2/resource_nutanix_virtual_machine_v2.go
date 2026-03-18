@@ -1393,32 +1393,21 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	}
 	d.SetId(utils.StringValue(uuid))
 
-	var PowerTaskRef import1.TaskReference
-	if powerState, ok := d.GetOk("power_state"); ok {
-		switch powerState {
-		case "ON":
-			PowerTaskRef, err = powerOnVMWithRetry(ctx, conn, utils.StringPtr(d.Id()))
-		case "OFF":
-			PowerTaskRef, err = powerOffVMWithRetry(ctx, conn, utils.StringPtr(d.Id()))
-		default:
-			return diag.Errorf("invalid power state: %s", powerState)
-		}
-		if err != nil {
-			return diag.Errorf("error while powering %s Virtual Machines: %v", powerState, err)
-		}
-	}
-	powertaskUUID := PowerTaskRef.ExtId
+	powerState := d.Get("power_state").(string)
 
-	// Wait for the task to complete
-	powerStateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(powertaskUUID)),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
-	}
-
-	if _, errWaitTask := powerStateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for vm (%s) to power ON: %s", utils.StringValue(uuid), errWaitTask)
+	switch powerState {
+	case "ON":
+		log.Printf("[DEBUG] Powering on the VM")
+		diag := callForPowerOnVM(ctx, conn, d, meta)
+		if diag.HasError() {
+			return diag
+		}
+	case "OFF":
+		log.Printf("[DEBUG] Powering off the VM")
+		diag := callForPowerOffVM(ctx, conn, d, meta)
+		if diag.HasError() {
+			return diag
+		}
 	}
 
 	// If power state is ON and NICs are configured, wait for IP address
@@ -2291,10 +2280,16 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 			log.Printf("[DEBUG] Power state change detected: %s", power)
 			if power == "ON" {
 				log.Printf("[DEBUG] Powering on the VM")
-				callForPowerOnVM(ctx, conn, d, meta)
+				diag := callForPowerOnVM(ctx, conn, d, meta)
+				if diag.HasError() {
+					return diag
+				}
 			} else {
 				log.Printf("[DEBUG] Powering off the VM")
-				callForPowerOffVM(ctx, conn, d, meta)
+				diag := callForPowerOffVM(ctx, conn, d, meta)
+				if diag.HasError() {
+					return diag
+				}
 			}
 		}
 	}
@@ -3203,43 +3198,20 @@ func extractTaskReferenceFromResponse(resp interface{}) (import1.TaskReference, 
 	return taskRef, nil
 }
 
-// powerOnVMWithRetry attempts to power on a VM with retry logic
-// It fetches the VM and ETag header for each retry attempt to ensure we have the latest ETag
-func powerOnVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (import1.TaskReference, error) {
-	maxRetries := 10
-	retryDelay := 2500 * time.Millisecond // 2.5 seconds
-	var resp interface{}
-	var err error
-
-	for attempt := 0; attempt < maxRetries; attempt++ {
-		// Fetch VM to get latest ETag for each retry attempt
-		readResp, errR := conn.VMAPIInstance.GetVmById(vmID)
-		if errR != nil {
-			return import1.TaskReference{}, fmt.Errorf("error while fetching vm : %v", errR)
-		}
-
-		// Build args with fresh ETag for this attempt
-		args := make(map[string]interface{})
-		args["If-Match"] = getEtagHeader(readResp, conn)
-
-		resp, err = conn.VMAPIInstance.PowerOnVm(vmID, args)
-		if err == nil {
-			break
-		}
-
-		if attempt < maxRetries {
-			log.Printf("[DEBUG] Attempt %d/%d failed to power on VM, retrying in %v: %v", attempt+1, maxRetries, retryDelay, err)
-			select {
-			case <-ctx.Done():
-				return import1.TaskReference{}, fmt.Errorf("context cancelled while powering on VM: %v", ctx.Err())
-			case <-time.After(retryDelay):
-				// Continue to next retry
-			}
-		}
+// powerOnVM performs a single power-on API call. Retries are handled at the task layer in callForPowerOnVM.
+func powerOnVM(ctx context.Context, conn *vmm.Client, vmID *string) (import1.TaskReference, error) {
+	readResp, errR := conn.VMAPIInstance.GetVmById(vmID)
+	if errR != nil {
+		return import1.TaskReference{}, fmt.Errorf("error while fetching vm : %v", errR)
 	}
 
+	args := make(map[string]interface{})
+
+	args["If-Match"] = getEtagHeader(readResp, conn)
+
+	resp, err := conn.VMAPIInstance.PowerOnVm(vmID, args)
 	if err != nil {
-		return import1.TaskReference{}, fmt.Errorf("error while powering on Virtual Machine after %d attempts: %v", maxRetries, err)
+		return import1.TaskReference{}, fmt.Errorf("error powering on VM: %v", err)
 	}
 
 	taskRef, err := extractTaskReferenceFromResponse(resp)
@@ -3250,44 +3222,22 @@ func powerOnVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (im
 	return taskRef, nil
 }
 
-// powerOffVMWithRetry attempts to power off a VM with retry logic
-// It fetches the VM and ETag header for each retry attempt to ensure we have the latest ETag
-func powerOffVMWithRetry(ctx context.Context, conn *vmm.Client, vmID *string) (import1.TaskReference, error) {
-	maxRetries := 10
-	retryDelay := 2500 * time.Millisecond // 2.5 seconds
-	var resp interface{}
-	var err error
-
-	for attempt := 0; attempt < maxRetries; attempt++ {
-		// Fetch VM to get latest ETag for each retry attempt
-		readResp, errR := conn.VMAPIInstance.GetVmById(vmID)
-		if errR != nil {
-			return import1.TaskReference{}, fmt.Errorf("error while fetching vm : %v", errR)
-		}
-
-		// Build args with fresh ETag for this attempt
-		args := make(map[string]interface{})
-		args["If-Match"] = getEtagHeader(readResp, conn)
-
-		resp, err = conn.VMAPIInstance.PowerOffVm(vmID, args)
-		if err == nil {
-			break
-		}
-
-		if attempt < maxRetries {
-			log.Printf("[DEBUG] Attempt %d/%d failed to power off VM, retrying in %v: %v", attempt+1, maxRetries, retryDelay, err)
-			select {
-			case <-ctx.Done():
-				return import1.TaskReference{}, fmt.Errorf("context cancelled while powering off VM: %v", ctx.Err())
-			case <-time.After(retryDelay):
-				// Continue to next retry
-			}
-		}
+// powerOffVM performs a single power-off API call. Retries are handled at the task layer in callForPowerOffVM.
+func powerOffVM(ctx context.Context, conn *vmm.Client, vmID *string) (import1.TaskReference, error) {
+	readResp, errR := conn.VMAPIInstance.GetVmById(vmID)
+	if errR != nil {
+		return import1.TaskReference{}, fmt.Errorf("error while fetching vm : %v", errR)
 	}
 
+	args := make(map[string]interface{})
+
+	args["If-Match"] = getEtagHeader(readResp, conn)
+
+	resp, err := conn.VMAPIInstance.PowerOffVm(vmID, args)
 	if err != nil {
-		return import1.TaskReference{}, fmt.Errorf("error while powering off Virtual Machine after %d attempts: %v", maxRetries, err)
+		return import1.TaskReference{}, fmt.Errorf("error powering off VM: %v", err)
 	}
+
 	taskRef, err := extractTaskReferenceFromResponse(resp)
 	if err != nil {
 		return import1.TaskReference{}, fmt.Errorf("error extracting task reference from power off response: %v", err)
@@ -3315,78 +3265,161 @@ func flattenPowerState(pr *config.PowerState) string {
 	return "UNKNOWN"
 }
 
+const (
+	// maxPowerRetries is used for both API-layer retries (power-on/power-off call) and task-layer retries (wait for task).
+	maxPowerRetries     = 10
+	powerTaskRetryDelay = 5 * time.Second
+)
+
 func callForPowerOffVM(ctx context.Context, conn *vmm.Client, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	readResp, errR := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-	if errR != nil {
-		return diag.Errorf("error while reading vm : %v", errR)
-	}
-	// checking current state of VM
-	vmResp := readResp.Data.GetValue().(config.Vm)
-
-	if vmResp.PowerState.GetName() == "OFF" {
-		log.Printf("[DEBUG] VM is already in %s state", d.Get("power_state").(string))
-		return nil
-	}
-
-	// Power off the VM with retry logic (ETag is fetched inside the retry function)
-	TaskRef, err := powerOffVMWithRetry(ctx, conn, utils.StringPtr(d.Id()))
-	if err != nil {
-		return diag.Errorf("error while powering off Virtual Machine: %v", err)
-	}
-	taskUUID := TaskRef.ExtId
-
 	prismConn := meta.(*conns.Client).PrismAPI
+	var lastErr error
+	var taskUUID *string
 
-	// Wait for the task to complete
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
+	for taskAttempt := 0; taskAttempt < maxPowerRetries; taskAttempt++ {
+		readResp, errR := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+		if errR != nil {
+			return diag.Errorf("error while reading vm : %v", errR)
+		}
+		vmResp := readResp.Data.GetValue().(config.Vm)
+		currentPower := vmResp.PowerState.GetName()
+		log.Printf("[DEBUG] Power-off task attempt %d/%d: VM current power_state=%s", taskAttempt+1, maxPowerRetries, currentPower)
+		if currentPower == "OFF" {
+			log.Printf("[DEBUG] VM is already in OFF state")
+			return nil
+		}
 
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for virtual machine (%s) to power off: %s", utils.StringValue(taskUUID), errWaitTask)
+		TaskRef, err := powerOffVM(ctx, conn, utils.StringPtr(d.Id()))
+		if err != nil {
+			lastErr = err
+			if taskAttempt < maxPowerRetries-1 {
+				log.Printf("[DEBUG] Power-off API failed (attempt %d/%d), retrying in %v: %v",
+					taskAttempt+1, maxPowerRetries, powerTaskRetryDelay, err)
+				select {
+				case <-ctx.Done():
+					return diag.FromErr(ctx.Err())
+				case <-time.After(powerTaskRetryDelay):
+					continue
+				}
+			}
+			return diag.Errorf("error while powering off Virtual Machine after %d attempts: %v", maxPowerRetries, err)
+		}
+		taskUUID = TaskRef.ExtId
+
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutCreate),
+		}
+
+		_, errWaitTask := stateConf.WaitForStateContext(ctx)
+		if errWaitTask == nil {
+			log.Printf("[DEBUG] Power-off task reported SUCCEEDED for task %s; verifying VM power_state", utils.StringValue(taskUUID))
+			verifyResp, errV := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+			if errV != nil {
+				log.Printf("[DEBUG] Could not re-read VM after task success: %v", errV)
+				return nil
+			}
+			verifyVM := verifyResp.Data.GetValue().(config.Vm)
+			actualPower := verifyVM.PowerState.GetName()
+			log.Printf("[DEBUG] VM power_state after task: %s (expected OFF)", actualPower)
+			if actualPower != "OFF" {
+				log.Printf("[DEBUG] WARNING: Task reported SUCCEEDED but VM power_state is %s (expected OFF) - possible backend inconsistency or race", actualPower)
+			}
+			return nil
+		}
+		lastErr = errWaitTask
+		if taskAttempt < maxPowerRetries-1 {
+			log.Printf("[DEBUG] Power-off task failed or timed out (attempt %d/%d), retrying API call and task in %v: %v",
+				taskAttempt+1, maxPowerRetries, powerTaskRetryDelay, errWaitTask)
+			select {
+			case <-ctx.Done():
+				return diag.FromErr(ctx.Err())
+			case <-time.After(powerTaskRetryDelay):
+				// continue to next task retry
+			}
+		}
 	}
-	return nil
+	log.Printf("[DEBUG] Power-off failed after %d attempts; last error: %v", maxPowerRetries, lastErr)
+	return diag.Errorf("error waiting for virtual machine (%s) to power off after %d attempts: %s",
+		utils.StringValue(taskUUID), maxPowerRetries, lastErr)
 }
 
 func callForPowerOnVM(ctx context.Context, conn *vmm.Client, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	readResp, errR := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-	if errR != nil {
-		return diag.Errorf("error while reading vm : %v", errR)
-	}
-
-	vmResp := readResp.Data.GetValue().(config.Vm)
-
-	if vmResp.PowerState.GetName() == "ON" {
-		log.Printf("[DEBUG] VM is already in %s state", d.Get("power_state").(string))
-		return nil
-	}
-
-	// Power on the VM with retry logic (ETag is fetched inside the retry function)
-	TaskRef, err := powerOnVMWithRetry(ctx, conn, utils.StringPtr(d.Id()))
-	if err != nil {
-		return diag.Errorf("error while powering on Virtual Machine: %v", err)
-	}
-
-	log.Printf("[DEBUG] PowerOn Response: TaskReference ExtId: %s", utils.StringValue(TaskRef.ExtId))
-	taskUUID := TaskRef.ExtId
-
 	prismConn := meta.(*conns.Client).PrismAPI
+	var lastErr error
+	var taskUUID *string
 
-	// Wait for the task to complete
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
-	}
+	for taskAttempt := 0; taskAttempt < maxPowerRetries; taskAttempt++ {
+		readResp, errR := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+		if errR != nil {
+			return diag.Errorf("error while reading vm : %v", errR)
+		}
+		vmResp := readResp.Data.GetValue().(config.Vm)
+		currentPower := vmResp.PowerState.GetName()
+		log.Printf("[DEBUG] Power-on task attempt %d/%d: VM current power_state=%s", taskAttempt+1, maxPowerRetries, currentPower)
+		if currentPower == "ON" {
+			log.Printf("[DEBUG] VM is already in ON state")
+			return nil
+		}
 
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for virtual machine (%s) to power on: %s", utils.StringValue(taskUUID), errWaitTask)
+		TaskRef, err := powerOnVM(ctx, conn, utils.StringPtr(d.Id()))
+		if err != nil {
+			lastErr = err
+			if taskAttempt < maxPowerRetries-1 {
+				log.Printf("[DEBUG] Power-on API failed (attempt %d/%d), retrying in %v: %v",
+					taskAttempt+1, maxPowerRetries, powerTaskRetryDelay, err)
+				select {
+				case <-ctx.Done():
+					return diag.FromErr(ctx.Err())
+				case <-time.After(powerTaskRetryDelay):
+					continue
+				}
+			}
+			return diag.Errorf("error while powering on Virtual Machine after %d attempts: %v", maxPowerRetries, err)
+		}
+		taskUUID = TaskRef.ExtId
+		log.Printf("[DEBUG] PowerOn Response: TaskReference ExtId: %s (waiting for task)", utils.StringValue(taskUUID))
+
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutUpdate),
+		}
+
+		_, errWaitTask := stateConf.WaitForStateContext(ctx)
+		if errWaitTask == nil {
+			log.Printf("[DEBUG] Power-on task reported SUCCEEDED for task %s; verifying VM power_state", utils.StringValue(taskUUID))
+			verifyResp, errV := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+			if errV != nil {
+				log.Printf("[DEBUG] Could not re-read VM after task success: %v", errV)
+				return nil
+			}
+			verifyVM := verifyResp.Data.GetValue().(config.Vm)
+			actualPower := verifyVM.PowerState.GetName()
+			log.Printf("[DEBUG] VM power_state after task: %s (expected ON)", actualPower)
+			if actualPower != "ON" {
+				log.Printf("[DEBUG] WARNING: Task reported SUCCEEDED but VM power_state is %s (expected ON) - possible backend inconsistency or race", actualPower)
+			}
+			return nil
+		}
+		lastErr = errWaitTask
+		if taskAttempt < maxPowerRetries-1 {
+			log.Printf("[DEBUG] Power-on task failed or timed out (attempt %d/%d), retrying API call and task in %v: %v",
+				taskAttempt+1, maxPowerRetries, powerTaskRetryDelay, errWaitTask)
+			select {
+			case <-ctx.Done():
+				return diag.FromErr(ctx.Err())
+			case <-time.After(powerTaskRetryDelay):
+				// continue to next task retry
+			}
+		}
 	}
-	return nil
+	log.Printf("[DEBUG] Power-on failed after %d attempts; last error: %v", maxPowerRetries, lastErr)
+	return diag.Errorf("error waiting for virtual machine (%s) to power on after %d attempts: %s",
+		utils.StringValue(taskUUID), maxPowerRetries, lastErr)
 }
 
 func diffConfig(oldValue []interface{}, newValue []interface{}) ([]interface{}, []interface{}, []interface{}) {
