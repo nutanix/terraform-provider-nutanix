@@ -22,21 +22,22 @@ data "nutanix_resource_group_v2" "example" {
 
 The following arguments are supported:
 
-* `ext_id` - (Required) The external identifier of the resource group.
+* `ext_id`:- (Required) The external identifier of the resource group.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `name` - Name of the resource group.
-* `project_ext_id` - External identifier of the project this resource group belongs to.
-* `tenant_id` - A globally unique identifier that represents the tenant that owns this entity.
-* `created_by` - User who created the resource group.
-* `last_updated_by` - User who last updated the resource group.
-* `create_time` - Creation time (RFC3339).
-* `last_update_time` - Last update time (RFC3339).
-* `placement_targets` - List of placement targets (cluster and storage containers).
-* `links` - A HATEOAS style link for the response.
+* `name`:- Name of the resource group.
+* `project_ext_id`:- External identifier of the project this resource group belongs to.
+* `tenant_id`:- A globally unique identifier that represents the tenant that owns this entity.
+* `created_by`:- User who created the resource group.
+* `last_updated_by`:- User who last updated the resource group.
+* `create_time`:- Creation time (RFC3339).
+* `last_update_time`:- Last update time (RFC3339).
+* `placement_targets`:- List of placement targets (cluster and storage containers).
+* `capabilities`:- List of Capabilities and features for this Resource Group.
+* `links`:- A HATEOAS style link for the response.
 
 ## Placement Targets
 
@@ -44,15 +45,25 @@ The `placement_targets` attribute supports the following:
 
 * `cluster_ext_id`:- UUID of the AOS cluster.
 * `storage_containers`:- List of storage containers available for this cluster target.
+* `capabilities`:- Capabilities and features available at this Placement Target.
 
 ## Storage Containers
 
 The `storage_containers` attribute supports the following:
+
 * `ext_id`:- UUID of the storage container.
+* `capabilities`:- Capabilities and features of the storage container.
+
+## Capabilities
+
+The `capabilities` attribute supports the following:
+
+* `name`:- The key of the key-value pair.
+* `value`:- The value associated with the key for this key-value pair.
 
 ## Links
 
 The `links` attribute supports the following:
 
-* `href` - The URL at which the entity described by the link can be accessed.
-* `rel` - A name that identifies the relationship of the link to the object.
+* `href`:- The URL at which the entity described by the link can be accessed.
+* `rel`:- A name that identifies the relationship of the link to the object.

@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/models/multidomain/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/models/common/v1/config"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/models/multidomain/v4/request/resourcegroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -52,7 +53,27 @@ func DatasourceNutanixResourceGroupV2() *schema.Resource {
 				Computed: true,
 				Elem:     schemaDatasourceResourceGroupPlacementTargets(),
 			},
+			"capabilities": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: capabilitiesSchema(),
+			},
 			"links": schemaForLinks(),
+		},
+	}
+}
+
+func capabilitiesSchema() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"value": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -73,8 +94,18 @@ func schemaDatasourceResourceGroupPlacementTargets() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"capabilities": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: capabilitiesSchema(),
+						},
 					},
 				},
+			},
+			"capabilities": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: capabilitiesSchema(),
 			},
 		},
 	}
@@ -121,7 +152,10 @@ func DatasourceNutanixResourceGroupV2Read(ctx context.Context, d *schema.Resourc
 			return diag.FromErr(err)
 		}
 	}
-	if err := d.Set("placement_targets", flattenResourceGroupPlacementTargets(rg.PlacementTargets)); err != nil {
+	if err := d.Set("placement_targets", flattenResourceGroupPlacementTargetsIncludingCapabilities(rg.PlacementTargets)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("capabilities", flattenResourceGroupCapabilities(rg.Capabilities)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("links", flattenLinks(rg.Links)); err != nil {
@@ -132,7 +166,7 @@ func DatasourceNutanixResourceGroupV2Read(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func flattenResourceGroupPlacementTargets(targets []config.TargetDetails) []map[string]interface{} {
+func flattenResourceGroupPlacementTargetsIncludingCapabilities(targets []config.TargetDetails) []map[string]interface{} {
 	if len(targets) == 0 {
 		return []map[string]interface{}{}
 	}
@@ -140,14 +174,15 @@ func flattenResourceGroupPlacementTargets(targets []config.TargetDetails) []map[
 	for _, t := range targets {
 		m := map[string]interface{}{
 			"cluster_ext_id":     utils.StringValue(t.ClusterExtId),
-			"storage_containers": flattenResourceGroupStorageContainers(t.StorageContainers),
+			"storage_containers": flattenResourceGroupStorageContainersIncludingCapabilities(t.StorageContainers),
+			"capabilities":       flattenResourceGroupCapabilities(t.Capabilities),
 		}
 		out = append(out, m)
 	}
 	return out
 }
 
-func flattenResourceGroupStorageContainers(containers []config.StorageContainerDetails) []map[string]interface{} {
+func flattenResourceGroupStorageContainersIncludingCapabilities(containers []config.StorageContainerDetails) []map[string]interface{} {
 	if len(containers) == 0 {
 		return []map[string]interface{}{}
 	}
@@ -155,6 +190,21 @@ func flattenResourceGroupStorageContainers(containers []config.StorageContainerD
 	for _, c := range containers {
 		out = append(out, map[string]interface{}{
 			"ext_id": utils.StringValue(c.ExtId),
+			"capabilities": flattenResourceGroupCapabilities(c.Capabilities),
+		})
+	}
+	return out
+}
+
+func flattenResourceGroupCapabilities(capabilities []import2.KVPair) []map[string]interface{} {
+	if len(capabilities) == 0 {
+		return []map[string]interface{}{}
+	}
+	out := make([]map[string]interface{}, 0, len(capabilities))
+	for _, c := range capabilities {
+		out = append(out, map[string]interface{}{
+			"name": utils.StringValue(c.Name),
+			"value": c.Value.GetValue(),
 		})
 	}
 	return out

@@ -188,43 +188,48 @@ func ResourceNutanixResourceGroupV2Read(ctx context.Context, d *schema.ResourceD
 
 func ResourceNutanixResourceGroupV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MultidomainAPI
-
-	body := config.NewResourceGroup()
-	if v, ok := d.GetOk("name"); ok {
-		body.Name = utils.StringPtr(v.(string))
-	}
-	if v, ok := d.GetOk("project_ext_id"); ok {
-		body.ProjectExtId = utils.StringPtr(v.(string))
-	}
-	if v, ok := d.GetOk("tenant_id"); ok {
-		body.TenantId = utils.StringPtr(v.(string))
-	}
-	if v, ok := d.GetOk("placement_targets"); ok {
-		body.PlacementTargets = expandResourceGroupPlacementTargets(v.([]interface{}))
-	}
-
-	updateReq := import1.UpdateResourceGroupByIdRequest{
-		ExtId: utils.StringPtr(d.Id()),
-		Body:  body,
-	}
-
+  
 	extID := d.Id()
 	getReq := import1.GetResourceGroupByIdRequest{
 		ExtId: utils.StringPtr(extID),
 	}
-	getResp, err := conn.ResourceGroups.GetResourceGroupById(ctx, &getReq)
+	resp, err := conn.ResourceGroups.GetResourceGroupById(ctx, &getReq)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	updateSpec := resp.Data.GetValue().(config.ResourceGroup)
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
+	if d.HasChange("name") {
+		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
+	}
+	if d.HasChange("placement_targets") {
+		updateSpec.PlacementTargets = expandResourceGroupPlacementTargets(d.Get("placement_targets").([]interface{}))
+	}
+
+	updateReq := import1.UpdateResourceGroupByIdRequest{
+		ExtId: utils.StringPtr(extID),
+		Body:  &updateSpec,
+	}
+
+
+	getRespBeforeUpdate, err := conn.ResourceGroups.GetResourceGroupById(ctx, &getReq)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	args := make(map[string]interface{})
-	etagValue := conn.APIClientInstance.GetEtag(getResp)
+	etagValue := conn.APIClientInstance.GetEtag(getRespBeforeUpdate)
 	args["If-Match"] = utils.StringPtr(etagValue)
 
-	aJSON, _ := json.MarshalIndent(body, "", "  ")
+	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
 	log.Printf("[DEBUG] Update ResourceGroup Body: %s", string(aJSON))
-	resp, err := conn.ResourceGroups.UpdateResourceGroupById(ctx, &updateReq, args)
+	updateResp, err := conn.ResourceGroups.UpdateResourceGroupById(ctx, &updateReq, args)
 	if err != nil {
 		return diag.Errorf("error updating ResourceGroup: %v", err)
 	}
 
-	taskRef, ok := resp.Data.GetValue().(multidomainPrism.TaskReference)
+	taskRef, ok := updateResp.Data.GetValue().(multidomainPrism.TaskReference)
 	if !ok {
 		return diag.Errorf("update resource group response did not contain task reference")
 	}
@@ -349,4 +354,32 @@ func schemaResourceGroupPlacementTargets() *schema.Resource {
 			},
 		},
 	}
+}
+
+func flattenResourceGroupPlacementTargets(targets []config.TargetDetails) []map[string]interface{} {
+	if len(targets) == 0 {
+		return []map[string]interface{}{}
+	}
+	out := make([]map[string]interface{}, 0, len(targets))
+	for _, t := range targets {
+		m := map[string]interface{}{
+			"cluster_ext_id":     utils.StringValue(t.ClusterExtId),
+			"storage_containers": flattenResourceGroupStorageContainers(t.StorageContainers),
+		}
+		out = append(out, m)
+	}
+	return out
+}
+
+func flattenResourceGroupStorageContainers(containers []config.StorageContainerDetails) []map[string]interface{} {
+	if len(containers) == 0 {
+		return []map[string]interface{}{}
+	}
+	out := make([]map[string]interface{}, 0, len(containers))
+	for _, c := range containers {
+		out = append(out, map[string]interface{}{
+			"ext_id": utils.StringValue(c.ExtId),
+		})
+	}
+	return out
 }

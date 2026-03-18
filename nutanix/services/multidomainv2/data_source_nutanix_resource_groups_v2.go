@@ -102,8 +102,9 @@ func flattenResourceGroups(resourceGroups []config.ResourceGroup) []map[string]i
 			"tenant_id":          utils.StringValue(rg.TenantId),
 			"created_by":         utils.StringValue(rg.CreatedBy),
 			"last_updated_by":    utils.StringValue(rg.LastUpdatedBy),
-			"placement_targets":  flattenResourceGroupPlacementTargets(rg.PlacementTargets),
+			"placement_targets":  flattenResourceGroupPlacementTargetsIncludingCapabilities(rg.PlacementTargets),
 			"links":              flattenLinks(rg.Links),
+			"capabilities":       flattenResourceGroupCapabilities(rg.Capabilities),
 		}
 		if rg.CreateTime != nil {
 			m["create_time"] = rg.CreateTime.Format("2006-01-02T15:04:05Z07:00")

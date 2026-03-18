@@ -60,6 +60,7 @@ The `resource_groups` attribute is a list of resource group objects. Each resour
 * `create_time`:- Creation time (RFC3339).
 * `last_update_time`:- Last update time (RFC3339).
 * `placement_targets`:- List of placement targets.
+* `capabilities`:- List of Capabilities and features for this Resource Group.
 * `links`:- A HATEOAS style link for the response.
 
 ## Placement Targets
@@ -68,11 +69,21 @@ The `placement_targets` attribute supports the following:
 
 * `cluster_ext_id`:- UUID of the AOS cluster.
 * `storage_containers`:- List of storage containers available for this cluster target.
+* `capabilities`:- Capabilities and features available at this Placement Target.
 
 ## Storage Containers
 
 The `storage_containers` attribute supports the following:
+
 * `ext_id`:- UUID of the storage container.
+* `capabilities`:- Capabilities and features of the storage container.
+
+## Capabilities
+
+The `capabilities` attribute supports the following:
+
+* `name`:- The key of the key-value pair.
+* `value`:- The value associated with the key for this key-value pair.
 
 ## Links
 
