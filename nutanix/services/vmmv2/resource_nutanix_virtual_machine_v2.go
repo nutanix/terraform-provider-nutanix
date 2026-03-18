@@ -3206,7 +3206,7 @@ func powerOnVM(ctx context.Context, conn *vmm.Client, vmID *string) (import1.Tas
 	}
 
 	args := make(map[string]interface{})
-   
+
 	args["If-Match"] = getEtagHeader(readResp, conn)
 
 	resp, err := conn.VMAPIInstance.PowerOnVm(vmID, args)
