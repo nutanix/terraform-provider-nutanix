@@ -19,6 +19,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iamv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/lcmv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/multidomainv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/ndb"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networkingv2"
@@ -331,6 +332,10 @@ func Provider() *schema.Provider {
 			"nutanix_key_management_server_v2":                securityv2.DatasourceNutanixKeyManagementServerV2(),
 			"nutanix_key_management_servers_v2":               securityv2.DatasourceNutanixKeyManagementServersV2(),
 			"nutanix_stigs_v2":                                securityv2.DatasourceNutanixStigsControlsV2(),
+			"nutanix_project_v2":                              multidomainv2.DatasourceNutanixProjectV2(),
+			"nutanix_projects_v2":                             multidomainv2.DatasourceNutanixProjectsV2(),
+			"nutanix_resource_group_v2":                      multidomainv2.DatasourceNutanixResourceGroupV2(),
+			"nutanix_resource_groups_v2":                     multidomainv2.DatasourceNutanixResourceGroupsV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
@@ -458,6 +463,8 @@ func Provider() *schema.Provider {
 			"nutanix_object_store_v2":                         objectstoresv2.ResourceNutanixObjectStoresV2(),
 			"nutanix_object_store_certificate_v2":             objectstoresv2.ResourceNutanixObjectStoreCertificateV2(),
 			"nutanix_key_management_server_v2":                securityv2.ResourceNutanixKeyManagementServerV2(),
+			"nutanix_project_v2":                              multidomainv2.ResourceNutanixProjectV2(),
+			"nutanix_resource_group_v2":                      multidomainv2.ResourceNutanixResourceGroupV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

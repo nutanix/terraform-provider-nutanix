@@ -32,6 +32,8 @@ const (
 	RelEntityTypeKMS                    = "security:encryption:key-management-server"
 	RelEntityTypeClusterProfile         = "clustermgmt:config:cluster-profile"
 	RelEntityTypeDomainManager          = "prism:config:domain_manager"
+	RelEntityTypeProject                = "multidomain:config:Project"
+	RelEntityTypeResourceGroup          = "multidomain:config:nutanix-resource-group"
 )
 
 // CompletionDetailsName constants - Completion details name for the task entities affected
@@ -41,4 +43,6 @@ const (
 	CompletionDetailsNameVMExtIDs         = "vmExtIds"
 	CompletionDetailsNameVGExtIDs         = "volumeGroupExtIds"
 	CompletionDetailsNameProtectionPolicy = "protectionPolicyExtId"
+	CompletionDetailsNameProject         = "projectExtId"
+	CompletionDetailsNameResourceGroup   = "resourceGroupExtId"
 )
