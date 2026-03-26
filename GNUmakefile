@@ -59,6 +59,7 @@ acc-test:
 				v4) pattern="TestAccV2Nutanix*" ;; \
 				lcm) pattern="TestAccV2NutanixLcm*" ;; \
 				era) pattern="TestAccEra*" ;; \
+				fmt|fmtcheck|lint|tools|build|test) continue ;; \
 				*) pattern="$$arg" ;; \
 			esac; \
 			if [ -n "$$run_flag" ]; then \
@@ -81,16 +82,13 @@ acc-test:
 			"$(CURDIR)/scripts/acc-test-summary.sh" "$$logfile"; \
 		fi'
 	@echo "==> Log file: $(ACC_TEST_LOG)"
-# Dummy target so "make acc-test v4" etc. do not fail (arguments are consumed)
-%: acc-test
-	@true
 
+# Format and check targets: defined before the % pattern so "make fmt" runs only fmt, not acc-test.
 fmt:
 	@echo "==> Fixing source code with gofmt..."
 	goimports -w ./$(PKG_NAME)
 	goimports -w ./client
 	goimports -w ./utils
-
 
 fmtcheck:
 	@echo "Running fmtcheck"

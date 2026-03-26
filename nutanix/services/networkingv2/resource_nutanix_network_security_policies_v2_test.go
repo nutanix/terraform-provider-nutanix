@@ -141,6 +141,111 @@ func TestAccV2NutanixNetworkSecurityResource_InvalidExtIDReference(t *testing.T)
 	})
 }
 
+// TestAccV2NutanixNetworkSecurityResource_WithNetworkFunctionReference creates a network
+// function (with prerequisites), then creates an NSP with an APPLICATION rule that
+// references it via network_function_reference.
+func TestAccV2NutanixNetworkSecurityResource_WithNetworkFunctionReference(t *testing.T) {
+	r := acctest.RandInt()
+	subnetName := fmt.Sprintf("tf-test-subnet-nsp-nf-%d", r)
+	vm1Name := fmt.Sprintf("tf-test-vm-1-nsp-nf-%d", r)
+	vm2Name := fmt.Sprintf("tf-test-vm-2-nsp-nf-%d", r)
+	nfName := fmt.Sprintf("tf-test-nf-nsp-%d", r)
+	nspName := fmt.Sprintf("tf-test-nsp-nf-%d", r)
+	nspDesc := "NSP with network_function_reference"
+
+	// Use prerequisites without VM postcondition so we don't wait for DHCP on the VM NORMAL_NIC.
+	config := testAccNetworkFunctionV2ConfigPrerequisitesNoPostcondition(subnetName, vm1Name, vm2Name) +
+		testAccNetworkFunctionV2EgressIngressConfig(nfName) +
+		testAccNSPWithNetworkFunctionReferenceConfig(nspName, nspDesc)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNetworkFunctionResourcesDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameNs, "ext_id"),
+					resource.TestCheckResourceAttr(resourceNameNs, "name", nspName),
+					resource.TestCheckResourceAttr(resourceNameNs, "description", nspDesc),
+					resource.TestCheckResourceAttr(resourceNameNs, "type", "APPLICATION"),
+					resource.TestCheckResourceAttr(resourceNameNs, "state", "SAVE"),
+					resource.TestCheckResourceAttrPair(
+						resourceNameNs,
+						"rules.0.spec.0.application_rule_spec.0.network_function_reference",
+						"nutanix_network_function_v2.ntf-1",
+						"ext_id",
+					),
+					resource.TestCheckResourceAttrSet(resourceNameNs, "rules.0.spec.0.application_rule_spec.0.secured_group_category_references.#"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccV2NutanixNetworkSecurityResource_ServiceInsertion creates a network function (with
+// prerequisites), then creates an NSP matching the v4 Service Insertion pattern: APPLICATION
+// policy with scope ALL_VLAN, state ENFORCE, and two APPLICATION rules (outbound + inbound)
+// so direction is mutually exclusive per rule: Rule 1 = Secured (Web) -> Dest (DB) via NF,
+// Rule 2 = Src (DB) -> Secured (Web) via NF.
+func TestAccV2NutanixNetworkSecurityResource_ServiceInsertion(t *testing.T) {
+	r := acctest.RandInt()
+	subnetName := fmt.Sprintf("tf-test-subnet-nsp-si-%d", r)
+	vm1Name := fmt.Sprintf("tf-test-vm-1-nsp-si-%d", r)
+	vm2Name := fmt.Sprintf("tf-test-vm-2-nsp-si-%d", r)
+	nfName := fmt.Sprintf("tf-test-nf-nsp-si-%d", r)
+	nspName := fmt.Sprintf("tf-test-nsp-si-%d", r)
+	nspDesc := "Redirects traffic between Web and DB tiers through a Network Function"
+
+	config := testAccNetworkFunctionV2ConfigPrerequisitesNoPostcondition(subnetName, vm1Name, vm2Name) +
+		testAccNetworkFunctionV2EgressIngressConfig(nfName) +
+		testAccNSPServiceInsertionConfig(nspName, nspDesc)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNetworkFunctionResourcesDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameNs, "ext_id"),
+					resource.TestCheckResourceAttr(resourceNameNs, "name", nspName),
+					resource.TestCheckResourceAttr(resourceNameNs, "description", nspDesc),
+					resource.TestCheckResourceAttr(resourceNameNs, "type", "APPLICATION"),
+					resource.TestCheckResourceAttr(resourceNameNs, "state", "ENFORCE"),
+					resource.TestCheckResourceAttr(resourceNameNs, "scope", "ALL_VLAN"),
+					resource.TestCheckResourceAttr(resourceNameNs, "is_ipv6_traffic_allowed", "false"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.#", "2"),
+					// Rule 0: Outbound (Secured -> Dest via NF)
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.description", "OUTBOUND: Traffic from Web (Secured) -> DB"),
+					resource.TestCheckResourceAttrSet(resourceNameNs, "rules.0.spec.0.application_rule_spec.0.secured_group_category_references.#"),
+					resource.TestCheckResourceAttrSet(resourceNameNs, "rules.0.spec.0.application_rule_spec.0.dest_category_references.#"),
+					resource.TestCheckResourceAttrPair(
+						resourceNameNs,
+						"rules.0.spec.0.application_rule_spec.0.network_function_reference",
+						"nutanix_network_function_v2.ntf-1",
+						"ext_id",
+					),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.spec.0.application_rule_spec.0.is_all_protocol_allowed", "true"),
+					// Rule 1: Inbound (Src -> Secured via NF)
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.1.description", "INBOUND: Traffic from DB -> Web (Secured)"),
+					resource.TestCheckResourceAttrSet(resourceNameNs, "rules.1.spec.0.application_rule_spec.0.secured_group_category_references.#"),
+					resource.TestCheckResourceAttrSet(resourceNameNs, "rules.1.spec.0.application_rule_spec.0.src_category_references.#"),
+					resource.TestCheckResourceAttrPair(
+						resourceNameNs,
+						"rules.1.spec.0.application_rule_spec.0.network_function_reference",
+						"nutanix_network_function_v2.ntf-1",
+						"ext_id",
+					),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.1.spec.0.application_rule_spec.0.is_all_protocol_allowed", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccV2NutanixNetworkSecurityResource_WithApplicationAndInfraGroupRules(t *testing.T) {
 	r := acctest.RandIntRange(1, 1000)
 	name := fmt.Sprintf("tf-test-nsp-%d", r)
@@ -190,6 +295,34 @@ func TestAccV2NutanixNetworkSecurityResource_WithApplicationAndInfraGroupRules(t
 					resource.TestCheckResourceAttr(resourceNameNs, "rules.10.spec.0.application_rule_spec.0.tcp_services.4.start_port", "5985"),
 					resource.TestCheckResourceAttr(resourceNameNs, "rules.10.spec.0.application_rule_spec.0.src_allow_spec", "ALL"),
 					resource.TestCheckResourceAttr(resourceNameNs, "rules.10.type", "APPLICATION"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccV2NutanixNSPDataSource_NewAttributes creates all dependent resources
+// (clusters, subnet, vpc, categories) and an APPLICATION policy with APPLICATION
+// and INTRA_GROUP rules only (application policies do not allow MULTI_ENV_ISOLATION),
+// then verifies the data source returns the new computed attributes.
+func TestAccV2NutanixNSPDataSource_NewAttributes(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-nsp-ds-%d", r)
+	desc := "test nsp data source new attributes"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNspDataSourceConfigWithNewAttributes(name, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameNsp, "name"),
+					resource.TestCheckResourceAttr(datasourceNameNsp, "name", name),
+					resource.TestCheckResourceAttrSet(datasourceNameNsp, "rules.#"),
+					// APPLICATION policies may return extra default rules; rule order is not guaranteed.
+					// Scan all rules for our expected content (new schema attributes are present when API returns them).
+					testAccCheckNutanixNSPDataSourceRulesContainExpectedContent(datasourceNameNsp),
 				),
 			},
 		},
@@ -1001,4 +1134,208 @@ resource "nutanix_network_security_policy_v2" "test" {
 
 
 `, name, desc)
+}
+
+// testAccNspDataSourceConfigWithNewAttributes creates clusters, subnet, vpc, categories,
+// an APPLICATION policy with APPLICATION (with tcp_services) and INTRA_GROUP rules,
+// and the data source to exercise the new computed attributes.
+func testAccNspDataSourceConfigWithNewAttributes(name, desc string) string {
+	return fmt.Sprintf(`
+	data "nutanix_clusters_v2" "clusters" {}
+
+	locals {
+		cluster0 = [
+		  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+		  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
+	}
+
+	resource "nutanix_subnet_v2" "test" {
+		name             = "tf-test-subnet-ds-%[1]s"
+		description      = "test subnet for nsp data source"
+		cluster_reference = local.cluster0
+		subnet_type      = "VLAN"
+		network_id       = 113
+		is_external      = true
+		ip_config {
+			ipv4 {
+				ip_subnet {
+					ip {
+						value = "192.168.0.0"
+					}
+					prefix_length = 24
+				}
+				default_gateway_ip {
+					value = "192.168.0.1"
+				}
+				pool_list {
+					start_ip {
+						value = "192.168.0.20"
+					}
+					end_ip {
+						value = "192.168.0.30"
+					}
+				}
+			}
+		}
+		depends_on = [data.nutanix_clusters_v2.clusters]
+	}
+
+	resource "nutanix_vpc_v2" "test" {
+		name        = "tf-test-vpc-ds-%[1]s"
+		description = "%[2]s"
+		external_subnets {
+			subnet_reference = nutanix_subnet_v2.test.id
+		}
+		depends_on = [nutanix_subnet_v2.test]
+	}
+
+	data "nutanix_categories_v2" "test" {}
+
+	resource "nutanix_network_security_policy_v2" "test" {
+		name        = "%[1]s"
+		description = "%[2]s"
+		type        = "APPLICATION"
+		state       = "SAVE"
+		rules {
+			description = "app rule with tcp"
+			type        = "APPLICATION"
+			spec {
+				application_rule_spec {
+					secured_group_category_references = [
+						data.nutanix_categories_v2.test.categories[0].ext_id,
+						data.nutanix_categories_v2.test.categories[1].ext_id,
+					]
+					src_category_references = [data.nutanix_categories_v2.test.categories[2].ext_id]
+					src_subnet {
+						value         = "192.168.0.0"
+						prefix_length = 24
+					}
+					src_allow_spec          = "NONE"
+					is_all_protocol_allowed = false
+					tcp_services {
+						start_port = 22
+						end_port   = 22
+					}
+				}
+			}
+		}
+		rules {
+			description = "app rule with dest subnet"
+			type        = "APPLICATION"
+			spec {
+				application_rule_spec {
+					secured_group_category_references = [
+						data.nutanix_categories_v2.test.categories[3].ext_id,
+						data.nutanix_categories_v2.test.categories[4].ext_id,
+					]
+					dest_category_references = [data.nutanix_categories_v2.test.categories[5].ext_id]
+					dest_subnet {
+						value         = "192.68.0.0"
+						prefix_length = 20
+					}
+					is_all_protocol_allowed = true
+				}
+			}
+		}
+		rules {
+			description = "intra group rule"
+			type        = "INTRA_GROUP"
+			spec {
+				intra_entity_group_rule_spec {
+					secured_group_category_references = [
+						data.nutanix_categories_v2.test.categories[6].ext_id,
+						data.nutanix_categories_v2.test.categories[7].ext_id,
+					]
+					secured_group_action = "ALLOW"
+				}
+			}
+		}
+		vpc_reference   = [nutanix_vpc_v2.test.id]
+		is_hitlog_enabled = false
+		depends_on       = [nutanix_vpc_v2.test, data.nutanix_categories_v2.test]
+	}
+
+	data "nutanix_network_security_policy_v2" "test" {
+		ext_id     = nutanix_network_security_policy_v2.test.ext_id
+		depends_on = [nutanix_network_security_policy_v2.test]
+	}
+	`, name, desc)
+}
+
+// testAccNSPWithNetworkFunctionReferenceConfig returns an NSP with one APPLICATION rule
+// that references nutanix_network_function_v2.ntf-1 via network_function_reference.
+func testAccNSPWithNetworkFunctionReferenceConfig(name, desc string) string {
+	return fmt.Sprintf(`
+	data "nutanix_categories_v2" "test" {}
+
+	resource "nutanix_network_security_policy_v2" "test" {
+		name        = "%[1]s"
+		description = "%[2]s"
+		type        = "APPLICATION"
+		state       = "SAVE"
+		rules {
+			description = "application rule with network function"
+			type        = "APPLICATION"
+			spec {
+				application_rule_spec {
+					secured_group_category_references = [
+						data.nutanix_categories_v2.test.categories[0].ext_id,
+					]
+					network_function_reference = nutanix_network_function_v2.ntf-1.ext_id
+					is_all_protocol_allowed    = true
+					dest_allow_spec           = "ALL"
+				}
+			}
+		}
+		depends_on = [nutanix_network_function_v2.ntf-1, data.nutanix_categories_v2.test]
+	}
+	`, name, desc)
+}
+
+// testAccNSPServiceInsertionConfig returns an NSP with bidirectional Service Insertion: two
+// APPLICATION rules so direction is mutually exclusive (API MIC-30108). Secured Group = Web (cat0),
+// other tier = DB (cat1). Rule 1 = Outbound (Secured -> Dest), Rule 2 = Inbound (Src -> Secured).
+func testAccNSPServiceInsertionConfig(name, desc string) string {
+	return fmt.Sprintf(`
+	data "nutanix_categories_v2" "test" {}
+
+	resource "nutanix_network_security_policy_v2" "test" {
+		name                    = "%[1]s"
+		description             = "%[2]s"
+		type                    = "APPLICATION"
+		state                   = "ENFORCE"
+		scope                   = "ALL_VLAN"
+		is_ipv6_traffic_allowed = false
+		rules {
+			description = "OUTBOUND: Traffic from Web (Secured) -> DB"
+			type        = "APPLICATION"
+			spec {
+				application_rule_spec {
+					secured_group_category_references = [
+						data.nutanix_categories_v2.test.categories[0].ext_id,
+					]
+					dest_category_references     = [data.nutanix_categories_v2.test.categories[1].ext_id]
+					network_function_reference   = nutanix_network_function_v2.ntf-1.ext_id
+					is_all_protocol_allowed      = true
+				}
+			}
+		}
+		rules {
+			description = "INBOUND: Traffic from DB -> Web (Secured)"
+			type        = "APPLICATION"
+			spec {
+				application_rule_spec {
+					secured_group_category_references = [
+						data.nutanix_categories_v2.test.categories[0].ext_id,
+					]
+					src_category_references       = [data.nutanix_categories_v2.test.categories[1].ext_id]
+					network_function_reference   = nutanix_network_function_v2.ntf-1.ext_id
+					is_all_protocol_allowed      = true
+				}
+			}
+		}
+		depends_on = [nutanix_network_function_v2.ntf-1, data.nutanix_categories_v2.test]
+	}
+	`, name, desc)
 }
