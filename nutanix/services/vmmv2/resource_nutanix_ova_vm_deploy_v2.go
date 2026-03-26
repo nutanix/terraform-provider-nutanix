@@ -2,11 +2,16 @@ package vmmv2
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	import4 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	import3 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
@@ -15,41 +20,70 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+const (
+	ovaVMDeployTimeout = 30 * time.Minute
+)
+
 func ResourceNutanixOvaVMDeploymentV2() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: ResourceNutanixOvaVMDeploymentCreate,
 		ReadContext:   ResourceNutanixOvaVMDeploymentRead,
 		UpdateContext: ResourceNutanixOvaVMDeploymentUpdate,
 		DeleteContext: ResourceNutanixOvaVMDeploymentDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(ovaVMDeployTimeout),
+			Update: schema.DefaultTimeout(ovaVMDeployTimeout),
+			Delete: schema.DefaultTimeout(ovaVMDeployTimeout),
+		},
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The globally unique identifier of the OVA image to deploy VM from.",
 			},
 			"override_vm_config": {
-				Type:     schema.TypeList,
-				Required: true,
+				Type:        schema.TypeList,
+				Required:    true,
+				MaxItems:    1,
+				Description: "Override VM configuration parameters when deploying from OVA.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Name of the VM to be deployed from OVA.",
 						},
 						"num_sockets": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Description:  "Number of sockets for the VM CPU configuration.",
+							ValidateFunc: validation.IntAtLeast(1),
 						},
 						"num_cores_per_socket": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Description:  "Number of cores per socket for the VM CPU configuration.",
+							ValidateFunc: validation.IntAtLeast(1),
 						},
 						"num_threads_per_core": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Description:  "Number of threads per core for the VM CPU configuration.",
+							ValidateFunc: validation.IntAtLeast(1),
 						},
 						"memory_size_bytes": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Description:  "Memory size of the VM in bytes.",
+							ValidateFunc: validation.IntAtLeast(1),
+						},
+						"power_state": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "ON",
+							Description:  "Power state of the VM (ON or OFF).",
+							ValidateFunc: validation.StringInSlice([]string{"ON", "OFF"}, false),
 						},
 						"nics": {
 							Type:     schema.TypeList,
@@ -210,6 +244,199 @@ func ResourceNutanixOvaVMDeploymentV2() *schema.Resource {
 								},
 							},
 						},
+						"disks": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Computed:    true,
+							Description: "Additional disks to attach to the VM.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ext_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"disk_address": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"bus_type": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														"SCSI", "SPAPR", "PCI",
+														"IDE", "SATA",
+													}, false),
+												},
+												"index": {
+													Type:     schema.TypeInt,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"backing_info": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"vm_disk": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"disk_ext_id": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+															"disk_size_bytes": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"storage_container": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"ext_id": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+															"storage_config": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"is_flash_mode_enabled": {
+																			Type:     schema.TypeBool,
+																			Optional: true,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+															"data_source": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"reference": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			Computed: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"image_reference": {
+																						Type:     schema.TypeList,
+																						Optional: true,
+																						Computed: true,
+																						Elem: &schema.Resource{
+																							Schema: map[string]*schema.Schema{
+																								"image_ext_id": {
+																									Type:     schema.TypeString,
+																									Optional: true,
+																									Computed: true,
+																								},
+																							},
+																						},
+																					},
+																					"vm_disk_reference": {
+																						Type:     schema.TypeList,
+																						Optional: true,
+																						Computed: true,
+																						Elem: &schema.Resource{
+																							Schema: map[string]*schema.Schema{
+																								"disk_ext_id": {
+																									Type:     schema.TypeString,
+																									Optional: true,
+																									Computed: true,
+																								},
+																								"disk_address": {
+																									Type:     schema.TypeList,
+																									Optional: true,
+																									Computed: true,
+																									Elem: &schema.Resource{
+																										Schema: map[string]*schema.Schema{
+																											"bus_type": {
+																												Type:     schema.TypeString,
+																												Optional: true,
+																												Computed: true,
+																												ValidateFunc: validation.StringInSlice([]string{
+																													"SCSI", "SPAPR", "PCI",
+																													"IDE", "SATA",
+																												}, false),
+																											},
+																											"index": {
+																												Type:     schema.TypeInt,
+																												Optional: true,
+																												Computed: true,
+																											},
+																										},
+																									},
+																								},
+																								"vm_reference": {
+																									Type:     schema.TypeList,
+																									Optional: true,
+																									Computed: true,
+																									Elem: &schema.Resource{
+																										Schema: map[string]*schema.Schema{
+																											"ext_id": {
+																												Type:     schema.TypeString,
+																												Optional: true,
+																												Computed: true,
+																											},
+																										},
+																									},
+																								},
+																							},
+																						},
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+															"is_migration_in_progress": {
+																Type:     schema.TypeBool,
+																Computed: true,
+															},
+														},
+													},
+												},
+												"adfs_volume_group_reference": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"volume_group_ext_id": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -251,15 +478,12 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 				mem := int64(v)
 				overrideSpec.MemorySizeBytes = &mem
 			}
-			// Handle categories
 			if cats, ok := ovm["categories"]; ok {
 				overrideSpec.Categories = expandCategoryReference(cats.([]interface{}))
 			}
-			// Handle nics
 			if nics, ok := ovm["nics"]; ok {
-				overrideSpec.Nics = expandNic(nics.([]interface{}))
+				overrideSpec.Nics = expandNic(nics.([]interface{}), nil, "")
 			}
-			// Handle cd_roms
 			if cdroms, ok := ovm["cd_roms"]; ok {
 				overrideSpec.CdRoms = expandCdRom(cdroms.([]interface{}))
 			}
@@ -267,13 +491,16 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 		}
 	}
 
+	log.Printf("[DEBUG] Calling DeployOva API with OVA ext_id: %s", extID)
 	resp, err := conn.OvasAPIInstance.DeployOva(&extID, vmDeploymentSpec)
 	if err != nil {
+		log.Printf("[ERROR] Failed to deploy OVA: %v", err)
 		return diag.FromErr(err)
 	}
 
 	TaskRef := resp.Data.GetValue().(import3.TaskReference)
 	taskUUID := TaskRef.ExtId
+	log.Printf("[DEBUG] OVA deployment task started with UUID: %s", utils.StringValue(taskUUID))
 
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the OVA VM to be deployed
@@ -283,23 +510,618 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for OVA VM deployment (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
-	d.SetId(extID)
-	return nil
+	log.Printf("[DEBUG] OVA deployment task completed successfully with UUID: %s", utils.StringValue(taskUUID))
+
+	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		var errordata map[string]interface{}
+		e := json.Unmarshal([]byte(err.Error()), &errordata)
+		if e != nil {
+			return diag.FromErr(e)
+		}
+		return diag.Errorf("error while fetching vm UUID : %v", err)
+	}
+	taskResult := resourceUUID.Data.GetValue().(import4.Task)
+
+	if len(taskResult.EntitiesAffected) == 0 {
+		return diag.Errorf("no entities affected in OVA deployment task")
+	}
+	vmUUID, err := common.ExtractEntityUUIDFromTask(taskResult, utils.RelEntityTypeVM, "Virtual Machine")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(*vmUUID)
+	log.Printf("[DEBUG] OVA VM deployment completed successfully: vm_id=%s", *vmUUID)
+
+	// Handle additional disks after initial VM deployment
+	// OVA deployment doesn't support disks in the initial deployment, so add them separately
+	if overrideVMConfig, ok := d.GetOk("override_vm_config"); ok {
+		overrideVMConfigList := overrideVMConfig.([]interface{})
+		if len(overrideVMConfigList) > 0 && overrideVMConfigList[0] != nil {
+			overrideConfig := overrideVMConfigList[0].(map[string]interface{})
+
+			if disks, exists := overrideConfig["disks"]; exists && disks != nil {
+				disksList := disks.([]interface{})
+				if len(disksList) > 0 {
+					log.Printf("[DEBUG] Adding %d disks to OVA VM", len(disksList))
+					for _, disk := range disksList {
+						diskInput := expandDisk([]interface{}{disk})[0]
+						aJSON, _ := json.MarshalIndent(diskInput, "", "  ")
+						log.Printf("[DEBUG] disk input: %s", string(aJSON))
+						readVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+						if err != nil {
+							return diag.Errorf("error reading VM for disk creation: %v", err)
+						}
+
+						args := make(map[string]interface{})
+						args["If-Match"] = getEtagHeader(readVMResp, conn)
+
+						resp, err := conn.VMAPIInstance.CreateDisk(utils.StringPtr(d.Id()), &diskInput, args)
+						if err != nil {
+							return diag.Errorf("error creating disk: %v", err)
+						}
+						TaskRef := resp.Data.GetValue().(import3.TaskReference)
+						diskTaskUUID := TaskRef.ExtId
+
+						if err := waitForTask(ctx, d, meta, diskTaskUUID, schema.TimeoutCreate, "disk creation"); err != nil {
+							return err
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Handle initial power state if specified as ON after initial VM deployment
+	// OVA deployment doesn't support power state in the initial deployment, so add them separately
+	if overrideVMConfig, ok := d.GetOk("override_vm_config"); ok {
+		overrideVMConfigList := overrideVMConfig.([]interface{})
+		if len(overrideVMConfigList) > 0 && overrideVMConfigList[0] != nil {
+			overrideConfig := overrideVMConfigList[0].(map[string]interface{})
+			if powerState, exists := overrideConfig["power_state"]; exists && powerState.(string) == "ON" {
+				log.Printf("[DEBUG] Powering on VM after deployment as requested in configuration")
+				if err := callForPowerOnVM(ctx, conn, d, meta); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	// After all disks are created and powrer is handled, read the VM again to get the updated information
+	log.Printf("[DEBUG] Reading VM after disk creation to update state")
+	return ResourceNutanixOvaVMDeploymentRead(ctx, d, meta)
 }
 
 func ResourceNutanixOvaVMDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	conn := meta.(*conns.Client).VmmAPI
+
+	resp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while fetching vm : %v", err)
+	}
+
+	getResp := resp.Data.GetValue().(import2.Vm)
+	return setOvaVMConfig(d, getResp)
 }
 
 func ResourceNutanixOvaVMDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	conn := meta.(*conns.Client).VmmAPI
+
+	log.Printf("[DEBUG] starting OVA VM update for VM ID: %s", d.Id())
+
+	// Check for hot-plug changes that require VM power off
+	hotPlugRequired := false
+	var oldConfig, newConfig interface{}
+	hasOverrideVMConfigChange := d.HasChange("override_vm_config")
+
+	// Consolidated override_vm_config change handling block
+	if hasOverrideVMConfigChange {
+		oldConfig, newConfig = d.GetChange("override_vm_config")
+		if oldList, ok := oldConfig.([]interface{}); ok && len(oldList) > 0 {
+			if newList, ok := newConfig.([]interface{}); ok && len(newList) > 0 {
+				oldMap := oldList[0].(map[string]interface{})
+				newMap := newList[0].(map[string]interface{})
+
+				// Check if hot-plug sensitive fields changed
+				hotPlugFields := []string{"num_sockets", "num_cores_per_socket", "num_threads_per_core", "memory_size_bytes"}
+				for _, field := range hotPlugFields {
+					if oldMap[field] != newMap[field] {
+						hotPlugRequired = true
+						log.Printf("[DEBUG] hot-plug change detected for field: %s", field)
+						break
+					}
+				}
+			}
+		}
+
+		// Power off VM if hot-plug changes are required
+		if hotPlugRequired && !isVMPowerOff(d, conn) {
+			log.Printf("[DEBUG] VM needs to be powered off for hot-plug changes")
+			if err := callForPowerOffVM(ctx, conn, d, meta); err != nil {
+				return err
+			}
+		}
+		if err := handleDiskChanges(ctx, d, meta, meta, oldConfig, newConfig); err != nil {
+			return err
+		}
+
+		if err := handlePowerStateChanges(ctx, d, meta, meta, oldConfig, newConfig, hotPlugRequired); err != nil {
+			return err
+		}
+
+		if err := handleVMConfigurationUpdates(ctx, d, meta, meta, newConfig, hasOverrideVMConfigChange); err != nil {
+			return err
+		}
+	}
+
+	// Power VM back on if it was powered off for hot-plug changes
+	if hotPlugRequired {
+		// Check if the desired power state is ON
+		if overrideVMConfig, ok := d.GetOk("override_vm_config"); ok {
+			overrideVMConfigList := overrideVMConfig.([]interface{})
+			if len(overrideVMConfigList) > 0 {
+				overrideConfig := overrideVMConfigList[0].(map[string]interface{})
+				if powerState, exists := overrideConfig["power_state"]; exists && powerState.(string) == "ON" {
+					log.Printf("[DEBUG] Powering VM back on after hot-plug changes")
+					if err := callForPowerOnVM(ctx, conn, d, meta); err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+
+	log.Printf("[DEBUG] OVA VM update completed successfully")
+	return ResourceNutanixOvaVMDeploymentRead(ctx, d, meta)
 }
 
 func ResourceNutanixOvaVMDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).VmmAPI
+
+	readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while reading vm : %v", err)
+	}
+	// Extract E-Tag Header
+	args := make(map[string]interface{})
+	args["If-Match"] = getEtagHeader(readResp, conn)
+
+	resp, err := conn.VMAPIInstance.DeleteVmById(utils.StringPtr(d.Id()), args)
+	if err != nil {
+		return diag.Errorf("error while deleting vm : %v", err)
+	}
+	TaskRef := resp.Data.GetValue().(import3.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	// Wait for VM deletion to complete
+	if err := waitForTask(ctx, d, meta, taskUUID, schema.TimeoutDelete, "VM deletion"); err != nil {
+		return err
+	}
+	return nil
+}
+
+func setOvaVMConfig(d *schema.ResourceData, vm import2.Vm) diag.Diagnostics {
+	log.Printf("[DEBUG] Setting OVA VM state from API response")
+
+	// Get existing override_vm_config to preserve all user configuration
+	if v, ok := d.GetOk("override_vm_config"); ok {
+		existingList := v.([]interface{})
+		if len(existingList) > 0 {
+			if existingConfig, ok := existingList[0].(map[string]interface{}); ok {
+				overrideConfig := make(map[string]interface{})
+				for k, v := range existingConfig {
+					overrideConfig[k] = v
+				}
+
+				if vm.Name != nil {
+					overrideConfig["name"] = utils.StringValue(vm.Name)
+				}
+
+				if vm.NumSockets != nil && utils.IntValue(vm.NumSockets) > 0 {
+					overrideConfig["num_sockets"] = utils.IntValue(vm.NumSockets)
+					log.Printf("[DEBUG] Preserved num_sockets from API: %d", utils.IntValue(vm.NumSockets))
+				} else {
+					log.Printf("[DEBUG] API did not return num_sockets or returned 0, preserving user config")
+				}
+
+				if vm.NumCoresPerSocket != nil && utils.IntValue(vm.NumCoresPerSocket) > 0 {
+					overrideConfig["num_cores_per_socket"] = utils.IntValue(vm.NumCoresPerSocket)
+					log.Printf("[DEBUG] Preserved num_cores_per_socket from API: %d", utils.IntValue(vm.NumCoresPerSocket))
+				} else {
+					log.Printf("[DEBUG] API did not return num_cores_per_socket or returned 0, preserving user config")
+				}
+
+				if vm.NumThreadsPerCore != nil && utils.IntValue(vm.NumThreadsPerCore) > 0 {
+					overrideConfig["num_threads_per_core"] = utils.IntValue(vm.NumThreadsPerCore)
+					log.Printf("[DEBUG] Preserved num_threads_per_core from API: %d", utils.IntValue(vm.NumThreadsPerCore))
+				} else {
+					log.Printf("[DEBUG] API did not return num_threads_per_core or returned 0, preserving user config")
+				}
+
+				if vm.MemorySizeBytes != nil && utils.Int64Value(vm.MemorySizeBytes) > 0 {
+					overrideConfig["memory_size_bytes"] = int(utils.Int64Value(vm.MemorySizeBytes))
+				}
+				if vm.PowerState != nil {
+					overrideConfig["power_state"] = vm.PowerState.GetName()
+					log.Printf("[DEBUG] Set power_state: %s", vm.PowerState.GetName())
+				}
+
+				// Update disks to capture ext_id from API by matching bus_type and index
+				// Set disks: only refresh from API when state already had disks (so removing disks in config is recognized as a change).
+				// If state has no disks, keep state disks empty so plan will show update and Update can delete disks on the VM.
+				if existingDisks, ok := existingConfig["disks"].([]interface{}); ok && len(existingDisks) > 0 {
+					if len(vm.Disks) > 0 {
+						disksList := flattenDisk(vm.Disks)
+						if disksList != nil {
+							overrideConfig["disks"] = disksList
+							log.Printf("[DEBUG] Updated disks configuration with %d disks", len(disksList))
+						}
+					}
+				} else {
+					overrideConfig["disks"] = []interface{}{}
+					log.Printf("[DEBUG] No disks in config/state, setting disks to empty")
+				}
+
+				if len(vm.Nics) > 0 {
+					nicsList := flattenNic(vm.Nics)
+					if nicsList != nil {
+						overrideConfig["nics"] = nicsList
+						log.Printf("[DEBUG] Updated NICs configuration with %d NICs", len(nicsList))
+					}
+				}
+
+				// Set the complete override_vm_config with preserved user settings
+				overrideConfigList := []map[string]interface{}{overrideConfig}
+				if err := d.Set("override_vm_config", overrideConfigList); err != nil {
+					return diag.FromErr(fmt.Errorf("failed setting override_vm_config: %w", err))
+				}
+			}
+		}
+	}
+
+	log.Printf("[DEBUG] OVA VM state set successfully")
+	return nil
+}
+
+// waitForTask waits for a Nutanix task to complete
+func waitForTask(ctx context.Context, d *schema.ResourceData, meta interface{}, taskUUID *string, timeoutType string, operation string) diag.Diagnostics {
+	taskconn := meta.(*conns.Client).PrismAPI
+
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(timeoutType),
+	}
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for %s (%s): %s", operation, utils.StringValue(taskUUID), errWaitTask)
+	}
+
+	log.Printf("[DEBUG] %s completed successfully", operation)
+	return nil
+}
+
+func handleDiskDeletions(ctx context.Context, d *schema.ResourceData, meta interface{}, vmmConn interface{}, deletedDisks []interface{}) diag.Diagnostics {
+	if len(deletedDisks) == 0 {
+		return nil
+	}
+
+	conn := vmmConn.(*conns.Client).VmmAPI
+	log.Printf("[DEBUG] Handling deletion of %d disks", len(deletedDisks))
+	for _, disk := range deletedDisks {
+		diskInput := expandDisk([]interface{}{disk})[0]
+		aJSON, _ := json.MarshalIndent(diskInput, "", "  ")
+		log.Printf("[DEBUG] disk input: %s", string(aJSON))
+
+		diskExtID := diskInput.ExtId
+
+		readVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+		if err != nil {
+			return diag.Errorf("error reading VM for disk deletion: %v", err)
+		}
+
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(readVMResp, conn)
+
+		resp, err := conn.VMAPIInstance.DeleteDiskById(utils.StringPtr(d.Id()), diskExtID, args)
+		if err != nil {
+			return diag.Errorf("error deleting disk: %v", err)
+		}
+		TaskRef := resp.Data.GetValue().(import3.TaskReference)
+		taskUUID := TaskRef.ExtId
+
+		if err := waitForTask(ctx, d, meta, taskUUID, schema.TimeoutUpdate, "disk deletion"); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func handleDiskUpdates(ctx context.Context, d *schema.ResourceData, meta interface{}, vmmConn interface{}, updatedDisks []interface{}) diag.Diagnostics {
+	if len(updatedDisks) == 0 {
+		return nil
+	}
+
+	conn := vmmConn.(*conns.Client).VmmAPI
+	log.Printf("[DEBUG] Handling updates of %d disks", len(updatedDisks))
+	for _, disk := range updatedDisks {
+		if diskMap, ok := disk.(map[string]interface{}); ok {
+			if backingInfoRaw, ok := diskMap["backing_info"]; ok {
+				if backingInfoSlice, ok := backingInfoRaw.([]interface{}); ok {
+					if backingInfoMap, ok := backingInfoSlice[0].(map[string]interface{}); ok {
+						if vmDiskArray, ok := backingInfoMap["vm_disk"].([]interface{}); ok {
+							if vmDiskMap, ok := vmDiskArray[0].(map[string]interface{}); ok {
+								if vmDiskMap["data_source"] != nil {
+									delete(vmDiskMap, "data_source")
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		diskInput := expandDisk([]interface{}{disk})[0]
+
+		aJSON, _ := json.MarshalIndent(diskInput, "", "  ")
+		log.Printf("[DEBUG] disk input: %s", string(aJSON))
+
+		diskExtID := diskInput.ExtId
+
+		readVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+		if err != nil {
+			return diag.Errorf("error reading VM for disk update: %v", err)
+		}
+
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(readVMResp, conn)
+
+		resp, err := conn.VMAPIInstance.UpdateDiskById(utils.StringPtr(d.Id()), diskExtID, &diskInput, args)
+		if err != nil {
+			return diag.Errorf("error updating disk: %v", err)
+		}
+		TaskRef := resp.Data.GetValue().(import3.TaskReference)
+		taskUUID := TaskRef.ExtId
+
+		if err := waitForTask(ctx, d, meta, taskUUID, schema.TimeoutUpdate, "disk update"); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func handleDiskAdditions(ctx context.Context, d *schema.ResourceData, meta interface{}, vmmConn interface{}, newDisks []interface{}) diag.Diagnostics {
+	if len(newDisks) == 0 {
+		return nil
+	}
+
+	conn := vmmConn.(*conns.Client).VmmAPI
+	log.Printf("[DEBUG] Handling addition of %d disks", len(newDisks))
+	for _, disk := range newDisks {
+		diskInput := expandDisk([]interface{}{disk})[0]
+		aJSON, _ := json.MarshalIndent(diskInput, "", "  ")
+		log.Printf("[DEBUG] disk input: %s", string(aJSON))
+
+		readVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+		if err != nil {
+			return diag.Errorf("error reading VM for disk creation: %v", err)
+		}
+
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(readVMResp, conn)
+
+		resp, err := conn.VMAPIInstance.CreateDisk(utils.StringPtr(d.Id()), &diskInput, args)
+		if err != nil {
+			return diag.Errorf("error creating disk: %v", err)
+		}
+		TaskRef := resp.Data.GetValue().(import3.TaskReference)
+		taskUUID := TaskRef.ExtId
+
+		if err := waitForTask(ctx, d, meta, taskUUID, schema.TimeoutUpdate, "disk creation"); err != nil {
+			return err
+		}
+	}
+
+	log.Printf("[DEBUG] Reading VM after disk addition to update state")
+	return ResourceNutanixOvaVMDeploymentRead(ctx, d, meta)
+}
+
+func handleDiskChanges(ctx context.Context, d *schema.ResourceData, meta interface{}, vmmConn interface{}, oldConfig, newConfig interface{}) diag.Diagnostics {
+	var oldDisks, newDisks []interface{}
+
+	if oldList, ok := oldConfig.([]interface{}); ok && len(oldList) > 0 {
+		if oldMap, ok := oldList[0].(map[string]interface{}); ok {
+			if disks, exists := oldMap["disks"]; exists && disks != nil {
+				oldDisks = disks.([]interface{})
+			}
+		}
+	}
+
+	if newList, ok := newConfig.([]interface{}); ok && len(newList) > 0 {
+		if newMap, ok := newList[0].(map[string]interface{}); ok {
+			if disks, exists := newMap["disks"]; exists && disks != nil {
+				newDisks = disks.([]interface{})
+			}
+		}
+	}
+
+	newAddedDisk, oldDeletedDisk, updatedDisk := diffConfig(oldDisks, newDisks)
+
+	if err := handleDiskDeletions(ctx, d, meta, vmmConn, oldDeletedDisk); err != nil {
+		return err
+	}
+
+	if err := handleDiskUpdates(ctx, d, meta, vmmConn, updatedDisk); err != nil {
+		return err
+	}
+
+	if err := handleDiskAdditions(ctx, d, meta, vmmConn, newAddedDisk); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func handlePowerStateChanges(ctx context.Context, d *schema.ResourceData, meta interface{}, conn interface{}, oldConfig, newConfig interface{}, hotPlugRequired bool) diag.Diagnostics {
+	var oldPowerState, newPowerState string
+
+	if oldList, ok := oldConfig.([]interface{}); ok && len(oldList) > 0 {
+		if oldMap, ok := oldList[0].(map[string]interface{}); ok {
+			if ps, exists := oldMap["power_state"]; exists && ps != nil {
+				oldPowerState = ps.(string)
+			}
+		}
+	}
+
+	if newList, ok := newConfig.([]interface{}); ok && len(newList) > 0 {
+		if newMap, ok := newList[0].(map[string]interface{}); ok {
+			if ps, exists := newMap["power_state"]; exists && ps != nil {
+				newPowerState = ps.(string)
+			}
+		}
+	}
+
+	if oldPowerState != newPowerState && newPowerState != "" && !hotPlugRequired {
+		log.Printf("[DEBUG] Handling power state change from '%s' to '%s'", oldPowerState, newPowerState)
+
+		vmmConn := conn.(*conns.Client).VmmAPI
+		readResp, err := vmmConn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+		if err != nil {
+			return diag.Errorf("error reading VM for power state change: %v", err)
+		}
+
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(readResp, vmmConn)
+
+		var taskUUID *string
+
+		switch newPowerState {
+		case "ON":
+			powerResp, err := vmmConn.VMAPIInstance.PowerOnVm(utils.StringPtr(d.Id()), args)
+			if err != nil {
+				return diag.Errorf("error powering on VM: %v", err)
+			}
+			TaskRef := powerResp.Data.GetValue().(import3.TaskReference)
+			taskUUID = TaskRef.ExtId
+		case "OFF":
+			powerResp, err := vmmConn.VMAPIInstance.PowerOffVm(utils.StringPtr(d.Id()), args)
+			if err != nil {
+				return diag.Errorf("error powering off VM: %v", err)
+			}
+			TaskRef := powerResp.Data.GetValue().(import3.TaskReference)
+			taskUUID = TaskRef.ExtId
+		default:
+			return diag.Errorf("unsupported power state: %s", newPowerState)
+		}
+
+		if taskUUID != nil {
+			if err := waitForTask(ctx, d, meta, taskUUID, schema.TimeoutUpdate, fmt.Sprintf("power state change to %s", newPowerState)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func handleVMConfigurationUpdates(ctx context.Context, d *schema.ResourceData, meta interface{}, conn interface{}, newConfig interface{}, hasChanges bool) diag.Diagnostics {
+	if !hasChanges {
+		return nil
+	}
+
+	vmmConn := conn.(*conns.Client).VmmAPI
+	updatedVMResp, err := vmmConn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error reading VM for update: %v", err)
+	}
+
+	respVM := updatedVMResp.Data.GetValue().(import2.Vm)
+	updateSpec := respVM
+	checkForUpdateParams := false
+
+	if newList, ok := newConfig.([]interface{}); ok && len(newList) > 0 {
+		if overrideConfig, ok := newList[0].(map[string]interface{}); ok {
+			if name, exists := overrideConfig["name"]; exists && name != nil && name.(string) != "" {
+				currentName := ""
+				if respVM.Name != nil {
+					currentName = *respVM.Name
+				}
+				if name.(string) != currentName {
+					updateSpec.Name = utils.StringPtr(name.(string))
+					checkForUpdateParams = true
+					log.Printf("[DEBUG] updating VM name from '%s' to '%s'", currentName, name.(string))
+				}
+			}
+
+			if numSockets, exists := overrideConfig["num_sockets"]; exists && numSockets != nil && numSockets.(int) > 0 {
+				currentSockets := 0
+				if respVM.NumSockets != nil {
+					currentSockets = *respVM.NumSockets
+				}
+				if numSockets.(int) != currentSockets {
+					updateSpec.NumSockets = utils.IntPtr(numSockets.(int))
+					checkForUpdateParams = true
+					log.Printf("[DEBUG] updating VM sockets from %d to %d", currentSockets, numSockets.(int))
+				}
+			}
+
+			if numCoresPerSocket, exists := overrideConfig["num_cores_per_socket"]; exists && numCoresPerSocket != nil && numCoresPerSocket.(int) > 0 {
+				currentCores := 0
+				if respVM.NumCoresPerSocket != nil {
+					currentCores = *respVM.NumCoresPerSocket
+				}
+				if numCoresPerSocket.(int) != currentCores {
+					updateSpec.NumCoresPerSocket = utils.IntPtr(numCoresPerSocket.(int))
+					checkForUpdateParams = true
+					log.Printf("[DEBUG] updating VM cores per socket from %d to %d", currentCores, numCoresPerSocket.(int))
+				}
+			}
+
+			if numThreadsPerCore, exists := overrideConfig["num_threads_per_core"]; exists && numThreadsPerCore != nil && numThreadsPerCore.(int) > 0 {
+				currentThreads := 0
+				if respVM.NumThreadsPerCore != nil {
+					currentThreads = *respVM.NumThreadsPerCore
+				}
+				if numThreadsPerCore.(int) != currentThreads {
+					updateSpec.NumThreadsPerCore = utils.IntPtr(numThreadsPerCore.(int))
+					checkForUpdateParams = true
+					log.Printf("[DEBUG] updating VM threads per core from %d to %d", currentThreads, numThreadsPerCore.(int))
+				}
+			}
+
+			if memorySizeBytes, exists := overrideConfig["memory_size_bytes"]; exists && memorySizeBytes != nil && memorySizeBytes.(int) > 0 {
+				currentMemory := int64(0)
+				if respVM.MemorySizeBytes != nil {
+					currentMemory = *respVM.MemorySizeBytes
+				}
+				if int64(memorySizeBytes.(int)) != currentMemory {
+					updateSpec.MemorySizeBytes = utils.Int64Ptr(int64(memorySizeBytes.(int)))
+					checkForUpdateParams = true
+					log.Printf("[DEBUG] updating VM memory from %d to %d", currentMemory, memorySizeBytes.(int))
+				}
+			}
+		}
+	}
+
+	if checkForUpdateParams {
+		log.Printf("[DEBUG] Applying VM configuration updates")
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(updatedVMResp, vmmConn)
+
+		updateResp, err := vmmConn.VMAPIInstance.UpdateVmById(utils.StringPtr(d.Id()), &updateSpec, args)
+		if err != nil {
+			return diag.Errorf("error updating VM: %v", err)
+		}
+
+		TaskRef := updateResp.Data.GetValue().(import3.TaskReference)
+		taskUUID := TaskRef.ExtId
+
+		if err := waitForTask(ctx, d, meta, taskUUID, schema.TimeoutUpdate, "VM configuration update"); err != nil {
+			return err
+		}
+	}
 	return nil
 }
