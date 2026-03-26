@@ -615,12 +615,17 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 		// Share with specific projects
 		projectsSet := sharedProjects.(*schema.Set)
 		for _, projectID := range projectsSet.List() {
-			if err := shareSubnetWithProject(ctx, conn, utils.StringValue(subnetExtID), projectID.(string)); err != nil {
-				return diag.Errorf("error while sharing subnet with project %s: %v", projectID.(string), err)
+			if err := shareSubnetWithProject(ctx, meta, conn, d, projectID.(string)); err != nil {
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  "Subnet created but sharing with project failed.",
+						Detail:   fmt.Sprintf("error while sharing subnet with project %s: %v", projectID.(string), err),
+					},
+				}
 			}
 		}
 	}
-
 	return ResourceNutanixSubnetV2Read(ctx, d, meta)
 }
 
@@ -727,7 +732,7 @@ func ResourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, me
 func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 	updateSpec := import1.Subnet{}
-  
+
 	// Handle shared_with_projects changes
 	if d.HasChange("shared_with_projects") {
 		oldProjects, newProjects := d.GetChange("shared_with_projects")
@@ -737,7 +742,7 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 		// Unshare with removed projects
 		removedProjects := oldSet.Difference(newSet)
 		for _, projectID := range removedProjects.List() {
-			if err := unshareSubnetWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
+			if err := unshareSubnetWithProject(ctx, meta, conn, d, projectID.(string)); err != nil {
 				return diag.Errorf("error while unsharing subnet with project %s: %v", projectID.(string), err)
 			}
 		}
@@ -745,12 +750,12 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 		// Share with new projects
 		addedProjects := newSet.Difference(oldSet)
 		for _, projectID := range addedProjects.List() {
-			if err := shareSubnetWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
+			if err := shareSubnetWithProject(ctx, meta, conn, d, projectID.(string)); err != nil {
 				return diag.Errorf("error while sharing subnet with project %s: %v", projectID.(string), err)
 			}
 		}
 	}
-	
+
 	getSubnetRequest := import5.GetSubnetByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}
@@ -760,7 +765,7 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	updateSpec = readResp.Data.GetValue().(import1.Subnet)
-  updateSpecChanged := false
+	updateSpecChanged := false
 	if d.HasChange("name") {
 		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
 		updateSpecChanged = true
@@ -772,7 +777,6 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 	if d.HasChange("project_ext_id") {
 		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
-
 
 	if d.HasChange("subnet_type") {
 		const two, three = 2, 3
@@ -858,7 +862,7 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 		updateSpec.IpConfig = expandIPConfig(d.Get("ip_config").([]interface{}))
 		updateSpecChanged = true
 	}
-  if updateSpecChanged {
+	if updateSpecChanged {
 		aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
 		log.Printf("[DEBUG] Update Subnet Request: %s", string(aJSON))
 
@@ -1578,9 +1582,9 @@ func expandIPv6Pool(pr []interface{}) []import1.IPv6Pool {
 }
 
 // Helper functions for sharing/unsharing subnet with projects
-func shareSubnetWithProject(ctx context.Context, conn *networking.Client, subnetID, projectID string) error {
+func shareSubnetWithProject(ctx context.Context, meta interface{}, conn *networking.Client, d *schema.ResourceData, projectID string) error {
 
-	subnetExtID := utils.StringPtr(subnetID)
+	subnetExtID := utils.StringPtr(d.Id())
 	shareSubnetRequest := import5.ShareSubnetByIdRequest{
 		SubnetExtId: subnetExtID,
 		Body: &import1.ProjectReference{
@@ -1602,14 +1606,32 @@ func shareSubnetWithProject(ctx context.Context, conn *networking.Client, subnet
 	args["If-Match"] = utils.StringPtr(etagValue)
 	resp, err := conn.SubnetAPIInstance.ShareSubnetById(ctx, &shareSubnetRequest, args)
 	if err != nil {
-		return fmt.Errorf("error while sharing subnet %s with project %s: %w", subnetExtID, projectID, err)
+		return fmt.Errorf("%w", err)
 	}
-	log.Printf("[DEBUG] Sharing subnet %s with project %s response: %v", subnetID, projectID, resp)
+
+	TaskRef := resp.Data.GetValue().(import4.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	// calling group API to poll for completion of task
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the subnet to be updated
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return fmt.Errorf("%w", errWaitTask)
+	}
+
+	log.Printf("[DEBUG] Sharing subnet %s with project %s success", d.Id(), projectID)
 	return nil
 }
 
-func unshareSubnetWithProject(ctx context.Context, conn *networking.Client, subnetID, projectID string) error {
-	subnetExtID := utils.StringPtr(subnetID)
+func unshareSubnetWithProject(ctx context.Context, meta interface{}, conn *networking.Client, d *schema.ResourceData, projectID string) error {
+	subnetExtID := utils.StringPtr(d.Id())
 	unshareSubnetRequest := import5.UnshareSubnetByIdRequest{
 		SubnetExtId: subnetExtID,
 		Body: &import1.ProjectReference{
@@ -1633,8 +1655,27 @@ func unshareSubnetWithProject(ctx context.Context, conn *networking.Client, subn
 
 	resp, err := conn.SubnetAPIInstance.UnshareSubnetById(ctx, &unshareSubnetRequest, args)
 	if err != nil {
-		return fmt.Errorf("error while unsharing subnet %s with project %s: %w", subnetExtID, projectID, err)
+		return fmt.Errorf("%w", err)
 	}
-	log.Printf("[DEBUG] Unsharing subnet %s with project %s response: %v", subnetExtID, projectID, resp)
+
+	TaskRef := resp.Data.GetValue().(import4.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	// calling group API to poll for completion of task
+	taskconn := meta.(*conns.Client).PrismAPI
+
+	// Wait for the subnet to be updated
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return fmt.Errorf("%w", errWaitTask)
+	}
+
+	log.Printf("[DEBUG] Unsharing subnet %s with project %s success", d.Id(), projectID)
 	return nil
 }
