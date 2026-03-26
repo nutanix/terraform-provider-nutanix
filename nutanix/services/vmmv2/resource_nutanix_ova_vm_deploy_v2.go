@@ -790,20 +790,6 @@ func setOvaVMConfig(d *schema.ResourceData, vm import2.Vm) diag.Diagnostics {
 					overrideConfig["disks"] = flattenDisk(vm.Disks)
 					log.Printf("[DEBUG] Updated disks configuration with %d disks from API", len(vm.Disks))
 				}
-				// Set disks: only refresh from API when state already had disks (so removing disks in config is recognized as a change).
-				// If state has no disks, keep state disks empty so plan will show update and Update can delete disks on the VM.
-				// if existingDisks, ok := existingConfig["disks"].([]interface{}); ok && len(existingDisks) > 0 {
-				// 	if len(vm.Disks) > 0 {
-				// 		disksList := flattenDisk(vm.Disks)
-				// 		if disksList != nil {
-				// 			overrideConfig["disks"] = disksList
-				// 			log.Printf("[DEBUG] Updated disks configuration with %d disks", len(disksList))
-				// 		}
-				// 	}
-				// } else {
-				// 	overrideConfig["disks"] = []interface{}{}
-				// 	log.Printf("[DEBUG] No disks in config/state, setting disks to empty")
-				// }
 
 				if len(vm.Nics) > 0 {
 					nicsList := flattenNic(vm.Nics)
