@@ -727,32 +727,7 @@ func ResourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, me
 func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 	updateSpec := import1.Subnet{}
-
-	getSubnetRequest := import5.GetSubnetByIdRequest{
-		ExtId: utils.StringPtr(d.Id()),
-	}
-	readResp, err := conn.SubnetAPIInstance.GetSubnetById(ctx, &getSubnetRequest)
-	if err != nil {
-		return diag.Errorf("error while fetching subnets : %v", err)
-	}
-
-	updateSpec = readResp.Data.GetValue().(import1.Subnet)
-	// Extract E-Tag Header
-	etagValue := conn.SubnetAPIInstance.ApiClient.GetEtag(readResp)
-
-	args := make(map[string]interface{})
-	args["If-Match"] = utils.StringPtr(etagValue)
-
-	if d.HasChange("name") {
-		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
-	}
-	if d.HasChange("description") {
-		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
-	}
-	if d.HasChange("project_ext_id") {
-		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
-	}
-
+  
 	// Handle shared_with_projects changes
 	if d.HasChange("shared_with_projects") {
 		oldProjects, newProjects := d.GetChange("shared_with_projects")
@@ -775,6 +750,29 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 			}
 		}
 	}
+	
+	getSubnetRequest := import5.GetSubnetByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.SubnetAPIInstance.GetSubnetById(ctx, &getSubnetRequest)
+	if err != nil {
+		return diag.Errorf("error while fetching subnets : %v", err)
+	}
+
+	updateSpec = readResp.Data.GetValue().(import1.Subnet)
+  updateSpecChanged := false
+	if d.HasChange("name") {
+		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
+		updateSpecChanged = true
+	}
+	if d.HasChange("description") {
+		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
+		updateSpecChanged = true
+	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
+
 
 	if d.HasChange("subnet_type") {
 		const two, three = 2, 3
@@ -785,92 +783,123 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 		pInt := subMap[d.Get("subnet_type").(string)]
 		p := import1.SubnetType(pInt.(int))
 		updateSpec.SubnetType = &p
+		updateSpecChanged = true
 	}
 	if d.HasChange("dhcp_options") {
 		updateSpec.DhcpOptions = expandDhcpOptions(d.Get("dhcp_options").([]interface{}))
+		updateSpecChanged = true
 	}
 	if d.HasChange("cluster_reference") {
 		updateSpec.ClusterReference = utils.StringPtr(d.Get("cluster_reference").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("virtual_switch_reference") {
 		updateSpec.VirtualSwitchReference = utils.StringPtr(d.Get("virtual_switch_reference").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("vpc_reference") {
 		updateSpec.VpcReference = utils.StringPtr(d.Get("vpc_reference").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("is_nat_enabled") {
 		updateSpec.IsNatEnabled = utils.BoolPtr(d.Get("is_nat_enabled").(bool))
+		updateSpecChanged = true
 	}
 	if d.HasChange("is_external") {
 		updateSpec.IsExternal = utils.BoolPtr(d.Get("is_external").(bool))
+		updateSpecChanged = true
 	}
 	if d.HasChange("reserved_ip_addresses") {
 		updateSpec.ReservedIpAddresses = expandIPAddress(d.Get("reserved_ip_addresses").([]interface{}))
+		updateSpecChanged = true
 	}
 	if d.HasChange("dynamic_ip_addresses") {
 		updateSpec.DynamicIpAddresses = expandIPAddress(d.Get("dynamic_ip_addresses").([]interface{}))
+		updateSpecChanged = true
 	}
 
 	if d.HasChange("network_function_chain_reference") {
 		updateSpec.NetworkFunctionChainReference = utils.StringPtr(d.Get("network_function_chain_reference").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("bridge_name") {
 		updateSpec.BridgeName = utils.StringPtr(d.Get("bridge_name").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("is_advanced_networking") {
 		updateSpec.IsAdvancedNetworking = utils.BoolPtr(d.Get("is_advanced_networking").(bool))
+		updateSpecChanged = true
 	}
 	if d.HasChange("cluster_name") {
 		updateSpec.ClusterName = utils.StringPtr(d.Get("cluster_name").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("hypervisor_type") {
 		updateSpec.HypervisorType = utils.StringPtr(d.Get("hypervisor_type").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("virtual_switch") {
 		updateSpec.VirtualSwitch = expandVirtualSwitch(d.Get("virtual_switch"))
+		updateSpecChanged = true
 	}
 	if d.HasChange("vpc") {
 		updateSpec.Vpc = expandVpc(d.Get("vpc"))
+		updateSpecChanged = true
 	}
 	if d.HasChange("ip_prefix") {
 		updateSpec.IpPrefix = utils.StringPtr(d.Get("ip_prefix").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("ip_usage") {
 		updateSpec.IpUsage = expandIPUsage(d.Get("ip_usage"))
+		updateSpecChanged = true
 	}
 	if d.HasChange("ip_config") {
 		updateSpec.IpConfig = expandIPConfig(d.Get("ip_config").([]interface{}))
+		updateSpecChanged = true
 	}
+  if updateSpecChanged {
+		aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
+		log.Printf("[DEBUG] Update Subnet Request: %s", string(aJSON))
 
-	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
-	log.Printf("[DEBUG] Update Subnet Request: %s", string(aJSON))
+		updateSubnetRequest := import5.UpdateSubnetByIdRequest{
+			ExtId: utils.StringPtr(d.Id()),
+			Body:  &updateSpec,
+		}
 
-	updateSubnetRequest := import5.UpdateSubnetByIdRequest{
-		ExtId: utils.StringPtr(d.Id()),
-		Body:  &updateSpec,
-	}
+		readRespSubnetById, err := conn.SubnetAPIInstance.GetSubnetById(ctx, &getSubnetRequest)
+		if err != nil {
+			return diag.Errorf("error while fetching subnets : %v", err)
+		}
+		updateSpec = readRespSubnetById.Data.GetValue().(import1.Subnet)
+		// Extract E-Tag Header
+		etagValue := conn.SubnetAPIInstance.ApiClient.GetEtag(readRespSubnetById)
 
-	updateResp, err := conn.SubnetAPIInstance.UpdateSubnetById(ctx, &updateSubnetRequest, args)
-	if err != nil {
-		return diag.Errorf("error while updating subnets : %v", err)
-	}
+		args := make(map[string]interface{})
+		args["If-Match"] = utils.StringPtr(etagValue)
 
-	TaskRef := updateResp.Data.GetValue().(import4.TaskReference)
-	taskUUID := TaskRef.ExtId
+		updateResp, err := conn.SubnetAPIInstance.UpdateSubnetById(ctx, &updateSubnetRequest, args)
+		if err != nil {
+			return diag.Errorf("error while updating subnets : %v", err)
+		}
 
-	// calling group API to poll for completion of task
+		TaskRef := updateResp.Data.GetValue().(import4.TaskReference)
+		taskUUID := TaskRef.ExtId
 
-	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the subnet to be updated
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
-	}
+		// calling group API to poll for completion of task
 
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for subnet (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
+		taskconn := meta.(*conns.Client).PrismAPI
+		// Wait for the subnet to be updated
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutUpdate),
+		}
+
+		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+			return diag.Errorf("error waiting for subnet (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
+		}
 	}
 	return ResourceNutanixSubnetV2Read(ctx, d, meta)
 }
