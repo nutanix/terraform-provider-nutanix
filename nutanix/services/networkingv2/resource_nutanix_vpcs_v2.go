@@ -325,8 +325,14 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 		// Share with specific projects
 		projectsSet := sharedProjects.(*schema.Set)
 		for _, projectID := range projectsSet.List() {
-			if err := shareVpcWithProject(ctx, conn, utils.StringValue(uuid), projectID.(string)); err != nil {
-				return diag.Errorf("error while sharing VPC with project %s: %v", projectID.(string), err)
+			if err := shareVpcWithProject(ctx, meta, conn, d, projectID.(string)); err != nil {
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  "VPC created but sharing with project failed.",
+						Detail:   fmt.Sprintf("error while sharing VPC with project %s: %v", projectID.(string), err),
+					},
+				}
 			}
 		}
 	}
@@ -399,6 +405,30 @@ func ResourceNutanixVPCsV2Read(ctx context.Context, d *schema.ResourceData, meta
 func ResourceNutanixVPCsV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
+
+	// Handle shared_with_projects changes
+	if d.HasChange("shared_with_projects") {
+		oldProjects, newProjects := d.GetChange("shared_with_projects")
+		oldSet := oldProjects.(*schema.Set)
+		newSet := newProjects.(*schema.Set)
+
+		// Unshare with removed projects
+		removedProjects := oldSet.Difference(newSet)
+		for _, projectID := range removedProjects.List() {
+			if err := unshareVpcWithProject(ctx, meta, conn, d, projectID.(string)); err != nil {
+				return diag.Errorf("error while unsharing VPC with project %s: %v", projectID.(string), err)
+			}
+		}
+
+		// Share with new projects
+		addedProjects := newSet.Difference(oldSet)
+		for _, projectID := range addedProjects.List() {
+			if err := shareVpcWithProject(ctx, meta, conn, d, projectID.(string)); err != nil {
+				return diag.Errorf("error while sharing VPC with project %s: %v", projectID.(string), err)
+			}
+		}
+	}
+
 	getVpcRequest := import2.GetVpcByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}
@@ -410,38 +440,18 @@ func ResourceNutanixVPCsV2Update(ctx context.Context, d *schema.ResourceData, me
 	respVpc := resp.Data.GetValue().(import1.Vpc)
 
 	updateSpec := respVpc
-
+	updateSpecChanged := false
 	if d.HasChange("name") {
 		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("description") {
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("project_ext_id") {
-		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
-	}
-
-	// Handle shared_with_projects changes
-	if d.HasChange("shared_with_projects") {
-		oldProjects, newProjects := d.GetChange("shared_with_projects")
-		oldSet := oldProjects.(*schema.Set)
-		newSet := newProjects.(*schema.Set)
-
-		// Unshare with removed projects
-		removedProjects := oldSet.Difference(newSet)
-		for _, projectID := range removedProjects.List() {
-			if err := unshareVpcWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
-				return diag.Errorf("error while unsharing VPC with project %s: %v", projectID.(string), err)
-			}
-		}
-
-		// Share with new projects
-		addedProjects := newSet.Difference(oldSet)
-		for _, projectID := range addedProjects.List() {
-			if err := shareVpcWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
-				return diag.Errorf("error while sharing VPC with project %s: %v", projectID.(string), err)
-			}
-		}
+		updateSpec.ProjectExtId = utils.StringPtr(d.Get("project_ext_id").(string))
+		updateSpecChanged = true
 	}
 
 	if d.HasChange("vpc_type") {
@@ -457,51 +467,65 @@ func ResourceNutanixVPCsV2Update(ctx context.Context, d *schema.ResourceData, me
 			p := import1.VpcType(pVal.(int))
 			updateSpec.VpcType = &p
 		}
+		updateSpecChanged = true
 	}
 	if d.HasChange("common_dhcp_options") {
 		updateSpec.CommonDhcpOptions = expandVpcDhcpOptions(d.Get("common_dhcp_options").([]interface{}))
+		updateSpecChanged = true
 	}
 	if d.HasChange("external_subnets") {
 		updateSpec.ExternalSubnets = expandExternalSubnet(d.Get("external_subnets").([]interface{}))
+		updateSpecChanged = true
 	}
 	if d.HasChange("external_routing_domain_reference") {
 		updateSpec.ExternalRoutingDomainReference = utils.StringPtr(d.Get("external_routing_domain_reference").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("externally_routable_prefixes") {
 		updateSpec.ExternallyRoutablePrefixes = expandIPSubnet(d.Get("externally_routable_prefixes").([]interface{}))
+		updateSpecChanged = true
 	}
 
-	etagValue := conn.VpcAPIInstance.ApiClient.GetEtag(resp)
-	args := make(map[string]interface{})
-	args["If-Match"] = utils.StringPtr(etagValue)
+	if updateSpecChanged {
+		aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
+		log.Printf("[DEBUG] Update VPC Request: %s", string(aJSON))
 
-	updateVpcRequest := import2.UpdateVpcByIdRequest{
-		ExtId: utils.StringPtr(d.Id()),
-		Body:  &updateSpec,
-	}
-	aJSON, _ := json.MarshalIndent(updateVpcRequest, "", "  ")
-	log.Printf("[DEBUG] Update VPC Payload: %s", string(aJSON))
-	updateResp, err := conn.VpcAPIInstance.UpdateVpcById(ctx, &updateVpcRequest, args)
-	if err != nil {
-		return diag.Errorf("error while updating vpcs : %v", err)
-	}
+		readRespVpcById, err := conn.VpcAPIInstance.GetVpcById(ctx, &getVpcRequest)
+		if err != nil {
+			return diag.Errorf("error while fetching vpcs : %v", err)
+		}
+		updateSpec = readRespVpcById.Data.GetValue().(import1.Vpc)
+		// Extract E-Tag Header
+		etagValue := conn.VpcAPIInstance.ApiClient.GetEtag(readRespVpcById)
 
-	TaskRef := updateResp.Data.GetValue().(import4.TaskReference)
-	taskUUID := TaskRef.ExtId
+		args := make(map[string]interface{})
+		args["If-Match"] = utils.StringPtr(etagValue)
+    
+		updateVpcRequest := import2.UpdateVpcByIdRequest{
+			ExtId: utils.StringPtr(d.Id()),
+			Body:  &updateSpec,
+		}
+		updateResp, err := conn.VpcAPIInstance.UpdateVpcById(ctx, &updateVpcRequest, args)
+		if err != nil {
+			return diag.Errorf("error while updating vpcs : %v", err)
+		}
+		TaskRef := updateResp.Data.GetValue().(import4.TaskReference)
+		taskUUID := TaskRef.ExtId
 
-	// calling group API to poll for completion of task
-	taskconn := meta.(*conns.Client).PrismAPI
+		// calling group API to poll for completion of task
+		taskconn := meta.(*conns.Client).PrismAPI
 
-	// Wait for the VPC to be updated
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
-	}
+		// Wait for the VPC to be updated
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutUpdate),
+		}
 
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for VPC (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
+		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+			return diag.Errorf("error waiting for VPC (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
+		}
 	}
 	return ResourceNutanixVPCsV2Read(ctx, d, meta)
 }
@@ -537,8 +561,8 @@ func ResourceNutanixVPCsV2Delete(ctx context.Context, d *schema.ResourceData, me
 }
 
 // Helper functions for sharing/unsharing VPC with projects
-func shareVpcWithProject(ctx context.Context, conn *networking.Client, vpcID, projectID string) error {
-	vpcExtID := utils.StringPtr(vpcID)
+func shareVpcWithProject(ctx context.Context, meta interface{}, conn *networking.Client, d *schema.ResourceData, projectID string) error {
+	vpcExtID := utils.StringPtr(d.Id())
 	shareVpcRequest := import2.ShareVpcByIdRequest{
 		ExtId: vpcExtID,
 		Body: &import1.ProjectReference{
@@ -561,14 +585,32 @@ func shareVpcWithProject(ctx context.Context, conn *networking.Client, vpcID, pr
 
 	resp, err := conn.VpcAPIInstance.ShareVpcById(ctx, &shareVpcRequest, args)
 	if err != nil {
-		return fmt.Errorf("error while sharing VPC %s with project %s: %w", vpcExtID, projectID, err)
+		return fmt.Errorf("%w", err)
 	}
-	log.Printf("[DEBUG] Sharing VPC %s with project %s response: %v", vpcExtID, projectID, resp)
+
+	TaskRef := resp.Data.GetValue().(import4.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	// calling group API to poll for completion of task
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the VPC to be updated
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return fmt.Errorf("%w", errWaitTask)
+	}
+
+	log.Printf("[DEBUG] Sharing VPC %s with project %s is success", d.Id(), projectID)
 	return nil
 }
 
-func unshareVpcWithProject(ctx context.Context, conn *networking.Client, vpcID, projectID string) error {
-	vpcExtID := utils.StringPtr(vpcID)
+func unshareVpcWithProject(ctx context.Context, meta interface{}, conn *networking.Client, d *schema.ResourceData, projectID string) error {
+	vpcExtID := utils.StringPtr(d.Id())
 	unshareVpcRequest := import2.UnshareVpcByIdRequest{
 		ExtId: vpcExtID,
 		Body: &import1.ProjectReference{
@@ -591,8 +633,26 @@ func unshareVpcWithProject(ctx context.Context, conn *networking.Client, vpcID, 
 
 	resp, err := conn.VpcAPIInstance.UnshareVpcById(ctx, &unshareVpcRequest, args)
 	if err != nil {
-		return fmt.Errorf("error while unsharing VPC %s with project %s: %w", vpcExtID, projectID, err)
+		return fmt.Errorf("%w", err)
 	}
-	log.Printf("[DEBUG] Unsharing VPC %s with project %s response: %v", vpcExtID, projectID, resp)
+
+	TaskRef := resp.Data.GetValue().(import4.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	// calling group API to poll for completion of task
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the VPC to be updated
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return fmt.Errorf("%w", errWaitTask)
+	}
+
+	log.Printf("[DEBUG] Unsharing VPC %s with project %s is success", d.Id(), projectID)
 	return nil
 }
