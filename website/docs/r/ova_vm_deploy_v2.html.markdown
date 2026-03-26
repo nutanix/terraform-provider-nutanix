@@ -23,16 +23,31 @@ resource "nutanix_ova_vm_deploy_v2" "test" {
     name              = "vm-from-ova"
     memory_size_bytes = 8 * 1024 * 1024 * 1024 # 8 GiB
     nics {
-      backing_info {
-        is_connected = true
-      }
-      network_info {
-        nic_type = "NORMAL_NIC"
-        subnet {
-          ext_id = "9bd6cbc2-a592-4728-ab89-473612f46b99"
+      nic_backing_info {
+        virtual_ethernet_nic {
+          is_connected = true
         }
-        vlan_mode     = "TRUNK"
-        trunked_vlans = ["1"]
+      }
+      nic_network_info {
+        virtual_ethernet_nic_network_info {
+          nic_type = "NORMAL_NIC"
+          subnet {
+            ext_id = "9bd6cbc2-a592-4728-ab89-473612f46b99"
+          }
+          vlan_mode     = "TRUNK"
+          trunked_vlans = ["1"]
+        }
+      }
+    }
+    disks {
+      disk_address {
+        bus_type = "SCSI"
+        index    = 0
+      }
+      backing_info {
+        vm_disk {
+          disk_size_bytes = 10 * 1024 * 1024 * 1024 # 10 GiB
+        }
       }
     }
   }
@@ -44,19 +59,21 @@ resource "nutanix_ova_vm_deploy_v2" "test" {
 
 The following arguments are supported:
 
-- `extId`: -(Required) The external identifier for an OVA.
+- `ext_id`: -(Required) The external identifier for an OVA.
 - `override_vm_config`: -(Required) VM config override spec for OVA VM deploy endpoint
-- `cluster_location_ext_id`: -(Optional) Cluster identifier to deploy VM from OVA. This field is required when deploying an OVA and must be a part of the OVA location list.
+- `cluster_location_ext_id`: -(Required) Cluster identifier to deploy VM from OVA. This field is required when deploying an OVA and must be a part of the OVA location list.
 
 ### Override VM Config
 The `override_vm_config` arguments are support the following :
 
 * `name`: (Optional) VM name.
-* `num_sockets`: (Required) Number of vCPU sockets. Value should be at least 1.
+* `num_sockets`: (Optional) Number of vCPU sockets. Value should be at least 1.
 * `num_cores_per_socket`: (Optional) Number of cores per socket. Value should be at least 1.
 * `num_threads_per_core`: (Optional) Number of threads per core. Value should be at least 1.
-* `memory_size_bytes`: (Required) Memory size in bytes.
-* `nics`: (Optional) NICs attached to the VM.
+* `memory_size_bytes`: (Optional) Memory size in bytes.
+* `power_state`: (Optional) Power state of the VM (ON or OFF). Default is "ON".
+* `nics`: (Required) NICs attached to the VM.
+* `disks`: (Optional) Additional disks to attach to the VM.
 * `cd_roms`: (Optional) CD-ROMs attached to the VM.
 * `categories`: (Optional) Categories for the VM.
 
@@ -64,8 +81,10 @@ The `override_vm_config` arguments are support the following :
 #### NICs
 The `nics` attribute supports the following:
 
-* `backing_info`: (Optional) Defines a NIC emulated by the hypervisor
-* `network_info`: (Optional) Network information for a NIC.
+* `nic_backing_info`: (Optional) New NIC backing info (v2.4.1+). One of `virtual_ethernet_nic`, `sriov_nic`, `dp_offload_nic`.
+* `nic_network_info`: (Optional) New NIC network info (v2.4.1+). One of `virtual_ethernet_nic_network_info`, `sriov_nic_network_info`, `dp_offload_nic_network_info`.
+* `backing_info`: (Optional, Deprecated) Use `nic_backing_info.virtual_ethernet_nic` instead.
+* `network_info`: (Optional, Deprecated) Use `nic_network_info.virtual_ethernet_nic_network_info` instead.
 
 ##### nics.backing_info
 * `model`: (Optional) Options for the NIC emulation. Valid values "VIRTIO" , "E1000".
@@ -92,6 +111,24 @@ The `nics` attribute supports the following:
 ###### ip_address, secondary_ip_address_list
 * `value`: The IPv4 address of the host.
 * `prefix_length`: The prefix length of the IP address.
+
+#### Disks
+The `disks` attribute supports the following:
+
+* `disk_address`: (Optional) Disk address configuration.
+* `backing_info`: (Optional) Storage configuration for the disk.
+
+##### disks.disk_address
+* `bus_type`: (Optional) Bus type for the disk. Valid values "SCSI", "SPAPR", "PCI", "IDE", "SATA".
+* `index`: (Optional) Device index on the bus.
+
+##### disks.backing_info
+* `vm_disk`: (Optional) VM disk configuration.
+
+###### disks.backing_info.vm_disk
+* `disk_size_bytes`: (Optional) Disk size in bytes.
+* `storage_container`: (Optional) Storage container for the disk.
+* `storage_config`: (Optional) Storage configuration options.
 
 #### CD-ROMs
 The `cd_roms` attribute supports the following:

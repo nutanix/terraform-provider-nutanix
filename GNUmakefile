@@ -173,4 +173,4 @@ endif
 
 .NOTPARALLEL:
 
-.PHONY: default build test testacc fmt fmtcheck errcheck lint tools vet test-compile cibuild citest website website-lint website-test
+.PHONY: default build test testacc acc-test fmt fmtcheck errcheck lint tools vet test-compile cibuild citest website website-lint website-test

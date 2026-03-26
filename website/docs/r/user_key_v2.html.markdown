@@ -23,6 +23,26 @@ resource "nutanix_user_key_v2" "create_key" {
 }
 ```
 
+## Lifecycle Behavior
+
+~> Important: The nutanix_user_key_v2 resource does not support in-place updates.
+
+Changes to the following arguments will force the resource to be replaced:
+
+- name
+
+- description
+
+- key_type
+
+- expiry_time
+
+- assigned_to
+
+When any of these arguments are modified, Terraform will destroy the existing user key and create a new one. This results in a new key being generated.
+
+~> Note: Replacing the resource invalidates the previously generated key. Ensure that any dependent systems are updated before applying the changes.
+
 ## Argument Reference
 
 The following arguments are supported:

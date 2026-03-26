@@ -78,6 +78,54 @@ func TestAccV2NutanixVpcResource_WithExternallyRoutablePrefixes(t *testing.T) {
 	})
 }
 
+// TestAccV2NutanixVpcResource_WithMultipleExternallyRoutablePrefixes tests the fix for issue
+// where multiple ipv4 blocks within a single externally_routable_prefixes block were not
+// being properly sent to the API - only the first one was processed.
+func TestAccV2NutanixVpcResource_WithMultipleExternallyRoutablePrefixes(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-vpc-multi-prefix-%d", r)
+	vlanID := acctest.RandIntRange(1, 999)
+	desc := "test vpc with multiple externally routable prefixes"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testVpcConfigWithMultipleExtRoutablePrefixes(name, desc, vlanID),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVpc, "name", name),
+					resource.TestCheckResourceAttr(resourceNameVpc, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameVpc, "vpc_type", "REGULAR"),
+					// Verify that all 3 ipv4 prefixes are configured
+					resource.TestCheckResourceAttr(resourceNameVpc, "externally_routable_prefixes.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameVpc, "externally_routable_prefixes.0.ipv4.#", "3"),
+					resource.TestCheckResourceAttr(resourceNameVpc, "externally_routable_prefixes.0.ipv4.0.prefix_length", "24"),
+					resource.TestCheckResourceAttr(resourceNameVpc, "externally_routable_prefixes.0.ipv4.0.ip.0.value", "172.16.3.0"),
+					resource.TestCheckResourceAttr(resourceNameVpc, "externally_routable_prefixes.0.ipv4.1.prefix_length", "24"),
+					resource.TestCheckResourceAttr(resourceNameVpc, "externally_routable_prefixes.0.ipv4.1.ip.0.value", "172.16.4.0"),
+					resource.TestCheckResourceAttr(resourceNameVpc, "externally_routable_prefixes.0.ipv4.2.prefix_length", "24"),
+					resource.TestCheckResourceAttr(resourceNameVpc, "externally_routable_prefixes.0.ipv4.2.ip.0.value", "192.168.120.0"),
+					resource.TestCheckResourceAttrSet(resourceNameVpc, "links.#"),
+					resource.TestCheckResourceAttrSet(resourceNameVpc, "snat_ips.#"),
+				),
+			},
+			{
+				// Remove one ipv4 block: update from 3 to 2 prefixes
+				Config: testVpcConfigWithTwoExtRoutablePrefixes(name, desc, vlanID),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVpc, "name", name),
+					resource.TestCheckResourceAttr(resourceNameVpc, "externally_routable_prefixes.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameVpc, "externally_routable_prefixes.0.ipv4.#", "2"),
+					resource.TestCheckResourceAttr(resourceNameVpc, "externally_routable_prefixes.0.ipv4.0.prefix_length", "24"),
+					resource.TestCheckResourceAttr(resourceNameVpc, "externally_routable_prefixes.0.ipv4.0.ip.0.value", "172.16.3.0"),
+					resource.TestCheckResourceAttr(resourceNameVpc, "externally_routable_prefixes.0.ipv4.1.prefix_length", "24"),
+					resource.TestCheckResourceAttr(resourceNameVpc, "externally_routable_prefixes.0.ipv4.1.ip.0.value", "172.16.4.0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccV2NutanixVpcResource_WithDHCP(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vpc-%d", r)
@@ -273,6 +321,164 @@ func testVpcConfigWithExtRoutablePrefix(name, desc string, vlanID int) string {
 		vpc_type = "REGULAR"
 		depends_on = [nutanix_subnet_v2.test]
 	}
+`, name, desc, vlanID)
+}
+
+// testVpcConfigWithMultipleExtRoutablePrefixes tests the fix for the bug where
+// multiple ipv4 blocks within a single externally_routable_prefixes were not all
+// being sent to the API - only the first one was processed.
+func testVpcConfigWithMultipleExtRoutablePrefixes(name, desc string, vlanID int) string {
+	return fmt.Sprintf(`
+
+	data "nutanix_clusters_v2" "clusters" {}
+
+	locals {
+		cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
+	}
+
+	resource "nutanix_subnet_v2" "test" {
+		name              = "terraform-test-subnet-vpc-multi"
+		description       = "test subnet description"
+		cluster_reference = local.cluster0
+		subnet_type       = "VLAN"
+		network_id        = %[3]d
+		is_external       = true
+		ip_config {
+			ipv4 {
+				ip_subnet {
+					ip {
+						value = "192.168.0.0"
+					}
+					prefix_length = 24
+				}
+				default_gateway_ip {
+					value = "192.168.0.1"
+				}
+				pool_list {
+					start_ip {
+						value = "192.168.0.20"
+					}
+					end_ip {
+						value = "192.168.0.30"
+					}
+				}
+			}
+		}
+		depends_on = [data.nutanix_clusters_v2.clusters]
+	}
+
+	resource "nutanix_vpc_v2" "test" {
+		name        = "%[1]s"
+		description = "%[2]s"
+		external_subnets {
+			subnet_reference = nutanix_subnet_v2.test.id
+		}
+		# Test case: multiple ipv4 blocks within a single externally_routable_prefixes block
+		# All 3 prefixes should be configured on the VPC
+		externally_routable_prefixes {
+			ipv4 {
+				ip {
+					value         = "172.16.3.0"
+					prefix_length = 32
+				}
+				prefix_length = 24
+			}
+			ipv4 {
+				ip {
+					value         = "172.16.4.0"
+					prefix_length = 32
+				}
+				prefix_length = 24
+			}
+			ipv4 {
+				ip {
+					value         = "192.168.120.0"
+					prefix_length = 32
+				}
+				prefix_length = 24
+			}
+		}
+		vpc_type = "REGULAR"
+		depends_on = [nutanix_subnet_v2.test]
+	}
+
+`, name, desc, vlanID)
+}
+
+// testVpcConfigWithTwoExtRoutablePrefixes is the same as testVpcConfigWithMultipleExtRoutablePrefixes
+// but with only 2 ipv4 blocks, used to test removal of one block (update from 3 to 2).
+func testVpcConfigWithTwoExtRoutablePrefixes(name, desc string, vlanID int) string {
+	return fmt.Sprintf(`
+
+	data "nutanix_clusters_v2" "clusters" {}
+
+	locals {
+		cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
+	}
+
+	resource "nutanix_subnet_v2" "test" {
+		name              = "terraform-test-subnet-vpc-multi"
+		description       = "test subnet description"
+		cluster_reference = local.cluster0
+		subnet_type       = "VLAN"
+		network_id        = %[3]d
+		is_external       = true
+		ip_config {
+			ipv4 {
+				ip_subnet {
+					ip {
+						value = "192.168.0.0"
+					}
+					prefix_length = 24
+				}
+				default_gateway_ip {
+					value = "192.168.0.1"
+				}
+				pool_list {
+					start_ip {
+						value = "192.168.0.20"
+					}
+					end_ip {
+						value = "192.168.0.30"
+					}
+				}
+			}
+		}
+		depends_on = [data.nutanix_clusters_v2.clusters]
+	}
+
+	resource "nutanix_vpc_v2" "test" {
+		name        = "%[1]s"
+		description = "%[2]s"
+		external_subnets {
+			subnet_reference = nutanix_subnet_v2.test.id
+		}
+		externally_routable_prefixes {
+			ipv4 {
+				ip {
+					value         = "172.16.3.0"
+					prefix_length = 32
+				}
+				prefix_length = 24
+			}
+			ipv4 {
+				ip {
+					value         = "172.16.4.0"
+					prefix_length = 32
+				}
+				prefix_length = 24
+			}
+		}
+		vpc_type = "REGULAR"
+		depends_on = [nutanix_subnet_v2.test]
+	}
+
 `, name, desc, vlanID)
 }
 

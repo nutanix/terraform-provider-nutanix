@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -27,7 +28,7 @@ const (
 )
 
 func ResourceNutanixVirtualMachineV2() *schema.Resource {
-	return &schema.Resource{
+	r := &schema.Resource{
 		CreateContext: ResourceNutanixVirtualMachineV2Create,
 		ReadContext:   ResourceNutanixVirtualMachineV2Read,
 		UpdateContext: ResourceNutanixVirtualMachineV2Update,
@@ -1077,199 +1078,7 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 			"nics": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ext_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"backing_info": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"model": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringInSlice([]string{"VIRTIO", "E1000"}, false),
-									},
-									"mac_address": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-									"is_connected": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Computed: true,
-									},
-									"num_queues": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Default:  1,
-									},
-								},
-							},
-						},
-						"network_info": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"nic_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"SPAN_DESTINATION_NIC",
-											"NORMAL_NIC", "DIRECT_NIC", "NETWORK_FUNCTION_NIC",
-										}, false),
-									},
-									"network_function_chain": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ext_id": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"network_function_nic_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"TAP", "EGRESS",
-											"INGRESS",
-										}, false),
-									},
-									"subnet": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ext_id": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"vlan_mode": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringInSlice([]string{"TRUNK", "ACCESS"}, false),
-									},
-									"trunked_vlans": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeInt,
-										},
-									},
-									"should_allow_unknown_macs": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Computed: true,
-									},
-									"ipv4_config": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"should_assign_ip": {
-													Type:     schema.TypeBool,
-													Optional: true,
-													Computed: true,
-												},
-												"ip_address": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"value": {
-																Type:     schema.TypeString,
-																Optional: true,
-																Computed: true,
-															},
-															"prefix_length": {
-																Type:     schema.TypeInt,
-																Optional: true,
-																Default:  defaultValue,
-															},
-														},
-													},
-												},
-												"secondary_ip_address_list": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"value": {
-																Type:     schema.TypeString,
-																Optional: true,
-																Computed: true,
-															},
-															"prefix_length": {
-																Type:     schema.TypeInt,
-																Optional: true,
-																Default:  defaultValue,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									// not visible in API reference
-									"ipv4_info": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"learned_ip_addresses": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"value": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															"prefix_length": {
-																Type:     schema.TypeInt,
-																Optional: true,
-																Default:  defaultValue,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
+				Elem:     nicsElemSchemaV2(),
 			},
 			"gpus": {
 				Type:     schema.TypeList,
@@ -1417,6 +1226,18 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 			},
 		},
 	}
+
+	// v1: migrate deprecated NIC fields into new nic_* fields to avoid diffs after upgrade.
+	r.SchemaVersion = 1
+	r.StateUpgraders = []schema.StateUpgrader{
+		{
+			Type:    r.CoreConfigSchema().ImpliedType(),
+			Upgrade: resourceNutanixVirtualMachineV2StateUpgradeV0,
+			Version: 0,
+		},
+	}
+
+	return r
 }
 
 func schemaForGuestCustomization() *schema.Schema {
@@ -1572,43 +1393,21 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	}
 	d.SetId(utils.StringValue(uuid))
 
-	// read VM
+	powerState := d.Get("power_state").(string)
 
-	readResp, errR := conn.VMAPIInstance.GetVmById(utils.StringPtr(*uuid))
-	if errR != nil {
-		return diag.Errorf("error while reading vm : %v", errR)
-	}
-	args := make(map[string]interface{})
-	args["If-Match"] = getEtagHeader(readResp, conn)
-
-	var PowerTaskRef import1.TaskReference
-	if powerState, ok := d.GetOk("power_state"); ok {
-		if powerState == "ON" {
-			resp, err := conn.VMAPIInstance.PowerOnVm(uuid, args)
-			if err != nil {
-				return diag.Errorf("error while powering on Virtual Machines : %v", err)
-			}
-			PowerTaskRef = resp.Data.GetValue().(import1.TaskReference)
-		} else if powerState == "OFF" {
-			resp, err := conn.VMAPIInstance.PowerOffVm(utils.StringPtr(d.Id()), args)
-			if err != nil {
-				return diag.Errorf("error while powering OFF : %v", err)
-			}
-			PowerTaskRef = resp.Data.GetValue().(import1.TaskReference)
+	switch powerState {
+	case "ON":
+		log.Printf("[DEBUG] Powering on the VM")
+		diag := callForPowerOnVM(ctx, conn, d, meta)
+		if diag.HasError() {
+			return diag
 		}
-	}
-	powertaskUUID := PowerTaskRef.ExtId
-
-	// Wait for the task to complete
-	powerStateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(powertaskUUID)),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
-	}
-
-	if _, errWaitTask := powerStateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for vm (%s) to power ON: %s", utils.StringValue(uuid), errWaitTask)
+	case "OFF":
+		log.Printf("[DEBUG] Powering off the VM")
+		diag := callForPowerOffVM(ctx, conn, d, meta)
+		if diag.HasError() {
+			return diag
+		}
 	}
 
 	// If power state is ON and NICs are configured, wait for IP address
@@ -2000,7 +1799,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 		if len(oldDeletedNic) > 0 {
 			for _, nic := range oldDeletedNic {
-				nicInput := expandNic([]interface{}{nic})[0]
+				nicInput := expandNic([]interface{}{nic}, nil, "")[0]
 
 				nicExtID := nicInput.ExtId
 
@@ -2035,8 +1834,24 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 			}
 		}
 		if len(updatedNic) > 0 {
+			newNicList := common.InterfaceToSlice(newNic)
 			for _, nic := range updatedNic {
-				nicInput := expandNic([]interface{}{nic})[0]
+				nicMap, _ := nic.(map[string]interface{})
+				extID, _ := nicMap["ext_id"].(string)
+				nicIndex := -1
+				for i, n := range newNicList {
+					if m, ok := n.(map[string]interface{}); ok {
+						if e, _ := m["ext_id"].(string); e == extID {
+							nicIndex = i
+							break
+						}
+					}
+				}
+				basePath := ""
+				if nicIndex >= 0 {
+					basePath = "nics." + strconv.Itoa(nicIndex)
+				}
+				nicInput := expandNic([]interface{}{nic}, d, basePath)[0]
 
 				nicExtID := nicInput.ExtId
 
@@ -2076,7 +1891,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		}
 		if len(newAddedNic) > 0 {
 			for _, nic := range newAddedNic {
-				nicInput := expandNic([]interface{}{nic})[0]
+				nicInput := expandNic([]interface{}{nic}, nil, "")[0]
 
 				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
 				if err != nil {
@@ -2465,10 +2280,16 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 			log.Printf("[DEBUG] Power state change detected: %s", power)
 			if power == "ON" {
 				log.Printf("[DEBUG] Powering on the VM")
-				callForPowerOnVM(ctx, conn, d, meta)
+				diag := callForPowerOnVM(ctx, conn, d, meta)
+				if diag.HasError() {
+					return diag
+				}
 			} else {
 				log.Printf("[DEBUG] Powering off the VM")
-				callForPowerOffVM(ctx, conn, d, meta)
+				diag := callForPowerOffVM(ctx, conn, d, meta)
+				if diag.HasError() {
+					return diag
+				}
 			}
 		}
 	}
@@ -3355,6 +3176,76 @@ func expandPolicyReference(pr interface{}) *config.PolicyReference {
 	return nil
 }
 
+// extractTaskReferenceFromResponse extracts TaskReference from API response using reflection
+func extractTaskReferenceFromResponse(resp interface{}) (import1.TaskReference, error) {
+	respValue := reflect.ValueOf(resp)
+	if respValue.Kind() == reflect.Ptr {
+		respValue = respValue.Elem()
+	}
+	dataField := respValue.FieldByName("Data")
+	if !dataField.IsValid() {
+		return import1.TaskReference{}, fmt.Errorf("unexpected response structure: Data field not found")
+	}
+	getValueMethod := dataField.MethodByName("GetValue")
+	if !getValueMethod.IsValid() {
+		return import1.TaskReference{}, fmt.Errorf("unexpected response structure: GetValue method not found")
+	}
+	result := getValueMethod.Call(nil)[0].Interface()
+	taskRef, ok := result.(import1.TaskReference)
+	if !ok {
+		return import1.TaskReference{}, fmt.Errorf("unexpected response type: expected TaskReference")
+	}
+	return taskRef, nil
+}
+
+// powerOnVM performs a single power-on API call. Retries are handled at the task layer in callForPowerOnVM.
+func powerOnVM(ctx context.Context, conn *vmm.Client, vmID *string) (import1.TaskReference, error) {
+	readResp, errR := conn.VMAPIInstance.GetVmById(vmID)
+	if errR != nil {
+		return import1.TaskReference{}, fmt.Errorf("error while fetching vm : %v", errR)
+	}
+
+	args := make(map[string]interface{})
+
+	args["If-Match"] = getEtagHeader(readResp, conn)
+
+	resp, err := conn.VMAPIInstance.PowerOnVm(vmID, args)
+	if err != nil {
+		return import1.TaskReference{}, fmt.Errorf("error powering on VM: %v", err)
+	}
+
+	taskRef, err := extractTaskReferenceFromResponse(resp)
+	if err != nil {
+		return import1.TaskReference{}, fmt.Errorf("error extracting task reference from power on response: %v", err)
+	}
+	log.Printf("[DEBUG] PowerOn Response: TaskReference ExtId: %s", utils.StringValue(taskRef.ExtId))
+	return taskRef, nil
+}
+
+// powerOffVM performs a single power-off API call. Retries are handled at the task layer in callForPowerOffVM.
+func powerOffVM(ctx context.Context, conn *vmm.Client, vmID *string) (import1.TaskReference, error) {
+	readResp, errR := conn.VMAPIInstance.GetVmById(vmID)
+	if errR != nil {
+		return import1.TaskReference{}, fmt.Errorf("error while fetching vm : %v", errR)
+	}
+
+	args := make(map[string]interface{})
+
+	args["If-Match"] = getEtagHeader(readResp, conn)
+
+	resp, err := conn.VMAPIInstance.PowerOffVm(vmID, args)
+	if err != nil {
+		return import1.TaskReference{}, fmt.Errorf("error powering off VM: %v", err)
+	}
+
+	taskRef, err := extractTaskReferenceFromResponse(resp)
+	if err != nil {
+		return import1.TaskReference{}, fmt.Errorf("error extracting task reference from power off response: %v", err)
+	}
+	log.Printf("[DEBUG] PowerOff Response: TaskReference ExtId: %s", utils.StringValue(taskRef.ExtId))
+	return taskRef, nil
+}
+
 func flattenPowerState(pr *config.PowerState) string {
 	if pr != nil {
 		const two, three, four, five = 2, 3, 4, 5
@@ -3374,90 +3265,161 @@ func flattenPowerState(pr *config.PowerState) string {
 	return "UNKNOWN"
 }
 
+const (
+	// maxPowerRetries is used for both API-layer retries (power-on/power-off call) and task-layer retries (wait for task).
+	maxPowerRetries     = 10
+	powerTaskRetryDelay = 5 * time.Second
+)
+
 func callForPowerOffVM(ctx context.Context, conn *vmm.Client, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	readResp, errR := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-	if errR != nil {
-		return diag.Errorf("error while reading vm : %v", errR)
-	}
-	// checking current state of VM
-	vmResp := readResp.Data.GetValue().(config.Vm)
-
-	if vmResp.PowerState.GetName() == "OFF" {
-		log.Printf("[DEBUG] VM is already in %s state", d.Get("power_state").(string))
-		return nil
-	}
-
-	// Extract E-Tag Header
-	args := make(map[string]interface{})
-	args["If-Match"] = getEtagHeader(readResp, conn)
-
-	// Power off the VM
-	powerOffResp, err := conn.VMAPIInstance.PowerOffVm(utils.StringPtr(d.Id()), args)
-	if err != nil {
-		return diag.Errorf("error while powering off Virtual Machine : %v", err)
-	}
-
-	TaskRef := powerOffResp.Data.GetValue().(import1.TaskReference)
-	taskUUID := TaskRef.ExtId
-
 	prismConn := meta.(*conns.Client).PrismAPI
+	var lastErr error
+	var taskUUID *string
 
-	// Wait for the task to complete
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
+	for taskAttempt := 0; taskAttempt < maxPowerRetries; taskAttempt++ {
+		readResp, errR := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+		if errR != nil {
+			return diag.Errorf("error while reading vm : %v", errR)
+		}
+		vmResp := readResp.Data.GetValue().(config.Vm)
+		currentPower := vmResp.PowerState.GetName()
+		log.Printf("[DEBUG] Power-off task attempt %d/%d: VM current power_state=%s", taskAttempt+1, maxPowerRetries, currentPower)
+		if currentPower == "OFF" {
+			log.Printf("[DEBUG] VM is already in OFF state")
+			return nil
+		}
 
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for virtual machine (%s) to power off: %s", utils.StringValue(taskUUID), errWaitTask)
+		TaskRef, err := powerOffVM(ctx, conn, utils.StringPtr(d.Id()))
+		if err != nil {
+			lastErr = err
+			if taskAttempt < maxPowerRetries-1 {
+				log.Printf("[DEBUG] Power-off API failed (attempt %d/%d), retrying in %v: %v",
+					taskAttempt+1, maxPowerRetries, powerTaskRetryDelay, err)
+				select {
+				case <-ctx.Done():
+					return diag.FromErr(ctx.Err())
+				case <-time.After(powerTaskRetryDelay):
+					continue
+				}
+			}
+			return diag.Errorf("error while powering off Virtual Machine after %d attempts: %v", maxPowerRetries, err)
+		}
+		taskUUID = TaskRef.ExtId
+
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutCreate),
+		}
+
+		_, errWaitTask := stateConf.WaitForStateContext(ctx)
+		if errWaitTask == nil {
+			log.Printf("[DEBUG] Power-off task reported SUCCEEDED for task %s; verifying VM power_state", utils.StringValue(taskUUID))
+			verifyResp, errV := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+			if errV != nil {
+				log.Printf("[DEBUG] Could not re-read VM after task success: %v", errV)
+				return nil
+			}
+			verifyVM := verifyResp.Data.GetValue().(config.Vm)
+			actualPower := verifyVM.PowerState.GetName()
+			log.Printf("[DEBUG] VM power_state after task: %s (expected OFF)", actualPower)
+			if actualPower != "OFF" {
+				log.Printf("[DEBUG] WARNING: Task reported SUCCEEDED but VM power_state is %s (expected OFF) - possible backend inconsistency or race", actualPower)
+			}
+			return nil
+		}
+		lastErr = errWaitTask
+		if taskAttempt < maxPowerRetries-1 {
+			log.Printf("[DEBUG] Power-off task failed or timed out (attempt %d/%d), retrying API call and task in %v: %v",
+				taskAttempt+1, maxPowerRetries, powerTaskRetryDelay, errWaitTask)
+			select {
+			case <-ctx.Done():
+				return diag.FromErr(ctx.Err())
+			case <-time.After(powerTaskRetryDelay):
+				// continue to next task retry
+			}
+		}
 	}
-	return nil
+	log.Printf("[DEBUG] Power-off failed after %d attempts; last error: %v", maxPowerRetries, lastErr)
+	return diag.Errorf("error waiting for virtual machine (%s) to power off after %d attempts: %s",
+		utils.StringValue(taskUUID), maxPowerRetries, lastErr)
 }
 
 func callForPowerOnVM(ctx context.Context, conn *vmm.Client, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	readResp, errR := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-	if errR != nil {
-		return diag.Errorf("error while reading vm : %v", errR)
-	}
-
-	vmResp := readResp.Data.GetValue().(config.Vm)
-
-	if vmResp.PowerState.GetName() == "ON" {
-		log.Printf("[DEBUG] VM is already in %s state", d.Get("power_state").(string))
-		return nil
-	}
-
-	// Extract E-Tag Header
-	args := make(map[string]interface{})
-	args["If-Match"] = getEtagHeader(readResp, conn)
-	// Power on the VM
-	powerOnResp, err := conn.VMAPIInstance.PowerOnVm(utils.StringPtr(d.Id()), args)
-	if err != nil {
-		return diag.Errorf("error while powering on Virtual Machine : %v", err)
-	}
-
-	aJSON, _ := json.Marshal(powerOnResp)
-	log.Printf("[DEBUG] PowerOn Response: %s", string(aJSON))
-
-	TaskRef := powerOnResp.Data.GetValue().(import1.TaskReference)
-	taskUUID := TaskRef.ExtId
-
 	prismConn := meta.(*conns.Client).PrismAPI
+	var lastErr error
+	var taskUUID *string
 
-	// Wait for the task to complete
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
-	}
+	for taskAttempt := 0; taskAttempt < maxPowerRetries; taskAttempt++ {
+		readResp, errR := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+		if errR != nil {
+			return diag.Errorf("error while reading vm : %v", errR)
+		}
+		vmResp := readResp.Data.GetValue().(config.Vm)
+		currentPower := vmResp.PowerState.GetName()
+		log.Printf("[DEBUG] Power-on task attempt %d/%d: VM current power_state=%s", taskAttempt+1, maxPowerRetries, currentPower)
+		if currentPower == "ON" {
+			log.Printf("[DEBUG] VM is already in ON state")
+			return nil
+		}
 
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for virtual machine (%s) to power on: %s", utils.StringValue(taskUUID), errWaitTask)
+		TaskRef, err := powerOnVM(ctx, conn, utils.StringPtr(d.Id()))
+		if err != nil {
+			lastErr = err
+			if taskAttempt < maxPowerRetries-1 {
+				log.Printf("[DEBUG] Power-on API failed (attempt %d/%d), retrying in %v: %v",
+					taskAttempt+1, maxPowerRetries, powerTaskRetryDelay, err)
+				select {
+				case <-ctx.Done():
+					return diag.FromErr(ctx.Err())
+				case <-time.After(powerTaskRetryDelay):
+					continue
+				}
+			}
+			return diag.Errorf("error while powering on Virtual Machine after %d attempts: %v", maxPowerRetries, err)
+		}
+		taskUUID = TaskRef.ExtId
+		log.Printf("[DEBUG] PowerOn Response: TaskReference ExtId: %s (waiting for task)", utils.StringValue(taskUUID))
+
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutUpdate),
+		}
+
+		_, errWaitTask := stateConf.WaitForStateContext(ctx)
+		if errWaitTask == nil {
+			log.Printf("[DEBUG] Power-on task reported SUCCEEDED for task %s; verifying VM power_state", utils.StringValue(taskUUID))
+			verifyResp, errV := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+			if errV != nil {
+				log.Printf("[DEBUG] Could not re-read VM after task success: %v", errV)
+				return nil
+			}
+			verifyVM := verifyResp.Data.GetValue().(config.Vm)
+			actualPower := verifyVM.PowerState.GetName()
+			log.Printf("[DEBUG] VM power_state after task: %s (expected ON)", actualPower)
+			if actualPower != "ON" {
+				log.Printf("[DEBUG] WARNING: Task reported SUCCEEDED but VM power_state is %s (expected ON) - possible backend inconsistency or race", actualPower)
+			}
+			return nil
+		}
+		lastErr = errWaitTask
+		if taskAttempt < maxPowerRetries-1 {
+			log.Printf("[DEBUG] Power-on task failed or timed out (attempt %d/%d), retrying API call and task in %v: %v",
+				taskAttempt+1, maxPowerRetries, powerTaskRetryDelay, errWaitTask)
+			select {
+			case <-ctx.Done():
+				return diag.FromErr(ctx.Err())
+			case <-time.After(powerTaskRetryDelay):
+				// continue to next task retry
+			}
+		}
 	}
-	return nil
+	log.Printf("[DEBUG] Power-on failed after %d attempts; last error: %v", maxPowerRetries, lastErr)
+	return diag.Errorf("error waiting for virtual machine (%s) to power on after %d attempts: %s",
+		utils.StringValue(taskUUID), maxPowerRetries, lastErr)
 }
 
 func diffConfig(oldValue []interface{}, newValue []interface{}) ([]interface{}, []interface{}, []interface{}) {
@@ -3535,8 +3497,8 @@ func diffConfig(oldValue []interface{}, newValue []interface{}) ([]interface{}, 
 
 // Check if VM is in power off state to perform update operations
 func checkForHotPlugChanges(d *schema.ResourceData) bool {
-	if d.HasChange(("num_sockets")) || d.HasChange(("num_cores_per_socket")) || d.HasChange(("memory_size_bytes")) ||
-		d.HasChange(("num_threads_per_core")) || d.HasChange(("cd_rom")) || d.HasChange(("num_numa_nodes")) ||
+	if d.HasChange("num_sockets") || d.HasChange("num_cores_per_socket") || d.HasChange("memory_size_bytes") ||
+		d.HasChange("num_threads_per_core") || d.HasChange("cd_rom") || d.HasChange("num_numa_nodes") ||
 		d.HasChange("cluster") || d.HasChange("is_cpu_passthrough_enabled") || d.HasChange("enabled_cpu_features") ||
 		d.HasChange("is_vcpu_hard_pinning_enabled") || d.HasChange("guest_customization") || d.HasChange("guest_tools") ||
 		d.HasChange("serial_ports") || d.HasChange("gpus") || d.HasChange("boot_config") {
@@ -3553,6 +3515,75 @@ func isVMPowerOff(d *schema.ResourceData, conn *vmm.Client) bool {
 	vmResp := readResp.Data.GetValue().(config.Vm)
 
 	return vmResp.PowerState.GetName() == "OFF"
+}
+
+// resourceNutanixVirtualMachineV2StateUpgradeV0 migrates legacy NIC backing fields into the new schema.
+// Specifically:
+// - nics[*].backing_info -> nics[*].nic_backing_info[0].virtual_ethernet_nic
+func resourceNutanixVirtualMachineV2StateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	nicsRaw, ok := rawState["nics"]
+	if !ok || nicsRaw == nil {
+		return rawState, nil
+	}
+
+	nics, ok := nicsRaw.([]interface{})
+	if !ok || len(nics) == 0 {
+		return rawState, nil
+	}
+
+	for _, nicItem := range nics {
+		nicMap, ok := nicItem.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		// If new field already present, do nothing.
+		if v, ok := nicMap["nic_backing_info"]; ok {
+			if list, ok := v.([]interface{}); ok && len(list) > 0 {
+				continue
+			}
+		}
+
+		// Migrate legacy backing_info into nic_backing_info.virtual_ethernet_nic.
+		backingRaw, ok := nicMap["backing_info"]
+		if !ok || backingRaw == nil {
+			// don't return; we may still migrate network_info below
+		} else {
+			backingList, ok := backingRaw.([]interface{})
+			if ok && len(backingList) > 0 {
+				nicMap["nic_backing_info"] = []interface{}{
+					map[string]interface{}{
+						"virtual_ethernet_nic": backingList,
+					},
+				}
+			}
+		}
+
+		// If new field already present, do nothing.
+		if v, ok := nicMap["nic_network_info"]; ok {
+			if list, ok := v.([]interface{}); ok && len(list) > 0 {
+				continue
+			}
+		}
+
+		// Migrate legacy network_info into nic_network_info.virtual_ethernet_nic_network_info.
+		networkRaw, ok := nicMap["network_info"]
+		if !ok || networkRaw == nil {
+			continue
+		}
+		networkList, ok := networkRaw.([]interface{})
+		if !ok || len(networkList) == 0 {
+			continue
+		}
+
+		nicMap["nic_network_info"] = []interface{}{
+			map[string]interface{}{
+				"virtual_ethernet_nic_network_info": networkList,
+			},
+		}
+	}
+
+	return rawState, nil
 }
 
 // getFirstIPAddress returns the first available IP address from a NIC.
@@ -3711,18 +3742,7 @@ func prepareVMConfigFromMap(m map[string]interface{}) *config.Vm {
 		body.IsVgaConsoleEnabled = utils.BoolPtr(vgaConsole.(bool))
 	}
 	if machineType, ok := m["machine_type"]; ok {
-		const two, three, four = 2, 3, 4
-		subMap := map[string]interface{}{
-			"PC":      two,
-			"PSERIES": three,
-			"Q35":     four,
-		}
-		if val, ok := machineType.(string); ok {
-			if pVal, exists := subMap[val]; exists {
-				p := config.MachineType(pVal.(int))
-				body.MachineType = &p
-			}
-		}
+		body.MachineType = common.ExpandEnum[config.MachineType](machineType)
 	}
 	if vtpmConfig, ok := m["vtpm_config"]; ok {
 		body.VtpmConfig = expandVtpmConfig(vtpmConfig)
@@ -3743,7 +3763,7 @@ func prepareVMConfigFromMap(m map[string]interface{}) *config.Vm {
 		body.CdRoms = expandCdRom(cdroms.([]interface{}))
 	}
 	if nics, ok := m["nics"]; ok {
-		body.Nics = expandNic(nics.([]interface{}))
+		body.Nics = expandNic(nics.([]interface{}), nil, "")
 	}
 	if gpus, ok := m["gpus"]; ok {
 		body.Gpus = expandGpu(gpus.([]interface{}))
@@ -3752,18 +3772,7 @@ func prepareVMConfigFromMap(m map[string]interface{}) *config.Vm {
 		body.SerialPorts = expandSerialPort(serialPorts.([]interface{}))
 	}
 	if protectionType, ok := m["protection_type"]; ok {
-		const two, three, four = 2, 3, 4
-		subMap := map[string]interface{}{
-			"UNPROTECTED":    two,
-			"PD_PROTECTED":   three,
-			"RULE_PROTECTED": four,
-		}
-		if val, ok := protectionType.(string); ok {
-			if pVal, exists := subMap[val]; exists {
-				p := config.ProtectionType(pVal.(int))
-				body.ProtectionType = &p
-			}
-		}
+		body.ProtectionType = common.ExpandEnum[config.ProtectionType](protectionType)
 	}
 	if protectionPolicyState, ok := m["protection_policy_state"]; ok {
 		body.ProtectionPolicyState = expandProtectionPolicyState(protectionPolicyState)

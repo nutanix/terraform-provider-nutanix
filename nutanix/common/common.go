@@ -80,9 +80,58 @@ func IsExplicitlySet(d *schema.ResourceData, key string) bool {
 	if !ok {
 		return false
 	}
-
-	log.Printf("[DEBUG] Key: %s, Value: %s", key, val)
+	aJSON, _ := json.MarshalIndent(val, "", "  ")
+	log.Printf("[DEBUG] Key: %s, Value: %s", key, string(aJSON))
 	return !val.IsNull() // Ensure key exists and isn't explicitly null
+}
+
+// IsNonEmptyBlockExplicitlySet returns true only when the key exists in raw config and has meaningful content
+// (e.g. at least one nested attribute or block set). Used to prefer legacy blocks when the user only set
+// legacy fields and the new block is present in config as an empty block (e.g. from schema default).
+func IsNonEmptyBlockExplicitlySet(d *schema.ResourceData, key string) bool {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return false
+	}
+	val, ok := getRawConfigValueAtPath(rawConfig, key)
+	if !ok || val.IsNull() || !val.IsKnown() {
+		return false
+	}
+	return ctyValueHasContent(val)
+}
+
+// ctyValueHasContent returns true if the cty value has at least one non-null, known nested value.
+func ctyValueHasContent(v cty.Value) bool {
+	if v.IsNull() || !v.IsKnown() {
+		return false
+	}
+	ty := v.Type()
+	if ty.IsListType() || ty.IsTupleType() {
+		l := v.Length()
+		if l.IsNull() || !l.IsKnown() {
+			return false
+		}
+		bf := l.AsBigFloat()
+		n, _ := bf.Int64()
+		if n == 0 {
+			return false
+		}
+		return ctyValueHasContent(v.Index(cty.NumberIntVal(0)))
+	}
+	if ty.IsObjectType() || ty.IsMapType() {
+		for _, v := range v.AsValueMap() {
+			if !v.IsNull() && v.IsKnown() {
+				if v.Type().IsPrimitiveType() || v.Type().IsCapsuleType() {
+					return true
+				}
+				if ctyValueHasContent(v) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+	return true // primitive or other known type
 }
 
 func getRawConfigValueAtPath(root cty.Value, path string) (cty.Value, bool) {
@@ -185,38 +234,56 @@ func EnumToMap[T interface{ GetName() string }](enums []T) map[string]T {
 	return m
 }
 
-// ExpandEnum expands a single string value to an enum pointer
-func ExpandEnum[T any](val interface{}, enumMap map[string]T, fieldName string) *T {
+// ExpandEnum expands a single string value to an enum pointer.
+// It relies on the SDK-generated enum's UnmarshalJSON for correctness (preferred approach).
+func ExpandEnum[T any](val interface{}) *T {
 	if val == nil {
 		return nil
 	}
 
-	if str, ok := val.(string); ok && str != "" {
-		if enumVal, found := enumMap[str]; found {
-			return &enumVal
-		} else {
-			log.Printf("[WARN] unknown %s: %s", fieldName, str)
+	str, ok := val.(string)
+	if !ok || str == "" {
+		return nil
+	}
+
+	var out T
+	if u, ok := any(&out).(interface{ UnmarshalJSON([]byte) error }); ok {
+		b, err := json.Marshal(str)
+		if err == nil {
+			if err := u.UnmarshalJSON(b); err == nil {
+				return &out
+			}
 		}
 	}
 
+	log.Printf("[WARN] unknown enum value: %s", str)
 	return nil
 }
 
 // ExpandEnumList expands a list of strings to enum values
-func ExpandEnumList[T any](val interface{}, enumMap map[string]T, fieldName string) []T {
+func ExpandEnumList[T any](val interface{}) []T {
 	if val == nil {
 		return nil
 	}
 
 	list := make([]T, 0)
 	for _, item := range val.([]interface{}) {
-		if str, ok := item.(string); ok && str != "" {
-			if enumVal, found := enumMap[str]; found {
-				list = append(list, enumVal)
-			} else {
-				log.Printf("[WARN] unknown %s: %s", fieldName, str)
+		str, ok := item.(string)
+		if !ok || str == "" {
+			continue
+		}
+
+		var out T
+		if u, ok := any(&out).(interface{ UnmarshalJSON([]byte) error }); ok {
+			if b, err := json.Marshal(str); err == nil {
+				if err := u.UnmarshalJSON(b); err == nil {
+					list = append(list, out)
+					continue
+				}
 			}
 		}
+
+		log.Printf("[WARN] unknown enum value: %s", str)
 	}
 
 	if len(list) == 0 {
