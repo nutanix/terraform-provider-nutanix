@@ -10,7 +10,7 @@ import (
 type TestConfig struct {
 	UsernameForTest string `json:"username_for_test"`
 	PasswordForTest string `json:"password_for_test"`
-	Prism          struct {
+	Prism           struct {
 		DeployPC struct {
 			PeIP           string `json:"pe_ip"`
 			Version        string `json:"version"`

@@ -62,7 +62,7 @@ func TestAccV2NutanixOvaVmDeployResource_DeployVmFromOvaDoesNotExist(t *testing.
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testOvaVMDeployResourceConfigDeployVMFromOvaDoseNotExists(ovaName),
+				Config: testOvaVMDeployResourceConfigDeployVMFromOvaDoseNotExists(ovaName),
 				// OVA not found: API may return "could not find the entity" or 404 with "Valid metadata or attributes could not be fetched" / PLAT-10007
 				ExpectError: regexp.MustCompile(`(Failed to perform the operation as the backend service could not find the entity|Valid metadata or attributes could not be fetched|404|PLAT-10007)`),
 			},

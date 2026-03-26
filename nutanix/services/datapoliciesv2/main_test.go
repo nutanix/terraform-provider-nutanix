@@ -8,8 +8,8 @@ import (
 )
 
 type TestConfig struct {
-	UsernameForTest string `json:"username_for_test"`
-	PasswordForTest string `json:"password_for_test"`
+	UsernameForTest  string `json:"username_for_test"`
+	PasswordForTest  string `json:"password_for_test"`
 	AvailabilityZone struct {
 		PcExtID      string `json:"pc_ext_id"`
 		ClusterExtID string `json:"cluster_ext_id"`
