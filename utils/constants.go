@@ -34,6 +34,8 @@ const (
 	RelEntityTypeKMS                    = "security:encryption:key-management-server"
 	RelEntityTypeClusterProfile         = "clustermgmt:config:cluster-profile"
 	RelEntityTypeDomainManager          = "prism:config:domain_manager"
+	RelEntityTypeVMAntiAffinityPolicy   = "vmm:ahv:policies:vm-anti-affinity-policy"
+	RelEntityTypeVMHostAffinityPolicy   = "vmm:ahv:policies:vm-host-affinity-policy"
 )
 
 // CompletionDetailsName constants - Completion details name for the task entities affected
