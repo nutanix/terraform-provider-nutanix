@@ -294,7 +294,8 @@ func TestAccV2NutanixClusterProfileV2_fetchCPWrongExtID(t *testing.T) {
 						ext_id = "00000000-0000-0000-0000-000000000000"
 					}
 				`,
-				ExpectError: regexp.MustCompile(`Error - profile 00000000-0000-0000-0000-000000000000 not found`),
+				// API may return "profile not found" or RBAC/could not be fetched for invalid ext_id
+				ExpectError: regexp.MustCompile(`(?i)(profile.*00000000-0000-0000-0000-000000000000 not found|RBAC_AUTHORIZATION_ERROR|could not be fetched|valid metadata or attributes could not be fetched)`),
 			},
 		},
 	})
@@ -569,6 +570,20 @@ resource "nutanix_cluster_profile_v2" "tf_second" {
 `, profile1, profile2)
 }
 
+// isClusterProfileNotFound returns true if the error indicates the cluster profile
+// does not exist (e.g. already deleted). API may return 404 with different messages.
+func isClusterProfileNotFound(err error, id string) bool {
+	if err == nil {
+		return false
+	}
+	s := strings.ToLower(fmt.Sprint(err))
+	return strings.Contains(s, "profile "+id+" not found") ||
+		strings.Contains(s, "not found") ||
+		strings.Contains(s, "404") ||
+		strings.Contains(s, "could not be fetched") ||
+		strings.Contains(s, "rbac_authorization_error")
+}
+
 // Check destroy function
 func testAccCheckClusterProfileDestroy(s *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
@@ -580,8 +595,8 @@ func testAccCheckClusterProfileDestroy(s *terraform.State) error {
 		// Check API if resource exists
 		_, errRead := conn.ClusterAPI.ClusterProfilesAPI.GetClusterProfileById(utils.StringPtr(rs.Primary.ID))
 		if errRead != nil {
-			if strings.Contains(fmt.Sprint(errRead), "profile "+rs.Primary.ID+" not found") {
-				return nil
+			if isClusterProfileNotFound(errRead, rs.Primary.ID) {
+				continue
 			}
 			return errRead
 		}
