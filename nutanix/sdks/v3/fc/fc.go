@@ -2,7 +2,6 @@ package foundationcentral
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 )
@@ -11,7 +10,6 @@ const (
 	libraryVersion = "v1"
 	absolutePath   = "api/fc/" + libraryVersion
 	userAgent      = "nutanix/" + libraryVersion
-	clientName     = "foundation_central"
 )
 
 // Client manages the foundation central API
@@ -25,15 +23,20 @@ func NewFoundationCentralClient(credentials client.Credentials) (*Client, error)
 	var baseClient *client.Client
 
 	// check if all required fields are present. Else create an empty client
-	if credentials.Username != "" && credentials.Password != "" && credentials.Endpoint != "" {
+	// Accept either (username + password) OR api_key for authentication
+	hasBasicAuth := credentials.Username != "" && credentials.Password != ""
+	hasAPIKey := credentials.APIKey != ""
+	hasEndpoint := credentials.Endpoint != ""
+
+	if hasEndpoint && (hasBasicAuth || hasAPIKey) {
 		c, err := client.NewClient(&credentials, userAgent, absolutePath, false)
 		if err != nil {
 			return nil, err
 		}
 		baseClient = c
 	} else {
-		errorMsg := fmt.Sprintf("Foundation Central Client is missing. "+
-			"Please provide required details - %s in provider configuration.", strings.Join(credentials.RequiredFields[clientName], ", "))
+		errorMsg := fmt.Sprintf("Foundation Central Client is missing. " +
+			"Please provide endpoint and either (username + password) or api_key in provider configuration.")
 
 		baseClient = &client.Client{UserAgent: userAgent, ErrorMsg: errorMsg}
 	}

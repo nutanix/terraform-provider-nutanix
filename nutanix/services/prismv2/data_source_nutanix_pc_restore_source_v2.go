@@ -177,11 +177,20 @@ func flattenRestoreSourceLocation(location *management.OneOfRestoreSourceLocatio
 func flattenRestoreSourceClusterLocation(location management.ClusterLocation) []map[string]interface{} {
 	clusterLocation := make([]map[string]interface{}, 0)
 	clusterLocationMap := make(map[string]interface{})
-	// From IRIS SDK, the cluster location config is a OneOfClusterLocationConfig
-	// so we need to get the value of the OneOfClusterLocationConfig
-	clusterConfig := location.Config.GetValue().(management.OneOfClusterLocationConfig)
-	clusterConfigValue := clusterConfig.GetValue().(management.ClusterReference)
-	clusterLocationMap["config"] = flattenRestoreSourceClusterReference(&clusterConfigValue)
+	// Config is *OneOfClusterLocationConfig; GetValue() returns the concrete member (ClusterReference or RemoteClusterSpec), not another OneOf wrapper.
+	if location.Config == nil {
+		clusterLocationMap["config"] = nil
+		clusterLocation = append(clusterLocation, clusterLocationMap)
+		return clusterLocation
+	}
+	switch v := location.Config.GetValue().(type) {
+	case management.ClusterReference:
+		clusterLocationMap["config"] = flattenRestoreSourceClusterReference(&v)
+	case *management.ClusterReference:
+		clusterLocationMap["config"] = flattenRestoreSourceClusterReference(v)
+	default:
+		clusterLocationMap["config"] = nil
+	}
 
 	clusterLocation = append(clusterLocation, clusterLocationMap)
 
