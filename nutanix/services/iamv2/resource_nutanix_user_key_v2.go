@@ -127,6 +127,7 @@ func ResourceNutanixUserKeyV2() *schema.Resource {
 									"api_key": {
 										Type:     schema.TypeString,
 										Computed: true,
+										Sensitive: true,
 									},
 								},
 							},
@@ -139,10 +140,12 @@ func ResourceNutanixUserKeyV2() *schema.Resource {
 									"secret_key": {
 										Type:     schema.TypeString,
 										Computed: true,
+										Sensitive: true,
 									},
 									"access_key": {
 										Type:     schema.TypeString,
 										Computed: true,
+										Sensitive: true,
 									},
 								},
 							},
@@ -222,7 +225,14 @@ func resourceNutanixUserKeyV2Create(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error while creating User Key: %v", err)
 	}
 	getResp := resp.Data.GetValue().(import1.Key)
+
+	aJSON, _ := json.MarshalIndent(getResp, "", "  ")
+	log.Printf("[DEBUG] Created User Key: %s", aJSON)
 	d.SetId(utils.StringValue(getResp.ExtId))
+
+	if err := d.Set("key_details", flattenKeyDetails(getResp.KeyDetails)); err != nil {
+		return diag.Errorf("error while setting key_details: %v", err)
+	}
 	return resourceNutanixUserKeyV2Read(ctx, d, meta)
 }
 
@@ -289,9 +299,6 @@ func resourceNutanixUserKeyV2Read(ctx context.Context, d *schema.ResourceData, m
 	}
 	if err := d.Set("last_used_time", flattenTime(keyConfig.LastUsedTime)); err != nil {
 		return diag.Errorf("error while setting last_used_time: %v", err)
-	}
-	if err := d.Set("key_details", flattenKeyDetails(keyConfig.KeyDetails)); err != nil {
-		return diag.Errorf("error while setting key_details: %v", err)
 	}
 	d.SetId(utils.StringValue(keyConfig.ExtId))
 	return nil
