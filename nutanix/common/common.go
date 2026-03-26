@@ -193,6 +193,66 @@ func getRawConfigValueAtPath(root cty.Value, path string) (cty.Value, bool) {
 	return cur, true
 }
 
+// IsConfigListEmpty returns true if the raw config has a list at path with length 0 (or path is null/unknown).
+// Used to prefer config (e.g. 0 disks) over API state when the user has removed all items.
+func IsConfigListEmpty(d *schema.ResourceData, path string) bool {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return false
+	}
+	val, ok := getRawConfigValueAtPath(rawConfig, path)
+	if !ok || val.IsNull() || !val.IsKnown() {
+		return false // unknown or missing: don't treat as "empty"
+	}
+	t := val.Type()
+	if !t.IsListType() && !t.IsTupleType() {
+		return false
+	}
+	lenVal := val.Length()
+	if lenVal.IsNull() || !lenVal.IsKnown() {
+		return false
+	}
+	bf := lenVal.AsBigFloat()
+	li, _ := bf.Int64()
+	return li == 0
+}
+
+// IsConfigListEmptyOrMissing returns true if the raw config has no value at path (block omitted),
+// or has a list at path with length 0. Use this when omitting an optional block should be
+// treated as "empty" (e.g. so removals are applied).
+func IsConfigListEmptyOrMissing(d *schema.ResourceData, path string) bool {
+	return isConfigListEmptyOrMissingImpl(d, path, false)
+}
+
+// IsConfigListEmptyOrMissingForUpdate is like IsConfigListEmptyOrMissing but also returns true
+// when raw config is null/unknown (e.g. in some test or RPC contexts). Use only in Update path
+// so removals are applied when config is unavailable; do not use in Read to avoid wiping state.
+func IsConfigListEmptyOrMissingForUpdate(d *schema.ResourceData, path string) bool {
+	return isConfigListEmptyOrMissingImpl(d, path, true)
+}
+
+func isConfigListEmptyOrMissingImpl(d *schema.ResourceData, path string, treatUnknownConfigAsEmpty bool) bool {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return treatUnknownConfigAsEmpty
+	}
+	val, ok := getRawConfigValueAtPath(rawConfig, path)
+	if !ok || val.IsNull() || !val.IsKnown() {
+		return true // missing or null/unknown: treat as empty so removals run
+	}
+	t := val.Type()
+	if !t.IsListType() && !t.IsTupleType() {
+		return false
+	}
+	lenVal := val.Length()
+	if lenVal.IsNull() || !lenVal.IsKnown() {
+		return false
+	}
+	bf := lenVal.AsBigFloat()
+	li, _ := bf.Int64()
+	return li == 0
+}
+
 func TaskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
