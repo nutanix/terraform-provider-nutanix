@@ -1,67 +1,10 @@
 package provider
 
 import (
+	"net/http"
 	"os"
 	"testing"
 )
-
-func TestToTitleCase(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected string
-	}{
-		{
-			name:     "simple header",
-			input:    "CONTENT-TYPE",
-			expected: "Content-Type",
-		},
-		{
-			name:     "cloudflare access header",
-			input:    "CF-ACCESS-CLIENT-ID",
-			expected: "Cf-Access-Client-Id",
-		},
-		{
-			name:     "single word",
-			input:    "AUTHORIZATION",
-			expected: "Authorization",
-		},
-		{
-			name:     "already lowercase",
-			input:    "content-type",
-			expected: "Content-Type",
-		},
-		{
-			name:     "mixed case",
-			input:    "Content-TYPE",
-			expected: "Content-Type",
-		},
-		{
-			name:     "x-custom header",
-			input:    "X-CUSTOM-HEADER",
-			expected: "X-Custom-Header",
-		},
-		{
-			name:     "empty string",
-			input:    "",
-			expected: "",
-		},
-		{
-			name:     "single char parts",
-			input:    "A-B-C",
-			expected: "A-B-C",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := toTitleCase(tt.input)
-			if result != tt.expected {
-				t.Errorf("toTitleCase(%q) = %q, expected %q", tt.input, result, tt.expected)
-			}
-		})
-	}
-}
 
 func TestParseHeadersFromEnv(t *testing.T) {
 	// Save original environment and restore after test
@@ -205,6 +148,9 @@ func TestParseHeadersFromEnv_IgnoresNonHeaderEnvVars(t *testing.T) {
 		}
 	}()
 
+	// Clear environment so ambient NUTANIX_HEADER_* vars don't leak in.
+	os.Clearenv()
+
 	// Set various env vars, only one should be picked up
 	os.Setenv("NUTANIX_HEADER_X_VALID", "valid")
 	os.Setenv("NUTANIX_USERNAME", "should-ignore")
@@ -252,7 +198,7 @@ func parseHeadersFromEnv() map[string]string {
 						}
 					}
 					headerName = string(result)
-					headerName = toTitleCase(headerName)
+					headerName = http.CanonicalHeaderKey(headerName)
 					customHeaders[headerName] = envValue
 					break
 				}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 
@@ -576,15 +577,23 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 				// Strip prefix, replace underscores with dashes, and title-case
 				headerName := envName[len(headerPrefix):]
 				headerName = strings.ReplaceAll(headerName, "_", "-")
-				headerName = toTitleCase(headerName)
+				headerName = http.CanonicalHeaderKey(headerName)
 				customHeaders[headerName] = envValue
 			}
 		}
 	}
 
-	// Config headers take precedence over environment variables
+	// Config headers take precedence over environment variables.
+	// Preserve the user's casing exactly, but remove any env var entry for the
+	// same header name (compared case-insensitively) before inserting.
 	if v, ok := d.GetOk("custom_headers"); ok {
 		for key, value := range v.(map[string]interface{}) {
+			// Remove any env var-derived entry with the same name (different case).
+			for existing := range customHeaders {
+				if strings.EqualFold(existing, key) && existing != key {
+					delete(customHeaders, existing)
+				}
+			}
 			customHeaders[key] = value.(string)
 		}
 	}
@@ -615,14 +624,3 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	return c, diags
 }
 
-// toTitleCase converts a dash-separated string to title case
-// e.g., "CF-ACCESS-CLIENT-ID" -> "Cf-Access-Client-Id"
-func toTitleCase(s string) string {
-	parts := strings.Split(s, "-")
-	for i, part := range parts {
-		if len(part) > 0 {
-			parts[i] = strings.ToUpper(string(part[0])) + strings.ToLower(part[1:])
-		}
-	}
-	return strings.Join(parts, "-")
-}
