@@ -2,10 +2,12 @@ package networkingv2_test
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -163,16 +165,62 @@ func TestAccV2NutanixSubnetResource_WithMetadata(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameSubnet, "subnet_type", "VLAN"),
 					resource.TestCheckResourceAttr(resourceNameSubnet, "network_id", "112"),
 					resource.TestCheckResourceAttr(resourceNameSubnet, "metadata.0.category_ids.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceNameSubnet, "metadata.0.category_ids.0", "nutanix_category_v2.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceNameSubnet, "metadata.0.category_ids.1", "nutanix_category_v2.test2", "id"),
+					testCheckMetadataCategoryIDsContain(resourceNameSubnet, "nutanix_category_v2.test", "nutanix_category_v2.test2"),
 					// data source check
 					resource.TestCheckResourceAttr(datasourceNameSubnet, "metadata.0.category_ids.#", "2"),
-					resource.TestCheckResourceAttrPair(datasourceNameSubnet, "metadata.0.category_ids.0", "nutanix_category_v2.test", "id"),
-					resource.TestCheckResourceAttrPair(datasourceNameSubnet, "metadata.0.category_ids.1", "nutanix_category_v2.test2", "id"),
+					testCheckMetadataCategoryIDsContain(datasourceNameSubnet, "nutanix_category_v2.test", "nutanix_category_v2.test2"),
 				),
 			},
 		},
 	})
+}
+
+func testCheckMetadataCategoryIDsContain(target string, expectedCategoryResources ...string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		targetRs, ok := s.RootModule().Resources[target]
+		if !ok {
+			return fmt.Errorf("resource %q not found in state", target)
+		}
+
+		countStr, ok := targetRs.Primary.Attributes["metadata.0.category_ids.#"]
+		if !ok {
+			return fmt.Errorf("resource %q has no metadata category_ids count", target)
+		}
+
+		count, err := strconv.Atoi(countStr)
+		if err != nil {
+			return fmt.Errorf("invalid category_ids count %q for %q: %w", countStr, target, err)
+		}
+
+		actualIDs := make(map[string]struct{}, count)
+		for i := 0; i < count; i++ {
+			k := fmt.Sprintf("metadata.0.category_ids.%d", i)
+			if v, exists := targetRs.Primary.Attributes[k]; exists && v != "" {
+				actualIDs[v] = struct{}{}
+			}
+		}
+
+		for _, expectedResource := range expectedCategoryResources {
+			expectedRs, exists := s.RootModule().Resources[expectedResource]
+			if !exists {
+				return fmt.Errorf("expected category resource %q not found in state", expectedResource)
+			}
+
+			expectedID := expectedRs.Primary.ID
+			if expectedID == "" {
+				expectedID = expectedRs.Primary.Attributes["id"]
+			}
+			if expectedID == "" {
+				return fmt.Errorf("expected category resource %q has empty id", expectedResource)
+			}
+
+			if _, present := actualIDs[expectedID]; !present {
+				return fmt.Errorf("resource %q metadata category_ids does not contain expected id %q from %q", target, expectedID, expectedResource)
+			}
+		}
+
+		return nil
+	}
 }
 
 func testSubnetV2Config(name, desc string) string {
