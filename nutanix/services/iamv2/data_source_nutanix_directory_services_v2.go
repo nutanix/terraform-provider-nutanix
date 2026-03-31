@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -202,7 +203,8 @@ func DatasourceNutanixDirectoryServicesV2Read(ctx context.Context, d *schema.Res
 	if v, ok := d.GetOk("select"); ok {
 		listDirectoryServicesRequest.Select_ = utils.StringPtr(v.(string))
 	}
-
+  aJSON, _ := json.MarshalIndent(listDirectoryServicesRequest, "", " ")
+	log.Println("[DEBUG] List Directory Services payload: ", string(aJSON))
 	resp, err := conn.DirectoryServiceAPIInstance.ListDirectoryServices(ctx, &listDirectoryServicesRequest)
 	if err != nil {
 		fmt.Println(err)
