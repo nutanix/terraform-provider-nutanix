@@ -3,6 +3,7 @@ package prismv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -88,8 +89,7 @@ func ResourceNutanixUnregisterClusterV2Create(ctx context.Context, d *schema.Res
 	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Unregister Cluster task details: %s", string(aJSON))
 
-	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeDomainManager,
-		"Unregister Domain Manager")
+	uuid, err := unregisterDomainManagerUUIDFromTask(taskDetails, extID.(string))
 	if err != nil {
 		return diag.Errorf("error while extracting domain manager UUID from task response: %s", err)
 	}
@@ -108,4 +108,26 @@ func ResourceNutanixUnregisterClusterV2Update(ctx context.Context, d *schema.Res
 
 func ResourceNutanixUnregisterClusterV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
+}
+
+// unregisterDomainManagerUUIDFromTask picks the unregistered PC among entitiesAffected.
+// The API may use rel prism:config:domain_manager or prism:management:domain_manager, and may list
+// both the hosting PC and the unregistered PC, so we match by the requested ext_id.
+func unregisterDomainManagerUUIDFromTask(task config.Task, requestedExtID string) (*string, error) {
+	relTypes := []string{
+		utils.RelEntityTypeDomainManager,
+		utils.RelEntityTypeDomainManagerManagement,
+	}
+	for _, entity := range task.EntitiesAffected {
+		if entity.Rel == nil || entity.ExtId == nil {
+			continue
+		}
+		rel := utils.StringValue(entity.Rel)
+		for _, rt := range relTypes {
+			if rel == rt && utils.StringValue(entity.ExtId) == requestedExtID {
+				return entity.ExtId, nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("Unregister Domain Manager UUID not found in entities affected")
 }

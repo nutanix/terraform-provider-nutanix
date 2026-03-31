@@ -1,7 +1,9 @@
 package prismv2_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"testing"
@@ -43,8 +45,7 @@ func TestAccV2NutanixDeployPcResource_Basic(t *testing.T) {
 }
 
 func testAccDeployPCConfig(name string) string {
-	username := os.Getenv("NUTANIX_USERNAME")
-	password := os.Getenv("NUTANIX_PASSWORD")
+	username, password := getBasicAuthForAPINonSupportedTests()
 	port, _ := strconv.Atoi(os.Getenv("NUTANIX_PORT"))
 	insecure, _ := strconv.ParseBool(os.Getenv("NUTANIX_INSECURE"))
 	remoteHostProviderConfig := fmt.Sprintf(`
@@ -54,10 +55,13 @@ provider "nutanix-2" {
   endpoint = "%[3]s"
   insecure = %[4]t
   port     = %[5]d
+  api_key  = ""  # Force basic auth; deploy PC does not support API key
 }
 
 `, username, password, testVars.Prism.DeployPC.PeIP, insecure, port)
 
+	aJSON, _ := json.Marshal(remoteHostProviderConfig)
+	log.Println(string(aJSON))
 	return fmt.Sprintf(`
 
 %[2]s

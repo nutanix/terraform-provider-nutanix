@@ -254,7 +254,7 @@ func TestAccV2NutanixProtectionPolicyResource_AutoRollupRetention(t *testing.T) 
 }
 
 func testProtectionPolicyResourceConfig(name, description string) string {
-	return fmt.Sprintf(`
+	return getProviderConfigForAPINonSupportedTests() + fmt.Sprintf(`
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
@@ -312,7 +312,7 @@ resource "nutanix_protection_policy_v2" "test" {
 }
 
 func testProtectionPolicyResourceUpdateConfig(name, description string) string {
-	return fmt.Sprintf(`
+	return getProviderConfigForAPINonSupportedTests() + fmt.Sprintf(`
 
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
@@ -395,7 +395,7 @@ resource "nutanix_protection_policy_v2" "test" {
 }
 
 func testProtectionPolicyResourceConfigLinearRetentionConfig(name, description string) string {
-	return fmt.Sprintf(`
+	return getProviderConfigForAPINonSupportedTests() + fmt.Sprintf(`
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
@@ -474,7 +474,7 @@ resource "nutanix_protection_policy_v2" "test" {
 }
 
 func testProtectionPolicyResourceConfigLinearRetentionUpdateConfig(name, description string) string {
-	return fmt.Sprintf(`
+	return getProviderConfigForAPINonSupportedTests() + fmt.Sprintf(`
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
@@ -553,7 +553,7 @@ resource "nutanix_protection_policy_v2" "test" {
 }
 
 func testProtectionPolicyResourceConfigAutoRollupRetentionConfig(name, description string) string {
-	return fmt.Sprintf(`
+	return getProviderConfigForAPINonSupportedTests() + fmt.Sprintf(`
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
@@ -635,7 +635,7 @@ resource "nutanix_protection_policy_v2" "test" {
 }
 
 func testProtectionPolicyResourceConfigAutoRollupRetentionUpdateConfig(name, description string) string {
-	return fmt.Sprintf(`
+	return getProviderConfigForAPINonSupportedTests() + fmt.Sprintf(`
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 

@@ -41,10 +41,12 @@ func testAccCheckNutanixObjectStoreDestroy(s *terraform.State) error {
 				bucketResp.StatusCode != http.StatusAccepted &&
 				bucketResp.StatusCode != http.StatusNoContent &&
 				bucketResp.StatusCode != http.StatusNotFound &&
-				bucketResp.StatusCode != http.StatusServiceUnavailable {
+				bucketResp.StatusCode != http.StatusServiceUnavailable &&
+				bucketResp.StatusCode != http.StatusInternalServerError {
 				return fmt.Errorf("error deleting bucket for ObjectStore %s: %s", rs.Primary.ID, bucketResp.Status)
 			}
-			log.Printf("[DEBUG] Bucket for ObjectStore %s deleted (status %d)", rs.Primary.ID, bucketResp.StatusCode)
+			// 500 is common when object store is already deleted (proxy returns "Object store not found")
+			log.Printf("[DEBUG] Bucket for ObjectStore %s deleted or store gone (status %d)", rs.Primary.ID, bucketResp.StatusCode)
 		}
 
 		// Now check if the object store itself is deleted
@@ -66,9 +68,17 @@ func deleteBucketForObjectStore(objectStoreExtID string) (*http.Response, error)
 	defer cancel()
 
 	endpoint := os.Getenv("NUTANIX_ENDPOINT")
-	user := os.Getenv("NUTANIX_USERNAME")
-	password := os.Getenv("NUTANIX_PASSWORD")
+	// Prefer test config credentials (username_for_test/password_for_test) for bucket operations
+	user := testVars.UsernameForTest
+	password := testVars.PasswordForTest
+	if user == "" && password == "" {
+		user = os.Getenv("NUTANIX_USERNAME")
+		password = os.Getenv("NUTANIX_PASSWORD")
+	}
 	port := os.Getenv("NUTANIX_PORT")
+	if port == "" {
+		port = "9440"
+	}
 
 	bucketName := testVars.ObjectStore.BucketName
 
@@ -81,7 +91,7 @@ func deleteBucketForObjectStore(objectStoreExtID string) (*http.Response, error)
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
 
-	// 4) Set Authentication
+	// 4) Set Authentication: use test config credentials (username_for_test/password_for_test) for bucket operations
 	req.SetBasicAuth(user, password)
 
 	// 5) Set Headers

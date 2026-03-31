@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -54,6 +55,11 @@ func TestAccV2NutanixSSLCertificateV2_Regenerate(t *testing.T) {
 		Steps: []resource.TestStep{
 			// regenerate the ssl certificate
 			{
+				PreConfig: func() {
+					// wait for 1 minute before regenerating the ssl certificate
+					// its required when running the test in parallel
+					time.Sleep(1 * time.Minute)
+				},
 				Config: `
 				data "nutanix_clusters_v2" "clusters" {
 					filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"

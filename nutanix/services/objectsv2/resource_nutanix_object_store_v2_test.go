@@ -2,6 +2,7 @@ package objectstoresv2_test
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"os"
 	"strings"
@@ -326,9 +327,15 @@ resource "terraform_data" "cleanup_bucket_test" {
   input = {
     object_store_id = nutanix_object_store_v2.test.id
     bucket_name     = local.objectStore.bucket_name
+    username        = local.config.username_for_test
+    password        = local.config.password_for_test
   }
   provisioner "local-exec" {
     when = destroy
+    environment = {
+      NUTANIX_USERNAME = self.input.username
+      NUTANIX_PASSWORD = self.input.password
+    }
     command = <<EOT
 set -eu
 BASE="https://$NUTANIX_ENDPOINT:$NUTANIX_PORT/oss/api/nutanix/v3/objectstore_proxy/${self.input.object_store_id}"
@@ -431,9 +438,15 @@ resource "terraform_data" "cleanup_bucket_test2" {
   input = {
     object_store_id = nutanix_object_store_v2.test2.id
     bucket_name     = local.objectStore.bucket_name
+    username        = local.config.username_for_test
+    password        = local.config.password_for_test
   }
   provisioner "local-exec" {
     when = destroy
+    environment = {
+      NUTANIX_USERNAME = self.input.username
+      NUTANIX_PASSWORD = self.input.password
+    }
     command = <<EOT
 set -eu
 BASE="https://$NUTANIX_ENDPOINT:$NUTANIX_PORT/oss/api/nutanix/v3/objectstore_proxy/${self.input.object_store_id}"
@@ -552,9 +565,15 @@ resource "terraform_data" "cleanup_bucket_test" {
   input = {
     object_store_id = nutanix_object_store_v2.test.id
     bucket_name     = local.objectStore.bucket_name
+    username        = local.config.username_for_test
+    password        = local.config.password_for_test
   }
   provisioner "local-exec" {
     when = destroy
+    environment = {
+      NUTANIX_USERNAME = self.input.username
+      NUTANIX_PASSWORD = self.input.password
+    }
     command = <<EOT
 set -eu
 BASE="https://$NUTANIX_ENDPOINT:$NUTANIX_PORT/oss/api/nutanix/v3/objectstore_proxy/${self.input.object_store_id}"
@@ -761,9 +780,15 @@ resource "terraform_data" "cleanup_bucket_test" {
   input = {
     object_store_id = nutanix_object_store_v2.test.id
     bucket_name     = local.objectStore.bucket_name
+    username        = local.config.username_for_test
+    password        = local.config.password_for_test
   }
   provisioner "local-exec" {
     when = destroy
+    environment = {
+      NUTANIX_USERNAME = self.input.username
+      NUTANIX_PASSWORD = self.input.password
+    }
     command = <<EOT
 set -eu
 URL="https://$NUTANIX_ENDPOINT:$NUTANIX_PORT/oss/api/nutanix/v3/objectstore_proxy/${self.input.object_store_id}/buckets/${self.input.bucket_name}?force_empty_bucket=true"
@@ -797,10 +822,16 @@ EOT
 }
 
 func testAccObjectStoreObjectLiteSourceConfig(objectLiteSourceImgName, vmName, vmOvaName, objectOvaName string) string {
-	nutanixUsername := os.Getenv("NUTANIX_USERNAME")
-	nutanixPassword := os.Getenv("NUTANIX_PASSWORD")
+	nutanixUsername := testVars.UsernameForTest
+	nutanixPassword := testVars.PasswordForTest
 	nutanixEndpoint := os.Getenv("NUTANIX_ENDPOINT")
 	nutanixPort := os.Getenv("NUTANIX_PORT")
+
+	log.Println("nutanixUsername: ", nutanixUsername)
+	log.Println("nutanixPassword: ", nutanixPassword)
+	log.Println("nutanixEndpoint: ", nutanixEndpoint)
+	log.Println("nutanixPort: ", nutanixPort)
+
 	return fmt.Sprintf(`
 
 locals {

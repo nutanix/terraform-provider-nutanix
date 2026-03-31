@@ -26,6 +26,15 @@ const (
 	awsS3ConfigObjectType = "prism.v4.management.AWSS3Config"
 )
 
+// getBasicAuthForAPINonSupportedTests returns username and password for tests that do not support API key.
+// Uses username_for_test and password_for_test from test_config_v2.json when available, otherwise env vars.
+func getBasicAuthForAPINonSupportedTests() (string, string) {
+	if testVars.UsernameForTest != "" && testVars.PasswordForTest != "" {
+		return testVars.UsernameForTest, testVars.PasswordForTest
+	}
+	return os.Getenv("NUTANIX_USERNAME"), os.Getenv("NUTANIX_PASSWORD")
+}
+
 // checkAttributeLength checks the length of an attribute and make sure it is greater than or equal to minLength
 // simply used to check the length of a list returned by List data sources
 func checkAttributeLength(resourceName, attribute string, minLength int) resource.TestCheckFunc {

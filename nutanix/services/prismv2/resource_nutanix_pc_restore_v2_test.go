@@ -263,17 +263,17 @@ func TestAccV2NutanixRestorePCResource_ObjectRestoreSourceRestorePC(t *testing.T
 
 func testAccPreRequestForRestoreSourceConfig() string {
 	// pe config
-	username := os.Getenv("NUTANIX_USERNAME")
-	password := os.Getenv("NUTANIX_PASSWORD")
+	username, password := getBasicAuthForAPINonSupportedTests()
 	port, _ := strconv.Atoi(os.Getenv("NUTANIX_PORT"))
 	insecure, _ := strconv.ParseBool(os.Getenv("NUTANIX_INSECURE"))
 	peHostProviderConfig := fmt.Sprintf(`
 provider "nutanix-2" {
-  username = "%[1]s"
-  password = "%[2]s"
-  endpoint = "%[3]s"
-  insecure = %[4]t
-  port     = %[5]d
+  username  = "%[1]s"
+  password  = "%[2]s"
+  endpoint  = "%[3]s"
+  insecure  = %[4]t
+  port      = %[5]d
+  api_key   = ""  # Force basic auth; restore source does not support API key
 }
 `, username, password, testVars.Prism.RestoreSource.PeIP, insecure, port)
 
@@ -316,17 +316,17 @@ data "nutanix_subnets_v2" "subnets" {
 
 func testAccPowerOffPCConfig(restoreSourceExtID, domainManagerExtID string) string {
 	// pe config
-	username := os.Getenv("NUTANIX_USERNAME")
-	password := os.Getenv("NUTANIX_PASSWORD")
+	username, password := getBasicAuthForAPINonSupportedTests()
 	port, _ := strconv.Atoi(os.Getenv("NUTANIX_PORT"))
 	insecure, _ := strconv.ParseBool(os.Getenv("NUTANIX_INSECURE"))
 	peHostProviderConfig := fmt.Sprintf(`
 provider "nutanix-2" {
-  username = "%[1]s"
-  password = "%[2]s"
-  endpoint = "%[3]s"
-  insecure = %[4]t
-  port     = %[5]d
+  username  = "%[1]s"
+  password  = "%[2]s"
+  endpoint  = "%[3]s"
+  insecure  = %[4]t
+  port      = %[5]d
+  api_key   = ""  # Force basic auth; restore source does not support API key
 }
 `, username, password, testVars.Prism.RestoreSource.PeIP, insecure, port)
 
@@ -438,17 +438,17 @@ func restorePcResourceConfig(pcDetails map[string]interface{}, restoreSourceExtI
 		testVars.Prism.RestoreSource.SSHPassword, testVars.Prism.RestoreSource.SSHUser, pcIP, remoteCommands)
 
 	// pe config
-	username := os.Getenv("NUTANIX_USERNAME")
-	password := os.Getenv("NUTANIX_PASSWORD")
+	username, password := getBasicAuthForAPINonSupportedTests()
 	port, _ := strconv.Atoi(os.Getenv("NUTANIX_PORT"))
 	insecure, _ := strconv.ParseBool(os.Getenv("NUTANIX_INSECURE"))
 	peHostProviderConfig := fmt.Sprintf(`
 provider "nutanix-2" {
-  username = "%[1]s"
-  password = "%[2]s"
-  endpoint = "%[3]s"
-  insecure = %[4]t
-  port     = %[5]d
+  username  = "%[1]s"
+  password  = "%[2]s"
+  endpoint  = "%[3]s"
+  insecure  = %[4]t
+  port      = %[5]d
+  api_key   = ""  # Force basic auth; restore source does not support API key
 }
 `, username, password, testVars.Prism.RestoreSource.PeIP, insecure, port)
 
