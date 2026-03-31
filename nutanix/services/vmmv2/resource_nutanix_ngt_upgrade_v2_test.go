@@ -66,7 +66,6 @@ func testNGTUpgradeResourceConfig() string {
 	`, filepath)
 }
 
-
 func testNGTUpgradeResourceConfigDoublicated() string {
 	return fmt.Sprintf(`
 	locals {
