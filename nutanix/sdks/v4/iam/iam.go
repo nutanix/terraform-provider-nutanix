@@ -33,7 +33,7 @@ func NewIamClient(credentials client.Credentials) (*Client, error) {
 		baseClient = pcClient
 	}
 
-	return &Client{
+	f := &Client{
 		DirectoryServiceAPIInstance: api.NewDirectoryServicesApi(baseClient),
 		SamlIdentityAPIInstance:     api.NewSAMLIdentityProvidersApi(baseClient),
 		UserGroupsAPIInstance:       api.NewUserGroupsApi(baseClient),
