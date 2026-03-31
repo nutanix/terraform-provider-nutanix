@@ -81,10 +81,10 @@ under:
    Local Nutanix provider plugin will be used after `terraform init`
    command execution in Terraform template directory
 
-
 ### Running tests of provider
 
 For running unit tests:
+
 ```sh
 make test
 ```
@@ -92,39 +92,56 @@ make test
 For running integration tests:
 
 1. Add environment variables for setup related details:
-```ssh
-export NUTANIX_USERNAME="<username>"
-export NUTANIX_PASSWORD="<password>"
-export NUTANIX_INSECURE=true
-export NUTANIX_PORT=9440
-export NUTANIX_ENDPOINT="<pc-ip>"
-export NUTANIX_STORAGE_CONTAINER="<storage-container-uuid-for-vm-tests>"
-export FOUNDATION_ENDPOINT="<foundation-vm-ip-for-foundation-related-tests>"
-export FOUNDATION_PORT=8000
-export NOS_IMAGE_TEST_URL="<test-image-url>"
-export NDB_ENDPOINT="<ndb-ip>"
-export NDB_USERNAME="<username>"
-export NDB_PASSWORD="<password>"
-```
+
+    ```sh
+    export NUTANIX_USERNAME="<username>"
+    export NUTANIX_PASSWORD="<password>"
+    export NUTANIX_INSECURE=true
+    export NUTANIX_PORT=9440
+    export NUTANIX_ENDPOINT="<pc-ip>"
+    export NUTANIX_STORAGE_CONTAINER="<storage-container-uuid-for-vm-tests>"
+    export FOUNDATION_ENDPOINT="<foundation-vm-ip-for-foundation-related-tests>"
+    export FOUNDATION_PORT=8000
+    export NOS_IMAGE_TEST_URL="<test-image-url>"
+    export NDB_ENDPOINT="<ndb-ip>"
+    export NDB_USERNAME="<username>"
+    export NDB_PASSWORD="<password>"
+    ```
+
+    Alternatively, you can authenticate using an API key instead of username/password:
+
+    ```sh
+    export NUTANIX_API_KEY="<api-key>"
+    ```
+
+    Custom HTTP headers (e.g. for Cloudflare Access) can be injected via environment variables with the `NUTANIX_HEADER_` prefix:
+
+    ```sh
+    export NUTANIX_HEADER_CF_ACCESS_CLIENT_ID="<client-id>"
+    export NUTANIX_HEADER_CF_ACCESS_CLIENT_SECRET="<client-secret>"
+    ```
 
 2. Some tests need setup related constants for resource creation. So add/replace details in test_config.json (for pc tests) and test_foundation_config.json (for foundation and foundation central tests and NDB)
 
 3. To run all tests:
-```ssh
-make testacc
-```
+
+    ```sh
+    make testacc
+    ```
 
 4. To run specific tests:
-```ssh 
-export TESTARGS='-run=TestAccNutanixPbr_WithSourceExternalDestinationNetwork'
-make testacc
-```
+
+    ```sh
+    export TESTARGS='-run=TestAccNutanixPbr_WithSourceExternalDestinationNetwork'
+    make testacc
+    ```
 
 5. To run collection of tests:
-``` ssh
-export TESTARGS='-run=TestAccNutanixPbr*'
-make testacc
-```
+
+    ```sh
+    export TESTARGS='-run=TestAccNutanixPbr*'
+    make testacc
+    ```
 
 ### Common Issues using the development binary.
 
