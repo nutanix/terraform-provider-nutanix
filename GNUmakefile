@@ -23,6 +23,8 @@ testacc: fmtcheck
 #   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic    # single test in specific package
 #   make acc-test p=networkingv2                                       # all tests in package (explicit)
 #   make acc-test p=networkingv2 TestAccV2NutanixSubnetResource_Basic  # single test in specific package (explicit)
+#   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic o=test_logs_nf.log
+#   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic -- -o test_logs_nf.log
 #   make acc-test v4                                                   # all TestAccV2Nutanix* tests
 #   make acc-test v3                                                   # all TestAccNutanix* tests
 #   make acc-test TestAccV2NutanixSubnetResource_Basic                 # single test (searches all packages)
@@ -30,25 +32,32 @@ testacc: fmtcheck
 # Note: Don't use -p flag (it's a Make built-in). Use p= or just the package name directly.
 _acc_goals := $(filter-out acc-test,$(MAKECMDGOALS))
 _acc_single := $(if $(filter 1,$(words $(_acc_goals))),$(firstword $(_acc_goals)),)
-ACC_TEST_LOG ?= $(if $(_acc_single),test_output_$(_acc_single).log,test_output.log)
+ACC_TEST_LOG ?= $(if $(o),$(o),$(if $(_acc_single),test_output_$(_acc_single).log,test_output.log))
 acc-test:
 	@bash -c '\
 		logfile="$(ACC_TEST_LOG)"; \
-		: > "$$logfile"; \
-		echo "==> Loading .env and running acceptance tests (output to $$logfile only; summary at end)..." >> "$$logfile"; \
-		[ -f .env ] && set -a && . ./.env && set +a; \
-		export TF_ACC=1 GOTRACEBACK=all GOFLAGS="-mod=mod"; \
 		args="$(filter-out acc-test,$(MAKECMDGOALS))"; \
 		package_path="./..."; \
 		run_flag=""; \
+		expect_log_arg=0; \
+		[ -f .env ] && set -a && . ./.env && set +a; \
+		export TF_ACC=1 GOTRACEBACK=all GOFLAGS="-mod=mod"; \
 		if [ -n "$(p)" ]; then \
 			package_path="./nutanix/services/$(p)"; \
-			echo "📦 Running tests only in package: $$package_path" >> "$$logfile"; \
 		fi; \
 		for arg in $$args; do \
+			if [ "$$expect_log_arg" = "1" ]; then \
+				logfile="$$arg"; \
+				expect_log_arg=0; \
+				continue; \
+			fi; \
+			case "$$arg" in \
+				--) continue ;; \
+				-o|--output) expect_log_arg=1; continue ;; \
+				-o=*|--output=*) logfile="$${arg#*=}"; continue ;; \
+			esac; \
 			if [ -d "nutanix/services/$$arg" ]; then \
 				package_path="./nutanix/services/$$arg"; \
-				echo "📦 Running tests only in package: $$package_path (auto-detected)" >> "$$logfile"; \
 				continue; \
 			fi; \
 			case "$$arg" in \
@@ -68,6 +77,17 @@ acc-test:
 				run_flag="$$pattern"; \
 			fi; \
 		done; \
+		if [ "$$expect_log_arg" = "1" ]; then \
+			echo "acc-test: missing file name after -o/--output" >&2; \
+			exit 1; \
+		fi; \
+		: > "$$logfile"; \
+		echo "==> Loading .env and running acceptance tests (output to $$logfile only; summary at end)..." >> "$$logfile"; \
+		if [ -n "$(p)" ]; then \
+			echo "📦 Running tests only in package: $$package_path" >> "$$logfile"; \
+		elif [ "$$package_path" != "./..." ]; then \
+			echo "📦 Running tests only in package: $$package_path (auto-detected)" >> "$$logfile"; \
+		fi; \
 		if [ "$$package_path" != "./..." ] && [ -z "$$run_flag" ]; then \
 			test_args="-run=."; \
 		elif [ -n "$$run_flag" ]; then \
@@ -80,8 +100,8 @@ acc-test:
 		go test "$$package_path" -v $$test_args -timeout 500m -count=1 -mod=mod 2>&1 | while IFS= read -r line; do echo "$$line" >> "$$logfile"; done; \
 		if [ -f "$$logfile" ] && grep -qE "^--- (PASS|FAIL|SKIP):" "$$logfile" 2>/dev/null; then \
 			"$(CURDIR)/scripts/acc-test-summary.sh" "$$logfile"; \
-		fi'
-	@echo "==> Log file: $(ACC_TEST_LOG)"
+		fi; \
+		echo "==> Log file: $$logfile"'
 
 # Format and check targets: defined before the % pattern so "make fmt" runs only fmt, not acc-test.
 fmt:
