@@ -30,6 +30,44 @@ resource "nutanix_directory_services_v2" "active-directory" {
     ]
   }
 }
+
+# Directory Service Shared with All Projects
+resource "nutanix_directory_services_v2" "active-directory" {
+  name           = "example_active_directory"
+  url            = "ldap://10.xx.xx.xx:xxxx"
+  directory_type = "ACTIVE_DIRECTORY"
+  domain_name    = "nutanix.com"
+  service_account {
+    username = "username"
+    password = "password"
+  }
+  share_with_all_projects = true
+  white_listed_groups = ["example"]
+  lifecycle {
+    ignore_changes = [
+      service_account.0.password,
+    ]
+  }
+}
+
+# Directory Service Shared with Projects
+resource "nutanix_directory_services_v2" "active-directory" {
+  name           = "example_active_directory"
+  url            = "ldap://10.xx.xx.xx:xxxx"
+  directory_type = "ACTIVE_DIRECTORY"
+  domain_name    = "nutanix.com"
+  service_account {
+    username = "username"
+    password = "password"
+  }
+  shared_with_projects = ["Project1_UUID", "Project2_UUID"]
+  white_listed_groups = ["example"]
+  lifecycle {
+    ignore_changes = [
+      service_account.0.password,
+    ]
+  }
+}
 ```
 
 ## Argument Reference
@@ -41,6 +79,8 @@ The following arguments are supported:
 * `url`: -(Required) URL for the Directory Service.
 * `secondary_urls`: -(Optional) Secondary URL for the Directory Service.
 * `domain_name`: -(Required) Domain name for the Directory Service.
+* `shared_with_projects`: -(Optional)
+* `share_with_all_projects`: -(Optional)
 * `directory_type`: -(Required) Type of Directory Service, Supported values are: "ACTIVE_DIRECTORY" (Directory Service type is Active Directory.) and "OPEN_LDAP" (Directory Service type is Open LDAP.)
 * `service_account`: -(Required) Information of Service account to connect to the Directory Service.
 * `open_ldap_configuration`: -(Optional) Configuration for OpenLDAP Directory Service.
