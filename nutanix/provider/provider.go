@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
+	"os"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -35,11 +37,13 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/volumesv2"
 )
 
+// requiredProviderFields defines the required fields for each provider service.
+// Note: prism_central and karbon now accept either (username + password) OR api_key
 var requiredProviderFields map[string][]string = map[string][]string{
-	"prism_central":      {"username", "password", "endpoint"},
-	"karbon":             {"username", "password", "endpoint"},
+	"prism_central":      {"endpoint"}, // username+password OR api_key validated separately
+	"karbon":             {"endpoint"}, // username+password OR api_key validated separately
 	"foundation":         {"foundation_endpoint"},
-	"foundation_central": {"username", "password", "endpoint"},
+	"foundation_central": {"endpoint"}, // username+password OR api_key validated separately
 	"ndb":                {"ndb_endpoint", "ndb_username", "ndb_password"},
 }
 
@@ -71,6 +75,16 @@ func Provider() *schema.Provider {
 		"foundation_port": "Port for foundation VM",
 
 		"ndb_endpoint": "endpoint for Era VM (era ip)",
+
+		"api_key": "API key for Nutanix Prism authentication. Can be used as an\n" +
+			"alternative to username/password. When set, the X-Ntnx-Api-Key header\n" +
+			"will be used instead of Basic Authentication.",
+
+		"custom_headers": "Custom HTTP headers to add to all API requests. Useful for\n" +
+			"environments that require additional headers such as Cloudflare Access\n" +
+			"service tokens. Headers can also be set via environment variables with\n" +
+			"the NUTANIX_HEADER_ prefix (e.g., NUTANIX_HEADER_CF_ACCESS_CLIENT_ID\n" +
+			"becomes Cf-Access-Client-Id). Config values take precedence over env vars.",
 	}
 
 	// Nutanix provider schema
@@ -102,9 +116,8 @@ func Provider() *schema.Provider {
 			},
 			"port": {
 				Type:        schema.TypeString,
-				Default:     "9440",
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_PORT", false),
+				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_PORT", "9440"),
 				Description: descriptions["port"],
 			},
 			"endpoint": {
@@ -155,6 +168,20 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("NDB_PASSWORD", nil),
 				Description: descriptions["ndb_password"],
+			},
+			"api_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_API_KEY", nil),
+				Description: descriptions["api_key"],
+			},
+			"custom_headers": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Sensitive:   true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: descriptions["custom_headers"],
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
@@ -312,6 +339,10 @@ func Provider() *schema.Provider {
 			"nutanix_ngt_configuration_v2":                    vmmv2.DatasourceNutanixNGTConfigurationV4(),
 			"nutanix_image_placement_policy_v2":               vmmv2.DatasourceNutanixImagePlacementV4(),
 			"nutanix_image_placement_policies_v2":             vmmv2.DatasourceNutanixImagePlacementsV4(),
+			"nutanix_vm_anti_affinity_policy_v2":              vmmv2.DatasourceNutanixVMAntiAffinityPolicyV2(),
+			"nutanix_vm_anti_affinity_policies_v2":            vmmv2.DatasourceNutanixVMAntiAffinityPoliciesV2(),
+			"nutanix_vm_host_affinity_policy_v2":              vmmv2.DatasourceNutanixVMHostAffinityPolicyV2(),
+			"nutanix_vm_host_affinity_policies_v2":            vmmv2.DatasourceNutanixVMHostAffinityPoliciesV2(),
 			"nutanix_cluster_v2":                              clustersv2.DatasourceNutanixClusterEntityV2(),
 			"nutanix_clusters_v2":                             clustersv2.DatasourceNutanixClusterEntitiesV2(),
 			"nutanix_system_user_passwords_v2":                passwordmanagerv2.DataSourceNutanixPasswordManagersV2(),
@@ -444,6 +475,8 @@ func Provider() *schema.Provider {
 			"nutanix_vm_network_device_assign_ip_v2":          vmmv2.ResourceNutanixVmsNetworkDeviceAssignIPV2(),
 			"nutanix_vm_network_device_migrate_v2":            vmmv2.ResourceNutanixVmsNetworkDeviceMigrateV2(),
 			"nutanix_image_placement_policy_v2":               vmmv2.ResourceNutanixImagePlacementV2(),
+			"nutanix_vm_host_affinity_policy_v2":              vmmv2.ResourceNutanixVMHostAffinityPolicyV2(),
+			"nutanix_vm_anti_affinity_policy_v2":              vmmv2.ResourceNutanixVMAntiAffinityPolicyV2(),
 			"nutanix_cluster_v2":                              clustersv2.ResourceNutanixClusterV2(),
 			"nutanix_cluster_add_node_v2":                     clustersv2.ResourceNutanixClusterAddNodeV2(),
 			"nutanix_clusters_discover_unconfigured_nodes_v2": clustersv2.ResourceNutanixClusterDiscoverUnconfiguredNodesV2(),
@@ -471,6 +504,42 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	disabledProviders := make([]string, 0)
 	// create warnings for disabled provider services
 	var diags diag.Diagnostics
+
+	// Get authentication credentials
+	username := d.Get("username").(string)
+	password := d.Get("password").(string)
+	apiKey := d.Get("api_key").(string)
+	endpoint := d.Get("endpoint").(string)
+
+	// Validate authentication: need either (username + password) OR api_key for Prism Central services
+	hasBasicAuth := username != "" && password != ""
+	hasAPIKey := apiKey != ""
+
+	if (username != "") != (password != "") {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid authentication configuration",
+			Detail:   "Both username and password must be provided together.",
+		})
+		return nil, diags
+	}
+
+	if endpoint != "" && !hasBasicAuth && !hasAPIKey {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Authentication required",
+			Detail:   "Either username and password or api_key must be provided for Prism Central authentication.",
+		})
+		return nil, diags
+	}
+
+	if hasBasicAuth && hasAPIKey {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "Both username/password and api_key are set. api_key takes precedence; username and password will be ignored.",
+		})
+	}
+
 	for k, v := range requiredProviderFields {
 		// check if any field is not provided
 		for _, attr := range v {
@@ -489,10 +558,50 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		})
 	}
 
+	// Parse custom headers from environment variables and config
+	// Environment variables with prefix NUTANIX_HEADER_ are converted to HTTP headers:
+	// - Strip the NUTANIX_HEADER_ prefix
+	// - Replace underscores with dashes
+	// - Apply title-casing (e.g., NUTANIX_HEADER_CF_ACCESS_CLIENT_ID -> Cf-Access-Client-Id)
+	// Headers defined in config take precedence over environment variables
+	customHeaders := make(map[string]string)
+
+	// First, scan environment variables for NUTANIX_HEADER_ prefix
+	const headerPrefix = "NUTANIX_HEADER_"
+	for _, env := range os.Environ() {
+		if strings.HasPrefix(env, headerPrefix) {
+			parts := strings.SplitN(env, "=", 2)
+			if len(parts) == 2 {
+				envName := parts[0]
+				envValue := parts[1]
+				// Strip prefix, replace underscores with dashes, and title-case
+				headerName := envName[len(headerPrefix):]
+				headerName = strings.ReplaceAll(headerName, "_", "-")
+				headerName = http.CanonicalHeaderKey(headerName)
+				customHeaders[headerName] = envValue
+			}
+		}
+	}
+
+	// Config headers take precedence over environment variables.
+	// Preserve the user's casing exactly, but remove any env var entry for the
+	// same header name (compared case-insensitively) before inserting.
+	if v, ok := d.GetOk("custom_headers"); ok {
+		for key, value := range v.(map[string]interface{}) {
+			// Remove any env var-derived entry with the same name (different case).
+			for existing := range customHeaders {
+				if strings.EqualFold(existing, key) && existing != key {
+					delete(customHeaders, existing)
+				}
+			}
+			customHeaders[key] = value.(string)
+		}
+	}
+
 	config := conns.Config{
-		Endpoint:           d.Get("endpoint").(string),
-		Username:           d.Get("username").(string),
-		Password:           d.Get("password").(string),
+		Endpoint:           endpoint,
+		Username:           username,
+		Password:           password,
 		Insecure:           d.Get("insecure").(bool),
 		SessionAuth:        d.Get("session_auth").(bool),
 		Port:               d.Get("port").(string),
@@ -504,6 +613,8 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		NdbUsername:        d.Get("ndb_username").(string),
 		NdbPassword:        d.Get("ndb_password").(string),
 		RequiredFields:     requiredProviderFields,
+		APIKey:             apiKey,
+		CustomHeaders:      customHeaders,
 	}
 	c, err := config.Client()
 	if err != nil {

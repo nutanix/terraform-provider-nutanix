@@ -1245,6 +1245,7 @@ func schemaForGuestCustomization() *schema.Schema {
 		Type:     schema.TypeList,
 		Optional: true,
 		Computed: true,
+		ForceNew: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"config": {
@@ -1657,128 +1658,15 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		oldDisk, newDisk := d.GetChange("disks")
 		newAddedDisk, oldDeletedDisk, updatedDisk := diffConfig(oldDisk.([]interface{}), newDisk.([]interface{}))
 
-		if len(oldDeletedDisk) > 0 {
-			for _, disk := range oldDeletedDisk {
-
-				diskInput := expandDisk([]interface{}{disk})[0]
-
-				diskExtID := diskInput.ExtId
-
-				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-				if err != nil {
-					return diag.Errorf("error while fetching vm : %v", err)
-				}
-
-				args := make(map[string]interface{})
-				args["If-Match"] = getEtagHeader(ReadVMResp, conn)
-
-				resp, err := conn.VMAPIInstance.DeleteDiskById(utils.StringPtr(d.Id()), diskExtID, args)
-				if err != nil {
-					return diag.Errorf("error while deleting Disk : %v", err)
-				}
-				TaskRef := resp.Data.GetValue().(import1.TaskReference)
-				taskUUID := TaskRef.ExtId
-
-				taskconn := meta.(*conns.Client).PrismAPI
-				// Wait for the task to complete
-				stateConf := &resource.StateChangeConf{
-					Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-					Target:  []string{"SUCCEEDED"},
-					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-					Timeout: d.Timeout(schema.TimeoutDelete),
-				}
-
-				if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-					return diag.Errorf("error waiting for disk (%s) to be deleted: %s", utils.StringValue(taskUUID), errWaitTask)
-				}
-			}
+		expandDiskFn := func(disks []interface{}) []config.Disk { return expandDisk(disks, nil) }
+		if err := ApplyDiskDeletions(ctx, d, meta, conn, d.Id(), oldDeletedDisk, expandDiskFn); err != nil {
+			return err
 		}
-
-		if len(updatedDisk) > 0 {
-			for _, disk := range updatedDisk {
-				if diskMap, ok := disk.(map[string]interface{}); ok {
-					if backingInfoRaw, ok := diskMap["backing_info"]; ok {
-						if backingInfoSlice, ok := backingInfoRaw.([]interface{}); ok {
-							if backingInfoMap, ok := backingInfoSlice[0].(map[string]interface{}); ok {
-								if vmDiskArray, ok := backingInfoMap["vm_disk"].([]interface{}); ok {
-									if vmDiskMap, ok := vmDiskArray[0].(map[string]interface{}); ok {
-										if vmDiskMap["data_source"] != nil {
-											delete(vmDiskMap, "data_source")
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-
-				diskInput := expandDisk([]interface{}{disk})[0]
-
-				diskExtID := diskInput.ExtId
-
-				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-				if err != nil {
-					return diag.Errorf("error while fetching vm : %v", err)
-				}
-
-				args := make(map[string]interface{})
-				args["If-Match"] = getEtagHeader(ReadVMResp, conn)
-
-				resp, err := conn.VMAPIInstance.UpdateDiskById(utils.StringPtr(d.Id()), diskExtID, &diskInput, args)
-				if err != nil {
-					return diag.Errorf("error while updating Disk : %v", err)
-				}
-				TaskRef := resp.Data.GetValue().(import1.TaskReference)
-				taskUUID := TaskRef.ExtId
-
-				taskconn := meta.(*conns.Client).PrismAPI
-				// Wait for the task to complete
-				stateConf := &resource.StateChangeConf{
-					Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-					Target:  []string{"SUCCEEDED"},
-					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-					Timeout: d.Timeout(schema.TimeoutUpdate),
-				}
-
-				if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-					return diag.Errorf("error waiting for disk (%s) to be updated: %s", utils.StringValue(taskUUID), errWaitTask)
-				}
-			}
+		if err := ApplyDiskUpdates(ctx, d, meta, conn, d.Id(), updatedDisk, expandDiskFn); err != nil {
+			return err
 		}
-
-		if len(newAddedDisk) > 0 {
-			for _, disk := range newAddedDisk {
-				diskInput := expandDisk([]interface{}{disk})[0]
-
-				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-				if err != nil {
-					return diag.Errorf("error while fetching vm : %v", err)
-				}
-
-				// // Extract E-Tag Header
-				args := make(map[string]interface{})
-				args["If-Match"] = getEtagHeader(ReadVMResp, conn)
-
-				resp, err := conn.VMAPIInstance.CreateDisk(utils.StringPtr(d.Id()), &diskInput, args)
-				if err != nil {
-					return diag.Errorf("error while creating Disk : %v", err)
-				}
-				TaskRef := resp.Data.GetValue().(import1.TaskReference)
-				taskUUID := TaskRef.ExtId
-
-				taskconn := meta.(*conns.Client).PrismAPI
-				// Wait for the task to complete
-				stateConf := &resource.StateChangeConf{
-					Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-					Target:  []string{"SUCCEEDED"},
-					Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-					Timeout: d.Timeout(schema.TimeoutCreate),
-				}
-
-				if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-					return diag.Errorf("error waiting for disk (%s) to add: %s", utils.StringValue(taskUUID), errWaitTask)
-				}
-			}
+		if err := ApplyDiskAdditions(ctx, d, meta, conn, d.Id(), newAddedDisk, expandDiskFn); err != nil {
+			return err
 		}
 	}
 
@@ -2906,7 +2794,15 @@ func expandQosConfig(pr interface{}) *config.QosConfig {
 	return nil
 }
 
-func expandDisk(disk []interface{}) []config.Disk {
+// ExpandDiskOpts optionally provides resource config for explicit attribute checks (e.g. disk_address.index).
+// When set, Index is left nil when not explicitly set so the API can assign the next available slot.
+type ExpandDiskOpts struct {
+	D               *schema.ResourceData
+	DisksPath       string // e.g. "override_vm_config.0.disks" or "disks"
+	DiskIndexOffset int    // offset for config path when expanding a subset of disks (e.g. new additions only)
+}
+
+func expandDisk(disk []interface{}, opts *ExpandDiskOpts) []config.Disk {
 	if len(disk) > 0 {
 		diskList := make([]config.Disk, len(disk))
 
@@ -2926,6 +2822,22 @@ func expandDisk(disk []interface{}) []config.Disk {
 
 			diskList[k] = disk
 		}
+
+		// When index is not explicitly set in config, leave it nil so the API can assign (e.g. avoid SCSI 0 already in use).
+		if opts != nil && opts.D != nil && opts.DisksPath != "" {
+			offset := 0
+			if opts.DiskIndexOffset > 0 {
+				offset = opts.DiskIndexOffset
+			}
+			for k := range diskList {
+				indexPath := opts.DisksPath + "." + strconv.Itoa(offset+k) + ".disk_address.0.index"
+				if !common.IsExplicitlySet(opts.D, indexPath) {
+					if diskList[k].DiskAddress != nil {
+						diskList[k].DiskAddress.Index = nil
+					}
+				}
+			}
+		}
 		return diskList
 	}
 	return nil
@@ -2937,19 +2849,10 @@ func expandDiskAddress(disk interface{}) *config.DiskAddress {
 		diskVal := daI[0].(map[string]interface{})
 		diskAddOut := config.DiskAddress{}
 		if busType, ok := diskVal["bus_type"]; ok {
-			const two, three, four, five, six = 2, 3, 4, 5, 6
-			subMap := map[string]interface{}{
-				"SCSI":  two,
-				"IDE":   three,
-				"PCI":   four,
-				"SATA":  five,
-				"SPAPR": six,
-			}
-			pVal := subMap[busType.(string)]
-			p := config.DiskBusType(pVal.(int))
-			diskAddOut.BusType = &p
+			diskAddOut.BusType = common.ExpandEnum[config.DiskBusType](busType.(string))
 		}
-		if index, ok := diskVal["index"]; ok {
+		// Only set Index when explicitly set in config; omit from payload when not set so API can assign.
+		if index, ok := diskVal["index"]; ok && index != nil {
 			diskAddOut.Index = utils.IntPtr(index.(int))
 		}
 		return &diskAddOut
@@ -3757,7 +3660,7 @@ func prepareVMConfigFromMap(m map[string]interface{}) *config.Vm {
 		body.StorageConfig = expandADSFVmStorageConfig(storageConfig)
 	}
 	if disks, ok := m["disks"]; ok {
-		body.Disks = expandDisk(disks.([]interface{}))
+		body.Disks = expandDisk(disks.([]interface{}), nil)
 	}
 	if cdroms, ok := m["cd_roms"]; ok {
 		body.CdRoms = expandCdRom(cdroms.([]interface{}))
