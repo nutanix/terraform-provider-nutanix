@@ -86,19 +86,19 @@ func TestAccV2NutanixRestorablePcsDatasource_ObjectStoreLocation(t *testing.T) {
 }
 
 func testClusterLocationRestoreSourceConfig() string {
-	username := os.Getenv("NUTANIX_USERNAME")
-	password := os.Getenv("NUTANIX_PASSWORD")
+	username, password := getBasicAuthForAPINonSupportedTests()
 	port, _ := strconv.Atoi(os.Getenv("NUTANIX_PORT"))
 	insecure, _ := strconv.ParseBool(os.Getenv("NUTANIX_INSECURE"))
 	endpoint := testVars.Prism.RestoreSource.PeIP
 
 	return fmt.Sprintf(`
 provider "nutanix-2" {
-  username = "%[1]s"
-  password = "%[2]s"
-  endpoint = "%[3]s"
-  insecure = %[4]t
-  port     = %[5]d
+  username  = "%[1]s"
+  password  = "%[2]s"
+  endpoint  = "%[3]s"
+  insecure  = %[4]t
+  port      = %[5]d
+  api_key   = ""  # Force basic auth; restore source does not support API key
 }
 
 
@@ -137,19 +137,19 @@ output "restore_source" {
 }
 
 func testObjectStoreLocationRestoreSourceConfig() string {
-	username := os.Getenv("NUTANIX_USERNAME")
-	password := os.Getenv("NUTANIX_PASSWORD")
+	username, password := getBasicAuthForAPINonSupportedTests()
 	port, _ := strconv.Atoi(os.Getenv("NUTANIX_PORT"))
 	insecure, _ := strconv.ParseBool(os.Getenv("NUTANIX_INSECURE"))
 	endpoint := testVars.Prism.RestoreSource.PeIP
 
 	return fmt.Sprintf(`
 provider "nutanix-2" {
-  username = "%[1]s"
-  password = "%[2]s"
-  endpoint = "%[3]s"
-  insecure = %[4]t
-  port     = %[5]d
+  username  = "%[1]s"
+  password  = "%[2]s"
+  endpoint  = "%[3]s"
+  insecure  = %[4]t
+  port      = %[5]d
+  api_key   = ""  # Force basic auth; restore source does not support API key
 }
 
 
