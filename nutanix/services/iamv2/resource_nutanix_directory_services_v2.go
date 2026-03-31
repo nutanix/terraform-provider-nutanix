@@ -250,15 +250,27 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 	// Handle sharing with projects after creation
 	if shareWithAll, ok := d.GetOk("share_with_all_projects"); ok && shareWithAll.(bool) {
 		// Share with all projects
-		if err := shareDirectoryServiceWithAllProjects(ctx, conn, utils.StringValue(getResp.ExtId)); err != nil {
-			return diag.Errorf("error while sharing directory service with all projects: %v", err)
+		if err := shareDirectoryServiceWithAllProjects(ctx, conn, d); err != nil {
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Directory service created but sharing with all projects failed.",
+					Detail:   fmt.Sprintf("error while sharing directory service with all projects: %v", err),
+				},
+			}
 		}
 	} else if sharedProjects, ok := d.GetOk("shared_with_projects"); ok {
 		// Share with specific projects
 		projectsSet := sharedProjects.(*schema.Set)
 		for _, projectID := range projectsSet.List() {
-			if err := shareDirectoryServiceWithProject(ctx, conn, utils.StringValue(getResp.ExtId), projectID.(string)); err != nil {
-				return diag.Errorf("error while sharing directory service with project %s: %v", projectID.(string), err)
+			if err := shareDirectoryServiceWithProject(ctx, conn, d, projectID.(string)); err != nil {
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  "Directory service created but sharing with project failed.",
+						Detail:   fmt.Sprintf("error while sharing directory service with project %s: %v", projectID.(string), err),
+					},
+				}
 			}
 		}
 	}
@@ -343,7 +355,9 @@ func ResourceNutanixDirectoryServicesV2Read(ctx context.Context, d *schema.Resou
 	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
 		return diag.FromErr(err)
 	}
-	// Note: ShareWithAllProjects field is not available in the model
+	if err := d.Set("share_with_all_projects", getResp.SharedWithAllProjects); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
@@ -460,11 +474,11 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 	if d.HasChange("share_with_all_projects") {
 		shareWithAll := d.Get("share_with_all_projects").(bool)
 		if shareWithAll {
-			if err := shareDirectoryServiceWithAllProjects(ctx, conn, d.Id()); err != nil {
+			if err := shareDirectoryServiceWithAllProjects(ctx, conn, d); err != nil {
 				return diag.Errorf("error while sharing directory service with all projects: %v", err)
 			}
 		} else {
-			if err := unshareDirectoryServiceWithAllProjects(ctx, conn, d.Id()); err != nil {
+			if err := unshareDirectoryServiceWithAllProjects(ctx, conn, d); err != nil {
 				return diag.Errorf("error while unsharing directory service with all projects: %v", err)
 			}
 		}
@@ -479,7 +493,7 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 		// Unshare with removed projects
 		removedProjects := oldSet.Difference(newSet)
 		for _, projectID := range removedProjects.List() {
-			if err := unshareDirectoryServiceWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
+			if err := unshareDirectoryServiceWithProject(ctx, conn, d, projectID.(string)); err != nil {
 				return diag.Errorf("error while unsharing directory service with project %s: %v", projectID.(string), err)
 			}
 		}
@@ -487,7 +501,7 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 		// Share with new projects
 		addedProjects := newSet.Difference(oldSet)
 		for _, projectID := range addedProjects.List() {
-			if err := shareDirectoryServiceWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
+			if err := shareDirectoryServiceWithProject(ctx, conn, d, projectID.(string)); err != nil {
 				return diag.Errorf("error while sharing directory service with project %s: %v", projectID.(string), err)
 			}
 		}
@@ -641,38 +655,133 @@ func flattenDsServiceAccountForResource(pr *import1.DsServiceAccount) []map[stri
 }
 
 // Helper functions for sharing/unsharing directory service with projects
-// Note: The exact API method signatures may need to be verified based on the actual API client
-func shareDirectoryServiceWithProject(ctx context.Context, conn *iam.Client, directoryServiceID, projectID string) error {
-	// TODO: Verify the exact method signature and request object type
-	// The API likely requires: ctx, and a request object containing directoryServiceID and projectID
-	// Example pattern (may need adjustment):
-	// request := &directoryservices.ShareDirectoryServiceRequest{
-	//     ExtId: utils.StringPtr(directoryServiceID),
-	//     ProjectExtId: utils.StringPtr(projectID),
-	// }
-	// resp, err := conn.DirectoryServiceAPIInstance.ShareDirectoryService(ctx, request)
-	log.Printf("[DEBUG] Sharing directory service %s with project %s", directoryServiceID, projectID)
-	// Placeholder - implement with actual API call once method signature is confirmed
-	return fmt.Errorf("ShareDirectoryServiceWithProject API method needs to be implemented with correct signature")
+func shareDirectoryServiceWithProject(ctx context.Context, conn *iam.Client, d *schema.ResourceData, projectID string) error {
+	directoryServiceExtID := utils.StringPtr(d.Id())
+	shareDirectoryServiceRequest := import2.ShareDirectoryServiceRequest{
+		ExtId: directoryServiceExtID,
+		Body: &import1.DirectoryServiceShareRequest{
+			ProjectExtId: utils.StringPtr(projectID),
+		},
+	}
+
+	getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
+		ExtId: directoryServiceExtID,
+	}
+	readResp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching directory service: %v", err)
+	}
+
+	// get etag value from read response to pass in update request If-Match header, Required for update request
+	etagValue := conn.DirectoryServiceAPIInstance.ApiClient.GetEtag(readResp)
+	headers := make(map[string]interface{})
+	headers["If-Match"] = utils.StringPtr(etagValue)
+  
+	// call share directory service api
+	resp, err := conn.DirectoryServiceAPIInstance.ShareDirectoryService(ctx, &shareDirectoryServiceRequest, headers)
+	if err != nil {
+		return fmt.Errorf("error while sharing directory service with project %s: %v", projectID, err)
+	}
+
+	getResp := resp.Data.GetValue().(import1.DirectoryServiceShareResponse)
+	if getResp.Message != nil {
+		log.Printf("[DEBUG] Sharing directory service %s with project %s is success with message: %s", directoryServiceExtID, projectID, getResp.Message)
+	}
+	return nil
 }
 
-func unshareDirectoryServiceWithProject(ctx context.Context, conn *iam.Client, directoryServiceID, projectID string) error {
-	// TODO: Verify the exact method signature and request object type
-	log.Printf("[DEBUG] Unsharing directory service %s with project %s", directoryServiceID, projectID)
-	// Placeholder - implement with actual API call once method signature is confirmed
-	return fmt.Errorf("UnshareDirectoryServiceWithProject API method needs to be implemented with correct signature")
+func unshareDirectoryServiceWithProject(ctx context.Context, conn *iam.Client, d *schema.ResourceData, projectID string) error {
+	directoryServiceExtID := utils.StringPtr(d.Id())
+	unshareDirectoryServiceRequest := import2.UnshareDirectoryServiceRequest{
+		ExtId: directoryServiceExtID,
+		Body: &import1.DirectoryServiceUnshareRequest{
+			ProjectExtId: utils.StringPtr(projectID),
+		},
+	}
+	
+	getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
+		ExtId: directoryServiceExtID,
+	}
+	readResp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching directory service: %v", err)
+	}
+
+	etagValue := conn.DirectoryServiceAPIInstance.ApiClient.GetEtag(readResp)
+	headers := make(map[string]interface{})
+	headers["If-Match"] = utils.StringPtr(etagValue)
+  
+	// call unshare directory service api
+	resp, err := conn.DirectoryServiceAPIInstance.UnshareDirectoryService(ctx, &unshareDirectoryServiceRequest, headers)
+	if err != nil {
+		return fmt.Errorf("error while unsharing directory service with project %s: %v", projectID, err)
+	}
+
+	getResp := resp.Data.GetValue().(import1.DirectoryServiceUnshareResponse)
+	if getResp.Message != nil {
+		log.Printf("[DEBUG] Unsharing directory service %s with project %s is success with message: %s", directoryServiceExtID, projectID, getResp.Message)
+	}
+	return nil
 }
 
-func shareDirectoryServiceWithAllProjects(ctx context.Context, conn *iam.Client, directoryServiceID string) error {
-	// TODO: Verify if this method exists and its exact signature
-	log.Printf("[DEBUG] Sharing directory service %s with all projects", directoryServiceID)
-	// Placeholder - implement with actual API call once method signature is confirmed
-	return fmt.Errorf("ShareDirectoryServiceWithAllProjects API method needs to be implemented with correct signature")
+func shareDirectoryServiceWithAllProjects(ctx context.Context, conn *iam.Client, d *schema.ResourceData) error {
+	directoryServiceExtID := utils.StringPtr(d.Id())
+	shareDirectoryServiceRequest := import2.ShareDirectoryServiceRequest{
+		ExtId: directoryServiceExtID,
+	}
+	
+	getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
+		ExtId: directoryServiceExtID,
+	}
+	readResp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching directory service: %v", err)
+	}
+
+	etagValue := conn.DirectoryServiceAPIInstance.ApiClient.GetEtag(readResp)
+	headers := make(map[string]interface{})
+	headers["If-Match"] = utils.StringPtr(etagValue)
+  
+	// call share all directory service api
+	resp, err := conn.DirectoryServiceAPIInstance.ShareDirectoryService(ctx, &shareDirectoryServiceRequest, headers)
+	if err != nil {
+		return fmt.Errorf("error while sharing directory service with all projects: %v", err)
+	}
+
+	getResp := resp.Data.GetValue().(import1.DirectoryServiceShareResponse)
+	if getResp.Message != nil {
+		log.Printf("[DEBUG] Sharing directory service %s with all projects is success with message: %s", directoryServiceExtID, getResp.Message)
+	}
+	return nil
 }
 
-func unshareDirectoryServiceWithAllProjects(ctx context.Context, conn *iam.Client, directoryServiceID string) error {
-	// TODO: Verify if this method exists and its exact signature
-	log.Printf("[DEBUG] Unsharing directory service %s with all projects", directoryServiceID)
-	// Placeholder - implement with actual API call once method signature is confirmed
-	return fmt.Errorf("UnshareDirectoryServiceWithAllProjects API method needs to be implemented with correct signature")
+func unshareDirectoryServiceWithAllProjects(ctx context.Context, conn *iam.Client, d *schema.ResourceData) error {
+	directoryServiceExtID := utils.StringPtr(d.Id())
+	unshareDirectoryServiceRequest := import2.UnshareDirectoryServiceRequest{
+		ExtId: directoryServiceExtID,
+	}
+	
+	getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
+		ExtId: directoryServiceExtID,
+	}
+	readResp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching directory service: %v", err)
+	}
+
+	etagValue := conn.DirectoryServiceAPIInstance.ApiClient.GetEtag(readResp)
+	headers := make(map[string]interface{})
+	headers["If-Match"] = utils.StringPtr(etagValue)
+  
+	// call unshare all directory service api
+	resp, err := conn.DirectoryServiceAPIInstance.UnshareDirectoryService(ctx, &unshareDirectoryServiceRequest, headers)
+	if err != nil {
+		return fmt.Errorf("error while unsharing directory service with all projects: %v", err)
+	}
+
+	getResp := resp.Data.GetValue().(import1.DirectoryServiceUnshareResponse)
+	if getResp.Message != nil {
+		log.Printf("[DEBUG] Unsharing directory service %s with all projects is success with message: %s", directoryServiceExtID, getResp.Message)
+	}
+	return nil
 }

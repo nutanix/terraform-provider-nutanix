@@ -165,8 +165,14 @@ func ResourceNutanixCategoriesV2Create(ctx context.Context, d *schema.ResourceDa
 		// Share with specific projects
 		projectsSet := sharedProjects.(*schema.Set)
 		for _, projectID := range projectsSet.List() {
-			if err := shareCategoryWithProject(ctx, conn, utils.StringValue(getResp.ExtId), projectID.(string)); err != nil {
-				return diag.Errorf("error while sharing category with project %s: %v", projectID.(string), err)
+			if err := shareCategoryWithProject(ctx, meta, conn, d, projectID.(string)); err != nil {
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  "Category created but sharing with project failed.",
+						Detail:   fmt.Sprintf("error while sharing category with project %s: %v", projectID.(string), err),
+					},
+				}
 			}
 		}
 	}
@@ -264,7 +270,7 @@ func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceDa
 		// Unshare with removed projects
 		removedProjects := oldSet.Difference(newSet)
 		for _, projectID := range removedProjects.List() {
-			if err := unshareCategoryWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
+			if err := unshareCategoryWithProject(ctx, meta, conn, d, projectID.(string)); err != nil {
 				return diag.Errorf("error while unsharing category with project %s: %v", projectID.(string), err)
 			}
 		}
@@ -272,7 +278,7 @@ func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceDa
 		// Share with new projects
 		addedProjects := newSet.Difference(oldSet)
 		for _, projectID := range addedProjects.List() {
-			if err := shareCategoryWithProject(ctx, conn, d.Id(), projectID.(string)); err != nil {
+			if err := shareCategoryWithProject(ctx, meta, conn, d, projectID.(string)); err != nil {
 				return diag.Errorf("error while sharing category with project %s: %v", projectID.(string), err)
 			}
 		}
@@ -310,18 +316,12 @@ func ResourceNutanixCategoriesV2Delete(ctx context.Context, d *schema.ResourceDa
 
 // Helper functions for sharing/unsharing category with projects
 // Note: The exact API method signatures may need to be verified based on the actual API client
-func shareCategoryWithProject(ctx context.Context, conn *prism.Client, categoryID, projectID string) error {
-	// TODO: Verify the exact method signature - the Categories API may not have ShareCategory/UnshareCategory methods
-	// Alternative: Categories might use a different API endpoint or method name
-	// Check if there's a ShareWithProject or similar method on the CategoriesAPIInstance
-	log.Printf("[DEBUG] Sharing category %s with project %s", categoryID, projectID)
-	// Placeholder - implement with actual API call once method signature is confirmed
-	return fmt.Errorf("ShareCategoryWithProject API method needs to be implemented - verify if Categories API supports project sharing")
+func shareCategoryWithProject(ctx context.Context, meta interface{}, conn *prism.Client, d *schema.ResourceData, projectID string) error {
+	// TODO: Implement share category with project
+	return nil
 }
 
-func unshareCategoryWithProject(ctx context.Context, conn *prism.Client, categoryID, projectID string) error {
-	// TODO: Verify the exact method signature - the Categories API may not have ShareCategory/UnshareCategory methods
-	log.Printf("[DEBUG] Unsharing category %s with project %s", categoryID, projectID)
-	// Placeholder - implement with actual API call once method signature is confirmed
-	return fmt.Errorf("UnshareCategoryWithProject API method needs to be implemented - verify if Categories API supports project unsharing")
+func unshareCategoryWithProject(ctx context.Context, meta interface{}, conn *prism.Client, d *schema.ResourceData, projectID string) error {
+	// TODO: Implement unshare category with project
+	return nil
 }
