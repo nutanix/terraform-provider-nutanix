@@ -489,8 +489,9 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 		inputSpec.SubnetType = &p
 	}
 
-	if networkID, ok := d.GetOk("network_id"); ok {
-		inputSpec.NetworkId = utils.IntPtr(networkID.(int))
+	if common.IsExplicitlySet(d, "network_id") {
+		networkID := d.Get("network_id").(int)
+		inputSpec.NetworkId = utils.IntPtr(networkID)
 	}
 
 	if dhcp, ok := d.GetOk("dhcp_options"); ok {
@@ -525,8 +526,9 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	if bridgeName, ok := d.GetOk("bridge_name"); ok {
 		inputSpec.BridgeName = utils.StringPtr(bridgeName.(string))
 	}
-	if isAdvNet, ok := d.GetOk("is_advanced_networking"); ok {
-		inputSpec.IsAdvancedNetworking = utils.BoolPtr(isAdvNet.(bool))
+	if common.IsExplicitlySet(d, "is_advanced_networking") {
+		isAdvNet := d.Get("is_advanced_networking").(bool)
+		inputSpec.IsAdvancedNetworking = utils.BoolPtr(isAdvNet)
 	}
 	if clsName, ok := d.GetOk("cluster_name"); ok {
 		inputSpec.ClusterName = utils.StringPtr(clsName.(string))

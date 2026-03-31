@@ -23,8 +23,8 @@ import (
 )
 
 const (
-	timeout = 3 * time.Minute
-	delay   = 3 * time.Second
+	timeout = 5 * time.Minute
+	delay   = 5 * time.Second
 )
 
 func ResourceNutanixVirtualMachineV2() *schema.Resource {

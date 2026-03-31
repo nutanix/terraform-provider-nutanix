@@ -333,7 +333,7 @@ locals {
   cluster_ext_id = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
   img_name       = local.config.ubuntu_image
   gz_ntf         = <<EOT
-  #cloud-config
+#cloud-config
 chpasswd:
   list: |
     ubuntu:nutanix/4u
@@ -361,7 +361,7 @@ data "nutanix_images_v2" "vm_img" {
   filter = "name eq '${local.img_name}'"
 }
 
-# Create VLAN subnet without IPAM
+# VLAN subnet with advanced networking (required for network function NICs)
 resource "nutanix_subnet_v2" "subnet" {
   name                   = "%[2]s"
   description            = "Subnet managed by Terraform for Network Function testing"
