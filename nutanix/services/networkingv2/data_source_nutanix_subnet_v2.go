@@ -854,7 +854,7 @@ func DatasourceMetadataSchemaV2() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"category_ids": {
-			Type:     schema.TypeList,
+			Type:     schema.TypeSet,
 			Computed: true,
 			Optional: true,
 			Elem: &schema.Schema{

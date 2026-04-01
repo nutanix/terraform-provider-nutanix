@@ -2,7 +2,7 @@ package networkingv2_test
 
 import (
 	"fmt"
-	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -151,10 +151,10 @@ func TestAccV2NutanixSubnetResource_WithMetadata(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameSubnet, "cluster_reference"),
 					resource.TestCheckResourceAttrSet(resourceNameSubnet, "metadata.#"),
 					resource.TestCheckResourceAttr(resourceNameSubnet, "metadata.0.category_ids.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceNameSubnet, "metadata.0.category_ids.0", "nutanix_category_v2.test", "id"),
+					testCheckMetadataCategoryIDsContain(resourceNameSubnet, "nutanix_category_v2.test"),
 					// data source check
 					resource.TestCheckResourceAttr(datasourceNameSubnet, "metadata.0.category_ids.#", "1"),
-					resource.TestCheckResourceAttrPair(datasourceNameSubnet, "metadata.0.category_ids.0", "nutanix_category_v2.test", "id"),
+					testCheckMetadataCategoryIDsContain(datasourceNameSubnet, "nutanix_category_v2.test"),
 				),
 			},
 			{
@@ -182,21 +182,21 @@ func testCheckMetadataCategoryIDsContain(target string, expectedCategoryResource
 			return fmt.Errorf("resource %q not found in state", target)
 		}
 
-		countStr, ok := targetRs.Primary.Attributes["metadata.0.category_ids.#"]
-		if !ok {
-			return fmt.Errorf("resource %q has no metadata category_ids count", target)
+		var categoryPrefix string
+		for attrKey := range targetRs.Primary.Attributes {
+			if strings.HasSuffix(attrKey, ".category_ids.#") {
+				categoryPrefix = strings.TrimSuffix(attrKey, "#")
+				break
+			}
+		}
+		if categoryPrefix == "" {
+			return fmt.Errorf("resource %q has no metadata category_ids", target)
 		}
 
-		count, err := strconv.Atoi(countStr)
-		if err != nil {
-			return fmt.Errorf("invalid category_ids count %q for %q: %w", countStr, target, err)
-		}
-
-		actualIDs := make(map[string]struct{}, count)
-		for i := 0; i < count; i++ {
-			k := fmt.Sprintf("metadata.0.category_ids.%d", i)
-			if v, exists := targetRs.Primary.Attributes[k]; exists && v != "" {
-				actualIDs[v] = struct{}{}
+		actualIDs := make(map[string]struct{})
+		for attrKey, attrVal := range targetRs.Primary.Attributes {
+			if strings.HasPrefix(attrKey, categoryPrefix) && !strings.HasSuffix(attrKey, ".#") && attrVal != "" {
+				actualIDs[attrVal] = struct{}{}
 			}
 		}
 
