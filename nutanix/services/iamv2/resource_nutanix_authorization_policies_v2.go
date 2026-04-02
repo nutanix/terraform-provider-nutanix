@@ -133,6 +133,10 @@ func ResourceNutanixAuthPoliciesV2() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"share_with_all_projects": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -258,6 +262,9 @@ func ResourceNutanixAuthPoliciesV2Read(ctx context.Context, d *schema.ResourceDa
 		return diag.FromErr(err)
 	}
 	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("share_with_all_projects", getResp.SharedWithAllProjects); err != nil {
 		return diag.FromErr(err)
 	}
 	return nil

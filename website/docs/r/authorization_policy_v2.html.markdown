@@ -14,11 +14,13 @@ Provides Nutanix resource to create authorization policy.
 
 ```hcl
 
+# Create authorization policy with user-defined project
 resource "nutanix_authorization_policy_v2" "ap-example"{
   role                      = "ba250e3e-1db1-4950-917f-a9e2ea35b8e3"
   display_name              = "auth_policy_example"
   description               = "authorization policy example"
   authorization_policy_type = "USER_DEFINED"
+  project_ext_id = "<project_uuid>"
   identities {
     reserved = "{\"user\":{\"uuid\":{\"anyof\":[\"00000000-0000-0000-0000-000000000000\"]}}}"
   }
@@ -29,6 +31,8 @@ resource "nutanix_authorization_policy_v2" "ap-example"{
     reserved = "{\"marketplace_item\":{\"owner_uuid\":{\"eq\":\"SELF_OWNED\"}}}"
   }
 }
+
+Note: Incase if authorization policy need to created in system defined project, please do not specify the project reference in the config.
 ```
 
 ## Argument Reference
@@ -47,6 +51,7 @@ The following arguments are supported:
   - `PREDEFINED_UPDATE_IDENTITY_ONLY` : System-defined ACP prohibiting any modifications from customer.
   - `SERVICE_DEFINED` : ACP defined by a service.
   - `USER_DEFINED` : ACP defined by an User.
+- `project_ext_id`: -(Optional) Project reference for the Authorization Policy.
 
 ## Attribute Reference
 
@@ -65,6 +70,8 @@ The following attributes are exported:
 - `created_by`: User or Service Name that created the Authorization Policy.
 - `is_system_defined`: Flag identifying if the Authorization Policy is system defined or not.
 - `authorization_policy_type`: Type of Authorization Policy.
+* `project_ext_id`: - Project reference for the Authorization Policy.
+* `share_with_all_projects`: - Flag indicating whether the Authorization Policy is shared with all projects or not.
 
 ### Links
 

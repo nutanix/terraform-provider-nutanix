@@ -116,6 +116,10 @@ func DatasourceNutanixAuthorizationPoliciesV2() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"share_with_all_projects": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -216,7 +220,7 @@ func flattenAuthorizationPolicyEntities(pr []import1.AuthorizationPolicyProjecti
 			auth["is_system_defined"] = v.IsSystemDefined
 			auth["authorization_policy_type"] = flattenAuthorizationPolicyType(v.AuthorizationPolicyType)
 			auth["project_ext_id"] = v.ProjectExtId
-
+			auth["share_with_all_projects"] = v.SharedWithAllProjects
 			auths[k] = auth
 		}
 		log.Printf("[DEBUG] flattenAuthorizationPolicyEntities return: %+v", auths[0])

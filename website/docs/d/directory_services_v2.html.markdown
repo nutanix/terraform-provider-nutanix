@@ -71,6 +71,9 @@ The directory_services attribute supports the following:
 * `url`: - URL for the Directory Service.
 * `secondary_urls`: - Secondary URL for the Directory Service.
 * `domain_name`: - Domain name for the Directory Service.
+* `project_ext_id`: - Project reference for the Directory Service.
+* `shared_with_projects`: - List of projects with which the directory service is shared.
+* `share_with_all_projects`: - Flag indicating whether the directory service is shared with all projects or not.
 * `directory_type`: - Type of Directory Service, Supported values are: "ACTIVE_DIRECTORY" (Directory Service type is Active Directory.) and "OPEN_LDAP" (Directory Service type is Open LDAP.)
 * `service_account`: - Information of Service account to connect to the Directory Service.
 * `open_ldap_configuration`: - Configuration for OpenLDAP Directory Service.
