@@ -69,6 +69,7 @@ The following arguments are supported:
   - ISCSI : Volume Group uses iSCSI protocol.
   - NVMF : Volume Group uses NVMf protocol.
 - `is_hidden`: -(Optional) Indicates whether the Volume Group is meant to be hidden or not.
+- `project_ext_id`: -(Optional) External identifier of the project associated with the Volume Group.
 - `disks`: -(Optional) A list of Volume Disks to be attached to the Volume Group.
 
 ### Iscsi Features
