@@ -19,7 +19,7 @@ func TestAccV2NutanixRestoreProtectedResourceResource_RestoreVm(t *testing.T) {
 	// if the test is running using NUTANIX_API_KEY, skip the test
 	if os.Getenv("NUTANIX_API_KEY") != "" {
 		t.Skip("Skipping test as it not supported using NUTANIX_API_KEY")
-	} 
+	}
 	r := acctest.RandIntRange(1, 100)
 	vmName := fmt.Sprintf("tf-test-protected-vm-restore-%d", r)
 	ppName := fmt.Sprintf("tf-test-protected-policy-restore-vm-%d", r)
