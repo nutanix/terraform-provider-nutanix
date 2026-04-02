@@ -148,6 +148,10 @@ func DatasourceNutanixRolesV2() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"share_with_all_projects": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -258,8 +262,12 @@ func flattenRolesEntities(roles []iamConfig.Role) []interface{} {
 			if v.IsSystemDefined != nil {
 				role["is_system_defined"] = v.IsSystemDefined
 			}
-			role["project_ext_id"] = v.ProjectExtId
-
+			if v.SharedWithAllProjects != nil {
+				role["share_with_all_projects"] = v.SharedWithAllProjects
+			}
+			if v.ProjectExtId != nil {
+				role["project_ext_id"] = v.ProjectExtId
+			}
 			rolesList[k] = role
 		}
 		return rolesList

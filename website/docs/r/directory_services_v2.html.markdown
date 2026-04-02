@@ -13,7 +13,7 @@ Provides a resource to Create a Directory Service.
 ## Example Usage
 
 ```hcl
-# Add Directory Service .
+# Create Directory Service with System Defined Project.
 resource "nutanix_directory_services_v2" "active-directory" {
   name           = "example_active_directory"
   url            = "ldap://10.xx.xx.xx:xxxx"
@@ -31,7 +31,27 @@ resource "nutanix_directory_services_v2" "active-directory" {
   }
 }
 
-# Directory Service Shared with All Projects
+# Create Directory Service with user defined project
+resource "nutanix_directory_services_v2" "active-directory" {
+  name           = "example_active_directory"
+  url            = "ldap://10.xx.xx.xx:xxxx"
+  directory_type = "ACTIVE_DIRECTORY"
+  domain_name    = "nutanix.com"
+  project_ext_id = "<project_uuid>"
+  service_account {
+    username = "username"
+    password = "password"
+  }
+  white_listed_groups = ["example"]
+  lifecycle {
+    ignore_changes = [
+      service_account.0.password,
+    ]
+  }
+}
+
+
+# Create Directory Service Shared with All Projects
 resource "nutanix_directory_services_v2" "active-directory" {
   name           = "example_active_directory"
   url            = "ldap://10.xx.xx.xx:xxxx"
@@ -50,7 +70,7 @@ resource "nutanix_directory_services_v2" "active-directory" {
   }
 }
 
-# Directory Service Shared with Projects
+# Create Directory Service Shared with Projects
 resource "nutanix_directory_services_v2" "active-directory" {
   name           = "example_active_directory"
   url            = "ldap://10.xx.xx.xx:xxxx"
@@ -79,8 +99,9 @@ The following arguments are supported:
 * `url`: -(Required) URL for the Directory Service.
 * `secondary_urls`: -(Optional) Secondary URL for the Directory Service.
 * `domain_name`: -(Required) Domain name for the Directory Service.
-* `shared_with_projects`: -(Optional)
-* `share_with_all_projects`: -(Optional)
+* `project_ext_id`: -(Optional) Project reference for the Directory Service.
+* `shared_with_projects`: -(Optional) List of projects with which the directory service is shared.
+* `share_with_all_projects`: -(Optional)  Flag indicating whether the directory service is shared with all projects or not.
 * `directory_type`: -(Required) Type of Directory Service, Supported values are: "ACTIVE_DIRECTORY" (Directory Service type is Active Directory.) and "OPEN_LDAP" (Directory Service type is Open LDAP.)
 * `service_account`: -(Required) Information of Service account to connect to the Directory Service.
 * `open_ldap_configuration`: -(Optional) Configuration for OpenLDAP Directory Service.
@@ -132,6 +153,9 @@ The following attributes are exported:
 * `url`: - URL for the Directory Service.
 * `secondary_urls`: - Secondary URL for the Directory Service.
 * `domain_name`: - Domain name for the Directory Service.
+* `project_ext_id`: - Project reference for the Directory Service.
+* `shared_with_projects`: - List of projects with which the directory service is shared.
+* `share_with_all_projects`: - Flag indicating whether the directory service is shared with all projects or not.
 * `directory_type`: - Type of Directory Service, Supported values are: "ACTIVE_DIRECTORY" (Directory Service type is Active Directory.) and "OPEN_LDAP" (Directory Service type is Open LDAP.)
 * `service_account`: - Information of Service account to connect to the Directory Service.
 * `open_ldap_configuration`: - Configuration for OpenLDAP Directory Service.

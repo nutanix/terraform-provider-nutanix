@@ -161,13 +161,11 @@ func ResourceNutanixDirectoryServicesV2() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				ConflictsWith: []string{"share_with_all_projects"},
 			},
 			"share_with_all_projects": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
-				ConflictsWith: []string{"shared_with_projects"},
 			},
 		},
 	}
@@ -665,6 +663,9 @@ func flattenDsServiceAccountForResource(pr *import1.DsServiceAccount) []map[stri
 
 // Helper functions for sharing/unsharing directory service with projects
 func shareDirectoryServiceWithProject(ctx context.Context, conn *iam.Client, d *schema.ResourceData, projectID string) error {
+	if d.Get("share_with_all_projects") == true {
+		return fmt.Errorf("Directory service is shared with all projects, cannot share with a specific project")
+	}
 	directoryServiceExtID := utils.StringPtr(d.Id())
 	shareDirectoryServiceRequest := import2.ShareDirectoryServiceRequest{
 		ExtId: directoryServiceExtID,
@@ -700,6 +701,9 @@ func shareDirectoryServiceWithProject(ctx context.Context, conn *iam.Client, d *
 }
 
 func unshareDirectoryServiceWithProject(ctx context.Context, conn *iam.Client, d *schema.ResourceData, projectID string) error {
+	if d.Get("share_with_all_projects") == true {
+		return fmt.Errorf("Directory service is shared with all projects, cannot unshare with a specific project")
+	}
 	directoryServiceExtID := utils.StringPtr(d.Id())
 	unshareDirectoryServiceRequest := import2.UnshareDirectoryServiceRequest{
 		ExtId: directoryServiceExtID,
