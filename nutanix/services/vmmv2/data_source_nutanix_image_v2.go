@@ -182,6 +182,10 @@ func DatasourceNutanixImageV4() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"share_with_all_projects": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -243,6 +247,9 @@ func DatasourceNutanixImageV4Read(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("share_with_all_projects", getResp.IsSharedWithAllProjects); err != nil {
 		return diag.FromErr(err)
 	}
 

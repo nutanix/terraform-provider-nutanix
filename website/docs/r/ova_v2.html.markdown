@@ -63,6 +63,7 @@ The following arguments are supported:
   |---|---|
   | VMDK | The VMDK disk format of an OVA. |
   | QCOW2 | The QCOW2 disk format of an OVA. |
+- `project_ext_id`: -(Optional) External identifier of the project associated with the OVA.
 
 ### checksum
 
@@ -420,6 +421,7 @@ The `nics` attribute supports the following:
 
 - `policy`: (Optional) Reference to the policy object in use.
 - `policy.ext_id`: (Optional) Reference to the policy object in use.
+
 
 ## Import
 

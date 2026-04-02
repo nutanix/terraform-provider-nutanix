@@ -46,6 +46,7 @@ The following attributes are exported:
 * `storage_features`: - Storage optimization features which must be enabled on the Volume Group.
 * `usage_type`: - Expected usage type for the Volume Group. This is an indicative hint on how the caller will consume the Volume Group.  Valid values are BACKUP_TARGET, INTERNAL, TEMPORARY, USER
 * `is_hidden`: - Indicates whether the Volume Group is meant to be hidden or not.
+* `project_ext_id`: - External identifier of the project associated with the Volume Group.
 
 ### Links
 

@@ -231,6 +231,10 @@ func ResourceNutanixImageV4() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"share_with_all_projects": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -382,6 +386,9 @@ func ResourceNutanixImageV4Read(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(err)
 	}
 	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("share_with_all_projects", getResp.IsSharedWithAllProjects); err != nil {
 		return diag.FromErr(err)
 	}
 

@@ -208,6 +208,10 @@ func DatasourceNutanixImagesV4() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"share_with_all_projects": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -313,7 +317,12 @@ func flattenImagesEntities(pr []import5.Image) []interface{} {
 			if v.PlacementPolicyStatus != nil {
 				img["placement_policy_status"] = flattenImagePlacementStatus(v.PlacementPolicyStatus)
 			}
-			img["project_ext_id"] = v.ProjectExtId
+			if v.IsSharedWithAllProjects != nil {
+				img["share_with_all_projects"] = v.IsSharedWithAllProjects
+			}
+			if v.ProjectExtId != nil {
+				img["project_ext_id"] = v.ProjectExtId
+			}
 			imgs[k] = img
 		}
 		return imgs
