@@ -3401,7 +3401,7 @@ func diffConfig(oldValue []interface{}, newValue []interface{}) ([]interface{}, 
 // Check if VM is in power off state to perform update operations
 func checkForHotPlugChanges(d *schema.ResourceData) bool {
 	if d.HasChange("num_cores_per_socket") ||
-		d.HasChange("num_threads_per_core") || d.HasChange("cd_rom") || d.HasChange("num_numa_nodes") ||
+		d.HasChange("num_threads_per_core") || d.HasChange("cd_roms") || d.HasChange("num_numa_nodes") ||
 		d.HasChange("cluster") || d.HasChange("is_cpu_passthrough_enabled") || d.HasChange("enabled_cpu_features") ||
 		d.HasChange("is_vcpu_hard_pinning_enabled") || d.HasChange("guest_customization") || d.HasChange("guest_tools") ||
 		d.HasChange("serial_ports") || d.HasChange("gpus") || d.HasChange("boot_config") || d.HasChange("is_cpu_hotplug_enabled") {
