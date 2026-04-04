@@ -16,7 +16,6 @@ import (
 const resourceNameDeployPC = "nutanix_pc_deploy_v2.test"
 
 func TestAccV2NutanixDeployPcResource_Basic(t *testing.T) {
-  t.Skip("Skipping PC Deploy V2 test")
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-deploy-pc-%d", r)
 
