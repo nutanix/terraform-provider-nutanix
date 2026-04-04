@@ -58,7 +58,7 @@ func DatasourceNutanixListRestorablePcsV2Read(ctx context.Context, d *schema.Res
 
 	restoreSourceExtID := d.Get("restore_source_ext_id").(string)
 
-	resp, err := conn.DomainManagerBackupsAPIInstance.ListRestorableDomainManagers(utils.StringPtr(restoreSourceExtID), page, limit, filter)
+	resp, err := listRestorableDomainManagersWithV42Fallback(ctx, conn.DomainManagerBackupsAPIInstance, utils.StringPtr(restoreSourceExtID), page, limit, filter)
 	if err != nil {
 		return diag.Errorf("Error while Listing Restorable Domain Managers configurations Details: %v", err)
 	}
