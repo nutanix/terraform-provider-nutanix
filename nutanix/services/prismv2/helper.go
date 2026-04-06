@@ -3,6 +3,7 @@ package prismv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -136,6 +137,10 @@ func listRestorableDomainManagersWithV42Fallback(
 	filter *string,
 	args ...map[string]interface{},
 ) (*management.ListRestorableDomainManagersApiResponse, error) {
+	if restoreSourceExtID == nil || strings.TrimSpace(*restoreSourceExtID) == "" {
+		return nil, fmt.Errorf("restore source ext_id is required for listing restorable domain managers")
+	}
+
 	resp, err := api.ListRestorableDomainManagers(restoreSourceExtID, page, limit, filter, args...)
 	if err == nil || !isNotFoundError(err) {
 		return resp, err
