@@ -12,6 +12,7 @@ type Client struct {
 	RoutesTable           *api.RouteTablesApi
 	APIClientInstance     *network.ApiClient
 	RoutingPolicy         *api.RoutingPoliciesApi
+	NetworkFunctionAPI    *api.NetworkFunctionsApi
 	SubnetAPIInstance     *api.SubnetsApi
 	VpcAPIInstance        *api.VpcsApi
 	FloatingIPAPIInstance *api.FloatingIpsApi
@@ -35,6 +36,7 @@ func NewNetworkingClient(credentials client.Credentials) (*Client, error) {
 		Routes:                api.NewRoutesApi(baseClient),
 		RoutesTable:           api.NewRouteTablesApi(baseClient),
 		RoutingPolicy:         api.NewRoutingPoliciesApi(baseClient),
+		NetworkFunctionAPI:    api.NewNetworkFunctionsApi(baseClient),
 		SubnetAPIInstance:     api.NewSubnetsApi(baseClient),
 		VpcAPIInstance:        api.NewVpcsApi(baseClient),
 		FloatingIPAPIInstance: api.NewFloatingIpsApi(baseClient),

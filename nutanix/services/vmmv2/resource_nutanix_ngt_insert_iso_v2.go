@@ -141,6 +141,9 @@ func ResourceNutanixNGTInsertIsoV2Create(ctx context.Context, d *schema.Resource
 			body.IsConfigOnly = utils.BoolPtr(isConfigOnly.(bool))
 		}
 
+		aJSON, _ := json.MarshalIndent(body, "", "  ")
+		log.Printf("[DEBUG] Inserting NGT ISO Request Body: %s", string(aJSON))
+
 		resp, err := conn.VMAPIInstance.InsertVmGuestTools(utils.StringPtr(extID.(string)), body, args)
 		if err != nil {
 			return diag.Errorf("error while Inserting  gest tools ISO : %v", err)
@@ -169,7 +172,7 @@ func ResourceNutanixNGTInsertIsoV2Create(ctx context.Context, d *schema.Resource
 		}
 		taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
 
-		aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+		aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
 		log.Printf("[DEBUG] NGT ISO Insert Task Details: %s", string(aJSON))
 
 		for _, entity := range taskDetails.EntitiesAffected {

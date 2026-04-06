@@ -219,6 +219,7 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | nutanix_service_groups | nutanix_service_groups_v2 |
 | nutanix_network_security_rule | nutanix_network_security_policy_v2 |
 | - | nutanix_network_security_policies_v2 |
+| - | nutanix_network_security_policy_rules_v2 |
 | nutanix_role | nutanix_role_v2 |
 | nutanix_roles | nutanix_roles_v2 |
 | nutanix_permission | nutanix_operation_v2 |

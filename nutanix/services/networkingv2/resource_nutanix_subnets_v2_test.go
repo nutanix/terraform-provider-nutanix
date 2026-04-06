@@ -2,10 +2,12 @@ package networkingv2_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -127,6 +129,98 @@ func TestAccV2NutanixSubnetResource_isNatEnableFalse(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccV2NutanixSubnetResource_WithMetadata(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-subnet-%d", r)
+	desc := "test subnet description"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testSubnetV2ConfigwithMetadata(name, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameSubnet, "name", name),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "subnet_type", "VLAN"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "network_id", "112"),
+					resource.TestCheckResourceAttrSet(resourceNameSubnet, "links.#"),
+					resource.TestCheckResourceAttrSet(resourceNameSubnet, "ip_usage.#"),
+					resource.TestCheckResourceAttrSet(resourceNameSubnet, "cluster_reference"),
+					resource.TestCheckResourceAttrSet(resourceNameSubnet, "metadata.#"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "metadata.0.category_ids.#", "1"),
+					testCheckMetadataCategoryIDsContain(resourceNameSubnet, "nutanix_category_v2.test"),
+					// data source check
+					resource.TestCheckResourceAttr(datasourceNameSubnet, "metadata.0.category_ids.#", "1"),
+					testCheckMetadataCategoryIDsContain(datasourceNameSubnet, "nutanix_category_v2.test"),
+				),
+			},
+			{
+				Config: testSubnetV2ConfigwithMetadataUpdate(name, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameSubnet, "name", name),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "subnet_type", "VLAN"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "network_id", "112"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "metadata.0.category_ids.#", "2"),
+					testCheckMetadataCategoryIDsContain(resourceNameSubnet, "nutanix_category_v2.test", "nutanix_category_v2.test2"),
+					// data source check
+					resource.TestCheckResourceAttr(datasourceNameSubnet, "metadata.0.category_ids.#", "2"),
+					testCheckMetadataCategoryIDsContain(datasourceNameSubnet, "nutanix_category_v2.test", "nutanix_category_v2.test2"),
+				),
+			},
+		},
+	})
+}
+
+func testCheckMetadataCategoryIDsContain(target string, expectedCategoryResources ...string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		targetRs, ok := s.RootModule().Resources[target]
+		if !ok {
+			return fmt.Errorf("resource %q not found in state", target)
+		}
+
+		var categoryPrefix string
+		for attrKey := range targetRs.Primary.Attributes {
+			if strings.HasSuffix(attrKey, ".category_ids.#") {
+				categoryPrefix = strings.TrimSuffix(attrKey, "#")
+				break
+			}
+		}
+		if categoryPrefix == "" {
+			return fmt.Errorf("resource %q has no metadata category_ids", target)
+		}
+
+		actualIDs := make(map[string]struct{})
+		for attrKey, attrVal := range targetRs.Primary.Attributes {
+			if strings.HasPrefix(attrKey, categoryPrefix) && !strings.HasSuffix(attrKey, ".#") && attrVal != "" {
+				actualIDs[attrVal] = struct{}{}
+			}
+		}
+
+		for _, expectedResource := range expectedCategoryResources {
+			expectedRs, exists := s.RootModule().Resources[expectedResource]
+			if !exists {
+				return fmt.Errorf("expected category resource %q not found in state", expectedResource)
+			}
+
+			expectedID := expectedRs.Primary.ID
+			if expectedID == "" {
+				expectedID = expectedRs.Primary.Attributes["id"]
+			}
+			if expectedID == "" {
+				return fmt.Errorf("expected category resource %q has empty id", expectedResource)
+			}
+
+			if _, present := actualIDs[expectedID]; !present {
+				return fmt.Errorf("resource %q metadata category_ids does not contain expected id %q from %q", target, expectedID, expectedResource)
+			}
+		}
+
+		return nil
+	}
 }
 
 func testSubnetV2Config(name, desc string) string {
@@ -297,5 +391,77 @@ resource "nutanix_subnet_v2" "test" {
     }
   }
 }
+`, name, desc)
+}
+
+func testSubnetV2ConfigwithMetadata(name, desc string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+		cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
+		}
+
+		resource "nutanix_category_v2" "test" {
+			key = "tf-test-category-key-%[1]s"
+			value = "tf-test-category-value-%[1]s"
+			description = "test category for subnet"
+		}
+
+		resource "nutanix_subnet_v2" "test" {
+			name = "%[1]s"
+			description = "%[2]s"
+			cluster_reference = local.cluster0
+			subnet_type = "VLAN"
+			network_id = 112
+			metadata {
+				category_ids = [nutanix_category_v2.test.id]
+			}
+		}
+		data "nutanix_subnet_v2" "test" {
+			ext_id = nutanix_subnet_v2.test.id
+		}
+`, name, desc)
+}
+
+func testSubnetV2ConfigwithMetadataUpdate(name, desc string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+		cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
+		}
+
+		resource "nutanix_category_v2" "test" {
+			key = "tf-test-category-key-%[1]s"
+			value = "tf-test-category-value-%[1]s"
+			description = "test category for subnet"
+		}
+
+		resource "nutanix_category_v2" "test2" {
+			key = "tf-test-category-key-%[1]s-2"
+			value = "tf-test-category-value-%[1]s-2"
+			description = "test category for subnet 2"
+		}
+
+		resource "nutanix_subnet_v2" "test" {
+			name = "%[1]s"
+			description = "%[2]s"
+			cluster_reference = local.cluster0
+			subnet_type = "VLAN"
+			network_id = 112
+			metadata {
+				category_ids = [nutanix_category_v2.test.id, nutanix_category_v2.test2.id]
+			}
+		}
+		data "nutanix_subnet_v2" "test" {
+			ext_id = nutanix_subnet_v2.test.id
+		}
 `, name, desc)
 }

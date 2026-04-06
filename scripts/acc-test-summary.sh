@@ -11,7 +11,8 @@ if [[ ! -f "$LOGFILE" ]] || ! grep -qE '^--- (PASS|FAIL|SKIP):' "$LOGFILE" 2>/de
 fi
 
 TMP=$(mktemp)
-trap 'rm -f "$TMP"' EXIT
+SUMMARY_TMP=$(mktemp)
+trap 'rm -f "$TMP" "$SUMMARY_TMP"' EXIT
 
 awk '
   /^--- (PASS|FAIL|SKIP): / {
@@ -73,7 +74,10 @@ fi
     echo "🎉💃 No tests skipped 🕺🎉"
   fi
   echo "================================================================================================================================================"
-} >> "$LOGFILE"
+} > "$SUMMARY_TMP"
 
+cat "$SUMMARY_TMP" >> "$LOGFILE"
 echo ""
 echo "==> Test summary appended to $LOGFILE"
+echo ""
+cat "$SUMMARY_TMP"
