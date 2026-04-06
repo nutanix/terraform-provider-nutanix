@@ -104,7 +104,14 @@ func ResourceNutanixRestorePcCreate(ctx context.Context, d *schema.ResourceData,
 	aJSON, _ := json.MarshalIndent(restoreSpec, "", "  ")
 	log.Printf("[DEBUG] Restore PC Body: %s", string(aJSON))
 
-	resp, err := conn.DomainManagerBackupsAPIInstance.Restore(utils.StringPtr(restoreSourceExtID), utils.StringPtr(restorableDomainManagerExtID), utils.StringPtr(restorePointExtID), restoreSpec)
+	resp, err := restoreDomainManagerWithV42Fallback(
+		ctx,
+		conn.DomainManagerBackupsAPIInstance,
+		utils.StringPtr(restoreSourceExtID),
+		utils.StringPtr(restorableDomainManagerExtID),
+		utils.StringPtr(restorePointExtID),
+		restoreSpec,
+	)
 	if err != nil {
 		return diag.Errorf("error while restoring PC: %s", err)
 	}

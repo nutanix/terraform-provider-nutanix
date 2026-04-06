@@ -91,7 +91,7 @@ func DatasourceNutanixRestorePointsV2Read(ctx context.Context, d *schema.Resourc
 		limit = nil
 	}
 
-	resp, err := conn.DomainManagerBackupsAPIInstance.ListRestorePoints(restoreSourceExtID, restorableDomainManagerExtID, page, limit, filter, orderBy, selects)
+	resp, err := listRestorePointsWithV42Fallback(ctx, conn.DomainManagerBackupsAPIInstance, restoreSourceExtID, restorableDomainManagerExtID, page, limit, filter, orderBy, selects)
 	if err != nil {
 		return diag.Errorf("error while fetching Domain Manager Restore Point Detail: %s", err)
 	}

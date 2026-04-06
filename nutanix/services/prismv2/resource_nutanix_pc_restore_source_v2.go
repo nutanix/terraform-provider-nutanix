@@ -192,7 +192,7 @@ func ResourceNutanixRestoreSourceV2Create(ctx context.Context, d *schema.Resourc
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Restore Source Create Payload: %s", string(aJSON))
 
-	resp, err := conn.DomainManagerBackupsAPIInstance.CreateRestoreSource(&body)
+	resp, err := createRestoreSourceWithV42Fallback(ctx, conn.DomainManagerBackupsAPIInstance, &body)
 
 	if err != nil {
 		return diag.Errorf("error while creating restore source: %s", err)
@@ -211,7 +211,7 @@ func ResourceNutanixRestoreSourceV2Create(ctx context.Context, d *schema.Resourc
 func ResourceNutanixRestoreSourceV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).PrismAPI
 
-	resp, err := conn.DomainManagerBackupsAPIInstance.GetRestoreSourceById(utils.StringPtr(d.Id()))
+	resp, err := getRestoreSourceByIDWithV42Fallback(ctx, conn.DomainManagerBackupsAPIInstance, utils.StringPtr(d.Id()))
 
 	if err != nil {
 		log.Printf("[DEBUG] Restore Source read error: %s", err)
@@ -250,7 +250,7 @@ func ResourceNutanixRestoreSourceV2Update(ctx context.Context, d *schema.Resourc
 func ResourceNutanixRestoreSourceV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).PrismAPI
 
-	readResp, err := conn.DomainManagerBackupsAPIInstance.GetRestoreSourceById(utils.StringPtr(d.Id()))
+	readResp, err := getRestoreSourceByIDWithV42Fallback(ctx, conn.DomainManagerBackupsAPIInstance, utils.StringPtr(d.Id()))
 	if err != nil {
 		log.Printf("[DEBUG] Restore Source Read Error: %s", err)
 		errMessage := utils.ExtractErrorFromV4APIResponse(err)
@@ -267,7 +267,7 @@ func ResourceNutanixRestoreSourceV2Delete(ctx context.Context, d *schema.Resourc
 	eTag := conn.DomainManagerBackupsAPIInstance.ApiClient.GetEtag(readResp)
 	args["If-Match"] = utils.StringPtr(eTag)
 
-	resp, err := conn.DomainManagerBackupsAPIInstance.DeleteRestoreSourceById(utils.StringPtr(d.Id()), args)
+	resp, err := deleteRestoreSourceByIDWithV42Fallback(ctx, conn.DomainManagerBackupsAPIInstance, utils.StringPtr(d.Id()), args)
 
 	if err != nil {
 		return diag.Errorf("error while deleting restore source: %s", err)
