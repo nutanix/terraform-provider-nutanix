@@ -74,6 +74,7 @@ The `floating_ips` object contains the following attributes:
 - `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 - `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
 - `metadata`: Metadata associated with this resource.
+- `project_ext_id`: External identifier of the project associated with the Floating IP.
 
 ### association
 

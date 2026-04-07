@@ -123,6 +123,8 @@ resource "nutanix_subnet_v2" "van-114" {
 - `virtual_switch`: (Optional) Schema to configure a virtual switch
 - `vpc`: (Optional) Networking common base object
 - `ip_prefix`: (Optional) IP Prefix in CIDR format.
+- `project_ext_id`: (Optional) External identifier of the project associated with the Subnet.
+- `shared_with_projects`: (Optional) List of project external identifiers with which the Subnet is shared.
 
 ### dhcp_options
 

@@ -23,11 +23,12 @@ resource "nutanix_images_v2" "img-1" {
   }
 }
 
-
+# Create a image with user defined project
 resource "nutanix_images_v2" "img-2"{
   name = "test-image"
   description = "img desc"
   type = "DISK_IMAGE"
+  project_ext_id = "<project_uuid>"
   source {
     url_source {
       url = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"

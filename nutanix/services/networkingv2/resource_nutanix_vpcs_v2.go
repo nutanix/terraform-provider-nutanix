@@ -405,7 +405,9 @@ func ResourceNutanixVPCsV2Read(ctx context.Context, d *schema.ResourceData, meta
 func ResourceNutanixVPCsV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 	// Handle shared_with_projects changes
 	if d.HasChange("shared_with_projects") {
 		oldProjects, newProjects := d.GetChange("shared_with_projects")
@@ -447,10 +449,6 @@ func ResourceNutanixVPCsV2Update(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("description") {
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
-		updateSpecChanged = true
-	}
-	if d.HasChange("project_ext_id") {
-		updateSpec.ProjectExtId = utils.StringPtr(d.Get("project_ext_id").(string))
 		updateSpecChanged = true
 	}
 

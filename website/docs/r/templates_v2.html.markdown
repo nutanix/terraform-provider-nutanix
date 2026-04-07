@@ -13,6 +13,8 @@ Create a Template from the given VM identifier. A Template stores the VM configu
 ## Example
 
 ```hcl
+
+# Create a template with user defined project
 resource "nutanix_template_v2" "temp-1"{
     template_name = "example_template"
     template_description = "create example template"

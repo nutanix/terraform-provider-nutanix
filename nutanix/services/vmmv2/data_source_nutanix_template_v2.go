@@ -114,6 +114,10 @@ func DatasourceNutanixTemplateV2() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -172,6 +176,9 @@ func DatasourceNutanixTemplateV2Read(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 	if err := d.Set("category_ext_ids", getResp.CategoryExtIds); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId(utils.StringValue(getResp.ExtId))

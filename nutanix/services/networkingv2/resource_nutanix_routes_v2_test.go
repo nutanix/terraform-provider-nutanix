@@ -42,6 +42,7 @@ func TestAccV2NutanixRoutesResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceSubnet, "ip_config.0.ipv4.0.default_gateway_ip.0.value", testVars.Networking.Subnets.GatewayIP),
 					resource.TestCheckResourceAttr(resourceSubnet, "ip_config.0.ipv4.0.pool_list.0.start_ip.0.value", testVars.Networking.Subnets.DHCP.StartIP),
 					resource.TestCheckResourceAttr(resourceSubnet, "ip_config.0.ipv4.0.pool_list.0.end_ip.0.value", testVars.Networking.Subnets.DHCP.EndIP),
+					resource.TestCheckResourceAttr(resourceSubnet, "project_ext_id", "00000000-0000-0000-0000-000000000000"), // default project
 				),
 			},
 			// Create VPC 1
