@@ -221,7 +221,7 @@ func testVMV2Config(name, desc, powerState string) string {
 		}
 
 		data "nutanix_storage_containers_v2" "ngt-sc" {
-		  filter = "clusterExtId eq '${local.cluster0}'"
+		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 		  limit = 1
 		}
 
@@ -335,7 +335,7 @@ func testVmsShutdownV4ConfigWithError(name, desc, state string) string {
 		}
 
 		data "nutanix_storage_containers_v2" "ngt-sc" {
-		  filter = "clusterExtId eq '${local.cluster0}'"
+		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 		  limit = 1
 		}
 	

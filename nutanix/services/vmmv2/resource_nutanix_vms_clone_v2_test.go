@@ -112,7 +112,7 @@ func testVmsCloneV2Config(name, desc string) string {
 		  filter = "name eq '${local.vmm.subnet_name}'"
 		}
 		data "nutanix_storage_containers_v2" "ngt-sc" {
-		  filter = "clusterExtId eq '${local.cluster0}'"
+		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 		  limit = 1
 		}
 
@@ -231,7 +231,7 @@ func testVmsCloneV2WithGuestCustomizationConfig(name, desc string) string {
 		  filter = "name eq '${local.vmm.subnet_name}'"
 		}
 		data "nutanix_storage_containers_v2" "ngt-sc" {
-		  filter = "clusterExtId eq '${local.clusterUUID}'"
+		  filter = "clusterExtId eq '${local.clusterUUID}' and startswith(name,'default-container-')"
 		  limit = 1
 		}
 
