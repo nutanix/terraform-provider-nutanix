@@ -157,7 +157,7 @@ func testAccVolumeGroupDiskResourceConfig(name, desc string, diskSizeBytes int) 
 	return fmt.Sprintf(`	  
 
       data "nutanix_storage_containers_v2" "test" {
-		  filter = "clusterExtId eq '${local.cluster1}'"
+		  filter = "clusterExtId eq '${local.cluster1}' and startswith(name,'default-container-')"
 		  limit  = 1
 	  }
 	  resource "nutanix_volume_group_disk_v2" "test" {
