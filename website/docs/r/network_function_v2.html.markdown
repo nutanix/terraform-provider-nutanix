@@ -175,4 +175,18 @@ The `data_plane_health_check_config` object contains the following attributes:
 - `success_threshold` :  `Default: 3`. The number of successful checks after which the target is considered healthy.
 - `timeout_secs` :  `Default: 1`. The time, in seconds, after which a health check times out.
 
+## Import
+
+This helps to manage existing entities which are not created through terraform. Network Function can be imported using the network function uuid `networkFunctionUUID` (ext_id in v4 terms). eg,
+
+
+```hcl
+// create its configuration in the root module. For example:
+// network function will be imported to this resource 
+resource "nutanix_network_function_v2" "import_network_function"{}
+
+// execute the below command.
+terraform import nutanix_network_function_v2.import_network_function <networkFunctionUUID>
+```
+
 See detailed information in [Create Nutanix Network Function v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.2#tag/NetworkFunctions/operation/createNetworkFunction).

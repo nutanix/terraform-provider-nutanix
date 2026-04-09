@@ -519,4 +519,16 @@ The following attributes are exported:
 * `protection_type`: The type of protection applied on a VM. PD_PROTECTED indicates a VM is protected using the Prism Element. RULE_PROTECTED indicates a VM protection using the Prism Central.
 * `protection_policy_state`: Status of protection policy applied to this VM.
 
+## Import
+
+This helps to manage existing entities which are not created through terraform. Virtual Machine can be imported using the virtual machine uuid `virtualMachineUUID` (ext_id in v4 terms). eg,
+
+```hcl
+// create its configuration in the root module. For example:
+// virtual machine will be imported to this resource 
+resource "nutanix_virtual_machine_v2" "import_virtual_machine"{}
+
+terraform import nutanix_virtual_machine_v2.import_virtual_machine <virtualMachineUUID>
+```
+
 See detailed information in [Nutanix Create Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Vm/operation/createVm).

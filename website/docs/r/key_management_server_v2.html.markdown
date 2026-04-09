@@ -79,4 +79,16 @@ The `kmip_key_vault` supports the following:
       - `value`: - (Optional) FQDN of the External Key Manager server.
   - `port`: - (Required) Port of the External Key Manager server.
 
+## Import
+
+This helps to manage existing entities which are not created through Terraform. Key management server resources can be imported using the `UUID` (`ext_id` in v4 terms). For example:
+
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_key_management_server_v2" "import_kms" {}
+
+// execute this command in cli
+terraform import nutanix_key_management_server_v2.import_kms <UUID>
+```
+
 See detailed information in [Nutanix Create a key management server V4](https://developers.nutanix.com/api-reference?namespace=security&version=v4.1#tag/KeyManagementServers/operation/createKeyManagementServer)

@@ -125,10 +125,14 @@ Within one entity group, you cannot have two entities with the same `(selected_b
 
 ## Import
 
-Entity Group can be imported using the UUID (ext_id):
+Entity Group can be imported using the entity group uuid `entityGroupUUID` (ext_id in v4 terms). eg,
 
 ```bash
-terraform import nutanix_entity_group_v2.example <UUID>
+// create its configuration in the root module. For example:
+resource "nutanix_entity_group_v2" "import_entity_group"{}
+
+// execute the below command.
+terraform import nutanix_entity_group_v2.import_entity_group <entityGroupUUID>
 ```
 
 See detailed information in [Nutanix Entity Groups V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.2#tag/EntityGroups/operation/createEntityGroup).
