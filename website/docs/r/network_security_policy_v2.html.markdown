@@ -176,4 +176,4 @@ resource "nutanix_network_security_policy_v2" "import_nsp" {}
 terraform import nutanix_network_security_policy_v2.import_nsp <UUID>
 ```
 
-See detailed information in [Nutanix Security Policy v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0#tag/NetworkSecurityPolicies/operation/createNetworkSecurityPolicy).
+See detailed information in [Nutanix Security Policy v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.2#tag/NetworkSecurityPolicies/operation/createNetworkSecurityPolicy).

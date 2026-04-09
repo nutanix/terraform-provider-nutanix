@@ -86,4 +86,4 @@ resource "nutanix_vm_cdrom_insert_eject_v2" "import_cdrom_inserted" {
 }
 ```
 
-See detailed information in [Nutanix VMs CDROM Insert V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Vm/operation/insertCdRomById).
+See detailed information in [Nutanix VMs CDROM Insert V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Vm/operation/insertCdRomById).

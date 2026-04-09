@@ -112,5 +112,5 @@ The target_site_reference attribute supports the following:
 * `cluster_ext_id`: External identifier of the cluster.
 
 
-See detailed information in [Nutanix Get Protected Resource v4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.0#tag/ProtectedResources/operation/getProtectedResourceById).
+See detailed information in [Nutanix Get Protected Resource v4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.3#tag/ProtectedResources/operation/getProtectedResourceById).
 

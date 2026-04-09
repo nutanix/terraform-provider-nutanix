@@ -53,4 +53,4 @@ The `storage_policies` contains list of Storage Policy objects. Each Storage Pol
 * `policy_type`:- Indicates whether the policy is user-created or system-created. Valid values: `"USER"`, `"SYSTEM"`.
 
 
-See detailed information in [Nutanix Get Storage Policies v4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.1#tag/StoragePolicies/operation/listStoragePolicies).
+See detailed information in [Nutanix Get Storage Policies v4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.2#tag/StoragePolicies/operation/listStoragePolicies).

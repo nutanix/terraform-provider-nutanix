@@ -39,4 +39,4 @@ The following arguments are supported:
 * `is_https_enabled`: (Optional) Indicates if the LCM URL has HTTPS enabled. The default value is True.
 * `has_module_auto_upgrade_enabled`: (Optional) Indicates if LCM is enabled to auto-upgrade products. The default value is False.
 
-See detailed information in [Nutanix Update LCM Config V4](https://developers.nutanix.com/api-reference?namespace=lifecycle&version=v4.0#tag/Config/operation/updateConfig)
+See detailed information in [Nutanix Update LCM Config V4](https://developers.nutanix.com/api-reference?namespace=lifecycle&version=v4.2#tag/Config/operation/updateConfig)

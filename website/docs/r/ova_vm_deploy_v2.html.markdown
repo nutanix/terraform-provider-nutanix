@@ -144,4 +144,4 @@ The `categories` attribute supports the following:
 * `ext_id`: A globally unique identifier of a VM category of type UUID.
 
 
-See detailed information in [Nutanix Deploy VMs from an OVA V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.1#tag/Ovas/operation/deployOva).
+See detailed information in [Nutanix Deploy VMs from an OVA V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Ovas/operation/deployOva).

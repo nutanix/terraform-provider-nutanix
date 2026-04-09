@@ -50,4 +50,4 @@ The following attributes are exported:
 * `code`: Icmp service Code. Ignore this field if Code has to be ANY
 * `is_all_allowed`: Set this field to true if both Type and Code is ANY.
 
-See detailed information in [Nutanix Get Service Group v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0#tag/ServiceGroups/operation/getServiceGroupById).
+See detailed information in [Nutanix Get Service Group v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.2#tag/ServiceGroups/operation/getServiceGroupById).

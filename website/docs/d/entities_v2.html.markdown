@@ -133,4 +133,4 @@ Each element in `attribute_list` supports the following:
 * `supported_operator` - List of supported operators for this entity attribute.
 * `attribute_values` - List of attribute values supported for access control.
 
-See [Nutanix List Entities v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b2#tag/Entities/operation/listEntities) for API details.
+See [Nutanix List Entities v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Entities/operation/listEntities) for API details.

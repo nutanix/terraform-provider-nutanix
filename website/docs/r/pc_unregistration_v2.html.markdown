@@ -28,4 +28,4 @@ The following arguments are supported:
 - `pc_ext_id`: -(Required) The external identifier of the domain manager (Prism Central) resource
 - `ext_id`: -(Required) Cluster UUID of a remote cluster.
 
-See detailed information in [Nutanix PC Unregistration V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/unregister).
+See detailed information in [Nutanix PC Unregistration V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.3#tag/DomainManager/operation/unregister).

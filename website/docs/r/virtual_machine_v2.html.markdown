@@ -531,4 +531,4 @@ resource "nutanix_virtual_machine_v2" "import_virtual_machine"{}
 terraform import nutanix_virtual_machine_v2.import_virtual_machine <virtualMachineUUID>
 ```
 
-See detailed information in [Nutanix Create Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Vm/operation/createVm).
+See detailed information in [Nutanix Create Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Vm/operation/createVm).

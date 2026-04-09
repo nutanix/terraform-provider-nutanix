@@ -129,4 +129,4 @@ The `ova_sha1_checksum` and `ova_sha256_checksum` arguments support the followin
 - `hex_digest`: - The hexadecimal representation of the checksum.
 
 
-See detailed information in [Nutanix List Ovas V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.1#tag/Ovas/operation/listOvas).
+See detailed information in [Nutanix List Ovas V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Ovas/operation/listOvas).

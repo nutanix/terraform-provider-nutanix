@@ -46,4 +46,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix Get Route Table v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/RouteTables/operation/getRouteTableById).
+See detailed information in [Nutanix Get Route Table v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/RouteTables/operation/getRouteTableById).
