@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Cloud Platform.
 
-NOTE: The latest version of the Nutanix provider is [v2.4.0](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.4.0).
+NOTE: The latest version of the Nutanix provider is [v2.4.1](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.4.1).
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 
@@ -21,6 +21,49 @@ Modules based on Terraform Nutanix Provider can be found here : [Modules](https:
 * [Terraform](https://www.terraform.io/downloads.html) 0.12+
 * [Go](https://golang.org/doc/install) 1.17+ (to build the provider plugin)
 * This provider uses [SDKv2](https://www.terraform.io/plugin/sdkv2/sdkv2-intro) from release 1.3.0
+
+## Introducing Nutanix Terraform Provider Version v2.4.1
+
+We're excited to announce the release of Nutanix Terraform Provider Version 2.4.1!
+
+### What's New in v2.4.1
+
+- **New Resource Support**
+  - **Network Functions (Networking)**: Create and manage Network Functions for service chaining and traffic forwarding use cases. [#982](https://github.com/nutanix/terraform-provider-nutanix/issues/982)
+  - **Entity Groups (Security)**: Create and manage Entity Groups for microsegmentation use cases. [#1030](https://github.com/nutanix/terraform-provider-nutanix/issues/1030)
+  - **Deploy from OVA (VMM)**: Add support to deploy virtual machines from OVA images. [#985](https://github.com/nutanix/terraform-provider-nutanix/pull/985)
+  - **VM Affinity Policies (VMM)**: Add support for VM-Host affinity and VM-VM anti-affinity policies. [#997](https://github.com/nutanix/terraform-provider-nutanix/pull/997)
+
+- **Enhancements:**
+  - Feature Request: Entities. [#955](https://github.com/nutanix/terraform-provider-nutanix/issues/955)
+  - List all the Network Security Policy rules by policy ExtID. [#1031](https://github.com/nutanix/terraform-provider-nutanix/issues/1031)
+  - FNS 5.2: Add support for global scope, specific intratier rules, and subnet/VPC-based objects features. [#1032](https://github.com/nutanix/terraform-provider-nutanix/issues/1032)
+  - Add data source to list Network Security Policy rules v2 (`nutanix_network_security_policy_rules_v2`). [#1084](https://github.com/nutanix/terraform-provider-nutanix/issues/1084)
+  - Support metadata on subnet V2 resource and data source. [#1085](https://github.com/nutanix/terraform-provider-nutanix/issues/1085)
+  - API key and custom headers as an alternative method of authorization. [#1062](https://github.com/nutanix/terraform-provider-nutanix/pull/1062)
+
+- **Fixed Bugs:**
+   - `subnets_v2` update with `is_external` set to `true` fails. [#1063](https://github.com/nutanix/terraform-provider-nutanix/issues/1063)
+   - `nutanix_vpc_v2`: Unable to add more than one external routable prefix. [#1053](https://github.com/nutanix/terraform-provider-nutanix/issues/1053)
+   - Legacy NIC attributes in VMM v2 are still used across resources and data sources. [#1059](https://github.com/nutanix/terraform-provider-nutanix/issues/1059)
+   - `nutanix_network_security_policy_v2`: Failed to add a rule on an existing security policy. [#1052](https://github.com/nutanix/terraform-provider-nutanix/issues/1052)
+   - Add retries for VM power on/off operations in `nutanix_virtual_machine_v2` to avoid ETag mismatch errors. [#1089](https://github.com/nutanix/terraform-provider-nutanix/issues/1089)
+   - Bug: can not create global Nutanix security policy, defaults to VLAN. [#1087](https://github.com/nutanix/terraform-provider-nutanix/issues/1087)
+   - `nutanix_object_store_v2` update functionality. [#1094](https://github.com/nutanix/terraform-provider-nutanix/issues/1094)
+   - `nutanix_object_store_v2` gives no Terraform error on long name. [#1093](https://github.com/nutanix/terraform-provider-nutanix/issues/1093)
+   - `nutanix_user_key_v2` update tries to recreate the key object. [#1092](https://github.com/nutanix/terraform-provider-nutanix/issues/1092)
+   - `nutanix_virtual_machine_v2`: Power state ETag handling and task-layer retry. [#1104](https://github.com/nutanix/terraform-provider-nutanix/issues/1104)
+   - Bug: Updating cloud-init for `nutanix_virtual_machine_v2`. [#1108](https://github.com/nutanix/terraform-provider-nutanix/issues/1108)
+   - Memory hot-plug increase causing VM power off when using `nutanix_virtual_machine_v2` resource. [#1105](https://github.com/nutanix/terraform-provider-nutanix/issues/1105)
+   - Mark user key secrets as sensitive and persist `key_details` on create. [#1112](https://github.com/nutanix/terraform-provider-nutanix/issues/1112)
+
+### Software Requirements
+The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.4.1 for Iris 1, ensure your Nutanix environment meets the following software requirements:
+- Self Service version: 4.3.0 (Required only for running Self Service based resource and data source)
+- AOS Version: Iris 1 or later
+- Prism Central Version: Iris 1 or later
+- Nutanix Terraform Provider Version: 2.4.1
+
 
 ## Introducing Nutanix Terraform Provider Version v2.4.0
 
@@ -65,6 +108,7 @@ The provider is used to interact with the many resources and data sources suppor
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
+| 2.4.1 | 7.5.1 | pc7.5 or later | Self Service  v4.3.0 | yes |
 | 2.4.0 | 7.5 | pc7.5 or later | Self Service  v4.3.0 | yes |
 | 2.3.4 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.3 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
@@ -199,11 +243,13 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | nutanix_static_routes | nutanix_routes_v2 |
 | nutanix_address_group | nutanix_address_groups_v2 |
 | nutanix_service_group | nutanix_service_groups_v2 |
+| - | nutanix_network_function_v2 |
 | nutanix_network_security_rule | nutanix_network_security_policy_v2 |
 | nutanix_role | nutanix_roles_v2 |
 | nutanix_user | nutanix_users_v2 |
 | nutanix_user_groups | nutanix_user_groups_v2 |
 | nutanix_access_control_policy | nutanix_authorization_policy_v2 |
+| - | nutanix_entity_group_v2 |
 | - | nutanix_saml_identity_providers_v2 |
 | - | nutanix_directory_services_v2 |
 | nutanix_category_key | nutanix_category_v2 |
@@ -220,6 +266,8 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | - | nutanix_vm_gc_update_v2 |
 | - | nutanix_vm_network_device_assign_ip_v2 |
 | - | nutanix_vm_network_device_migrate_v2 |
+| - | nutanix_vm_host_affinity_policy_v2 |
+| - | nutanix_vm_anti_affinity_policy_v2 |
 | - | nutanix_template_v2 |
 | - | nutanix_deploy_templates_v2 |
 | - | nutanix_template_guest_os_actions_v2 |
@@ -322,8 +370,11 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | nutanix_address_groups | nutanix_address_groups_v2 |
 | nutanix_service_group | nutanix_service_group_v2 |
 | nutanix_service_groups | nutanix_service_groups_v2 |
+| - | nutanix_network_function_v2 |
+| - | nutanix_network_functions_v2 |
 | nutanix_network_security_rule | nutanix_network_security_policy_v2 |
 | - | nutanix_network_security_policies_v2 |
+| - | nutanix_network_security_policy_rules_v2 |
 | nutanix_role | nutanix_role_v2 |
 | nutanix_roles | nutanix_roles_v2 |
 | nutanix_permission | nutanix_operation_v2 |
@@ -334,6 +385,10 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | nutanix_user_groups | nutanix_user_groups_v2 |
 | nutanix_access_control_policy | nutanix_authorization_policy_v2 |
 | nutanix_access_control_policies | nutanix_authorization_policies_v2 |
+| - | nutanix_entity_v2 |
+| - | nutanix_entities_v2 |
+| - | nutanix_entity_group_v2 |
+| - | nutanix_entity_groups_v2 |
 | - | nutanix_saml_identity_provider_v2 |
 | - | nutanix_saml_identity_providers_v2 |
 | - | nutanix_directory_service_v2 |
@@ -344,6 +399,10 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | - | nutanix_images_v2 |
 | nutanix_virtual_machine | nutanix_virtual_machine_v2 |
 | - | nutanix_virtual_machines_v2 |
+| - | nutanix_vm_host_affinity_policy_v2 |
+| - | nutanix_vm_host_affinity_policies_v2 |
+| - | nutanix_vm_anti_affinity_policy_v2 |
+| - | nutanix_vm_anti_affinity_policies_v2 |
 | - | nutanix_ova_v2 |
 | - | nutanix_ovas_v2 |
 | - | nutanix_template_v2 |
