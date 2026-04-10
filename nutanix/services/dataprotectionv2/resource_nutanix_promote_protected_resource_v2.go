@@ -8,10 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/request/protectedresources"
 	dataprotectionPrismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
-	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/request/protectedresources"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -39,7 +39,7 @@ func ResourceNutanixPromoteProtectedResourceV2Create(ctx context.Context, d *sch
 	conn := meta.(*conns.Client).DataProtectionAPI
 
 	extID := d.Get("ext_id").(string)
-  promoteProtectedResourceRequest := import2.PromoteProtectedResourceRequest{
+	promoteProtectedResourceRequest := import2.PromoteProtectedResourceRequest{
 		ExtId: utils.StringPtr(extID),
 	}
 	resp, err := conn.ProtectedResource.PromoteProtectedResource(ctx, &promoteProtectedResourceRequest)

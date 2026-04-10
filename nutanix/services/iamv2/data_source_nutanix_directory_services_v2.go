@@ -203,7 +203,7 @@ func DatasourceNutanixDirectoryServicesV2Read(ctx context.Context, d *schema.Res
 	if v, ok := d.GetOk("select"); ok {
 		listDirectoryServicesRequest.Select_ = utils.StringPtr(v.(string))
 	}
-  aJSON, _ := json.MarshalIndent(listDirectoryServicesRequest, "", " ")
+	aJSON, _ := json.MarshalIndent(listDirectoryServicesRequest, "", " ")
 	log.Println("[DEBUG] List Directory Services payload: ", string(aJSON))
 	resp, err := conn.DirectoryServiceAPIInstance.ListDirectoryServices(ctx, &listDirectoryServicesRequest)
 	if err != nil {

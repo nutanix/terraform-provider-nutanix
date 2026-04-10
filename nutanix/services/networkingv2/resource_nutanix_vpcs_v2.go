@@ -498,7 +498,7 @@ func ResourceNutanixVPCsV2Update(ctx context.Context, d *schema.ResourceData, me
 
 		args := make(map[string]interface{})
 		args["If-Match"] = utils.StringPtr(etagValue)
-    
+
 		updateVpcRequest := import2.UpdateVpcByIdRequest{
 			ExtId: utils.StringPtr(d.Id()),
 			Body:  &updateSpec,

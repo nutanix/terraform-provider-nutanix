@@ -324,7 +324,7 @@ func ResourceNutanixBackupTargetV2Read(ctx context.Context, d *schema.ResourceDa
 
 	getBackupTargetByIdRequest := import3.GetBackupTargetByIdRequest{
 		DomainManagerExtId: utils.StringPtr(domainManagerExtID),
-		ExtId:               utils.StringPtr(d.Id()),
+		ExtId:              utils.StringPtr(d.Id()),
 	}
 	resp, err := conn.DomainManagerBackupsAPIInstance.GetBackupTargetById(ctx, &getBackupTargetByIdRequest)
 
@@ -426,7 +426,7 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 
 	getBackupTargetByIdRequest := import3.GetBackupTargetByIdRequest{
 		DomainManagerExtId: utils.StringPtr(domainManagerExtID),
-		ExtId:               utils.StringPtr(d.Id()),
+		ExtId:              utils.StringPtr(d.Id()),
 	}
 	readResp, err := conn.DomainManagerBackupsAPIInstance.GetBackupTargetById(ctx, &getBackupTargetByIdRequest)
 	if err != nil {
@@ -493,8 +493,8 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 
 	updateBackupTargetByIdRequest := import3.UpdateBackupTargetByIdRequest{
 		DomainManagerExtId: utils.StringPtr(domainManagerExtID),
-		ExtId:               utils.StringPtr(d.Id()),
-		Body:                &updateSpec,
+		ExtId:              utils.StringPtr(d.Id()),
+		Body:               &updateSpec,
 	}
 	resp, err := conn.DomainManagerBackupsAPIInstance.UpdateBackupTargetById(ctx, &updateBackupTargetByIdRequest, args)
 
@@ -540,7 +540,7 @@ func ResourceNutanixBackupTargetV2Delete(ctx context.Context, d *schema.Resource
 
 	getBackupTargetByIdRequest := import3.GetBackupTargetByIdRequest{
 		DomainManagerExtId: utils.StringPtr(domainManagerExtID),
-		ExtId:               utils.StringPtr(d.Id()),
+		ExtId:              utils.StringPtr(d.Id()),
 	}
 	readResp, err := conn.DomainManagerBackupsAPIInstance.GetBackupTargetById(ctx, &getBackupTargetByIdRequest)
 	if err != nil {
@@ -554,7 +554,7 @@ func ResourceNutanixBackupTargetV2Delete(ctx context.Context, d *schema.Resource
 
 	deleteBackupTargetByIdRequest := import3.DeleteBackupTargetByIdRequest{
 		DomainManagerExtId: utils.StringPtr(domainManagerExtID),
-		ExtId:               utils.StringPtr(d.Id()),
+		ExtId:              utils.StringPtr(d.Id()),
 	}
 	resp, err := conn.DomainManagerBackupsAPIInstance.DeleteBackupTargetById(ctx, &deleteBackupTargetByIdRequest, args)
 

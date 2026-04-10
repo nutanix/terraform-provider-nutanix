@@ -511,7 +511,6 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 		Body:  &updatedSpec,
 	}
 
-	
 	readRespById, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Directory service : %v", err)
@@ -686,7 +685,7 @@ func shareDirectoryServiceWithProject(ctx context.Context, conn *iam.Client, d *
 	etagValue := conn.DirectoryServiceAPIInstance.ApiClient.GetEtag(readResp)
 	headers := make(map[string]interface{})
 	headers["If-Match"] = utils.StringPtr(etagValue)
-  
+
 	// call share directory service api
 	resp, err := conn.DirectoryServiceAPIInstance.ShareDirectoryService(ctx, &shareDirectoryServiceRequest, headers)
 	if err != nil {
@@ -711,7 +710,7 @@ func unshareDirectoryServiceWithProject(ctx context.Context, conn *iam.Client, d
 			ProjectExtId: utils.StringPtr(projectID),
 		},
 	}
-	
+
 	getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
 		ExtId: directoryServiceExtID,
 	}
@@ -723,7 +722,7 @@ func unshareDirectoryServiceWithProject(ctx context.Context, conn *iam.Client, d
 	etagValue := conn.DirectoryServiceAPIInstance.ApiClient.GetEtag(readResp)
 	headers := make(map[string]interface{})
 	headers["If-Match"] = utils.StringPtr(etagValue)
-  
+
 	// call unshare directory service api
 	resp, err := conn.DirectoryServiceAPIInstance.UnshareDirectoryService(ctx, &unshareDirectoryServiceRequest, headers)
 	if err != nil {
@@ -742,7 +741,7 @@ func shareDirectoryServiceWithAllProjects(ctx context.Context, conn *iam.Client,
 	shareAllDirectoryServiceRequest := import2.ShareAllDirectoryServiceRequest{
 		ExtId: directoryServiceExtID,
 	}
-	
+
 	getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
 		ExtId: directoryServiceExtID,
 	}
@@ -754,7 +753,7 @@ func shareDirectoryServiceWithAllProjects(ctx context.Context, conn *iam.Client,
 	etagValue := conn.DirectoryServiceAPIInstance.ApiClient.GetEtag(readResp)
 	headers := make(map[string]interface{})
 	headers["If-Match"] = utils.StringPtr(etagValue)
-  
+
 	// call share all directory service api
 	resp, err := conn.DirectoryServiceAPIInstance.ShareAllDirectoryService(
 		ctx, &shareAllDirectoryServiceRequest, headers)
@@ -774,7 +773,7 @@ func unshareDirectoryServiceWithAllProjects(ctx context.Context, conn *iam.Clien
 	unshareAllDirectoryServiceRequest := import2.UnshareAllDirectoryServiceRequest{
 		ExtId: directoryServiceExtID,
 	}
-	
+
 	getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
 		ExtId: directoryServiceExtID,
 	}
@@ -786,7 +785,7 @@ func unshareDirectoryServiceWithAllProjects(ctx context.Context, conn *iam.Clien
 	etagValue := conn.DirectoryServiceAPIInstance.ApiClient.GetEtag(readResp)
 	headers := make(map[string]interface{})
 	headers["If-Match"] = utils.StringPtr(etagValue)
-  
+
 	// call unshare all directory service api
 	resp, err := conn.DirectoryServiceAPIInstance.UnshareAllDirectoryService(ctx, &unshareAllDirectoryServiceRequest, headers)
 	if err != nil {

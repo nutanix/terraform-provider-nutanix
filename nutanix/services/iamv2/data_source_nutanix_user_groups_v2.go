@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authn"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/usergroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/usergroups"
 )
 
 func DatasourceNutanixUserGroupsV2() *schema.Resource {
@@ -49,7 +49,6 @@ func DatasourceNutanixUserGroupsV2() *schema.Resource {
 func DatasourceNutanixUserGroupsV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	
 	listUserGroupsRequest := import2.ListUserGroupsRequest{}
 	if v, ok := d.GetOk("page"); ok {
 		listUserGroupsRequest.Page_ = utils.IntPtr(v.(int))
@@ -58,7 +57,7 @@ func DatasourceNutanixUserGroupsV4Read(ctx context.Context, d *schema.ResourceDa
 		listUserGroupsRequest.Limit_ = utils.IntPtr(v.(int))
 	}
 	if v, ok := d.GetOk("filter"); ok {
-		listUserGroupsRequest.Filter_ = utils.StringPtr(v.(string))	
+		listUserGroupsRequest.Filter_ = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("order_by"); ok {
 		listUserGroupsRequest.Orderby_ = utils.StringPtr(v.(string))

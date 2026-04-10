@@ -110,16 +110,16 @@ func DatasourceNutanixServiceGroupV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-		"tenant_id": {
-			Type:     schema.TypeString,
-			Computed: true,
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
-		"project_ext_id": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-	},
-}
+	}
 }
 
 func DatasourceNutanixServiceGroupV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

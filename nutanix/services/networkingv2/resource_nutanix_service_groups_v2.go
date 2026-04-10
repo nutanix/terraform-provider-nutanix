@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/request/servicegroups"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
-	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/request/servicegroups"
 	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -125,17 +125,17 @@ func ResourceNutanixServiceGroupsV2() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-		"tenant_id": {
-			Type:     schema.TypeString,
-			Computed: true,
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
-		"project_ext_id": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-	},
-}
+	}
 }
 
 func ResourceNutanixServiceGroupsV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

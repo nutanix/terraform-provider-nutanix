@@ -2,9 +2,9 @@ package vmmv2
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
-	"encoding/json"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -68,7 +68,7 @@ func datasourceNutanixOvasV2Read(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("select"); ok {
 		listOvasRequest.Select_ = utils.StringPtr(v.(string))
 	}
-  
+
 	aJSON, _ := json.Marshal(listOvasRequest)
 	log.Printf("listOvasRequest: %s", aJSON)
 	resp, err := conn.OvasAPIInstance.ListOvas(ctx, &listOvasRequest)

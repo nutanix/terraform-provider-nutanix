@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/common"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/config"
-	dataprtotectionPrismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/prism/v4/config"
-	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/request/recoverypoints"
+	dataprtotectionPrismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	commonUtils "github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -360,7 +360,7 @@ func ResourceNutanixRecoveryPointsV2Create(ctx context.Context, d *schema.Resour
 		body.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
 
-  createRecoveryPointRequest := import2.CreateRecoveryPointRequest{
+	createRecoveryPointRequest := import2.CreateRecoveryPointRequest{
 		Body: &body,
 	}
 	aJSON, _ := json.MarshalIndent(createRecoveryPointRequest, "", "  ")
@@ -414,8 +414,8 @@ func ResourceNutanixRecoveryPointsV2Read(ctx context.Context, d *schema.Resource
 	log.Printf("[DEBUG] DatasourceNutanixRecoveryPointV2Read \n")
 
 	conn := meta.(*conns.Client).DataProtectionAPI
-  
-  getRecoveryPointByIdRequest := import2.GetRecoveryPointByIdRequest{
+
+	getRecoveryPointByIdRequest := import2.GetRecoveryPointByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}
 	resp, err := conn.RecoveryPoint.GetRecoveryPointById(ctx, &getRecoveryPointByIdRequest)
@@ -520,8 +520,8 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 	}
 
 	conn := meta.(*conns.Client).DataProtectionAPI
-  
-  getRecoveryPointByIdRequest := import2.GetRecoveryPointByIdRequest{
+
+	getRecoveryPointByIdRequest := import2.GetRecoveryPointByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}
 	readResp, err := conn.RecoveryPoint.GetRecoveryPointById(ctx, &getRecoveryPointByIdRequest)
@@ -552,8 +552,8 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] RecoveryPoint Body: %v", string(aJSON))
-  
-  setRecoveryPointExpirationTimeRequest := import2.SetRecoveryPointExpirationTimeRequest{
+
+	setRecoveryPointExpirationTimeRequest := import2.SetRecoveryPointExpirationTimeRequest{
 		ExtId: utils.StringPtr(d.Id()),
 		Body:  &body,
 	}
@@ -596,8 +596,8 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 
 func ResourceNutanixRecoveryPointsV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataProtectionAPI
-  
-  deleteRecoveryPointByIdRequest := import2.DeleteRecoveryPointByIdRequest{
+
+	deleteRecoveryPointByIdRequest := import2.DeleteRecoveryPointByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}
 	resp, err := conn.RecoveryPoint.DeleteRecoveryPointById(ctx, &deleteRecoveryPointByIdRequest)

@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	networkingCommon "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/common/v1/config"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/routes"
 	networkingPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
-	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/routes"
 	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -307,7 +307,7 @@ func ResourceNutanixRoutesV2Read(ctx context.Context, d *schema.ResourceData, me
 func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] ResourceNutanixRoutesV2Update \n")
 	conn := meta.(*conns.Client).NetworkingAPI
-  if d.HasChange("project_ext_id") {
+	if d.HasChange("project_ext_id") {
 		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 	routeTableExtID := d.Get("route_table_ext_id").(string)
@@ -415,7 +415,7 @@ func ResourceNutanixRoutesV2Delete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	routeTableExtID := d.Get("route_table_ext_id").(string)
-  deleteRouteForRouteTableByIdRequest := import2.DeleteRouteForRouteTableByIdRequest{
+	deleteRouteForRouteTableByIdRequest := import2.DeleteRouteForRouteTableByIdRequest{
 		ExtId:           utils.StringPtr(d.Id()),
 		RouteTableExtId: &routeTableExtID,
 	}
@@ -621,7 +621,7 @@ func routeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) di
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	routeTableExtID := d.Get("route_table_ext_id").(string)
-  getRouteForRouteTableByIdRequest := import2.GetRouteForRouteTableByIdRequest{
+	getRouteForRouteTableByIdRequest := import2.GetRouteForRouteTableByIdRequest{
 		ExtId:           utils.StringPtr(d.Id()),
 		RouteTableExtId: &routeTableExtID,
 	}

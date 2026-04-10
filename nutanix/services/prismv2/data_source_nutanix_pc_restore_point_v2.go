@@ -93,9 +93,9 @@ func DatasourceNutanixRestorePointV2Read(ctx context.Context, d *schema.Resource
 	restorableDomainManagerExtID := d.Get("restorable_domain_manager_ext_id").(string)
 	extID := d.Get("ext_id").(string)
 	getRestorePointByIdRequest := import1.GetRestorePointByIdRequest{
-		RestoreSourceExtId:         utils.StringPtr(restoreSourceExtID),
+		RestoreSourceExtId:           utils.StringPtr(restoreSourceExtID),
 		RestorableDomainManagerExtId: utils.StringPtr(restorableDomainManagerExtID),
-		ExtId:                       utils.StringPtr(extID),
+		ExtId:                        utils.StringPtr(extID),
 	}
 	resp, err := conn.DomainManagerBackupsAPIInstance.GetRestorePointById(ctx, &getRestorePointByIdRequest)
 

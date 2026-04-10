@@ -136,19 +136,19 @@ func DatasourceNutanixServiceGroupsV2() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-					"tenant_id": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"project_ext_id": {
-						Type:     schema.TypeString,
-						Computed: true,
+						"tenant_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"project_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
 		},
-	},
-}
+	}
 }
 
 func DatasourceNutanixServiceGroupsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -223,16 +223,16 @@ func flattenServiceGroupsEntities(pr []import1.ServiceGroup) []interface{} {
 			if v.CreatedBy != nil {
 				sg["created_by"] = v.CreatedBy
 			}
-		if v.TenantId != nil {
-			sg["tenant_id"] = v.TenantId
-		}
-		if v.ProjectExtId != nil {
-			sg["project_ext_id"] = v.ProjectExtId
-		}
+			if v.TenantId != nil {
+				sg["tenant_id"] = v.TenantId
+			}
+			if v.ProjectExtId != nil {
+				sg["project_ext_id"] = v.ProjectExtId
+			}
 
-		serviceGroups[k] = sg
+			serviceGroups[k] = sg
+		}
+		return serviceGroups
 	}
-	return serviceGroups
-}
 	return nil
 }
