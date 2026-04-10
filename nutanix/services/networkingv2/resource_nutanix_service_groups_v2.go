@@ -125,12 +125,17 @@ func ResourceNutanixServiceGroupsV2() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tenant_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		"tenant_id": {
+			Type:     schema.TypeString,
+			Computed: true,
 		},
-	}
+		"project_ext_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+	},
+}
 }
 
 func ResourceNutanixServiceGroupsV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -152,6 +157,9 @@ func ResourceNutanixServiceGroupsV2Create(ctx context.Context, d *schema.Resourc
 	}
 	if icmp, ok := d.GetOk("icmp_services"); ok {
 		spec.IcmpServices = expandIcmpTypeCodeSpec(icmp.([]interface{}))
+	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		spec.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
 
 	createServiceGroupRequest := import2.CreateServiceGroupRequest{
@@ -251,10 +259,16 @@ func ResourceNutanixServiceGroupsV2Read(ctx context.Context, d *schema.ResourceD
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
 func ResourceNutanixServiceGroupsV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 	conn := meta.(*conns.Client).MicroSegAPI
 	updatedSpec := import1.ServiceGroup{}
 

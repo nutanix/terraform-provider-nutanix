@@ -224,6 +224,9 @@ func ResourceNutanixCategoriesV2Read(ctx context.Context, d *schema.ResourceData
 }
 
 func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 	conn := meta.(*conns.Client).PrismAPI
 	updatedInput := import1.Category{}
 	getCategoryByIdRequest := import2.GetCategoryByIdRequest{
@@ -256,9 +259,6 @@ func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceDa
 	}
 	if d.HasChange("owner_uuid") {
 		updatedInput.OwnerUuid = utils.StringPtr(d.Get("owner_uuid").(string))
-	}
-	if d.HasChange("project_ext_id") {
-		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 
 	// Handle shared_with_projects changes

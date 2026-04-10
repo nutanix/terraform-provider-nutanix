@@ -37,6 +37,7 @@ The following attributes are exported:
 * `category_ids`: - Host entity with its attributes.
 * `is_approval_policy_needed`: - Disks attached to host.
 * `owner_ext_id`: - Node degraded status.
+* `project_ext_id`: - Project external ID associated with the protection policy.
 
 
 ### Links

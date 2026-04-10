@@ -66,6 +66,7 @@ The following arguments are supported:
 - `is_hitlog_enabled`: (Optional) If Hitlog is enabled.
 - `scope`: (Optional) Defines the scope of the policy. Acceptable values are "ALL_VLAN", "ALL_VPC", "VPC_LIST", and "GLOBAL".
 - `vpc_reference`: (Optional) A list of external ids for VPCs, used only when the scope of policy is a list of VPCs.
+- `project_ext_id`: (Optional) Project external ID to associate with the network security policy. Note: This field cannot be updated after creation.
 
 ### rules
 
@@ -149,6 +150,7 @@ The following attributes are exported:
 - `tenant_id`: A globally unique identifier that represents the tenant that owns this entity
 - `last_update_time`: last updated time
 - `creation_time`: creation time of NSP
+- `project_ext_id`: Project external ID associated with the network security policy.
 
 ## Import
 

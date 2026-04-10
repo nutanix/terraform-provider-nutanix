@@ -47,6 +47,7 @@ The following arguments are supported:
 * `description`: - (Optional) Description of the Address group
 * `ipv4_addresses`: - (Optional) List of CIDR blocks in the Address Group.
 * `ip_ranges`: - (Optional) List of IP range containing start and end IP.
+* `project_ext_id`: - (Optional) Project external ID to associate with the address group. Note: This field cannot be updated after creation.
 
 
 ### ipv4_addresses
@@ -68,6 +69,7 @@ The following attributes are exported:
 * `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
 * `policy_references`: Reference to policy associated with Address Group.
 * `created_by`: created by.
+* `project_ext_id`: Project external ID associated with the address group.
 
 ## Import
 

@@ -184,6 +184,7 @@ The following arguments are supported:
 * `replication_locations`: -(Required) Hypervisor details.
 * `replication_configurations`: -(Required) Cluster reference for an entity.
 * `category_ids`: -(Optional) Host entity with its attributes.
+* `project_ext_id`: -(Optional) Project external ID to associate with the protection policy. Note: This field cannot be updated after creation.
 
 
 ### Replication Locations

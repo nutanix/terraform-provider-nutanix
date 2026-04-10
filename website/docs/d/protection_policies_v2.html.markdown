@@ -69,6 +69,7 @@ The `protection_policies` is a list of protection policies. Each protection poli
 * `category_ids`: - Host entity with its attributes.
 * `is_approval_policy_needed`: - Disks attached to host.
 * `owner_ext_id`: - Node degraded status.
+* `project_ext_id`: - Project external ID associated with the protection policy.
 
 
 ### Links
