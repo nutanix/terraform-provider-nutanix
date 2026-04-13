@@ -13,6 +13,8 @@ Create a Template from the given VM identifier. A Template stores the VM configu
 ## Example
 
 ```hcl
+
+# Create a template with user defined project
 resource "nutanix_template_v2" "temp-1"{
     template_name = "example_template"
     template_description = "create example template"
@@ -95,6 +97,7 @@ The following arguments are supported:
 * `template_description`: (Optional) The user defined description of a Template.
 * `template_version_spec`: (Required) A model that represents an object instance that is accessible through an API endpoint. Instances of this type get an extId field that contains the globally unique identifier for that instance. Externally accessible instances are always tenant aware and, therefore, extend the TenantAwareModel
 * `guest_update_status`: (Optional) Status of a guest update.
+* `project_ext_id`: (Optional) The external identifier of the project with which the template is associated.
 
 
 ### template_version_spec

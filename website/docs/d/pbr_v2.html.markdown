@@ -37,6 +37,7 @@ The following attributes are exported:
 - `policies`: Routing Policies
 - `vpc_ext_id`: ExtId of the VPC extId to which the routing policy belongs.
 - `vpc`: VPC name for projections
+- `project_ext_id`: External identifier of the project associated with the Routing Policy.
 
 ### Links
 

@@ -46,6 +46,7 @@ The following attributes are exported:
 - `route_type`: Route type. Acceptable values are "STATIC", "LOCAL", "DYNAMIC"
 - `is_active`: Indicates whether the route is active in the forwarding plane.
 - `priority`: Route priority. A higher value implies greater preference is assigned to the route.
+- `project_ext_id`: External identifier of the project associated with the Route.
 
 ### metadata
 

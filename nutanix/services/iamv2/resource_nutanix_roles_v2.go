@@ -2,6 +2,7 @@ package iamv2
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -128,6 +129,10 @@ func ResourceNutanixRolesV2() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"share_with_all_projects": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -148,6 +153,9 @@ func ResourceNutanixRolesV4Create(ctx context.Context, d *schema.ResourceData, m
 	if clientName, ok := d.GetOk("client_name"); ok {
 		body.ClientName = utils.StringPtr(clientName.(string))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		body.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 	if operations, ok := d.GetOk("operations"); ok {
 		operationsList := operations.([]interface{})
 		operationsListStr := make([]string, len(operationsList))
@@ -160,6 +168,8 @@ func ResourceNutanixRolesV4Create(ctx context.Context, d *schema.ResourceData, m
 	createRoleRequest := import2.CreateRoleRequest{
 		Body: body,
 	}
+	aJSON, _ := json.MarshalIndent(createRoleRequest, "", "  ")
+	log.Printf("[DEBUG] Create Role Request Body: %s", string(aJSON))
 	resp, err := conn.RolesAPIInstance.CreateRole(ctx, &createRoleRequest)
 	if err != nil {
 		return diag.Errorf("error while creating role: %v", err)
@@ -269,6 +279,9 @@ func ResourceNutanixRolesV4Read(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(err)
 	}
 	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("share_with_all_projects", getResp.SharedWithAllProjects); err != nil {
 		return diag.FromErr(err)
 	}
 

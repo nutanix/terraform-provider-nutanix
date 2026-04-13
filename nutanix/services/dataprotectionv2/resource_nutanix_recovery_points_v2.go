@@ -515,6 +515,9 @@ func ResourceNutanixRecoveryPointsV2Read(ctx context.Context, d *schema.Resource
 func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// update is supported for expiration_time only
 	log.Printf("[DEBUG] DatasourceNutanixRecoveryPointV2Update \n")
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 
 	conn := meta.(*conns.Client).DataProtectionAPI
 
@@ -545,9 +548,6 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 		}
 	} else {
 		return diag.Errorf("expiration_time is the only field that can be updated")
-	}
-	if d.HasChange("project_ext_id") {
-		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")

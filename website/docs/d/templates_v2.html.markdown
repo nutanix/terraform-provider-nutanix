@@ -55,6 +55,7 @@ The `templates` object is a list of all templates. Each template has the followi
 * `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 * `ext_id`: A globally unique identifier of an instance that is suitable for external consumption.
 * `template_name`: The user defined name of a Template.
+* `project_ext_id`: The external identifier of the project with which the template is associated.
 * `template_description`: The user defined description of a Template.
 * `template_version_spec`: A model that represents an object instance that is accessible through an API endpoint. Instances of this type get an extId field that contains the globally unique identifier for that instance
 * `guest_update_status`: Status of a Guest Update.

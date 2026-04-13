@@ -45,6 +45,8 @@ The following attributes are exported:
     * `PREDEFINED_UPDATE_IDENTITY_ONLY` : System-defined ACP prohibiting any modifications from customer.
     * `SERVICE_DEFINED` : ACP defined by a service.
     * `USER_DEFINED` : ACP defined by an User.
+* `project_ext_id`: - Project reference for the Authorization Policy.
+* `share_with_all_projects`: - Flag indicating whether the Authorization Policy is shared with all projects or not.
 
 
 ### Links

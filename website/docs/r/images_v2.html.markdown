@@ -23,11 +23,12 @@ resource "nutanix_images_v2" "img-1" {
   }
 }
 
-
+# Create a image with user defined project
 resource "nutanix_images_v2" "img-2"{
   name = "test-image"
   description = "img desc"
   type = "DISK_IMAGE"
+  project_ext_id = "<project_uuid>"
   source {
     url_source {
       url = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
@@ -66,6 +67,7 @@ The following arguments are supported:
 - `source`: (Optional) The source of an image. It can be a VM disk or a URL.
 - `category_ext_ids`: (Optional) List of category external identifiers for an image.
 - `cluster_location_ext_ids`: (Optional) List of cluster external identifiers where the image is located.
+- `project_ext_id`: (Optional) External identifier of the project associated with the image.
 
 ### checksum
 
@@ -115,6 +117,8 @@ The following attributes are exported:
 - `create_time`: Create time of an image.
 - `last_update_time`: Last update time of an image.
 - `owner_ext_id`: External identifier of the owner of the image
+- `project_ext_id`: External identifier of the project associated with the image.
+- `share_with_all_projects`: Indicates whether the image is shared with all projects.
 - `placement_policy_status`: Status of an image placement policy.
 
 ### placement_policy_status

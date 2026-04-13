@@ -236,7 +236,7 @@ func flattenVolumesEntities(volumeGroups []volumesClient.VolumeGroup) []interfac
 	if len(volumeGroups) > 0 {
 		volumeGroupList := make([]interface{}, len(volumeGroups))
 
-		for k, v := range volumeGroups {
+		for _, v := range volumeGroups {
 			volumeGroup := make(map[string]interface{})
 
 			if v.TenantId != nil {
@@ -284,9 +284,9 @@ func flattenVolumesEntities(volumeGroups []volumesClient.VolumeGroup) []interfac
 			if v.IsHidden != nil {
 				volumeGroup["is_hidden"] = v.IsHidden
 			}
-			volumeGroup["project_ext_id"] = v.ProjectExtId
-
-			volumeGroupList[k] = volumeGroup
+			if v.ProjectExtId != nil {
+				volumeGroup["project_ext_id"] = v.ProjectExtId
+			}
 		}
 		return volumeGroupList
 	}

@@ -47,6 +47,7 @@ The following arguments are supported:
 * `priority`: (Required) Priority of the routing policy.
 * `policies`: (Required) Routing Policies.
 * `vpc_ext_id`: (Required) ExtId of the VPC extId to which the routing policy belongs.
+* `project_ext_id`: (Optional) External identifier of the project associated with the Routing Policy.
 
 
 ### policies
@@ -124,6 +125,7 @@ The following attributes are exported:
 * `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 * `metadata`: Metadata associated with this resource.
 * `vpc`: VPC name for projections
+* `project_ext_id`: External identifier of the project associated with the Routing Policy.
 
 ## Import
 This helps to manage existing entities which are not created through terraform. Routing Policy can be imported using the `UUID`.  eg,

@@ -307,7 +307,9 @@ func ResourceNutanixRoutesV2Read(ctx context.Context, d *schema.ResourceData, me
 func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] ResourceNutanixRoutesV2Update \n")
 	conn := meta.(*conns.Client).NetworkingAPI
-
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 	routeTableExtID := d.Get("route_table_ext_id").(string)
 
 	// Get Etag
@@ -337,9 +339,6 @@ func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, 
 	}
 	if d.HasChange("description") {
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
-	}
-	if d.HasChange("project_ext_id") {
-		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 	if d.HasChange("destination") {
 		updateSpec.Destination = expandDestination(d.Get("destination"))

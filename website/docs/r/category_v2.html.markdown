@@ -19,6 +19,26 @@ resource "nutanix_category_v2" "example" {
   description = "category example description"
 }
 
+# Category with project association
+resource "nutanix_category_v2" "with_project" {
+  key            = "environment"
+  value          = "production"
+  description    = "Production environment category"
+  project_ext_id = "project-ext-id-here"
+}
+
+# Category shared with multiple projects
+resource "nutanix_category_v2" "shared" {
+  key         = "department"
+  value       = "engineering"
+  description = "Engineering department category"
+  shared_with_projects = [
+    "project-ext-id-1",
+    "project-ext-id-2",
+    "project-ext-id-3"
+  ]
+}
+
 ```
 
 
@@ -61,6 +81,10 @@ This field can be updated through updateCategoryById API, in which case, should 
 Validity of the user UUID can be checked by invoking the API: authn/users/{extId} in the 'Identity and Access Management' or 'IAM' namespace.
 It is used for enabling RBAC access to self-owned categories.
 
+* `project_ext_id`: -(Optional) The external identifier of the project to which the category belongs. Once set during creation, this field cannot be updated.
+
+* `shared_with_projects`: -(Optional) A set of project external identifiers with which the category should be shared. Projects can be added or removed from this list through updates.
+
 ## Attributes Reference
 
 The following attributes are exported:
@@ -71,6 +95,8 @@ The following attributes are exported:
 There are three types of categories: SYSTEM, INTERNAL, and USER.
 * `description`: A string consisting of the description of the category as defined by the user.
 * `owner_uuid`: This field contains the UUID of a user who owns the category.
+* `project_ext_id`: The external identifier of the project to which the category belongs.
+* `shared_with_projects`: A set of project external identifiers with which the category is shared.
 * `associations`: This field gives basic information about resources that are associated with the category.
 The results present under this field summarize the counts of various kinds of resources associated with the category.
 For more detailed information about the UUIDs of the resources, please look into the field detailedAssociations.

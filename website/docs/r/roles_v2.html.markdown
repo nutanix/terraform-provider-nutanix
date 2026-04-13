@@ -18,10 +18,11 @@ data "nutanix_operations_v2" "operations-filtered-list" {
   filter = "startswith(displayName, 'Create_')"
 }
 
-# Create role
+# Create role with user defined project
 resource "nutanix_roles_v2" "example-role"{
   display_name = "example_role"
   description  = "create example role"
+  project_ext_id = "<project_uuid>"
   operations = [
     data.nutanix_operations_v2.operations-filtered-list.operations[0].ext_id,
     data.nutanix_operations_v2.operations-filtered-list.operations[1].ext_id,
@@ -29,6 +30,8 @@ resource "nutanix_roles_v2" "example-role"{
     data.nutanix_operations_v2.operations-filtered-list.operations[3].ext_id
   ]
 }
+
+Note: Incase if role need to created in system defined project, please do not specify the project reference in the config.
 ```
 
 ## Argument Reference
@@ -39,6 +42,7 @@ The following arguments are supported:
 - `description`: - Description of the Role.
 - `client_name`: - Client that created the entity.
 - `operations`: -(Required) List of operations for the role.
+- `project_ext_id`: -(Optional) Project reference for the role.
 
 ## Attributes Reference
 
@@ -51,6 +55,8 @@ The following attributes are exported:
 - `description`: - Description of the Role.
 - `client_name`: - Client that created the entity.
 - `operations`: - List of operations for the role.
+* `project_ext_id`: - Project reference for the role.
+* `share_with_all_projects`: - Flag indicating whether the role is shared with all projects or not.
 - `accessible_clients`: - List of Accessible Clients for the Role.
 - `accessible_entity_types`: - List of Accessible Entity Types for the Role.
 - `assigned_users_count`: - Number of Users assigned to given Role.

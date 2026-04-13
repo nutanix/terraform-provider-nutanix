@@ -351,7 +351,9 @@ func ResourceNutanixFloatingIPv2Read(ctx context.Context, d *schema.ResourceData
 
 func ResourceNutanixFloatingIPv2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
-
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 	getFloatingIpByIdRequest := import2.GetFloatingIpByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}
@@ -375,9 +377,6 @@ func ResourceNutanixFloatingIPv2Update(ctx context.Context, d *schema.ResourceDa
 	}
 	if d.HasChange("description") {
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
-	}
-	if d.HasChange("project_ext_id") {
-		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 	if d.HasChange("association") {
 		updateSpec.Association = expandOneOfFloatingIPAssociation(d.Get("association"))

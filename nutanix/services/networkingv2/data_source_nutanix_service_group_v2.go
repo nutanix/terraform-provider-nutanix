@@ -114,6 +114,10 @@ func DatasourceNutanixServiceGroupV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -164,6 +168,10 @@ func DatasourceNutanixServiceGroupV2Read(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 	if err := d.Set("tenant_id", utils.StringValue(getResp.TenantId)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
 		return diag.FromErr(err)
 	}
 

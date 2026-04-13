@@ -101,6 +101,10 @@ func DatasourceNutanixAddressGroupsV2() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"project_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -185,6 +189,9 @@ func flattenAddressGroupsEntities(pr []import1.AddressGroup) []interface{} {
 			}
 			if v.TenantId != nil {
 				add["tenant_id"] = v.TenantId
+			}
+			if v.ProjectExtId != nil {
+				add["project_ext_id"] = v.ProjectExtId
 			}
 
 			addGroups[k] = add

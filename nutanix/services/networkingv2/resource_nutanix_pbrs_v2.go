@@ -511,7 +511,9 @@ func ResourceNutanixPbrsV2Read(ctx context.Context, d *schema.ResourceData, meta
 
 func ResourceNutanixPbrsV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
-
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 	getRoutingPolicyByIdRequest := import2.GetRoutingPolicyByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}
@@ -529,9 +531,6 @@ func ResourceNutanixPbrsV2Update(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("description") {
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
-	}
-	if d.HasChange("project_ext_id") {
-		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 	if d.HasChange("priority") {
 		updateSpec.Priority = utils.IntPtr(d.Get("priority").(int))

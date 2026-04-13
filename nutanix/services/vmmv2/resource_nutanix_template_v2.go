@@ -142,6 +142,11 @@ func ResourceNutanixTemplatesV2() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"tenant_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -207,6 +212,9 @@ func ResourceNutanixTemplatesV2Create(ctx context.Context, d *schema.ResourceDat
 	}
 	if categoryExtIDs, ok := d.GetOk("category_ext_ids"); ok {
 		body.CategoryExtIds = common.ExpandListOfString(categoryExtIDs.([]interface{}))
+	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		body.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
@@ -325,12 +333,17 @@ func ResourceNutanixTemplatesV2Read(ctx context.Context, d *schema.ResourceData,
 	if err := d.Set("category_ext_ids", getResp.CategoryExtIds); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
 func ResourceNutanixTemplatesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
-
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 	getTemplateByIdRequest := import3.GetTemplateByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}
