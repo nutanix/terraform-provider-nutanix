@@ -1,6 +1,7 @@
 package objectstores
 
 import (
+	objects "github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/client"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/api"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/sdkconfig"
