@@ -103,10 +103,10 @@ func ApplyDiskDeletions(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 		args := make(map[string]interface{})
 		args["If-Match"] = getEtagHeader(readVMResp, conn)
-    
+
 		deleteDiskByIdRequest := import1.DeleteDiskByIdRequest{
 			VmExtId: utils.StringPtr(vmID),
-			ExtId: diskExtID,
+			ExtId:   diskExtID,
 		}
 		resp, err := conn.VMAPIInstance.DeleteDiskById(ctx, &deleteDiskByIdRequest, args)
 		if err != nil {
@@ -144,11 +144,11 @@ func ApplyDiskUpdates(ctx context.Context, d *schema.ResourceData, meta interfac
 		}
 		args := make(map[string]interface{})
 		args["If-Match"] = getEtagHeader(readVMResp, conn)
-    
+
 		updateDiskByIdRequest := import1.UpdateDiskByIdRequest{
 			VmExtId: utils.StringPtr(vmID),
-			ExtId: diskExtID,
-			Body: &diskInput,
+			ExtId:   diskExtID,
+			Body:    &diskInput,
 		}
 		resp, err := conn.VMAPIInstance.UpdateDiskById(ctx, &updateDiskByIdRequest, args)
 		if err != nil {
@@ -182,10 +182,10 @@ func ApplyDiskAdditions(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 		args := make(map[string]interface{})
 		args["If-Match"] = getEtagHeader(readVMResp, conn)
-    
+
 		createDiskRequest := import1.CreateDiskRequest{
 			VmExtId: utils.StringPtr(vmID),
-			Body: &diskInput,
+			Body:    &diskInput,
 		}
 		resp, err := conn.VMAPIInstance.CreateDisk(ctx, &createDiskRequest, args)
 		if err != nil {

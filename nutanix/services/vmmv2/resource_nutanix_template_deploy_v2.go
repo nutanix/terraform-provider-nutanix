@@ -107,7 +107,7 @@ func ResourceNutanixTemplateDeployV2Create(ctx context.Context, d *schema.Resour
 		ExtId: utils.StringPtr(extID.(string)),
 		Body:  body,
 	}
-  aJSON, _ := json.MarshalIndent(body, "", "  ")
+	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Payload to deploy template: %s", string(aJSON))
 	resp, err := conn.TemplatesAPIInstance.DeployTemplate(ctx, &deployTemplateRequest)
 	if err != nil {

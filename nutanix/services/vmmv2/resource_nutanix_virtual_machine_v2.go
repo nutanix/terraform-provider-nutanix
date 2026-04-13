@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strconv"
 	"time"
-  "strconv"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -1350,7 +1351,7 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.Client).VmmAPI
 	VMConfigMap := resourceDataToMap(d, ResourceNutanixVirtualMachineV2().Schema)
 	body := prepareVMConfigFromMap(VMConfigMap)
-  createVmRequest := import3.CreateVmRequest{
+	createVmRequest := import3.CreateVmRequest{
 		Body: body,
 	}
 	aJSON, _ := json.MarshalIndent(body, "", " ")
@@ -1456,7 +1457,7 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 
 func ResourceNutanixVirtualMachineV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
-  
+
 	getVmByIdRequest := import3.GetVmByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}
@@ -1782,8 +1783,8 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 				updateNicByIdRequest := import3.UpdateNicByIdRequest{
 					VmExtId: utils.StringPtr(d.Id()),
-					ExtId: nicExtID,
-					Body: &nicInput,
+					ExtId:   nicExtID,
+					Body:    &nicInput,
 				}
 				resp, err := conn.VMAPIInstance.UpdateNicById(ctx, &updateNicByIdRequest, args)
 				if err != nil {
@@ -1822,7 +1823,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				args["If-Match"] = getEtagHeader(ReadVMResp, conn)
 				createNicRequest := import3.CreateNicRequest{
 					VmExtId: utils.StringPtr(d.Id()),
-					Body: &nicInput,
+					Body:    &nicInput,
 				}
 				resp, err := conn.VMAPIInstance.CreateNic(ctx, &createNicRequest, args)
 				if err != nil {
@@ -1867,7 +1868,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				args["If-Match"] = getEtagHeader(ReadVMResp, conn)
 				createCdRomRequest := import3.CreateCdRomRequest{
 					VmExtId: utils.StringPtr(d.Id()),
-					Body: &cdromInput,
+					Body:    &cdromInput,
 				}
 				resp, err := conn.VMAPIInstance.CreateCdRom(ctx, &createCdRomRequest, args)
 				if err != nil {
@@ -1910,7 +1911,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				args["If-Match"] = getEtagHeader(ReadVMResp, conn)
 				deleteCdRomByIdRequest := import3.DeleteCdRomByIdRequest{
 					VmExtId: utils.StringPtr(d.Id()),
-					ExtId: cdromExtID,
+					ExtId:   cdromExtID,
 				}
 				resp, err := conn.VMAPIInstance.DeleteCdRomById(ctx, &deleteCdRomByIdRequest, args)
 				if err != nil {
@@ -1958,7 +1959,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 				deleteSerialPortByIdRequest := import3.DeleteSerialPortByIdRequest{
 					VmExtId: utils.StringPtr(d.Id()),
-					ExtId: serialPortExtID,
+					ExtId:   serialPortExtID,
 				}
 				resp, err := conn.VMAPIInstance.DeleteSerialPortById(ctx, &deleteSerialPortByIdRequest, args)
 				if err != nil {
@@ -2000,8 +2001,8 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 				updateSerialPortByIdRequest := import3.UpdateSerialPortByIdRequest{
 					VmExtId: utils.StringPtr(d.Id()),
-					ExtId: portExtTD,
-					Body: &serialPortInput,
+					ExtId:   portExtTD,
+					Body:    &serialPortInput,
 				}
 				resp, err := conn.VMAPIInstance.UpdateSerialPortById(ctx, &updateSerialPortByIdRequest, args)
 				if err != nil {
@@ -2042,7 +2043,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 				createSerialPortRequest := import3.CreateSerialPortRequest{
 					VmExtId: utils.StringPtr(d.Id()),
-					Body: &serialPortInput,
+					Body:    &serialPortInput,
 				}
 				resp, err := conn.VMAPIInstance.CreateSerialPort(ctx, &createSerialPortRequest, args)
 				if err != nil {
@@ -2088,7 +2089,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 				createGpuRequest := import3.CreateGpuRequest{
 					VmExtId: utils.StringPtr(d.Id()),
-					Body: &gpuInput,
+					Body:    &gpuInput,
 				}
 				resp, err := conn.VMAPIInstance.CreateGpu(ctx, &createGpuRequest, args)
 				if err != nil {
@@ -2131,7 +2132,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 				deleteGpuByIdRequest := import3.DeleteGpuByIdRequest{
 					VmExtId: utils.StringPtr(d.Id()),
-					ExtId: gpuExtID,
+					ExtId:   gpuExtID,
 				}
 				resp, err := conn.VMAPIInstance.DeleteGpuById(ctx, &deleteGpuByIdRequest, args)
 				if err != nil {
@@ -2180,7 +2181,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 			disassociateCategoriesRequest := import3.DisassociateCategoriesRequest{
 				ExtId: utils.StringPtr(d.Id()),
-				Body: &body,
+				Body:  &body,
 			}
 			resp, err := conn.VMAPIInstance.DisassociateCategories(ctx, &disassociateCategoriesRequest, args)
 			if err != nil {
@@ -2221,7 +2222,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 			args["If-Match"] = getEtagHeader(readResp, conn)
 			associateCategoriesRequest := import3.AssociateCategoriesRequest{
 				ExtId: utils.StringPtr(d.Id()),
-				Body: &body,
+				Body:  &body,
 			}
 			resp, err := conn.VMAPIInstance.AssociateCategories(ctx, &associateCategoriesRequest, args)
 			if err != nil {

@@ -67,20 +67,20 @@ func testAccCheckNutanixVolumeGroupV2Destroy(s *terraform.State) error {
 		if rs.Type != "nutanix_volume_group_v2" {
 			continue
 		}
-    
-    // Verify the volume group is destroyed by trying to get it (not by deleting again).
+
+		// Verify the volume group is destroyed by trying to get it (not by deleting again).
 		getVolumeGroupByIdRequest := import1.GetVolumeGroupByIdRequest{
 			ExtId: utils.StringPtr(rs.Primary.ID),
 		}
 		_, err := conn.VolumeAPI.VolumeAPIInstance.GetVolumeGroupById(ctx, &getVolumeGroupByIdRequest)
 		if err == nil {
-      deleteVolumeGroupByIdRequest := import1.DeleteVolumeGroupByIdRequest{
-			  ExtId: utils.StringPtr(rs.Primary.ID),
-		  }
+			deleteVolumeGroupByIdRequest := import1.DeleteVolumeGroupByIdRequest{
+				ExtId: utils.StringPtr(rs.Primary.ID),
+			}
 			_, err := conn.VolumeAPI.VolumeAPIInstance.DeleteVolumeGroupById(ctx, &deleteVolumeGroupByIdRequest)
-      if err != nil{
-        return fmt.Errorf("Failed to delete volume group")
-      }
+			if err != nil {
+				return fmt.Errorf("Failed to delete volume group")
+			}
 		}
 		if !isVolumeGroupNotFoundErr(err) {
 			return err

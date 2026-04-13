@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import6 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/config"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/content"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/ovas"
-  import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
-	import6 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	import7 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/vm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -497,7 +497,7 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 		ExtId: &extID,
 		Body:  vmDeploymentSpec,
 	}
-  log.Printf("[DEBUG] Calling DeployOva API with OVA ext_id: %s", extID)
+	log.Printf("[DEBUG] Calling DeployOva API with OVA ext_id: %s", extID)
 	resp, err := conn.OvasAPIInstance.DeployOva(ctx, &deployOvaRequest)
 	if err != nil {
 		log.Printf("[ERROR] Failed to deploy OVA: %v", err)
@@ -521,7 +521,7 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	log.Printf("[DEBUG] OVA deployment task completed successfully with UUID: %s", utils.StringValue(taskUUID))
-	
+
 	getTaskByIdRequest := import6.GetTaskByIdRequest{
 		ExtId: taskUUID,
 	}
@@ -575,7 +575,7 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 
 						createDiskRequest := import7.CreateDiskRequest{
 							VmExtId: utils.StringPtr(d.Id()),
-							Body: &diskInput,
+							Body:    &diskInput,
 						}
 						resp, err := conn.VMAPIInstance.CreateDisk(ctx, &createDiskRequest, args)
 						if err != nil {
@@ -1016,7 +1016,7 @@ func handleVMConfigurationUpdates(ctx context.Context, d *schema.ResourceData, m
 
 		updateVmByIdRequest := import7.UpdateVmByIdRequest{
 			ExtId: utils.StringPtr(d.Id()),
-			Body: &updateSpec,
+			Body:  &updateSpec,
 		}
 		updateResp, err := vmmConn.VMAPIInstance.UpdateVmById(ctx, &updateVmByIdRequest, args)
 		if err != nil {

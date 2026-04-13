@@ -8,12 +8,12 @@ import (
 )
 
 type Client struct {
-	ImagesAPIInstance          *api.ImagesServiceApi
-	TemplatesAPIInstance       *api.TemplatesServiceApi
-	VMAPIInstance              *api.VmServiceApi
-	ImagesPlacementAPIInstance *api.ImagePlacementPoliciesServiceApi
-	OvasAPIInstance            *api.OvasServiceApi
-  VMAntiAffinityPolicyAPIInstance *api.VmAntiAffinityPoliciesServiceApi
+	ImagesAPIInstance               *api.ImagesServiceApi
+	TemplatesAPIInstance            *api.TemplatesServiceApi
+	VMAPIInstance                   *api.VmServiceApi
+	ImagesPlacementAPIInstance      *api.ImagePlacementPoliciesServiceApi
+	OvasAPIInstance                 *api.OvasServiceApi
+	VMAntiAffinityPolicyAPIInstance *api.VmAntiAffinityPoliciesServiceApi
 	VMHostAffinityPolicyAPIInstance *api.VmHostAffinityPoliciesServiceApi
 }
 
@@ -32,12 +32,12 @@ func NewVmmClient(credentials client.Credentials) (*Client, error) {
 	}
 
 	f := &Client{
-		ImagesAPIInstance:          api.NewImagesServiceApi(baseClient),
-		TemplatesAPIInstance:       api.NewTemplatesServiceApi(baseClient),
-		VMAPIInstance:              api.NewVmServiceApi(baseClient),
-		ImagesPlacementAPIInstance: api.NewImagePlacementPoliciesServiceApi(baseClient),
-		OvasAPIInstance:            api.NewOvasServiceApi(baseClient),
-    VMAntiAffinityPolicyAPIInstance: api.NewVmAntiAffinityPoliciesServiceApi(baseClient),
+		ImagesAPIInstance:               api.NewImagesServiceApi(baseClient),
+		TemplatesAPIInstance:            api.NewTemplatesServiceApi(baseClient),
+		VMAPIInstance:                   api.NewVmServiceApi(baseClient),
+		ImagesPlacementAPIInstance:      api.NewImagePlacementPoliciesServiceApi(baseClient),
+		OvasAPIInstance:                 api.NewOvasServiceApi(baseClient),
+		VMAntiAffinityPolicyAPIInstance: api.NewVmAntiAffinityPoliciesServiceApi(baseClient),
 		VMHostAffinityPolicyAPIInstance: api.NewVmHostAffinityPoliciesServiceApi(baseClient),
 	}
 
