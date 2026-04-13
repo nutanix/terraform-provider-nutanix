@@ -13,6 +13,8 @@ import (
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func ResourceNutanixCategoriesV2() *schema.Resource {
@@ -228,38 +230,6 @@ func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceDa
 		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
 	conn := meta.(*conns.Client).PrismAPI
-	updatedInput := import1.Category{}
-	getCategoryByIdRequest := import2.GetCategoryByIdRequest{
-		ExtId: utils.StringPtr(d.Id()),
-	}
-	resp, err := conn.CategoriesAPIInstance.GetCategoryById(ctx, &getCategoryByIdRequest)
-	if err != nil {
-		return diag.Errorf("error while fetching categories : %v", err)
-	}
-
-	updatedInput = resp.Data.GetValue().(import1.Category)
-
-	if d.HasChange("value") {
-		updatedInput.Value = utils.StringPtr(d.Get("value").(string))
-	}
-	if d.HasChange("description") {
-		updatedInput.Description = utils.StringPtr(d.Get("description").(string))
-	}
-	if d.HasChange("type") {
-		const two, three, four = 2, 3, 4
-		subMap := map[string]interface{}{
-			"USER":     two,
-			"SYSTEM":   three,
-			"INTERNAL": four,
-		}
-
-		pInt := subMap[d.Get("type").(string)]
-		p := import1.CategoryType(pInt.(int))
-		updatedInput.Type = &p
-	}
-	if d.HasChange("owner_uuid") {
-		updatedInput.OwnerUuid = utils.StringPtr(d.Get("owner_uuid").(string))
-	}
 
 	// Handle shared_with_projects changes
 	if d.HasChange("shared_with_projects") {
@@ -284,15 +254,54 @@ func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	updateCategoryByIdRequest := import2.UpdateCategoryByIdRequest{
+	updatedInput := import1.Category{}
+	getCategoryByIdRequest := import2.GetCategoryByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
-		Body:  &updatedInput,
 	}
-	_, er := conn.CategoriesAPIInstance.UpdateCategoryById(ctx, &updateCategoryByIdRequest)
-	if er != nil {
-		return diag.Errorf("error while updating categories : %v", err)
+	resp, err := conn.CategoriesAPIInstance.GetCategoryById(ctx, &getCategoryByIdRequest)
+	if err != nil {
+		return diag.Errorf("error while fetching categories : %v", err)
 	}
-	log.Println("[DEBUG] Category updated successfully")
+
+	updatedInput = resp.Data.GetValue().(import1.Category)
+  updateSpecChanged := false
+	if d.HasChange("value") {
+		updatedInput.Value = utils.StringPtr(d.Get("value").(string))
+		updateSpecChanged = true
+	}
+	if d.HasChange("description") {
+		updatedInput.Description = utils.StringPtr(d.Get("description").(string))
+		updateSpecChanged = true
+	}
+	if d.HasChange("type") {
+		const two, three, four = 2, 3, 4
+		subMap := map[string]interface{}{
+			"USER":     two,
+			"SYSTEM":   three,
+			"INTERNAL": four,
+		}
+
+		pInt := subMap[d.Get("type").(string)]
+		p := import1.CategoryType(pInt.(int))
+		updatedInput.Type = &p
+		updateSpecChanged = true
+	}
+	if d.HasChange("owner_uuid") {
+		updatedInput.OwnerUuid = utils.StringPtr(d.Get("owner_uuid").(string))
+		updateSpecChanged = true
+	}
+  
+	if updateSpecChanged {
+		updateCategoryByIdRequest := import2.UpdateCategoryByIdRequest{
+			ExtId: utils.StringPtr(d.Id()),
+			Body:  &updatedInput,
+		}
+		_, er := conn.CategoriesAPIInstance.UpdateCategoryById(ctx, &updateCategoryByIdRequest)
+		if er != nil {
+			return diag.Errorf("error while updating categories : %v", err)
+		}
+		log.Println("[DEBUG] Category updated successfully")
+	}
 	return ResourceNutanixCategoriesV2Read(ctx, d, meta)
 }
 
@@ -315,13 +324,93 @@ func ResourceNutanixCategoriesV2Delete(ctx context.Context, d *schema.ResourceDa
 }
 
 // Helper functions for sharing/unsharing category with projects
-// Note: The exact API method signatures may need to be verified based on the actual API client
 func shareCategoryWithProject(ctx context.Context, meta interface{}, conn *prism.Client, d *schema.ResourceData, projectID string) error {
-	// TODO: Implement share category with project
+	shareReq := &import1.ShareCategoryRequest{
+		ProjectExtId: utils.StringPtr(projectID),
+	}
+
+	shareCategoryRequest := import2.ShareCategoryRequest{
+		CategoryExtId: utils.StringPtr(d.Id()),
+		Body:          shareReq,
+	}
+	getCategoryByIdRequest := import2.GetCategoryByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.CategoriesAPIInstance.GetCategoryById(ctx, &getCategoryByIdRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching category : %v", err)
+	}
+	etagValue := conn.CategoriesAPIInstance.ApiClient.GetEtag(resp)
+	headers := make(map[string]interface{})
+	headers["If-Match"] = utils.StringPtr(etagValue)
+
+	shareResp, err := conn.CategoriesAPIInstance.ShareCategory(ctx, &shareCategoryRequest, headers)
+	if err != nil {
+		return fmt.Errorf("error sharing category with project %s: %v", projectID, err)
+	}
+  
+	TaskRef := shareResp.Data.GetValue().(import1.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	// calling group API to poll for completion of task
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the category to be updated
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return fmt.Errorf("%w", errWaitTask)
+	}
+
+	log.Printf("[DEBUG] Category %s shared with project %s successfully", d.Id(), projectID)
 	return nil
 }
 
 func unshareCategoryWithProject(ctx context.Context, meta interface{}, conn *prism.Client, d *schema.ResourceData, projectID string) error {
-	// TODO: Implement unshare category with project
+	unshareReq := &import1.UnshareCategoryRequest{
+		ProjectExtId: utils.StringPtr(projectID),
+	}
+
+	unshareCategoryRequest := import2.UnshareCategoryRequest{
+		CategoryExtId: utils.StringPtr(d.Id()),
+		Body:          unshareReq,
+	}
+
+	getCategoryByIdRequest := import2.GetCategoryByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.CategoriesAPIInstance.GetCategoryById(ctx, &getCategoryByIdRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching category : %v", err)
+	}
+	etagValue := conn.CategoriesAPIInstance.ApiClient.GetEtag(resp)
+	headers := make(map[string]interface{})
+	headers["If-Match"] = utils.StringPtr(etagValue)
+
+	unshareResp, err := conn.CategoriesAPIInstance.UnshareCategory(ctx, &unshareCategoryRequest, headers)
+	if err != nil {
+		return fmt.Errorf("error unsharing category with project %s: %v", projectID, err)
+	}
+  TaskRef := unshareResp.Data.GetValue().(import1.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	// calling group API to poll for completion of task
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the category to be updated
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return fmt.Errorf("%w", errWaitTask)
+	}
+	log.Printf("[DEBUG] Category %s unshared with project %s successfully", d.Id(), projectID)
 	return nil
 }
