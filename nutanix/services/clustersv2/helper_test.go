@@ -8,11 +8,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusters"
 	clusterPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
-	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusters"
-	import6 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	import7 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/categories"
+	import6 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -277,6 +277,23 @@ func testAccCheckNutanixClusterDestroy(s *terraform.State) error {
 	return nil
 }
 
+// isCategoryNotFoundErr returns true if the error indicates the category does not exist
+// (e.g. already deleted). API may return 404, ENTITY_NOT_FOUND, or RBAC when metadata
+// cannot be fetched for a missing resource.
+func isCategoryNotFoundErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	s := strings.ToLower(err.Error())
+	return strings.Contains(s, "not found") ||
+		strings.Contains(s, "entity_not_found") ||
+		strings.Contains(s, "could not be fetched") ||
+		strings.Contains(s, "valid metadata or attributes could not be fetched") ||
+		strings.Contains(s, "rbac_authorization_error") ||
+		strings.Contains(s, "plat-10007") ||
+		strings.Contains(s, "failed to authorize")
+}
+
 // helper function to check if categories and cluster categories association are destroyed
 func testAccCheckNutanixClusterCategoriesDestroy(s *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
@@ -309,8 +326,8 @@ func testAccCheckNutanixClusterCategoriesDestroy(s *terraform.State) error {
 				return fmt.Errorf("error: Category %s still exists and could not be deleted: %v", categoryID, deleteErr)
 			}
 			fmt.Printf("[DEBUG] Category deleted: %s\n", categoryID)
-		} else if !strings.Contains(err.Error(), "not found") && !strings.Contains(err.Error(), "ENTITY_NOT_FOUND") {
-			// If it's not a "not found" error, return it
+		} else if !isCategoryNotFoundErr(err) {
+			// If it's not a "not found" / RBAC-for-missing-resource error, return it
 			return fmt.Errorf("error checking if category %s exists: %v", categoryID, err)
 		}
 		// If category is not found, that's expected - it's been destroyed

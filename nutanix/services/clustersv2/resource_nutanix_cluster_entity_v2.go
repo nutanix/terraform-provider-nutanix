@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
-	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/common/v1/config"
-	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusters"
 	import7 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusterprofiles"
-	import6 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusters"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/common/v1/config"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/prism/v4/config"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import6 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/clusters"
@@ -2282,7 +2282,7 @@ func fetchNetworkDetailsForNodes(ctx context.Context, d *schema.ResourceData, me
 	const networkingDetails = config.TASKRESPONSETYPE_NETWORKING_DETAILS
 	taskResponseType := config.TaskResponseType(networkingDetails)
 	fetchTaskResponseRequest := import5.FetchTaskResponseRequest{
-		ExtId:           utils.StringPtr(uuid),
+		ExtId:            utils.StringPtr(uuid),
 		TaskResponseType: &taskResponseType,
 	}
 	networkDetailsTaskResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(ctx, &fetchTaskResponseRequest)
@@ -2362,7 +2362,7 @@ func discoverUnconfiguredNode(ctx context.Context, d *schema.ResourceData, meta 
 	const unconfiguredNodes = config.TASKRESPONSETYPE_UNCONFIGURED_NODES
 	taskResponseType := config.TaskResponseType(unconfiguredNodes)
 	fetchTaskResponseRequest := import5.FetchTaskResponseRequest{
-		ExtId:           utils.StringPtr(uuid),
+		ExtId:            utils.StringPtr(uuid),
 		TaskResponseType: &taskResponseType,
 	}
 	unconfiguredNodesResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(ctx, &fetchTaskResponseRequest)

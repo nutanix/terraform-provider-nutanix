@@ -1,0 +1,158 @@
+package vmmv2
+
+import (
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/policies"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/vmhostaffinitypolicies"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+func DatasourceNutanixVMHostAffinityPolicyV2() *schema.Resource {
+	return &schema.Resource{
+		ReadContext: DatasourceNutanixVMHostAffinityPolicyV2Read,
+		Schema: map[string]*schema.Schema{
+			"ext_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"create_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"update_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created_by": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"last_updated_by": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"host_categories": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"vm_categories": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"num_vms": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"num_hosts": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"num_compliant_vms": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"num_non_compliant_vms": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+		},
+	}
+}
+
+func DatasourceNutanixVMHostAffinityPolicyV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).VmmAPI
+
+	extID := d.Get("ext_id")
+
+	getRequest := import2.GetVmHostAffinityPolicyByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+
+	resp, err := conn.VMHostAffinityPolicyAPIInstance.GetVmHostAffinityPolicyById(ctx, &getRequest)
+
+	if err != nil {
+		return diag.Errorf("error while fetching policy : %v", err)
+	}
+
+	getResp := resp.Data.GetValue().(import1.VmHostAffinityPolicy)
+
+	flattenedPolicy := flattenVMHostAffinityPolicyEntity(getResp)
+
+	for k, v := range flattenedPolicy {
+		if err := d.Set(k, v); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	d.SetId(flattenedPolicy["ext_id"].(string))
+
+	return nil
+}
+
+func flattenVMHostAffinityPolicyEntity(policy import1.VmHostAffinityPolicy) map[string]interface{} {
+	result := make(map[string]interface{})
+	if policy.ExtId != nil {
+		result["ext_id"] = *policy.ExtId
+	}
+	if policy.Name != nil {
+		result["name"] = *policy.Name
+	}
+	if policy.Description != nil {
+		result["description"] = *policy.Description
+	}
+	if policy.CreateTime != nil {
+		result["create_time"] = utils.TimeStringValue(policy.CreateTime)
+	}
+	if policy.UpdateTime != nil {
+		result["update_time"] = utils.TimeStringValue(policy.UpdateTime)
+	}
+	if policy.CreatedBy != nil && policy.CreatedBy.ExtId != nil {
+		result["created_by"] = map[string]string{"ext_id": *policy.CreatedBy.ExtId}
+	}
+	if policy.LastUpdatedBy != nil && policy.LastUpdatedBy.ExtId != nil {
+		result["last_updated_by"] = map[string]string{"ext_id": *policy.LastUpdatedBy.ExtId}
+	}
+	if policy.HostCategories != nil {
+		result["host_categories"] = flattenPolicyCategoryReference(policy.HostCategories)
+	}
+	if policy.VmCategories != nil {
+		result["vm_categories"] = flattenPolicyCategoryReference(policy.VmCategories)
+	}
+	if policy.NumVms != nil {
+		result["num_vms"] = *policy.NumVms
+	}
+	if policy.NumHosts != nil {
+		result["num_hosts"] = *policy.NumHosts
+	}
+	if policy.NumCompliantVms != nil {
+		result["num_compliant_vms"] = *policy.NumCompliantVms
+	}
+	if policy.NumNonCompliantVms != nil {
+		result["num_non_compliant_vms"] = *policy.NumNonCompliantVms
+	}
+	return result
+}

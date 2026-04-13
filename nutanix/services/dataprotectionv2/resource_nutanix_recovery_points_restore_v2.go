@@ -10,10 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/config"
-	dataprtotectionPrismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/prism/v4/config"
-	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/request/recoverypoints"
+	dataprtotectionPrismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -106,8 +106,8 @@ func ResourceNutanixRecoveryPointRestoreV2Create(ctx context.Context, d *schema.
 	if volumeGroupRecoveryPointRestoreOverrides, ok := d.GetOk("volume_group_recovery_point_restore_overrides"); ok {
 		body.VolumeGroupRecoveryPointRestoreOverrides = expandVolumeGroupRecoveryPointRestoreOverrides(volumeGroupRecoveryPointRestoreOverrides)
 	}
-  
-  restoreRecoveryPointRequest := import2.RestoreRecoveryPointRequest{
+
+	restoreRecoveryPointRequest := import2.RestoreRecoveryPointRequest{
 		ExtId: utils.StringPtr(rpExtID),
 		Body:  &body,
 	}

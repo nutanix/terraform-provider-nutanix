@@ -139,12 +139,14 @@ func testVmsCloneV2Config(name, desc string) string {
 				}
 			}
 			nics {
-				network_info {
-				  nic_type = "NORMAL_NIC"
-				  subnet {
-					ext_id = data.nutanix_subnets_v2.subnet.subnets[0].ext_id
+				nic_network_info {
+				  virtual_ethernet_nic_network_info {
+					nic_type = "NORMAL_NIC"
+					subnet {
+					  ext_id = data.nutanix_subnets_v2.subnet.subnets[0].ext_id
+					}
+					vlan_mode = "ACCESS"
 				  }
-				  vlan_mode = "ACCESS"
 				}
 		    }
 			// guest_customization{
@@ -264,12 +266,14 @@ func testVmsCloneV2WithGuestCustomizationConfig(name, desc string) string {
 		  }
 
 		  nics {
-			network_info {
-			  nic_type = "NORMAL_NIC"
-			  subnet {
-				ext_id = data.nutanix_subnets_v2.subnet.subnets[0].ext_id
+			nic_network_info {
+			  virtual_ethernet_nic_network_info {
+				nic_type = "NORMAL_NIC"
+				subnet {
+				  ext_id = data.nutanix_subnets_v2.subnet.subnets[0].ext_id
+				}
+				vlan_mode = "ACCESS"
 			  }
-			  vlan_mode = "ACCESS"
 			}
 		  }
 		  power_state = "OFF"

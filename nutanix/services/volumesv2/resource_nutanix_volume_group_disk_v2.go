@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	taskPoll "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/common/v1/config"
 	volumesPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/prism/v4/config"
 	volumesClient "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/config"
-	taskPoll "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/request/volumegroups"
-	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -159,9 +159,9 @@ func ResourceNutanixVolumeGroupDiskV2Create(ctx context.Context, d *schema.Resou
 	if diskStorageFeatures, ok := d.GetOk("disk_storage_features"); ok {
 		body.DiskStorageFeatures = expandDiskStorageFeatures(diskStorageFeatures.([]interface{}))
 	}
-  createVolumeDiskRequest := import1.CreateVolumeDiskRequest{
+	createVolumeDiskRequest := import1.CreateVolumeDiskRequest{
 		VolumeGroupExtId: utils.StringPtr(volumeGroupExtID.(string)),
-		Body:  &body,
+		Body:             &body,
 	}
 	log.Printf("[DEBUG] Volume Disk Body body.DiskDataSourceReference.Uris : %v", body.DiskDataSourceReference.Uris)
 	resp, err := conn.VolumeAPIInstance.CreateVolumeDisk(ctx, &createVolumeDiskRequest)
@@ -216,7 +216,7 @@ func ResourceNutanixVolumeGroupDiskV2Read(ctx context.Context, d *schema.Resourc
 
 	getVolumeDiskByIdRequest := import1.GetVolumeDiskByIdRequest{
 		VolumeGroupExtId: utils.StringPtr(volumeGroupExtID.(string)),
-		ExtId: utils.StringPtr(volumeDiskExtID),
+		ExtId:            utils.StringPtr(volumeDiskExtID),
 	}
 	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(ctx, &getVolumeDiskByIdRequest)
 	if err != nil {
@@ -255,7 +255,7 @@ func ResourceNutanixVolumeGroupDiskV2Update(ctx context.Context, d *schema.Resou
 
 	getVolumeDiskByIdRequest := import1.GetVolumeDiskByIdRequest{
 		VolumeGroupExtId: utils.StringPtr(volumeGroupExtID.(string)),
-		ExtId: utils.StringPtr(volumeDiskExtID),
+		ExtId:            utils.StringPtr(volumeDiskExtID),
 	}
 	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(ctx, &getVolumeDiskByIdRequest)
 	if err != nil {
@@ -290,8 +290,8 @@ func ResourceNutanixVolumeGroupDiskV2Update(ctx context.Context, d *schema.Resou
 
 	updateVolumeDiskByIdRequest := import1.UpdateVolumeDiskByIdRequest{
 		VolumeGroupExtId: utils.StringPtr(volumeGroupExtID.(string)),
-		ExtId: utils.StringPtr(volumeDiskExtID),
-		Body: &updateSpec,
+		ExtId:            utils.StringPtr(volumeDiskExtID),
+		Body:             &updateSpec,
 	}
 	updateResp, err := conn.VolumeAPIInstance.UpdateVolumeDiskById(ctx, &updateVolumeDiskByIdRequest)
 	if err != nil {
@@ -339,7 +339,7 @@ func ResourceNutanixVolumeGroupDiskV2Delete(ctx context.Context, d *schema.Resou
 
 	deleteVolumeDiskByIdRequest := import1.DeleteVolumeDiskByIdRequest{
 		VolumeGroupExtId: utils.StringPtr(volumeGroupExtID.(string)),
-		ExtId: utils.StringPtr(volumeDiskExtID.(string)),
+		ExtId:            utils.StringPtr(volumeDiskExtID.(string)),
 	}
 	resp, err := conn.VolumeAPIInstance.DeleteVolumeDiskById(ctx, &deleteVolumeDiskByIdRequest)
 	if err != nil {

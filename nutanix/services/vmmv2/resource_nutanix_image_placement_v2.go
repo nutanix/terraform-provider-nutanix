@@ -360,7 +360,7 @@ func ResourceNutanixImagePlacementV2Update(ctx context.Context, d *schema.Resour
 
 func suspendAction(ctx context.Context, conn *vmm.Client, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	extID := d.Id()
-  
+
 	getPlacementPolicyByIdRequest := import3.GetPlacementPolicyByIdRequest{
 		ExtId: utils.StringPtr(extID),
 	}
@@ -377,7 +377,7 @@ func suspendAction(ctx context.Context, conn *vmm.Client, d *schema.ResourceData
 	if shouldCancelRunningTasks, ok := d.GetOk("should_cancel_running_tasks"); ok {
 		body.ShouldCancelRunningTasks = utils.BoolPtr(shouldCancelRunningTasks.(bool))
 	}
-  
+
 	suspendPlacementPolicyRequest := import3.SuspendPlacementPolicyRequest{
 		ExtId: utils.StringPtr(extID),
 		Body:  body,
@@ -418,7 +418,7 @@ func resumeAction(ctx context.Context, conn *vmm.Client, d *schema.ResourceData,
 	// Extract E-Tag Header
 	args := make(map[string]interface{})
 	args["If-Match"] = getEtagHeader(readResp, conn)
-  
+
 	resumePlacementPolicyRequest := import3.ResumePlacementPolicyRequest{
 		ExtId: utils.StringPtr(extID),
 	}
@@ -448,7 +448,7 @@ func resumeAction(ctx context.Context, conn *vmm.Client, d *schema.ResourceData,
 
 func ResourceNutanixImagePlacementV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
-  
+
 	deletePlacementPolicyByIdRequest := import3.DeletePlacementPolicyByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}

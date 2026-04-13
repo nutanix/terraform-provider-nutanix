@@ -44,6 +44,8 @@ type Config struct {
 	NdbEndpoint        string
 	NdbUsername        string
 	NdbPassword        string
+	APIKey             string            // API key for authentication (alternative to username/password)
+	CustomHeaders      map[string]string // Custom headers to add to all requests (e.g., for Cloudflare Access)
 }
 
 // Client ...
@@ -63,6 +65,8 @@ func (c *Config) Client() (*Client, error) {
 		NdbUsername:        c.NdbUsername,
 		NdbPassword:        c.NdbPassword,
 		RequiredFields:     c.RequiredFields,
+		APIKey:             c.APIKey,
+		CustomHeaders:      c.CustomHeaders,
 	}
 
 	v3Client, err := v3.NewV3Client(configCreds)

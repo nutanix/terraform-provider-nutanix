@@ -46,6 +46,19 @@ func testAccCheckResourceAttrListNotEmpty(resourceName, attrName, subAttr string
 	}
 }
 
+// isVolumeGroupNotFoundErr returns true if the error indicates the volume group
+// does not exist (e.g. already deleted). API may return 404 with different messages.
+func isVolumeGroupNotFoundErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	s := fmt.Sprint(err)
+	return strings.Contains(s, "404") ||
+		strings.Contains(s, "VOLUME_UNKNOWN_ENTITY_ERROR") ||
+		strings.Contains(s, "Unknown volume group") ||
+		strings.Contains(s, "PLAT-10007")
+}
+
 func testAccCheckNutanixVolumeGroupV2Destroy(s *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 	ctx := context.Background()
@@ -54,13 +67,22 @@ func testAccCheckNutanixVolumeGroupV2Destroy(s *terraform.State) error {
 		if rs.Type != "nutanix_volume_group_v2" {
 			continue
 		}
-		deleteVolumeGroupByIdRequest := import1.DeleteVolumeGroupByIdRequest{
+
+		// Verify the volume group is destroyed by trying to get it (not by deleting again).
+		getVolumeGroupByIdRequest := import1.GetVolumeGroupByIdRequest{
 			ExtId: utils.StringPtr(rs.Primary.ID),
 		}
-		if _, err := conn.VolumeAPI.VolumeAPIInstance.DeleteVolumeGroupById(ctx, &deleteVolumeGroupByIdRequest); err != nil {
-			if strings.Contains(fmt.Sprint(err), "VOLUME_UNKNOWN_ENTITY_ERROR") {
-				return nil
+		_, err := conn.VolumeAPI.VolumeAPIInstance.GetVolumeGroupById(ctx, &getVolumeGroupByIdRequest)
+		if err == nil {
+			deleteVolumeGroupByIdRequest := import1.DeleteVolumeGroupByIdRequest{
+				ExtId: utils.StringPtr(rs.Primary.ID),
 			}
+			_, err := conn.VolumeAPI.VolumeAPIInstance.DeleteVolumeGroupById(ctx, &deleteVolumeGroupByIdRequest)
+			if err != nil {
+				return fmt.Errorf("Failed to delete volume group")
+			}
+		}
+		if !isVolumeGroupNotFoundErr(err) {
 			return err
 		}
 	}

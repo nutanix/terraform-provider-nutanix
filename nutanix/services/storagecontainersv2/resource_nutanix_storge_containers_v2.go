@@ -11,10 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	clustermgmtConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/storagecontainers"
 	clsCommonConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/common/v1/config"
 	clsPrismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
-	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/storagecontainers"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -287,9 +287,9 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 	if affinityHostExtID, ok := d.GetOk("affinity_host_ext_id"); ok {
 		body.AffinityHostExtId = utils.StringPtr(affinityHostExtID.(string))
 	}
-  
+
 	createStorageContainerRequest := import1.CreateStorageContainerRequest{
-		Body:  body,
+		Body:       body,
 		XClusterId: utils.StringPtr(clusterExtID.(string)),
 	}
 	jsonBody, _ := json.MarshalIndent(createStorageContainerRequest, "", "  ")
@@ -342,7 +342,7 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 func ResourceNutanixStorageContainersV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] Reading storage container with ID: %s", d.Id())
 	conn := meta.(*conns.Client).ClusterAPI
-  
+
 	getStorageContainerByIdRequest := import1.GetStorageContainerByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}
@@ -446,7 +446,7 @@ func ResourceNutanixStorageContainersV2Read(ctx context.Context, d *schema.Resou
 func ResourceNutanixStorageContainersV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] Update Storage Container")
 	conn := meta.(*conns.Client).ClusterAPI
-  
+
 	getStorageContainerByIdRequest := import1.GetStorageContainerByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}
@@ -546,7 +546,7 @@ func ResourceNutanixStorageContainersV2Update(ctx context.Context, d *schema.Res
 	if d.HasChange("affinity_host_ext_id") {
 		updateSpec.AffinityHostExtId = utils.StringPtr(d.Get("affinity_host_ext_id").(string))
 	}
-  
+
 	updateStorageContainerByIdRequest := import1.UpdateStorageContainerByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 		Body:  &updateSpec,
@@ -571,7 +571,7 @@ func ResourceNutanixStorageContainersV2Update(ctx context.Context, d *schema.Res
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for storage container (%s) to be updated: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-  
+
 	getTaskByIdRequest := import2.GetTaskByIdRequest{
 		ExtId: utils.StringPtr(*taskUUID),
 	}
@@ -596,9 +596,9 @@ func ResourceNutanixStorageContainersV2Delete(ctx context.Context, d *schema.Res
 	if ignoreSmallFile, ok := d.GetOk("ignore_small_files"); ok {
 		ignoreSmallFiles = *utils.BoolPtr(ignoreSmallFile.(bool))
 	}
-  
+
 	deleteStorageContainerByIdRequest := import1.DeleteStorageContainerByIdRequest{
-		ExtId: utils.StringPtr(d.Id()),
+		ExtId:            utils.StringPtr(d.Id()),
 		IgnoreSmallFiles: utils.BoolPtr(ignoreSmallFiles),
 	}
 	resp, err := conn.StorageContainersAPI.DeleteStorageContainerById(ctx, &deleteStorageContainerByIdRequest)

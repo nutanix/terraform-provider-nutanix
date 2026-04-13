@@ -64,8 +64,8 @@ func DatasourceNutanixRestorePointsV2Read(ctx context.Context, d *schema.Resourc
 	restorableDomainManagerExtID := d.Get("restorable_domain_manager_ext_id").(string)
 
 	listRestorePointsRequest := import1.ListRestorePointsRequest{
-		RestoreSourceExtId:            utils.StringPtr(restoreSourceExtID),
-		RestorableDomainManagerExtId:   utils.StringPtr(restorableDomainManagerExtID),
+		RestoreSourceExtId:           utils.StringPtr(restoreSourceExtID),
+		RestorableDomainManagerExtId: utils.StringPtr(restorableDomainManagerExtID),
 	}
 
 	if v, ok := d.GetOk("page"); ok {

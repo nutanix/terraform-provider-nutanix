@@ -11,6 +11,8 @@ description: |-
 
 # nutanix_protection_policies_v2
 
+> **Authentication:** Protection policy operations do **not** support API key authentication. Use `username` and `password` in the provider configuration.
+
 List the protection policies defined on the system. This operation supports filtering, sorting, selection and pagination.
 
 

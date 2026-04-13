@@ -9,7 +9,9 @@ description: |-
 
 # nutanix_protection_policy_v2
 
-Describes the Fetches the protection policy identified by an external identifier.
+> **Authentication:** Protection policy operations do **not** support API key authentication. Use `username` and `password` in the provider configuration.
+
+Fetches the protection policy identified by an external identifier.
 
 ## Example Usage
 

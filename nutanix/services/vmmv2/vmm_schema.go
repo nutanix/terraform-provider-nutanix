@@ -17,7 +17,7 @@ func nicsElemSchemaV2() *schema.Resource {
 				Type:       schema.TypeList,
 				Optional:   true,
 				Computed:   true,
-				Deprecated: "Use `nic_backing_info` instead. This field will be removed in a future release.",
+				Deprecated: "The `backing_info` attribute is deprecated. Use `nic_backing_info` instead. This field will be removed in a future release.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"model": {
@@ -48,7 +48,7 @@ func nicsElemSchemaV2() *schema.Resource {
 				Type:       schema.TypeList,
 				Optional:   true,
 				Computed:   true,
-				Deprecated: "Use `nic_backing_info` instead. This field will be removed in a future release.",
+				Deprecated: "The `network_info` attribute is deprecated. Use `nic_network_info` instead. This field will be removed in a future release.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"nic_type": {

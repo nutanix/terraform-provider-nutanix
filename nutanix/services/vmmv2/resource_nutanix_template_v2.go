@@ -9,14 +9,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	vmmCommon "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/common/v1/config"
 	vmmAuthn "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/iam/v4/authn"
 	vmmProsmConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
 	vmmConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/config"
 	vmmContent "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/content"
-	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/templates"
-	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -2144,13 +2144,13 @@ func expandTemplateVMSpec(vmSpec interface{}) *vmmConfig.Vm {
 			vm.StorageConfig = expandADSFVmStorageConfig(storageConfig)
 		}
 		if disks, ok := vmVal["disks"]; ok {
-			vm.Disks = expandDisk(disks.([]interface{}))
+			vm.Disks = expandDisk(disks.([]interface{}), nil)
 		}
 		if cdRoms, ok := vmVal["cd_roms"]; ok {
 			vm.CdRoms = expandCdRom(cdRoms.([]interface{}))
 		}
 		if nics, ok := vmVal["nics"]; ok {
-			vm.Nics = expandNic(nics.([]interface{}))
+			vm.Nics = expandNic(nics.([]interface{}), nil, "")
 		}
 		if gpus, ok := vmVal["gpus"]; ok {
 			vm.Gpus = expandGpu(gpus.([]interface{}))
@@ -2513,7 +2513,7 @@ func expandVMConfigOverrideTemplate(pr interface{}) *vmmContent.VmConfigOverride
 			cfg.MemorySizeBytes = utils.Int64Ptr(int64(memorySizeBytes.(int)))
 		}
 		if nics, ok := val["nics"]; ok && len(nics.([]interface{})) > 0 {
-			cfg.Nics = expandNic(nics.([]interface{}))
+			cfg.Nics = expandNic(nics.([]interface{}), nil, "")
 		}
 		if guest, ok := val["guest_customization"]; ok && len(guest.([]interface{})) > 0 {
 			cfg.GuestCustomization = expandTemplateGuestCustomizationParams(guest)

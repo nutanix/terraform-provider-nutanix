@@ -13,9 +13,9 @@ import (
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/sslcertificate"
-	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	clustermgmtPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -153,8 +153,8 @@ func ResourceNutanixSSLCertificateV2Read(ctx context.Context, d *schema.Resource
 	// Retry logic to handle temporary API unavailability after certificate regeneration
 	var resp *import1.GetSSLCertificateApiResponse
 	var err error
-	maxRetries := 10
-	retryDelay := 2 * time.Second
+	maxRetries := 15
+	retryDelay := 5 * time.Second
 
 	getSSLCertificateRequest := import2.GetSSLCertificateRequest{
 		ClusterExtId: utils.StringPtr(clusterExtID),
