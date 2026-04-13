@@ -47,9 +47,11 @@ func TestAccV2NutanixVmsShutdownResource_Basic(t *testing.T) {
 			},
 			// 3. create a vm shutdown action
 			{
-				Config: testVMV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("shutdown"),
+				Config:             testVMV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("shutdown"),
+				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("nutanix_virtual_machine_v2.rtest", "id"),
+					resource.TestCheckResourceAttr("nutanix_vm_shutdown_action_v2.vmShuts", "action", "shutdown"),
 				),
 			},
 			// 4. check the power state of the vm
@@ -123,7 +125,8 @@ func TestAccV2NutanixVmsShutdownResource_Basic(t *testing.T) {
 			},
 			// 11. guest_shutdown the vm
 			{
-				Config: testVMV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("guest_shutdown"),
+				Config:             testVMV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("guest_shutdown"),
+				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("nutanix_virtual_machine_v2.rtest", "id"),
 				),
