@@ -153,8 +153,8 @@ func ResourceNutanixSSLCertificateV2Read(ctx context.Context, d *schema.Resource
 	// Retry logic to handle temporary API unavailability after certificate regeneration
 	var resp *import1.GetSSLCertificateApiResponse
 	var err error
-	maxRetries := 10
-	retryDelay := 2 * time.Second
+	maxRetries := 15
+	retryDelay := 5 * time.Second
 
 	getSSLCertificateRequest := import2.GetSSLCertificateRequest{
 		ClusterExtId: utils.StringPtr(clusterExtID),

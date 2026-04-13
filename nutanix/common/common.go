@@ -81,9 +81,58 @@ func IsExplicitlySet(d *schema.ResourceData, key string) bool {
 	if !ok {
 		return false
 	}
-
-	log.Printf("[DEBUG] Key: %s, Value: %s", key, val)
+	aJSON, _ := json.MarshalIndent(val, "", "  ")
+	log.Printf("[DEBUG] Key: %s, Value: %s", key, string(aJSON))
 	return !val.IsNull() // Ensure key exists and isn't explicitly null
+}
+
+// IsNonEmptyBlockExplicitlySet returns true only when the key exists in raw config and has meaningful content
+// (e.g. at least one nested attribute or block set). Used to prefer legacy blocks when the user only set
+// legacy fields and the new block is present in config as an empty block (e.g. from schema default).
+func IsNonEmptyBlockExplicitlySet(d *schema.ResourceData, key string) bool {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return false
+	}
+	val, ok := getRawConfigValueAtPath(rawConfig, key)
+	if !ok || val.IsNull() || !val.IsKnown() {
+		return false
+	}
+	return ctyValueHasContent(val)
+}
+
+// ctyValueHasContent returns true if the cty value has at least one non-null, known nested value.
+func ctyValueHasContent(v cty.Value) bool {
+	if v.IsNull() || !v.IsKnown() {
+		return false
+	}
+	ty := v.Type()
+	if ty.IsListType() || ty.IsTupleType() {
+		l := v.Length()
+		if l.IsNull() || !l.IsKnown() {
+			return false
+		}
+		bf := l.AsBigFloat()
+		n, _ := bf.Int64()
+		if n == 0 {
+			return false
+		}
+		return ctyValueHasContent(v.Index(cty.NumberIntVal(0)))
+	}
+	if ty.IsObjectType() || ty.IsMapType() {
+		for _, v := range v.AsValueMap() {
+			if !v.IsNull() && v.IsKnown() {
+				if v.Type().IsPrimitiveType() || v.Type().IsCapsuleType() {
+					return true
+				}
+				if ctyValueHasContent(v) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+	return true // primitive or other known type
 }
 
 func getRawConfigValueAtPath(root cty.Value, path string) (cty.Value, bool) {
@@ -143,6 +192,66 @@ func getRawConfigValueAtPath(root cty.Value, path string) (cty.Value, bool) {
 	}
 
 	return cur, true
+}
+
+// IsConfigListEmpty returns true if the raw config has a list at path with length 0 (or path is null/unknown).
+// Used to prefer config (e.g. 0 disks) over API state when the user has removed all items.
+func IsConfigListEmpty(d *schema.ResourceData, path string) bool {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return false
+	}
+	val, ok := getRawConfigValueAtPath(rawConfig, path)
+	if !ok || val.IsNull() || !val.IsKnown() {
+		return false // unknown or missing: don't treat as "empty"
+	}
+	t := val.Type()
+	if !t.IsListType() && !t.IsTupleType() {
+		return false
+	}
+	lenVal := val.Length()
+	if lenVal.IsNull() || !lenVal.IsKnown() {
+		return false
+	}
+	bf := lenVal.AsBigFloat()
+	li, _ := bf.Int64()
+	return li == 0
+}
+
+// IsConfigListEmptyOrMissing returns true if the raw config has no value at path (block omitted),
+// or has a list at path with length 0. Use this when omitting an optional block should be
+// treated as "empty" (e.g. so removals are applied).
+func IsConfigListEmptyOrMissing(d *schema.ResourceData, path string) bool {
+	return isConfigListEmptyOrMissingImpl(d, path, false)
+}
+
+// IsConfigListEmptyOrMissingForUpdate is like IsConfigListEmptyOrMissing but also returns true
+// when raw config is null/unknown (e.g. in some test or RPC contexts). Use only in Update path
+// so removals are applied when config is unavailable; do not use in Read to avoid wiping state.
+func IsConfigListEmptyOrMissingForUpdate(d *schema.ResourceData, path string) bool {
+	return isConfigListEmptyOrMissingImpl(d, path, true)
+}
+
+func isConfigListEmptyOrMissingImpl(d *schema.ResourceData, path string, treatUnknownConfigAsEmpty bool) bool {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return treatUnknownConfigAsEmpty
+	}
+	val, ok := getRawConfigValueAtPath(rawConfig, path)
+	if !ok || val.IsNull() || !val.IsKnown() {
+		return true // missing or null/unknown: treat as empty so removals run
+	}
+	t := val.Type()
+	if !t.IsListType() && !t.IsTupleType() {
+		return false
+	}
+	lenVal := val.Length()
+	if lenVal.IsNull() || !lenVal.IsKnown() {
+		return false
+	}
+	bf := lenVal.AsBigFloat()
+	li, _ := bf.Int64()
+	return li == 0
 }
 
 func TaskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {

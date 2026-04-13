@@ -382,9 +382,11 @@ provider "nutanix" {
 ## Argument Reference
 
 The following arguments are used to configure the Nutanix Provider:
-* `username` - **(Required)** This is the username for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_USERNAME` environment variable.
-* `password` - **(Required)** This is the password for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_PASSWORD` environment variable.
+* `username` - (Optional) This is the username for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_USERNAME` environment variable. Required if `api_key` is not provided.
+* `password` - (Optional) This is the password for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_PASSWORD` environment variable. Required if `api_key` is not provided.
 * `endpoint` - **(Required)** This is the endpoint for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_ENDPOINT` environment variable.
+* `api_key` - (Optional) This is an API key for Prism Central authentication. Can be used as an alternative to `username`/`password` when connecting to a Prism Central instance. **Not supported by Prism Elements**, which requires `username` and `password`. When set, the `X-Ntnx-Api-Key` header will be used instead of Basic Authentication. This can also be specified with the `NUTANIX_API_KEY` environment variable.
+* `custom_headers` - (Optional) A map of custom HTTP headers to add to all API requests. Useful for environments that require additional headers such as Cloudflare Access service tokens. Headers can also be set via environment variables with the `NUTANIX_HEADER_` prefix (e.g., `NUTANIX_HEADER_CF_ACCESS_CLIENT_ID` becomes `Cf-Access-Client-Id`). Config values take precedence over environment variables.
 * `insecure` - (Optional) This specifies whether to allow verify ssl certificates. This can also be specified with `NUTANIX_INSECURE`. Defaults to `false`.
 * `port` - (Optional) This is the port for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_PORT` environment variable. Defaults to `9440`.
 * `session_auth` - (Optional) This specifies whether to use [session authentication](#session-based-authentication). This can also be specified with the `NUTANIX_SESSION_AUTH` environment variable. Defaults to `true`
@@ -405,6 +407,64 @@ provider "nutanix" {
   ...
 }
 ```
+
+### API Key Authentication
+
+API key authentication can be used as an alternative to username/password authentication when connecting to a **Prism Central** instance. When an API key is provided, the `X-Ntnx-Api-Key` header is used for authentication instead of Basic Authentication.
+
+-> **Note:** API key authentication is a Prism Central feature and is not supported by Prism Elements. Use `username` and `password` when connecting to a Prism Elements endpoint.
+
+Usage:
+
+```terraform
+provider "nutanix" {
+  endpoint = var.nutanix_endpoint
+  api_key  = var.nutanix_api_key
+  port     = var.nutanix_port
+  insecure = true
+}
+```
+
+Or using environment variable:
+```bash
+export NUTANIX_API_KEY="your-api-key"
+```
+
+### Custom Headers (Cloudflare Access)
+
+For environments that require additional HTTP headers (such as Cloudflare Access service tokens), you can specify custom headers that will be added to all API requests.
+
+Usage with provider configuration:
+
+```terraform
+provider "nutanix" {
+  endpoint = var.nutanix_endpoint
+  api_key  = var.nutanix_api_key
+  custom_headers = {
+    "CF-Access-Client-Id"     = var.cf_client_id
+    "CF-Access-Client-Secret" = var.cf_client_secret
+  }
+}
+```
+
+Or using environment variables with the `NUTANIX_HEADER_` prefix:
+```bash
+export NUTANIX_HEADER_CF_ACCESS_CLIENT_ID="your-client-id"
+export NUTANIX_HEADER_CF_ACCESS_CLIENT_SECRET="your-client-secret"
+```
+
+Environment variables are converted to HTTP headers by:
+1. Stripping the `NUTANIX_HEADER_` prefix
+2. Replacing underscores with dashes
+3. Applying title-casing
+
+For example:
+| Environment Variable | HTTP Header |
+| :--- | :--- |
+| `NUTANIX_HEADER_CF_ACCESS_CLIENT_ID` | `Cf-Access-Client-Id` |
+| `NUTANIX_HEADER_X_CUSTOM_HEADER` | `X-Custom-Header` |
+
+Headers defined in the provider configuration take precedence over environment variables.
 
 ## Notes
 
@@ -479,9 +539,8 @@ NDB based examples : https://github.com/nutanix/terraform-provider-nutanix/blob/
 
 ## Provider configuration required details
 
-Going from 1.8.0-beta release of nutanix provider, fields inside provider configuration would be mandatory as per the usecase : 
+Going from 1.8.0-beta release of nutanix provider, fields inside provider configuration would be mandatory as per the usecase :
 
-* `Prism Central & Karbon` : For prism central and karbon related resources and data sources, `username`, `password` & `endpoint` are manadatory.
-* `Foundation` : For foundation related resources and data sources, `foundation_endpoint` in manadatory.
-* `NDB` : For Nutanix Database Service (NDB) related resources and data sources. 
-
+* `Prism Central & Karbon` : For prism central and karbon related resources and data sources, `endpoint` is mandatory plus either (`username` and `password`) or `api_key` for authentication.
+* `Foundation` : For foundation related resources and data sources, `foundation_endpoint` is mandatory.
+* `NDB` : For Nutanix Database Service (NDB) related resources and data sources, `ndb_endpoint`, `ndb_username`, and `ndb_password` are mandatory. 

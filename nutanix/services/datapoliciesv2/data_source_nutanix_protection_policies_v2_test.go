@@ -150,7 +150,7 @@ data "nutanix_protection_policies_v2" "test" {
 }
 
 func testProtectionPoliciesDatasourceConfigWithInvalidFilter() string {
-	return `
+	return getProviderConfigForAPINonSupportedTests() + `
 
 data "nutanix_protection_policies_v2" "test" {
 	filter = "name eq 'invalid_filter'"

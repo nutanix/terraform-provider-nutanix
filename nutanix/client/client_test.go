@@ -27,14 +27,40 @@ func setup() (*http.ServeMux, *Client, *httptest.Server) {
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
 
-	client, _ := NewClient(&Credentials{"", "username", "password", "", "", true, false, "", "", "", nil, "", "", ""}, testUserAgent, testAbsolutePath, false)
+	client, _ := NewClient(&Credentials{"", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", nil}, testUserAgent, testAbsolutePath, false)
+	client.BaseURL, _ = url.Parse(server.URL)
+
+	return mux, client, server
+}
+
+// setupWithAPIKey creates a test client using API key authentication
+func setupWithAPIKey() (*http.ServeMux, *Client, *httptest.Server) {
+	mux := http.NewServeMux()
+	server := httptest.NewServer(mux)
+
+	client, _ := NewClient(&Credentials{"", "", "", "", "", true, false, "", "", "", nil, "", "", "", "test-api-key", nil}, testUserAgent, testAbsolutePath, false)
+	client.BaseURL, _ = url.Parse(server.URL)
+
+	return mux, client, server
+}
+
+// setupWithCustomHeaders creates a test client with custom headers
+func setupWithCustomHeaders() (*http.ServeMux, *Client, *httptest.Server) {
+	mux := http.NewServeMux()
+	server := httptest.NewServer(mux)
+
+	customHeaders := map[string]string{
+		"CF-Access-Client-Id":     "test-client-id",
+		"CF-Access-Client-Secret": "test-client-secret",
+	}
+	client, _ := NewClient(&Credentials{"", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", customHeaders}, testUserAgent, testAbsolutePath, false)
 	client.BaseURL, _ = url.Parse(server.URL)
 
 	return mux, client, server
 }
 
 func TestNewClient(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", ""}, testUserAgent, testAbsolutePath, false)
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", nil}, testUserAgent, testAbsolutePath, false)
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -51,7 +77,7 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestNewBaseClient(t *testing.T) {
-	c, err := NewBaseClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", ""}, testAbsolutePath, true)
+	c, err := NewBaseClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", nil}, testAbsolutePath, true)
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -68,7 +94,7 @@ func TestNewBaseClient(t *testing.T) {
 }
 
 func TestNewRequest(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", ""}, testUserAgent, testAbsolutePath, false)
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", nil}, testUserAgent, testAbsolutePath, false)
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -91,7 +117,7 @@ func TestNewRequest(t *testing.T) {
 }
 
 func TestNewUploadRequest(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", ""}, testUserAgent, testAbsolutePath, true)
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", nil}, testUserAgent, testAbsolutePath, true)
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -133,7 +159,7 @@ func TestNewUploadRequest(t *testing.T) {
 }
 
 func TestNewUnAuthRequest(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", ""}, testUserAgent, testAbsolutePath, true)
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", nil}, testUserAgent, testAbsolutePath, true)
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -171,7 +197,7 @@ func TestNewUnAuthRequest(t *testing.T) {
 }
 
 func TestNewUnAuthFormEncodedRequest(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", ""}, testUserAgent, testAbsolutePath, true)
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", nil}, testUserAgent, testAbsolutePath, true)
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -213,7 +239,7 @@ func TestNewUnAuthFormEncodedRequest(t *testing.T) {
 }
 
 func TestNewUnAuthUploadRequest(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", ""}, testUserAgent, testAbsolutePath, true)
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", nil}, testUserAgent, testAbsolutePath, true)
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -629,5 +655,155 @@ func Test_fillStruct(t *testing.T) {
 				t.Errorf("fillStruct() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
+	}
+}
+
+// *********** API Key Authentication Tests ***********
+
+func TestNewRequest_WithAPIKey(t *testing.T) {
+	_, client, server := setupWithAPIKey()
+	defer server.Close()
+
+	req, err := client.NewRequest(context.TODO(), http.MethodGet, "/test", nil)
+	if err != nil {
+		t.Fatalf("NewRequest() error: %v", err)
+	}
+
+	// Check that X-Ntnx-Api-Key header is set
+	apiKeyHeader := req.Header.Get("X-Ntnx-Api-Key")
+	if apiKeyHeader != "test-api-key" {
+		t.Errorf("NewRequest() X-Ntnx-Api-Key header = %v, expected %v", apiKeyHeader, "test-api-key")
+	}
+
+	// Check that Authorization header is NOT set when using API key
+	authHeader := req.Header.Get("Authorization")
+	if authHeader != "" {
+		t.Errorf("NewRequest() Authorization header should be empty when using API key, got %v", authHeader)
+	}
+}
+
+func TestNewRequest_WithBasicAuth(t *testing.T) {
+	_, client, server := setup()
+	defer server.Close()
+
+	req, err := client.NewRequest(context.TODO(), http.MethodGet, "/test", nil)
+	if err != nil {
+		t.Fatalf("NewRequest() error: %v", err)
+	}
+
+	// Check that Authorization header is set for basic auth
+	authHeader := req.Header.Get("Authorization")
+	if authHeader == "" {
+		t.Error("NewRequest() Authorization header should be set when using basic auth")
+	}
+	if !strings.HasPrefix(authHeader, "Basic ") {
+		t.Errorf("NewRequest() Authorization header should start with 'Basic ', got %v", authHeader)
+	}
+
+	// Check that X-Ntnx-Api-Key header is NOT set when using basic auth
+	apiKeyHeader := req.Header.Get("X-Ntnx-Api-Key")
+	if apiKeyHeader != "" {
+		t.Errorf("NewRequest() X-Ntnx-Api-Key header should be empty when using basic auth, got %v", apiKeyHeader)
+	}
+}
+
+// *********** Custom Headers Tests ***********
+
+func TestNewRequest_WithCustomHeaders(t *testing.T) {
+	_, client, server := setupWithCustomHeaders()
+	defer server.Close()
+
+	req, err := client.NewRequest(context.TODO(), http.MethodGet, "/test", nil)
+	if err != nil {
+		t.Fatalf("NewRequest() error: %v", err)
+	}
+
+	// Check that custom headers are set
+	clientID := req.Header.Get("CF-Access-Client-Id")
+	if clientID != "test-client-id" {
+		t.Errorf("NewRequest() CF-Access-Client-Id header = %v, expected %v", clientID, "test-client-id")
+	}
+
+	clientSecret := req.Header.Get("CF-Access-Client-Secret")
+	if clientSecret != "test-client-secret" {
+		t.Errorf("NewRequest() CF-Access-Client-Secret header = %v, expected %v", clientSecret, "test-client-secret")
+	}
+}
+
+func TestNewUploadRequest_WithAPIKey(t *testing.T) {
+	_, client, server := setupWithAPIKey()
+	defer server.Close()
+
+	// Create a temporary file for testing
+	tmpFile, err := os.CreateTemp("", "test-upload-*.txt")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+	tmpFile.WriteString("test content")
+	tmpFile.Seek(0, 0)
+
+	req, err := client.NewUploadRequest(context.TODO(), http.MethodPost, "/upload", tmpFile)
+	if err != nil {
+		t.Fatalf("NewUploadRequest() error: %v", err)
+	}
+
+	// Check that X-Ntnx-Api-Key header is set
+	apiKeyHeader := req.Header.Get("X-Ntnx-Api-Key")
+	if apiKeyHeader != "test-api-key" {
+		t.Errorf("NewUploadRequest() X-Ntnx-Api-Key header = %v, expected %v", apiKeyHeader, "test-api-key")
+	}
+}
+
+func TestNewUploadRequest_WithCustomHeaders(t *testing.T) {
+	_, client, server := setupWithCustomHeaders()
+	defer server.Close()
+
+	// Create a temporary file for testing
+	tmpFile, err := os.CreateTemp("", "test-upload-*.txt")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+	tmpFile.WriteString("test content")
+	tmpFile.Seek(0, 0)
+
+	req, err := client.NewUploadRequest(context.TODO(), http.MethodPost, "/upload", tmpFile)
+	if err != nil {
+		t.Fatalf("NewUploadRequest() error: %v", err)
+	}
+
+	// Check that custom headers are set
+	clientID := req.Header.Get("CF-Access-Client-Id")
+	if clientID != "test-client-id" {
+		t.Errorf("NewUploadRequest() CF-Access-Client-Id header = %v, expected %v", clientID, "test-client-id")
+	}
+}
+
+func TestApplyAuthHeaders_Priority(t *testing.T) {
+	// Test that cookies take priority over API key
+	mux := http.NewServeMux()
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	client, _ := NewClient(&Credentials{"", "", "", "", "", true, false, "", "", "", nil, "", "", "", "test-api-key", nil}, testUserAgent, testAbsolutePath, false)
+	client.BaseURL, _ = url.Parse(server.URL)
+
+	// Set cookies to simulate session auth
+	client.Cookies = []*http.Cookie{
+		{Name: "session", Value: "test-session-id"},
+	}
+
+	req, _ := client.NewRequest(context.TODO(), http.MethodGet, "/test", nil)
+
+	// When cookies are set, they should be used instead of API key
+	if len(req.Cookies()) == 0 {
+		t.Error("Expected cookies to be set when client has cookies")
+	}
+
+	// API key header should NOT be set when using cookies
+	apiKeyHeader := req.Header.Get("X-Ntnx-Api-Key")
+	if apiKeyHeader != "" {
+		t.Errorf("X-Ntnx-Api-Key should not be set when using session cookies, got %v", apiKeyHeader)
 	}
 }

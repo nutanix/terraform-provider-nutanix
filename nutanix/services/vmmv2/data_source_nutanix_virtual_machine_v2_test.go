@@ -58,10 +58,10 @@ func TestAccV2NutanixVmsDatasource_WithConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameVMs, "is_agent_vm", "false"),
 					resource.TestCheckResourceAttr(datasourceNameVMs, "machine_type", "PC"),
 					resource.TestCheckResourceAttrSet(datasourceNameVMs, "nics.#"),
-					resource.TestCheckResourceAttr(datasourceNameVMs, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
-					resource.TestCheckResourceAttr(datasourceNameVMs, "nics.0.network_info.0.vlan_mode", "ACCESS"),
-					resource.TestCheckResourceAttrSet(datasourceNameVMs, "nics.0.backing_info.#"),
-					resource.TestCheckResourceAttrSet(datasourceNameVMs, "nics.0.network_info.#"),
+					resource.TestCheckResourceAttr(datasourceNameVMs, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(datasourceNameVMs, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.vlan_mode", "ACCESS"),
+					resource.TestCheckResourceAttrSet(datasourceNameVMs, "nics.0.nic_backing_info.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameVMs, "nics.0.nic_network_info.#"),
 				),
 			},
 		},
@@ -89,10 +89,10 @@ func TestAccV2NutanixVmsDatasource_WithCdromConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameVMs, "is_agent_vm", "false"),
 					resource.TestCheckResourceAttr(datasourceNameVMs, "machine_type", "PC"),
 					resource.TestCheckResourceAttrSet(datasourceNameVMs, "nics.#"),
-					resource.TestCheckResourceAttr(datasourceNameVMs, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
-					resource.TestCheckResourceAttr(datasourceNameVMs, "nics.0.network_info.0.vlan_mode", "ACCESS"),
-					resource.TestCheckResourceAttrSet(datasourceNameVMs, "nics.0.backing_info.#"),
-					resource.TestCheckResourceAttrSet(datasourceNameVMs, "nics.0.network_info.#"),
+					resource.TestCheckResourceAttr(datasourceNameVMs, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(datasourceNameVMs, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.vlan_mode", "ACCESS"),
+					resource.TestCheckResourceAttrSet(datasourceNameVMs, "nics.0.nic_backing_info.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameVMs, "nics.0.nic_network_info.#"),
 					resource.TestCheckResourceAttrSet(datasourceNameVMs, "cd_roms.#"),
 					resource.TestCheckResourceAttr(datasourceNameVMs, "cd_roms.0.disk_address.0.bus_type", "SATA"),
 					resource.TestCheckResourceAttr(datasourceNameVMs, "cd_roms.0.disk_address.0.index", "0"),
@@ -123,10 +123,10 @@ func TestAccV2NutanixVmsDatasource_WithCdromBackingInfo(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameVMs, "is_agent_vm", "false"),
 					resource.TestCheckResourceAttr(datasourceNameVMs, "machine_type", "PC"),
 					resource.TestCheckResourceAttrSet(datasourceNameVMs, "nics.#"),
-					resource.TestCheckResourceAttr(datasourceNameVMs, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
-					resource.TestCheckResourceAttr(datasourceNameVMs, "nics.0.network_info.0.vlan_mode", "ACCESS"),
-					resource.TestCheckResourceAttrSet(datasourceNameVMs, "nics.0.backing_info.#"),
-					resource.TestCheckResourceAttrSet(datasourceNameVMs, "nics.0.network_info.#"),
+					resource.TestCheckResourceAttr(datasourceNameVMs, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(datasourceNameVMs, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.vlan_mode", "ACCESS"),
+					resource.TestCheckResourceAttrSet(datasourceNameVMs, "nics.0.nic_backing_info.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameVMs, "nics.0.nic_network_info.#"),
 					resource.TestCheckResourceAttrSet(datasourceNameVMs, "cd_roms.#"),
 					resource.TestCheckResourceAttr(datasourceNameVMs, "cd_roms.0.disk_address.0.bus_type", "IDE"),
 					resource.TestCheckResourceAttr(datasourceNameVMs, "cd_roms.0.disk_address.0.index", "0"),
@@ -190,12 +190,14 @@ func testAccVMDataSourceConfigV4WithNic(name, desc string) string {
 				ext_id = local.cluster0
 			}
 			nics{
-				network_info{
-					nic_type = "NORMAL_NIC"
-					subnet{
-						ext_id = data.nutanix_subnets_v2.subnets.subnets.0.ext_id
-					}	
-					vlan_mode = "ACCESS"
+				nic_network_info{
+					virtual_ethernet_nic_network_info{
+						nic_type = "NORMAL_NIC"
+						subnet{
+							ext_id = data.nutanix_subnets_v2.subnets.subnets.0.ext_id
+						}	
+						vlan_mode = "ACCESS"
+					}
 				}
 			}
 		}
@@ -232,12 +234,14 @@ func testAccVMDataSourceConfigV4WithCdrom(name, desc string) string {
 				ext_id = local.cluster0
 			}
 			nics{
-				network_info{
-					nic_type = "NORMAL_NIC"
-					subnet{
-						ext_id = data.nutanix_subnets_v2.subnets.subnets.0.ext_id
-					}	
-					vlan_mode = "ACCESS"
+				nic_network_info{
+					virtual_ethernet_nic_network_info{
+						nic_type = "NORMAL_NIC"
+						subnet{
+							ext_id = data.nutanix_subnets_v2.subnets.subnets.0.ext_id
+						}	
+						vlan_mode = "ACCESS"
+					}
 				}
 			}
 			boot_config{
@@ -320,12 +324,14 @@ func testAccVMDataSourceConfigV4WithCdromBackingInfo(name, desc string) string {
 				}
 			}
 			nics{
-				network_info{
-					nic_type = "NORMAL_NIC"
-					subnet{
-						ext_id = data.nutanix_subnets_v2.subnets.subnets.0.ext_id
-					}	
-					vlan_mode = "ACCESS"
+				nic_network_info{
+					virtual_ethernet_nic_network_info{
+						nic_type = "NORMAL_NIC"
+						subnet{
+							ext_id = data.nutanix_subnets_v2.subnets.subnets.0.ext_id
+						}	
+						vlan_mode = "ACCESS"
+					}
 				}
 			}
 			cd_roms{

@@ -59,7 +59,7 @@ type Client struct {
 // RequestCompletionCallback defines the type of the request callback function
 type RequestCompletionCallback func(*http.Request, *http.Response, interface{})
 
-// Credentials needed username and password
+// Credentials needed username and password (or API key)
 type Credentials struct {
 	URL                string
 	Username           string
@@ -75,12 +75,39 @@ type Credentials struct {
 	NdbEndpoint        string              // Required field for connecting to Era VM APIs.
 	NdbUsername        string
 	NdbPassword        string
+	APIKey             string            // API key for authentication (alternative to username/password)
+	CustomHeaders      map[string]string // Custom headers to add to all requests (e.g., for Cloudflare Access)
 }
 
 // AdditionalFilter specification for client side filters
 type AdditionalFilter struct {
 	Name   string
 	Values []string
+}
+
+// applyAuthHeaders adds the appropriate authentication header to the request
+// Priority: Cookies (session auth) > API Key > Basic Auth
+func (c *Client) applyAuthHeaders(req *http.Request) {
+	if c.Cookies != nil {
+		// Session-based authentication using cookies
+		for _, cookie := range c.Cookies {
+			req.AddCookie(cookie)
+		}
+	} else if c.Credentials.APIKey != "" {
+		// API key authentication
+		req.Header.Add("X-Ntnx-Api-Key", c.Credentials.APIKey)
+	} else {
+		// Basic authentication (username/password)
+		req.Header.Add("Authorization", "Basic "+
+			base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
+	}
+}
+
+// applyCustomHeaders adds any custom headers from credentials to the request
+func (c *Client) applyCustomHeaders(req *http.Request) {
+	for key, value := range c.Credentials.CustomHeaders {
+		req.Header.Add(key, value)
+	}
 }
 
 // NewClient returns a wrapper around http/https (as per isHTTP flag) client with additions of proxy & session_auth if given
@@ -204,18 +231,12 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	req.Header.Add("Content-Type", mediaType)
 	req.Header.Add("Accept", mediaType)
 	req.Header.Add("User-Agent", c.UserAgent)
-	if c.Cookies != nil {
-		for _, i := range c.Cookies {
-			req.AddCookie(i)
-		}
-	} else {
-		req.Header.Add("Authorization", "Basic "+
-			base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
-	}
+	c.applyAuthHeaders(req)
+	c.applyCustomHeaders(req)
 	return req, nil
 }
 
-// NewRequest creates a request without authorisation headers
+// NewUnAuthRequest creates a request without authorisation headers
 func (c *Client) NewUnAuthRequest(ctx context.Context, method, urlStr string, body interface{}) (*http.Request, error) {
 	// check if client exists or not
 	if c.client == nil {
@@ -312,13 +333,13 @@ func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, fi
 	req.Header.Add("Content-Type", octetStreamType)
 	req.Header.Add("Accept", mediaType)
 	req.Header.Add("User-Agent", c.UserAgent)
-	req.Header.Add("Authorization", "Basic "+
-		base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
+	c.applyAuthHeaders(req)
+	c.applyCustomHeaders(req)
 
 	return req, nil
 }
 
-// NewUploadRequest handles image uploads for image service
+// NewUnAuthUploadRequest handles image uploads for image service without auth
 func (c *Client) NewUnAuthUploadRequest(ctx context.Context, method, urlStr string, fileReader *os.File) (*http.Request, error) {
 	// check if client exists or not
 	if c.client == nil {
