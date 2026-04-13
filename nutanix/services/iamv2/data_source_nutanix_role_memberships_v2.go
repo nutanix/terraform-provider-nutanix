@@ -2,6 +2,8 @@ package iamv2
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -45,32 +47,7 @@ func DatasourceNutanixRoleMembershipsV2() *schema.Resource {
 			"role_memberships": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ext_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"tenant_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"links":                      schemaForLinks(),
-						"authorization_policy_ext_id": {Type: schema.TypeString, Computed: true},
-						"role_ext_id":                 {Type: schema.TypeString, Computed: true},
-						"identity_ext_id":             {Type: schema.TypeString, Computed: true},
-						"identity_type":               {Type: schema.TypeString, Computed: true},
-						"identity_value":              {Type: schema.TypeString, Computed: true},
-						"idp_ext_id":                  {Type: schema.TypeString, Computed: true},
-						"scope_template_name":         {Type: schema.TypeString, Computed: true},
-						"scope_template_name_values":  schemaForScopeTemplateNameValues(),
-						"project_ext_id":              {Type: schema.TypeString, Computed: true},
-						"key_value_pairs":             schemaForKeyValuePairs(),
-						"created_by":                  {Type: schema.TypeString, Computed: true},
-						"created_time":                {Type: schema.TypeString, Computed: true},
-						"last_updated_time":           {Type: schema.TypeString, Computed: true},
-					},
-				},
+				Elem:     DatasourceNutanixRoleMembershipV2(),
 			},
 		},
 	}
@@ -98,26 +75,26 @@ func DatasourceNutanixRoleMembershipsV2Read(ctx context.Context, d *schema.Resou
 	if v, ok := d.GetOk("select"); ok {
 		listRequest.Select_ = utils.StringPtr(v.(string))
 	}
-
+  Json, _ := json.MarshalIndent(listRequest, "", "  ")
+  log.Printf("[DEBUG] List Role Memberships Request Body: %s", string(Json))
 	resp, err := conn.RoleMembershipAPIInstance.ListRoleMemberships(ctx, &listRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching role memberships: %v", err)
 	}
 
-	membershipsRaw := resp.Data.GetValue()
-	membershipsList, ok := membershipsRaw.([]iamConfig.RoleMembership)
-	if !ok || len(membershipsList) == 0 {
-		if err := d.Set("role_memberships", make([]interface{}, 0)); err != nil {
+	if resp.Data == nil {
+		if err := d.Set("role_memberships", []map[string]interface{}{}); err != nil {
 			return diag.FromErr(err)
 		}
 		d.SetId(utils.GenUUID())
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
-			Summary:  "No data found.",
+			Summary:  "🫙 No data found.",
 			Detail:   "The API returned an empty list of role memberships.",
 		}}
 	}
 
+  membershipsList := resp.Data.GetValue().([]iamConfig.RoleMembershipProjection)
 	if err := d.Set("role_memberships", flattenRoleMembershipEntities(membershipsList)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -126,7 +103,7 @@ func DatasourceNutanixRoleMembershipsV2Read(ctx context.Context, d *schema.Resou
 	return nil
 }
 
-func flattenRoleMembershipEntities(memberships []iamConfig.RoleMembership) []interface{} {
+func flattenRoleMembershipEntities(memberships []iamConfig.RoleMembershipProjection) []interface{} {
 	if len(memberships) == 0 {
 		return nil
 	}
@@ -152,9 +129,6 @@ func flattenRoleMembershipEntities(memberships []iamConfig.RoleMembership) []int
 			membership["identity_ext_id"] = utils.StringValue(m.IdentityExtId)
 		}
 		membership["identity_type"] = flattenRmIdentityType(m.IdentityType)
-		if m.IdentityValue != nil {
-			membership["identity_value"] = utils.StringValue(m.IdentityValue)
-		}
 		if m.IdpExtId != nil {
 			membership["idp_ext_id"] = utils.StringValue(m.IdpExtId)
 		}
@@ -166,9 +140,6 @@ func flattenRoleMembershipEntities(memberships []iamConfig.RoleMembership) []int
 		}
 		if m.ProjectExtId != nil {
 			membership["project_ext_id"] = utils.StringValue(m.ProjectExtId)
-		}
-		if m.KeyValuePairs != nil {
-			membership["key_value_pairs"] = flattenKeyValuePairs(m.KeyValuePairs)
 		}
 		if m.CreatedBy != nil {
 			membership["created_by"] = utils.StringValue(m.CreatedBy)

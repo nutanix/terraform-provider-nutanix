@@ -45,11 +45,6 @@ func DatasourceNutanixRoleMembershipV2() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"identity_value": {
-				Description: "Value of the identity.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
 			"idp_ext_id": {
 				Description: "External identifier of the identity provider.",
 				Type:        schema.TypeString,
@@ -66,7 +61,6 @@ func DatasourceNutanixRoleMembershipV2() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"key_value_pairs": schemaForKeyValuePairs(),
 			"created_by": {
 				Description: "User or service name that created the role membership.",
 				Type:        schema.TypeString,
@@ -119,9 +113,6 @@ func DatasourceNutanixRoleMembershipV2Read(ctx context.Context, d *schema.Resour
 	if err := d.Set("identity_type", flattenRmIdentityType(getResp.IdentityType)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("identity_value", getResp.IdentityValue); err != nil {
-		return diag.FromErr(err)
-	}
 	if err := d.Set("idp_ext_id", getResp.IdpExtId); err != nil {
 		return diag.FromErr(err)
 	}
@@ -132,9 +123,6 @@ func DatasourceNutanixRoleMembershipV2Read(ctx context.Context, d *schema.Resour
 		return diag.FromErr(err)
 	}
 	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("key_value_pairs", flattenKeyValuePairs(getResp.KeyValuePairs)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("created_by", getResp.CreatedBy); err != nil {

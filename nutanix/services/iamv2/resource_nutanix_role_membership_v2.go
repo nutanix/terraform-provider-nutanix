@@ -2,7 +2,8 @@ package iamv2
 
 import (
 	"context"
-
+	"encoding/json"
+	"log"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	iamConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authz"
@@ -44,25 +45,16 @@ func ResourceNutanixRoleMembershipV2() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
-			"identity_value": {
-				Description: "Value of the identity.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				ForceNew:    true,
-			},
 			"idp_ext_id": {
 				Description: "External identifier of the identity provider.",
 				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				ForceNew:    true,
 			},
 			"scope_template_name": {
 				Description: "Name of the scope template.",
 				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				ForceNew:    true,
 			},
 			"scope_template_name_values": {
@@ -93,27 +85,6 @@ func ResourceNutanixRoleMembershipV2() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				ForceNew:    true,
-			},
-			"key_value_pairs": {
-				Description: "Key-value pairs for the role membership.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Computed:    true,
-				ForceNew:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"value": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-					},
-				},
 			},
 			"tenant_id": {
 				Type:     schema.TypeString,
@@ -155,9 +126,6 @@ func ResourceNutanixRoleMembershipV2Create(ctx context.Context, d *schema.Resour
 	if v, ok := d.GetOk("identity_type"); ok {
 		body.IdentityType = expandRmIdentityType(v.(string))
 	}
-	if v, ok := d.GetOk("identity_value"); ok {
-		body.IdentityValue = utils.StringPtr(v.(string))
-	}
 	if v, ok := d.GetOk("idp_ext_id"); ok {
 		body.IdpExtId = utils.StringPtr(v.(string))
 	}
@@ -170,14 +138,12 @@ func ResourceNutanixRoleMembershipV2Create(ctx context.Context, d *schema.Resour
 	if v, ok := d.GetOk("project_ext_id"); ok {
 		body.ProjectExtId = utils.StringPtr(v.(string))
 	}
-	if v, ok := d.GetOk("key_value_pairs"); ok {
-		body.KeyValuePairs = expandKeyValuePairs(v.([]interface{}))
-	}
 
 	createRequest := import1.CreateRoleMembershipRequest{
 		Body: &body,
 	}
-
+  Json, _ := json.MarshalIndent(createRequest, "", "  ")
+  log.Printf("[DEBUG] Create Role Membership Request Body: %s", string(Json))
 	resp, err := conn.RoleMembershipAPIInstance.CreateRoleMembership(ctx, &createRequest)
 	if err != nil {
 		return diag.Errorf("error while creating role membership: %v", err)
@@ -224,9 +190,6 @@ func ResourceNutanixRoleMembershipV2Read(ctx context.Context, d *schema.Resource
 	if err := d.Set("identity_type", flattenRmIdentityType(getResp.IdentityType)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("identity_value", getResp.IdentityValue); err != nil {
-		return diag.FromErr(err)
-	}
 	if err := d.Set("idp_ext_id", getResp.IdpExtId); err != nil {
 		return diag.FromErr(err)
 	}
@@ -237,9 +200,6 @@ func ResourceNutanixRoleMembershipV2Read(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("key_value_pairs", flattenKeyValuePairs(getResp.KeyValuePairs)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("created_by", getResp.CreatedBy); err != nil {
@@ -261,15 +221,27 @@ func ResourceNutanixRoleMembershipV2Read(ctx context.Context, d *schema.Resource
 
 func ResourceNutanixRoleMembershipV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
+  getRequest := import1.GetRoleMembershipByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+
+	resp, err := conn.RoleMembershipAPIInstance.GetRoleMembershipById(ctx, &getRequest)
+	if err != nil {
+		return diag.Errorf("error while fetching role membership: %v", err)
+	}
+	getResp := resp.Data.GetValue().(iamConfig.RoleMembership)
+	etagValue := conn.RoleMembershipAPIInstance.ApiClient.GetEtag(getResp)
+	headers := make(map[string]interface{})
+	headers["If-Match"] = utils.StringPtr(etagValue)
 
 	deleteRequest := import1.DeleteRoleMembershipByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}
 
-	_, err := conn.RoleMembershipAPIInstance.DeleteRoleMembershipById(ctx, &deleteRequest)
+	_, err = conn.RoleMembershipAPIInstance.DeleteRoleMembershipById(ctx, &deleteRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while deleting role membership: %v", err)
 	}
-
+	
 	return nil
 }

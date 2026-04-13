@@ -100,43 +100,6 @@ func expandRmIdentityType(identityType string) *iamConfig.RmIdentityType {
 	return &val
 }
 
-func flattenKeyValuePairs(kvPairs []iamConfig.KeyValue) []map[string]interface{} {
-	if len(kvPairs) == 0 {
-		return nil
-	}
-	result := make([]map[string]interface{}, len(kvPairs))
-	for i, kv := range kvPairs {
-		kvMap := map[string]interface{}{}
-		if kv.Key != nil {
-			kvMap["key"] = utils.StringValue(kv.Key)
-		}
-		if kv.Value != nil {
-			kvMap["value"] = utils.StringValue(kv.Value)
-		}
-		result[i] = kvMap
-	}
-	return result
-}
-
-func expandKeyValuePairs(kvPairs []interface{}) []iamConfig.KeyValue {
-	if len(kvPairs) == 0 {
-		return nil
-	}
-	result := make([]iamConfig.KeyValue, len(kvPairs))
-	for i, kv := range kvPairs {
-		kvMap := kv.(map[string]interface{})
-		keyValue := iamConfig.KeyValue{}
-		if v, ok := kvMap["key"]; ok && v.(string) != "" {
-			keyValue.Key = utils.StringPtr(v.(string))
-		}
-		if v, ok := kvMap["value"]; ok && v.(string) != "" {
-			keyValue.Value = utils.StringPtr(v.(string))
-		}
-		result[i] = keyValue
-	}
-	return result
-}
-
 func flattenScopeTemplateNameValues(kvPairs []iamCommonConfig.KVPair) []map[string]interface{} {
 	if len(kvPairs) == 0 {
 		return nil
@@ -170,8 +133,13 @@ func expandScopeTemplateNameValues(kvPairs []interface{}) []iamCommonConfig.KVPa
 	for i, kv := range kvPairs {
 		kvMap := kv.(map[string]interface{})
 		kvPair := iamCommonConfig.KVPair{}
-		if v, ok := kvMap["name"]; ok && v.(string) != "" {
+			if v, ok := kvMap["name"]; ok && v.(string) != "" {
 			kvPair.Name = utils.StringPtr(v.(string))
+		}
+		if v, ok := kvMap["value"]; ok && v.(string) != "" {
+			oneOfValue := iamCommonConfig.NewOneOfKVPairValue()
+			oneOfValue.SetValue(v.(string))
+			kvPair.Value = oneOfValue
 		}
 		result[i] = kvPair
 	}
