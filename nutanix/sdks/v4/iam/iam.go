@@ -8,14 +8,15 @@ import (
 )
 
 type Client struct {
-	APIClientInstance           *iam.ApiClient
+	APIClientInstance         *iam.ApiClient
 	DirectoryServiceAPIInstance *api.DirectoryServicesServiceApi
-	SamlIdentityAPIInstance     *api.SAMLIdentityProvidersServiceApi
-	UsersAPIInstance            *api.UsersServiceApi
-	UserGroupsAPIInstance       *api.UserGroupsServiceApi
-	RolesAPIInstance            *api.RolesServiceApi
-	OperationsAPIInstance       *api.OperationsServiceApi
-	AuthAPIInstance             *api.AuthorizationPoliciesServiceApi
+	SamlIdentityAPIInstance   *api.SAMLIdentityProvidersServiceApi
+	UsersAPIInstance          *api.UsersServiceApi
+	UserGroupsAPIInstance    *api.UserGroupsServiceApi
+	RolesAPIInstance          *api.RolesServiceApi
+	OperationsAPIInstance    *api.OperationsServiceApi
+	AuthAPIInstance           *api.AuthorizationPoliciesServiceApi
+	RoleMembershipAPIInstance *api.RoleMembershipServiceApi
 }
 
 func NewIamClient(credentials client.Credentials) (*Client, error) {
@@ -32,7 +33,7 @@ func NewIamClient(credentials client.Credentials) (*Client, error) {
 		baseClient = pcClient
 	}
 
-	f := &Client{
+	return &Client{
 		DirectoryServiceAPIInstance: api.NewDirectoryServicesServiceApi(baseClient),
 		SamlIdentityAPIInstance:     api.NewSAMLIdentityProvidersServiceApi(baseClient),
 		UserGroupsAPIInstance:       api.NewUserGroupsServiceApi(baseClient),
@@ -40,6 +41,7 @@ func NewIamClient(credentials client.Credentials) (*Client, error) {
 		OperationsAPIInstance:       api.NewOperationsServiceApi(baseClient),
 		UsersAPIInstance:            api.NewUsersServiceApi(baseClient),
 		AuthAPIInstance:             api.NewAuthorizationPoliciesServiceApi(baseClient),
+		RoleMembershipAPIInstance:   api.NewRoleMembershipServiceApi(baseClient),
 		APIClientInstance:           iam.NewApiClient(),
 	}, nil
 }

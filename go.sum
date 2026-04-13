@@ -461,8 +461,8 @@ github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17 
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17 v17.6.0-17997/go.mod h1:V87Qmvmx9PjbkDZOw5cUFsPKH9+axs90rr0OTg6GN9Q=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17 v17.6.0-18161 h1:Hk+A0Ki+O0H6DgTLG5eurIVuq3eavXWvqkjj2P/ZlB0=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17 v17.6.0-18161/go.mod h1:y2CGT8SAfp1CkHNdp6pfVGOGLU1zAEPy2P7wziXsV+o=
-github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17 v17.6.0-18140 h1:e9tsIxVieEbu2QiI6qkhTO9IRotEsgZVqitDN20E7zI=
-github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17 v17.6.0-18140/go.mod h1:1XlQBQm5QCQX1awsifrsqlbhx6jYtz2zj/VCNRZXiL0=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17 v17.6.0-19057 h1:D4PdV8v9wJ7FEegTFe3LiV6VxKwlXS+Pw2B/HIVmrfs=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17 v17.6.0-19057/go.mod h1:1XlQBQm5QCQX1awsifrsqlbhx6jYtz2zj/VCNRZXiL0=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17 v17.6.0-18125 h1:VppaW8cr5+wL2L8HyR5UKM2OudsWwhucWMkVsC19pPE=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17 v17.6.0-18125/go.mod h1:hyDNuIH34gKAVRPCee2opu611OdTR89UZ2n3R/6WHH4=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17 v17.6.0-18117 h1:dHAMDm6ZMPuM9yLFYrZGWd0JzplYjYTHEvxtll6j0Ng=
