@@ -217,28 +217,33 @@ func ResourceNutanixTemplatesV2Create(ctx context.Context, d *schema.ResourceDat
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
+	// Wait for the template to be created
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for template(%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for template (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching vm UUID : %v", err)
+		return diag.Errorf("error while fetching template create task (%s): %v", utils.StringValue(taskUUID), err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Template Create Task Details: %s", string(aJSON))
+
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeTemplates, "Template")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(utils.StringValue(uuid))
 	return ResourceNutanixTemplatesV2Read(ctx, d, meta)
 }
 
@@ -425,19 +430,16 @@ func ResourceNutanixTemplatesV2Update(ctx context.Context, d *schema.ResourceDat
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Template to be available
+	// Wait for the template to be updated
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
-	// log task details
-	aJSON, _ = json.MarshalIndent(TaskRef, "", "  ")
-	log.Printf("[DEBUG] Task details : %v", string(aJSON))
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for template(%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for template (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	return ResourceNutanixTemplatesV2Read(ctx, d, meta)
 }
@@ -452,15 +454,13 @@ func ResourceNutanixTemplatesV2Delete(ctx context.Context, d *schema.ResourceDat
 	TaskRef := resp.Data.GetValue().(vmmProsmConfig.TaskReference)
 	taskUUID := TaskRef.ExtId
 
-	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
+	// Wait for the template to be deleted
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -1840,193 +1840,7 @@ func schemaForNics() *schema.Schema {
 		Type:     schema.TypeList,
 		Optional: true,
 		Computed: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"tenant_id": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"links": schemaForLinks(),
-				"ext_id": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"backing_info": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"model": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Computed:     true,
-								ValidateFunc: validation.StringInSlice([]string{"VIRTIO", "E1000"}, false),
-							},
-							"mac_address": {
-								Type:     schema.TypeString,
-								Optional: true,
-								Computed: true,
-							},
-							"is_connected": {
-								Type:     schema.TypeBool,
-								Optional: true,
-								Default:  true,
-							},
-							"num_queues": {
-								Type:     schema.TypeInt,
-								Optional: true,
-								Default:  1,
-							},
-						},
-					},
-				},
-				"network_info": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"nic_type": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Computed:     true,
-								ValidateFunc: validation.StringInSlice([]string{"SPAN_DESTINATION_NIC", "NORMAL_NIC", "DIRECT_NIC", "NETWORK_FUNCTION_NIC"}, false),
-							},
-							"network_function_chain": {
-								Type:     schema.TypeList,
-								Optional: true,
-								Computed: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"ext_id": {
-											Type:     schema.TypeString,
-											Optional: true,
-											Computed: true,
-										},
-									},
-								},
-							},
-							"network_function_nic_type": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Computed:     true,
-								ValidateFunc: validation.StringInSlice([]string{"TAP", "EGRESS", "INGRESS"}, false),
-							},
-							"subnet": {
-								Type:     schema.TypeList,
-								Optional: true,
-								Computed: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"ext_id": {
-											Type:     schema.TypeString,
-											Optional: true,
-											Computed: true,
-										},
-									},
-								},
-							},
-							"vlan_mode": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Computed:     true,
-								ValidateFunc: validation.StringInSlice([]string{"TRUNK", "ACCESS"}, false),
-							},
-							"trunked_vlans": {
-								Type:     schema.TypeList,
-								Optional: true,
-								Computed: true,
-								Elem: &schema.Schema{
-									Type: schema.TypeInt,
-								},
-							},
-							"should_allow_unknown_macs": {
-								Type:     schema.TypeBool,
-								Optional: true,
-								Computed: true,
-							},
-							"ipv4_config": {
-								Type:     schema.TypeList,
-								Optional: true,
-								Computed: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"should_assign_ip": {
-											Type:     schema.TypeBool,
-											Optional: true,
-											Computed: true,
-										},
-										"ip_address": {
-											Type:     schema.TypeList,
-											Computed: true,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"value": {
-														Type:     schema.TypeString,
-														Required: true,
-													},
-													"prefix_length": {
-														Type:     schema.TypeInt,
-														Optional: true,
-														Default:  defaultValue,
-													},
-												},
-											},
-										},
-										"secondary_ip_address_list": {
-											Type:     schema.TypeList,
-											Computed: true,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"value": {
-														Type:     schema.TypeString,
-														Required: true,
-													},
-													"prefix_length": {
-														Type:     schema.TypeInt,
-														Optional: true,
-														Default:  defaultValue,
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-							// not visible in API reference
-							"ipv4_info": {
-								Type:     schema.TypeList,
-								Optional: true,
-								Computed: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"learned_ip_addresses": {
-											Type:     schema.TypeList,
-											Optional: true,
-											Computed: true,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"value": {
-														Type:     schema.TypeString,
-														Required: true,
-													},
-													"prefix_length": {
-														Type:     schema.TypeInt,
-														Optional: true,
-														Default:  defaultValue,
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
+		Elem:     nicsElemSchemaV2WithTenantLinks(),
 	}
 }
 

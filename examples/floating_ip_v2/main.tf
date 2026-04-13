@@ -168,26 +168,30 @@ resource "nutanix_virtual_machine_v2" "vm" {
     }
   }
   nics {
-    backing_info {
-      is_connected = true
+    nic_backing_info {
+      virtual_ethernet_nic {
+        is_connected = true
+      }
     }
-    network_info {
-      nic_type = "NORMAL_NIC"
-      ipv4_config {
-        ip_address {
-          value = "192.168.1.15"
+    nic_network_info {
+      virtual_ethernet_nic_network_info {
+        nic_type = "NORMAL_NIC"
+        ipv4_config {
+          ip_address {
+            value = "192.168.1.15"
+          }
+          should_assign_ip = true
         }
-        should_assign_ip = true
+        subnet {
+          ext_id = nutanix_subnet_v2.overlay-subnet.id
+        }
+        vlan_mode = "ACCESS"
       }
-      subnet {
-        ext_id = nutanix_subnet_v2.overlay-subnet.id
-      }
-      vlan_mode = "ACCESS"
     }
   }
   power_state = "OFF"
   lifecycle {
-    ignore_changes = [nics.0.network_info.0.ipv4_config.0.should_assign_ip]
+    ignore_changes = [nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.ipv4_config.0.should_assign_ip]
   }
   depends_on = [nutanix_vpc_v2.vm-vpc]
 }

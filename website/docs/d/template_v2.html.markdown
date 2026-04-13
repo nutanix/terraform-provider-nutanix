@@ -237,8 +237,10 @@ The links attribute supports the following:
 
 ### nics
 * `ext_id`: A globally unique identifier of an instance that is suitable for external consumption
-* `backing_info`: Defines a NIC emulated by the hypervisor
-* `network_info`: Network information for a NIC.
+* `nic_backing_info`: New NIC backing info (v2.4.1+). One of `virtual_ethernet_nic`, `sriov_nic`, `dp_offload_nic`.
+* `nic_network_info`: New NIC network info (v2.4.1+). One of `virtual_ethernet_nic_network_info`, `sriov_nic_network_info`, `dp_offload_nic_network_info`.
+* `backing_info`: (Deprecated) Use `nic_backing_info.virtual_ethernet_nic` instead.
+* `network_info`: (Deprecated) Use `nic_network_info.virtual_ethernet_nic_network_info` instead.
 
 ### nics.backing_info
 * `model`: Options for the NIC emulation.

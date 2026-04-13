@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
-	import3 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/response"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -553,7 +552,7 @@ func DatasourceNutanixClusterEntityV2Read(ctx context.Context, d *schema.Resourc
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
+	if err := d.Set("links", common.FlattenLinks(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("name", getResp.Name); err != nil {
@@ -590,27 +589,7 @@ func DatasourceNutanixClusterEntityV2Read(ctx context.Context, d *schema.Resourc
 		return diag.FromErr(err)
 	}
 
-	d.SetId(*getResp.ExtId)
-	return nil
-}
-
-func flattenLinks(pr []import3.ApiLink) []map[string]interface{} {
-	if len(pr) > 0 {
-		linkList := make([]map[string]interface{}, len(pr))
-
-		for k, v := range pr {
-			links := map[string]interface{}{}
-			if v.Href != nil {
-				links["href"] = v.Href
-			}
-			if v.Rel != nil {
-				links["rel"] = v.Rel
-			}
-
-			linkList[k] = links
-		}
-		return linkList
-	}
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return nil
 }
 

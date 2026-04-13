@@ -21,6 +21,19 @@ provider "nutanix" {
 #pull all clusters data
 data "nutanix_clusters_v2" "clusters" {}
 
+# create categories
+resource "nutanix_category_v2" "cat-1" {
+  key         = "environment"
+  value       = "production"
+  description = "Production environment category"
+}
+
+resource "nutanix_category_v2" "cat-2" {
+  key         = "department"
+  value       = "engineering"
+  description = "Engineering department category"
+}
+
 #create local variable pointing to desired cluster
 locals {
   pc_ext_id = [
@@ -50,6 +63,14 @@ resource "nutanix_cluster_v2" "example" {
       domain_awareness_level = "DISK"
     }
   }
+  ## after creating and registering the cluster with prism central,
+  ## to associate categories to the cluster, uncomment the following block
+  ## and to disassociate categories from the cluster, remove it from the categories list.
+  # categories = [
+  #   nutanix_category_v2.cat-1.id,
+  #   nutanix_category_v2.cat-2.id
+  # ]
+  
   # after create a cluster you need to reset the pe ui password
   provisioner "local-exec" {
     command = "sshpass -p '${var.pe_password}' ssh ${var.pe_username}@${var.node_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${var.username} password=${var.password}'"

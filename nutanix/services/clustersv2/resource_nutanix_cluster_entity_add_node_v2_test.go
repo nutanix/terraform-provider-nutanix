@@ -157,6 +157,34 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
     }
   }
 
+  network {
+		external_address {
+			ipv4 {
+				value = local.clusters.network.virtual_ip
+			}
+		}
+		ntp_server_ip_list {
+			fqdn {
+				value = local.clusters.network.ntp_servers[0]
+			}
+		}
+		ntp_server_ip_list {
+			fqdn {
+				value = local.clusters.network.ntp_servers[1]
+			}
+		}
+		ntp_server_ip_list {
+			fqdn {
+				value = local.clusters.network.ntp_servers[2]
+			}
+		}
+		ntp_server_ip_list {
+			fqdn {
+				value = local.clusters.network.ntp_servers[3]
+			}
+		}
+	}
+
   provisioner "local-exec" {
     command = "ssh-keygen -f ~/.ssh/known_hosts -R ${local.clusters.nodes[1].cvm_ip};   sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[1].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[1].username} password=${local.clusters.nodes[1].password}'"
 
@@ -258,7 +286,8 @@ resource "nutanix_cluster_add_node_v2" "test" {
   should_skip_pre_expand_checks = false
 
   node_params {
-    should_skip_host_networking = false
+    ## remove this because the expand cluster satrt failing from IRIS
+    #should_skip_host_networking = false
     hypervisor_isos {
       type = nutanix_clusters_discover_unconfigured_nodes_v2.cluster-node.unconfigured_nodes[0].hypervisor_type
     }

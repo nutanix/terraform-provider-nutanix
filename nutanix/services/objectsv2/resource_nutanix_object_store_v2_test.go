@@ -14,6 +14,7 @@ import (
 )
 
 const resourceNameObjectStore = "nutanix_object_store_v2.test"
+const resourceNameObjectStore2 = "nutanix_object_store_v2.test2"
 const resourceNameObjectStoreCertificate = "nutanix_object_store_certificate_v2.test"
 
 const datasourceNameObjectStoreFetch = "data.nutanix_object_store_v2.fetch"
@@ -33,13 +34,15 @@ const resourceNameObjectLiteSourceOva = "nutanix_ova_v2.object-liteSource-ova"
 func TestAccV2NutanixObjectStoreResource_OneWorkerNode(t *testing.T) {
 	r := acctest.RandIntRange(1, 99)
 	objectStoreName := fmt.Sprintf("tf-test-os-%d", r)
+	r2 := acctest.RandIntRange(100, 199)
+	objectStoreName2 := fmt.Sprintf("tf-test-os-%d", r2)
 
 	objectLiteSourceImgName := fmt.Sprintf("tf-object-ls-img-%d", r)
 	vmName := fmt.Sprintf("tf-object-vm-%d", r)
 	vmOvaName := fmt.Sprintf("tf-vm-ova-%d", r)
 	objectOvaName := fmt.Sprintf("tf-object-liteStore-ova-%d", r)
 
-	config := testAccObjectStoreWithOneWorkerNodeConfig(objectStoreName)
+	config := testAccObjectStoreWithOneWorkerNodeConfig(objectStoreName, objectStoreName2)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
@@ -57,10 +60,24 @@ func TestAccV2NutanixObjectStoreResource_OneWorkerNode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "public_network_ips.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "public_network_ips.0.ipv4.0.value", testVars.ObjectStore.PublicNetworkIPs[0]),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_dns_ip.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_dns_ip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkDNSIP),
+					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_dns_ip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkDNSIP[0]),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_vip.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_vip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkVip),
+					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_vip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkVip[0]),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "state", "OBJECT_STORE_AVAILABLE"),
+					// secand object store check
+					resource.TestCheckResourceAttr(resourceNameObjectStore2, "name", objectStoreName2),
+					resource.TestCheckResourceAttr(resourceNameObjectStore2, "description", "terraform test object store second object store"),
+					resource.TestCheckResourceAttrSet(resourceNameObjectStore2, "deployment_version"),
+					resource.TestCheckResourceAttr(resourceNameObjectStore2, "domain", testVars.ObjectStore.Domain),
+					resource.TestCheckResourceAttr(resourceNameObjectStore2, "num_worker_nodes", "1"),
+					resource.TestCheckResourceAttr(resourceNameObjectStore2, "total_capacity_gib", fmt.Sprintf("%d", 20*int(math.Pow(1024, 3)))),
+					resource.TestCheckResourceAttr(resourceNameObjectStore2, "public_network_ips.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameObjectStore2, "public_network_ips.0.ipv4.0.value", testVars.ObjectStore.PublicNetworkIPs[1]),
+					resource.TestCheckResourceAttr(resourceNameObjectStore2, "storage_network_dns_ip.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameObjectStore2, "storage_network_dns_ip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkDNSIP[1]),
+					resource.TestCheckResourceAttr(resourceNameObjectStore2, "storage_network_vip.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameObjectStore2, "storage_network_vip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkVip[1]),
+					resource.TestCheckResourceAttr(resourceNameObjectStore2, "state", "OBJECT_STORE_AVAILABLE"),
 				),
 			},
 			// list object store with filter and limit
@@ -199,9 +216,9 @@ func TestAccV2NutanixObjectStoreResource_DraftObjectStore(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "public_network_ips.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "public_network_ips.0.ipv4.0.value", testVars.ObjectStore.PublicNetworkIPs[0]),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_dns_ip.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_dns_ip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkDNSIP),
+					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_dns_ip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkDNSIP[0]),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_vip.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_vip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkVip),
+					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_vip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkVip[0]),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "state", "UNDEPLOYED_OBJECT_STORE"),
 				),
 			},
@@ -241,9 +258,9 @@ func TestAccV2NutanixObjectStoreResource_UpdateObjectStore(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "public_network_ips.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "public_network_ips.0.ipv4.0.value", testVars.ObjectStore.PublicNetworkIPs[0]),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_dns_ip.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_dns_ip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkDNSIP),
+					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_dns_ip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkDNSIP[0]),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_vip.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_vip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkVip),
+					resource.TestCheckResourceAttr(resourceNameObjectStore, "storage_network_vip.0.ipv4.0.value", testVars.ObjectStore.StorageNetworkVip[0]),
 					resource.TestCheckResourceAttr(resourceNameObjectStore, "state", "OBJECT_STORE_AVAILABLE"),
 
 					// delete object store bucket
@@ -253,7 +270,7 @@ func TestAccV2NutanixObjectStoreResource_UpdateObjectStore(t *testing.T) {
 		},
 	})
 }
-func testAccObjectStoreWithOneWorkerNodeConfig(objectStoreName string) string {
+func testAccObjectStoreWithOneWorkerNodeConfig(objectStoreName, objectStoreName2 string) string {
 	return fmt.Sprintf(`
 
 locals {
@@ -293,17 +310,190 @@ resource "nutanix_object_store_v2" "test" {
   storage_network_reference = local.subnetExtId
   storage_network_dns_ip {
     ipv4 {
-      value = local.objectStore.storage_network_dns_ip
+      value = local.objectStore.storage_network_dns_ip[0]
     }
   }
   storage_network_vip {
     ipv4 {
-      value = local.objectStore.storage_network_vip
+      value = local.objectStore.storage_network_vip[0]
     }
   }
 }
 
-`, filepath, objectStoreName)
+// Ensure bucket is deleted before the object store is destroyed, even if a test step fails.
+// Terraform destroys resources in reverse dependency order, so this will run *before* the object store delete.
+resource "terraform_data" "cleanup_bucket_test" {
+  input = {
+    object_store_id = nutanix_object_store_v2.test.id
+    bucket_name     = local.objectStore.bucket_name
+  }
+  provisioner "local-exec" {
+    when = destroy
+    command = <<EOT
+set -eu
+BASE="https://$NUTANIX_ENDPOINT:$NUTANIX_PORT/oss/api/nutanix/v3/objectstore_proxy/${self.input.object_store_id}"
+AUTH="$NUTANIX_USERNAME:$NUTANIX_PASSWORD"
+
+list_buckets() {
+  curl -sSk -u "$AUTH" "$BASE/buckets" || true
+}
+
+delete_bucket() {
+  b="$1"
+  url="$BASE/buckets/$b?force_empty_bucket=true"
+  code="$(curl -sSk -u "$AUTH" -X DELETE "$url" -o /tmp/os_bucket_delete_test.out -w "%%%%{http_code}" || echo "000")"
+  case "$code" in
+    200|202|204|404|503) return 0 ;;
+    500) # observed as "Bucket lookup failed"; treat as non-fatal so destroy can proceed
+      return 0
+      ;;
+    *) echo "bucket delete failed (test) http_code=$code url=$url"; cat /tmp/os_bucket_delete_test.out || true; return 1 ;;
+  esac
+}
+
+# 1) Prefer listing actual buckets and deleting all of them
+payload="$(list_buckets)"
+names="$(python3 - <<'PY' 2>/dev/null || true
+import json,sys
+try:
+  data=json.loads(sys.stdin.read() or "{}")
+except Exception:
+  sys.exit(0)
+items = data.get("entities") or data.get("buckets") or []
+out=[]
+for it in items:
+  if isinstance(it,str):
+    out.append(it)
+  elif isinstance(it,dict):
+    n=it.get("name")
+    if isinstance(n,str):
+      out.append(n)
+print("\n".join([n for n in out if n]))
+PY
+)"
+
+if [ -n "$names" ]; then
+  for b in $names; do
+    # retry a few times in case OSS proxy is transient
+    i=0
+    while [ $i -lt 5 ]; do
+      if delete_bucket "$b"; then break; fi
+      i=$((i+1))
+      sleep 5
+    done
+  done
+else
+  # 2) Fallback: try configured bucket name
+  delete_bucket "${self.input.bucket_name}" || true
+fi
+
+exit 0
+EOT
+  }
+  depends_on = [nutanix_object_store_v2.test]
+}
+
+# second object store to test
+resource "nutanix_object_store_v2" "test2" {
+  timeouts {
+    create = "120m"
+  }
+  name                     = "%[3]s"
+  description              = "terraform test object store second object store"
+  domain                   = local.objectStore.domain
+  num_worker_nodes         = 1
+  cluster_ext_id           = local.clusterExtId
+  total_capacity_gib       = 20 * pow(1024, 3)
+
+  public_network_reference = local.subnetExtId
+  public_network_ips {
+    ipv4 {
+      value = local.objectStore.public_network_ips[1]
+    }
+  }
+
+  storage_network_reference = local.subnetExtId
+  storage_network_dns_ip {
+    ipv4 {
+      value = local.objectStore.storage_network_dns_ip[1]
+    }
+  }
+  storage_network_vip {
+    ipv4 {
+      value = local.objectStore.storage_network_vip[1]
+    }
+  }
+  # wait for first object store to be created
+  depends_on = [nutanix_object_store_v2.test]
+}
+
+resource "terraform_data" "cleanup_bucket_test2" {
+  input = {
+    object_store_id = nutanix_object_store_v2.test2.id
+    bucket_name     = local.objectStore.bucket_name
+  }
+  provisioner "local-exec" {
+    when = destroy
+    command = <<EOT
+set -eu
+BASE="https://$NUTANIX_ENDPOINT:$NUTANIX_PORT/oss/api/nutanix/v3/objectstore_proxy/${self.input.object_store_id}"
+AUTH="$NUTANIX_USERNAME:$NUTANIX_PASSWORD"
+
+list_buckets() {
+  curl -sSk -u "$AUTH" "$BASE/buckets" || true
+}
+
+delete_bucket() {
+  b="$1"
+  url="$BASE/buckets/$b?force_empty_bucket=true"
+  code="$(curl -sSk -u "$AUTH" -X DELETE "$url" -o /tmp/os_bucket_delete_test2.out -w "%%%%{http_code}" || echo "000")"
+  case "$code" in
+    200|202|204|404|503) return 0 ;;
+    500) return 0 ;;
+    *) echo "bucket delete failed (test2) http_code=$code url=$url"; cat /tmp/os_bucket_delete_test2.out || true; return 1 ;;
+  esac
+}
+
+payload="$(list_buckets)"
+names="$(python3 - <<'PY' 2>/dev/null || true
+import json,sys
+try:
+  data=json.loads(sys.stdin.read() or "{}")
+except Exception:
+  sys.exit(0)
+items = data.get("entities") or data.get("buckets") or []
+out=[]
+for it in items:
+  if isinstance(it,str):
+    out.append(it)
+  elif isinstance(it,dict):
+    n=it.get("name")
+    if isinstance(n,str):
+      out.append(n)
+print("\n".join([n for n in out if n]))
+PY
+)"
+
+if [ -n "$names" ]; then
+  for b in $names; do
+    i=0
+    while [ $i -lt 5 ]; do
+      if delete_bucket "$b"; then break; fi
+      i=$((i+1))
+      sleep 5
+    done
+  done
+else
+  delete_bucket "${self.input.bucket_name}" || true
+fi
+
+exit 0
+EOT
+  }
+  depends_on = [nutanix_object_store_v2.test2]
+}
+
+`, filepath, objectStoreName, objectStoreName2)
 }
 
 func testAccObjectStoreUndeployedObjectStoreConfig(objectStoreName string) string {
@@ -347,14 +537,81 @@ resource "nutanix_object_store_v2" "test" {
   storage_network_reference = local.subnetExtId
   storage_network_dns_ip {
     ipv4 {
-      value = local.objectStore.storage_network_dns_ip
+      value = local.objectStore.storage_network_dns_ip[0]
     }
   }
   storage_network_vip {
     ipv4 {
-      value = local.objectStore.storage_network_vip
+      value = local.objectStore.storage_network_vip[0]
     }
   }
+}
+
+// Ensure bucket is deleted before the object store is destroyed, even if a test step fails.
+resource "terraform_data" "cleanup_bucket_test" {
+  input = {
+    object_store_id = nutanix_object_store_v2.test.id
+    bucket_name     = local.objectStore.bucket_name
+  }
+  provisioner "local-exec" {
+    when = destroy
+    command = <<EOT
+set -eu
+BASE="https://$NUTANIX_ENDPOINT:$NUTANIX_PORT/oss/api/nutanix/v3/objectstore_proxy/${self.input.object_store_id}"
+AUTH="$NUTANIX_USERNAME:$NUTANIX_PASSWORD"
+
+list_buckets() {
+  curl -sSk -u "$AUTH" "$BASE/buckets" || true
+}
+
+delete_bucket() {
+  b="$1"
+  url="$BASE/buckets/$b?force_empty_bucket=true"
+  code="$(curl -sSk -u "$AUTH" -X DELETE "$url" -o /tmp/os_bucket_delete_test.out -w "%%%%{http_code}" || echo "000")"
+  case "$code" in
+    200|202|204|404|503) return 0 ;;
+    500) return 0 ;;
+    *) echo "bucket delete failed (test) http_code=$code url=$url"; cat /tmp/os_bucket_delete_test.out || true; return 1 ;;
+  esac
+}
+
+payload="$(list_buckets)"
+names="$(python3 - <<'PY' 2>/dev/null || true
+import json,sys
+try:
+  data=json.loads(sys.stdin.read() or "{}")
+except Exception:
+  sys.exit(0)
+items = data.get("entities") or data.get("buckets") or []
+out=[]
+for it in items:
+  if isinstance(it,str):
+    out.append(it)
+  elif isinstance(it,dict):
+    n=it.get("name")
+    if isinstance(n,str):
+      out.append(n)
+print("\n".join([n for n in out if n]))
+PY
+)"
+
+if [ -n "$names" ]; then
+  for b in $names; do
+    i=0
+    while [ $i -lt 5 ]; do
+      if delete_bucket "$b"; then break; fi
+      i=$((i+1))
+      sleep 5
+    done
+  done
+else
+  delete_bucket "${self.input.bucket_name}" || true
+fi
+
+exit 0
+EOT
+  }
+  depends_on = [nutanix_object_store_v2.test]
 }
 
 `, filepath, objectStoreName)
@@ -429,22 +686,6 @@ locals {
 
 }
 
-locals {
-  pre_update_hook_command = <<EOT
-  sshpass -p '${local.pcSSHPassword}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${local.username}@${local.ip} \
-  "docker exec aoss_service_manager sh -c 'cd /home/nutanix/config/poseidon_master && \
-  cp buckets_tools_template.yaml buckets_tools_template_backup.yml && \
-  sed -i -E \"s|(image: .+/[^:]+:)[^ ]+|\\\\1invalid-version|\" buckets_tools_template.yaml'"
-  EOT
-}
-
-locals {
-  restore_command = <<EOT
-  sshpass -p '${local.pcSSHPassword}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${local.username}@${local.ip} \
-  "docker exec aoss_service_manager sh -c 'cd /home/nutanix/config/poseidon_master && mv buckets_tools_template_backup.yml buckets_tools_template.yaml'"
-  EOT
-}
-
 data "nutanix_clusters_v2" "clusters" {}
 
 data "nutanix_subnets_v2" "subnets" {
@@ -454,9 +695,29 @@ data "nutanix_subnets_v2" "subnets" {
 # this resource to change image tag on pc to incorrect one
 # to make sure object store deployment fails
 resource "terraform_data" "pre_update_hook" {
+  input = {
+    pc_ssh_password = local.pcSSHPassword
+    pc_ssh_username = local.username
+    pc_ip           = local.ip
+  }
   provisioner "local-exec" {
     when       = create
-    command    = local.pre_update_hook_command
+    command    = <<EOT
+sshpass -p '${self.input.pc_ssh_password}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${self.input.pc_ssh_username}@${self.input.pc_ip} \
+"docker exec aoss_service_manager sh -c 'cd /home/nutanix/config/poseidon_master && \
+cp buckets_tools_template.yaml buckets_tools_template_backup.yml && \
+sed -i -E \"s|(image: .+/[^:]+:)[^ ]+|\\\\1invalid-version|\" buckets_tools_template.yaml'"
+EOT
+    on_failure = continue
+  }
+  # If the test fails after we patched the template (e.g. OSS deploy failure or assertion failure),
+  # ensure we restore the correct template on test cleanup (terraform destroy).
+  provisioner "local-exec" {
+    when       = destroy
+    command    = <<EOT
+sshpass -p '${self.input.pc_ssh_password}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${self.input.pc_ssh_username}@${self.input.pc_ip} \
+"docker exec aoss_service_manager sh -c 'cd /home/nutanix/config/poseidon_master && mv buckets_tools_template_backup.yml buckets_tools_template.yaml'"
+EOT
     on_failure = continue
   }
 }
@@ -484,22 +745,48 @@ resource "nutanix_object_store_v2" "test" {
   storage_network_reference = local.subnetExtId
   storage_network_dns_ip {
     ipv4 {
-      value = local.objectStore.storage_network_dns_ip
+      value = local.objectStore.storage_network_dns_ip[0]
     }
   }
   storage_network_vip {
     ipv4 {
-      value = local.objectStore.storage_network_vip
+      value = local.objectStore.storage_network_vip[0]
     }
   }
   depends_on = [terraform_data.pre_update_hook]
+}
+
+// Ensure bucket is deleted before the object store is destroyed, even if a test step fails.
+resource "terraform_data" "cleanup_bucket_test" {
+  input = {
+    object_store_id = nutanix_object_store_v2.test.id
+    bucket_name     = local.objectStore.bucket_name
+  }
+  provisioner "local-exec" {
+    when = destroy
+    command = <<EOT
+set -eu
+URL="https://$NUTANIX_ENDPOINT:$NUTANIX_PORT/oss/api/nutanix/v3/objectstore_proxy/${self.input.object_store_id}/buckets/${self.input.bucket_name}?force_empty_bucket=true"
+CODE="$(curl -sSk -u "$NUTANIX_USERNAME:$NUTANIX_PASSWORD" -X DELETE "$URL" -o /tmp/os_bucket_delete_test.out -w "%%%%{http_code}" || echo "000")"
+if [ "$CODE" != "200" ] && [ "$CODE" != "202" ] && [ "$CODE" != "204" ] && [ "$CODE" != "404" ] && [ "$CODE" != "500" ] && [ "$CODE" != "503" ]; then
+  echo "bucket delete failed (test) http_code=$CODE url=$URL"
+  cat /tmp/os_bucket_delete_test.out || true
+  exit 1
+fi
+exit 0
+EOT
+  }
+  depends_on = [nutanix_object_store_v2.test]
 }
 
 # this resource to change image tag on pc to correct one
 # to make sure object store deployment succeeds
 resource "terraform_data" "post_update_hook" {
   provisioner "local-exec" {
-    command    = local.restore_command
+    command    = <<EOT
+sshpass -p '${local.pcSSHPassword}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${local.username}@${local.ip} \
+"docker exec aoss_service_manager sh -c 'cd /home/nutanix/config/poseidon_master && mv buckets_tools_template_backup.yml buckets_tools_template.yaml'"
+EOT
     on_failure = continue
 	when	   = create
   }
@@ -654,6 +941,10 @@ resource "nutanix_ova_v2" "object-liteSource-ova" {
   depends_on               = [terraform_data.delay]
 }
 
+# Download Ova from object store
+resource "nutanix_ova_download_v2" "test-2" {
+  ova_ext_id = nutanix_ova_v2.object-liteSource-ova.id
+}
 
 `, nutanixUsername, nutanixPassword, nutanixEndpoint, nutanixPort, objectLiteSourceImgName, vmName, vmOvaName, objectOvaName)
 }

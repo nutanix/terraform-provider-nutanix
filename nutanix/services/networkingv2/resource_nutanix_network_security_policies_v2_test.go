@@ -107,8 +107,9 @@ func TestAccV2NutanixNetworkSecurityResource_InvalidExtIDReference(t *testing.T)
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testNetworkSecurityInvalidConfig(name, desc),
-				ExpectError: regexp.MustCompile(`(?s)Failed validation.*firstIsolationGroup.*regex.*invalid-ext-id`),
+				Config: testNetworkSecurityInvalidConfig(name, desc),
+				// Microseg API validates ext_id format server-side and returns an ECMA 262 UUID-regex validation error.
+				ExpectError: regexp.MustCompile(`(?s)(SchemaValidationError|ECMA 262 regex|regular expression|regex).*invalid-ext-id`),
 			},
 		},
 	})

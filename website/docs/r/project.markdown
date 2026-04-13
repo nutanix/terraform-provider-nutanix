@@ -10,6 +10,8 @@ description: |-
 
 Provides a Nutanix Project resource to Create a Project.
 
+> **Note:** When removing the acps from the project, the ACP blocks are index-based. Removing an ACP from the middle of the list causes Terraform to shift subsequent ACPs. While the backend update succeeds without impact, the plan may show unexpected updates due to index reordering.
+
 ## Example Usage
 
 ```hcl
@@ -40,13 +42,6 @@ resource "nutanix_project" "project_test" {
   categories {
     name  = "Environment"
     value = "Staging"
-  }
-
-  resource_domain {
-    resources {
-      limit         = 4
-      resource_type = "STORAGE"
-    }
   }
 
   default_subnet_reference {
@@ -162,11 +157,8 @@ The following arguments are supported:
 * `cluster_uuid` - (Optional) The UUID of cluster. (Required when using project_internal flag).
 * `enable_collab` - (Optional) flag to allow collaboration of projects. (Use with project_internal flag)
 
-### Resource Domain
-* `resource_domain` - (Optional) The status for a resource domain (limits and values)
-* `resource_domain.resources` - (Required) Array of the utilization/limit for resource types
-* `resource_domain.resources.#.limit` - (Required) The resource consumption limit.
-* `resource_domain.resources.#.resource_type` - (Required) The type of resource (for example storage, CPUs)
+### Resource Domain (Deprecated)
+* `resource_domain` - (Deprecated) Not supported starting from provider version `2.4.0` and ignored by the provider. Remove it from your configuration/scripts.
 
 ### Account Reference List
 * `account_reference_list` - (Optional/Computed) List of accounts associated with the project.
@@ -291,10 +283,6 @@ The following arguments are supported:
 
 ## Attributes Reference
 The following attributes are exported:
-
-### Resource Domain
-* `resource_domain.resources.#.units` - The units of the resource type
-* `resource_domain.resources.#.value` - The amount of resource consumed
 
 ### ACP
 ACPs will be exported if use_project_internal flag is set.

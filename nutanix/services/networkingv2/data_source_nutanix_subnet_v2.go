@@ -825,25 +825,30 @@ func DatasourceMetadataSchemaV2() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"owner_reference_id": {
 			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		},
 		"owner_user_name": {
 			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		},
 		"project_reference_id": {
 			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		},
 		"project_name": {
 			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		},
 		"category_ids": {
 			Type:     schema.TypeList,
 			Computed: true,
+			Optional: true,
 			Elem: &schema.Schema{
-				Type: schema.TypeList,
+				Type: schema.TypeString,
 			},
 		},
 	}
@@ -1135,10 +1140,10 @@ func flattenMetadata(pr *config.Metadata) []map[string]interface{} {
 
 		m := make(map[string]interface{})
 
-		m["owner_reference_id"] = pr.OwnerReferenceId
-		m["owner_user_name"] = pr.OwnerUserName
-		m["project_reference_id"] = pr.ProjectReferenceId
-		m["project_name"] = pr.ProjectName
+		m["owner_reference_id"] = utils.StringValue(pr.OwnerReferenceId)
+		m["owner_user_name"] = utils.StringValue(pr.OwnerUserName)
+		m["project_reference_id"] = utils.StringValue(pr.ProjectReferenceId)
+		m["project_name"] = utils.StringValue(pr.ProjectName)
 		m["category_ids"] = pr.CategoryIds
 
 		meta = append(meta, m)
@@ -1281,20 +1286,37 @@ func flattenNodeIPAddress(pr *config.IPAddress) []map[string]interface{} {
 }
 
 func flattenExternallyRoutablePrefixes(pr []import1.IPSubnet) []map[string]interface{} {
-	if len(pr) > 0 {
-		exts := make([]map[string]interface{}, len(pr))
-
-		for k, v := range pr {
-			ext := make(map[string]interface{})
-
-			ext["ipv4"] = flattenIPv4Subnet(v.Ipv4)
-			ext["ipv6"] = flattenIPv6Subnet(v.Ipv6)
-
-			exts[k] = ext
-		}
-		return exts
+	if len(pr) == 0 {
+		return nil
 	}
-	return nil
+
+	// Consolidate all IPv4 and IPv6 subnets into a single block
+	// This matches the user's config structure where multiple ipv4/ipv6 blocks
+	// can be specified within a single externally_routable_prefixes block
+	var ipv4List []interface{}
+	var ipv6List []interface{}
+
+	for _, v := range pr {
+		if v.Ipv4 != nil {
+			ipv4Entry := make(map[string]interface{})
+			ipv4Entry["ip"] = flattenIPv4(v.Ipv4.Ip)
+			ipv4Entry["prefix_length"] = v.Ipv4.PrefixLength
+			ipv4List = append(ipv4List, ipv4Entry)
+		}
+		if v.Ipv6 != nil {
+			ipv6Entry := make(map[string]interface{})
+			ipv6Entry["ip"] = flattenIPv6(v.Ipv6.Ip)
+			ipv6Entry["prefix_length"] = v.Ipv6.PrefixLength
+			ipv6List = append(ipv6List, ipv6Entry)
+		}
+	}
+
+	// Return a single block containing all IPv4 and IPv6 entries
+	ext := make(map[string]interface{})
+	ext["ipv4"] = ipv4List
+	ext["ipv6"] = ipv6List
+
+	return []map[string]interface{}{ext}
 }
 
 func flattenIPUsage(pr *import1.IPUsage) []map[string]interface{} {

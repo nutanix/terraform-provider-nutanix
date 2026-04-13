@@ -381,8 +381,49 @@ The `cd_roms` attribute supports the following:
 ### NICs
 The `nics` attribute supports the following:
 
-* `backing_info`: (Optional) Defines a NIC emulated by the hypervisor
-* `network_info`: (Optional) Network information for a NIC.
+* `nic_backing_info`: (Optional) New NIC backing info (v2.4.1+). One of `virtual_ethernet_nic`, `sriov_nic`, `dp_offload_nic`.
+* `nic_network_info`: (Optional) New NIC network info (v2.4.1+). One of `virtual_ethernet_nic_network_info`, `sriov_nic_network_info`, `dp_offload_nic_network_info`.
+* `backing_info`: (Optional, Deprecated) Use `nic_backing_info.virtual_ethernet_nic` instead.
+* `network_info`: (Optional, Deprecated) Use `nic_network_info.virtual_ethernet_nic_network_info` instead.
+
+### nics.nic_backing_info.virtual_ethernet_nic
+* `model`: (Optional) Options for the NIC emulation. Valid values "VIRTIO", "E1000".
+* `mac_address`: (Optional) MAC address of the emulated NIC.
+* `is_connected`: (Optional) Indicates whether the NIC is connected or not. Default is True.
+* `num_queues`: (Optional) The number of Tx/Rx queue pairs for this NIC. Default is 1.
+
+### nics.nic_backing_info.sriov_nic
+* `sriov_profile_reference`: (Required) SR-IOV profile reference.
+* `host_pcie_device_reference`: (Optional) Host PCIe device reference.
+* `is_connected`: (Optional) Indicates whether the NIC is connected or not. Default is True.
+* `mac_address`: (Optional) MAC address of the SR-IOV NIC.
+
+### nics.nic_backing_info.dp_offload_nic
+* `dp_offload_profile_reference`: (Required) DP offload profile reference.
+* `host_pcie_device_reference`: (Optional) Host PCIe device reference.
+* `is_connected`: (Optional) Indicates whether the NIC is connected or not. Default is True.
+* `mac_address`: (Optional) MAC address of the DP offload NIC.
+
+### nics.nic_network_info.virtual_ethernet_nic_network_info
+* `nic_type`: (Optional) NIC type. Valid values "SPAN_DESTINATION_NIC", "NORMAL_NIC", "DIRECT_NIC", "NETWORK_FUNCTION_NIC".
+* `network_function_chain`: (Optional) The network function chain associates with the NIC. Only valid if nic_type is NORMAL_NIC.
+* `network_function_nic_type`: (Optional) The type of this Network function NIC. Defaults to INGRESS.
+* `subnet`: (Optional) Network identifier for this adapter. Only valid if nic_type is NORMAL_NIC or DIRECT_NIC.
+* `subnet.ext_id`: (Optional) The globally unique identifier of a subnet of type UUID.
+* `vlan_mode`: (Optional) All the virtual NICs are created in ACCESS mode by default. TRUNKED allows multiple VLANs.
+* `trunked_vlans`: (Optional) List of networks to trunk if VLAN mode is TRUNKED.
+* `should_allow_unknown_macs`: (Optional) Indicates whether an unknown unicast traffic is forwarded to this NIC or not.
+* `ipv4_config`: (Optional) The IP address configurations.
+
+### nics.nic_network_info.sriov_nic_network_info
+* `vlan_id`: (Optional) VLAN ID for the SR-IOV NIC.
+
+### nics.nic_network_info.dp_offload_nic_network_info
+* `subnet`: (Optional) Network identifier for this adapter.
+* `vlan_mode`: (Optional) VLAN mode for DP offload NIC.
+* `trunked_vlans`: (Optional) List of networks to trunk if VLAN mode is TRUNKED.
+* `should_allow_unknown_macs`: (Optional) Indicates whether an unknown unicast traffic is forwarded to this NIC or not.
+* `ipv4_config`: (Optional) The IP address configurations.
 
 ### nics.backing_info
 * `model`: (Optional) Options for the NIC emulation. Valid values "VIRTIO" , "E1000".

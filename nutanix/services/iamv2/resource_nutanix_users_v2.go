@@ -294,7 +294,7 @@ func resourceNutanixUserV2Create(ctx context.Context, d *schema.ResourceData, me
 
 	getResp := resp.Data.GetValue().(import1.User)
 
-	d.SetId(*getResp.ExtId)
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return resourceNutanixUserV2Read(ctx, d, meta)
 }
 
@@ -496,7 +496,7 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 	}
 	updateResp := updateresp.Data.GetValue().(import1.User)
 
-	if d.Id() != *updateResp.ExtId {
+	if d.Id() != utils.StringValue(updateResp.ExtId) {
 		return diag.Errorf("ext_id is different in update user")
 	}
 	return resourceNutanixUserV2Read(ctx, d, meta)
