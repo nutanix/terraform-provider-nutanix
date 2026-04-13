@@ -5,7 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/policies"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/policies"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/vmhostaffinitypolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -87,13 +88,17 @@ func DatasourceNutanixVMHostAffinityPolicyV2Read(ctx context.Context, d *schema.
 
 	extID := d.Get("ext_id")
 
-	resp, err := conn.VMHostAffinityPolicyAPIInstance.GetVmHostAffinityPolicyById(utils.StringPtr(extID.(string)))
+	getRequest := import2.GetVmHostAffinityPolicyByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+
+	resp, err := conn.VMHostAffinityPolicyAPIInstance.GetVmHostAffinityPolicyById(ctx, &getRequest)
 
 	if err != nil {
 		return diag.Errorf("error while fetching policy : %v", err)
 	}
 
-	getResp := resp.Data.GetValue().(policies.VmHostAffinityPolicy)
+	getResp := resp.Data.GetValue().(import1.VmHostAffinityPolicy)
 
 	flattenedPolicy := flattenVMHostAffinityPolicyEntity(getResp)
 
@@ -108,7 +113,7 @@ func DatasourceNutanixVMHostAffinityPolicyV2Read(ctx context.Context, d *schema.
 	return nil
 }
 
-func flattenVMHostAffinityPolicyEntity(policy policies.VmHostAffinityPolicy) map[string]interface{} {
+func flattenVMHostAffinityPolicyEntity(policy import1.VmHostAffinityPolicy) map[string]interface{} {
 	result := make(map[string]interface{})
 	if policy.ExtId != nil {
 		result["ext_id"] = *policy.ExtId

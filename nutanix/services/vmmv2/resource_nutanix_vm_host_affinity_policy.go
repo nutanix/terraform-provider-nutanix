@@ -8,9 +8,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-	vmmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/policies"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	vmmConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/policies"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/vmhostaffinitypolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -97,7 +99,7 @@ func ResourceNutanixVMHostAffinityPolicyV2() *schema.Resource {
 
 func ResourceNutanixVMHostAffinityPolicyV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
-	body := policies.VmHostAffinityPolicy{}
+	body := import1.VmHostAffinityPolicy{}
 
 	if name, ok := d.GetOk("name"); ok {
 		body.Name = utils.StringPtr(name.(string))
@@ -117,7 +119,11 @@ func ResourceNutanixVMHostAffinityPolicyV2Create(ctx context.Context, d *schema.
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] VM-Host Affinity Policy Request Body: %s", string(aJSON))
 
-	resp, err := conn.VMHostAffinityPolicyAPIInstance.CreateVmHostAffinityPolicy(&body)
+	createRequest := import2.CreateVmHostAffinityPolicyRequest{
+		Body: &body,
+	}
+
+	resp, err := conn.VMHostAffinityPolicyAPIInstance.CreateVmHostAffinityPolicy(ctx, &createRequest)
 
 	if err != nil {
 		return diag.Errorf("error while creating VM-Host Affinity policy : %v", err)
@@ -140,8 +146,11 @@ func ResourceNutanixVMHostAffinityPolicyV2Create(ctx context.Context, d *schema.
 	}
 
 	// Get UUID from TASK API
+	getTaskRequest := import3.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
 
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching VM-Host Affinity policy task: %v", err)
 	}
@@ -161,12 +170,16 @@ func ResourceNutanixVMHostAffinityPolicyV2Create(ctx context.Context, d *schema.
 func ResourceNutanixVMHostAffinityPolicyV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	resp, err := conn.VMHostAffinityPolicyAPIInstance.GetVmHostAffinityPolicyById(utils.StringPtr(d.Id()))
+	getRequest := import2.GetVmHostAffinityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+
+	resp, err := conn.VMHostAffinityPolicyAPIInstance.GetVmHostAffinityPolicyById(ctx, &getRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching VM-Host Affinity policy : %v", err)
 	}
 
-	getResp := resp.Data.GetValue().(policies.VmHostAffinityPolicy)
+	getResp := resp.Data.GetValue().(import1.VmHostAffinityPolicy)
 
 	flattenedPolicy := flattenVMHostAffinityPolicyEntity(getResp)
 
@@ -182,12 +195,16 @@ func ResourceNutanixVMHostAffinityPolicyV2Read(ctx context.Context, d *schema.Re
 func ResourceNutanixVMHostAffinityPolicyV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	resp, err := conn.VMHostAffinityPolicyAPIInstance.GetVmHostAffinityPolicyById(utils.StringPtr(d.Id()))
+	getRequest := import2.GetVmHostAffinityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+
+	resp, err := conn.VMHostAffinityPolicyAPIInstance.GetVmHostAffinityPolicyById(ctx, &getRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching VM-Host Affinity policy : %v", err)
 	}
 
-	respPolicy := resp.Data.GetValue().(policies.VmHostAffinityPolicy)
+	respPolicy := resp.Data.GetValue().(import1.VmHostAffinityPolicy)
 	updateSpec := respPolicy
 
 	if d.HasChange("name") {
@@ -208,7 +225,12 @@ func ResourceNutanixVMHostAffinityPolicyV2Update(ctx context.Context, d *schema.
 	aJSON, _ := json.MarshalIndent(updateSpec, "", " ")
 	log.Printf("[DEBUG] VM-Host Affinity Policy Update Request Body: %s", string(aJSON))
 
-	updateResp, err := conn.VMHostAffinityPolicyAPIInstance.UpdateVmHostAffinityPolicyById(utils.StringPtr(d.Id()), &updateSpec)
+	updateRequest := import2.UpdateVmHostAffinityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updateSpec,
+	}
+
+	updateResp, err := conn.VMHostAffinityPolicyAPIInstance.UpdateVmHostAffinityPolicyById(ctx, &updateRequest)
 	if err != nil {
 		return diag.Errorf("error while updating VM-Host Affinity policy : %v", err)
 	}
@@ -232,7 +254,11 @@ func ResourceNutanixVMHostAffinityPolicyV2Update(ctx context.Context, d *schema.
 func ResourceNutanixVMHostAffinityPolicyV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	readResp, err := conn.VMHostAffinityPolicyAPIInstance.GetVmHostAffinityPolicyById(utils.StringPtr(d.Id()))
+	getRequest := import2.GetVmHostAffinityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+
+	readResp, err := conn.VMHostAffinityPolicyAPIInstance.GetVmHostAffinityPolicyById(ctx, &getRequest)
 	if err != nil {
 		return diag.Errorf("error while reading policy : %v", err)
 	}
@@ -240,7 +266,11 @@ func ResourceNutanixVMHostAffinityPolicyV2Delete(ctx context.Context, d *schema.
 	args := make(map[string]interface{})
 	args["If-Match"] = getEtagHeader(readResp, conn)
 
-	resp, err := conn.VMHostAffinityPolicyAPIInstance.DeleteVmHostAffinityPolicyById(utils.StringPtr(d.Id()), args)
+	deleteRequest := import2.DeleteVmHostAffinityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+
+	resp, err := conn.VMHostAffinityPolicyAPIInstance.DeleteVmHostAffinityPolicyById(ctx, &deleteRequest, args)
 	if err != nil {
 		return diag.Errorf("error while deleting VM-Host Affinity policy : %v", err)
 	}

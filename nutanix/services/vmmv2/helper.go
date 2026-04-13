@@ -7,8 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/vm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
@@ -93,15 +94,21 @@ func ApplyDiskDeletions(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 		diskInput := diskInputs[0]
 		diskExtID := diskInput.ExtId
-
-		readVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(vmID))
+		getVmByIdRequest := import1.GetVmByIdRequest{
+			ExtId: utils.StringPtr(vmID),
+		}
+		readVMResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 		if err != nil {
 			return diag.Errorf("error while fetching vm : %v", err)
 		}
 		args := make(map[string]interface{})
 		args["If-Match"] = getEtagHeader(readVMResp, conn)
-
-		resp, err := conn.VMAPIInstance.DeleteDiskById(utils.StringPtr(vmID), diskExtID, args)
+    
+		deleteDiskByIdRequest := import1.DeleteDiskByIdRequest{
+			VmExtId: utils.StringPtr(vmID),
+			ExtId: diskExtID,
+		}
+		resp, err := conn.VMAPIInstance.DeleteDiskById(ctx, &deleteDiskByIdRequest, args)
 		if err != nil {
 			return diag.Errorf("error while deleting Disk : %v", err)
 		}
@@ -128,14 +135,22 @@ func ApplyDiskUpdates(ctx context.Context, d *schema.ResourceData, meta interfac
 		diskInput := diskInputs[0]
 		diskExtID := diskInput.ExtId
 
-		readVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(vmID))
+		getVmByIdRequest := import1.GetVmByIdRequest{
+			ExtId: utils.StringPtr(vmID),
+		}
+		readVMResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 		if err != nil {
 			return diag.Errorf("error while fetching vm : %v", err)
 		}
 		args := make(map[string]interface{})
 		args["If-Match"] = getEtagHeader(readVMResp, conn)
-
-		resp, err := conn.VMAPIInstance.UpdateDiskById(utils.StringPtr(vmID), diskExtID, &diskInput, args)
+    
+		updateDiskByIdRequest := import1.UpdateDiskByIdRequest{
+			VmExtId: utils.StringPtr(vmID),
+			ExtId: diskExtID,
+			Body: &diskInput,
+		}
+		resp, err := conn.VMAPIInstance.UpdateDiskById(ctx, &updateDiskByIdRequest, args)
 		if err != nil {
 			return diag.Errorf("error while updating Disk : %v", err)
 		}
@@ -158,15 +173,21 @@ func ApplyDiskAdditions(ctx context.Context, d *schema.ResourceData, meta interf
 			continue
 		}
 		diskInput := diskInputs[0]
-
-		readVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(vmID))
+		getVmByIdRequest := import1.GetVmByIdRequest{
+			ExtId: utils.StringPtr(vmID),
+		}
+		readVMResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 		if err != nil {
 			return diag.Errorf("error while fetching vm : %v", err)
 		}
 		args := make(map[string]interface{})
 		args["If-Match"] = getEtagHeader(readVMResp, conn)
-
-		resp, err := conn.VMAPIInstance.CreateDisk(utils.StringPtr(vmID), &diskInput, args)
+    
+		createDiskRequest := import1.CreateDiskRequest{
+			VmExtId: utils.StringPtr(vmID),
+			Body: &diskInput,
+		}
+		resp, err := conn.VMAPIInstance.CreateDisk(ctx, &createDiskRequest, args)
 		if err != nil {
 			return diag.Errorf("error while creating Disk : %v", err)
 		}
