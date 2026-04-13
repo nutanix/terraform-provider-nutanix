@@ -6,15 +6,15 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/categories"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func ResourceNutanixCategoriesV2() *schema.Resource {
@@ -264,7 +264,7 @@ func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceDa
 	}
 
 	updatedInput = resp.Data.GetValue().(import1.Category)
-  updateSpecChanged := false
+	updateSpecChanged := false
 	if d.HasChange("value") {
 		updatedInput.Value = utils.StringPtr(d.Get("value").(string))
 		updateSpecChanged = true
@@ -290,7 +290,7 @@ func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceDa
 		updatedInput.OwnerUuid = utils.StringPtr(d.Get("owner_uuid").(string))
 		updateSpecChanged = true
 	}
-  
+
 	if updateSpecChanged {
 		updateCategoryByIdRequest := import2.UpdateCategoryByIdRequest{
 			ExtId: utils.StringPtr(d.Id()),
@@ -348,7 +348,7 @@ func shareCategoryWithProject(ctx context.Context, meta interface{}, conn *prism
 	if err != nil {
 		return fmt.Errorf("error sharing category with project %s: %v", projectID, err)
 	}
-  
+
 	TaskRef := shareResp.Data.GetValue().(import1.TaskReference)
 	taskUUID := TaskRef.ExtId
 
@@ -395,7 +395,7 @@ func unshareCategoryWithProject(ctx context.Context, meta interface{}, conn *pri
 	if err != nil {
 		return fmt.Errorf("error unsharing category with project %s: %v", projectID, err)
 	}
-  TaskRef := unshareResp.Data.GetValue().(import1.TaskReference)
+	TaskRef := unshareResp.Data.GetValue().(import1.TaskReference)
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
