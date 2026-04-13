@@ -71,7 +71,8 @@ func DatasourceNutanixProjectsV2Read(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("error while listing Projects: %s", err)
 	}
 
-	if resp.Data == nil {
+	projects := resp.Data.GetValue().([]config.ProjectProjection)
+	if len(projects) == 0 {
 		if err := d.Set("projects", []map[string]interface{}{}); err != nil {
 			return diag.FromErr(err)
 		}
@@ -82,8 +83,7 @@ func DatasourceNutanixProjectsV2Read(ctx context.Context, d *schema.ResourceData
 			Detail:   "The API returned an empty list of projects.",
 		}}
 	}
-
-	projects := resp.Data.GetValue().([]config.Project)
+  
 	if err := d.Set("projects", flattenProjects(projects)); err != nil {
 		return diag.Errorf("error setting projects: %s", err)
 	}
@@ -92,7 +92,7 @@ func DatasourceNutanixProjectsV2Read(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func flattenProjects(projects []config.Project) []map[string]interface{} {
+func flattenProjects(projects []config.ProjectProjection) []map[string]interface{} {
 	if len(projects) == 0 {
 		return []map[string]interface{}{}
 	}

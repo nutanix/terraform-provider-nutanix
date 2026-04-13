@@ -81,8 +81,8 @@ func DatasourceNutanixRoleMembershipsV2Read(ctx context.Context, d *schema.Resou
 	if err != nil {
 		return diag.Errorf("error while fetching role memberships: %v", err)
 	}
-
-	if resp.Data == nil {
+  membershipsList := resp.Data.GetValue().([]iamConfig.RoleMembershipProjection)
+	if len(membershipsList) == 0 {
 		if err := d.Set("role_memberships", []map[string]interface{}{}); err != nil {
 			return diag.FromErr(err)
 		}
@@ -94,7 +94,6 @@ func DatasourceNutanixRoleMembershipsV2Read(ctx context.Context, d *schema.Resou
 		}}
 	}
 
-  membershipsList := resp.Data.GetValue().([]iamConfig.RoleMembershipProjection)
 	if err := d.Set("role_memberships", flattenRoleMembershipEntities(membershipsList)); err != nil {
 		return diag.FromErr(err)
 	}
