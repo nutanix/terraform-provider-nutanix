@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	commonCfg "github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/common/v1/config"
 	securityPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/prism/v4/config"
-	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/security/v4/request/keymanagementservers"
-	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/security/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/security/v4/request/keymanagementservers"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 
@@ -185,7 +185,7 @@ func ResourceNutanixKeyManagementServerV2Create(ctx context.Context, d *schema.R
 			return diag.FromErr(err)
 		}
 	}
-  
+
 	createKeyManagementServerRequest := import1.CreateKeyManagementServerRequest{
 		Body: body,
 	}

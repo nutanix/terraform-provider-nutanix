@@ -107,10 +107,10 @@ func ResourceNutanixRestorePcCreate(ctx context.Context, d *schema.ResourceData,
 	log.Printf("[DEBUG] Restore PC Body: %s", string(aJSON))
 
 	restoreRequest := import3.RestoreRequest{
-		RestoreSourceExtId:         utils.StringPtr(restoreSourceExtID),
+		RestoreSourceExtId:           utils.StringPtr(restoreSourceExtID),
 		RestorableDomainManagerExtId: utils.StringPtr(restorableDomainManagerExtID),
-		ExtId:                      utils.StringPtr(restorePointExtID),
-		Body:                       restoreSpec,
+		ExtId:                        utils.StringPtr(restorePointExtID),
+		Body:                         restoreSpec,
 	}
 	resp, err := conn.DomainManagerBackupsAPIInstance.Restore(ctx, &restoreRequest)
 	if err != nil {

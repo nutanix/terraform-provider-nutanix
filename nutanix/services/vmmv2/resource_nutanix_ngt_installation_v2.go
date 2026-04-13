@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	taskPoll "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	vmmPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
 	vmmConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/config"
-	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/vm"
-	taskPoll "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -173,7 +173,7 @@ func ResourceNutanixNGTInstallationV4Create(ctx context.Context, d *schema.Resou
 
 	log.Printf("[DEBUG] vmmExtId : %s", *vmmExtID)
 	body := &vmmConfig.GuestToolsInstallConfig{}
-  
+
 	getGuestToolsByIdRequest := import2.GetGuestToolsByIdRequest{
 		ExtId: vmmExtID,
 	}
@@ -344,7 +344,7 @@ func ResourceNutanixNGTInstallationV4Update(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.Client).VmmAPI
 
 	extID := d.Get("ext_id").(string)
-  
+
 	getGuestToolsByIdRequest := import2.GetGuestToolsByIdRequest{
 		ExtId: utils.StringPtr(extID),
 	}
@@ -397,7 +397,7 @@ func ResourceNutanixNGTInstallationV4Update(ctx context.Context, d *schema.Resou
 		log.Printf("[DEBUG] NGT Configuration is same, no update required")
 		return nil
 	}
-  
+
 	updateGuestToolsByIdRequest := import2.UpdateGuestToolsByIdRequest{
 		ExtId: utils.StringPtr(extID),
 		Body:  &updateSpec,
