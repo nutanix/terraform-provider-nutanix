@@ -226,4 +226,4 @@ The pulse_status attribute supports the following:
     | ALL      | Scrub All PII Information from Pulse including data like entity names and IP addresses        |
     | DEFAULT  | Default PII Scrubbing level. Data like entity names and IP addresses will not be scrubbed from Pulse |
 
-See detailed information in [Nutanix Create Cluster Profile V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.1#tag/ClusterProfiles/operation/createClusterProfile).
+See detailed information in [Nutanix Create Cluster Profile V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.2#tag/ClusterProfiles/operation/createClusterProfile).

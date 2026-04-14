@@ -75,4 +75,4 @@ One of:
 - `intra_entity_group_rule_spec`: Intra-entity group rule (`secured_group_action`, `secured_group_category_references`).
 - `multi_env_isolation_rule_spec`: Multi-environment isolation rule (`spec` → `all_to_all_isolation_group` → `isolation_group` with `group_category_references`).
 
-See [Nutanix List Network Security Policy Rules v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0) for full API details.
+See [Nutanix List Network Security Policy Rules v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.2) for full API details.

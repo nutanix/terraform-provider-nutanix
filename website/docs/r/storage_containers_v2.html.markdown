@@ -126,4 +126,4 @@ terraform import nutanix_storage_containers_v2.import_sc <UUID>
 ```
 
 
-See detailed information in [Nutanix Create Storage Containers v4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/StorageContainers/operation/createStorageContainer).
+See detailed information in [Nutanix Create Storage Containers v4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.2#tag/StorageContainers/operation/createStorageContainer).

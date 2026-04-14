@@ -189,4 +189,4 @@ resource "nutanix_network_function_v2" "import_network_function"{}
 terraform import nutanix_network_function_v2.import_network_function <networkFunctionUUID>
 ```
 
-See detailed information in [Create Nutanix Network Function v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.2#tag/NetworkFunctions/operation/createNetworkFunction).
+See detailed information in [Create Nutanix Network Function v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/NetworkFunctions/operation/createNetworkFunction).

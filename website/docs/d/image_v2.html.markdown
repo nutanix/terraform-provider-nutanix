@@ -60,4 +60,4 @@ The following attributes are exported:
 * `enforced_cluster_ext_ids`: List of cluster external identifiers for the enforced placement policy.
 * `conflicting_policy_ext_ids`: List of image placement policy external identifier that conflict with the current one.
 
-See detailed information in [Nutanix Get Image](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Images/operation/getImageById)
+See detailed information in [Nutanix Get Image](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Images/operation/getImageById)

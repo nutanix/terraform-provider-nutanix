@@ -106,4 +106,4 @@ The `data_plane_health_check_config` object contains the following attributes:
 - `success_threshold` :  `Default: 3`. The number of successful checks after which the target is considered healthy.
 - `timeout_secs` :  `Default: 1`. The time, in seconds, after which a health check times out.
 
-See detailed information in [Nutanix Network Function v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.2#tag/NetworkFunctions/operation/getNetworkFunctionById).
+See detailed information in [Nutanix Network Function v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/NetworkFunctions/operation/getNetworkFunctionById).
