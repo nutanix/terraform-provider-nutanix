@@ -31,12 +31,12 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.4.
 - **New Resource Support**
   - **Network Functions (Networking)**: Create and manage Network Functions for service chaining and traffic forwarding use cases. [#982](https://github.com/nutanix/terraform-provider-nutanix/issues/982)
   - **Entity Groups (Security)**: Create and manage Entity Groups for microsegmentation use cases. [#1030](https://github.com/nutanix/terraform-provider-nutanix/issues/1030)
-  - **Deploy from OVA (VMM)**: Add support to deploy virtual machines from OVA images. [#985](https://github.com/nutanix/terraform-provider-nutanix/pull/985)
+  - **Entities (Security)**: Add support for Entities resources. [#955](https://github.com/nutanix/terraform-provider-nutanix/issues/955)
+  - **Network Security Policy Rules (Security)**: Add support to list all the Network Security Policy rules by policy ExtID. [#1031](https://github.com/nutanix/terraform-provider-nutanix/issues/1031)
   - **VM Affinity Policies (VMM)**: Add support for VM-Host affinity and VM-VM anti-affinity policies. [#997](https://github.com/nutanix/terraform-provider-nutanix/pull/997)
 
 - **Enhancements:**
-  - Feature Request: Entities. [#955](https://github.com/nutanix/terraform-provider-nutanix/issues/955)
-  - List all the Network Security Policy rules by policy ExtID. [#1031](https://github.com/nutanix/terraform-provider-nutanix/issues/1031)
+  - **Deploy from OVA (VMM)**: Add support to update deployed virtual machines from OVA images. [#985](https://github.com/nutanix/terraform-provider-nutanix/pull/985)
   - FNS 5.2: Add support for global scope, specific intratier rules, and subnet/VPC-based objects features. [#1032](https://github.com/nutanix/terraform-provider-nutanix/issues/1032)
   - Add data source to list Network Security Policy rules v2 (`nutanix_network_security_policy_rules_v2`). [#1084](https://github.com/nutanix/terraform-provider-nutanix/issues/1084)
   - Support metadata on subnet V2 resource and data source. [#1085](https://github.com/nutanix/terraform-provider-nutanix/issues/1085)
@@ -52,8 +52,7 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.4.
    - `nutanix_object_store_v2` update functionality. [#1094](https://github.com/nutanix/terraform-provider-nutanix/issues/1094)
    - `nutanix_object_store_v2` gives no Terraform error on long name. [#1093](https://github.com/nutanix/terraform-provider-nutanix/issues/1093)
    - `nutanix_user_key_v2` update tries to recreate the key object. [#1092](https://github.com/nutanix/terraform-provider-nutanix/issues/1092)
-   - `nutanix_virtual_machine_v2`: Power state ETag handling and task-layer retry. [#1104](https://github.com/nutanix/terraform-provider-nutanix/issues/1104)
-   - Bug: Updating cloud-init for `nutanix_virtual_machine_v2`. [#1108](https://github.com/nutanix/terraform-provider-nutanix/issues/1108)
+  - Update of Guest Customization leads to delete and recreate of virtual machine resource. [#1108](https://github.com/nutanix/terraform-provider-nutanix/issues/1108)
    - Memory hot-plug increase causing VM power off when using `nutanix_virtual_machine_v2` resource. [#1105](https://github.com/nutanix/terraform-provider-nutanix/issues/1105)
    - Mark user key secrets as sensitive and persist `key_details` on create. [#1112](https://github.com/nutanix/terraform-provider-nutanix/issues/1112)
 
@@ -64,51 +63,10 @@ The provider is used to interact with the many resources and data sources suppor
 - Prism Central Version: Iris 1 or later
 - Nutanix Terraform Provider Version: 2.4.1
 
-
-## Introducing Nutanix Terraform Provider Version v2.4.0
-
-We're excited to announce the release of Nutanix Terraform Provider Version 2.4.0!
-
-### What's New in v2.4.0
-
-- **New Resource Support**
-  - **Key Management Server (Security)**: Create, Update, Read and Delete Key Management Servers secure data encryption keys when encryption is enabled.
-  - **Security Technical Implementation Guide controls details (Security)**: Fetch the STIG controls details for STIG rules on each cluster.
-  - **SSL Certification (Cluster Management)**: Provides the ability to manage SSL certificates for clusters. This includes the ability to retrieve and update SSL certificates for clusters.
-  - **Cluster Profile (Cluster Management)**: Create, Update, Read and Delete cluster configuration profiles for consistent deployments.
-  - **Associate/Disassociate Cluster from Cluster Profile (Cluster Management)**: Associate or Disassociate clusters to profiles for streamlined management.
-  - **Associate/Disassociate Categories to Cluster (Cluster Management)**: Associate or Disassociate categories to clusters.
-  - **Storage Policies (Data Policies)**: Create, Update, Read and Delete Storage Policy which helps in ease of storage management at scale.
-
-- **Enhancements:**
-  - Add Support for Package-Specific Acceptance Tests via /ok-to-test -p Command [#1014](https://github.com/nutanix/terraform-provider-nutanix/issues/1014)
-  - Centralize task entity type and completion detail constants for reliable UUID extraction [#1029](https://github.com/nutanix/terraform-provider-nutanix/issues/1029)
-
-- **Fixed Bugs:**
-   - Unable to list VPC using data "nutanix_vpcs_v2" "list_vpcs" [#1000](https://github.com/nutanix/terraform-provider-nutanix/issues/1000)
-   - virtual_machine_v2: VM creation fails with multiple NICs ("invalid input arguments") [#994](https://github.com/nutanix/terraform-provider-nutanix/issues/994)
-   - V3: Project: Revisit the Project Module resources [#962](https://github.com/nutanix/terraform-provider-nutanix/issues/962)
-      - Projects: ACP: Order changes in API response lead to data inconsistency in state file. [#1042](https://github.com/nutanix/terraform-provider-nutanix/issues/1042)
-      - Projects: ACP: Removing a ACP causing index shifting issues. [#1044](https://github.com/nutanix/terraform-provider-nutanix/issues/1044)
-      - Project: ACP: Adding a new user or new user group to existing ACP is failed. [#1043](https://github.com/nutanix/terraform-provider-nutanix/issues/1043)
-   - Bug Report: resource "nutanix_user_groups_v2" [#947](https://github.com/nutanix/terraform-provider-nutanix/issues/947)
-
-- **Breaking Changes:**
-   - From PC version 7.5 onwards, the resource domain is not supported by Projects API. As a result, Terraform support for this functionality (resource_domain attribute) has been removed starting with the 2.4.0 release. [#1049](https://github.com/nutanix/terraform-provider-nutanix/issues/1049)
-
-
-### Software Requirements
-The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.4.0, ensure your Nutanix environment meets the following software requirements:
-- Self Service version: 4.3.0 (Required only for running Self Service based resource and data source)
-- AOS Version: 7.5 or later
-- Prism Central Version: pc 7.5 or later
-- Nutanix Terraform Provider Version: 2.4.0
-
-
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
-| 2.4.1 | 7.5.1 | pc7.5 or later | Self Service  v4.3.0 | yes |
+| 2.4.1 | 7.5.1 | pc7.5.1 or later | Self Service  v4.3.1 | yes |
 | 2.4.0 | 7.5 | pc7.5 or later | Self Service  v4.3.0 | yes |
 | 2.3.4 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.3 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
