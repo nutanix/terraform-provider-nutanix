@@ -152,6 +152,21 @@ resource "nutanix_virtual_machine_v2" "vm-3" {
 
 ```
 
+## Lifecycle Behavior
+
+~> Important: Updates to `guest_customization` are treated as create-time only changes and will force the VM to be replaced.
+
+Guest customization settings such as `config.cloud_init` and `config.sysprep` are consumed during the initial boot of the virtual machine and are not re-applied on later updates.
+
+As a result, changing the `guest_customization` block causes Terraform to destroy and recreate the `nutanix_virtual_machine_v2` resource instead of performing an in-place update.
+
+This behavior applies to both:
+
+- Sysprep-based guest customization for Windows VMs
+- cloud-init based guest customization for Linux VMs
+
+~> Note: Replacing the VM creates a new virtual machine instance. Make sure any dependent systems, references, or post-provisioning steps are updated accordingly before applying the change.
+
 ## Argument Reference
 
 The following arguments are supported:
