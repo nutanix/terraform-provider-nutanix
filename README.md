@@ -33,7 +33,6 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.4.
   - **Entity Groups (Security)**: Create and manage Entity Groups for microsegmentation use cases. [#1030](https://github.com/nutanix/terraform-provider-nutanix/issues/1030)
   - **Entities (Security)**: Add support for Entities resources. [#955](https://github.com/nutanix/terraform-provider-nutanix/issues/955)
   - **Network Security Policy Rules (Security)**: Add support to list all the Network Security Policy rules by policy ExtID. [#1031](https://github.com/nutanix/terraform-provider-nutanix/issues/1031)
-  - **Network Security Policy Rules Data Source (Security)**: Add data source to list Network Security Policy rules v2 (`nutanix_network_security_policy_rules_v2`). [#1084](https://github.com/nutanix/terraform-provider-nutanix/issues/1084)
   - **VM Affinity Policies (VMM)**: Add support for VM-Host affinity and VM-VM anti-affinity policies. [#997](https://github.com/nutanix/terraform-provider-nutanix/pull/997)
 
 - **Enhancements:**
