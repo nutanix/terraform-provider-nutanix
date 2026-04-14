@@ -67,4 +67,4 @@ The links attribute supports the following:
 * `object_type`: value: `dataprotection.v4.common.VssProperties`
 
 
-See detailed information in [Nutanix Get Vm Recovery Point V4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.0#tag/RecoveryPoints/operation/getVmRecoveryPointById).
+See detailed information in [Nutanix Get Vm Recovery Point V4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.3#tag/RecoveryPoints/operation/getVmRecoveryPointById).

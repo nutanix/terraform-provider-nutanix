@@ -61,4 +61,4 @@ resource "nutanix_image_placement_policy_v2" "import_ipp"{}
 terraform import nutanix_image_placement_policy_v2.import_ipp <UUID>
 ```
 
-See detailed information in [Nutanix Create Image Placement Policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/ImagePlacementPolicies/operation/createPlacementPolicy)
+See detailed information in [Nutanix Create Image Placement Policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/ImagePlacementPolicies/operation/createPlacementPolicy)

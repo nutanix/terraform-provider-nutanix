@@ -132,4 +132,4 @@ resource "nutanix_volume_group_v2" "import_vg" {}
 terraform import nutanix_volume_group_v2.import_vg <UUID>
 ```
 
-See detailed information in [Nutanix Create Volume Group V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.0#tag/VolumeGroups/operation/createVolumeGroup).
+See detailed information in [Nutanix Create Volume Group V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.2#tag/VolumeGroups/operation/createVolumeGroup).

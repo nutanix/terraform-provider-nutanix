@@ -82,4 +82,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix Install VM Guest Tools V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Vm/operation/installVmGuestTools).
+See detailed information in [Nutanix Install VM Guest Tools V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Vm/operation/installVmGuestTools).

@@ -45,4 +45,4 @@ The following attributes are exported:
 * `num_compliant_vms` - Number of VMs which are compliant with the VM-host affinity policy.
 * `num_non_compliant_vms` - Number of VMs which are not compliant with the VM-host affinity policy.
 
-See detailed information in [Nutanix Get VM Host Affinity Policy V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/VmHostAffinityPolicies/operation/getVmHostAffinityPolicyById)
+See detailed information in [Nutanix Get VM Host Affinity Policy V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/VmHostAffinityPolicies/operation/getVmHostAffinityPolicyById)

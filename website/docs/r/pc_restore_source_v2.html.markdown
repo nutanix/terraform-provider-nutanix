@@ -140,4 +140,4 @@ resource "nutanix_pc_restore_source_v2" "import_restore_source" {}
 terraform import nutanix_pc_restore_source_v2.import_restore_source <UUID>
 ```
 
-See detailed information in [Nutanix Restore Source V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createRestoreSource).
+See detailed information in [Nutanix Restore Source V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.3#tag/DomainManager/operation/createRestoreSource).

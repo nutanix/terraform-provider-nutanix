@@ -237,4 +237,4 @@ terraform import nutanix_storage_policy_v2.import_storage_policy <UUID>
 
 
 
-See detailed information in [Nutanix Create Storage Policies v4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.1#tag/StoragePolicies/operation/createStoragePolicy).
+See detailed information in [Nutanix Create Storage Policies v4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.2#tag/StoragePolicies/operation/createStoragePolicy).

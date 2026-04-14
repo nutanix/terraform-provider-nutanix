@@ -247,4 +247,4 @@ resource "nutanix_subnet_v2" "import_subnet" {}
 terraform import nutanix_subnet_v2.import_subnet <UUID>
 ```
 
-See detailed information in [Nutanix Subnet v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/Subnets/operation/createSubnet).
+See detailed information in [Nutanix Subnet v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/Subnets/operation/createSubnet).

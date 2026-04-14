@@ -329,4 +329,4 @@ The `nics` attribute supports the following:
 * `policy`: Reference to the policy object in use.
 
 
-See detailed information in [Nutanix Get Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Vm/operation/getVmById).
+See detailed information in [Nutanix Get Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Vm/operation/getVmById).

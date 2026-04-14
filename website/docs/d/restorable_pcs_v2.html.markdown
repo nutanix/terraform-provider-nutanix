@@ -176,4 +176,4 @@ The `fqdn` argument supports the following:
 
 * `value`: - The fully qualified domain name of the host.
 
-See detailed information in [Nutanix List Restorable PCs V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/listRestorableDomainManagers).
+See detailed information in [Nutanix List Restorable PCs V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.3#tag/DomainManager/operation/listRestorableDomainManagers).

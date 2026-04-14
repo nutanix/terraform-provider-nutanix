@@ -66,4 +66,4 @@ The `route_tables` object contains the following attributes:
 
 
 
-See detailed information in [Nutanix Route Tables v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/RouteTables).
+See detailed information in [Nutanix Route Tables v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/RouteTables).

@@ -433,4 +433,4 @@ The `nics` attribute supports the following:
 #### protection_policy_state
 * `policy`: Reference to the policy object in use.
 
-See detailed information in [Nutanix Get Ova Details V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/getDomainManagerById).
+See detailed information in [Nutanix Get Ova Details V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.3#tag/DomainManager/operation/getDomainManagerById).
