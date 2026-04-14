@@ -82,7 +82,7 @@ resource "nutanix_cluster_v2" "example" {
   # the nutanix_pc_registration_v2 resource, the registration call requires valid credentials. 
   # If the password hasn't been changed from the default, the registration may fail or require 
   # manual intervention.
-  # after create a cluster you need to reset the pe ui password
+  # after create a cluster you need to reset the pe user password
   provisioner "local-exec" {
     command = "sshpass -p '${var.pe_password}' ssh ${var.pe_username}@${var.node_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${var.username} password=${var.password}'"
   }
