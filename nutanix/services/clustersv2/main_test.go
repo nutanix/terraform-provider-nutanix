@@ -64,7 +64,7 @@ type TestConfig struct {
 var (
 	testVars TestConfig
 	path, _  = os.Getwd()
-	filepath = path + "/../../../test_config_v2.json"
+	filepath = path + "/temp/test_config_v2.json"
 )
 
 func loadVars(filepath string, varStuct interface{}) {
