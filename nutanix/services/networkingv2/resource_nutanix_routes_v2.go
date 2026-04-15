@@ -526,10 +526,11 @@ func expandMetadata(metadata []interface{}) *networkingCommon.Metadata {
 	setStringPtr(&metadataObj.ProjectName, "project_name")
 
 	if categoryIDs, ok := metadataMap["category_ids"]; ok {
-		if categorySlice, valid := categoryIDs.([]interface{}); valid && len(categorySlice) > 0 {
+		categorySlice := common.InterfaceToSlice(categoryIDs)
+		if len(categorySlice) > 0 {
 			categoryIDListStr := make([]string, 0, len(categorySlice))
-			for _, v := range categorySlice {
-				if s, ok := v.(string); ok && s != "" {
+			for _, id := range categorySlice {
+				if s, ok := id.(string); ok && s != "" {
 					categoryIDListStr = append(categoryIDListStr, s)
 				}
 			}

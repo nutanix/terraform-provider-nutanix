@@ -152,6 +152,21 @@ resource "nutanix_virtual_machine_v2" "vm-3" {
 
 ```
 
+## Lifecycle Behavior
+
+~> Important: Updates to `guest_customization` are treated as create-time only changes and will force the VM to be replaced.
+
+Guest customization settings such as `config.cloud_init` and `config.sysprep` are consumed during the initial boot of the virtual machine and are not re-applied on later updates.
+
+As a result, changing the `guest_customization` block causes Terraform to destroy and recreate the `nutanix_virtual_machine_v2` resource instead of performing an in-place update.
+
+This behavior applies to both:
+
+- Sysprep-based guest customization for Windows VMs
+- cloud-init based guest customization for Linux VMs
+
+~> Note: Replacing the VM creates a new virtual machine instance. Make sure any dependent systems, references, or post-provisioning steps are updated accordingly before applying the change.
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -519,4 +534,16 @@ The following attributes are exported:
 * `protection_type`: The type of protection applied on a VM. PD_PROTECTED indicates a VM is protected using the Prism Element. RULE_PROTECTED indicates a VM protection using the Prism Central.
 * `protection_policy_state`: Status of protection policy applied to this VM.
 
-See detailed information in [Nutanix Create Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Vm/operation/createVm).
+## Import
+
+This helps to manage existing entities which are not created through terraform. Virtual Machine can be imported using the virtual machine uuid `virtualMachineUUID` (ext_id in v4 terms). eg,
+
+```hcl
+// create its configuration in the root module. For example:
+// virtual machine will be imported to this resource 
+resource "nutanix_virtual_machine_v2" "import_virtual_machine"{}
+
+terraform import nutanix_virtual_machine_v2.import_virtual_machine <virtualMachineUUID>
+```
+
+See detailed information in [Nutanix Create Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Vm/operation/createVm).

@@ -785,10 +785,16 @@ func setOvaVMConfig(d *schema.ResourceData, vm import2.Vm) diag.Diagnostics {
 					overrideConfig["power_state"] = vm.PowerState.GetName()
 					log.Printf("[DEBUG] Set power_state: %s", vm.PowerState.GetName())
 				}
-
-				if vm.Disks != nil {
-					overrideConfig["disks"] = flattenDisk(vm.Disks)
-					log.Printf("[DEBUG] Updated disks configuration with %d disks from API", len(vm.Disks))
+				if common.IsRawConfigAvailable(d) {
+					if !common.IsConfigListEmptyOrMissing(d, "override_vm_config.0.disks") && vm.Disks != nil {
+						overrideConfig["disks"] = flattenDisk(vm.Disks)
+						log.Printf("[DEBUG] Updated disks configuration with %d disks from API", len(vm.Disks))
+					} else {
+						overrideConfig["disks"] = []interface{}{}
+						log.Printf("[DEBUG] User config has no disks block; not storing API disks in state")
+					}
+				} else {
+					log.Printf("[DEBUG] Raw config unavailable (refresh); preserving existing disk state")
 				}
 
 				if len(vm.Nics) > 0 {

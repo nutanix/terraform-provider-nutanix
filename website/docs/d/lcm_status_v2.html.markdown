@@ -52,4 +52,4 @@ The `in_progress_operation` attribute supports the following:
   - `NONE`: Indicates that no operation is currently ongoing.
 * `operation_id`: - Root task UUID of the operation, if it is in running state.
 
-See detailed information in [Nutanix LCM Status v4](https://developers.nutanix.com/api-reference?namespace=lifecycle&version=v4.0#tag/Status)
+See detailed information in [Nutanix LCM Status v4](https://developers.nutanix.com/api-reference?namespace=lifecycle&version=v4.2#tag/Status)

@@ -69,7 +69,7 @@ func TestAccV2NutanixVpcsDataSource_WithFilter(t *testing.T) {
 					resource.TestCheckResourceAttrSet(datasourceNameVPCs, "vpcs.0.external_subnets.#"),
 					resource.TestCheckResourceAttr(datasourceNameVPCs, "vpcs.0.vpc_type", "REGULAR"),
 					resource.TestCheckResourceAttrSet(datasourceNameVPCs, "vpcs.0.metadata.0.category_ids.#"),
-					resource.TestCheckResourceAttrPair(datasourceNameVPCs, "vpcs.0.metadata.0.category_ids.0", "nutanix_category_v2.test", "id"),
+					testCheckMetadataCategoryIDsContain(datasourceNameVPCs, "nutanix_category_v2.test"),
 				),
 			},
 		},

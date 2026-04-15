@@ -86,4 +86,4 @@ The attached_targets attribute supports the following:
 
 
 
-See detailed information in [Nutanix Get iSCSI Client V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.0#tag/IscsiClients/operation/getIscsiClientById).
+See detailed information in [Nutanix Get iSCSI Client V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.2#tag/IscsiClients/operation/getIscsiClientById).

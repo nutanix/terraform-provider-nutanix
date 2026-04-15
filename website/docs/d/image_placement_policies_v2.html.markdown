@@ -85,4 +85,4 @@ The `placement_policies` object is a list of image placement policies. each imag
     - CATEGORIES_MATCH_ANY: Image policy applies to the entities that match any subset of the entity categories attached to the image policy.
 * `category_ext_ids`: Array of strings
 
-See detailed information in [Nutanix List Image placement policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/ImagePlacementPolicies/operation/listPlacementPolicies)
+See detailed information in [Nutanix List Image placement policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/ImagePlacementPolicies/operation/listPlacementPolicies)

@@ -26,10 +26,6 @@ data "nutanix_network_security_policies_v2" "example-2"{
 
 The following arguments are supported:
 
-## Argument Reference
-
-The following arguments are supported:
-
 - `page`: (Optional) A URL query parameter that specifies the page number of the result set. It must be a positive integer between 0 and the maximum number of pages that are available for that resource. Any number out of this range might lead to no results.
 - `limit`: (Optional) A URL query parameter that specifies the total number of records returned in the result set. Must be a positive integer between 1 and 100. Any number out of this range will lead to a validation error. If the limit is not provided, a default value of 50 records will be returned in the result set.
 - `filter`: (Optional) A URL query parameter that allows clients to filter a collection of resources. The filter can be applied to the following fields:
@@ -119,11 +115,17 @@ The following attributes are exported:
 
 ### application_rule_spec
 
+- `secured_group_category_associated_entity_type`: (Computed) Entity type for the secured group category (SUBNET, VM, VPC).
 - `secured_group_category_references`: A set of network endpoints which is protected by a Network Security Policy and defined as a list of categories.
+- `secured_group_entity_group_reference`: (Computed) Reference to the secured group entity group.
 - `src_allow_spec`: A specification to how allow mode traffic should be applied, either ALL or NONE.
 - `dest_allow_spec`: A specification to how allow mode traffic should be applied, either ALL or NONE.
+- `src_category_associated_entity_type`: (Computed) Entity type for the source category (SUBNET, VM, VPC).
 - `src_category_references`: List of categories that define a set of network endpoints as inbound.
+- `src_entity_group_reference`: (Computed) Reference to the source entity group.
+- `dest_category_associated_entity_type`: (Computed) Entity type for the destination category (SUBNET, VM, VPC).
 - `dest_category_references`: List of categories that define a set of network endpoints as outbound.
+- `dest_entity_group_reference`: (Computed) Reference to the destination entity group.
 - `src_subnet`: source subnet value
 - `dest_subnet`: destination subnet value
 - `src_address_group_references`: A list of address group references.
@@ -134,11 +136,18 @@ The following attributes are exported:
 - `udp_services`: udp services
 - `icmp_services`: icmp services
 - `network_function_chain_reference`: A reference to the network function chain in the rule.
+- `network_function_reference`: (Computed) A reference to the network function in the rule.
 
 ### intra_entity_group_rule_spec
 
-- `secured_group_action`: List of secured group action.
+- `secured_group_category_associated_entity_type`: (Computed) Entity type for the secured group category (SUBNET, VM, VPC).
+- `secured_group_entity_group_reference`: (Computed) Reference to the secured group entity group.
+- `secured_group_action`: Whether traffic between intra secured group entities should be allowed or denied.
 - `secured_group_category_references`: A specification to whether traffic between intra secured group entities should be allowed or denied.
+- `secured_group_service_references`: (Computed) List of service group references for the secured group.
+- `tcp_services`: (Computed) TCP port ranges for the rule.
+- `udp_services`: (Computed) UDP port ranges for the rule.
+- `icmp_services`: (Computed) ICMP type/code for the rule.
 
 ### multi_env_isolation_rule_spec
 
@@ -152,11 +161,13 @@ The following attributes are exported:
 
 - `isolation_group`: Denotes the list of secured groups that will be used in All to All mutual isolation.
 
-#### isolation_groups
+#### isolation_group
 
+- `group_category_associated_entity_type`: (Computed) Entity type for the group category (SUBNET, VM, VPC).
 - `group_category_references`: External identifiers of categories belonging to the isolation group.
+- `group_entity_group_reference`: (Computed) Reference to the entity group for the isolation group.
 
-### tcp_services, tcp_services
+### tcp_services, udp_services
 
 - `start_port`: start port
 - `end_port`: end port
@@ -174,4 +185,4 @@ The `links` attribute supports the following:
 - `href`: - The URL at which the entity described by the link can be accessed.
 - `rel`: - A name that identifies the relationship of the link to the object that is returned by the URL. The unique value of "self" identifies the URL for the object.
 
-See detailed information in [Nutanix List Security Policies v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0#tag/NetworkSecurityPolicies/operation/listNetworkSecurityPolicies).
+See detailed information in [Nutanix List Security Policies v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.2#tag/NetworkSecurityPolicies/operation/listNetworkSecurityPolicies).

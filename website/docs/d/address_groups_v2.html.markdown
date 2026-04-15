@@ -90,4 +90,4 @@ The `address_groups` object contains the following attributes:
 
 
 
-See detailed information in [Nutanix List Address Groups v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0#tag/AddressGroups/operation/listAddressGroups).
+See detailed information in [Nutanix List Address Groups v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.2#tag/AddressGroups/operation/listAddressGroups).

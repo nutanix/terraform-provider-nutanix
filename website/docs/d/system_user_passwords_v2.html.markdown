@@ -119,4 +119,4 @@ The `host_ip` attribute supports the following:
 - `value`: - The IPv4 address of the host.
 - `prefix_length`: - The prefix length of the network to which this host IPv4/IPv6 address belongs.
 
-See detailed information in [Nutanix List password status of system users V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.1#tag/PasswordManager/operation/listSystemUserPasswords).
+See detailed information in [Nutanix List password status of system users V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.2#tag/PasswordManager/operation/listSystemUserPasswords).

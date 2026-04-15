@@ -69,4 +69,4 @@ The flash mode features attribute supports the following:
 
 * `is_enabled`: - Indicates whether the flash mode is enabled for the Volume Group Disk.
 
-See detailed information in [Nutanix Get Volume Disk V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.0#tag/VolumeGroups/operation/getVolumeDiskById).
+See detailed information in [Nutanix Get Volume Disk V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.2#tag/VolumeGroups/operation/getVolumeDiskById).

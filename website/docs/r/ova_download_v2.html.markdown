@@ -31,4 +31,4 @@ The following attributes are exported:
 - `ova-file-path`: The file path where the OVA is downloaded.
 
 
-See detailed information in [Nutanix Download an Ova V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.1#tag/Ovas/operation/getFileByOvaId).
+See detailed information in [Nutanix Download an Ova V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Ovas/operation/getFileByOvaId).

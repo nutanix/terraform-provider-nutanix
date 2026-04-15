@@ -281,7 +281,7 @@ func testAccVMDataSourceConfigV4WithCdromBackingInfo(name, desc string) string {
 		}
 
 		data "nutanix_storage_containers_v2" "ngt-sc" {
-		  filter = "clusterExtId eq '${local.cluster0}'"
+		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 		  limit = 1
 		}
 

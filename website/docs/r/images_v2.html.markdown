@@ -137,4 +137,4 @@ resource "nutanix_images_v2" "import_image"{}
 terraform import nutanix_images_v2.import_image <UUID>
 ```
 
-See detailed information in [Nutanix Create Image V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Images/operation/createImage)
+See detailed information in [Nutanix Create Image V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Images/operation/createImage)

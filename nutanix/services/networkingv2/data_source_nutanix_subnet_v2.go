@@ -382,6 +382,13 @@ func DataSourceNutanixSubnetV2() *schema.Resource {
 					},
 				},
 			},
+			"metadata": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: DatasourceMetadataSchemaV2(),
+				},
+			},
 		},
 	}
 }
@@ -475,6 +482,9 @@ func dataSourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("metadata", flattenMetadata(getResp.Metadata)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -844,7 +854,7 @@ func DatasourceMetadataSchemaV2() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"category_ids": {
-			Type:     schema.TypeList,
+			Type:     schema.TypeSet,
 			Computed: true,
 			Optional: true,
 			Elem: &schema.Schema{

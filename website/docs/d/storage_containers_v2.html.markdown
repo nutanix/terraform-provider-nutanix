@@ -87,4 +87,4 @@ The `storage_containers` contains list of Storage Container objects. Each Storag
 
 
 
-See detailed information in [Nutanix List Storage Containers v4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/StorageContainers/operation/listStorageContainers).
+See detailed information in [Nutanix List Storage Containers v4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.2#tag/StorageContainers/operation/listStorageContainers).

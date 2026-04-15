@@ -102,4 +102,4 @@ resource "nutanix_service_groups_v2" "import_service_group" {}
 terraform import nutanix_service_groups_v2.import_service_group <UUID>
 ```
 
-See detailed information in [Nutanix Service Groups V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0#tag/ServiceGroups/operation/createServiceGroup).
+See detailed information in [Nutanix Service Groups V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.2#tag/ServiceGroups/operation/createServiceGroup).

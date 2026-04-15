@@ -107,4 +107,4 @@ data "nutanix_volume_group_disks_v2" "fetch_vg_disks"{
 terraform import nutanix_volume_group_disk_v2.import_vg_disk <volume_group_ext_id>/<disk_ext_id>
 ```
 
-See detailed information in [Nutanix Create Volume Disk V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.0#tag/VolumeGroups/operation/createVolumeDisk).
+See detailed information in [Nutanix Create Volume Disk V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.2#tag/VolumeGroups/operation/createVolumeDisk).

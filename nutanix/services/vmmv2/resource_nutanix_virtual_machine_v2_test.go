@@ -1180,7 +1180,7 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 		}
 
 		data "nutanix_storage_containers_v2" "ngt-sc" {
-		  filter = "clusterExtId eq '${local.cluster0}'"
+		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 		  limit = 1
 		}
 
@@ -1239,7 +1239,7 @@ func testVmsV4ConfigWithDiskWithDatasource(name string, desc string) string {
 		}
 
 		data "nutanix_storage_containers_v2" "ngt-sc" {
-		  filter = "clusterExtId eq '${local.cluster0}'"
+		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 		  limit = 1
 		}
 
@@ -1333,7 +1333,7 @@ func testVmsV4ConfigWithNic(r int, desc string, isConnected bool) string {
 		}
 
 		data "nutanix_storage_containers_v2" "ngt-sc" {
-		  filter = "clusterExtId eq '${local.cluster0}'"
+		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 		  limit = 1
 		}
 
@@ -1399,7 +1399,7 @@ func testVmsV4ConfigWithNicWithTrunkVlan(r int, desc string) string {
 		}
 
 		data "nutanix_storage_containers_v2" "ngt-sc" {
-		  filter = "clusterExtId eq '${local.cluster0}'"
+		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 		  limit = 1
 		}
 
@@ -1486,7 +1486,7 @@ func testVmsV4ConfigNicScenariosBase(name, desc, nicsBlock string) string {
 		}
 
 		data "nutanix_storage_containers_v2" "ngt-sc" {
-			filter = "clusterExtId eq '${local.cluster0}'"
+			filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 			limit  = 1
 		}
 
@@ -1843,7 +1843,7 @@ func testVmsV4ConfigWithCdromWithBackingInfo(name, desc string) string {
 		}
 
 		data "nutanix_storage_containers_v2" "ngt-sc" {
-		  filter = "clusterExtId eq '${local.cluster0}'"
+		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 		  limit = 1
 		}
 
@@ -1934,7 +1934,7 @@ func testVmsV4ConfigWithCloudInit(r int, desc string) string {
 		}
 
 		data "nutanix_storage_containers_v2" "ngt-sc" {
-		  filter = "clusterExtId eq '${local.cluster0}'"
+		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 		  limit = 1
 		}
 
@@ -2010,7 +2010,7 @@ locals {
 }
 
 data "nutanix_storage_containers_v2" "ngt-sc" {
-	filter = "clusterExtId eq '${local.cluster0}'"
+	filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 	limit = 1
 }
 
@@ -2088,7 +2088,7 @@ func testVmsV4ConfigWithCloudInitWithCustomKeys(r int, desc string) string {
 		}
 
 		data "nutanix_storage_containers_v2" "ngt-sc" {
-		  filter = "clusterExtId eq '${local.cluster0}'"
+		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 		  limit = 1
 		}
 
@@ -2168,7 +2168,7 @@ func testVmsV4ConfigWithDiskNic(name string, desc string) string {
 		}
 
 		data "nutanix_storage_containers_v2" "ngt-sc" {
-		  filter = "clusterExtId eq '${local.cluster0}'"
+		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 		  limit = 1
 		}
 
@@ -2232,7 +2232,7 @@ func testVmsV4ConfigWitUpdatedDiskNic(name, desc string) string {
 		}
 
 		data "nutanix_storage_containers_v2" "ngt-sc" {
-		  filter = "clusterExtId eq '${local.cluster0}'"
+		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 		  limit = 1
 		}
 
@@ -2546,7 +2546,7 @@ func testVmsV4ConfigWithSingleNic(name, desc string, r int) string {
 		}
 
 		data "nutanix_storage_containers_v2" "sc" {
-			filter = "clusterExtId eq '${local.cluster0}'"
+			filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 			limit = 1
 		}
 
@@ -2608,7 +2608,7 @@ func testVmsV4ConfigWithSingleNicKeepSubnet(name, desc string, r int) string {
 		}
 
 		data "nutanix_storage_containers_v2" "sc" {
-			filter = "clusterExtId eq '${local.cluster0}'"
+			filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 			limit = 1
 		}
 
@@ -2699,7 +2699,7 @@ func testVmsV4ConfigWithTwoNics(name, desc string, r int) string {
 		}
 
 		data "nutanix_storage_containers_v2" "sc" {
-			filter = "clusterExtId eq '${local.cluster0}'"
+			filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 			limit = 1
 		}
 

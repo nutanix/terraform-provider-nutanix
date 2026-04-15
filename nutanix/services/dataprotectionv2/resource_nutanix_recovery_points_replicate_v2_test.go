@@ -2,6 +2,7 @@ package dataprotectionv2_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -13,6 +14,10 @@ import (
 const resourceNameRecoveryPointReplicate = "nutanix_recovery_point_replicate_v2.test"
 
 func TestAccV2NutanixRecoveryPointReplicateResource_basic(t *testing.T) {
+	// if the test is running using NUTANIX_API_KEY, skip the test
+	if os.Getenv("NUTANIX_API_KEY") != "" {
+		t.Skip("Skipping test as it not supported using NUTANIX_API_KEY")
+	}
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-recovery-point-%d", r)
 	//clsName := fmt.Sprintf("tf-test-cluster-rp-%d", r)

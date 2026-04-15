@@ -217,6 +217,15 @@ func IsConfigListEmpty(d *schema.ResourceData, path string) bool {
 	return li == 0
 }
 
+// IsRawConfigAvailable returns true when the Terraform raw config (the user's
+// .tf file values) is available on d. During plan/apply this is true; during
+// a standalone refresh (or certain test contexts) it is false because the SDK
+// does not populate the raw config.
+func IsRawConfigAvailable(d *schema.ResourceData) bool {
+	rc := d.GetRawConfig()
+	return !rc.IsNull() && rc.IsKnown() && rc.Type() != cty.NilType
+}
+
 // IsConfigListEmptyOrMissing returns true if the raw config has no value at path (block omitted),
 // or has a list at path with length 0. Use this when omitting an optional block should be
 // treated as "empty" (e.g. so removals are applied).

@@ -132,4 +132,4 @@ data "nutanix_routes_v2" "fetch_templates"{
 terraform import nutanix_routes_v2.import_route <routeTableUUID>/<routeUUID>
 ```
 
-See detailed information in [Nutanix Routes v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/Routes/operation/createRouteForRouteTable).
+See detailed information in [Nutanix Routes v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/Routes/operation/createRouteForRouteTable).

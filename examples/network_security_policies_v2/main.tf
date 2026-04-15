@@ -248,3 +248,12 @@ data "nutanix_network_security_policies_v2" "filtered-nsps" {
 data "nutanix_network_security_policy_v2" "get-nsp" {
   ext_id = nutanix_network_security_policy_v2.multi-env-isolation-nsp.id
 }
+
+# get network security policy rules
+data "nutanix_network_security_policy_rules_v2" "get-nsp-rules" {
+  policy_ext_id = nutanix_network_security_policy_v2.multi-env-isolation-nsp.id
+}
+
+output "network_security_policy_rules" {
+  value = data.nutanix_network_security_policy_rules_v2.get-nsp-rules
+}

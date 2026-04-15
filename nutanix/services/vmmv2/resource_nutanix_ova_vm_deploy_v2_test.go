@@ -284,7 +284,7 @@ data "nutanix_subnets_v2" "subnets" {
 }
 
 data "nutanix_storage_containers_v2" "ngt-sc" {
-  filter = "clusterExtId eq '${local.cluster_ext_id}'"
+  filter = "clusterExtId eq '${local.cluster_ext_id}' and startswith(name,'default-container-')"
   limit  = 1
 }
 
@@ -430,7 +430,7 @@ data "nutanix_subnets_v2" "subnets" {
 }
 
 data "nutanix_storage_containers_v2" "ngt-sc" {
-  filter = "clusterExtId eq '${local.cluster_ext_id}'"
+  filter = "clusterExtId eq '${local.cluster_ext_id}' and startswith(name,'default-container-')"
   limit  = 1
 }
 
@@ -526,7 +526,7 @@ data "nutanix_subnets_v2" "subnets" {
   limit = 1
 }
 data "nutanix_storage_containers_v2" "ngt-sc" {
-  filter = "clusterExtId eq '${local.cluster_ext_id}'"
+  filter = "clusterExtId eq '${local.cluster_ext_id}' and startswith(name,'default-container-')"
   limit  = 1
 }
 
@@ -616,7 +616,7 @@ data "nutanix_subnets_v2" "subnets" {
   limit = 1
 }
 data "nutanix_storage_containers_v2" "ngt-sc" {
-  filter = "clusterExtId eq '${local.cluster_ext_id}'"
+  filter = "clusterExtId eq '${local.cluster_ext_id}' and startswith(name,'default-container-')"
   limit  = 1
 }
 
@@ -709,7 +709,7 @@ data "nutanix_subnets_v2" "subnets" {
 }
 
 data "nutanix_storage_containers_v2" "ngt-sc" {
-  filter = "clusterExtId eq '${local.cluster_ext_id}'"
+  filter = "clusterExtId eq '${local.cluster_ext_id}' and startswith(name,'default-container-')"
   limit  = 1
 }
 
@@ -801,7 +801,7 @@ data "nutanix_subnets_v2" "subnets" {
 }
 
 data "nutanix_storage_containers_v2" "ngt-sc" {
-  filter = "clusterExtId eq '${local.cluster_ext_id}'"
+  filter = "clusterExtId eq '${local.cluster_ext_id}' and startswith(name,'default-container-')"
   limit  = 1
 }
 

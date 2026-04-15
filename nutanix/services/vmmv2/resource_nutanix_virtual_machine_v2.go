@@ -23,8 +23,8 @@ import (
 )
 
 const (
-	timeout = 3 * time.Minute
-	delay   = 3 * time.Second
+	timeout = 5 * time.Minute
+	delay   = 5 * time.Second
 )
 
 func ResourceNutanixVirtualMachineV2() *schema.Resource {
@@ -1464,10 +1464,10 @@ func ResourceNutanixVirtualMachineV2Read(ctx context.Context, d *schema.Resource
 
 func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
-	// respImages := resp.Data.GetValue().(config.Vm)
-	// updateSpec := respImages
 
-	if checkForHotPlugChanges(d) && !isVMPowerOff(d, conn) {
+	// Power Off of VM is required for specific VM update operations.
+	isCpuHotplugEnabled := d.Get("is_cpu_hotplug_enabled").(bool)
+	if checkForHotPlugChanges(d) || (!isCpuHotplugEnabled && d.HasChange("num_sockets")) || checkMemoryAndSocketsDecreased(d) {
 		log.Printf("[DEBUG] callingForPowerOffVM func")
 		callForPowerOffVM(ctx, conn, d, meta)
 	}
@@ -2155,7 +2155,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 	}
 
 	// call for power on VM after updating
-	if checkForHotPlugChanges(d) {
+	if checkForHotPlugChanges(d) || (!isCpuHotplugEnabled && d.HasChange("num_sockets")) || checkMemoryAndSocketsDecreased(d) {
 		if power, ok := d.GetOk("power_state"); ok {
 			if power == "ON" {
 				callForPowerOnVM(ctx, conn, d, meta)
@@ -3400,12 +3400,30 @@ func diffConfig(oldValue []interface{}, newValue []interface{}) ([]interface{}, 
 
 // Check if VM is in power off state to perform update operations
 func checkForHotPlugChanges(d *schema.ResourceData) bool {
-	if d.HasChange("num_sockets") || d.HasChange("num_cores_per_socket") || d.HasChange("memory_size_bytes") ||
-		d.HasChange("num_threads_per_core") || d.HasChange("cd_rom") || d.HasChange("num_numa_nodes") ||
+	if d.HasChange("num_cores_per_socket") ||
+		d.HasChange("num_threads_per_core") || d.HasChange("cd_roms") || d.HasChange("num_numa_nodes") ||
 		d.HasChange("cluster") || d.HasChange("is_cpu_passthrough_enabled") || d.HasChange("enabled_cpu_features") ||
 		d.HasChange("is_vcpu_hard_pinning_enabled") || d.HasChange("guest_customization") || d.HasChange("guest_tools") ||
-		d.HasChange("serial_ports") || d.HasChange("gpus") || d.HasChange("boot_config") {
+		d.HasChange("serial_ports") || d.HasChange("gpus") || d.HasChange("boot_config") || d.HasChange("is_cpu_hotplug_enabled") {
 		return true
+	}
+	return false
+}
+
+func checkMemoryAndSocketsChange(d *schema.ResourceData) bool {
+	if d.HasChange("memory_size_bytes") || d.HasChange("num_sockets") {
+		return true
+	}
+	return false
+}
+
+func checkMemoryAndSocketsDecreased(d *schema.ResourceData) bool {
+	if checkMemoryAndSocketsChange(d) {
+		oldMemory, newMemory := d.GetChange("memory_size_bytes")
+		oldSockets, newSockets := d.GetChange("num_sockets")
+		if newMemory.(int) < oldMemory.(int) || newSockets.(int) < oldSockets.(int) {
+			return true
+		}
 	}
 	return false
 }

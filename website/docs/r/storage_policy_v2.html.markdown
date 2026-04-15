@@ -223,6 +223,18 @@ The following attributes are exported:
   * `replication_factor`:- Replication factor value.
 * `policy_type`:- (Computed) Indicates whether the policy is user-created or system-created. Valid values: `"USER"`, `"SYSTEM"`.
 
+## Import
+
+This helps to manage existing entities which are not created through Terraform. Storage policy resources can be imported using the `UUID` (`ext_id` in v4 terms). For example:
+
+```hcl
+// create its configuration in the root module. For example:
+resource "nutanix_storage_policy_v2" "import_storage_policy" {}
+
+// execute this command in cli
+terraform import nutanix_storage_policy_v2.import_storage_policy <UUID>
+```
 
 
-See detailed information in [Nutanix Create Storage Policies v4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.1#tag/StoragePolicies/operation/createStoragePolicy).
+
+See detailed information in [Nutanix Create Storage Policies v4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.2#tag/StoragePolicies/operation/createStoragePolicy).

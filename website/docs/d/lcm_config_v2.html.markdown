@@ -47,4 +47,4 @@ The following attributes are exported:
 * `is_framework_bundle_uploaded`: Indicates if the bundle is uploaded or not.
 * `has_module_auto_upgrade_enabled`: Indicates if LCM is enabled to auto-upgrade products. The default value is False.
 
-See detailed information in [Nutanix Get LCM Config V4](https://developers.nutanix.com/api-reference?namespace=lifecycle&version=v4.0#tag/Config/operation/getConfig)
+See detailed information in [Nutanix Get LCM Config V4](https://developers.nutanix.com/api-reference?namespace=lifecycle&version=v4.2#tag/Config/operation/getConfig)

@@ -43,4 +43,4 @@ The following attributes are exported:
 * `pc_ext_id`: - External identifier of the Prism Central.
 * `replicated_rp_ext_id`: - External identifier of replicated recovery point.
 
-See detailed information in [Nutanix Replicate a Recovery Point V4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.0#tag/RecoveryPoints/operation/replicateRecoveryPoint).
+See detailed information in [Nutanix Replicate a Recovery Point V4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.3#tag/RecoveryPoints/operation/replicateRecoveryPoint).

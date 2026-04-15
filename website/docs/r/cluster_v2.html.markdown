@@ -537,4 +537,4 @@ terraform import nutanix_cluster_v2.import_cluster <UUID>
 
 ```
 
-See detailed information in [Nutanix Create Cluster V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/Clusters/operation/createCluster).
+See detailed information in [Nutanix Create Cluster V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.2#tag/Clusters/operation/createCluster).

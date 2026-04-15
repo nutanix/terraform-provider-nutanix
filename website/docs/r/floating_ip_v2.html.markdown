@@ -93,4 +93,4 @@ resource "nutanix_floating_ip_v2" "floating_ip"{}
 terraform import nutanix_floating_ip_v2.floating_ip <UUID>
 ```
 
-See detailed information in [Nutanix Floating IP v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/FloatingIps/operation/createFloatingIp).
+See detailed information in [Nutanix Floating IP v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/FloatingIps/operation/createFloatingIp).

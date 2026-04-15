@@ -345,4 +345,4 @@ The `fqdn` argument supports the following:
 
 - `value`: -(Optional) The fully qualified domain name of the host.
 
-See detailed information in [Nutanix Restore PC V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/restore).
+See detailed information in [Nutanix Restore PC V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.3#tag/DomainManager/operation/restore).

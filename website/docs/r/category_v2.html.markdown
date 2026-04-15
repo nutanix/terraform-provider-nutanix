@@ -1,9 +1,10 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_category_v2"
-sidebar_current: "docs-nutanix-datasource-category-v2"
+sidebar_current: "docs-nutanix-resource-category-v2"
 description: |-
   Create, Update and Delete category (key - value pair).
+---
 
 # nutanix_category_v2
 Create, Update and Delete category (key - value pair).
@@ -173,4 +174,4 @@ We have two resources separately for category key (nutanix_category_key) and val
 Please use datasources (nutanix_categories_v2) to fetch uuids (ext_id) of all category key valye pairs to import them.
 
 
-See detailed information in [Nutanix Create Category v4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/Categories/operation/createCategory).
+See detailed information in [Nutanix Create Category v4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.3#tag/Categories/operation/createCategory).

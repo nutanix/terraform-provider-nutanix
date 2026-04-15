@@ -11,6 +11,7 @@ type Client struct {
 	AddressGroupAPIInstance    *api.AddressGroupsApi
 	ServiceGroupAPIInstance    *api.ServiceGroupsApi
 	NetworkingSecurityInstance *api.NetworkSecurityPoliciesApi
+	EntityGroupsAPIInstance    *api.EntityGroupsApi
 }
 
 func NewMicrosegClient(credentials client.Credentials) (*Client, error) {
@@ -27,9 +28,12 @@ func NewMicrosegClient(credentials client.Credentials) (*Client, error) {
 		baseClient = pcClient
 	}
 
-	return &Client{
+	f := &Client{
 		AddressGroupAPIInstance:    api.NewAddressGroupsApi(baseClient),
 		ServiceGroupAPIInstance:    api.NewServiceGroupsApi(baseClient),
 		NetworkingSecurityInstance: api.NewNetworkSecurityPoliciesApi(baseClient),
-	}, nil
+		EntityGroupsAPIInstance:    api.NewEntityGroupsApi(baseClient),
+	}
+
+	return f, nil
 }

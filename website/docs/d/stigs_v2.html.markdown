@@ -276,4 +276,4 @@ The `stigs` exports the following:
 - `fix_text`: - The command/steps to fix the STIG rule failure.
 - `benchmark_id`: - Benchmark ID of the STIG rules.
 
-See detailed information in [Nutanix Get the STIG controls details V4](https://developers.nutanix.com/api-reference?namespace=security&version=v4.0#tag/STIGs/operation/listStigs)
+See detailed information in [Nutanix Get the STIG controls details V4](https://developers.nutanix.com/api-reference?namespace=security&version=v4.1#tag/STIGs/operation/listStigs)

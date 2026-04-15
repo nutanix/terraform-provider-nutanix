@@ -385,4 +385,4 @@ resource "nutanix_cluster_profile_v2" "import_cluster_profile" {}
 terraform import nutanix_cluster_v2.import_cluster <UUID>
 ```
 
-See detailed information in [Nutanix Create Cluster Profile V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.1#tag/ClusterProfiles/operation/createClusterProfile).
+See detailed information in [Nutanix Create Cluster Profile V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.2#tag/ClusterProfiles/operation/createClusterProfile).

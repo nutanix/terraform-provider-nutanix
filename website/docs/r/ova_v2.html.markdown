@@ -432,4 +432,4 @@ resource "nutanix_ova_v2" "import_ova" {}
 terraform import nutanix_ova_v2.import_ova <UUID>
 ```
 
-See detailed information in [Nutanix Get Ova Details V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/getDomainManagerById).
+See detailed information in [Nutanix Get Ova Details V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.3#tag/DomainManager/operation/getDomainManagerById).

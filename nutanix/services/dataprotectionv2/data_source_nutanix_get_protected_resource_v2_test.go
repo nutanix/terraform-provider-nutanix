@@ -2,6 +2,7 @@ package dataprotectionv2_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -13,6 +14,10 @@ import (
 const dataSourceNameGetProtectedResource = "data.nutanix_protected_resource_v2.test"
 
 func TestAccV2NutanixPromoteProtectedResourceDatasource_GetProtectedVm(t *testing.T) {
+	// if the test is running using NUTANIX_API_KEY, skip the test
+	if os.Getenv("NUTANIX_API_KEY") != "" {
+		t.Skip("Skipping test as it not supported using NUTANIX_API_KEY")
+	}
 	r := acctest.RandIntRange(1, 99)
 	vmName := fmt.Sprintf("tf-test-protected-vm-get-%d", r)
 	ppName := fmt.Sprintf("tf-test-protected-policy-get-vm-%d", r)
@@ -59,6 +64,10 @@ func TestAccV2NutanixPromoteProtectedResourceDatasource_GetProtectedVm(t *testin
 }
 
 func TestAccV2NutanixPromoteProtectedResourceDatasource_GetProtectedVG(t *testing.T) {
+	// if the test is running using NUTANIX_API_KEY, skip the test
+	if os.Getenv("NUTANIX_API_KEY") != "" {
+		t.Skip("Skipping test as it not supported using NUTANIX_API_KEY")
+	}
 	r := acctest.RandIntRange(1, 99)
 	vgName := fmt.Sprintf("tf-test-protected-vg-get-%d", r)
 	ppName := fmt.Sprintf("tf-test-protected-policy-get-vg-%d", r)

@@ -88,4 +88,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix Get Stats for a Storage Container v4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/StorageContainers/operation/getStorageContainerStats).
+See detailed information in [Nutanix Get Stats for a Storage Container v4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.2#tag/StorageContainers/operation/getStorageContainerStats).

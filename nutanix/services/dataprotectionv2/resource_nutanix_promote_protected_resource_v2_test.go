@@ -19,6 +19,10 @@ const retryInterval = 10 * time.Second
 const sleepTime = 5 * time.Minute
 
 func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVm(t *testing.T) {
+	// if the test is running using NUTANIX_API_KEY, skip the test
+	if os.Getenv("NUTANIX_API_KEY") != "" {
+		t.Skip("Skipping test as it not supported using NUTANIX_API_KEY")
+	}
 	r := acctest.RandIntRange(1, 99)
 	vmName := fmt.Sprintf("tf-test-protected-vm-promote-%d", r)
 	ppName := fmt.Sprintf("tf-test-protected-policy-promote-vm-%d", r)

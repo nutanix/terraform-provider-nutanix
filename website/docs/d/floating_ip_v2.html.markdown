@@ -83,4 +83,4 @@ The `links` attribute supports the following:
 - `rel`: - A name that identifies the relationship of the link to the object that is returned by the URL. The unique value of "self" identifies the URL for the object.
 
 
-See detailed information in [Nutanix Get Floating IP v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/FloatingIps/operation/getFloatingIpById).
+See detailed information in [Nutanix Get Floating IP v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/FloatingIps/operation/getFloatingIpById).

@@ -79,4 +79,4 @@ resource "nutanix_vm_host_affinity_policy_v2" "imported" {}
 
 ```
 
-See detailed information in [Nutanix VM-Host Affinity Policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/VmHostAffinityPolicies)
+See detailed information in [Nutanix VM-Host Affinity Policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/VmHostAffinityPolicies)

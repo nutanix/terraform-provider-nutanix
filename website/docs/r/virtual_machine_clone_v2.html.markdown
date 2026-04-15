@@ -308,4 +308,4 @@ The key_value_pairs attribute supports the following:
 * `name`: - (Optional) The key of this key-value pair
 * `value`: - (Optional) The value associated with the key for this key-value pair.
 
-See detailed information in [Nutanix Clone Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Vm/operation/cloneVm).
+See detailed information in [Nutanix Clone Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Vm/operation/cloneVm).

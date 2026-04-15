@@ -33,6 +33,14 @@ func ResourceNutanixSubnetV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"metadata": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: DatasourceMetadataSchemaV2(),
+				},
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -463,6 +471,9 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	if name, nok := d.GetOk("name"); nok {
 		inputSpec.Name = utils.StringPtr(name.(string))
 	}
+	if metadata, ok := d.GetOk("metadata"); ok {
+		inputSpec.Metadata = expandMetadata(metadata.([]interface{}))
+	}
 	if desc, ok := d.GetOk("description"); ok {
 		inputSpec.Description = utils.StringPtr(desc.(string))
 	}
@@ -478,8 +489,9 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 		inputSpec.SubnetType = &p
 	}
 
-	if networkID, ok := d.GetOk("network_id"); ok {
-		inputSpec.NetworkId = utils.IntPtr(networkID.(int))
+	if common.IsExplicitlySet(d, "network_id") {
+		networkID := d.Get("network_id").(int)
+		inputSpec.NetworkId = utils.IntPtr(networkID)
 	}
 
 	if dhcp, ok := d.GetOk("dhcp_options"); ok {
@@ -514,8 +526,9 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	if bridgeName, ok := d.GetOk("bridge_name"); ok {
 		inputSpec.BridgeName = utils.StringPtr(bridgeName.(string))
 	}
-	if isAdvNet, ok := d.GetOk("is_advanced_networking"); ok {
-		inputSpec.IsAdvancedNetworking = utils.BoolPtr(isAdvNet.(bool))
+	if common.IsExplicitlySet(d, "is_advanced_networking") {
+		isAdvNet := d.Get("is_advanced_networking").(bool)
+		inputSpec.IsAdvancedNetworking = utils.BoolPtr(isAdvNet)
 	}
 	if clsName, ok := d.GetOk("cluster_name"); ok {
 		inputSpec.ClusterName = utils.StringPtr(clsName.(string))
@@ -600,6 +613,9 @@ func ResourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, me
 	getResp := resp.Data.GetValue().(import1.Subnet)
 
 	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("metadata", flattenMetadata(getResp.Metadata)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("name", getResp.Name); err != nil {
@@ -696,6 +712,9 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 	args := make(map[string]interface{})
 	args["If-Match"] = utils.StringPtr(etagValue)
 
+	if d.HasChange("metadata") {
+		updateSpec.Metadata = expandMetadata(d.Get("metadata").([]interface{}))
+	}
 	if d.HasChange("name") {
 		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
 	}

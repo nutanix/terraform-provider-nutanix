@@ -115,4 +115,4 @@ The following attributes are exported:
 - `value`: value of IP address
 - `prefix_length`: The prefix length of the network to which this host IPv4/IPv6 address belongs.
 
-See detailed information in [Nutanix List Routes By Route Table Id v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/Routes/operation/listRoutesByRouteTableId).
+See detailed information in [Nutanix List Routes By Route Table Id v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/Routes/operation/listRoutesByRouteTableId).

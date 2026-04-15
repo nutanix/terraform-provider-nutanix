@@ -59,7 +59,7 @@ func testVMPreEnvConfig(r int) string {
 	
 		
 		data "nutanix_storage_containers_v2" "sc" {
-		  filter = "clusterExtId eq '${local.clusterUUID}'"
+		  filter = "clusterExtId eq '${local.clusterUUID}' and startswith(name,'default-container-')"
 		  limit = 1
 		}		
 
