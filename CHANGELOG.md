@@ -1,4 +1,4 @@
-## 2.4.1
+## 2.4.1 (April 15, 2026)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.4.0...v2.4.1)
 
 **New Features:**
