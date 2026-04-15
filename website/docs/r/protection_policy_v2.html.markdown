@@ -9,6 +9,8 @@ description: |-
 
 # nutanix_protection_policy_v2
 
+> **Authentication:** The `nutanix_protection_policy_v2` resource does **not** support API key authentication for multi-site protection policy operations. Use `username` and `password` in the provider configuration—do not use `api_key`. Using API key will result in authorization errors (DPO-10600).
+
 Creates a protection policy to automate the recovery point creation and replication process.
 
 
@@ -266,4 +268,4 @@ resource "nutanix_protection_policy_v2" "import_pp" {}
 terraform import nutanix_protection_policy_v2.import_pp <UUID>
 ```
 
-See detailed information in [Nutanix Protection Policy v4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.0#tag/ProtectionPolicies/operation/createProtectionPolicy).
+See detailed information in [Nutanix Protection Policy v4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.2#tag/ProtectionPolicies/operation/createProtectionPolicy).

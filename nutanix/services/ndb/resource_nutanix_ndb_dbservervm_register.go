@@ -289,7 +289,7 @@ func resourceNutanixNDBRegisterDBServerUpdate(ctx context.Context, d *schema.Res
 		req.Description = utils.StringPtr(d.Get("description").(string))
 		req.ResetDescription = utils.BoolPtr(true)
 	}
-
+	//nolint:staticcheck
 	if _, ok := d.GetOkExists("update_name_description_in_cluster"); ok {
 		req.ResetDescriptionInNxCluster = utils.BoolPtr(true)
 		req.ResetNameInNxCluster = utils.BoolPtr(true)

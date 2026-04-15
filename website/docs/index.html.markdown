@@ -13,13 +13,45 @@ The provider is used to interact with the many resources and data sources suppor
 Use the navigation on the left to read about the available resources and data sources this provider can use.
 
 
-## Introducing Nutanix Terraform Provider Version v2.3.3
+## Introducing Nutanix Terraform Provider Version v2.4.2
 
-We're excited to announce the release of Nutanix Terraform Provider Version 2.3.3!
+We're excited to announce the release of Nutanix Terraform Provider Version 2.4.2!
 
-### What's New in v2.3.3
+### What's New in v2.4.2
 
-- This release includes one documentation fix to show guides in Terraform provider docs [#1002](https://github.com/nutanix/terraform-provider-nutanix/issues/1002), functionally this release is equivalent to v2.3.2
+- **New Resource Support**
+  - **Network Functions**: Create and manage Network Functions for service chaining and traffic forwarding use cases. [#982](https://github.com/nutanix/terraform-provider-nutanix/issues/982)
+  - **Entity Groups**: Create and manage Entity Groups for microsegmentation use cases. [#1030](https://github.com/nutanix/terraform-provider-nutanix/issues/1030)
+  - **Entities**: List and get IAM entities. Use Entities to configure and manage entities representing the resources over which permissions are defined. Users can use these datasource to list and fetch entities [#955](https://github.com/nutanix/terraform-provider-nutanix/issues/955)
+  - **Network Security Policy Rules**: List all network security policy rules by policy ExtID. [#1031](https://github.com/nutanix/terraform-provider-nutanix/issues/1031)
+  - **VM Affinity Policies**: Create, list, and get VM-Host affinity and VM-VM anti-affinity policies. Use VM Affinity Policies to govern where VMs run by specifying whether a VM should run on a selected set of hosts, or by keeping specified VMs apart on different hosts. Users can use these resources and data sources to configure, list, and fetch affinity policies [#997](https://github.com/nutanix/terraform-provider-nutanix/pull/997)
+
+- **Enhancements:**
+  - **Deploy from OVA**: Add support to update deployed virtual machines from OVA images. [#985](https://github.com/nutanix/terraform-provider-nutanix/pull/985)
+  - FNS 5.2: Add support for global scope, specific intratier rules, and subnet/VPC-based objects features. [#1032](https://github.com/nutanix/terraform-provider-nutanix/issues/1032)
+  - Support metadata on subnet V2 resource and data source. [#1085](https://github.com/nutanix/terraform-provider-nutanix/issues/1085)
+  - API key and custom headers as an alternative method of authorization. [#1062](https://github.com/nutanix/terraform-provider-nutanix/pull/1062)
+
+- **Fixed Bugs:**
+   - `subnets_v2` update with `is_external` set to `true` fails. [#1063](https://github.com/nutanix/terraform-provider-nutanix/issues/1063)
+   - `nutanix_vpc_v2`: Unable to add more than one external routable prefix. [#1053](https://github.com/nutanix/terraform-provider-nutanix/issues/1053)
+   - Legacy NIC attributes in VMM v2 are still used across resources and data sources. [#1059](https://github.com/nutanix/terraform-provider-nutanix/issues/1059)
+   - `nutanix_network_security_policy_v2`: Failed to add a rule on an existing security policy. [#1052](https://github.com/nutanix/terraform-provider-nutanix/issues/1052)
+   - Add retries for VM power on/off operations in `nutanix_virtual_machine_v2` to avoid ETag mismatch errors. [#1089](https://github.com/nutanix/terraform-provider-nutanix/issues/1089)
+   - Bug: can not create global Nutanix security policy, defaults to VLAN. [#1087](https://github.com/nutanix/terraform-provider-nutanix/issues/1087)
+   - `nutanix_object_store_v2` update functionality. [#1094](https://github.com/nutanix/terraform-provider-nutanix/issues/1094)
+   - `nutanix_object_store_v2` gives no Terraform error on long name. [#1093](https://github.com/nutanix/terraform-provider-nutanix/issues/1093)
+   - `nutanix_user_key_v2` update tries to recreate the key object. [#1092](https://github.com/nutanix/terraform-provider-nutanix/issues/1092)
+   - Update of Guest Customization leads to delete and recreate of virtual machine resource. [#1108](https://github.com/nutanix/terraform-provider-nutanix/issues/1108)
+   - Memory hot-plug increase causing VM power off when using `nutanix_virtual_machine_v2` resource. [#1105](https://github.com/nutanix/terraform-provider-nutanix/issues/1105)
+   - Mark user key secrets as sensitive and persist `key_details` on create. [#1112](https://github.com/nutanix/terraform-provider-nutanix/issues/1112)
+
+### Software Requirements
+The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.4.2 for Iris 1, ensure your Nutanix environment meets the following software requirements:
+- Self Service version: 4.3.1 (Required only for running Self Service based resource and data source)
+- AOS Version: 7.5, 7.5.1
+- Prism Central Version: 7.5, 7.5.1 or later
+- Nutanix Terraform Provider Version: 2.4.2
 
 
 ~> **Important Notice:** Upcoming Deprecation of Legacy Nutanix Terraform Provider Resources. Starting with the Nutanix Terraform Provider release planned for Q4-CY2026, legacy resources which are based on v0.8,v1,v2 and v3 APIs will be deprecated and no longer supported. For more information, visit [Legacy API Deprecation Announcement](https://portal.nutanix.com/page/documents/eol/list?type=announcement) [Legacy API Deprecation - FAQs](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA0VO0000005rgP0AQ). Nutanix strongly encourages you to migrate your scripts and applications to the latest v2 version of the Nutanix Terraform Provider resources, which are built on our v4 APIs/SDKs. By adopting the latest v2 version based on v4 APIs and SDKs, our users can leverage the enhanced capabilities and latest innovations from Nutanix. We understand that this transition may require some effort, and we are committed to supporting you throughout the process. Please refer to our documentation and support channels for guidance and assistance.
@@ -33,6 +65,10 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
+| 2.4.2 | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
+| 2.4.1 (⚠️ Deprecated/Invalid) | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
+| 2.4.0 | 7.5 | pc7.5 or later | Self Service  v4.3.0 | yes |
+| 2.3.4 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.3 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.2 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.1 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
@@ -71,11 +107,13 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | nutanix_static_routes | nutanix_routes_v2 |
 | nutanix_address_group | nutanix_address_groups_v2 |
 | nutanix_service_group | nutanix_service_groups_v2 |
+| - | nutanix_network_function_v2 |
 | nutanix_network_security_rule | nutanix_network_security_policy_v2 |
 | nutanix_role | nutanix_roles_v2 |
 | nutanix_user | nutanix_users_v2 |
 | nutanix_user_groups | nutanix_user_groups_v2 |
 | nutanix_access_control_policy | nutanix_authorization_policy_v2 |
+| - | nutanix_entity_group_v2 |
 | - | nutanix_saml_identity_providers_v2 |
 | - | nutanix_directory_services_v2 |
 | nutanix_category_key | nutanix_category_v2 |
@@ -92,6 +130,8 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_vm_gc_update_v2 |
 | - | nutanix_vm_network_device_assign_ip_v2 |
 | - | nutanix_vm_network_device_migrate_v2 |
+| - | nutanix_vm_host_affinity_policy_v2 |
+| - | nutanix_vm_anti_affinity_policy_v2 |
 | - | nutanix_template_v2 |
 | - | nutanix_deploy_templates_v2 |
 | - | nutanix_template_guest_os_actions_v2 |
@@ -167,6 +207,10 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_object_store_v2 |
 | - | nutanix_object_store_certificate_v2 |
 | - | nutanix_password_change_request_v2 |
+| - | nutanix_key_management_server_v2 |
+| - | nutanix_ssl_certificate_v2 |
+| - | nutanix_cluster_profile_v2 |
+| - | nutanix_storage_policy_v2 |
 
 ## Data Sources
 
@@ -188,8 +232,11 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | nutanix_address_groups | nutanix_address_groups_v2 |
 | nutanix_service_group | nutanix_service_group_v2 |
 | nutanix_service_groups | nutanix_service_groups_v2 |
+| - | nutanix_network_function_v2 |
+| - | nutanix_network_functions_v2 |
 | nutanix_network_security_rule | nutanix_network_security_policy_v2 |
 | - | nutanix_network_security_policies_v2 |
+| - | nutanix_network_security_policy_rules_v2 |
 | nutanix_role | nutanix_role_v2 |
 | nutanix_roles | nutanix_roles_v2 |
 | nutanix_permission | nutanix_operation_v2 |
@@ -200,6 +247,10 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | nutanix_user_groups | nutanix_user_groups_v2 |
 | nutanix_access_control_policy | nutanix_authorization_policy_v2 |
 | nutanix_access_control_policies | nutanix_authorization_policies_v2 |
+| - | nutanix_iam_entity_v2 |
+| - | nutanix_iam_entities_v2 |
+| - | nutanix_entity_group_v2 |
+| - | nutanix_entity_groups_v2 |
 | - | nutanix_saml_identity_provider_v2 |
 | - | nutanix_saml_identity_providers_v2 |
 | - | nutanix_directory_service_v2 |
@@ -210,6 +261,10 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_images_v2 |
 | nutanix_virtual_machine | nutanix_virtual_machine_v2 |
 | - | nutanix_virtual_machines_v2 |
+| - | nutanix_vm_host_affinity_policy_v2 |
+| - | nutanix_vm_host_affinity_policies_v2 |
+| - | nutanix_vm_anti_affinity_policy_v2 |
+| - | nutanix_vm_anti_affinity_policies_v2 |
 | - | nutanix_ova_v2 |
 | - | nutanix_ovas_v2 |
 | - | nutanix_template_v2 |
@@ -304,6 +359,14 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_certificate_v2 |
 | - | nutanix_certificates_v2 |
 | - | nutanix_system_user_passwords_v2 |
+| - | nutanix_key_management_server_v2 |
+| - | nutanix_key_management_servers_v2 |
+| - | nutanix_stigs_v2 |
+| - | nutanix_ssl_certificate_v2 |
+| - | nutanix_cluster_profile_v2 |
+| - | nutanix_cluster_profiles_v2 |
+| - | nutanix_storage_policy_v2 |
+| - | nutanix_storage_policies_v2 |
 
 ## Example Usage
 
@@ -345,9 +408,11 @@ provider "nutanix" {
 ## Argument Reference
 
 The following arguments are used to configure the Nutanix Provider:
-* `username` - **(Required)** This is the username for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_USERNAME` environment variable.
-* `password` - **(Required)** This is the password for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_PASSWORD` environment variable.
+* `username` - (Optional) This is the username for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_USERNAME` environment variable. Required if `api_key` is not provided.
+* `password` - (Optional) This is the password for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_PASSWORD` environment variable. Required if `api_key` is not provided.
 * `endpoint` - **(Required)** This is the endpoint for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_ENDPOINT` environment variable.
+* `api_key` - (Optional) This is an API key for Prism Central authentication. Can be used as an alternative to `username`/`password` when connecting to a Prism Central instance. **Not supported by Prism Elements**, which requires `username` and `password`. When set, the `X-Ntnx-Api-Key` header will be used instead of Basic Authentication. This can also be specified with the `NUTANIX_API_KEY` environment variable.
+* `custom_headers` - (Optional) A map of custom HTTP headers to add to all API requests. Useful for environments that require additional headers such as Cloudflare Access service tokens. Headers can also be set via environment variables with the `NUTANIX_HEADER_` prefix (e.g., `NUTANIX_HEADER_CF_ACCESS_CLIENT_ID` becomes `Cf-Access-Client-Id`). Config values take precedence over environment variables.
 * `insecure` - (Optional) This specifies whether to allow verify ssl certificates. This can also be specified with `NUTANIX_INSECURE`. Defaults to `false`.
 * `port` - (Optional) This is the port for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_PORT` environment variable. Defaults to `9440`.
 * `session_auth` - (Optional) This specifies whether to use [session authentication](#session-based-authentication). This can also be specified with the `NUTANIX_SESSION_AUTH` environment variable. Defaults to `true`
@@ -368,6 +433,64 @@ provider "nutanix" {
   ...
 }
 ```
+
+### API Key Authentication
+
+API key authentication can be used as an alternative to username/password authentication when connecting to a **Prism Central** instance. When an API key is provided, the `X-Ntnx-Api-Key` header is used for authentication instead of Basic Authentication.
+
+-> **Note:** API key authentication is a Prism Central feature and is not supported by Prism Elements. Use `username` and `password` when connecting to a Prism Elements endpoint.
+
+Usage:
+
+```terraform
+provider "nutanix" {
+  endpoint = var.nutanix_endpoint
+  api_key  = var.nutanix_api_key
+  port     = var.nutanix_port
+  insecure = true
+}
+```
+
+Or using environment variable:
+```bash
+export NUTANIX_API_KEY="your-api-key"
+```
+
+### Custom Headers (Cloudflare Access)
+
+For environments that require additional HTTP headers (such as Cloudflare Access service tokens), you can specify custom headers that will be added to all API requests.
+
+Usage with provider configuration:
+
+```terraform
+provider "nutanix" {
+  endpoint = var.nutanix_endpoint
+  api_key  = var.nutanix_api_key
+  custom_headers = {
+    "CF-Access-Client-Id"     = var.cf_client_id
+    "CF-Access-Client-Secret" = var.cf_client_secret
+  }
+}
+```
+
+Or using environment variables with the `NUTANIX_HEADER_` prefix:
+```bash
+export NUTANIX_HEADER_CF_ACCESS_CLIENT_ID="your-client-id"
+export NUTANIX_HEADER_CF_ACCESS_CLIENT_SECRET="your-client-secret"
+```
+
+Environment variables are converted to HTTP headers by:
+1. Stripping the `NUTANIX_HEADER_` prefix
+2. Replacing underscores with dashes
+3. Applying title-casing
+
+For example:
+| Environment Variable | HTTP Header |
+| :--- | :--- |
+| `NUTANIX_HEADER_CF_ACCESS_CLIENT_ID` | `Cf-Access-Client-Id` |
+| `NUTANIX_HEADER_X_CUSTOM_HEADER` | `X-Custom-Header` |
+
+Headers defined in the provider configuration take precedence over environment variables.
 
 ## Notes
 
@@ -442,9 +565,8 @@ NDB based examples : https://github.com/nutanix/terraform-provider-nutanix/blob/
 
 ## Provider configuration required details
 
-Going from 1.8.0-beta release of nutanix provider, fields inside provider configuration would be mandatory as per the usecase : 
+Going from 1.8.0-beta release of nutanix provider, fields inside provider configuration would be mandatory as per the usecase :
 
-* `Prism Central & Karbon` : For prism central and karbon related resources and data sources, `username`, `password` & `endpoint` are manadatory.
-* `Foundation` : For foundation related resources and data sources, `foundation_endpoint` in manadatory.
-* `NDB` : For Nutanix Database Service (NDB) related resources and data sources. 
-
+* `Prism Central & Karbon` : For prism central and karbon related resources and data sources, `endpoint` is mandatory plus either (`username` and `password`) or `api_key` for authentication.
+* `Foundation` : For foundation related resources and data sources, `foundation_endpoint` is mandatory.
+* `NDB` : For Nutanix Database Service (NDB) related resources and data sources, `ndb_endpoint`, `ndb_username`, and `ndb_password` are mandatory. 

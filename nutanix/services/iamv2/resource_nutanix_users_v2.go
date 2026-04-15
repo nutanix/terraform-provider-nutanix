@@ -294,7 +294,7 @@ func resourceNutanixUserV2Create(ctx context.Context, d *schema.ResourceData, me
 
 	getResp := resp.Data.GetValue().(import1.User)
 
-	d.SetId(*getResp.ExtId)
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return resourceNutanixUserV2Read(ctx, d, meta)
 }
 
@@ -381,8 +381,6 @@ func resourceNutanixUserV2Read(ctx context.Context, d *schema.ResourceData, meta
 func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	updateSpec := &import1.User{}
-
 	// get Resp
 	getResp, er := conn.UsersAPIInstance.GetUserById(utils.StringPtr(d.Id()))
 	if er != nil {
@@ -391,7 +389,7 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 
 	getUserResp := getResp.Data.GetValue().(import1.User)
 
-	updateSpec = &getUserResp
+	updateSpec := &getUserResp
 
 	// validation on update spec
 	// Note: user read response has "" as default value for  middleInitial, emailId, displayName.
@@ -498,7 +496,7 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 	}
 	updateResp := updateresp.Data.GetValue().(import1.User)
 
-	if d.Id() != *updateResp.ExtId {
+	if d.Id() != utils.StringValue(updateResp.ExtId) {
 		return diag.Errorf("ext_id is different in update user")
 	}
 	return resourceNutanixUserV2Read(ctx, d, meta)

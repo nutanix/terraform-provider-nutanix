@@ -78,7 +78,7 @@ func resourceNutanixNDBLogCatchUpsCreate(ctx context.Context, d *schema.Resource
 	// call log-catchup API
 
 	actargs := []*era.Actionarguments{}
-
+	//nolint:staticcheck
 	if restore, rok := d.GetOkExists("for_restore"); rok && restore.(bool) {
 		forRestore := restore.(bool)
 

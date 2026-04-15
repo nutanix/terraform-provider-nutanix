@@ -26,6 +26,15 @@ const (
 	awsS3ConfigObjectType = "prism.v4.management.AWSS3Config"
 )
 
+// getBasicAuthForAPINonSupportedTests returns username and password for tests that do not support API key.
+// Uses username_for_test and password_for_test from test_config_v2.json when available, otherwise env vars.
+func getBasicAuthForAPINonSupportedTests() (string, string) {
+	if testVars.UsernameForTest != "" && testVars.PasswordForTest != "" {
+		return testVars.UsernameForTest, testVars.PasswordForTest
+	}
+	return os.Getenv("NUTANIX_USERNAME"), os.Getenv("NUTANIX_PASSWORD")
+}
+
 // checkAttributeLength checks the length of an attribute and make sure it is greater than or equal to minLength
 // simply used to check the length of a list returned by List data sources
 func checkAttributeLength(resourceName, attribute string, minLength int) resource.TestCheckFunc {
@@ -227,7 +236,9 @@ func checkClusterLocationBackupTargetExistAndCreateIfNotExists() resource.TestCh
 
 		clusterRef.ExtId = utils.StringPtr(clusterExtID)
 
-		clusterConfigBody.Config = clusterRef
+		oneOfClusterLocationConfig := management.NewOneOfClusterLocationConfig()
+		oneOfClusterLocationConfig.SetValue(*clusterRef)
+		clusterConfigBody.Config = oneOfClusterLocationConfig
 
 		err := OneOfBackupTargetLocation.SetValue(*clusterConfigBody)
 		if err != nil {
@@ -253,7 +264,7 @@ func checkClusterLocationBackupTargetExistAndCreateIfNotExists() resource.TestCh
 			Refresh: taskStateRefreshPrismTaskGroupFunc(utils.StringValue(taskUUID)),
 			Timeout: timeout,
 		}
-
+		//nolint:staticcheck
 		if _, taskErr := stateConf.WaitForState(); err != nil {
 			return fmt.Errorf("error waiting for Backup Target to be deleted: %s", taskErr)
 		}
@@ -274,7 +285,8 @@ func checkClusterLocationBackupTargetExistAndCreateIfNotExists() resource.TestCh
 			backupTargetLocation := backupTarget.Location
 			if utils.StringValue(backupTargetLocation.ObjectType_) == "prism.v4.management.ClusterLocation" {
 				clusterLocation := backupTarget.Location.GetValue().(management.ClusterLocation)
-				if utils.StringValue(clusterLocation.Config.ExtId) == clusterExtID {
+				clusterConfig := clusterLocation.Config.GetValue().(management.ClusterReference)
+				if utils.StringValue(clusterConfig.ExtId) == clusterExtID {
 					break
 				}
 			}
@@ -374,7 +386,7 @@ func checkObjectStoreLocationBackupTargetExistAndCreateIfNotExists() resource.Te
 			Refresh: taskStateRefreshPrismTaskGroupFunc(utils.StringValue(taskUUID)),
 			Timeout: timeout,
 		}
-
+		//nolint:staticcheck
 		if _, taskErr := stateConf.WaitForState(); err != nil {
 			return fmt.Errorf("error waiting for Backup Target to be deleted: %s", taskErr)
 		}
@@ -432,7 +444,7 @@ func waitDeleteTask(resp *management.DeleteBackupTargetApiResponse) error {
 		Refresh: taskStateRefreshPrismTaskGroupFunc(utils.StringValue(taskUUID)),
 		Timeout: timeout,
 	}
-
+	//nolint:staticcheck
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf("error waiting for Backup Target to be deleted: %s", err)
 	}
@@ -552,8 +564,9 @@ func checkClusterLocationBackupTargetExistAndCreateIfNot(backupTargetExtID, doma
 		clusterRef := management.NewClusterReference()
 
 		clusterRef.ExtId = utils.StringPtr(clusterExtID)
-
-		clusterConfigBody.Config = clusterRef
+		oneOfClusterLocationConfig := management.NewOneOfClusterLocationConfig()
+		oneOfClusterLocationConfig.SetValue(*clusterRef)
+		clusterConfigBody.Config = oneOfClusterLocationConfig
 
 		err := OneOfBackupTargetLocation.SetValue(*clusterConfigBody)
 		if err != nil {
@@ -579,7 +592,7 @@ func checkClusterLocationBackupTargetExistAndCreateIfNot(backupTargetExtID, doma
 			Refresh: taskStateRefreshPrismTaskGroupFunc(utils.StringValue(taskUUID)),
 			Timeout: timeout,
 		}
-
+		//nolint:staticcheck
 		if _, taskErr := stateConf.WaitForState(); err != nil {
 			return fmt.Errorf("error waiting for Backup Target to be deleted: %s", taskErr)
 		}
@@ -600,7 +613,8 @@ func checkClusterLocationBackupTargetExistAndCreateIfNot(backupTargetExtID, doma
 			backupTargetLocation := backupTarget.Location
 			if utils.StringValue(backupTargetLocation.ObjectType_) == "prism.v4.management.ClusterLocation" {
 				clusterLocation := backupTarget.Location.GetValue().(management.ClusterLocation)
-				if utils.StringValue(clusterLocation.Config.ExtId) == clusterExtID {
+				clusterConfig := clusterLocation.Config.GetValue().(management.ClusterReference)
+				if utils.StringValue(clusterConfig.ExtId) == clusterExtID {
 					*backupTargetExtID = utils.StringValue(backupTarget.ExtId)
 					break
 				}
@@ -703,7 +717,7 @@ func checkObjectRestoreLocationBackupTargetExistAndCreateIfNot(backupTargetExtID
 			Refresh: taskStateRefreshPrismTaskGroupFunc(utils.StringValue(taskUUID)),
 			Timeout: timeout,
 		}
-
+		//nolint:staticcheck
 		if _, taskErr := stateConf.WaitForState(); err != nil {
 			return fmt.Errorf("error waiting for Backup Target to be deleted: %s", taskErr)
 		}
@@ -803,7 +817,9 @@ func createClusterLocationRestoreSource(restoreSourceExtID *string) resource.Tes
 
 		clusterRef.ExtId = utils.StringPtr(clusterExtID)
 
-		clusterConfigBody.Config = clusterRef
+		oneOfClusterLocationConfig := management.NewOneOfClusterLocationConfig()
+		oneOfClusterLocationConfig.SetValue(*clusterRef)
+		clusterConfigBody.Config = oneOfClusterLocationConfig
 
 		err := oneOfRestoreSourceLocation.SetValue(*clusterConfigBody)
 		if err != nil {

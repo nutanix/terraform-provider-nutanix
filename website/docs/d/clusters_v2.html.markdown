@@ -372,4 +372,4 @@ The `fqdn` attribute supports the following:
 
 * `value`: - The fully qualified domain name of the host.
 
-See detailed information in [Nutanix List Clusters V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/Clusters/operation/listClusters).
+See detailed information in [Nutanix List Clusters V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.2#tag/Clusters/operation/listClusters).

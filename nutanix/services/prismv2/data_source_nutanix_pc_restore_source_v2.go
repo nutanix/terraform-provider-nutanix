@@ -175,13 +175,22 @@ func flattenRestoreSourceLocation(location *management.OneOfRestoreSourceLocatio
 }
 
 func flattenRestoreSourceClusterLocation(location management.ClusterLocation) []map[string]interface{} {
-	if &location == nil {
-		return nil
-	}
-
 	clusterLocation := make([]map[string]interface{}, 0)
 	clusterLocationMap := make(map[string]interface{})
-	clusterLocationMap["config"] = flattenRestoreSourceClusterReference(location.Config)
+	// Config is *OneOfClusterLocationConfig; GetValue() returns the concrete member (ClusterReference or RemoteClusterSpec), not another OneOf wrapper.
+	if location.Config == nil {
+		clusterLocationMap["config"] = nil
+		clusterLocation = append(clusterLocation, clusterLocationMap)
+		return clusterLocation
+	}
+	switch v := location.Config.GetValue().(type) {
+	case management.ClusterReference:
+		clusterLocationMap["config"] = flattenRestoreSourceClusterReference(&v)
+	case *management.ClusterReference:
+		clusterLocationMap["config"] = flattenRestoreSourceClusterReference(v)
+	default:
+		clusterLocationMap["config"] = nil
+	}
 
 	clusterLocation = append(clusterLocation, clusterLocationMap)
 
@@ -204,10 +213,6 @@ func flattenRestoreSourceClusterReference(clusterReference *management.ClusterRe
 }
 
 func flattenRestoreSourceObjectStoreLocation(objectStoreLocation management.ObjectStoreLocation) []map[string]interface{} {
-	if &objectStoreLocation == nil {
-		return nil
-	}
-
 	objectStoreLocationMap := make(map[string]interface{})
 	objectStoreLocationMap["provider_config"] = flattenProviderConfig(objectStoreLocation.ProviderConfig)
 	//objectStoreLocationMap["backup_policy"] = flattenBackupPolicy(objectStoreLocation.BackupPolicy)

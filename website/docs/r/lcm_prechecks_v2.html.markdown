@@ -48,4 +48,4 @@ The `entity_update_specs` attribute supports the following:
 * `entity_uuid`: (Required) UUID of the LCM entity.
 * `to_version`: (Required) Version to upgrade to.
 
-See detailed information in [Nutanix LCM Prechecks v4](https://developers.nutanix.com/api-reference?namespace=lifecycle&version=v4.0#tag/Prechecks/operation/performPrechecks)
+See detailed information in [Nutanix LCM Prechecks v4](https://developers.nutanix.com/api-reference?namespace=lifecycle&version=v4.2#tag/Prechecks/operation/performPrechecks)

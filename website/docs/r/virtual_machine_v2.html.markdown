@@ -131,12 +131,14 @@ resource "nutanix_virtual_machine_v2" "vm-3" {
   }
 
   nics {
-    network_info {
+    nic_network_info {
+      virtual_ethernet_nic_network_info {
       nic_type = "NORMAL_NIC"
-      subnet {
-        ext_id = "7f66e20f-67f4-473f-96bb-c4fcfd487f16"
+        subnet {
+          ext_id = "7f66e20f-67f4-473f-96bb-c4fcfd487f16"
+        }
+        vlan_mode = "ACCESS"
       }
-      vlan_mode = "ACCESS"
     }
   }
 
@@ -149,6 +151,21 @@ resource "nutanix_virtual_machine_v2" "vm-3" {
 }
 
 ```
+
+## Lifecycle Behavior
+
+~> Important: Updates to `guest_customization` are treated as create-time only changes and will force the VM to be replaced.
+
+Guest customization settings such as `config.cloud_init` and `config.sysprep` are consumed during the initial boot of the virtual machine and are not re-applied on later updates.
+
+As a result, changing the `guest_customization` block causes Terraform to destroy and recreate the `nutanix_virtual_machine_v2` resource instead of performing an in-place update.
+
+This behavior applies to both:
+
+- Sysprep-based guest customization for Windows VMs
+- cloud-init based guest customization for Linux VMs
+
+~> Note: Replacing the VM creates a new virtual machine instance. Make sure any dependent systems, references, or post-provisioning steps are updated accordingly before applying the change.
 
 ## Argument Reference
 
@@ -381,8 +398,49 @@ The `cd_roms` attribute supports the following:
 ### NICs
 The `nics` attribute supports the following:
 
-* `backing_info`: (Optional) Defines a NIC emulated by the hypervisor
-* `network_info`: (Optional) Network information for a NIC.
+* `nic_backing_info`: (Optional) New NIC backing info (v2.4.1+). One of `virtual_ethernet_nic`, `sriov_nic`, `dp_offload_nic`.
+* `nic_network_info`: (Optional) New NIC network info (v2.4.1+). One of `virtual_ethernet_nic_network_info`, `sriov_nic_network_info`, `dp_offload_nic_network_info`.
+* `backing_info`: (Optional, Deprecated) Use `nic_backing_info.virtual_ethernet_nic` instead.
+* `network_info`: (Optional, Deprecated) Use `nic_network_info.virtual_ethernet_nic_network_info` instead.
+
+### nics.nic_backing_info.virtual_ethernet_nic
+* `model`: (Optional) Options for the NIC emulation. Valid values "VIRTIO", "E1000".
+* `mac_address`: (Optional) MAC address of the emulated NIC.
+* `is_connected`: (Optional) Indicates whether the NIC is connected or not. Default is True.
+* `num_queues`: (Optional) The number of Tx/Rx queue pairs for this NIC. Default is 1.
+
+### nics.nic_backing_info.sriov_nic
+* `sriov_profile_reference`: (Required) SR-IOV profile reference.
+* `host_pcie_device_reference`: (Optional) Host PCIe device reference.
+* `is_connected`: (Optional) Indicates whether the NIC is connected or not. Default is True.
+* `mac_address`: (Optional) MAC address of the SR-IOV NIC.
+
+### nics.nic_backing_info.dp_offload_nic
+* `dp_offload_profile_reference`: (Required) DP offload profile reference.
+* `host_pcie_device_reference`: (Optional) Host PCIe device reference.
+* `is_connected`: (Optional) Indicates whether the NIC is connected or not. Default is True.
+* `mac_address`: (Optional) MAC address of the DP offload NIC.
+
+### nics.nic_network_info.virtual_ethernet_nic_network_info
+* `nic_type`: (Optional) NIC type. Valid values "SPAN_DESTINATION_NIC", "NORMAL_NIC", "DIRECT_NIC", "NETWORK_FUNCTION_NIC".
+* `network_function_chain`: (Optional) The network function chain associates with the NIC. Only valid if nic_type is NORMAL_NIC.
+* `network_function_nic_type`: (Optional) The type of this Network function NIC. Defaults to INGRESS.
+* `subnet`: (Optional) Network identifier for this adapter. Only valid if nic_type is NORMAL_NIC or DIRECT_NIC.
+* `subnet.ext_id`: (Optional) The globally unique identifier of a subnet of type UUID.
+* `vlan_mode`: (Optional) All the virtual NICs are created in ACCESS mode by default. TRUNKED allows multiple VLANs.
+* `trunked_vlans`: (Optional) List of networks to trunk if VLAN mode is TRUNKED.
+* `should_allow_unknown_macs`: (Optional) Indicates whether an unknown unicast traffic is forwarded to this NIC or not.
+* `ipv4_config`: (Optional) The IP address configurations.
+
+### nics.nic_network_info.sriov_nic_network_info
+* `vlan_id`: (Optional) VLAN ID for the SR-IOV NIC.
+
+### nics.nic_network_info.dp_offload_nic_network_info
+* `subnet`: (Optional) Network identifier for this adapter.
+* `vlan_mode`: (Optional) VLAN mode for DP offload NIC.
+* `trunked_vlans`: (Optional) List of networks to trunk if VLAN mode is TRUNKED.
+* `should_allow_unknown_macs`: (Optional) Indicates whether an unknown unicast traffic is forwarded to this NIC or not.
+* `ipv4_config`: (Optional) The IP address configurations.
 
 ### nics.backing_info
 * `model`: (Optional) Options for the NIC emulation. Valid values "VIRTIO" , "E1000".
@@ -476,4 +534,16 @@ The following attributes are exported:
 * `protection_type`: The type of protection applied on a VM. PD_PROTECTED indicates a VM is protected using the Prism Element. RULE_PROTECTED indicates a VM protection using the Prism Central.
 * `protection_policy_state`: Status of protection policy applied to this VM.
 
-See detailed information in [Nutanix Create Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Vm/operation/createVm).
+## Import
+
+This helps to manage existing entities which are not created through terraform. Virtual Machine can be imported using the virtual machine uuid `virtualMachineUUID` (ext_id in v4 terms). eg,
+
+```hcl
+// create its configuration in the root module. For example:
+// virtual machine will be imported to this resource 
+resource "nutanix_virtual_machine_v2" "import_virtual_machine"{}
+
+terraform import nutanix_virtual_machine_v2.import_virtual_machine <virtualMachineUUID>
+```
+
+See detailed information in [Nutanix Create Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Vm/operation/createVm).

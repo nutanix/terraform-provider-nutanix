@@ -15,6 +15,7 @@ import (
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -37,12 +38,7 @@ func ResourceNutanixClusterDiscoverUnconfiguredNodesV2() *schema.Resource {
 			"ip_filter_list": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForValuePrefixLength(),
-						"ipv6": SchemaForValuePrefixLength(),
-					},
-				},
+				Elem:     common.SchemaForIPList(false),
 			},
 			"uuid_filter_list": {
 				Type:     schema.TypeList,
@@ -132,12 +128,7 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 			"cvm_ip": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForValuePrefixLength(),
-						"ipv6": SchemaForValuePrefixLength(),
-					},
-				},
+				Elem:     common.SchemaForIPList(false),
 			},
 			"foundation_version": {
 				Type:     schema.TypeString,
@@ -150,12 +141,7 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 			"hypervisor_ip": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForValuePrefixLengthResource(),
-						"ipv6": SchemaForValuePrefixLengthResource(),
-					},
-				},
+				Elem:     common.SchemaForIPList(false),
 			},
 			"hypervisor_type": {
 				Type:     schema.TypeString,
@@ -172,12 +158,7 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 			"ipmi_ip": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForValuePrefixLengthResource(),
-						"ipv6": SchemaForValuePrefixLengthResource(),
-					},
-				},
+				Elem:     common.SchemaForIPList(false),
 			},
 			"is_secure_booted": {
 				Type:     schema.TypeBool,
@@ -274,55 +255,51 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Nodes Trap to be available
+	// Wait for the discover unconfigured nodes operation to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
-
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Unconfigured Nodes (%s) to fetch: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for unconfigured nodes (%s) to discover: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Unconfigured Nodes UUID : %v", err)
+		return diag.Errorf("error while fetching discover unconfigured nodes task: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Discover Unconfigured Nodes Task Details: %s", string(aJSON))
 
-	jsonBody, _ := json.MarshalIndent(resourceUUID, "", "  ")
-	log.Printf("[DEBUG] fetching Unconfigured Nodes resourceUUID : %s", string(jsonBody))
+	uuid := strings.Split(utils.StringValue(taskDetails.ExtId), "=:")[1]
 
-	uuid := strings.Split(utils.StringValue(rUUID.ExtId), "=:")[1]
-
-	const unconfiguredNodes = 2
+	const unconfiguredNodes = config.TASKRESPONSETYPE_UNCONFIGURED_NODES
 	taskResponseType := config.TaskResponseType(unconfiguredNodes)
 	unconfiguredNodesResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr)
 	}
 
-	taskResp := unconfiguredNodesResp.Data.GetValue().(config.TaskResponse)
+	unconfiguredNodesTaskResp := unconfiguredNodesResp.Data.GetValue().(config.TaskResponse)
 
-	if *taskResp.TaskResponseType != config.TaskResponseType(unconfiguredNodes) {
+	if *unconfiguredNodesTaskResp.TaskResponseType != config.TaskResponseType(unconfiguredNodes) {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", "task response type mismatch")
 	}
 
-	unconfiguredNodeDetails := taskResp.Response.GetValue().(config.UnconfigureNodeDetails)
+	unconfiguredNodeDetails := unconfiguredNodesTaskResp.Response.GetValue().(config.UnconfigureNodeDetails)
 
 	if err := d.Set("unconfigured_nodes", flattenUnconfiguredNodes(unconfiguredNodeDetails.NodeList)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	aJSON, _ = json.MarshalIndent(unconfiguredNodesResp, "", " ")
-	log.Printf("[DEBUG] fetching Task Response for Unconfigured Nodes Task Details: %s\n", string(aJSON))
+	bJSON, _ := json.MarshalIndent(unconfiguredNodesResp, "", "  ")
+	log.Printf("[DEBUG] Fetch Task Response for Unconfigured Nodes: %s", string(bJSON))
 
 	// Set the ID
-	d.SetId(uuid)
+	d.SetId(utils.StringValue(taskDetails.ExtId))
 
 	return nil
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -192,8 +193,11 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 		clusterRef := management.NewClusterReference()
 		clusterExtID = clusterConfig["ext_id"].(string)
 		clusterRef.ExtId = utils.StringPtr(clusterExtID)
-
-		clusterConfigBody.Config = clusterRef
+		// From IRIS SDK, the cluster location config is a OneOfClusterLocationConfig
+		// so we need to set the value of the OneOfClusterLocationConfig
+		oneOfClusterLocationConfig := management.NewOneOfClusterLocationConfig()
+		oneOfClusterLocationConfig.SetValue(*clusterRef)
+		clusterConfigBody.Config = oneOfClusterLocationConfig
 
 		err := OneOfBackupTargetLocation.SetValue(*clusterConfigBody)
 		if err != nil {
@@ -240,21 +244,21 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the backup target to be created
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for backup target to be created: %s", err)
+		return diag.Errorf("error waiting for backup target (%s) to be created: %s", utils.StringValue(taskUUID), err)
 	}
 
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching backup target task details: %s", err)
+		return diag.Errorf("error while fetching backup target create task (%s): %s", utils.StringValue(taskUUID), err)
 	}
 
 	taskDetails := taskResp.Data.GetValue().(config.Task)
@@ -273,7 +277,10 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 		if isClusterLocation && utils.StringValue(backupTargetLocation.ObjectType_) == clustersLocationObjectType {
 			log.Printf("[DEBUG] Cluster Backup Target with Ext ID: %s", utils.StringValue(backupTarget.ExtId))
 			clusterLocation := backupTarget.Location.GetValue().(management.ClusterLocation)
-			if utils.StringValue(clusterLocation.Config.ExtId) == clusterExtID {
+			// From IRIS SDK, the cluster location config is a OneOfClusterLocationConfig
+			// so we need to get the value of the OneOfClusterLocationConfig
+			clusterConfig := clusterLocation.Config.GetValue().(management.ClusterReference)
+			if utils.StringValue(clusterConfig.ExtId) == clusterExtID {
 				d.SetId(utils.StringValue(backupTarget.ExtId))
 				break
 			}
@@ -281,7 +288,6 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 			objectStoreLocation := backupTarget.Location.GetValue().(management.ObjectStoreLocation)
 			// Since the backup target ext ID is not returned in the task details response
 			// we need to find the backup target by bucket name
-
 			if *objectStoreLocation.ProviderConfig.ObjectType_ == awsS3ConfigObjectType {
 				awsS3Config := objectStoreLocation.ProviderConfig.GetValue().(management.AWSS3Config)
 				if utils.StringValue(awsS3Config.BucketName) == bucketName {
@@ -427,8 +433,11 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 			clusterRef := management.NewClusterReference()
 
 			clusterRef.ExtId = utils.StringPtr(clusterConfig["ext_id"].(string))
-
-			clusterConfigBody.Config = clusterRef
+			// From IRIS SDK, the cluster location config is a OneOfClusterLocationConfig
+			// so we need to set the value of the OneOfClusterLocationConfig
+			oneOfClusterLocationConfig := management.NewOneOfClusterLocationConfig()
+			oneOfClusterLocationConfig.SetValue(*clusterRef)
+			clusterConfigBody.Config = oneOfClusterLocationConfig
 
 			err = oneOfBackupTargetLocation.SetValue(*clusterConfigBody)
 			if err != nil {
@@ -476,17 +485,17 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for backup target to be updated: %s", err)
+		return diag.Errorf("error waiting for backup target (%s) to be updated: %s", utils.StringValue(taskUUID), err)
 	}
 
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching backup target Task Details: %s", err)
+		return diag.Errorf("error while fetching backup target update task (%s): %s", utils.StringValue(taskUUID), err)
 	}
 
 	taskDetails := taskResp.Data.GetValue().(config.Task)
@@ -525,17 +534,17 @@ func ResourceNutanixBackupTargetV2Delete(ctx context.Context, d *schema.Resource
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for backup target to be deleted: %s", err)
+		return diag.Errorf("error waiting for backup target (%s) to be deleted: %s", utils.StringValue(taskUUID), err)
 	}
 
 	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching delete backup target task details: %s", err)
+		return diag.Errorf("error while fetching backup target delete task (%s): %s", utils.StringValue(taskUUID), err)
 	}
 
 	taskDetails := taskResp.Data.GetValue().(config.Task)

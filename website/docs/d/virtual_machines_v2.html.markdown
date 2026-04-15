@@ -365,8 +365,10 @@ The `cd_roms` attribute supports the following:
 The `nics` attribute supports the following:
 
 * `ext_id`: A globally unique identifier of an instance that is suitable for external consumption
-* `backing_info`: Defines a NIC emulated by the hypervisor
-* `network_info`: Network information for a NIC.
+* `nic_backing_info`: New NIC backing info (v2.4.1+). One of `virtual_ethernet_nic`, `sriov_nic`, `dp_offload_nic`.
+* `nic_network_info`: New NIC network info (v2.4.1+). One of `virtual_ethernet_nic_network_info`, `sriov_nic_network_info`, `dp_offload_nic_network_info`.
+* `backing_info`: (Deprecated) Use `nic_backing_info.virtual_ethernet_nic` instead.
+* `network_info`: (Deprecated) Use `nic_network_info.virtual_ethernet_nic_network_info` instead.
 
 ### nics.backing_info
 * `model`: Options for the NIC emulation.
@@ -433,4 +435,4 @@ The `nics` attribute supports the following:
 
 
 
-See detailed information in [Nutanix List Virtual Machines V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Vm/operation/listVms).
+See detailed information in [Nutanix List Virtual Machines V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Vm/operation/listVms).

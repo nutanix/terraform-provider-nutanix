@@ -38,174 +38,7 @@ func DataSourceNutanixVPCsv2() *schema.Resource {
 			"vpcs": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ext_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"tenant_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"links": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"href": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"rel": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"metadata": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: DatasourceMetadataSchemaV2(),
-							},
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"description": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"common_dhcp_options": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"domain_name_servers": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLength(),
-												"ipv6": SchemaForValuePrefixLength(),
-											},
-										},
-									},
-								},
-							},
-						},
-						"vpc_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"snat_ips": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
-								},
-							},
-						},
-						"external_subnets": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"subnet_reference": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"external_ips": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ipv4": SchemaForValuePrefixLength(),
-												"ipv6": SchemaForValuePrefixLength(),
-											},
-										},
-									},
-									"gateway_nodes": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"active_gateway_node": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"node_id": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"node_ip_address": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"ipv4": SchemaForValuePrefixLength(),
-															"ipv6": SchemaForValuePrefixLength(),
-														},
-													},
-												},
-											},
-										},
-									},
-									"active_gateway_count": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"external_routing_domain_reference": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"externally_routable_prefixes": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ip": SchemaForValuePrefixLength(),
-												"prefix_length": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"ipv6": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ip": SchemaForValuePrefixLength(),
-												"prefix_length": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
+				Elem:     DataSourceNutanixVPCv2(),
 			},
 		},
 	}
@@ -279,15 +112,14 @@ func flattenVPCsEntities(pr []import1.Vpc) []map[string]interface{} {
 		for k, v := range pr {
 			vpc := make(map[string]interface{})
 
-			if v.TenantId != nil {
-				vpc["tenant_id"] = v.TenantId
-			}
-			vpc["ext_id"] = v.ExtId
+			vpc["tenant_id"] = utils.StringValue(v.TenantId)
+			vpc["ext_id"] = utils.StringValue(v.ExtId)
 			vpc["links"] = flattenLinks(v.Links)
 			vpc["metadata"] = flattenMetadata(v.Metadata)
-			vpc["name"] = v.Name
-			vpc["description"] = v.Description
+			vpc["name"] = utils.StringValue(v.Name)
+			vpc["description"] = utils.StringValue(v.Description)
 			vpc["common_dhcp_options"] = flattenCommonDhcpOptions(v.CommonDhcpOptions)
+			vpc["vpc_type"] = v.VpcType.GetName()
 			vpc["snat_ips"] = flattenNtpServer(v.SnatIps)
 			vpc["external_subnets"] = flattenExternalSubnets(v.ExternalSubnets)
 			vpc["external_routing_domain_reference"] = v.ExternalRoutingDomainReference

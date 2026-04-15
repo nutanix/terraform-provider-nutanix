@@ -267,7 +267,7 @@ func flattenFloatingIPsEntities(pr []import1.FloatingIp) []map[string]interface{
 			fip["external_subnet"] = flattenExternalSubnet(v.ExternalSubnet)
 			fip["private_ip"] = v.PrivateIp
 			fip["floating_ip_value"] = v.FloatingIpValue
-			fip["association_status"] = v.AssociationStatus
+			fip["association_status"] = v.AssociationStatus.GetName()
 			fip["vpc_reference"] = v.VpcReference
 			fip["vm_nic_reference"] = v.VmNicReference
 			fip["vpc"] = flattenVpc(v.Vpc)

@@ -1,12 +1,12 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_template_version_v4"
+page_title: "NUTANIX: nutanix_template_version_v2"
 sidebar_current: "docs-nutanix-resource-template-version-v2"
 description: |-
   Performs Guest OS actions on given template.
 ---
 
-# nutanix_template_version_v4
+# nutanix_template_version_v2
 
 Performs Guest OS actions on given template. It Initiates, Completes and Cancels the Guest OS operation.
 
@@ -47,7 +47,7 @@ The following arguments are supported:
 * `is_active_version`: (Optional) Specify whether to mark the Template Version as active or not. The newly created Version during Template Creation, Updating or Guest OS Updating is set to Active by default unless specified otherwise. Default is true. Only applicable with `complete` action.
 
 
-See detailed information in [Nutanix Template Guest OS Action Initiate V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Templates/operation/initiateGuestUpdate).
-See detailed information in [Nutanix Template Guest OS Action Complete V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Templates/operation/completeGuestUpdate).
-See detailed information in [Nutanix Template Guest OS Action Cancel V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Templates/operation/cancelGuestUpdate).
+See detailed information in [Nutanix Template Guest OS Action Initiate V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Templates/operation/initiateGuestUpdate).
+See detailed information in [Nutanix Template Guest OS Action Complete V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Templates/operation/completeGuestUpdate).
+See detailed information in [Nutanix Template Guest OS Action Cancel V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Templates/operation/cancelGuestUpdate).
 

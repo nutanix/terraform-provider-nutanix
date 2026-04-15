@@ -12,6 +12,7 @@ import (
 	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -31,6 +32,14 @@ func ResourceNutanixSubnetV2() *schema.Resource {
 				Optional: true,
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"metadata": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: DatasourceMetadataSchemaV2(),
+				},
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -459,11 +468,11 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	inputSpec := import1.Subnet{}
-	subnetName := ""
-	subnetType := ""
 	if name, nok := d.GetOk("name"); nok {
 		inputSpec.Name = utils.StringPtr(name.(string))
-		subnetName = name.(string)
+	}
+	if metadata, ok := d.GetOk("metadata"); ok {
+		inputSpec.Metadata = expandMetadata(metadata.([]interface{}))
 	}
 	if desc, ok := d.GetOk("description"); ok {
 		inputSpec.Description = utils.StringPtr(desc.(string))
@@ -478,11 +487,11 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 
 		p := import1.SubnetType(pVal.(int))
 		inputSpec.SubnetType = &p
-		subnetType = subType.(string)
 	}
 
-	if networkID, ok := d.GetOk("network_id"); ok {
-		inputSpec.NetworkId = utils.IntPtr(networkID.(int))
+	if common.IsExplicitlySet(d, "network_id") {
+		networkID := d.Get("network_id").(int)
+		inputSpec.NetworkId = utils.IntPtr(networkID)
 	}
 
 	if dhcp, ok := d.GetOk("dhcp_options"); ok {
@@ -517,8 +526,9 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	if bridgeName, ok := d.GetOk("bridge_name"); ok {
 		inputSpec.BridgeName = utils.StringPtr(bridgeName.(string))
 	}
-	if isAdvNet, ok := d.GetOk("is_advanced_networking"); ok {
-		inputSpec.IsAdvancedNetworking = utils.BoolPtr(isAdvNet.(bool))
+	if common.IsExplicitlySet(d, "is_advanced_networking") {
+		isAdvNet := d.Get("is_advanced_networking").(bool)
+		inputSpec.IsAdvancedNetworking = utils.BoolPtr(isAdvNet)
 	}
 	if clsName, ok := d.GetOk("cluster_name"); ok {
 		inputSpec.ClusterName = utils.StringPtr(clsName.(string))
@@ -556,41 +566,38 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	// calling group API to poll for completion of task
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Subnet to be available
+	// Wait for the subnet to be created
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for subnet (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-	// Get UUID from TASK API, Entities not present in Task API
 
-	// resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-	// if err != nil {
-	// 	return diag.Errorf("error while fetching subnet UUID : %v", err)
-	// }
-	// rUUID := resourceUUID.Data.GetValue().(import2.Task)
-
-	// uuid := rUUID.EntitiesAffected[0].ExtId
-
-	// Fetch UUID based on Vlan id and vlan Name
-
-	readResp, err := conn.SubnetAPIInstance.ListSubnets(nil, nil, nil, nil, nil, nil)
+	// Get UUID from TASK API
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching subnets : %v", err)
+		return diag.Errorf("error while fetching subnet task: %v", err)
 	}
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Create Subnet Task Details: %s", string(aJSON))
 
-	getAllSubnetResp := readResp.Data.GetValue().([]import1.Subnet)
-
-	for _, subnet := range getAllSubnetResp {
-		if (utils.StringValue(subnet.Name) == subnetName) && (flattenSubnetType(subnet.SubnetType) == subnetType) {
-			d.SetId(*subnet.ExtId)
+	var subnetExtID *string
+	for _, entity := range taskDetails.EntitiesAffected {
+		if utils.StringValue(entity.Rel) == utils.RelEntityTypeSubnet {
+			subnetExtID = entity.ExtId
 			break
 		}
+	}
+	if subnetExtID != nil {
+		d.SetId(utils.StringValue(subnetExtID))
+	} else {
+		return diag.Errorf("error while fetching subnet ExtId: subnet entity not found in EntitiesAffected")
 	}
 	return ResourceNutanixSubnetV2Read(ctx, d, meta)
 }
@@ -606,6 +613,9 @@ func ResourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, me
 	getResp := resp.Data.GetValue().(import1.Subnet)
 
 	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("metadata", flattenMetadata(getResp.Metadata)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("name", getResp.Name); err != nil {
@@ -702,6 +712,9 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 	args := make(map[string]interface{})
 	args["If-Match"] = utils.StringPtr(etagValue)
 
+	if d.HasChange("metadata") {
+		updateSpec.Metadata = expandMetadata(d.Get("metadata").([]interface{}))
+	}
 	if d.HasChange("name") {
 		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
 	}
@@ -720,8 +733,6 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 	}
 	if d.HasChange("dhcp_options") {
 		updateSpec.DhcpOptions = expandDhcpOptions(d.Get("dhcp_options").([]interface{}))
-	} else {
-		updateSpec.DhcpOptions = nil
 	}
 	if d.HasChange("cluster_reference") {
 		updateSpec.ClusterReference = utils.StringPtr(d.Get("cluster_reference").(string))
@@ -774,8 +785,6 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 	}
 	if d.HasChange("ip_config") {
 		updateSpec.IpConfig = expandIPConfig(d.Get("ip_config").([]interface{}))
-	} else {
-		updateSpec.IpConfig = nil
 	}
 
 	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
@@ -792,12 +801,12 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 	// calling group API to poll for completion of task
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Subnet to be available
+	// Wait for the subnet to be updated
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -819,12 +828,12 @@ func ResourceNutanixSubnetV2Delete(ctx context.Context, d *schema.ResourceData, 
 	// calling group API to poll for completion of task
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the Subnet to be available
+	// Wait for the subnet to be deleted
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -1060,6 +1069,15 @@ func expandIPv4Subnet(pr interface{}) *import1.IPv4Subnet {
 		return nil
 	}
 
+	return expandIPv4SubnetFromMap(valMap)
+}
+
+// expandIPv4SubnetFromMap expands a single map to IPv4Subnet
+func expandIPv4SubnetFromMap(valMap map[string]interface{}) *import1.IPv4Subnet {
+	if len(valMap) == 0 {
+		return nil
+	}
+
 	ipv4Subs := &import1.IPv4Subnet{}
 
 	if ip, ok := valMap["ip"]; ok {
@@ -1087,6 +1105,15 @@ func expandIPv6Subnet(pr interface{}) *import1.IPv6Subnet {
 
 	valMap, ok := prSlice[0].(map[string]interface{})
 	if !ok || len(valMap) == 0 {
+		return nil
+	}
+
+	return expandIPv6SubnetFromMap(valMap)
+}
+
+// expandIPv6SubnetFromMap expands a single map to IPv6Subnet
+func expandIPv6SubnetFromMap(valMap map[string]interface{}) *import1.IPv6Subnet {
+	if len(valMap) == 0 {
 		return nil
 	}
 
@@ -1291,25 +1318,41 @@ func expandIPv6AddressMap(pr interface{}) *config.IPv6Address {
 }
 
 func expandIPSubnet(pr []interface{}) []import1.IPSubnet {
-	if len(pr) > 0 {
-		ips := make([]import1.IPSubnet, len(pr))
+	if len(pr) == 0 {
+		return nil
+	}
 
-		for k, v := range pr {
-			val := v.(map[string]interface{})
-			ip := import1.IPSubnet{}
+	var ips []import1.IPSubnet
 
-			if ipv4, ok := val["ipv4"]; ok && len(ipv4.([]interface{})) > 0 {
-				ip.Ipv4 = expandIPv4Subnet(ipv4)
+	for _, v := range pr {
+		val := v.(map[string]interface{})
+
+		// Handle all ipv4 blocks - each becomes a separate IPSubnet entry
+		if ipv4List, ok := val["ipv4"]; ok {
+			ipv4Slice := ipv4List.([]interface{})
+			for _, ipv4Item := range ipv4Slice {
+				if ipv4Map, ok := ipv4Item.(map[string]interface{}); ok {
+					ip := import1.IPSubnet{}
+					ip.Ipv4 = expandIPv4SubnetFromMap(ipv4Map)
+					ips = append(ips, ip)
+				}
 			}
-			if ipv6, ok := val["ipv6"]; ok && len(ipv6.([]interface{})) > 0 {
-				ip.Ipv6 = expandIPv6Subnet(ipv6)
-			}
-			ips[k] = ip
 		}
 
-		return ips
+		// Handle all ipv6 blocks - each becomes a separate IPSubnet entry
+		if ipv6List, ok := val["ipv6"]; ok {
+			ipv6Slice := ipv6List.([]interface{})
+			for _, ipv6Item := range ipv6Slice {
+				if ipv6Map, ok := ipv6Item.(map[string]interface{}); ok {
+					ip := import1.IPSubnet{}
+					ip.Ipv6 = expandIPv6SubnetFromMap(ipv6Map)
+					ips = append(ips, ip)
+				}
+			}
+		}
 	}
-	return nil
+
+	return ips
 }
 
 func expandIPUsage(pr interface{}) *import1.IPUsage {

@@ -32,6 +32,25 @@ resource "nutanix_network_security_policy_v2" "isolation-nsp" {
   is_hitlog_enabled = true
 }
 
+# Network Security Policy with GLOBAL scope (VMs resolved by category across all VPCs)
+resource "nutanix_network_security_policy_v2" "global-nsp" {
+  name        = "my-global-policy"
+  description = "Application policy with global scope"
+  state       = "SAVE"
+  type        = "APPLICATION"
+  scope       = "GLOBAL"
+  rules {
+    type = "APPLICATION"
+    spec {
+      application_rule_spec {
+        secured_group_category_references = [nutanix_category_v2.example.id]
+        service_group_references          = [nutanix_service_groups_v2.example.id]
+        src_address_group_references      = [nutanix_address_groups_v2.example.id]
+      }
+    }
+  }
+}
+
 ```
 
 ## Argument Reference
@@ -39,19 +58,19 @@ resource "nutanix_network_security_policy_v2" "isolation-nsp" {
 The following arguments are supported:
 
 - `name`: (Required) Name of the Flow Network Security Policy.
-- `type`: (Required) Defines the type of rules that can be used in a policy. Acceptable values are "QUARANTINE", "ISOLATION", "APPLICATION".
+- `type`: (Required) Defines the type of rules that can be used in a policy. Acceptable values are "QUARANTINE", "ISOLATION", "APPLICATION", "SHAREDSERVICE".
 - `description`: (Optional) A user defined annotation for a policy.
 - `state`: (Optional) Whether the policy is applied or monitored; can be omitted or set null to save the policy without applying or monitoring it. Acceptable values are "SAVE", "MONITOR", "ENFORCE".
 - `rules`: (Optional) A list of rules that form a policy. For isolation policies, use isolation rules; for application or quarantine policies, use application rules.
 - `is_ipv6_traffic_allowed`: (Optional) If Ipv6 Traffic is allowed.
 - `is_hitlog_enabled`: (Optional) If Hitlog is enabled.
-- `scope`: Defines the scope of the policy. Currently, only ALL_VLAN and VPC_LIST are supported. If scope is not provided, the default is set based on whether vpcReferences field is provided or not.
+- `scope`: (Optional) Defines the scope of the policy. Acceptable values are "ALL_VLAN", "ALL_VPC", "VPC_LIST", and "GLOBAL".
 - `vpc_reference`: (Optional) A list of external ids for VPCs, used only when the scope of policy is a list of VPCs.
 
 ### rules
 
 - `description`: (Optional) A user defined annotation for a rule.
-- `type`: (Required) The type for a rule—the value chosen here restricts which specification can be chosen. Acceptable values are "QUARANTINE", "TWO_ENV_ISOLATION", "APPLICATION", "INTRA_GROUP".
+- `type`: (Required) The type for a rule—the value chosen here restricts which specification can be chosen. Acceptable values are "QUARANTINE", "TWO_ENV_ISOLATION", "APPLICATION", "INTRA_GROUP", "MULTI_ENV_ISOLATION", "SHARED_SERVICE".
 - `spec`: (Required) Spec for rules.
 
 ### spec
@@ -70,11 +89,17 @@ One of below rules spec.
 
 ### application_rule_spec
 
+- `secured_group_category_associated_entity_type`: (Optional) Entity type for the secured group category. Acceptable values are "SUBNET", "VM", "VPC". Default is "VM".
 - `secured_group_category_references`: (Required) A set of network endpoints which is protected by a Network Security Policy and defined as a list of categories.
+- `secured_group_entity_group_reference`: (Optional) Reference to the secured group entity group.
 - `src_allow_spec`: (Optional) A specification to how allow mode traffic should be applied, either ALL or NONE.
 - `dest_allow_spec`: (Optional) A specification to how allow mode traffic should be applied, either ALL or NONE.
+- `src_category_associated_entity_type`: (Optional) Entity type for the source category. Acceptable values are "SUBNET", "VM", "VPC". Default is "VM".
 - `src_category_references`: (Optional) List of categories that define a set of network endpoints as inbound.
+- `src_entity_group_reference`: (Optional) Reference to the source entity group.
+- `dest_category_associated_entity_type`: (Optional) Entity type for the destination category. Acceptable values are "SUBNET", "VM", "VPC". Default is "VM".
 - `dest_category_references`: (Optional) List of categories that define a set of network endpoints as outbound.
+- `dest_entity_group_reference`: (Optional) Reference to the destination entity group.
 - `src_subnet`: (Optional) source subnet value
 - `dest_subnet`: (Optional) destination subnet value
 - `src_address_group_references`: (Optional) A list of address group references.
@@ -85,11 +110,18 @@ One of below rules spec.
 - `udp_services`: (Optional) udp services
 - `icmp_services`: (Optional) icmp services
 - `network_function_chain_reference`: (Optional) A reference to the network function chain in the rule.
+- `network_function_reference`: (Optional) A reference to the network function in the rule.
 
 ### intra_entity_group_rule_spec
 
-- `secured_group_action`: (Required) List of secured group action.
-- `secured_group_category_references`: (Required) A specification to whether traffic between intra secured group entities should be allowed or denied.
+- `secured_group_category_associated_entity_type`: (Optional) Entity type for the secured group category. Acceptable values are "SUBNET", "VM", "VPC". Default is "VM".
+- `secured_group_entity_group_reference`: (Optional) Reference to the secured group entity group.
+- `secured_group_action`: (Required) Whether traffic between intra secured group entities should be allowed or denied. Acceptable values are "ALLOW", "DENY".
+- `secured_group_category_references`: (Optional) List of category references for the secured group.
+- `secured_group_service_references`: (Optional) List of service group references for the secured group.
+- `tcp_services`: (Optional) TCP port ranges for the rule.
+- `udp_services`: (Optional) UDP port ranges for the rule.
+- `icmp_services`: (Optional) ICMP type/code for the rule.
 
 ### multi_env_isolation_rule_spec
 
@@ -103,11 +135,13 @@ One of below rules spec.
 
 - `isolation_group`: (Required) Denotes the list of secured groups that will be used in All to All mutual isolation.
 
-#### isolation_groups
+#### isolation_group
 
+- `group_category_associated_entity_type`: (Optional) Entity type for the group category. Acceptable values are "SUBNET", "VM", "VPC". Default is "VM".
 - `group_category_references`: (Required) External identifiers of categories belonging to the isolation group.
+- `group_entity_group_reference`: (Optional) Reference to the entity group for the isolation group.
 
-### tcp_services, tcp_services
+### tcp_services, udp_services
 
 - `start_port`: (Required) start port
 - `end_port`: (Required) end port
@@ -142,4 +176,4 @@ resource "nutanix_network_security_policy_v2" "import_nsp" {}
 terraform import nutanix_network_security_policy_v2.import_nsp <UUID>
 ```
 
-See detailed information in [Nutanix Security Policy v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0#tag/NetworkSecurityPolicies/operation/createNetworkSecurityPolicy).
+See detailed information in [Nutanix Security Policy v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.2#tag/NetworkSecurityPolicies/operation/createNetworkSecurityPolicy).

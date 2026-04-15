@@ -221,7 +221,7 @@ func testVMV2Config(name, desc, powerState string) string {
 		}
 
 		data "nutanix_storage_containers_v2" "ngt-sc" {
-		  filter = "clusterExtId eq '${local.cluster0}'"
+		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 		  limit = 1
 		}
 
@@ -261,12 +261,14 @@ func testVMV2Config(name, desc, powerState string) string {
 			}
 			
 			nics {
-				network_info {
-				  nic_type = "NORMAL_NIC"
-				  subnet {
-					ext_id = data.nutanix_subnets_v2.subnet.subnets[0].ext_id
+				nic_network_info {
+				  virtual_ethernet_nic_network_info {
+					nic_type = "NORMAL_NIC"
+					subnet {
+					  ext_id = data.nutanix_subnets_v2.subnet.subnets[0].ext_id
+					}
+					vlan_mode = "ACCESS"
 				  }
-				  vlan_mode = "ACCESS"
 				}
 			}
 			
@@ -333,7 +335,7 @@ func testVmsShutdownV4ConfigWithError(name, desc, state string) string {
 		}
 
 		data "nutanix_storage_containers_v2" "ngt-sc" {
-		  filter = "clusterExtId eq '${local.cluster0}'"
+		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 		  limit = 1
 		}
 	
@@ -346,12 +348,14 @@ func testVmsShutdownV4ConfigWithError(name, desc, state string) string {
 				ext_id = local.cluster0
 			}
 			nics{
-				network_info{
-					nic_type = "NORMAL_NIC"
-					subnet{
-						ext_id = data.nutanix_subnets_v2.subnets.subnets.0.ext_id
-					}	
-					vlan_mode = "ACCESS"
+				nic_network_info{
+					virtual_ethernet_nic_network_info{
+						nic_type = "NORMAL_NIC"
+						subnet{
+							ext_id = data.nutanix_subnets_v2.subnets.subnets.0.ext_id
+						}	
+						vlan_mode = "ACCESS"
+					}
 				}
 			}
 			disks{

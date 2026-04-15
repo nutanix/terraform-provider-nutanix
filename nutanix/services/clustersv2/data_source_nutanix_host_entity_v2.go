@@ -8,6 +8,7 @@ import (
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -27,22 +28,7 @@ func DatasourceNutanixHostEntityV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"links": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"href": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"rel": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
+			"links": common.LinksSchema(),
 			"host_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -59,12 +45,7 @@ func DatasourceNutanixHostEntityV2() *schema.Resource {
 						"external_address": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
-								},
-							},
+							Elem:     common.SchemaForIPList(false),
 						},
 						"user_name": {
 							Type:     schema.TypeString,
@@ -121,42 +102,22 @@ func DatasourceNutanixHostEntityV2() *schema.Resource {
 						"external_address": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
-								},
-							},
+							Elem:     common.SchemaForIPList(false),
 						},
 						"backplane_address": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
-								},
-							},
+							Elem:     common.SchemaForIPList(false),
 						},
 						"rdma_backplane_address": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
-								},
-							},
+							Elem:     common.SchemaForIPList(false),
 						},
 						"nat_ip": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
-								},
-							},
+							Elem:     common.SchemaForIPList(false),
 						},
 						"nat_port": {
 							Type:     schema.TypeInt,
@@ -324,12 +285,7 @@ func DatasourceNutanixHostEntityV2() *schema.Resource {
 						"ip": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
-								},
-							},
+							Elem:     common.SchemaForIPList(false),
 						},
 						"username": {
 							Type:     schema.TypeString,
@@ -361,7 +317,7 @@ func DatasourceNutanixHostEntityV2Read(ctx context.Context, d *schema.ResourceDa
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
+	if err := d.Set("links", common.FlattenLinks(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("host_name", getResp.HostName); err != nil {
@@ -467,51 +423,16 @@ func DatasourceNutanixHostEntityV2Read(ctx context.Context, d *schema.ResourceDa
 		return diag.FromErr(err)
 	}
 
-	d.SetId(*getResp.ExtId)
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return nil
 }
 
-func flattenNodeStatus(pr *import1.NodeStatus) string {
-	if pr != nil {
-		const two, three, four, five, six, seven = 2, 3, 4, 5, 6, 7
-
-		if *pr == import1.NodeStatus(two) {
-			return "NORMAL"
-		}
-		if *pr == import1.NodeStatus(three) {
-			return "TO_BE_REMOVED"
-		}
-		if *pr == import1.NodeStatus(four) {
-			return "OK_TO_BE_REMOVED"
-		}
-		if *pr == import1.NodeStatus(five) {
-			return "NEW_NODE"
-		}
-		if *pr == import1.NodeStatus(six) {
-			return "TO_BE_PREPROTECTED"
-		}
-		if *pr == import1.NodeStatus(seven) {
-			return "PREPROTECTED"
-		}
-	}
-	return "UNKNOWN"
+func flattenNodeStatus(nodeStatus *import1.NodeStatus) string {
+	return common.FlattenPtrEnum(nodeStatus)
 }
 
-func flattenHostTypeEnum(pr *import1.HostTypeEnum) string {
-	if pr != nil {
-		const two, three, four = 2, 3, 4
-
-		if *pr == import1.HostTypeEnum(two) {
-			return "HYPER_CONVERGED"
-		}
-		if *pr == import1.HostTypeEnum(three) {
-			return "COMPUTE_ONLY"
-		}
-		if *pr == import1.HostTypeEnum(four) {
-			return "STORAGE_ONLY"
-		}
-	}
-	return "UNKNOWN"
+func flattenHostTypeEnum(hostTypeEnum *import1.HostTypeEnum) string {
+	return common.FlattenPtrEnum(hostTypeEnum)
 }
 
 func flattenHypervisorReference(pr *import1.HypervisorReference) []map[string]interface{} {
@@ -534,82 +455,16 @@ func flattenHypervisorReference(pr *import1.HypervisorReference) []map[string]in
 	return nil
 }
 
-func flattenHypervisorState(pr *import1.HypervisorState) string {
-	if pr != nil {
-		const two, three, four,
-			five, six,
-			seven, eight, nine,
-			ten, eleven = 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
-
-		if *pr == import1.HypervisorState(two) {
-			return "ACROPOLIS_NORMAL"
-		}
-		if *pr == import1.HypervisorState(three) {
-			return "ENTERING_MAINTENANCE_MODE"
-		}
-		if *pr == import1.HypervisorState(four) {
-			return "ENTERED_MAINTENANCE_MODE"
-		}
-		if *pr == import1.HypervisorState(five) {
-			return "RESERVED_FOR_HA_FAILOVER"
-		}
-		if *pr == import1.HypervisorState(six) {
-			return "ENTERING_MAINTENANCE_MODE_FROM_HA_FAILOVER"
-		}
-		if *pr == import1.HypervisorState(seven) {
-			return "RESERVING_FOR_HA_FAILOVER"
-		}
-		if *pr == import1.HypervisorState(eight) {
-			return "HA_FAILOVER_SOURCE"
-		}
-		if *pr == import1.HypervisorState(nine) {
-			return "HA_FAILOVER_TARGET"
-		}
-		if *pr == import1.HypervisorState(ten) {
-			return "HA_HEALING_SOURCE"
-		}
-		if *pr == import1.HypervisorState(eleven) {
-			return "HA_HEALING_TARGET"
-		}
-	}
-	return "UNKNOWN"
+func flattenHypervisorState(hypervisorState *import1.HypervisorState) string {
+	return common.FlattenPtrEnum(hypervisorState)
 }
 
-func flattenHostHypervisorType(pr *import1.HypervisorType) string {
-	if pr != nil {
-		const ahv, esx, hyperv, xen, native = 2, 3, 4, 5, 6
-
-		if *pr == import1.HypervisorType(ahv) {
-			return "AHV"
-		}
-		if *pr == import1.HypervisorType(esx) {
-			return "ESX"
-		}
-		if *pr == import1.HypervisorType(hyperv) {
-			return "HYPERV"
-		}
-		if *pr == import1.HypervisorType(xen) {
-			return "XEN"
-		}
-		if *pr == import1.HypervisorType(native) {
-			return "NATIVEHOST"
-		}
-	}
-	return "UNKNOWN"
+func flattenHostHypervisorType(hypervisorType *import1.HypervisorType) string {
+	return common.FlattenPtrEnum(hypervisorType)
 }
 
-func flattenAcropolisConnectionState(pr *import1.AcropolisConnectionState) string {
-	if pr != nil {
-		const connected, disconnected = 2, 3
-
-		if *pr == import1.AcropolisConnectionState(connected) {
-			return "CONNECTED"
-		}
-		if *pr == import1.AcropolisConnectionState(disconnected) {
-			return "DISCONNECTED"
-		}
-	}
-	return "UNKNOWN"
+func flattenAcropolisConnectionState(acropolisConnState *import1.AcropolisConnectionState) string {
+	return common.FlattenPtrEnum(acropolisConnState)
 }
 
 func flattenClusterReference(pr *import1.ClusterReference) []map[string]interface{} {
@@ -714,18 +569,6 @@ func flattenKeyManagementDeviceToCertStatusInfo(pr []import1.KeyManagementDevice
 	return nil
 }
 
-func flattenStorageTierReference(pr *import1.StorageTierReference) string {
-	if pr != nil {
-		const pci, sata, hdd = 2, 3, 4
-		if *pr == import1.StorageTierReference(pci) {
-			return "PCIE_SSD"
-		}
-		if *pr == import1.StorageTierReference(sata) {
-			return "SATA_SSD"
-		}
-		if *pr == import1.StorageTierReference(hdd) {
-			return "HDD"
-		}
-	}
-	return "UNKNOWN"
+func flattenStorageTierReference(storageTierReference *import1.StorageTierReference) string {
+	return common.FlattenPtrEnum(storageTierReference)
 }

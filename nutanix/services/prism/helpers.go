@@ -1,16 +1,25 @@
 package prism
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+const (
+	acpIndexWarningSummary = "ACP blocks are index-based"
+	acpIndexWarningDetail  = "⚠️ Warning: ACP blocks are index-based. Removing an ACP from the middle of the list causes Terraform to shift subsequent ACPs. While the backend update succeeds without impact, the plan may show unexpected updates due to index reordering."
 )
 
 const (
@@ -205,6 +214,68 @@ func validateArrayRef(references interface{}, kindValue *string) []*v3.Reference
 	return nil
 }
 
+// orderACPsLikeState reorders the flattened ACP list returned from the API to match the ordering
+// currently in state/config (d.Get("acp")), keyed by role_reference.uuid.
+//
+// This keeps "acp" as schema.TypeList (positional), while avoiding drift when the API returns
+// ACPs in a different order than the user configuration.
+func orderACPsLikeState(d *schema.ResourceData, remote []map[string]interface{}) []map[string]interface{} {
+	if len(remote) == 0 {
+		return remote
+	}
+
+	rawCurrent, ok := d.GetOk("acp")
+	if !ok {
+		return remote
+	}
+	current, ok := rawCurrent.([]interface{})
+	if !ok || len(current) == 0 {
+		return remote
+	}
+
+	rolePos := make(map[string]int)
+	for idx, item := range current {
+		roleUUID := getACPRoleUUID(item)
+		if roleUUID == "" {
+			continue
+		}
+		if _, exists := rolePos[roleUUID]; !exists {
+			rolePos[roleUUID] = idx
+		}
+	}
+	if len(rolePos) == 0 {
+		return remote
+	}
+
+	type keyed struct {
+		pos int
+		acp map[string]interface{}
+	}
+
+	known := make([]keyed, 0, len(remote))
+	unknown := make([]map[string]interface{}, 0, len(remote))
+
+	for _, acp := range remote {
+		roleUUID := getACPRoleUUID(acp)
+		if pos, ok := rolePos[roleUUID]; ok {
+			known = append(known, keyed{pos: pos, acp: acp})
+		} else {
+			unknown = append(unknown, acp)
+		}
+	}
+
+	sort.SliceStable(known, func(i, j int) bool {
+		return known[i].pos < known[j].pos
+	})
+
+	out := make([]map[string]interface{}, 0, len(remote))
+	for _, k := range known {
+		out = append(out, k.acp)
+	}
+	out = append(out, unknown...)
+	return out
+}
+
 func flattenArrayReferenceValues(refs []*v3.Reference) []map[string]interface{} {
 	references := make([]map[string]interface{}, 0)
 	for _, r := range refs {
@@ -390,4 +461,323 @@ func buildDataSourceListMetadata(set *schema.Set) *v3.DSMetadata {
 		}
 	}
 	return &filters
+}
+
+// acpHash provides a stable identity for an ACP block so Terraform treats ACPs as order-insensitive.
+// We key primarily off role_reference.uuid because that's the unique semantic identifier for an ACP.
+func acpHash(v interface{}) int {
+	m, ok := v.(map[string]interface{})
+	if !ok {
+		return 0
+	}
+	roleRef, ok := m["role_reference"].([]interface{})
+	if !ok || len(roleRef) == 0 {
+		return 0
+	}
+	roleMap, ok := roleRef[0].(map[string]interface{})
+	if !ok {
+		return 0
+	}
+	uuid, ok := roleMap["uuid"].(string)
+	if !ok || uuid == "" {
+		return 0
+	}
+	return schema.HashString(uuid)
+}
+
+// customizeDiffProjectACP handles the custom diff logic for the "acp" (Access Control Policy) attribute.
+// Problem: Terraform treats lists positionally, so if the API returns ACPs in a different order
+// than the user specified, Terraform detects a "change" even though the content is identical.
+//
+// Solution: This function normalizes the ACP list by:
+//  1. Matching ACPs by role_reference.uuid (the unique identifier for an ACP)
+//  2. Merging computed fields (name, metadata, context_filter_list) from the OLD state
+//     with user-specified fields (role_reference, user_reference_list, user_group_reference_list) from NEW config
+//  3. Maintaining the old order for existing ACPs and appending new ACPs at the end
+//
+// Note: user_reference_list and user_group_reference_list within each ACP now use TypeSet
+// with UUID-based hashing, which handles order-independent comparison automatically.
+//
+// This ensures Terraform only shows actual content changes, not order-based false positives.
+func customizeDiffProjectACP(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	log.Printf("[DEBUG] CustomizeDiff resource_nutanix_project")
+
+	if !diff.HasChange("acp") {
+		log.Printf("[DEBUG] CustomizeDiff: no acp change detected")
+		return nil
+	}
+
+	oldACP, newACP := diff.GetChange("acp")
+
+	// If "acp" is a TypeSet, Terraform already handles ordering via hashing.
+	// We can safely skip the list-merge normalization logic.
+	if _, ok := oldACP.(*schema.Set); ok {
+		return nil
+	}
+	if _, ok := newACP.(*schema.Set); ok {
+		return nil
+	}
+
+	oldACPList, ok1 := oldACP.([]interface{})
+	newACPList, ok2 := newACP.([]interface{})
+
+	if !ok1 || !ok2 {
+		log.Printf("[DEBUG] CustomizeDiff: failed to convert ACP lists (ok1=%v, ok2=%v)", ok1, ok2)
+		return nil
+	}
+
+	log.Printf("[DEBUG] CustomizeDiff: oldACPList length: %d, newACPList length: %d", len(oldACPList), len(newACPList))
+
+	if len(oldACPList) == 0 || len(newACPList) == 0 {
+		log.Printf("[DEBUG] CustomizeDiff: one of the lists is empty, skipping merge")
+		return nil
+	}
+
+	// Build a map from role UUID to old ACP item (for getting computed fields)
+	oldRoleToItem := make(map[string]map[string]interface{})
+	for i, oldItem := range oldACPList {
+		oldMap, ok := oldItem.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		roleUUID := getACPRoleUUID(oldItem)
+		if roleUUID != "" {
+			oldRoleToItem[roleUUID] = oldMap
+			log.Printf("[DEBUG] CustomizeDiff: oldACP[%d] role UUID: %s", i, roleUUID)
+		}
+	}
+
+	// Build a map from role UUID to new ACP item (for getting user-specified fields)
+	newRoleToItem := make(map[string]map[string]interface{})
+	var newRoleOrder []string
+	for i, newItem := range newACPList {
+		newMap, ok := newItem.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		roleUUID := getACPRoleUUID(newItem)
+		if roleUUID != "" {
+			newRoleToItem[roleUUID] = newMap
+			newRoleOrder = append(newRoleOrder, roleUUID)
+			log.Printf("[DEBUG] CustomizeDiff: newACP[%d] role UUID: %s", i, roleUUID)
+		}
+	}
+
+	// Create merged ACPs in old order
+	// For each ACP: take computed fields from old, user-specified fields from new
+	mergedACPs := make([]interface{}, 0, len(newACPList))
+	usedRoles := make(map[string]bool)
+
+	// First, process ACPs that exist in both old and new (in old order)
+	for _, oldItem := range oldACPList {
+		oldMap, ok := oldItem.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		oldRoleUUID := getACPRoleUUID(oldItem)
+		newMap, exists := newRoleToItem[oldRoleUUID]
+		if !exists {
+			// ACP was removed in new config - skip it
+			log.Printf("[DEBUG] CustomizeDiff: ACP with role %s removed in new config", oldRoleUUID)
+			continue
+		}
+
+		// Merge: start with old ACP (has computed fields), overlay new user-specified fields
+		merged := make(map[string]interface{})
+
+		// Copy all computed fields from old ACP (name, metadata, context_filter_list)
+		for k, v := range oldMap {
+			merged[k] = v
+		}
+
+		// Overlay user-specified fields from new ACP
+		if roleRef, ok := newMap["role_reference"]; ok {
+			merged["role_reference"] = roleRef
+		}
+
+		// user_reference_list and user_group_reference_list use TypeSet with hash based on UUID
+		// TypeSet handles order-independent comparison automatically, so we just pass through the new values
+		if newUserRefList, ok := newMap["user_reference_list"]; ok {
+			merged["user_reference_list"] = newUserRefList
+			log.Printf("[DEBUG] CustomizeDiff: passing through user_reference_list for role %s (TypeSet handles ordering)", oldRoleUUID)
+		}
+
+		if newUserGroupRefList, ok := newMap["user_group_reference_list"]; ok {
+			merged["user_group_reference_list"] = newUserGroupRefList
+			log.Printf("[DEBUG] CustomizeDiff: passing through user_group_reference_list for role %s (TypeSet handles ordering)", oldRoleUUID)
+		}
+
+		// Preserve description if specified
+		if desc, ok := newMap["description"]; ok && desc != "" {
+			merged["description"] = desc
+		}
+
+		mergedACPs = append(mergedACPs, merged)
+		usedRoles[oldRoleUUID] = true
+		log.Printf("[DEBUG] CustomizeDiff: merged ACP with role %s in position %d", oldRoleUUID, len(mergedACPs)-1)
+	}
+
+	// Add new ACPs that weren't in the old list (these are truly new)
+	for _, roleUUID := range newRoleOrder {
+		if !usedRoles[roleUUID] {
+			mergedACPs = append(mergedACPs, newRoleToItem[roleUUID])
+			log.Printf("[DEBUG] CustomizeDiff: adding new ACP with role %s at position %d", roleUUID, len(mergedACPs)-1)
+		}
+	}
+
+	// Set the merged list to update the diff
+	log.Printf("[DEBUG] CustomizeDiff: setting merged ACPs (count: %d)", len(mergedACPs))
+	if err := diff.SetNew("acp", mergedACPs); err != nil {
+		log.Printf("[DEBUG] CustomizeDiff: failed to SetNew for acp: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// getACPRoleUUID extracts the role UUID from an ACP item.
+// It navigates the nested structure: acp -> role_reference[0] -> uuid
+// Returns empty string if the structure is invalid or UUID is not found.
+func getACPRoleUUID(acpItem interface{}) string {
+	acpMap, ok := acpItem.(map[string]interface{})
+	if !ok {
+		return ""
+	}
+	if roleRef, ok := acpMap["role_reference"].([]interface{}); ok && len(roleRef) > 0 {
+		if roleMap, ok := roleRef[0].(map[string]interface{}); ok {
+			if uuid, ok := roleMap["uuid"].(string); ok {
+				return uuid
+			}
+		}
+	}
+	return ""
+}
+
+// acpRemovalFromMiddle returns true when the new ACP list looks like the old ACP list
+// with one or more elements removed from the middle (i.e. subsequent elements shift left).
+//
+// This is the scenario that typically produces noisy plans because ACP is a schema.TypeList
+// and Terraform diffs it positionally.
+func acpRemovalFromMiddle(oldACPList, newACPList []interface{}) bool {
+	// Build role UUID order lists, skipping invalid entries.
+	oldRoles := make([]string, 0, len(oldACPList))
+	for _, it := range oldACPList {
+		if role := getACPRoleUUID(it); role != "" {
+			oldRoles = append(oldRoles, role)
+		}
+	}
+	newRoles := make([]string, 0, len(newACPList))
+	for _, it := range newACPList {
+		if role := getACPRoleUUID(it); role != "" {
+			newRoles = append(newRoles, role)
+		}
+	}
+
+	return acpRemovalFromMiddleRoles(oldRoles, newRoles)
+}
+
+func acpRemovalFromMiddleRoles(oldRoles, newRoles []string) bool {
+	// Only consider removal cases.
+	if len(newRoles) >= len(oldRoles) {
+		return false
+	}
+	// If new list is empty, there's no "shift of subsequent elements" to warn about.
+	if len(newRoles) == 0 {
+		return false
+	}
+
+	// Two-pointer subsequence check:
+	// If we ever have to "skip" oldRoles to match the next newRole, then something
+	// was removed from the middle (not only trimmed from the end).
+	removedFromMiddle := false
+	i := 0 // oldRoles index
+	for _, nr := range newRoles {
+		found := -1
+		for k := i; k < len(oldRoles); k++ {
+			if oldRoles[k] == nr {
+				found = k
+				break
+			}
+		}
+		if found == -1 {
+			// Not a pure removal/subsequence scenario (could be reorder or change).
+			return false
+		}
+		if found > i {
+			removedFromMiddle = true
+		}
+		i = found + 1
+	}
+
+	// If we only removed items from the tail, removedFromMiddle stays false.
+	return removedFromMiddle
+}
+
+// rawConfigACPRoleUUIDs extracts ACP role UUIDs from raw Terraform config. Returns (roles, true)
+// if the user explicitly set `acp` (even if set to an empty list), otherwise (nil, false).
+func rawConfigACPRoleUUIDs(d *schema.ResourceData) ([]string, bool) {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() {
+		return nil, false
+	}
+
+	acpAttr := rawConfig.GetAttr("acp")
+	if acpAttr.IsNull() {
+		return nil, false
+	}
+
+	roles := make([]string, 0)
+	if !acpAttr.CanIterateElements() {
+		return roles, true
+	}
+
+	for it := acpAttr.ElementIterator(); it.Next(); {
+		_, acpVal := it.Element()
+		if acpVal.IsNull() {
+			continue
+		}
+
+		roleRefAttr := acpVal.GetAttr("role_reference")
+		if roleRefAttr.IsNull() || !roleRefAttr.CanIterateElements() {
+			continue
+		}
+
+		// role_reference is a list with MaxItems=1
+		var roleUUID string
+		first := true
+		for rrIt := roleRefAttr.ElementIterator(); rrIt.Next(); {
+			if !first {
+				break
+			}
+			first = false
+			_, rrVal := rrIt.Element()
+			if rrVal.IsNull() {
+				break
+			}
+			uuidAttr := rrVal.GetAttr("uuid")
+			if uuidAttr.IsNull() || !uuidAttr.IsKnown() || uuidAttr.Type() != cty.String {
+				break
+			}
+			roleUUID = uuidAttr.AsString()
+		}
+
+		if roleUUID != "" {
+			roles = append(roles, roleUUID)
+		}
+	}
+
+	return roles, true
+}
+
+// acpReferenceHash generates a hash for user_reference_list and user_group_reference_list items
+// based on UUID. This ensures order-independent comparison in TypeSet.
+func acpReferenceHash(v interface{}) int {
+	m, ok := v.(map[string]interface{})
+	if !ok {
+		return 0
+	}
+	if uuid, ok := m["uuid"].(string); ok {
+		return schema.HashString(uuid)
+	}
+	return 0
 }

@@ -51,16 +51,19 @@ func ResourceNutanixUserKeyV2() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"key_type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"API_KEY", "OBJECT_KEY"}, false),
+				ForceNew:     true,
 			},
 			"created_time": {
 				Type:     schema.TypeString,
@@ -82,6 +85,7 @@ func ResourceNutanixUserKeyV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"status": {
 				Type:         schema.TypeString,
@@ -108,6 +112,7 @@ func ResourceNutanixUserKeyV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"key_details": {
 				Type:     schema.TypeList,
@@ -120,8 +125,9 @@ func ResourceNutanixUserKeyV2() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"api_key": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Type:      schema.TypeString,
+										Computed:  true,
+										Sensitive: true,
 									},
 								},
 							},
@@ -132,12 +138,14 @@ func ResourceNutanixUserKeyV2() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"secret_key": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Type:      schema.TypeString,
+										Computed:  true,
+										Sensitive: true,
 									},
 									"access_key": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Type:      schema.TypeString,
+										Computed:  true,
+										Sensitive: true,
 									},
 								},
 							},
@@ -217,7 +225,14 @@ func resourceNutanixUserKeyV2Create(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error while creating User Key: %v", err)
 	}
 	getResp := resp.Data.GetValue().(import1.Key)
-	d.SetId(*getResp.ExtId)
+
+	aJSON, _ := json.MarshalIndent(getResp, "", "  ")
+	log.Printf("[DEBUG] Created User Key: %s", aJSON)
+	d.SetId(utils.StringValue(getResp.ExtId))
+
+	if err := d.Set("key_details", flattenKeyDetails(getResp.KeyDetails)); err != nil {
+		return diag.Errorf("error while setting key_details: %v", err)
+	}
 	return resourceNutanixUserKeyV2Read(ctx, d, meta)
 }
 
@@ -285,10 +300,7 @@ func resourceNutanixUserKeyV2Read(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("last_used_time", flattenTime(keyConfig.LastUsedTime)); err != nil {
 		return diag.Errorf("error while setting last_used_time: %v", err)
 	}
-	if err := d.Set("key_details", flattenKeyDetails(keyConfig.KeyDetails)); err != nil {
-		return diag.Errorf("error while setting key_details: %v", err)
-	}
-	d.SetId(*keyConfig.ExtId)
+	d.SetId(utils.StringValue(keyConfig.ExtId))
 	return nil
 }
 
@@ -327,7 +339,7 @@ func flattenKeyDetails(oneOfKeyKeyDetails *import1.OneOfKeyKeyDetails) interface
 }
 
 func resourceNutanixUserKeyV2Update(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return resourceNutanixUserKeyV2Create(ctx, d, m)
+	return nil
 }
 
 func resourceNutanixUserKeyV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

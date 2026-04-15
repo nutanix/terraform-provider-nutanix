@@ -325,13 +325,8 @@ func testPreEnvConfig(vmName string, r int) string {
 		  filter = "name eq '${local.vmm.image_name}'"
 		}
 
-		data "nutanix_image" "ngt-image" {
-		  image_name = local.vmm.image_name
-		}
-
-
 		data "nutanix_storage_containers_v2" "ngt-sc" {
-		  filter = "clusterExtId eq '${local.clusterUUID}'"
+		  filter = "clusterExtId eq '${local.clusterUUID}' and startswith(name,'default-container-')"
 		  limit = 1
 		}
 
@@ -376,12 +371,14 @@ func testPreEnvConfig(vmName string, r int) string {
 		  }
 
 		  nics {
-			network_info {
-			  nic_type = "NORMAL_NIC"
-			  subnet {
-				ext_id = data.nutanix_subnets_v2.subnet.subnets[0].ext_id
+			nic_network_info {
+			  virtual_ethernet_nic_network_info {
+				nic_type = "NORMAL_NIC"
+				subnet {
+				  ext_id = data.nutanix_subnets_v2.subnet.subnets[0].ext_id
+				}
+				vlan_mode = "ACCESS"
 			  }
-			  vlan_mode = "ACCESS"
 			}
 		  }
 

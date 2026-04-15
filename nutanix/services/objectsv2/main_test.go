@@ -14,14 +14,16 @@ import (
 )
 
 type TestConfig struct {
-	ObjectStore struct {
+	UsernameForTest string `json:"username_for_test"`
+	PasswordForTest string `json:"password_for_test"`
+	ObjectStore     struct {
 		ImgURL              string   `json:"img_url"`
 		SubnetName          string   `json:"subnet_name"`
 		BucketName          string   `json:"bucket_name"`
 		Domain              string   `json:"domain"`
 		PublicNetworkIPs    []string `json:"public_network_ips"`
-		StorageNetworkDNSIP string   `json:"storage_network_dns_ip"`
-		StorageNetworkVip   string   `json:"storage_network_vip"`
+		StorageNetworkDNSIP []string `json:"storage_network_dns_ip"`
+		StorageNetworkVip   []string `json:"storage_network_vip"`
 	} `json:"object_store"`
 }
 

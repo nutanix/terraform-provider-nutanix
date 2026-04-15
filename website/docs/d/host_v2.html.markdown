@@ -206,4 +206,4 @@ The ipv6 attribute supports the following:
 
 
 
-See detailed information in [Nutanix Get Host V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/Clusters/operation/getHostById).
+See detailed information in [Nutanix Get Host V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.2#tag/Clusters/operation/getHostById).

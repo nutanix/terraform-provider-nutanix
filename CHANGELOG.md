@@ -1,3 +1,101 @@
+## 2.4.2(April 15, 2026) 
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.4.0...v2.4.2)
+
+**New Features:**
+- **Network Functions (Networking)**: Create and manage Network Functions for service chaining and traffic forwarding use cases. [#982](https://github.com/nutanix/terraform-provider-nutanix/issues/982)
+- **Entity Groups (Flow Management)**: Create and manage Entity Groups for microsegmentation use cases. [#1030](https://github.com/nutanix/terraform-provider-nutanix/issues/1030)
+- **Entities (IAM)**: List and get IAM entities. Use Entities to configure and manage entities representing the resources over which permissions are defined. Users can use these datasource to list and fetch entities [#955](https://github.com/nutanix/terraform-provider-nutanix/issues/955)
+- **Network Security Policy Rules (Flow Management)**: List all network security policy rules by policy ExtID. [#1031](https://github.com/nutanix/terraform-provider-nutanix/issues/1031)
+- **VM Affinity Policies (VMM)**: Create, list, and get VM-Host affinity and VM-VM anti-affinity policies. Use VM Affinity Policies to govern where VMs run by specifying whether a VM should run on a selected set of hosts, or by keeping specified VMs apart on different hosts. Users can use these resources and data sources to configure, list, and fetch affinity policies [#997](https://github.com/nutanix/terraform-provider-nutanix/pull/997)
+
+**Enhancements:**
+- **Deploy from OVA (VMM)**: Add support to update deployed virtual machines from OVA images. [#985](https://github.com/nutanix/terraform-provider-nutanix/pull/985)
+- FNS 5.2: Add support for global scope, specific intratier rules, and subnet/VPC-based objects features. [#1032](https://github.com/nutanix/terraform-provider-nutanix/issues/1032)
+- Support metadata on subnet V2 resource and data source. [#1085](https://github.com/nutanix/terraform-provider-nutanix/issues/1085)
+- API key and custom headers as an alternative method of authorization. [#1062](https://github.com/nutanix/terraform-provider-nutanix/pull/1062)
+
+**Fixed Bugs:**
+- `subnets_v2` update with `is_external` set to `true` fails. [#1063](https://github.com/nutanix/terraform-provider-nutanix/issues/1063)
+- `nutanix_vpc_v2`: Unable to add more than one external routable prefix. [#1053](https://github.com/nutanix/terraform-provider-nutanix/issues/1053)
+- Legacy NIC attributes in VMM v2 are still used across resources and data sources. [#1059](https://github.com/nutanix/terraform-provider-nutanix/issues/1059)
+- `nutanix_network_security_policy_v2`: Failed to add a rule on an existing security policy. [#1052](https://github.com/nutanix/terraform-provider-nutanix/issues/1052)
+- Add retries for VM power on/off operations in `nutanix_virtual_machine_v2` to avoid ETag mismatch errors. [#1089](https://github.com/nutanix/terraform-provider-nutanix/issues/1089)
+- Bug: can not create global Nutanix security policy, defaults to VLAN. [#1087](https://github.com/nutanix/terraform-provider-nutanix/issues/1087)
+- `nutanix_object_store_v2` update functionality. [#1094](https://github.com/nutanix/terraform-provider-nutanix/issues/1094)
+- `nutanix_object_store_v2` gives no Terraform error on long name. [#1093](https://github.com/nutanix/terraform-provider-nutanix/issues/1093)
+- `nutanix_user_key_v2` update tries to recreate the key object. [#1092](https://github.com/nutanix/terraform-provider-nutanix/issues/1092)
+- Update of Guest Customization leads to delete and recreate of virtual machine resource. [#1108](https://github.com/nutanix/terraform-provider-nutanix/issues/1108)
+- Memory hot-plug increase causing VM power off when using `nutanix_virtual_machine_v2` resource. [#1105](https://github.com/nutanix/terraform-provider-nutanix/issues/1105)
+- Mark user key secrets as sensitive and persist `key_details` on create. [#1112](https://github.com/nutanix/terraform-provider-nutanix/issues/1112)
+
+
+## 2.4.1 (April 15, 2026) **Invalid Release**
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.4.0...v2.4.1)
+
+**New Features:**
+- **Network Functions (Networking)**: Create and manage Network Functions for service chaining and traffic forwarding use cases. [#982](https://github.com/nutanix/terraform-provider-nutanix/issues/982)
+- **Entity Groups (Flow Management)**: Create and manage Entity Groups for microsegmentation use cases. [#1030](https://github.com/nutanix/terraform-provider-nutanix/issues/1030)
+- **Entities (IAM)**: List and get IAM entities. Use Entities to configure and manage entities representing the resources over which permissions are defined. Users can use these datasource to list and fetch entities [#955](https://github.com/nutanix/terraform-provider-nutanix/issues/955)
+- **Network Security Policy Rules (Flow Management)**: List all network security policy rules by policy ExtID. [#1031](https://github.com/nutanix/terraform-provider-nutanix/issues/1031)
+- **VM Affinity Policies (VMM)**: Create, list, and get VM-Host affinity and VM-VM anti-affinity policies. Use VM Affinity Policies to govern where VMs run by specifying whether a VM should run on a selected set of hosts, or by keeping specified VMs apart on different hosts. Users can use these resources and data sources to configure, list, and fetch affinity policies [#997](https://github.com/nutanix/terraform-provider-nutanix/pull/997)
+
+**Enhancements:**
+- **Deploy from OVA (VMM)**: Add support to update deployed virtual machines from OVA images. [#985](https://github.com/nutanix/terraform-provider-nutanix/pull/985)
+- FNS 5.2: Add support for global scope, specific intratier rules, and subnet/VPC-based objects features. [#1032](https://github.com/nutanix/terraform-provider-nutanix/issues/1032)
+- Support metadata on subnet V2 resource and data source. [#1085](https://github.com/nutanix/terraform-provider-nutanix/issues/1085)
+- API key and custom headers as an alternative method of authorization. [#1062](https://github.com/nutanix/terraform-provider-nutanix/pull/1062)
+
+**Fixed Bugs:**
+- `subnets_v2` update with `is_external` set to `true` fails. [#1063](https://github.com/nutanix/terraform-provider-nutanix/issues/1063)
+- `nutanix_vpc_v2`: Unable to add more than one external routable prefix. [#1053](https://github.com/nutanix/terraform-provider-nutanix/issues/1053)
+- Legacy NIC attributes in VMM v2 are still used across resources and data sources. [#1059](https://github.com/nutanix/terraform-provider-nutanix/issues/1059)
+- `nutanix_network_security_policy_v2`: Failed to add a rule on an existing security policy. [#1052](https://github.com/nutanix/terraform-provider-nutanix/issues/1052)
+- Add retries for VM power on/off operations in `nutanix_virtual_machine_v2` to avoid ETag mismatch errors. [#1089](https://github.com/nutanix/terraform-provider-nutanix/issues/1089)
+- Bug: can not create global Nutanix security policy, defaults to VLAN. [#1087](https://github.com/nutanix/terraform-provider-nutanix/issues/1087)
+- `nutanix_object_store_v2` update functionality. [#1094](https://github.com/nutanix/terraform-provider-nutanix/issues/1094)
+- `nutanix_object_store_v2` gives no Terraform error on long name. [#1093](https://github.com/nutanix/terraform-provider-nutanix/issues/1093)
+- `nutanix_user_key_v2` update tries to recreate the key object. [#1092](https://github.com/nutanix/terraform-provider-nutanix/issues/1092)
+- Update of Guest Customization leads to delete and recreate of virtual machine resource. [#1108](https://github.com/nutanix/terraform-provider-nutanix/issues/1108)
+- Memory hot-plug increase causing VM power off when using `nutanix_virtual_machine_v2` resource. [#1105](https://github.com/nutanix/terraform-provider-nutanix/issues/1105)
+- Mark user key secrets as sensitive and persist `key_details` on create. [#1112](https://github.com/nutanix/terraform-provider-nutanix/issues/1112)
+
+## 2.4.0 (January 8, 2026)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.4...v2.4.0)
+
+**New Features:**
+- **Key Management Server (Security)**: Create, Update, Read and Delete Key Management Servers secure data encryption keys when encryption is enabled.
+- **Security Technical Implementation Guide controls details (Security)**: Fetch the STIG controls details for STIG rules on each cluster.
+- **SSL Certification (Cluster Management)**: Provides the ability to manage SSL certificates for clusters. This includes the ability to retrieve and update SSL certificates for clusters.
+- **Cluster Profile (Cluster Management)**: Create, Update, Read and Delete cluster configuration profiles for consistent deployments.
+- **Associate/Disassociate Cluster from Cluster Profile (Cluster Management)**: Associate or Disassociate clusters to profiles for streamlined management.
+- **Associate/Disassociate Categories to Cluster (Cluster Management)**: Associate or Disassociate categories to clusters.
+- **Storage Policies (Data Policies)**: Create, Update, Read and Delete Storage Policy which helps in ease of storage management at scale.
+
+**Enhancements:**
+- Add Support for Package-Specific Acceptance Tests via /ok-to-test -p Command [#1014](https://github.com/nutanix/terraform-provider-nutanix/issues/1014)
+- Centralize task entity type and completion detail constants for reliable UUID extraction [#1029](https://github.com/nutanix/terraform-provider-nutanix/issues/1029)
+
+**Fixed Bugs:**
+- Unable to list VPC using data "nutanix_vpcs_v2" "list_vpcs" [#1000](https://github.com/nutanix/terraform-provider-nutanix/issues/1000)
+- virtual_machine_v2: VM creation fails with multiple NICs ("invalid input arguments") [#994](https://github.com/nutanix/terraform-provider-nutanix/issues/994)
+- V3: Project: Revisit the Project Module resources [#962](https://github.com/nutanix/terraform-provider-nutanix/issues/962)
+    - Projects: ACP: Order changes in API response lead to data inconsistency in state file. [#1042](https://github.com/nutanix/terraform-provider-nutanix/issues/1042)
+    - Projects: ACP: Removing a ACP causing index shifting issues. [#1044](https://github.com/nutanix/terraform-provider-nutanix/issues/1044)
+    - Project: ACP: Adding a new user or new user group to existing ACP is failed. [#1043](https://github.com/nutanix/terraform-provider-nutanix/issues/1043)
+- Bug Report: resource "nutanix_user_groups_v2" [#947](https://github.com/nutanix/terraform-provider-nutanix/issues/947)
+
+**Breaking Changes:**
+- From PC version 7.5 onwards, the resource domain is not supported by Projects API. As a result, Terraform support for this functionality (resource_domain attribute) has been removed starting with the 2.4.0 release. [#1049](https://github.com/nutanix/terraform-provider-nutanix/issues/1049)
+
+## 2.3.4 (November 14, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.3...v2.3.4)
+
+- **Enhancements:**
+  - Support for Ejecting ISO from CD-ROM [\#1006](https://github.com/nutanix/terraform-provider-nutanix/issues/1006)
+
+- **Fixed Bugs:**
+   - Subnet entity is not saved in Terraform State due to plugin crash [\#894](https://github.com/nutanix/terraform-provider-nutanix/issues/894)
+
 ## 2.3.3 (November 4, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.2...v2.3.3)
 

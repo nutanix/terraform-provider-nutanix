@@ -44,6 +44,19 @@ func testAccCheckResourceAttrListNotEmpty(resourceName, attrName, subAttr string
 	}
 }
 
+// isVolumeGroupNotFoundErr returns true if the error indicates the volume group
+// does not exist (e.g. already deleted). API may return 404 with different messages.
+func isVolumeGroupNotFoundErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	s := fmt.Sprint(err)
+	return strings.Contains(s, "404") ||
+		strings.Contains(s, "VOLUME_UNKNOWN_ENTITY_ERROR") ||
+		strings.Contains(s, "Unknown volume group") ||
+		strings.Contains(s, "PLAT-10007")
+}
+
 func testAccCheckNutanixVolumeGroupV2Destroy(s *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 
@@ -51,10 +64,12 @@ func testAccCheckNutanixVolumeGroupV2Destroy(s *terraform.State) error {
 		if rs.Type != "nutanix_volume_group_v2" {
 			continue
 		}
-		if _, err := conn.VolumeAPI.VolumeAPIInstance.DeleteVolumeGroupById(utils.StringPtr(rs.Primary.ID)); err != nil {
-			if strings.Contains(fmt.Sprint(err), "VOLUME_UNKNOWN_ENTITY_ERROR") {
-				return nil
-			}
+		// Verify the volume group is destroyed by trying to get it (not by deleting again).
+		_, err := conn.VolumeAPI.VolumeAPIInstance.GetVolumeGroupById(utils.StringPtr(rs.Primary.ID), nil)
+		if err == nil {
+			return fmt.Errorf("volume group %s still exists", rs.Primary.ID)
+		}
+		if !isVolumeGroupNotFoundErr(err) {
 			return err
 		}
 	}
@@ -142,7 +157,7 @@ func testAccVolumeGroupDiskResourceConfig(name, desc string, diskSizeBytes int) 
 	return fmt.Sprintf(`	  
 
       data "nutanix_storage_containers_v2" "test" {
-		  filter = "clusterExtId eq '${local.cluster1}'"
+		  filter = "clusterExtId eq '${local.cluster1}' and startswith(name,'default-container-')"
 		  limit  = 1
 	  }
 	  resource "nutanix_volume_group_disk_v2" "test" {

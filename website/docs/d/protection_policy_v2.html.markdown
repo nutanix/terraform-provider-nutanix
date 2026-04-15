@@ -9,7 +9,9 @@ description: |-
 
 # nutanix_protection_policy_v2
 
-Describes the Fetches the protection policy identified by an external identifier.
+> **Authentication:** Protection policy operations do **not** support API key authentication. Use `username` and `password` in the provider configuration.
+
+Fetches the protection policy identified by an external identifier.
 
 ## Example Usage
 
@@ -117,4 +119,4 @@ The local, remote attribute in the auto_rollup_retention supports the following:
 
 
 
-See detailed information in [Nutanix Get Protection Policy V4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.0#tag/ProtectionPolicies/operation/getProtectionPolicyById).
+See detailed information in [Nutanix Get Protection Policy V4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.2#tag/ProtectionPolicies/operation/getProtectionPolicyById).

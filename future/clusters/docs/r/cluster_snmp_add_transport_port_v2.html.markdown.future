@@ -16,7 +16,7 @@ Adds, Update and Remove SNMP trap configuration to the cluster identified by {ex
 data "nutanix_cluster_v2" "cluster" {}
 
 resource "nutanix_cluster_snmp_trap_v2" "cluster_trap" {
-  cluster_ext_id = data.nutanix_virtual_machines_v4.cluster.0.data.ext_id
+  cluster_ext_id = data.nutanix_virtual_machines_v2.cluster.0.data.ext_id
   protocol = "TCP"
   port = "3001"
 }

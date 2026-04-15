@@ -21,7 +21,7 @@ func TestNewV3Client(t *testing.T) {
 	}
 	_, err := NewV3Client(cred)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%s", err.Error())
 	}
 
 	// verify missing client scenario
@@ -34,7 +34,7 @@ func TestNewV3Client(t *testing.T) {
 	}
 	v3Client2, err2 := NewV3Client(cred2)
 	if err2 != nil {
-		t.Errorf(err2.Error())
+		t.Errorf("%s", err2.Error())
 	}
 
 	if v3Client2.client.ErrorMsg == "" {

@@ -83,12 +83,14 @@ resource "nutanix_virtual_machine_v2" "ngt-vm" {
   }
 
   nics {
-    network_info {
-      nic_type = "NORMAL_NIC"
-      subnet {
-        ext_id = data.nutanix_subnets_v2.subnet.subnets[0].ext_id
+    nic_network_info {
+      virtual_ethernet_nic_network_info {
+        nic_type = "NORMAL_NIC"
+        subnet {
+          ext_id = data.nutanix_subnets_v2.subnet.subnets[0].ext_id
+        }
+        vlan_mode = "ACCESS"
       }
-      vlan_mode = "ACCESS"
     }
   }
 
@@ -112,3 +114,15 @@ resource "nutanix_ngt_insert_iso_v2" "insert-iso" {
   capablities    = ["VSS_SNAPSHOT"]
   is_config_only = true
 }
+
+
+# Eject the NGT ISO, can be done in three ways:
+# 1. By setting `action = "eject"` → triggers eject operation explicitly.
+# 2. By deleting this resource → automatically ejects the NGT ISO.
+# 3. NGT installation automatically ejects the NGT ISO after installation.
+# resource "nutanix_ngt_insert_iso_v2" "insert-iso" {
+#   ext_id         = nutanix_virtual_machine_v2.ngt-vm.id
+#   capablities    = ["VSS_SNAPSHOT"]
+#   is_config_only = true
+#   action         = "eject"
+# }

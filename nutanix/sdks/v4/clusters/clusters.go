@@ -4,35 +4,36 @@ import (
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/api"
 	cluster "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/sdkconfig"
 )
 
 type Client struct {
 	ClusterEntityAPI     *api.ClustersApi
 	StorageContainersAPI *api.StorageContainersApi
 	PasswordManagerAPI   *api.PasswordManagerApi
+	ClusterProfilesAPI   *api.ClusterProfilesApi
+	SSLCertificateAPI    *api.SSLCertificateApi
 }
 
 func NewClustersClient(credentials client.Credentials) (*Client, error) {
 	var baseClient *cluster.ApiClient
 
-	// check if all required fields are present. Else create an empty client
-	if credentials.Username != "" && credentials.Password != "" && credentials.Endpoint != "" {
-		pcClient := cluster.NewApiClient()
-
-		pcClient.Host = credentials.Endpoint
-		pcClient.Password = credentials.Password
-		pcClient.Username = credentials.Username
-		pcClient.Port = 9440
-		pcClient.VerifySSL = false
-
+	pcClient := cluster.NewApiClient()
+	if cfg := sdkconfig.ConfigureV4Client(credentials, pcClient); cfg != nil {
+		pcClient.Host = cfg.Host
+		pcClient.Port = cfg.Port
+		pcClient.Username = cfg.Username
+		pcClient.Password = cfg.Password
+		pcClient.VerifySSL = cfg.VerifySSL
+		pcClient.AllowVersionNegotiation = cfg.AllowVersionNegotiation
 		baseClient = pcClient
 	}
 
-	f := &Client{
+	return &Client{
 		ClusterEntityAPI:     api.NewClustersApi(baseClient),
 		StorageContainersAPI: api.NewStorageContainersApi(baseClient),
 		PasswordManagerAPI:   api.NewPasswordManagerApi(baseClient),
-	}
-
-	return f, nil
+		ClusterProfilesAPI:   api.NewClusterProfilesApi(baseClient),
+		SSLCertificateAPI:    api.NewSSLCertificateApi(baseClient),
+	}, nil
 }

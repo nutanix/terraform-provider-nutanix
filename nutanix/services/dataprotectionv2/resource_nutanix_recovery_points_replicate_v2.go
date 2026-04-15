@@ -12,6 +12,7 @@ import (
 	dataprtotectionPrismConfig "github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -63,37 +64,40 @@ func ResourceNutanixRecoveryPointReplicateV2Create(ctx context.Context, d *schem
 		return diag.Errorf("error while replicating recovery point: %v", err)
 	}
 
-	TaskRef := resp.Data.GetValue().(dataprtotectionPrismConfig.TaskReference)
-	taskUUID := TaskRef.ExtId
+	taskRef := resp.Data.GetValue().(dataprtotectionPrismConfig.TaskReference)
+	taskUUID := taskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
+	// Wait for the recovery point to be replicated
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for recovery point: (%s) to replicate: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for recovery point (%s) to replicate: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching recovery point UUID : %v", err)
+		return diag.Errorf("error while fetching replicate recovery point task: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 
-	aJSON, _ := json.Marshal(rUUID)
-	log.Printf("[DEBUG] Replicate Recovery Point Task Details: %v", string(aJSON))
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Replicate Recovery Point Task Details: %s", string(aJSON))
 
-	// set the UUID of the replicated recovery point
-	uuid := rUUID.CompletionDetails[0].Value
-	d.SetId(uuid.GetValue().(string))
-	d.Set("replicated_rp_ext_id", uuid.GetValue().(string))
+	// Set the UUID of the replicated recovery point from completion details
+	values := common.ExtractCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameRecoveryPoint)
+	if len(values) == 0 {
+		return diag.Errorf("Recovery point not found in task completion details")
+	}
+	uuid := values[0]
+	d.SetId(uuid)
+	d.Set("replicated_rp_ext_id", uuid)
 
 	return ResourceNutanixRecoveryPointReplicateV2Read(ctx, d, meta)
 }

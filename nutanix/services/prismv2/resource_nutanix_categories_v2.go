@@ -136,7 +136,7 @@ func ResourceNutanixCategoriesV2Create(ctx context.Context, d *schema.ResourceDa
 
 	getResp := resp.Data.GetValue().(import1.Category)
 
-	d.SetId(*getResp.ExtId)
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return ResourceNutanixCategoriesV2Read(ctx, d, meta)
 }
 

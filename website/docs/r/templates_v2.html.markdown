@@ -250,8 +250,10 @@ The template_version_spec block supports the following:
 
 
 ### nics
-* `backing_info`: (Optional) Defines a NIC emulated by the hypervisor
-* `network_info`: (Optional) Network information for a NIC.
+* `nic_backing_info`: (Optional) New NIC backing info (v2.4.1+). One of `virtual_ethernet_nic`, `sriov_nic`, `dp_offload_nic`.
+* `nic_network_info`: (Optional) New NIC network info (v2.4.1+). One of `virtual_ethernet_nic_network_info`, `sriov_nic_network_info`, `dp_offload_nic_network_info`.
+* `backing_info`: (Optional, Deprecated) Use `nic_backing_info.virtual_ethernet_nic` instead.
+* `network_info`: (Optional, Deprecated) Use `nic_network_info.virtual_ethernet_nic_network_info` instead.
 
 ### nics.backing_info
 * `model`: (Optional) Options for the NIC emulation. Valid values "VIRTIO" , "E1000".
@@ -351,4 +353,4 @@ resource "nutanix_template_v2" "import_template" {}
 terraform import nutanix_template_v2.import_template <UUID>
 ```
 
-See detailed information in [Nutanix Create Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Templates/operation/createTemplate).
+See detailed information in [Nutanix Create Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Templates/operation/createTemplate).

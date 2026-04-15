@@ -185,8 +185,8 @@ func ResourceNutanixAuthPoliciesV2Create(ctx context.Context, d *schema.Resource
 
 	log.Printf("[DEBUG] Creating Authorization Policy Return")
 
-	d.Set("ext_id", *getResp.ExtId)
-	d.SetId(*getResp.ExtId)
+	d.Set("ext_id", utils.StringValue(getResp.ExtId))
+	d.SetId(utils.StringValue(getResp.ExtId))
 	return ResourceNutanixAuthPoliciesV2Read(ctx, d, meta)
 }
 
@@ -358,7 +358,7 @@ func expandIdentityFilter(identities []interface{}) ([]import1.IdentityFilter, e
 				log.Printf("[DEBUG] expandIdentityFilter val type : %v\n", reflect.TypeOf(val))
 				reserved, err := deserializeJSONStringToMap(val.(string))
 				if err != nil {
-					return nil, fmt.Errorf(err.Error())
+					return nil, fmt.Errorf("%s", err.Error())
 				}
 				log.Printf("[DEBUG] expandIdentityFilter reserved : %v\n", reserved)
 				filter.Reserved_ = reserved
@@ -395,7 +395,7 @@ func expandEntityFilter(entities []interface{}) ([]import1.EntityFilter, error) 
 				log.Printf("[DEBUG] expandEntityFilter val type : %v\n", reflect.TypeOf(val))
 				reserved, err := deserializeJSONStringToMap(val.(string))
 				if err != nil {
-					return nil, fmt.Errorf(err.Error())
+					return nil, fmt.Errorf("%s", err.Error())
 				}
 				log.Printf("[DEBUG] expandEntityFilter reserved : %v\n", reserved)
 				filter.Reserved_ = reserved

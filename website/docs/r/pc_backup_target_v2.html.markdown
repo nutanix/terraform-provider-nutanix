@@ -144,4 +144,4 @@ data "nutanix_pc_backup_targets_v2" "backup_targets" {
 terraform import nutanix_pc_backup_target_v2.imported <domainManagerUUID/backupTargetUUID>
 ```
 
-See detailed information in [Nutanix Create Backup Target V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createBackupTarget).
+See detailed information in [Nutanix Create Backup Target V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.3#tag/DomainManager/operation/createBackupTarget).

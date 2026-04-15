@@ -202,7 +202,7 @@ func DatasourceNutanixFloatingIPV2Read(ctx context.Context, d *schema.ResourceDa
 	if err := d.Set("floating_ip_value", getResp.FloatingIpValue); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("association_status", getResp.AssociationStatus); err != nil {
+	if err := d.Set("association_status", getResp.AssociationStatus.GetName()); err != nil {
 		return diag.FromErr(err)
 	}
 

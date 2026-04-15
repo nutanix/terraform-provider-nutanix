@@ -51,4 +51,4 @@ The following arguments are supported:
 * `ext_id`: -(Required) The external identifier of a protected VM or volume group that can be used to retrieve the protected resource.
 
 
-See detailed information in [Nutanix Promote Protected Resource v4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.0#tag/ProtectedResources/operation/promoteProtectedResource).
+See detailed information in [Nutanix Promote Protected Resource v4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.3#tag/ProtectedResources/operation/promoteProtectedResource).

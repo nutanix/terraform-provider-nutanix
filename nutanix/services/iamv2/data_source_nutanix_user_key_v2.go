@@ -183,6 +183,6 @@ func dataSourceNutanixUserKeyV2Create(ctx context.Context, d *schema.ResourceDat
 	if err := d.Set("key_details", flattenKeyDetails(keyConfig.KeyDetails)); err != nil {
 		return diag.Errorf("error while setting key_details: %v", err)
 	}
-	d.SetId(*keyConfig.ExtId)
+	d.SetId(utils.StringValue(keyConfig.ExtId))
 	return nil
 }

@@ -440,3 +440,13 @@ func TimeValueMap(src map[string]*time.Time) map[string]time.Time {
 
 	return dst
 }
+
+// TimeStringValue converts a time.Time pointer into a string value formatted as RFC3339
+// or "" if the pointer is nil.
+func TimeStringValue(v *time.Time) string {
+	if v != nil {
+		return v.Format(time.RFC3339)
+	}
+
+	return ""
+}

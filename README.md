@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Cloud Platform.
 
-NOTE: The latest version of the Nutanix provider is [v2.3.3](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.3.3).
+NOTE: The latest version of the Nutanix provider is [v2.4.2](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.4.2).
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 
@@ -22,26 +22,53 @@ Modules based on Terraform Nutanix Provider can be found here : [Modules](https:
 * [Go](https://golang.org/doc/install) 1.17+ (to build the provider plugin)
 * This provider uses [SDKv2](https://www.terraform.io/plugin/sdkv2/sdkv2-intro) from release 1.3.0
 
-## Introducing Nutanix Terraform Provider Version v2.3.3
+## Introducing Nutanix Terraform Provider Version v2.4.2
 
-We're excited to announce the release of Nutanix Terraform Provider Version 2.3.3!
+We're excited to announce the release of Nutanix Terraform Provider Version 2.4.2!
 
-### What's New in v2.3.3
+### What's New in v2.4.2
 
-- This release includes one documentation fix to show guides in Terraform provider docs [#1002](https://github.com/nutanix/terraform-provider-nutanix/issues/1002), functionally this release is equivalent to v2.3.2
+- **New Resource Support**
+  - **Network Functions (Networking)**: Create and manage Network Functions for service chaining and traffic forwarding use cases. [#982](https://github.com/nutanix/terraform-provider-nutanix/issues/982)
+  - **Entity Groups (Flow Management)**: Create and manage Entity Groups for microsegmentation use cases. [#1030](https://github.com/nutanix/terraform-provider-nutanix/issues/1030)
+  - **Entities (IAM)**: List and get IAM entities. Use Entities to configure and manage entities representing the resources over which permissions are defined. Users can use these datasource to list and fetch entities [#955](https://github.com/nutanix/terraform-provider-nutanix/issues/955)
+  - **Network Security Policy Rules (Flow Management)**: List all network security policy rules by policy ExtID. [#1031](https://github.com/nutanix/terraform-provider-nutanix/issues/1031)
+  - **VM Affinity Policies (VMM)**: Create, list, and get VM-Host affinity and VM-VM anti-affinity policies. Use VM Affinity Policies to govern where VMs run by specifying whether a VM should run on a selected set of hosts, or by keeping specified VMs apart on different hosts. Users can use these resources and data sources to configure, list, and fetch affinity policies [#997](https://github.com/nutanix/terraform-provider-nutanix/pull/997)
 
+- **Enhancements:**
+  - **Deploy from OVA (VMM)**: Add support to update deployed virtual machines from OVA images. [#985](https://github.com/nutanix/terraform-provider-nutanix/pull/985)
+  - FNS 5.2: Add support for global scope, specific intratier rules, and subnet/VPC-based objects features. [#1032](https://github.com/nutanix/terraform-provider-nutanix/issues/1032)
+  - Support metadata on subnet V2 resource and data source. [#1085](https://github.com/nutanix/terraform-provider-nutanix/issues/1085)
+  - API key and custom headers as an alternative method of authorization. [#1062](https://github.com/nutanix/terraform-provider-nutanix/pull/1062)
+
+- **Fixed Bugs:**
+   - `subnets_v2` update with `is_external` set to `true` fails. [#1063](https://github.com/nutanix/terraform-provider-nutanix/issues/1063)
+   - `nutanix_vpc_v2`: Unable to add more than one external routable prefix. [#1053](https://github.com/nutanix/terraform-provider-nutanix/issues/1053)
+   - Legacy NIC attributes in VMM v2 are still used across resources and data sources. [#1059](https://github.com/nutanix/terraform-provider-nutanix/issues/1059)
+   - `nutanix_network_security_policy_v2`: Failed to add a rule on an existing security policy. [#1052](https://github.com/nutanix/terraform-provider-nutanix/issues/1052)
+   - Add retries for VM power on/off operations in `nutanix_virtual_machine_v2` to avoid ETag mismatch errors. [#1089](https://github.com/nutanix/terraform-provider-nutanix/issues/1089)
+   - Bug: can not create global Nutanix security policy, defaults to VLAN. [#1087](https://github.com/nutanix/terraform-provider-nutanix/issues/1087)
+   - `nutanix_object_store_v2` update functionality. [#1094](https://github.com/nutanix/terraform-provider-nutanix/issues/1094)
+   - `nutanix_object_store_v2` gives no Terraform error on long name. [#1093](https://github.com/nutanix/terraform-provider-nutanix/issues/1093)
+   - `nutanix_user_key_v2` update tries to recreate the key object. [#1092](https://github.com/nutanix/terraform-provider-nutanix/issues/1092)
+  - Update of Guest Customization leads to delete and recreate of virtual machine resource. [#1108](https://github.com/nutanix/terraform-provider-nutanix/issues/1108)
+   - Memory hot-plug increase causing VM power off when using `nutanix_virtual_machine_v2` resource. [#1105](https://github.com/nutanix/terraform-provider-nutanix/issues/1105)
+   - Mark user key secrets as sensitive and persist `key_details` on create. [#1112](https://github.com/nutanix/terraform-provider-nutanix/issues/1112)
 
 ### Software Requirements
-The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.3.0, ensure your Nutanix environment meets the following software requirements:
-- Self Service version: 4.2.0 (Required only for running Self Service based resource and data source)
-- AOS Version: 7.3 or later
-- Prism Central Version: pc 7.3 or later
-- Nutanix Terraform Provider Version: 2.3.2
-
+The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.4.2 for Iris 1, ensure your Nutanix environment meets the following software requirements:
+- Self Service version: 4.3.1 (Required only for running Self Service based resource and data source)
+- AOS Version: 7.5, 7.5.1
+- Prism Central Version: 7.5, 7.5.1 or later
+- Nutanix Terraform Provider Version: 2.4.2
 
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
+| 2.4.2 | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
+| 2.4.1 (⚠️ Deprecated/Invalid) | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
+| 2.4.0 | 7.5 | pc7.5 or later | Self Service  v4.3.0 | yes |
+| 2.3.4 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.3 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.2 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.1 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
@@ -83,13 +110,16 @@ Long term, once this is upstream, no pre-compiled binaries will be needed, as te
 The following keys can be used to configure the provider.
 
 * **endpoint** - (Required) IP address for the Nutanix Prism Central.
-* **username** - (Required) Username for Nutanix Prism Central. Could be local cluster auth (e.g. `auth`) or directory auth.
-* **password** - (Required) Password for the provided username.
-* **port** - (Optional) Port for the Nutanix Prism Central. Default port is 9440.
+* **username** - (Optional) Username for Nutanix Prism Central. Could be local cluster auth (e.g. `auth`) or directory auth. Required if `api_key` is not set.
+* **password** - (Optional) Password for the provided username. Required if `api_key` is not set.
+* **api_key** - (Optional) API key for Prism Central authentication. Can be used as an alternative to `username`/`password` when connecting to a Prism Central instance. **Not supported by Prism Elements**, which requires `username` and `password`. When set, the `X-Ntnx-Api-Key` header is used instead of Basic Authentication.
+* **port** - (Optional) Port for the Nutanix Prism Central. Default port is 9440. Can also be set via the `NUTANIX_PORT` environment variable.
 * **insecure** - (Optional) Explicitly allow the provider to perform insecure SSL requests. If omitted, default value is false.
-* **wait_timeout** - (optional) Set if you know that the creation o update of a resource may take long time (minutes).
+* **wait_timeout** - (Optional) Set if you know that the creation or update of a resource may take long time (minutes).
+* **custom_headers** - (Optional) Map of custom HTTP headers to add to all API requests. Useful for environments that require additional headers such as Cloudflare Access service tokens. Headers can also be set via environment variables with the `NUTANIX_HEADER_` prefix (e.g. `NUTANIX_HEADER_CF_ACCESS_CLIENT_ID` becomes `Cf-Access-Client-Id`). Values defined in config take precedence over environment variables.
 
 ```hcl
+# Basic authentication
 provider "nutanix" {
   username     = "admin"
   password     = "myPassword"
@@ -98,9 +128,22 @@ provider "nutanix" {
   insecure     = true
   wait_timeout = 10
 }
+
+# API key authentication with custom headers (e.g. Cloudflare Access)
+provider "nutanix" {
+  api_key      = "my-api-key"
+  port         = 443
+  endpoint     = "10.36.7.201"
+  insecure     = true
+  wait_timeout = 10
+  custom_headers = {
+    "Cf-Access-Client-Id"     = "my-client-id"
+    "Cf-Access-Client-Secret" = "my-client-secret"
+  }
+}
 ```
 
-## From terraform-provider-nutanix v1.5.0-beta :
+## From terraform-provider-nutanix v1.5.0-beta
 
 The following keys can be used to configure the provider.
 
@@ -126,7 +169,7 @@ provider "nutanix" {
 }
 ```
 
-## Additional fields for using Nutanix Database Service:
+## Additional fields for using Nutanix Database Service
 
 * **ndb_username** - (Optional) Username of Nutanix Database Service server
 * **ndb_password** - (Optional) Password of Nutanix Database Service server
@@ -141,10 +184,10 @@ provider "nutanix" {
 ```
 
 ### Provider Configuration Requirements & Warnings
-From foundation getting released in 1.5.0-beta, provider configuration will accomodate prism central and foundation apis connection details. **It will show warnings for disabled api connections as per the attributes given in provider configuration in above mentioned format**. The below are the required attributes for corresponding provider componenets :
-* endpoint, username and password are required fields for using Prism Central & Karbon based resources and data sources
-* foundation_endpoint is required field for using Foundation based resources and data sources
-* ndb_username, ndb_password and ndb_endpoint are required fields for using NDB based resources and data sources
+From foundation getting released in 1.5.0-beta, provider configuration will accommodate Prism Central and foundation API connection details. **It will show warnings for disabled API connections as per the attributes given in provider configuration in above mentioned format**. The below are the required attributes for corresponding provider components:
+* `endpoint` and either (`username` + `password`) or `api_key` are required for using Prism Central & Karbon based resources and data sources.
+* `foundation_endpoint` is required field for using Foundation based resources and data sources
+* `ndb_username`, `ndb_password` and `ndb_endpoint` are required fields for using NDB based resources and data sources
 
 
 ## Resources
@@ -158,11 +201,13 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | nutanix_static_routes | nutanix_routes_v2 |
 | nutanix_address_group | nutanix_address_groups_v2 |
 | nutanix_service_group | nutanix_service_groups_v2 |
+| - | nutanix_network_function_v2 |
 | nutanix_network_security_rule | nutanix_network_security_policy_v2 |
 | nutanix_role | nutanix_roles_v2 |
 | nutanix_user | nutanix_users_v2 |
 | nutanix_user_groups | nutanix_user_groups_v2 |
 | nutanix_access_control_policy | nutanix_authorization_policy_v2 |
+| - | nutanix_entity_group_v2 |
 | - | nutanix_saml_identity_providers_v2 |
 | - | nutanix_directory_services_v2 |
 | nutanix_category_key | nutanix_category_v2 |
@@ -179,6 +224,8 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | - | nutanix_vm_gc_update_v2 |
 | - | nutanix_vm_network_device_assign_ip_v2 |
 | - | nutanix_vm_network_device_migrate_v2 |
+| - | nutanix_vm_host_affinity_policy_v2 |
+| - | nutanix_vm_anti_affinity_policy_v2 |
 | - | nutanix_template_v2 |
 | - | nutanix_deploy_templates_v2 |
 | - | nutanix_template_guest_os_actions_v2 |
@@ -254,6 +301,10 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | - | nutanix_object_store_v2 |
 | - | nutanix_object_store_certificate_v2 |
 | - | nutanix_password_change_request_v2 |
+| - | nutanix_key_management_server_v2 |
+| - | nutanix_ssl_certificate_v2 |
+| - | nutanix_cluster_profile_v2 |
+| - | nutanix_storage_policy_v2 |
 
 
 
@@ -277,8 +328,11 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | nutanix_address_groups | nutanix_address_groups_v2 |
 | nutanix_service_group | nutanix_service_group_v2 |
 | nutanix_service_groups | nutanix_service_groups_v2 |
+| - | nutanix_network_function_v2 |
+| - | nutanix_network_functions_v2 |
 | nutanix_network_security_rule | nutanix_network_security_policy_v2 |
 | - | nutanix_network_security_policies_v2 |
+| - | nutanix_network_security_policy_rules_v2 |
 | nutanix_role | nutanix_role_v2 |
 | nutanix_roles | nutanix_roles_v2 |
 | nutanix_permission | nutanix_operation_v2 |
@@ -289,6 +343,10 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | nutanix_user_groups | nutanix_user_groups_v2 |
 | nutanix_access_control_policy | nutanix_authorization_policy_v2 |
 | nutanix_access_control_policies | nutanix_authorization_policies_v2 |
+| - | nutanix_iam_entity_v2 |
+| - | nutanix_iam_entities_v2 |
+| - | nutanix_entity_group_v2 |
+| - | nutanix_entity_groups_v2 |
 | - | nutanix_saml_identity_provider_v2 |
 | - | nutanix_saml_identity_providers_v2 |
 | - | nutanix_directory_service_v2 |
@@ -299,6 +357,10 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | - | nutanix_images_v2 |
 | nutanix_virtual_machine | nutanix_virtual_machine_v2 |
 | - | nutanix_virtual_machines_v2 |
+| - | nutanix_vm_host_affinity_policy_v2 |
+| - | nutanix_vm_host_affinity_policies_v2 |
+| - | nutanix_vm_anti_affinity_policy_v2 |
+| - | nutanix_vm_anti_affinity_policies_v2 |
 | - | nutanix_ova_v2 |
 | - | nutanix_ovas_v2 |
 | - | nutanix_template_v2 |
@@ -393,6 +455,14 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | - | nutanix_certificate_v2 |
 | - | nutanix_certificates_v2 |
 | - | nutanix_system_user_passwords_v2 |
+| - | nutanix_key_management_server_v2 |
+| - | nutanix_key_management_servers_v2 |
+| - | nutanix_stigs_v2 |
+| - | nutanix_ssl_certificate_v2 |
+| - | nutanix_cluster_profile_v2 |
+| - | nutanix_cluster_profiles_v2 |
+| - | nutanix_storage_policy_v2 |
+| - | nutanix_storage_policies_v2 |
 
 
 
@@ -402,6 +472,38 @@ The Nutanix Provider for Terraform is the work of many contributors. We apprecia
 
 * [Contribution Guidelines](./CONTRIBUTING.md)
 * [Code of Conduct](./CODE_OF_CONDUCT.md)
+
+### Running acceptance tests locally (same as /ok-to-test on GitHub)
+
+From the **repository root**:
+
+1. **Set environment variables** (required by `TestAccPreCheck`):
+   - `NUTANIX_USERNAME`, `NUTANIX_PASSWORD`, `NUTANIX_ENDPOINT`
+   - `NUTANIX_INSECURE`, `NUTANIX_PORT`, `NUTANIX_STORAGE_CONTAINER`
+
+2. **Config files** (for V4/vmmv2 tests): ensure `test_config_v2.json` exists at the repo root (same content as the `V4_CONFIG` secret used in CI).
+
+3. **Run tests** (from repo root; `.env` is loaded automatically by `make acc-test`):
+
+   Output goes to `test_output.log`; a test summary is appended at the end. To watch the log: `tail -f test_output.log`.
+
+   | Command | What it does |
+   | :--- | :--- |
+   | `make acc-test networkingv2` | All tests in networkingv2 package (auto-detected) |
+   | `make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic` | Specific test in networkingv2 package |
+   | `make acc-test TestAccV2NutanixSubnetResource_Basic` | Search all packages for test |
+   | `make acc-test p=networkingv2` | All tests in networkingv2 (explicit package) |
+   | `make acc-test v4` | All V4 tests (`TestAccV2Nutanix*`) |
+   | `make acc-test v3` | All V3 tests (`TestAccNutanix*`) |
+
+   Use a different log file: `make acc-test networkingv2 ACC_TEST_LOG=my_tests.log`
+
+   Or use the script (also loads env if you `source .env` first):
+
+   ```bash
+   source .env
+   ./scripts/run-acceptance-test.sh -p vmmv2 TestAccV2NutanixOvaVmDeployResource_DeployVMFromOva
+   ```
 
 
 ## Support
