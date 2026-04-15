@@ -13,11 +13,11 @@ The provider is used to interact with the many resources and data sources suppor
 Use the navigation on the left to read about the available resources and data sources this provider can use.
 
 
-## Introducing Nutanix Terraform Provider Version v2.4.1
+## Introducing Nutanix Terraform Provider Version v2.4.2
 
-We're excited to announce the release of Nutanix Terraform Provider Version 2.4.1!
+We're excited to announce the release of Nutanix Terraform Provider Version 2.4.2!
 
-### What's New in v2.4.1
+### What's New in v2.4.2
 
 - **New Resource Support**
   - **Network Functions**: Create and manage Network Functions for service chaining and traffic forwarding use cases. [#982](https://github.com/nutanix/terraform-provider-nutanix/issues/982)
@@ -47,11 +47,11 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.4.
    - Mark user key secrets as sensitive and persist `key_details` on create. [#1112](https://github.com/nutanix/terraform-provider-nutanix/issues/1112)
 
 ### Software Requirements
-The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.4.1 for Iris 1, ensure your Nutanix environment meets the following software requirements:
+The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.4.2 for Iris 1, ensure your Nutanix environment meets the following software requirements:
 - Self Service version: 4.3.1 (Required only for running Self Service based resource and data source)
 - AOS Version: 7.5, 7.5.1
 - Prism Central Version: 7.5, 7.5.1 or later
-- Nutanix Terraform Provider Version: 2.4.1
+- Nutanix Terraform Provider Version: 2.4.2
 
 
 ~> **Important Notice:** Upcoming Deprecation of Legacy Nutanix Terraform Provider Resources. Starting with the Nutanix Terraform Provider release planned for Q4-CY2026, legacy resources which are based on v0.8,v1,v2 and v3 APIs will be deprecated and no longer supported. For more information, visit [Legacy API Deprecation Announcement](https://portal.nutanix.com/page/documents/eol/list?type=announcement) [Legacy API Deprecation - FAQs](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA0VO0000005rgP0AQ). Nutanix strongly encourages you to migrate your scripts and applications to the latest v2 version of the Nutanix Terraform Provider resources, which are built on our v4 APIs/SDKs. By adopting the latest v2 version based on v4 APIs and SDKs, our users can leverage the enhanced capabilities and latest innovations from Nutanix. We understand that this transition may require some effort, and we are committed to supporting you throughout the process. Please refer to our documentation and support channels for guidance and assistance.
@@ -65,7 +65,8 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
-| 2.4.1 | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
+| 2.4.2 | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
+| 2.4.1 (⚠️ Deprecated/Invalid) | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
 | 2.4.0 | 7.5 | pc7.5 or later | Self Service  v4.3.0 | yes |
 | 2.3.4 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.3 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |

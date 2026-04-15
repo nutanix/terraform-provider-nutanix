@@ -1,4 +1,35 @@
-## 2.4.1 (April 15, 2026)
+## 2.4.2(April 15, 2026) 
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.4.0...v2.4.2)
+
+**New Features:**
+- **Network Functions (Networking)**: Create and manage Network Functions for service chaining and traffic forwarding use cases. [#982](https://github.com/nutanix/terraform-provider-nutanix/issues/982)
+- **Entity Groups (Flow Management)**: Create and manage Entity Groups for microsegmentation use cases. [#1030](https://github.com/nutanix/terraform-provider-nutanix/issues/1030)
+- **Entities (IAM)**: List and get IAM entities. Use Entities to configure and manage entities representing the resources over which permissions are defined. Users can use these datasource to list and fetch entities [#955](https://github.com/nutanix/terraform-provider-nutanix/issues/955)
+- **Network Security Policy Rules (Flow Management)**: List all network security policy rules by policy ExtID. [#1031](https://github.com/nutanix/terraform-provider-nutanix/issues/1031)
+- **VM Affinity Policies (VMM)**: Create, list, and get VM-Host affinity and VM-VM anti-affinity policies. Use VM Affinity Policies to govern where VMs run by specifying whether a VM should run on a selected set of hosts, or by keeping specified VMs apart on different hosts. Users can use these resources and data sources to configure, list, and fetch affinity policies [#997](https://github.com/nutanix/terraform-provider-nutanix/pull/997)
+
+**Enhancements:**
+- **Deploy from OVA (VMM)**: Add support to update deployed virtual machines from OVA images. [#985](https://github.com/nutanix/terraform-provider-nutanix/pull/985)
+- FNS 5.2: Add support for global scope, specific intratier rules, and subnet/VPC-based objects features. [#1032](https://github.com/nutanix/terraform-provider-nutanix/issues/1032)
+- Support metadata on subnet V2 resource and data source. [#1085](https://github.com/nutanix/terraform-provider-nutanix/issues/1085)
+- API key and custom headers as an alternative method of authorization. [#1062](https://github.com/nutanix/terraform-provider-nutanix/pull/1062)
+
+**Fixed Bugs:**
+- `subnets_v2` update with `is_external` set to `true` fails. [#1063](https://github.com/nutanix/terraform-provider-nutanix/issues/1063)
+- `nutanix_vpc_v2`: Unable to add more than one external routable prefix. [#1053](https://github.com/nutanix/terraform-provider-nutanix/issues/1053)
+- Legacy NIC attributes in VMM v2 are still used across resources and data sources. [#1059](https://github.com/nutanix/terraform-provider-nutanix/issues/1059)
+- `nutanix_network_security_policy_v2`: Failed to add a rule on an existing security policy. [#1052](https://github.com/nutanix/terraform-provider-nutanix/issues/1052)
+- Add retries for VM power on/off operations in `nutanix_virtual_machine_v2` to avoid ETag mismatch errors. [#1089](https://github.com/nutanix/terraform-provider-nutanix/issues/1089)
+- Bug: can not create global Nutanix security policy, defaults to VLAN. [#1087](https://github.com/nutanix/terraform-provider-nutanix/issues/1087)
+- `nutanix_object_store_v2` update functionality. [#1094](https://github.com/nutanix/terraform-provider-nutanix/issues/1094)
+- `nutanix_object_store_v2` gives no Terraform error on long name. [#1093](https://github.com/nutanix/terraform-provider-nutanix/issues/1093)
+- `nutanix_user_key_v2` update tries to recreate the key object. [#1092](https://github.com/nutanix/terraform-provider-nutanix/issues/1092)
+- Update of Guest Customization leads to delete and recreate of virtual machine resource. [#1108](https://github.com/nutanix/terraform-provider-nutanix/issues/1108)
+- Memory hot-plug increase causing VM power off when using `nutanix_virtual_machine_v2` resource. [#1105](https://github.com/nutanix/terraform-provider-nutanix/issues/1105)
+- Mark user key secrets as sensitive and persist `key_details` on create. [#1112](https://github.com/nutanix/terraform-provider-nutanix/issues/1112)
+
+
+## 2.4.1 (April 15, 2026) **Invalid Release**
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.4.0...v2.4.1)
 
 **New Features:**
