@@ -59,7 +59,7 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.4.
 The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.4.1 for Iris 1, ensure your Nutanix environment meets the following software requirements:
 - Self Service version: 4.3.1 (Required only for running Self Service based resource and data source)
 - AOS Version: 7.5, 7.5.1
-- Prism Central Version: 7.5, 7.5.1
+- Prism Central Version: 7.5, 7.5.1 or later
 - Nutanix Terraform Provider Version: 2.4.1
 
 ## Compatibility Matrix
