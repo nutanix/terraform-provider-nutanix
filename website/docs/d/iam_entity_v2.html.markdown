@@ -1,12 +1,12 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_entity_v2"
+page_title: "NUTANIX: nutanix_iam_entity_v2"
 sidebar_current: "docs-nutanix-datasource-entity-v2"
 description: |-
   Provides a datasource to retrieve an IAM Entity by its external identifier.
 ---
 
-# nutanix_entity_v2
+# nutanix_iam_entity_v2
 
 Provides a datasource to retrieve an IAM Entity by its external identifier. Entities are used in authorization policies (e.g. user, role, cluster).
 
@@ -14,12 +14,12 @@ Provides a datasource to retrieve an IAM Entity by its external identifier. Enti
 
 ```hcl
 # Get entity by ext_id
-data "nutanix_entity_v2" "example" {
+data "nutanix_iam_entity_v2" "example" {
   ext_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 }
 
 output "entity_name" {
-  value = data.nutanix_entity_v2.example.name
+  value = data.nutanix_iam_entity_v2.example.name
 }
 ```
 

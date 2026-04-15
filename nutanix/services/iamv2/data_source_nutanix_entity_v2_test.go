@@ -7,7 +7,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNameEntity = "data.nutanix_entity_v2.test"
+const datasourceNameEntity = "data.nutanix_iam_entity_v2.test"
 
 func TestAccV2NutanixEntityDatasource_GetEntityById(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -40,12 +40,12 @@ func TestAccV2NutanixEntityDatasource_GetEntityById(t *testing.T) {
 func testEntityDatasourceV2Config(configPath string) string {
 	return `
 
-data "nutanix_entities_v2" "test" {
+data "nutanix_iam_entities_v2" "test" {
   limit   = 1
 }
 
-data "nutanix_entity_v2" "test" {
-  ext_id = data.nutanix_entities_v2.test.entities[0].ext_id
+data "nutanix_iam_entity_v2" "test" {
+  ext_id = data.nutanix_iam_entities_v2.test.entities[0].ext_id
 }
 	`
 }

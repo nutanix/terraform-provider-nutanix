@@ -246,8 +246,8 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | nutanix_user_groups | nutanix_user_groups_v2 |
 | nutanix_access_control_policy | nutanix_authorization_policy_v2 |
 | nutanix_access_control_policies | nutanix_authorization_policies_v2 |
-| - | nutanix_entity_v2 |
-| - | nutanix_entities_v2 |
+| - | nutanix_iam_entity_v2 |
+| - | nutanix_iam_entities_v2 |
 | - | nutanix_entity_group_v2 |
 | - | nutanix_entity_groups_v2 |
 | - | nutanix_saml_identity_provider_v2 |

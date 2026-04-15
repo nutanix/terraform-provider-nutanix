@@ -1,12 +1,12 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_entities_v2"
+page_title: "NUTANIX: nutanix_iam_entities_v2"
 sidebar_current: "docs-nutanix-datasource-entities-v2"
 description: |-
   Provides a datasource to list IAM Entities with optional filtering and pagination.
 ---
 
-# nutanix_entities_v2
+# nutanix_iam_entities_v2
 
 Provides a datasource to list IAM Entities. Entities are used in authorization policies (e.g. user, role, cluster). Supports pagination and OData `filter`, `order_by`, and `select`.
 
@@ -14,23 +14,23 @@ Provides a datasource to list IAM Entities. Entities are used in authorization p
 
 ```hcl
 # List all entities (default page/limit)
-data "nutanix_entities_v2" "all" {}
+data "nutanix_iam_entities_v2" "all" {}
 
 # List entities with filter and pagination
-data "nutanix_entities_v2" "filtered" {
+data "nutanix_iam_entities_v2" "filtered" {
   filter = "name eq 'user'"
   limit  = 20
   page   = 0
 }
 
 # List with order_by
-data "nutanix_entities_v2" "ordered" {
+data "nutanix_iam_entities_v2" "ordered" {
   order_by = "name asc"
   limit    = 50
 }
 
 # List with select to specify returned fields
-data "nutanix_entities_v2" "selected" {
+data "nutanix_iam_entities_v2" "selected" {
   select = "name,displayName,extId"
   limit  = 10
 }

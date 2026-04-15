@@ -9,7 +9,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNameEntities = "data.nutanix_entities_v2.test"
+const datasourceNameEntities = "data.nutanix_iam_entities_v2.test"
 
 func TestAccV2NutanixEntitiesDatasource_List(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -63,13 +63,13 @@ func TestAccV2NutanixEntitiesDatasource_ListWithFilter(t *testing.T) {
 
 func testEntitiesDatasourceV2Config() string {
 	return `
-		data "nutanix_entities_v2" "test" {}
+		data "nutanix_iam_entities_v2" "test" {}
 	`
 }
 
 func testEntitiesDatasourceV2ConfigWithLimit(limit int) string {
 	return fmt.Sprintf(`
-		data "nutanix_entities_v2" "test" {
+		data "nutanix_iam_entities_v2" "test" {
 			limit = %d
 		}
 	`, limit)
@@ -77,7 +77,7 @@ func testEntitiesDatasourceV2ConfigWithLimit(limit int) string {
 
 func testEntitiesDatasourceV2ConfigWithFilter(filter string) string {
 	return fmt.Sprintf(`
-		data "nutanix_entities_v2" "test" {
+		data "nutanix_iam_entities_v2" "test" {
 			filter = "%s"
 		}
 	`, filter)
