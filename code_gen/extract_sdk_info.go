@@ -484,8 +484,8 @@ func extractFromPackage(packageDir string) (map[string]structInfo, []methodInfo,
 func filterAPIMethods(methods []methodInfo) []methodInfo {
 	var apiMethods []methodInfo
 	for _, m := range methods {
-		methodType := strings.ToLower(m.receiver)
-		if strings.Contains(methodType, "api") || strings.HasSuffix(strings.ToLower(m.receiver), "api") {
+		receiverLower := strings.ToLower(m.receiver)
+		if strings.Contains(receiverLower, "service") {
 			apiMethods = append(apiMethods, m)
 		}
 	}
@@ -531,16 +531,29 @@ func filterByReceiverAndKeyword(apiMethods []methodInfo, structsMap map[string]s
 			}
 		}
 	} else {
-		// If only keyword is provided, match by keyword in method name only
-		keywordLower := strings.ToLower(keyword)
+		// Split comma-separated keywords and normalize
+		var keywords []string
+		for _, kw := range strings.Split(keyword, ",") {
+			kw = strings.TrimSpace(kw)
+			if kw != "" {
+				keywords = append(keywords, strings.ToLower(kw))
+			}
+		}
+
 		for _, method := range apiMethods {
 			methodNameLower := strings.ToLower(method.name)
 
-			// Only check if method name contains keyword
-			if strings.Contains(methodNameLower, keywordLower) {
+			matched := false
+			for _, kw := range keywords {
+				if strings.Contains(methodNameLower, kw) {
+					matched = true
+					break
+				}
+			}
+
+			if matched {
 				filteredMethods = append(filteredMethods, method)
 
-				// Mark related structs as used
 				requestType := findRequestType(method.params)
 				if requestType != "" {
 					baseRequestType := extractBaseTypeName(requestType)
@@ -672,7 +685,7 @@ func main() {
 	outputDirFlag := flag.String("output-dir", "code_gen/sdk_extract_output", "Output directory for extracted information")
 	apiPackageFlag := flag.String("api-package", "", "Specific API package to extract")
 	receiverFlag := flag.String("receiver", "", "Optional receiver type to filter extraction (only extract APIs/methods with matching receiver)")
-	keywordFlag := flag.String("keyword", "", "Optional keyword to filter extraction (only extract APIs/methods matching this keyword, used if receiver is not provided)")
+	keywordFlag := flag.String("keyword", "", "Optional comma-separated keywords to filter extraction (only extract APIs/methods matching any keyword, used if receiver is not provided)")
 	flag.Parse()
 
 	if *packageFlag == "" {
