@@ -19,14 +19,14 @@ provider "nutanix" {
 }
 
 # Get a single entity by ext_id (e.g. from authorization policy entities)
-data "nutanix_entity_v2" "example" {
+data "nutanix_iam_entity_v2" "example" {
   count  = var.entity_ext_id != "" ? 1 : 0
   ext_id = var.entity_ext_id
 }
 
 
 # List IAM entities (with optional filter/pagination)
-data "nutanix_entities_v2" "examples" {
+data "nutanix_iam_entities_v2" "examples" {
   limit   = var.entities_limit
   filter  = var.entities_filter
   order_by = var.entities_order_by
@@ -34,16 +34,16 @@ data "nutanix_entities_v2" "examples" {
 
 
 output "entity_name" {
-  value       = try(data.nutanix_entity_v2.example[0].name, null)
+  value       = try(data.nutanix_iam_entity_v2.example[0].name, null)
   description = "Name of the entity fetched by ext_id"
 }
 
 output "entity_display_name" {
-  value       = try(data.nutanix_entity_v2.example[0].display_name, null)
+  value       = try(data.nutanix_iam_entity_v2.example[0].display_name, null)
   description = "Display name of the entity"
 }
 
 output "entities_count" {
-  value       = length(data.nutanix_entities_v2.examples.entities)
+  value       = length(data.nutanix_iam_entities_v2.examples.entities)
   description = "Number of IAM entities returned by list"
 }
