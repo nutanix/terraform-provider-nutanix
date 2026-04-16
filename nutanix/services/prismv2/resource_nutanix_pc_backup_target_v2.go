@@ -193,7 +193,7 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 		clusterRef := management.NewClusterReference()
 		clusterExtID = clusterConfig["ext_id"].(string)
 		clusterRef.ExtId = utils.StringPtr(clusterExtID)
-		// From IRIS SDK, the cluster location config is a OneOfClusterLocationConfig
+		// From 7.5 PC version SDK, the cluster location config is a OneOfClusterLocationConfig
 		// so we need to set the value of the OneOfClusterLocationConfig
 		oneOfClusterLocationConfig := management.NewOneOfClusterLocationConfig()
 		oneOfClusterLocationConfig.SetValue(*clusterRef)
@@ -277,7 +277,7 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 		if isClusterLocation && utils.StringValue(backupTargetLocation.ObjectType_) == clustersLocationObjectType {
 			log.Printf("[DEBUG] Cluster Backup Target with Ext ID: %s", utils.StringValue(backupTarget.ExtId))
 			clusterLocation := backupTarget.Location.GetValue().(management.ClusterLocation)
-			// From IRIS SDK, the cluster location config is a OneOfClusterLocationConfig
+			// From 7.5 PC version SDK, the cluster location config is a OneOfClusterLocationConfig
 			// so we need to get the value of the OneOfClusterLocationConfig
 			clusterConfig := clusterLocation.Config.GetValue().(management.ClusterReference)
 			if utils.StringValue(clusterConfig.ExtId) == clusterExtID {
@@ -433,7 +433,7 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 			clusterRef := management.NewClusterReference()
 
 			clusterRef.ExtId = utils.StringPtr(clusterConfig["ext_id"].(string))
-			// From IRIS SDK, the cluster location config is a OneOfClusterLocationConfig
+			// From 7.5 PC version SDK, the cluster location config is a OneOfClusterLocationConfig
 			// so we need to set the value of the OneOfClusterLocationConfig
 			oneOfClusterLocationConfig := management.NewOneOfClusterLocationConfig()
 			oneOfClusterLocationConfig.SetValue(*clusterRef)

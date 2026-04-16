@@ -47,7 +47,7 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.4.
    - Mark user key secrets as sensitive and persist `key_details` on create. [#1112](https://github.com/nutanix/terraform-provider-nutanix/issues/1112)
 
 ### Software Requirements
-The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.4.2 for Iris 1, ensure your Nutanix environment meets the following software requirements:
+The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.4.2, ensure your Nutanix environment meets the following software requirements:
 - Self Service version: 4.3.1 (Required only for running Self Service based resource and data source)
 - AOS Version: 7.5, 7.5.1
 - Prism Central Version: 7.5, 7.5.1 or later

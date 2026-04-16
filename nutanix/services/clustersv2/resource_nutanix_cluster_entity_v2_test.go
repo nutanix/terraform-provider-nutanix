@@ -1138,7 +1138,7 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
 			is_never_scheduleable = false
 			is_light_compute = false
 			hypervisor_hostname = "test-hypervisor"
-			## remove this because the expand cluster satrt failing from IRIS
+			## remove this because the expand cluster satrt failing from PC 7.5 version
       # should_skip_host_networking   = false
       should_skip_pre_expand_checks = false
     }
