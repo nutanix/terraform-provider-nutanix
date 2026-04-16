@@ -297,6 +297,8 @@ func Provider() *schema.Provider {
 			"nutanix_role_membership_v2":                      iamv2.DatasourceNutanixRoleMembershipV2(),
 			"nutanix_role_memberships_v2":                     iamv2.DatasourceNutanixRoleMembershipsV2(),
 			"nutanix_role_membership_summary_v2":              iamv2.DatasourceNutanixRoleMembershipSummaryV2(),
+			"nutanix_scope_template_v2":                       iamv2.DatasourceNutanixScopeTemplateV2(),
+			"nutanix_scope_templates_v2":                      iamv2.DatasourceNutanixScopeTemplatesV2(),
 			"nutanix_operation_v2":                            iamv2.DatasourceNutanixOperationV2(),
 			"nutanix_operations_v2":                           iamv2.DatasourceNutanixOperationsV2(),
 			"nutanix_user_v2":                                 iamv2.DatasourceNutanixUserV2(),
