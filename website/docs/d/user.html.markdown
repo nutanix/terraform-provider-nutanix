@@ -12,7 +12,7 @@ Provides a datasource to retrieve a user based on the input parameters.
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_user" "user" {
 	directory_service_user {
 		user_principal_name = "test-user@ntnxlab.local"
@@ -24,12 +24,12 @@ resource "nutanix_user" "user" {
 
 //Retrieve by UUID
 data "nutanix_user" "user" {
-	uuid = nutanix_user.user.id
+	user_id = nutanix_user.user.id
 }
 
 //Retrieve by Name
 data "nutanix_user" "userbyname" {
-	name = nutanix_user.user.name
+	user_name = nutanix_user.user.name
 }
 ```
 

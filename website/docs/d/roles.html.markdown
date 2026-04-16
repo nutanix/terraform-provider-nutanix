@@ -12,7 +12,7 @@ Describes a list of roles.
 
 ## Example Usage
 
-``` hcl
+```hcl
 data "nutanix_roles" "test" {}
 ```
 

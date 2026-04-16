@@ -1,0 +1,51 @@
+---
+layout: "nutanix"
+page_title: "NUTANIX: nutanix_cluster_snmp_user_v2"
+sidebar_current: "docs-nutanix-resource-cluster-snmp-user-v2"
+description: |-
+   Adds, Update and Remove SNMP user configuration to the cluster identified by {extId}.
+---
+
+# nutanix_cluster_snmp_user_v2
+
+Adds, Update and Remove SNMP user configuration to the cluster identified by {extId}.
+
+## Example Usage
+
+```hcl
+data "nutanix_cluster_v2" "cluster" {}
+
+resource "nutanix_cluster_snmp_user_v2" "cluster_user" {
+  cluster_ext_id = data.nutanix_virtual_machines_v2.cluster.0.data.ext_id
+  username = "test-dou"
+  auth_type = "SHA"
+  auth_key = "<auth-key>"
+}
+```
+
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `cluster_ext_id` A globally unique identifier of an instance that is suitable for external consumption.
+* `username` (required) SNMP username. For SNMP trap v3 version, SNMP username is required parameter.
+* `auth_type` (required) SNMP user authentication type.
+    Valid values are:
+    - "SHA"	SHA SNMP authentication.
+    - "MD5"	MD5 SNMP authentication.
+* `auth_key` (required) SNMP user authentication key.
+* `priv_type` SNMP user encryption type.
+    Valid values are:
+    - "DES"	DES SNMP key.
+    - "AES"	AES SNMP key.
+* `priv_key` SNMP user encryption key.
+
+See detailed information in [Nutanix Cluster Entity](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0).
+
+## Import
+Nutanix Cluster Entitys can be imported using the `UUID` eg,
+
+`
+terraform import nutanix_cluster_entity.cs01 0F75E6A7-55FB-44D9-A50D-14AD72E2CF7C
+`
