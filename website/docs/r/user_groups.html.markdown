@@ -12,7 +12,7 @@ Provides a resource to add a User group to the system..
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_user_groups" "user_grp" {
 	directory_service_user_group{
 		distinguished_name = "<distinguished name for the user group>"
@@ -21,7 +21,7 @@ resource "nutanix_user_groups" "user_grp" {
 ```
 
 
-``` hcl
+```hcl
 resource "nutanix_user_groups" "user_grp" {
 	saml_user_group{
     name = "<name of saml group>"

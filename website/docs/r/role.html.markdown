@@ -12,7 +12,7 @@ Provides a resource to create a role based on the input parameters.
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_role" "test" {
 	name        = "NAME"
 	description = "DESCRIPTION"

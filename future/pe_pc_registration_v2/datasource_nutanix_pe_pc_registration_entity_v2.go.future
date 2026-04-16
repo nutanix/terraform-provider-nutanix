@@ -1,0 +1,572 @@
+package pe_pc_registration_v2
+
+import (
+	"context"
+	"encoding/json"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/clustersv2"
+	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	prismPack "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/models/clustermgmt/v4/config"
+	prismCommon "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/models/common/v1/config"
+	prismResponse "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/models/common/v1/response"
+	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+func DatasourceNutanixClusterPCEntityV2() *schema.Resource {
+	return &schema.Resource{
+		ReadContext: DatasourceNutanixClusterPCEntityV2Read,
+		Schema: map[string]*schema.Schema{
+			"ext_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"links": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"href": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"rel": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			}, // links
+			"config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"should_enable_lockdown_mode": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"build_info": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"version": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						}, // build_info
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"size": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"bootstrap_config": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"environment_info": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"type": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"provider_type": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"provisioning_type": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						}, // bootstrap_config
+						"resource_config": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"num_vcpus": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"memory_size_bytes": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"data_disk_size_bytes": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"container_ext_ids": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
+						}, // resource_config
+					},
+				},
+			}, // config
+			"is_registered_with_hosting_cluster": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"network": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"external_address": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ipv4": clustersv2.SchemaForValuePrefixLength(),
+									"ipv6": clustersv2.SchemaForValuePrefixLength(),
+								},
+							},
+						},
+						"name_servers": clustersv2.schemaForIPv4IPv6FQDNResource(),
+						"ntp_servers":  clustersv2.schemaForIPv4IPv6FQDNResource(),
+						"fqdn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"external_networks": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"default_gateway": clustersv2.schemaForIPv4IPv6FQDNResource(),
+									"subnet_mask":     clustersv2.schemaForIPv4IPv6FQDNResource(),
+									"ip_ranges": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"begin": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"ipv4": clustersv2.SchemaForValuePrefixLength(),
+															"ipv6": clustersv2.SchemaForValuePrefixLength(),
+														},
+													},
+												}, // begin
+												"end": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"ipv4": clustersv2.SchemaForValuePrefixLength(),
+															"ipv6": clustersv2.SchemaForValuePrefixLength(),
+														},
+													},
+												}, // end
+											},
+										},
+									}, // ip_ranges
+									"network_ext_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						}, // external_networks
+					},
+				},
+			}, // network
+			"hosting_cluster_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"should_enable_high_availability": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"node_ext_ids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			}, // node_ext_ids
+		},
+	}
+}
+
+func DatasourceNutanixClusterPCEntityV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] Read PC Registration Details\n")
+	conn := meta.(*conns.Client).PrismAPI
+
+	pcExtID := d.Get("ext_id").(string)
+
+	readResp, err := conn.DomainManagerAPIInstance.GetDomainManagerById(&pcExtID)
+	if err != nil {
+		return diag.Errorf("error while fetching domain manager with id %s : %v", pcExtID, err)
+	}
+
+	getResp := readResp.Data.GetValue().(prismConfig.DomainManager)
+	aJSON, _ := json.Marshal(getResp)
+	log.Printf("[DEBUG] PC Registration Read Response: %s", string(aJSON))
+
+	// set attributes
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.Errorf("error setting ext_id: %v", err)
+	}
+	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
+		return diag.Errorf("error setting tenant_id: %v", err)
+	}
+	if err := d.Set("links", flattenPrismLinks(getResp.Links)); err != nil {
+		return diag.Errorf("error setting links: %v", err)
+	}
+	if err := d.Set("config", flattenPCConfig(getResp.Config)); err != nil {
+		return diag.Errorf("error setting config: %v", err)
+	}
+	if err := d.Set("is_registered_with_hosting_cluster", getResp.IsRegisteredWithHostingCluster); err != nil {
+		return diag.Errorf("error setting is_registered_with_hosting_cluster: %v", err)
+	}
+	if err := d.Set("network", flattenPCNetwork(getResp.Network)); err != nil {
+		return diag.Errorf("error setting network: %v", err)
+	}
+	if err := d.Set("hosting_cluster_ext_id", getResp.HostingClusterExtId); err != nil {
+		return diag.Errorf("error setting hosting_cluster_ext_id: %v", err)
+	}
+	if err := d.Set("should_enable_high_availability", getResp.ShouldEnableHighAvailability); err != nil {
+		return diag.Errorf("error setting should_enable_high_availability: %v", err)
+	}
+	if err := d.Set("node_ext_ids", getResp.NodeExtIds); err != nil {
+		return diag.Errorf("error setting node_ext_ids: %v", err)
+	}
+
+	d.SetId(*getResp.ExtId)
+	return nil
+}
+
+// flattenLinks flattens the links field
+func flattenPrismLinks(pr []prismResponse.ApiLink) []map[string]interface{} {
+	if len(pr) > 0 {
+		linkList := make([]map[string]interface{}, len(pr))
+
+		for k, v := range pr {
+			links := map[string]interface{}{}
+			if v.Href != nil {
+				links["href"] = v.Href
+			}
+			if v.Rel != nil {
+				links["rel"] = v.Rel
+			}
+
+			linkList[k] = links
+		}
+		return linkList
+	}
+	return nil
+}
+
+func flattenPCNetwork(pcNetwork *prismConfig.DomainManagerNetwork) []map[string]interface{} {
+	if pcNetwork != nil {
+		network := make(map[string]interface{})
+		if pcNetwork.ExternalAddress != nil {
+			network["external_address"] = flattenPrismIPAddress(pcNetwork.ExternalAddress)
+		}
+		if pcNetwork.NameServers != nil {
+			network["name_servers"] = flattenPrismIPAddressOrFQDN(pcNetwork.NameServers)
+		}
+		if pcNetwork.NtpServers != nil {
+			network["ntp_servers"] = flattenPrismIPAddressOrFQDN(pcNetwork.NtpServers)
+		}
+		if pcNetwork.Fqdn != nil {
+			network["fqdn"] = *pcNetwork.Fqdn
+		}
+		if pcNetwork.ExternalNetworks != nil {
+			network["external_networks"] = flattenExternalNetworks(pcNetwork.ExternalNetworks)
+		}
+		return []map[string]interface{}{network}
+	}
+	return nil
+}
+
+func flattenExternalNetworks(externalNetworks []prismConfig.ExternalNetwork) []map[string]interface{} {
+	if len(externalNetworks) > 0 {
+		networks := make([]map[string]interface{}, len(externalNetworks))
+
+		for k, v := range externalNetworks {
+			network := make(map[string]interface{})
+			ipAddressList := make([]prismCommon.IPAddressOrFQDN, 1)
+			ipAddressList[0] = *v.DefaultGateway
+			network["default_gateway"] = flattenPrismIPAddressOrFQDN(ipAddressList)
+			ipAddressList[0] = *v.SubnetMask
+			network["subnet_mask"] = flattenPrismIPAddressOrFQDN(ipAddressList)
+			network["ip_ranges"] = flattenIPRanges(v.IpRanges)
+			network["network_ext_id"] = v.NetworkExtId
+
+			networks[k] = network
+		}
+		return networks
+	}
+	return nil
+}
+
+func flattenIPRanges(ipRanges []prismCommon.IpRange) []map[string]interface{} {
+	if len(ipRanges) > 0 {
+		ranges := make([]map[string]interface{}, len(ipRanges))
+
+		for k, v := range ipRanges {
+			ipRange := make(map[string]interface{})
+			ipRange["begin"] = flattenPrismIPAddress(v.Begin)
+			ipRange["end"] = flattenPrismIPAddress(v.End)
+
+			ranges[k] = ipRange
+		}
+		return ranges
+	}
+	return nil
+}
+
+func flattenPrismIPAddress(ipAddress *prismCommon.IPAddress) []map[string]interface{} {
+	if ipAddress != nil {
+		ip := make(map[string]interface{})
+
+		ip["ipv4"] = flattenPrismIPv4Address(ipAddress.Ipv4)
+		ip["ipv6"] = flattenPrismIPv6Address(ipAddress.Ipv6)
+
+		return []map[string]interface{}{ip}
+	}
+	return nil
+}
+
+func flattenPrismIPAddressOrFQDN(pr []prismCommon.IPAddressOrFQDN) interface{} {
+	if len(pr) > 0 {
+		ips := make([]map[string]interface{}, len(pr))
+
+		for k, v := range pr {
+			ip := make(map[string]interface{})
+
+			ip["ipv4"] = flattenPrismIPv4Address(v.Ipv4)
+			ip["ipv6"] = flattenPrismIPv6Address(v.Ipv6)
+			ip["fqdn"] = flattenPrismFQDN(v.Fqdn)
+
+			ips[k] = ip
+		}
+		return ips
+	}
+	return nil
+}
+
+func flattenPrismIPv4Address(pr *prismCommon.IPv4Address) []interface{} {
+	if pr != nil {
+		ipv4 := make([]interface{}, 0)
+
+		ip := make(map[string]interface{})
+
+		ip["value"] = pr.Value
+		ip["prefix_length"] = pr.PrefixLength
+
+		ipv4 = append(ipv4, ip)
+
+		return ipv4
+	}
+	return nil
+}
+
+func flattenPrismIPv6Address(pr *prismCommon.IPv6Address) []interface{} {
+	if pr != nil {
+		ipv6 := make([]interface{}, 0)
+
+		ip := make(map[string]interface{})
+
+		ip["value"] = pr.Value
+		ip["prefix_length"] = pr.PrefixLength
+
+		ipv6 = append(ipv6, ip)
+
+		return ipv6
+	}
+	return nil
+}
+
+func flattenPrismFQDN(pr *prismCommon.FQDN) []interface{} {
+	if pr != nil {
+		fqdn := make([]interface{}, 0)
+
+		f := make(map[string]interface{})
+
+		f["value"] = pr.Value
+
+		fqdn = append(fqdn, f)
+
+		return fqdn
+	}
+	return nil
+}
+
+func flattenPCConfig(pcConfig *prismConfig.DomainManagerClusterConfig) []map[string]interface{} {
+	if pcConfig != nil {
+		config := make(map[string]interface{})
+		if pcConfig.ShouldEnableLockdownMode != nil {
+			config["should_enable_lockdown_mode"] = *pcConfig.ShouldEnableLockdownMode
+		}
+		if pcConfig.BuildInfo != nil {
+			config["build_info"] = flattenBuildInfo(pcConfig.BuildInfo)
+		}
+		if pcConfig.Name != nil {
+			config["name"] = *pcConfig.Name
+		}
+		if pcConfig.Size != nil {
+			config["size"] = flattenClusterSize(*pcConfig.Size)
+		}
+		if pcConfig.BootstrapConfig != nil {
+			config["bootstrap_config"] = flattenBootstrapConfig(pcConfig.BootstrapConfig)
+		}
+		if pcConfig.ResourceConfig != nil {
+			config["resource_config"] = flattenResourceConfig(pcConfig.ResourceConfig)
+		}
+		return []map[string]interface{}{config}
+	}
+	return nil
+}
+
+func flattenBuildInfo(buildInfo *prismPack.BuildInfo) []map[string]interface{} {
+	if buildInfo != nil {
+		info := make(map[string]interface{})
+		if buildInfo.Version != nil {
+			info["version"] = *buildInfo.Version
+		}
+		return []map[string]interface{}{info}
+	}
+	return nil
+}
+
+func flattenClusterSize(size prismConfig.Size) string {
+	const STARTER, SMALL, LARGE, EXTRALARGE = 2, 3, 4, 5
+
+	switch size {
+	case STARTER:
+		return "STARTER"
+	case SMALL:
+		return "SMALL"
+	case LARGE:
+		return "LARGE"
+	case EXTRALARGE:
+		return "EXTRALARGE"
+	default:
+		return "UNKNOWN"
+	}
+}
+
+func flattenBootstrapConfig(bootstrapConfig *prismConfig.BootstrapConfig) []map[string]interface{} {
+	if bootstrapConfig != nil {
+		config := make(map[string]interface{})
+		if bootstrapConfig.EnvironmentInfo != nil {
+			config["environment_info"] = flattenEnvironmentInfo(bootstrapConfig.EnvironmentInfo)
+		}
+		return []map[string]interface{}{config}
+	}
+	return nil
+}
+
+func flattenEnvironmentInfo(environmentInfo *prismConfig.EnvironmentInfo) []map[string]interface{} {
+	if environmentInfo != nil {
+		info := make(map[string]interface{})
+		if environmentInfo.Type != nil {
+			info["type"] = flattenEnvironmentType(*environmentInfo.Type)
+		}
+		if environmentInfo.ProviderType != nil {
+			info["provider_type"] = flattenEnvironmentProviderType(*environmentInfo.ProviderType)
+		}
+		if environmentInfo.ProvisioningType != nil {
+			info["provisioning_type"] = flattenEnvironmentProvisioningType(*environmentInfo.ProvisioningType)
+		}
+		return []map[string]interface{}{info}
+	}
+	return nil
+}
+
+func flattenEnvironmentType(environmentType prismConfig.EnvironmentType) string {
+	const ONPREM, NTNX_CLOUD = 2, 3
+
+	switch environmentType {
+	case ONPREM:
+		return "ONPREM"
+	case NTNX_CLOUD:
+		return "NTNX_CLOUD"
+	default:
+		return "UNKNOWN"
+	}
+}
+
+func flattenEnvironmentProviderType(providerType prismConfig.ProviderType) string {
+	const NTNX, AZURE, AWS, GCP, VSPHERE = 2, 3, 4, 5, 6
+	switch providerType {
+	case NTNX:
+		return "NTNX"
+	case AZURE:
+		return "AZURE"
+	case AWS:
+		return "AWS"
+	case GCP:
+		return "GCP"
+	case VSPHERE:
+		return "VSPHERE"
+	default:
+		return "UNKNOWN"
+	}
+}
+
+func flattenEnvironmentProvisioningType(provisioningType prismConfig.ProvisioningType) string {
+	const NTNX, NATIVE = 2, 3
+	switch provisioningType {
+	case NTNX:
+		return "NTNX"
+	case NATIVE:
+		return "NATIVE"
+	default:
+		return "UNKNOWN"
+	}
+}
+
+func flattenResourceConfig(resourceConfig *prismConfig.DomainManagerResourceConfig) []map[string]interface{} {
+	if resourceConfig != nil {
+		config := make(map[string]interface{})
+		if resourceConfig.NumVcpus != nil {
+			config["num_vcpus"] = utils.IntValue(resourceConfig.NumVcpus)
+		}
+		if resourceConfig.MemorySizeBytes != nil {
+			config["memory_size_bytes"] = utils.Int64Value(resourceConfig.MemorySizeBytes)
+		}
+		if resourceConfig.DataDiskSizeBytes != nil {
+			config["data_disk_size_bytes"] = utils.Int64Value(resourceConfig.DataDiskSizeBytes)
+		}
+		if resourceConfig.ContainerExtIds != nil {
+			config["container_ext_ids"] = resourceConfig.ContainerExtIds
+		}
+		return []map[string]interface{}{config}
+	}
+	return nil
+}

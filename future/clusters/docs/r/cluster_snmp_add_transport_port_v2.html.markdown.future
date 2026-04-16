@@ -1,0 +1,46 @@
+---
+layout: "nutanix"
+page_title: "NUTANIX: nutanix_cluster_snmp_trap_v2"
+sidebar_current: "docs-nutanix-resource-cluster-snmp-trap-v2"
+description: |-
+   Adds, Update and Remove SNMP trap configuration to the cluster identified by {extId}.
+---
+
+# nutanix_cluster_snmp_trap_v2
+
+Adds, Update and Remove SNMP trap configuration to the cluster identified by {extId}.
+
+## Example Usage
+
+```hcl
+data "nutanix_cluster_v2" "cluster" {}
+
+resource "nutanix_cluster_snmp_trap_v2" "cluster_trap" {
+  cluster_ext_id = data.nutanix_virtual_machines_v2.cluster.0.data.ext_id
+  protocol = "TCP"
+  port = "3001"
+}
+```
+
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `cluster_ext_id` A globally unique identifier of an instance that is suitable for external consumption.
+* `protocol	`(required) SNMP protocol type.
+    Valid values are:
+    - "UDP"	UDP protocol.
+    - "TCP"	TCP protocol.
+    - "UDP6"	UDP6 protocol.
+    - "TCP6"	TCP6 protocol.
+* `port`(required) SNMP port.
+
+See detailed information in [Nutanix Cluster Entity](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0).
+
+## Import
+Nutanix Cluster Entitys can be imported using the `UUID` eg,
+
+`
+terraform import nutanix_cluster_entity.cs01 0F75E6A7-55FB-44D9-A50D-14AD72E2CF7C
+`

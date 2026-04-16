@@ -12,7 +12,7 @@ Describes an Access Control Policy.
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_access_control_policy" "test" {
 	name        = "NAME OF ACCESS CONTROL POLICY"
 	description = "DESCRIPTION OF THE ACCESS CONTROL POLICY"

@@ -1,0 +1,190 @@
+package clusters
+
+import (
+	"context"
+	"fmt"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clustersv2"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
+
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+func DatasourceNutanixClusterSNMPTrapV2() *schema.Resource {
+	return &schema.Resource{
+		ReadContext: DatasourceNutanixClusterSNMPTrapV2Read,
+		Schema: map[string]*schema.Schema{
+			"cluster_ext_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"ext_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"expand": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"links": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"href": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"rel": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"username": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"address": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ipv4": clustersv2.SchemaForValuePrefixLength(),
+						"ipv6": clustersv2.SchemaForValuePrefixLength(),
+					},
+				},
+			},
+			"port": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"protocol": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"should_inform": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"engine_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"reciever_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"community_string": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+		},
+	}
+}
+
+func DatasourceNutanixClusterSNMPTrapV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).ClusterAPI
+	var expand *string
+
+	extID := d.Get("ext_id")
+
+	if expandf, ok := d.GetOk("expand"); ok {
+		expand = utils.StringPtr(expandf.(string))
+	} else {
+		expand = nil
+	}
+	resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(extID.(string)), expand)
+	if err != nil {
+		return diag.Errorf("error while fetching cluster entity : %v", err)
+	}
+
+	getResp := resp.Data.GetValue().(import1.SnmpTrap)
+
+	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("links", clustersv2.flattenLinks(getResp.Links)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("username", getResp.Username); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("address", clustersv2.flattenIPAddress(getResp.Address)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("port", getResp.Port); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("protocol", flattenProtocol(getResp.Protocol)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("should_inform", getResp.ShouldInform); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("engine_id", getResp.EngineId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("version", flattenVersion(getResp.Version)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("reciever_name", getResp.RecieverName); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("community_string", getResp.CommunityString); err != nil {
+		return diag.FromErr(err)
+	}
+
+	fmt.Println(resp)
+
+	d.SetId(*getResp.ExtId)
+	return nil
+}
+
+func flattenProtocol(pr *import1.SnmpProtocol) string {
+	if pr != nil {
+
+		const two, three, four, five = 2, 3, 4, 5
+
+		if *pr == import1.SnmpProtocol(two) {
+			return "UDP"
+		}
+		if *pr == import1.SnmpProtocol(three) {
+			return "UDP6"
+		}
+		if *pr == import1.SnmpProtocol(four) {
+			return "TCP"
+		}
+		if *pr == import1.SnmpProtocol(five) {
+			return "TCP6"
+		}
+	}
+	return "UNKNOWN"
+}
+
+func flattenVersion(pr *import1.SnmpTrapVersion) string {
+	if pr != nil {
+
+		const two, three = 2, 3
+
+		if *pr == import1.SnmpTrapVersion(two) {
+			return "V2"
+		}
+		if *pr == import1.SnmpTrapVersion(three) {
+			return "V3"
+		}
+	}
+	return "UNKNOWN"
+}

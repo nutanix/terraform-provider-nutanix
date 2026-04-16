@@ -1,0 +1,83 @@
+package pe_pc_registration_v2
+
+import (
+	"context"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+)
+
+func DatasourceNutanixClusterPCEntitiesV2() *schema.Resource {
+	return &schema.Resource{
+		ReadContext: DatasourceNutanixClusterPCEntitiesV2Read,
+		Schema: map[string]*schema.Schema{
+			"select": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"pc_entities": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     DatasourceNutanixClusterPCEntityV2(),
+			},
+		},
+	}
+}
+
+func DatasourceNutanixClusterPCEntitiesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("DatasourceNutanixClusterPCRegistrationEntitiesV2Read")
+	conn := meta.(*conns.Client).PrismAPI
+
+	// initialize query params
+	var selectQ *string
+
+	if selectQy, ok := d.GetOk("apply"); ok {
+		selectQ = utils.StringPtr(selectQy.(string))
+	} else {
+		selectQ = nil
+	}
+
+	resp, err := conn.DomainManagerAPIInstance.ListDomainManagers(selectQ)
+	if err != nil {
+		return diag.Errorf("error while fetching pc entities : %v", err)
+	}
+	getResp := resp.Data.GetValue().([]prismConfig.DomainManager)
+
+	if err := d.Set("pc_entities", flattenPCEntities(getResp)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(resource.UniqueId())
+	return nil
+}
+
+func flattenPCEntities(pcEntities []prismConfig.DomainManager) []interface{} {
+	if len(pcEntities) > 0 {
+		pcList := make([]interface{}, len(pcEntities))
+
+		for k, v := range pcEntities {
+			pc := make(map[string]interface{})
+
+			pc["ext_id"] = v.ExtId
+			pc["tenant_id"] = v.TenantId
+			pc["links"] = flattenPrismLinks(v.Links)
+			pc["config"] = flattenPCConfig(v.Config)
+			pc["is_registered_with_hosting_cluster"] = v.IsRegisteredWithHostingCluster
+			pc["network"] = flattenPCNetwork(v.Network)
+			pc["hosting_cluster_ext_id"] = v.HostingClusterExtId
+			pc["should_enable_high_availability"] = v.ShouldEnableHighAvailability
+			pc["node_ext_ids"] = v.NodeExtIds
+
+			pcList[k] = pc
+		}
+
+		return pcList
+	}
+
+	return make([]interface{}, 0)
+}

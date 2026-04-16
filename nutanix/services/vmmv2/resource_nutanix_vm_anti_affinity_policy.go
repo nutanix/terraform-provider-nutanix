@@ -1,0 +1,276 @@
+package vmmv2
+
+import (
+	"context"
+	"encoding/json"
+	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	vmmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
+	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/policies"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+func ResourceNutanixVMAntiAffinityPolicyV2() *schema.Resource {
+	return &schema.Resource{
+		CreateContext: ResourceNutanixVMAntiAffinityPolicyV2Create,
+		ReadContext:   ResourceNutanixVMAntiAffinityPolicyV2Read,
+		UpdateContext: ResourceNutanixVMAntiAffinityPolicyV2Update,
+		DeleteContext: ResourceNutanixVMAntiAffinityPolicyV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+		Schema: map[string]*schema.Schema{
+			"ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"create_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"update_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created_by": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"updated_by": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"categories": {
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"num_compliant_vms": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"num_non_compliant_vms": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"num_pending_vms": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+		},
+	}
+}
+
+func ResourceNutanixVMAntiAffinityPolicyV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).VmmAPI
+	body := policies.VmAntiAffinityPolicy{}
+
+	if name, ok := d.GetOk("name"); ok {
+		body.Name = utils.StringPtr(name.(string))
+	}
+	if desc, ok := d.GetOk("description"); ok {
+		body.Description = utils.StringPtr(desc.(string))
+	}
+	if cats, ok := d.GetOk("categories"); ok {
+		catStrings := common.ExpandListOfString(common.InterfaceToSlice(cats))
+		body.Categories = expandPolicyCategoryReference(catStrings)
+	}
+
+	aJSON, _ := json.MarshalIndent(body, "", " ")
+	log.Printf("[DEBUG] VM-VM Anti-affinity Policy Request Body: %s", string(aJSON))
+
+	resp, err := conn.VMAntiAffinityPolicyAPIInstance.CreateVmAntiAffinityPolicy(&body)
+
+	if err != nil {
+		return diag.Errorf("error while creating VM-VM Anti-Affinity policy : %v", err)
+	}
+
+	TaskRef := resp.Data.GetValue().(vmmConfig.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the Policy to be available
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for VM-VM Anti-Affinity policy (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
+
+	// Get UUID from TASK API
+
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching VM-VM Anti-Affinity policy task: %v", err)
+	}
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] VM-VM Anti-Affinity Policy Task Details: %s", string(aJSON))
+
+	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeVMAntiAffinityPolicy, "VM-VM Anti-Affinity Policy")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(utils.StringValue(uuid))
+
+	return ResourceNutanixVMAntiAffinityPolicyV2Read(ctx, d, meta)
+}
+
+func ResourceNutanixVMAntiAffinityPolicyV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).VmmAPI
+
+	resp, err := conn.VMAntiAffinityPolicyAPIInstance.GetVmAntiAffinityPolicyById(utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while fetching VM-VM Anti-Affinity policy : %v", err)
+	}
+
+	getResp := resp.Data.GetValue().(policies.VmAntiAffinityPolicy)
+
+	flattenedPolicy := flattenVMAntiAffinityPolicyEntity(getResp)
+
+	for k, v := range flattenedPolicy {
+		if err := d.Set(k, v); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	return nil
+}
+
+func ResourceNutanixVMAntiAffinityPolicyV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).VmmAPI
+
+	resp, err := conn.VMAntiAffinityPolicyAPIInstance.GetVmAntiAffinityPolicyById(utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while fetching VM-VM Anti-Affinity policy : %v", err)
+	}
+
+	respPolicy := resp.Data.GetValue().(policies.VmAntiAffinityPolicy)
+	updateSpec := respPolicy
+
+	if d.HasChange("name") {
+		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
+	}
+	if d.HasChange("description") {
+		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
+	}
+	if d.HasChange("categories") {
+		if cats, ok := d.GetOk("categories"); ok {
+			catStrings := common.ExpandListOfString(common.InterfaceToSlice(cats))
+			updateSpec.Categories = expandPolicyCategoryReference(catStrings)
+		}
+	}
+
+	aJSON, _ := json.MarshalIndent(updateSpec, "", " ")
+	log.Printf("[DEBUG] VM Anti Affinity Policy Update Request Body: %s", string(aJSON))
+
+	updateResp, err := conn.VMAntiAffinityPolicyAPIInstance.UpdateVmAntiAffinityPolicyById(utils.StringPtr(d.Id()), &updateSpec)
+	if err != nil {
+		return diag.Errorf("error while updating VM-VM Anti-Affinity policy : %v", err)
+	}
+	TaskRef := updateResp.Data.GetValue().(vmmConfig.TaskReference)
+	taskUUID := TaskRef.ExtId
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the Policy to be available
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for VM-VM Anti-Affinity policy (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
+	return ResourceNutanixVMAntiAffinityPolicyV2Read(ctx, d, meta)
+}
+
+func ResourceNutanixVMAntiAffinityPolicyV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).VmmAPI
+
+	readResp, err := conn.VMAntiAffinityPolicyAPIInstance.GetVmAntiAffinityPolicyById(utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while fetching VM-VM Anti-Affinity policy : %v", err)
+	}
+
+	args := make(map[string]interface{})
+	args["If-Match"] = getEtagHeader(readResp, conn)
+
+	resp, err := conn.VMAntiAffinityPolicyAPIInstance.DeleteVmAntiAffinityPolicyById(utils.StringPtr(d.Id()), args)
+	if err != nil {
+		return diag.Errorf("error while deleting VM-VM Anti-Affinity policy : %v", err)
+	}
+	TaskRef := resp.Data.GetValue().(vmmConfig.TaskReference)
+	taskUUID := TaskRef.ExtId
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the Policy to be deleted
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for VM-VM Anti-Affinity policy (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
+	return nil
+}
+
+func expandPolicyCategoryReference(cats []string) []policies.CategoryReference {
+	if len(cats) == 0 {
+		return nil
+	}
+	catRefs := make([]policies.CategoryReference, len(cats))
+
+	for i, cat := range cats {
+		if cat != "" {
+			catRefs[i] = policies.CategoryReference{ExtId: utils.StringPtr(cat)}
+		}
+	}
+	return catRefs
+
+}
+
+func flattenPolicyCategoryReference(cats []policies.CategoryReference) []interface{} {
+	if len(cats) == 0 {
+		return nil
+	}
+
+	catList := make([]interface{}, len(cats))
+	for k, v := range cats {
+		if v.ExtId != nil {
+			catList[k] = v.ExtId
+		}
+	}
+	return catList
+
+}

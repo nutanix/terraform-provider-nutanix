@@ -42,13 +42,6 @@ resource "nutanix_project" "project_test" {
     value = "Staging"
   }
 
-  resource_domain {
-    resources {
-      limit         = 4
-      resource_type = "STORAGE"
-    }
-  }
-
   default_subnet_reference {
     uuid = nutanix_subnet.subnet.metadata.uuid
   }
@@ -75,12 +68,7 @@ The following attributes are exported:
 * `description` A description for project.
 
 ### Resource Domain
-* `resource_domain` The status for a resource domain (limits and values)
-* `resource_domain.resources` Array of the utilization/limit for resource types
-* `resource_domain.resources.#.limit` The resource consumption limit (unspecified is unlimited)
-* `resource_domain.resources.#.resource_type` The type of resource (for example storage, CPUs)
-* `resource_domain.resources.#.units` - The units of the resource type
-* `resource_domain.resources.#.value` - The amount of resource consumed
+* `resource_domain` (Deprecated) Not supported starting from provider version `2.4.0` and expected to be empty. Remove any usage from configuration/scripts.
 
 ### Account Reference List
 * `account_reference_list` - List of accounts associated with the project.
@@ -122,10 +110,6 @@ The following attributes are exported:
 * `external_network_list` - List of external networks associated with the project.
 * `external_network_list.#.uuid` - The UUID of a network.
 * `external_network_list.#.name` - The name of a network.
-
-### Resource Domain
-* `resource_domain.resources.#.units` - The units of the resource type
-* `resource_domain.resources.#.value` - The amount of resource consumed
 
 ### Tunnel Reference List
 * `tunnel_reference_list` - (Optional/Computed) List of tunnels associated with the project.
