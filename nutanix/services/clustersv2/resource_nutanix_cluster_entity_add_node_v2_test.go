@@ -286,7 +286,7 @@ resource "nutanix_cluster_add_node_v2" "test" {
   should_skip_pre_expand_checks = false
 
   node_params {
-    ## remove this because the expand cluster satrt failing from IRIS
+    ## remove this because the expand cluster satrt failing from PC 7.5
     #should_skip_host_networking = false
     hypervisor_isos {
       type = nutanix_clusters_discover_unconfigured_nodes_v2.cluster-node.unconfigured_nodes[0].hypervisor_type
