@@ -19,10 +19,11 @@ type NestedField struct {
 	Name        string        `json:"name"`
 	Type        string        `json:"type"`
 	Tag         string        `json:"tag,omitempty"`
+	Description string        `json:"description,omitempty"`
 	IsStruct    bool          `json:"is_struct,omitempty"`
-	Fields      []NestedField `json:"fields,omitempty"`       // Nested fields if this is a struct type
-	ImportAlias string        `json:"import_alias,omitempty"` // e.g., "import1", "import2" if type uses an import
-	ImportPath  string        `json:"import_path,omitempty"`  // Full import path for the alias
+	Fields      []NestedField `json:"fields,omitempty"`
+	ImportAlias string        `json:"import_alias,omitempty"`
+	ImportPath  string        `json:"import_path,omitempty"`
 }
 
 // APIRequestResponseStruct combines API method with its request and response structs
@@ -40,10 +41,12 @@ type MethodParam struct {
 
 // APIMethodInfo contains information about an API method
 type APIMethodInfo struct {
-	Name     string        `json:"name"`
-	Receiver string        `json:"receiver"`
-	File     string        `json:"file"`
-	Params   []MethodParam `json:"params"` // Required arguments/parameters
+	Name        string        `json:"name"`
+	Receiver    string        `json:"receiver"`
+	File        string        `json:"file"`
+	Params      []MethodParam `json:"params"`
+	Description string        `json:"description,omitempty"`
+	URI         string        `json:"uri,omitempty"`
 }
 
 // NestedStruct represents a struct with nested field structure
@@ -66,6 +69,9 @@ type ImportMapping struct {
 type OutputData struct {
 	Package                string                     `json:"package"`
 	PackagePath            string                     `json:"package_path"`
+	Version                string                     `json:"version"`
+	APIVersion             string                     `json:"api_version,omitempty"`
+	IsInternal             bool                       `json:"is_internal"`
 	APIRequestResponseList []APIRequestResponseStruct `json:"api_request_response_struct"`
 }
 
@@ -78,17 +84,20 @@ type structInfo struct {
 }
 
 type fieldInfo struct {
-	name string
-	typ  string
-	tag  string
+	name        string
+	typ         string
+	tag         string
+	description string
 }
 
 type methodInfo struct {
-	name     string
-	receiver string
-	params   []paramInfo
-	returns  []string
-	file     string
+	name        string
+	receiver    string
+	params      []paramInfo
+	returns     []string
+	file        string
+	description string
+	uri         string
 }
 
 type paramInfo struct {
@@ -275,6 +284,7 @@ func buildNestedStruct(structName string, structsMap map[string]structInfo, visi
 			Name:        field.name,
 			Type:        field.typ,
 			Tag:         field.tag,
+			Description: field.description,
 			IsStruct:    isStruct,
 			Fields:      nestedFields,
 			ImportAlias: importAlias,
@@ -350,6 +360,62 @@ func extractImportsFromFile(fset *token.FileSet, file *ast.File) map[string]stri
 	return imports
 }
 
+// extractCommentText extracts the text from a CommentGroup, cleaning up comment markers
+func extractCommentText(doc *ast.CommentGroup) string {
+	if doc == nil {
+		return ""
+	}
+	var lines []string
+	for _, comment := range doc.List {
+		text := comment.Text
+		text = strings.TrimPrefix(text, "//")
+		text = strings.TrimPrefix(text, "/*")
+		text = strings.TrimSuffix(text, "*/")
+		text = strings.TrimSpace(text)
+		if text != "" {
+			lines = append(lines, text)
+		}
+	}
+	return strings.Join(lines, " ")
+}
+
+// extractURIFromFuncBody extracts the URI string from a function body by walking the AST
+// for assignments like `uri := "/api/..."` at any nesting depth
+func extractURIFromFuncBody(fset *token.FileSet, body *ast.BlockStmt, src []byte) string {
+	if body == nil {
+		return ""
+	}
+	var result string
+	ast.Inspect(body, func(n ast.Node) bool {
+		if result != "" {
+			return false
+		}
+		assignStmt, ok := n.(*ast.AssignStmt)
+		if !ok {
+			return true
+		}
+		for i, lhs := range assignStmt.Lhs {
+			ident, ok := lhs.(*ast.Ident)
+			if !ok || ident.Name != "uri" {
+				continue
+			}
+			if i < len(assignStmt.Rhs) {
+				lit, ok := assignStmt.Rhs[i].(*ast.BasicLit)
+				if !ok || lit.Kind != token.STRING {
+					continue
+				}
+				val := strings.Trim(lit.Value, `"`)
+				if strings.HasPrefix(val, "/api/") {
+					result = val
+					return false
+				}
+			}
+		}
+		return true
+	})
+	return result
+}
+
 func extractFromPackage(packageDir string) (map[string]structInfo, []methodInfo, error) {
 	fset := token.NewFileSet()
 	structsMap := make(map[string]structInfo)
@@ -390,29 +456,31 @@ func extractFromPackage(packageDir string) (map[string]structInfo, []methodInfo,
 						imports: fileImports, // Store imports for this specific file
 					}
 
-					if st.Fields != nil {
-						for _, field := range st.Fields.List {
-							fieldType := formatTypeString(fset, field.Type, src)
-							for _, name := range field.Names {
-								tagValue := ""
-								if field.Tag != nil {
-									tagValue = string(field.Tag.Value)
-								}
-								structInfo.fields = append(structInfo.fields, fieldInfo{
-									name: name.Name,
-									typ:  fieldType,
-									tag:  tagValue,
-								})
+				if st.Fields != nil {
+					for _, field := range st.Fields.List {
+						fieldType := formatTypeString(fset, field.Type, src)
+						fieldDesc := extractCommentText(field.Doc)
+						for _, name := range field.Names {
+							tagValue := ""
+							if field.Tag != nil {
+								tagValue = string(field.Tag.Value)
 							}
-							if len(field.Names) == 0 {
-								// Embedded field
-								structInfo.fields = append(structInfo.fields, fieldInfo{
-									name: "",
-									typ:  fieldType,
-								})
-							}
+							structInfo.fields = append(structInfo.fields, fieldInfo{
+								name:        name.Name,
+								typ:         fieldType,
+								tag:         tagValue,
+								description: fieldDesc,
+							})
+						}
+						if len(field.Names) == 0 {
+							structInfo.fields = append(structInfo.fields, fieldInfo{
+								name:        "",
+								typ:         fieldType,
+								description: fieldDesc,
+							})
 						}
 					}
+				}
 
 					structsMap[structInfo.name] = structInfo
 				}
@@ -436,13 +504,18 @@ func extractFromPackage(packageDir string) (map[string]structInfo, []methodInfo,
 						recvType = formatTypeString(fset, x.Recv.List[0].Type, src)
 					}
 
-					methodInfo := methodInfo{
-						name:     x.Name.Name,
-						receiver: recvType,
-						params:   []paramInfo{},
-						returns:  []string{},
-						file:     relPath,
-					}
+				methodDesc := extractCommentText(x.Doc)
+				methodURI := extractURIFromFuncBody(fset, x.Body, src)
+
+				methodInfo := methodInfo{
+					name:        x.Name.Name,
+					receiver:    recvType,
+					params:      []paramInfo{},
+					returns:     []string{},
+					file:        relPath,
+					description: methodDesc,
+					uri:         methodURI,
+				}
 
 					if x.Type.Params != nil {
 						for _, param := range x.Type.Params.List {
@@ -470,15 +543,15 @@ func extractFromPackage(packageDir string) (map[string]structInfo, []methodInfo,
 					}
 
 					methods = append(methods, methodInfo)
-				}
 			}
-			return true
-		})
-
-		return nil
+		}
+		return true
 	})
 
-	return structsMap, methods, err
+	return nil
+})
+
+return structsMap, methods, err
 }
 
 func filterAPIMethods(methods []methodInfo) []methodInfo {
@@ -618,12 +691,13 @@ func buildAPIRequestResponseList(apiMethods []methodInfo, structsMap map[string]
 		}
 
 		apiMethodInfo := APIMethodInfo{
-			Name:     method.name,
-			Receiver: method.receiver,
-			File:     method.file,
-			Params:   params,
+			Name:        method.name,
+			Receiver:    method.receiver,
+			File:        method.file,
+			Params:      params,
+			Description: method.description,
+			URI:         method.uri,
 		}
-
 		// Find request type
 		requestType := findRequestType(method.params)
 		var requestStruct *NestedStruct
@@ -678,6 +752,39 @@ func buildAPIRequestResponseList(apiMethods []methodInfo, structsMap map[string]
 	}
 
 	return result
+}
+
+// extractAPIVersion scans Go source files in the api/ directory of the SDK package
+// for URI patterns like `/api/iam/v4.1.b3/...` and extracts the API version string.
+func extractAPIVersion(packageDir string) string {
+	apiDir := filepath.Join(packageDir, "api")
+	if !fileExists(apiDir) {
+		apiDir = packageDir
+	}
+
+	apiVersionRegex := regexp.MustCompile(`"/api/\w+/(v[\d]+(?:\.[\w]+)*)/`)
+
+	entries, err := os.ReadDir(apiDir)
+	if err != nil {
+		return ""
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".go") {
+			continue
+		}
+
+		content, err := os.ReadFile(filepath.Join(apiDir, entry.Name()))
+		if err != nil {
+			continue
+		}
+
+		if matches := apiVersionRegex.FindSubmatch(content); len(matches) > 1 {
+			return string(matches[1])
+		}
+	}
+
+	return ""
 }
 
 func main() {
@@ -744,6 +851,14 @@ func main() {
 
 	fmt.Printf("Found package at: %s\n", packageDir)
 
+	// Extract API version from URI patterns in the SDK source
+	apiVersion := extractAPIVersion(packageDir)
+	isInternal := strings.Contains(*packageFlag, "sdk-internal")
+	if apiVersion != "" {
+		fmt.Printf("Detected API version: %s\n", apiVersion)
+	}
+	fmt.Printf("Internal SDK: %v\n", isInternal)
+
 	// If api-package is specified, look for api subdirectory
 	if *apiPackageFlag != "" {
 		apiDir := filepath.Join(packageDir, "api")
@@ -797,6 +912,9 @@ func main() {
 	outputData := OutputData{
 		Package:                *packageFlag,
 		PackagePath:            packagePath,
+		Version:                version,
+		APIVersion:             apiVersion,
+		IsInternal:             isInternal,
 		APIRequestResponseList: apiRequestResponseList,
 	}
 
