@@ -36,6 +36,117 @@ def extract_namespace_from_package(package_path):
         return match.group(1)
     return "unknown"
 
+def camel_to_snake(name):
+    """Convert camelCase or PascalCase to snake_case.
+    e.g., 'identityExtId' -> 'identity_ext_id', 'scopeTemplateName' -> 'scope_template_name'
+    """
+    # Insert underscore before uppercase letters that follow lowercase letters or digits
+    s1 = re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', name)
+    # Insert underscore before uppercase letters followed by lowercase (handles acronyms like 'ExtID')
+    s2 = re.sub(r'([A-Z]+)([A-Z][a-z])', r'\1_\2', s1)
+    return s2.lower()
+
+
+def extract_required_fields_from_body(api_entry):
+    """Extract required field info from the Body field's description in a Create request_struct.
+
+    The Body description follows the pattern:
+      "(required) ... It requires the <field1>, <field2>, ..., and <fieldN> attributes."
+
+    The description names are informal shorthand that may NOT match struct field names exactly
+    (e.g. "role" for struct field "RoleExtId", "name" for "DisplayName").
+
+    We resolve them against actual Body struct fields using multiple strategies:
+      1. Exact match on camelCase field name (e.g. "identityExtId" -> "IdentityExtId")
+      2. Exact match on JSON tag name (e.g. "identityExtId" -> json:"identityExtId")
+      3. Prefix match on JSON tag (e.g. "role" matches "roleExtId" -> "RoleExtId")
+      4. Fallback: keep the raw description name (let the AI agent resolve it against the struct)
+
+    Returns a dict with:
+      - "resolved": list of snake_case field names successfully mapped to struct fields
+      - "unresolved": list of raw description names that could NOT be mapped
+      - "body_description": the original Body description text (authoritative source)
+    Returns None if no Body field or no required-fields pattern is found.
+    """
+    request_struct = api_entry.get('request_struct', {})
+    fields = request_struct.get('fields', [])
+
+    for field in fields:
+        if field.get('name') != 'Body':
+            continue
+
+        description = field.get('description', '')
+        match = re.search(r'[Ii]t requires the (.+?) attributes?\.', description)
+        if not match:
+            return None
+
+        raw = match.group(1)
+        raw = re.sub(r',?\s+and\s+', ', ', raw)
+        desc_names = [name.strip() for name in raw.split(',') if name.strip()]
+
+        body_fields = field.get('fields', [])
+
+        # Build lookup tables from the actual Body struct fields
+        camel_to_field = {}
+        json_tag_to_field = {}
+
+        for bf in body_fields:
+            bf_name = bf.get('name', '')
+            if not bf_name:
+                continue
+            camel = bf_name[0].lower() + bf_name[1:]
+            camel_to_field[camel] = bf_name
+
+            tag = bf.get('tag', '')
+            tag_match = re.search(r'json:"([^",]+)', tag)
+            if tag_match:
+                json_tag_to_field[tag_match.group(1)] = bf_name
+
+        resolved = []
+        unresolved = []
+        for desc_name in desc_names:
+            field_name = _resolve_field_name(desc_name, camel_to_field, json_tag_to_field)
+            if field_name != desc_name:
+                resolved.append(camel_to_snake(field_name))
+            else:
+                unresolved.append(desc_name)
+
+        return {
+            "resolved": resolved,
+            "unresolved": unresolved,
+            "body_description": description,
+        }
+
+    return None
+
+
+def _resolve_field_name(desc_name, camel_to_field, json_tag_to_field):
+    """Resolve an informal description name to the actual struct field name.
+
+    Strategies in order:
+      1. Exact camelCase match  (e.g. "identityExtId" -> "IdentityExtId")
+      2. Exact JSON tag match   (e.g. "identityExtId" -> json:"identityExtId")
+      3. Prefix match on JSON tags — pick the shortest tag that starts with desc_name
+         (e.g. "role" matches "roleExtId" -> "RoleExtId")
+      4. Fallback: return desc_name as-is (caller treats as unresolved)
+    """
+    if desc_name in camel_to_field:
+        return camel_to_field[desc_name]
+
+    if desc_name in json_tag_to_field:
+        return json_tag_to_field[desc_name]
+
+    candidates = []
+    for tag_name, field_name in json_tag_to_field.items():
+        if tag_name.lower().startswith(desc_name.lower()) and tag_name != desc_name:
+            candidates.append((len(tag_name), tag_name, field_name))
+    if candidates:
+        candidates.sort()
+        return candidates[0][2]
+
+    return desc_name
+
+
 def get_datasource_methods(api_list):
     """Extract datasource methods (Get*ById) and List* methods"""
     datasources = []
@@ -295,6 +406,13 @@ def generate_terraform_command_from_sdk(sdk_info, workspace_path):
     datasource_list = ', '.join([ds['name'] for ds in datasources]) if datasources else 'N/A'
     sdk_info_file = Path(workspace_path) / 'code_gen' / 'sdk_extract_output' / 'sdk_info.json'
     
+    # Build a lookup from method name to api_entry for required-field extraction
+    method_to_api = {}
+    for api in api_list:
+        method_name = api.get('api_method', {}).get('name', '')
+        if method_name:
+            method_to_api[method_name] = api
+
     # Build resource details
     resource_details = []
     if resources:
@@ -310,6 +428,18 @@ def generate_terraform_command_from_sdk(sdk_info, workspace_path):
                     details += f"\n  - Update context: {resource['update']}"
                 if resource.get('delete'):
                     details += f"\n  - Delete context: {resource['delete']}"
+
+                # Extract required fields from the Create method's Body description
+                create_method_name = resource.get('create')
+                if create_method_name and create_method_name in method_to_api:
+                    req_info = extract_required_fields_from_body(method_to_api[create_method_name])
+                    if req_info:
+                        if req_info["resolved"]:
+                            details += f"\n  - Required schema fields (mark as Required: true): {', '.join(req_info['resolved'])}"
+                        if req_info["unresolved"]:
+                            details += f"\n  - Unresolved required attrs from description (match to nearest Body struct field): {', '.join(req_info['unresolved'])}"
+                        details += f"\n  - Body description (authoritative): \"{req_info['body_description']}\""
+
                 resource_details.append(details)
             elif 'method' in resource:
                 # Other resource (non-CRUD)
@@ -384,6 +514,15 @@ def generate_terraform_command_from_sdk(sdk_info, workspace_path):
     - Update context → Update API method (if available)
     - Delete context → Delete API method (if available)
   - Build the schema from request_struct (for inputs) and response_struct (for computed outputs) in sdk_info.json.
+  - **Required fields**: The Create method's request_struct has a Body field whose description lists the required attributes
+    (e.g., "It requires the role, identityExtId, ... attributes."). These description names are **informal shorthand** that
+    may not match struct field names exactly (e.g., "role" refers to the struct field "RoleExtId" with json tag "roleExtId",
+    "name" may refer to "DisplayName" or a similarly named field). When "Required schema fields" are listed above, they have
+    been resolved to actual struct field names. When "Unresolved required attrs" are listed, you MUST manually match them to
+    the closest Body struct field by inspecting the json tags and field names in sdk_info.json. The Body description is also
+    provided verbatim as the authoritative source. Mark resolved + matched fields as `Required: true` in the resource schema.
+    All other Body fields that are NOT listed as required should be `Optional: true` (and `Computed: true` if they also appear in the response).
+    Fields that only appear in the response_struct (not in Body) should be `Computed: true`.
   - Methods that are not Get/List/Create/Update/Delete → implement as separate action resources.
 
 ## Step 5 — Tests
