@@ -283,7 +283,7 @@ def generate_terraform_command_from_sdk(sdk_info, workspace_path):
     package_path = sdk_info.get('package_path', '')
     namespace = extract_namespace_from_package(package_path)
     api_list = sdk_info.get('api_request_response_struct', [])
-    
+
     # Extract datasources (Get*ById methods)
     datasources = get_datasource_methods(api_list)
     
@@ -316,34 +316,108 @@ def generate_terraform_command_from_sdk(sdk_info, workspace_path):
                 resource_details.append(f"Resource: {resource['name']} (method: {resource['method']})")
     
     resource_section = '\n'.join(resource_details) if resource_details else 'N/A'
-    
-    prompt = f"""Generate complete Terraform provider code for {namespace} namespace using {sdk_info_file}.
-Generate:
-1. SDK client: nutanix/sdks/v4/{namespace}/{namespace}.go (pattern: networking.go), if client is already present please update the client with the new api methods or recivers.
-2. Update nutanix/config.go: add {namespace_camel}API client init + field
-3. Datasources in nutanix/services/{namespace}v2/: {datasource_list}: 
-IMPORTANT for DataSources:
-1. If Get*ById methods are present, please build the datasource using the response_struct from the sdk_info.json file for the api method, it's a module for fetching a single resource by id.
-2. If List* methods are present, please build the datasource using the response_struct from the sdk_info.json file for the api method, it's a module for fetching a list of resources.
-4. Resources in nutanix/services/{namespace}v2/:
+
+    # Build API method summary from sdk_info.json description fields
+    api_method_summary_lines = []
+    for api in api_list:
+        method = api.get('api_method', {})
+        method_name = method.get('name', '')
+        description = method.get('description', '')
+        uri = method.get('uri', '')
+        receiver = method.get('receiver', '')
+        if method_name:
+            parts = [f"  - {method_name} (receiver: {receiver})"]
+            if description:
+                parts.append(f"    Description: {description}")
+            if uri:
+                parts.append(f"    URI: {uri}")
+            api_method_summary_lines.append('\n'.join(parts))
+    api_method_summary = '\n'.join(api_method_summary_lines) if api_method_summary_lines else '  Refer to sdk_info.json'
+
+    # Build datasource details with descriptions
+    datasource_details = []
+    for api in api_list:
+        method = api.get('api_method', {})
+        method_name = method.get('name', '')
+        description = method.get('description', '')
+        if method_name.startswith('Get') and method_name.endswith('ById'):
+            datasource_details.append(f"  - {method_name} (singular datasource): {description}")
+        elif method_name.startswith('List'):
+            datasource_details.append(f"  - {method_name} (plural datasource): {description}")
+    datasource_section = '\n'.join(datasource_details) if datasource_details else '  N/A'
+
+    prompt = f"""# Terraform Provider Code Generation — {namespace} namespace
+
+## Source of Truth
+- SDK info file: {sdk_info_file}
+- Reference existing namespaces (datapoliciesv2, networkingv2) ONLY for file/folder structure patterns.
+- Use sdk_info.json for ALL field mappings, import paths, types, and request/response structs, descriptions, and URIs.
+
+## API Methods Available
+{api_method_summary}
+
+---
+
+## Step 1 — SDK Client
+- File: nutanix/sdks/v4/{namespace}/{namespace}.go (follow the pattern in networking.go).
+- If the client file already exists, update it with any new API methods or receivers.
+
+## Step 2 — Provider Config
+- Update nutanix/config.go: add a {namespace_camel}API client field and initialize it.
+- if {namespace_camel}API client field is already present, update it with any new API methods or receivers.
+
+## Step 3 — Datasources
+- Directory: nutanix/services/{namespace}v2/
+- Methods to implement:
+{datasource_section}
+- Rules:
+  - Get*ById methods → singular datasource (fetches one resource by ID). Build schema from response_struct in sdk_info.json.
+  - List* methods → plural datasource (fetches a list of resources). Build schema from response_struct in sdk_info.json.
+
+## Step 4 — Resources
+- Directory: nutanix/services/{namespace}v2/
 {resource_section}
-IMPORTANT for Resources: 
-- If a receiver has Create, Update, Delete methods, they should all be in the SAME resource file with Create, Read, Update, Delete contexts. Build the schema for the resource using the request_struct and response_struct from the sdk_info.json file for the api method.
-- Create context should use the Create API method
-- Read context should use the GetById API method (if available)
-- Update context should use the Update API method
-- Delete context should use the Delete API method
-- Other methods (not Get/List/Create/Update/Delete) should be considered as separate resources
-5. Tests: Build the test files for the datasource and resource files by analyzing the api method and the response_struct or Request struct from the sdk_info.json file.
-6. Examples: examples/{namespace}_v2/
-7. Docs: website/docs/d/ and website/docs/r/
-8. Register in nutanix/provider/provider.go
+- Rules:
+  - If a receiver has Create + Update + Delete methods, combine them into ONE resource file with Create, Read, Update, Delete contexts.
+    - Create context → Create API method
+    - Read context   → GetById API method (if available)
+    - Update context → Update API method (if available)
+    - Delete context → Delete API method (if available)
+  - Build the schema from request_struct (for inputs) and response_struct (for computed outputs) in sdk_info.json.
+  - Methods that are not Get/List/Create/Update/Delete → implement as separate action resources.
 
-Reference: datapoliciesv2, networkingv2 just for file structures. Use sdk_info.json for exact field mappings, import paths and request/response structs.
+## Step 5 — Tests
+- Build test files for every datasource and resource generated.
+- Derive test assertions from the response_struct and request_struct fields in sdk_info.json.
+- Dry run the tests to ensure each and every attribute is covered during resource tests, each and every attribute should be validated, present in state file.
 
-IMPORTANT - OneOf Type Handling:
-When flattening OneOf types (e.g., OneOfMetricDetailMetricValue, OneOfParameterParamValue), the OneOfTypeX fields are PRIVATE and cannot be accessed directly. Use this pattern:
+## Step 6 — Examples
+- Directory: examples/{namespace}_v2/
+- Provide working .tf examples for each datasource and resource.
 
+## Step 7 — Documentation
+- Datasource docs: website/docs/d/
+- Resource docs: website/docs/r/
+- Rules: All descriptions MUST come from sdk_info.json.
+  - API-level description (page subtitle, resource/datasource summary) → use the "description" field from api_method in sdk_info.json.
+  - Attribute-level description (each argument/attribute row) → use the "description" field from each field inside request_struct and response_struct in sdk_info.json.
+
+## Step 8 — Registration
+- Register all new datasources and resources in nutanix/provider/provider.go.
+
+## Step 9 - Review the generated code
+- Review Resource and DataSource files, navigate through schema and validate against sdk_info.json.
+- Review test files, validate against sdk_info.json. Validate against new resources and datasources.
+- Review examples files, validate against sdk_info.json. Validate against new resources and datasources.
+- Review documentation files, validate against sdk_info.json. Validate against new resources and datasources.
+- During reviews, if you found any issues, please fix them and re-run the review process until it matched with sdk_info.json.
+---
+
+## OneOf Type Handling (CRITICAL)
+OneOfTypeX fields (e.g., oneOfType0, oneOfType1) are PRIVATE and cannot be accessed directly.
+Always use GetValue() and switch on ObjectType_:
+
+```go
 func flattenOneOfValue(oneOfValue *import1.OneOfSomeValue) []map[string]interface{{}} {{
     if oneOfValue != nil && oneOfValue.ObjectType_ != nil {{
         valueMap := make(map[string]interface{{}})
@@ -372,10 +446,11 @@ func flattenOneOfValue(oneOfValue *import1.OneOfSomeValue) []map[string]interfac
     }}
     return nil
 }}
+```
 
-DO NOT try to access OneOfType0, OneOfType1, etc. directly - they are private fields. Always use GetValue() and check ObjectType_ field.
+Do NOT access oneOfType0, oneOfType1, etc. directly — they are unexported. Always use GetValue() + ObjectType_ switch.
 """
-    
+
     return prompt
 
 def main():
@@ -411,11 +486,18 @@ def main():
     api_list = sdk_info.get('api_request_response_struct', [])
     datasources = get_datasource_methods(api_list)
     resources = get_resource_methods(api_list)
-    
+
     print(f"✅ Loaded SDK info for namespace: {namespace}")
+    print(f"   API version: {sdk_info.get('api_version', '') or 'Not detected'}")
+    print(f"   Internal SDK: {sdk_info.get('is_internal', False)}")
     print(f"   Found {len(api_list)} API methods")
     print(f"   Found {len(datasources)} datasource(s): {', '.join([ds['name'] for ds in datasources]) if datasources else 'None'}")
     print(f"   Found {len(resources)} resource(s): {', '.join([r['name'] for r in resources]) if resources else 'None'}")
+    
+    desc_count = sum(1 for api in api_list if api.get('api_method', {}).get('description'))
+    uri_count = sum(1 for api in api_list if api.get('api_method', {}).get('uri'))
+    print(f"   📄 Descriptions: {desc_count}/{len(api_list)} methods have descriptions")
+    print(f"   🔗 URIs: {uri_count}/{len(api_list)} methods have URIs")
     print()
     
     # Generate the command
