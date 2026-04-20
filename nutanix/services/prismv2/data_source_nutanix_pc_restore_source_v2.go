@@ -118,7 +118,7 @@ func DatasourceNutanixRestoreSourceV2Read(ctx context.Context, d *schema.Resourc
 
 	restoreSourceExtID := d.Get("ext_id").(string)
 
-	resp, err := conn.DomainManagerBackupsAPIInstance.GetRestoreSourceById(utils.StringPtr(restoreSourceExtID), nil)
+	resp, err := getRestoreSourceByIDWithV42Fallback(ctx, conn.DomainManagerBackupsAPIInstance, utils.StringPtr(restoreSourceExtID), nil)
 
 	if err != nil {
 		return diag.Errorf("error while fetching Restore Source: %s", err)
