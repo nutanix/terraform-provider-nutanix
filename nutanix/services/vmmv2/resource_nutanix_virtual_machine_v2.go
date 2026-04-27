@@ -1649,8 +1649,8 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.Client).VmmAPI
 
 	// Power Off of VM is required for specific VM update operations.
-	isCpuHotplugEnabled := d.Get("is_cpu_hotplug_enabled").(bool)
-	if checkForHotPlugChanges(d) || (!isCpuHotplugEnabled && d.HasChange("num_sockets")) || checkMemoryAndSocketsDecreased(d) {
+	isCPUHotplugEnabled := d.Get("is_cpu_hotplug_enabled").(bool)
+	if checkForHotPlugChanges(d) || (!isCPUHotplugEnabled && d.HasChange("num_sockets")) || checkMemoryAndSocketsDecreased(d) {
 		log.Printf("[DEBUG] callingForPowerOffVM func")
 		callForPowerOffVM(ctx, conn, d, meta)
 	}
@@ -2429,7 +2429,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 	}
 
 	// call for power on VM after updating
-	if checkForHotPlugChanges(d) || (!isCpuHotplugEnabled && d.HasChange("num_sockets")) || checkMemoryAndSocketsDecreased(d) {
+	if checkForHotPlugChanges(d) || (!isCPUHotplugEnabled && d.HasChange("num_sockets")) || checkMemoryAndSocketsDecreased(d) {
 		if power, ok := d.GetOk("power_state"); ok {
 			if power == "ON" {
 				callForPowerOnVM(ctx, conn, d, meta)
