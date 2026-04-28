@@ -67,9 +67,9 @@ func DatasourceNutanixAuditV2() *schema.Resource {
 			},
 			"affected_entities": schemaForEntityReferences(),
 			"cluster_reference": schemaForEntityReference(),
-			"source_entity": schemaForAuditEntityReference(),
-			"user_reference": schemaForUserReference(),
-			"parameters": schemaForParameters(),
+			"source_entity":     schemaForAuditEntityReference(),
+			"user_reference":    schemaForUserReference(),
+			"parameters":        schemaForParameters(),
 		},
 	}
 }

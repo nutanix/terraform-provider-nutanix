@@ -8,7 +8,7 @@ import (
 )
 
 type Client struct {
-	AuditsAPI        *api.AuditsApi
+	AuditsAPI         *api.AuditsApi
 	APIClientInstance *monitoringClient.ApiClient
 }
 
@@ -27,7 +27,7 @@ func NewMonitoringClient(credentials client.Credentials) (*Client, error) {
 	}
 
 	return &Client{
-		AuditsAPI:        api.NewAuditsApi(baseClient),
+		AuditsAPI:         api.NewAuditsApi(baseClient),
 		APIClientInstance: baseClient,
 	}, nil
 }
