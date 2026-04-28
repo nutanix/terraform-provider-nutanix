@@ -1,7 +1,6 @@
 package monitoringv2_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -24,8 +23,12 @@ func TestAccV2NutanixAuditDatasource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceNameAudit, "status"),
 					resource.TestCheckResourceAttrSet(dataSourceNameAudit, "creation_time"),
 					resource.TestCheckResourceAttrSet(dataSourceNameAudit, "service_name"),
+					resource.TestCheckResourceAttrSet(dataSourceNameAudit, "links.#"),
+					resource.TestCheckResourceAttrSet(dataSourceNameAudit, "affected_entities.#"),
+					resource.TestCheckResourceAttrSet(dataSourceNameAudit, "cluster_reference.#"),
 					resource.TestCheckResourceAttrSet(dataSourceNameAudit, "source_entity.#"),
 					resource.TestCheckResourceAttrSet(dataSourceNameAudit, "user_reference.#"),
+					resource.TestCheckResourceAttrSet(dataSourceNameAudit, "parameters.#"),
 				),
 			},
 		},
@@ -33,7 +36,7 @@ func TestAccV2NutanixAuditDatasource_Basic(t *testing.T) {
 }
 
 func testAuditDatasourceConfig() string {
-	return fmt.Sprintf(`
+	return `
 data "nutanix_audits_v2" "audits" {
   limit = 1
 }
@@ -42,5 +45,5 @@ data "nutanix_audit_v2" "test" {
   ext_id = data.nutanix_audits_v2.audits.audits.0.ext_id
   depends_on = [data.nutanix_audits_v2.audits]
 }
-`)
+`
 }

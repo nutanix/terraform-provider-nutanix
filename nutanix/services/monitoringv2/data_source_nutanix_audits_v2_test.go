@@ -18,6 +18,13 @@ func TestAccV2NutanixAuditsDatasource_Basic(t *testing.T) {
 				Config: testAuditsDatasourceBasicConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceNameAudits, "audits.#"),
+					resource.TestCheckResourceAttrSet(dataSourceNameAudits, "audits.0.ext_id"),
+					resource.TestCheckResourceAttrSet(dataSourceNameAudits, "audits.0.audit_type"),
+					resource.TestCheckResourceAttrSet(dataSourceNameAudits, "audits.0.operation_type"),
+					resource.TestCheckResourceAttrSet(dataSourceNameAudits, "audits.0.status"),
+					resource.TestCheckResourceAttrSet(dataSourceNameAudits, "audits.0.creation_time"),
+					resource.TestCheckResourceAttrSet(dataSourceNameAudits, "audits.0.service_name"),
+					resource.TestCheckResourceAttrSet(dataSourceNameAudits, "audits.0.links.#"),
 				),
 			},
 		},
@@ -33,6 +40,7 @@ func TestAccV2NutanixAuditsDatasource_WithLimit(t *testing.T) {
 				Config: testAuditsDatasourceWithLimitConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceNameAudits, "audits.#"),
+					resource.TestCheckResourceAttrSet(dataSourceNameAudits, "audits.0.ext_id"),
 				),
 			},
 		},
