@@ -22,6 +22,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iamv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/lcmv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/microsegv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/monitoringv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/ndb"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networkingv2"
@@ -370,6 +371,8 @@ func Provider() *schema.Provider {
 			"nutanix_stigs_v2":                                securityv2.DatasourceNutanixStigsControlsV2(),
 			"nutanix_entity_group_v2":                         microsegv2.DatasourceNutanixEntityGroupV2(),
 			"nutanix_entity_groups_v2":                        microsegv2.DatasourceNutanixEntityGroupsV2(),
+			"nutanix_audit_v2":                                monitoringv2.DatasourceNutanixAuditV2(),
+			"nutanix_audits_v2":                               monitoringv2.DatasourceNutanixAuditsV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
