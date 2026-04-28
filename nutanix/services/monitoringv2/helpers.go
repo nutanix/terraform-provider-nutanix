@@ -266,14 +266,14 @@ func flattenOperationType(opType *import1.OperationType) string {
 	if opType == nil {
 		return ""
 	}
-	return string(*opType)
+	return fmt.Sprintf("%v", *opType)
 }
 
 func flattenStatus(status *import3.Status) string {
 	if status == nil {
 		return ""
 	}
-	return string(*status)
+	return fmt.Sprintf("%v", *status)
 }
 
 func flattenParameters(params []import1.Parameter) []map[string]interface{} {
