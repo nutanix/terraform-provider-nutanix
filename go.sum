@@ -467,6 +467,8 @@ github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.2.2 h1:ms+a
 github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.2.2/go.mod h1:X3TsJoGBbkQzz6OP8Be7XvGhH4CwKkF9t35OmJpPY0w=
 github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.2.2 h1:dE0zUP3ExJBnMUaGDAIZGN7/UZ0a85IWzHygMGcUDMc=
 github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.2.2/go.mod h1:vo3VMB097Zd9cw4hLDbnpyBVcBZkpFmcQ2nNgpOpo7U=
+github.com/nutanix/ntnx-api-golang-clients/monitoring-go-client/v4 v4.2.2 h1:dXFgnBHMd6MipSXkQE5cRysjKX96MeYeIFIkZDvye60=
+github.com/nutanix/ntnx-api-golang-clients/monitoring-go-client/v4 v4.2.2/go.mod h1:msvlZou4z7vn5pHFhJ65OtAbh99z1ISsqCzfehdcWfw=
 github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.3.1 h1:VWxK8mY6kOag/ocDBttDViktEi8bcjbAvm3i9laDyCA=
 github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.3.1/go.mod h1:4fUdP3zeL4UFS/UVaii5EdS2v+KlM4gI07KcnS+wDuY=
 github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4 v4.0.3 h1:TE/G5GHrnvBGPI8MC0fSMSAaeD6HcdtezIgEmn8V/Yo=
