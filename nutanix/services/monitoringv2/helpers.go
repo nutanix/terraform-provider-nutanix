@@ -305,9 +305,9 @@ func schemaForAlertConfig() *schema.Schema {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"critical_severity":  schemaForSeverityConfig(),
-				"info_severity":      schemaForSeverityConfig(),
-				"warning_severity":   schemaForSeverityConfig(),
+				"critical_severity": schemaForSeverityConfig(),
+				"info_severity":     schemaForSeverityConfig(),
+				"warning_severity":  schemaForSeverityConfig(),
 			},
 		},
 	}
@@ -326,9 +326,9 @@ func schemaForAlertConfigResource() *schema.Schema {
 					Optional: true,
 					Computed: true,
 				},
-				"critical_severity":  schemaForSeverityConfigResource(),
-				"info_severity":      schemaForSeverityConfigResource(),
-				"warning_severity":   schemaForSeverityConfigResource(),
+				"critical_severity": schemaForSeverityConfigResource(),
+				"info_severity":     schemaForSeverityConfigResource(),
+				"warning_severity":  schemaForSeverityConfigResource(),
 			},
 		},
 	}
@@ -470,14 +470,14 @@ func flattenClusterConfigs(configs []monitoringModel.ClusterConfig) []map[string
 
 func flattenClusterConfig(config monitoringModel.ClusterConfig) map[string]interface{} {
 	m := map[string]interface{}{
-		"ext_id":                     utils.StringValue(config.ExtId),
-		"tenant_id":                  utils.StringValue(config.TenantId),
-		"is_enabled":                 utils.BoolValue(config.IsEnabled),
-		"last_modified_by_user":      utils.StringValue(config.LastModifiedByUser),
-		"schedule_interval_seconds":  0,
-		"links":                      flattenLinks(config.Links),
-		"alert_config":               flattenAlertConfig(config.AlertConfig),
-		"configurable_parameters":    flattenConfigurableParams(config.ConfigurableParameters),
+		"ext_id":                       utils.StringValue(config.ExtId),
+		"tenant_id":                    utils.StringValue(config.TenantId),
+		"is_enabled":                   utils.BoolValue(config.IsEnabled),
+		"last_modified_by_user":        utils.StringValue(config.LastModifiedByUser),
+		"schedule_interval_seconds":    0,
+		"links":                        flattenLinks(config.Links),
+		"alert_config":                 flattenAlertConfig(config.AlertConfig),
+		"configurable_parameters":      flattenConfigurableParams(config.ConfigurableParameters),
 		"system_defined_policy_ext_id": "",
 	}
 	if config.LastModifiedTime != nil {

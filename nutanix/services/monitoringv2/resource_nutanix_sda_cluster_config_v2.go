@@ -63,8 +63,8 @@ func ResourceNutanixSdaClusterConfigV2() *schema.Resource {
 				Computed:    true,
 				Description: "Interval in seconds for periodically executing the SDA policy. This will not be set for policies with the type NOT_SCHEDULED & EVENT_DRIVEN.",
 			},
-			"alert_config":              schemaForAlertConfigResource(),
-			"configurable_parameters":   schemaForConfigurableParametersResource(),
+			"alert_config":            schemaForAlertConfigResource(),
+			"configurable_parameters": schemaForConfigurableParametersResource(),
 		},
 	}
 }
