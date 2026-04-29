@@ -22,6 +22,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iamv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/lcmv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/microsegv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/monitoringv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/ndb"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networkingv2"
@@ -370,6 +371,8 @@ func Provider() *schema.Provider {
 			"nutanix_stigs_v2":                                securityv2.DatasourceNutanixStigsControlsV2(),
 			"nutanix_entity_group_v2":                         microsegv2.DatasourceNutanixEntityGroupV2(),
 			"nutanix_entity_groups_v2":                        microsegv2.DatasourceNutanixEntityGroupsV2(),
+			"nutanix_alert_v2":                                monitoringv2.DatasourceNutanixAlertV2(),
+			"nutanix_alerts_v2":                               monitoringv2.DatasourceNutanixAlertsV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
@@ -501,6 +504,8 @@ func Provider() *schema.Provider {
 			"nutanix_object_store_certificate_v2":             objectstoresv2.ResourceNutanixObjectStoreCertificateV2(),
 			"nutanix_key_management_server_v2":                securityv2.ResourceNutanixKeyManagementServerV2(),
 			"nutanix_entity_group_v2":                         microsegv2.ResourceNutanixEntityGroupV2(),
+			"nutanix_alert_email_configuration_v2":            monitoringv2.ResourceNutanixAlertEmailConfigurationV2(),
+			"nutanix_manage_alert_v2":                         monitoringv2.ResourceNutanixManageAlertV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
