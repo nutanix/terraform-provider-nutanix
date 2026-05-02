@@ -22,6 +22,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iamv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/lcmv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/microsegv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/monitoringv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/ndb"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networkingv2"
@@ -370,6 +371,10 @@ func Provider() *schema.Provider {
 			"nutanix_stigs_v2":                                securityv2.DatasourceNutanixStigsControlsV2(),
 			"nutanix_entity_group_v2":                         microsegv2.DatasourceNutanixEntityGroupV2(),
 			"nutanix_entity_groups_v2":                        microsegv2.DatasourceNutanixEntityGroupsV2(),
+			"nutanix_sda_policy_v2":                           monitoringv2.DatasourceNutanixSdaPolicyV2(),
+			"nutanix_sda_policies_v2":                         monitoringv2.DatasourceNutanixSdaPoliciesV2(),
+			"nutanix_sda_cluster_config_v2":                   monitoringv2.DatasourceNutanixSdaClusterConfigV2(),
+			"nutanix_sda_cluster_configs_v2":                  monitoringv2.DatasourceNutanixSdaClusterConfigsV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
@@ -501,6 +506,8 @@ func Provider() *schema.Provider {
 			"nutanix_object_store_certificate_v2":             objectstoresv2.ResourceNutanixObjectStoreCertificateV2(),
 			"nutanix_key_management_server_v2":                securityv2.ResourceNutanixKeyManagementServerV2(),
 			"nutanix_entity_group_v2":                         microsegv2.ResourceNutanixEntityGroupV2(),
+			"nutanix_run_system_defined_checks_v2":            monitoringv2.ResourceNutanixRunSystemDefinedChecksV2(),
+			"nutanix_sda_cluster_config_v2":                   monitoringv2.ResourceNutanixSdaClusterConfigV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
