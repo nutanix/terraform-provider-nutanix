@@ -10,6 +10,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/karbon"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/selfservice"
+	cluster_management "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/cluster_management"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/clusters"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/datapolicies"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/dataprotection"
@@ -19,7 +20,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/objectstores"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
-	cluster_management "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/cluster_management"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/security"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/volumes"
@@ -147,49 +147,49 @@ func (c *Config) Client() (*Client, error) {
 	}
 
 	return &Client{
-		WaitTimeout:         c.WaitTimeout,
-		API:                 v3Client,
-		KarbonAPI:           karbonClient,
-		FoundationClientAPI: foundationClient,
-		FoundationCentral:   fcClient,
-		Era:                 eraClient,
-		NetworkingAPI:       networkingClient,
-		PrismAPI:            prismClient,
-		MicroSegAPI:         microsegClient,
-		IamAPI:              iamClient,
-		ClusterAPI:          clustersClient,
-		VolumeAPI:           volumeClient,
-		DataProtectionAPI:   dataprotectionClient,
-		VmmAPI:              vmmClient,
-		DataPoliciesAPI:     dataPoliciesClient,
-		LcmAPI:              LcmClient,
-		CalmAPI:             calmClient,
-		ObjectStoreAPI:          ObjectStoreClient,
-		SecurityAPI:             SecurityClient,
-		Cluster_managementAPI:   clusterManagementClient,
+		WaitTimeout:           c.WaitTimeout,
+		API:                   v3Client,
+		KarbonAPI:             karbonClient,
+		FoundationClientAPI:   foundationClient,
+		FoundationCentral:     fcClient,
+		Era:                   eraClient,
+		NetworkingAPI:         networkingClient,
+		PrismAPI:              prismClient,
+		MicroSegAPI:           microsegClient,
+		IamAPI:                iamClient,
+		ClusterAPI:            clustersClient,
+		VolumeAPI:             volumeClient,
+		DataProtectionAPI:     dataprotectionClient,
+		VmmAPI:                vmmClient,
+		DataPoliciesAPI:       dataPoliciesClient,
+		LcmAPI:                LcmClient,
+		CalmAPI:               calmClient,
+		ObjectStoreAPI:        ObjectStoreClient,
+		SecurityAPI:           SecurityClient,
+		Cluster_managementAPI: clusterManagementClient,
 	}, nil
 }
 
 // Client represents the nutanix API client
 type Client struct {
-	API                 *v3.Client
-	KarbonAPI           *karbon.Client
-	FoundationClientAPI *foundation.Client
-	WaitTimeout         int64
-	FoundationCentral   *foundation_central.Client
-	Era                 *era.Client
-	NetworkingAPI       *networking.Client
-	PrismAPI            *prism.Client
-	MicroSegAPI         *microseg.Client
-	IamAPI              *iam.Client
-	ClusterAPI          *clusters.Client
-	VolumeAPI           *volumes.Client
-	DataProtectionAPI   *dataprotection.Client
-	VmmAPI              *vmm.Client
-	DataPoliciesAPI     *datapolicies.Client
-	LcmAPI              *lcm.Client
-	CalmAPI             *selfservice.Client
-	ObjectStoreAPI          *objectstores.Client
-	SecurityAPI             *security.Client
-	Cluster_managementAPI   *cluster_management.Client
+	API                   *v3.Client
+	KarbonAPI             *karbon.Client
+	FoundationClientAPI   *foundation.Client
+	WaitTimeout           int64
+	FoundationCentral     *foundation_central.Client
+	Era                   *era.Client
+	NetworkingAPI         *networking.Client
+	PrismAPI              *prism.Client
+	MicroSegAPI           *microseg.Client
+	IamAPI                *iam.Client
+	ClusterAPI            *clusters.Client
+	VolumeAPI             *volumes.Client
+	DataProtectionAPI     *dataprotection.Client
+	VmmAPI                *vmm.Client
+	DataPoliciesAPI       *datapolicies.Client
+	LcmAPI                *lcm.Client
+	CalmAPI               *selfservice.Client
+	ObjectStoreAPI        *objectstores.Client
+	SecurityAPI           *security.Client
+	Cluster_managementAPI *cluster_management.Client
 }
