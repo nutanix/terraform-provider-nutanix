@@ -19,6 +19,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/objectstores"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
+	cluster_management "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/cluster_management"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/security"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/volumes"
@@ -140,6 +141,10 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	clusterManagementClient, err := cluster_management.NewClusterManagementClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Client{
 		WaitTimeout:         c.WaitTimeout,
@@ -159,8 +164,9 @@ func (c *Config) Client() (*Client, error) {
 		DataPoliciesAPI:     dataPoliciesClient,
 		LcmAPI:              LcmClient,
 		CalmAPI:             calmClient,
-		ObjectStoreAPI:      ObjectStoreClient,
-		SecurityAPI:         SecurityClient,
+		ObjectStoreAPI:          ObjectStoreClient,
+		SecurityAPI:             SecurityClient,
+		Cluster_managementAPI:   clusterManagementClient,
 	}, nil
 }
 
@@ -183,6 +189,7 @@ type Client struct {
 	DataPoliciesAPI     *datapolicies.Client
 	LcmAPI              *lcm.Client
 	CalmAPI             *selfservice.Client
-	ObjectStoreAPI      *objectstores.Client
-	SecurityAPI         *security.Client
+	ObjectStoreAPI          *objectstores.Client
+	SecurityAPI             *security.Client
+	Cluster_managementAPI   *cluster_management.Client
 }

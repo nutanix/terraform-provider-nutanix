@@ -13,6 +13,7 @@ import (
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/internal"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clusters"
+	cluster_managementv2 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/cluster_managementv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clustersv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/datapoliciesv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/dataprotectionv2"
@@ -501,6 +502,7 @@ func Provider() *schema.Provider {
 			"nutanix_object_store_certificate_v2":             objectstoresv2.ResourceNutanixObjectStoreCertificateV2(),
 			"nutanix_key_management_server_v2":                securityv2.ResourceNutanixKeyManagementServerV2(),
 			"nutanix_entity_group_v2":                         microsegv2.ResourceNutanixEntityGroupV2(),
+			"nutanix_add_snmp_transport_v2":                   cluster_managementv2.ResourceNutanixAddSnmpTransportV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
