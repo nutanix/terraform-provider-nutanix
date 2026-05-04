@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -110,7 +109,7 @@ func TestNewRequest(t *testing.T) {
 	}
 
 	// test body was JSON encoded
-	body, _ := ioutil.ReadAll(req.Body)
+	body, _ := io.ReadAll(req.Body)
 	if string(body) != outBody {
 		t.Errorf("NewRequest(%v) Body = %v, expected %v", inBody, string(body), outBody)
 	}
@@ -130,7 +129,7 @@ func TestNewUploadRequest(t *testing.T) {
 
 	// expected body
 	out, _ := os.Open(fileName)
-	outBody, _ := ioutil.ReadAll(out)
+	outBody, _ := io.ReadAll(out)
 
 	req, err := c.NewUploadRequest(context.TODO(), http.MethodPost, inURL, inBody)
 	if err != nil {
@@ -141,7 +140,7 @@ func TestNewUploadRequest(t *testing.T) {
 		t.Errorf("NewUploadRequest(%v) URL = %v, expected %v", inURL, req.URL, outURL)
 	}
 
-	got, _ := ioutil.ReadAll(req.Body)
+	got, _ := io.ReadAll(req.Body)
 	if !bytes.Equal(got, outBody) {
 		t.Errorf("NewUploadRequest(%v) Body = %v, expected %v", inBody, string(got), string(outBody))
 	}
@@ -175,7 +174,7 @@ func TestNewUnAuthRequest(t *testing.T) {
 	}
 
 	// test body was JSON encoded
-	body, _ := ioutil.ReadAll(req.Body)
+	body, _ := io.ReadAll(req.Body)
 	if string(body) != outBody {
 		t.Errorf("NewUnAuthRequest(%v) Body = %v, expected %v", inBody, string(body), outBody)
 	}
@@ -252,7 +251,7 @@ func TestNewUnAuthUploadRequest(t *testing.T) {
 
 	// expected body
 	out, _ := os.Open(fileName)
-	outBody, _ := ioutil.ReadAll(out)
+	outBody, _ := io.ReadAll(out)
 
 	req, err := c.NewUnAuthUploadRequest(context.TODO(), http.MethodPost, inURL, inBody)
 	if err != nil {
@@ -263,7 +262,7 @@ func TestNewUnAuthUploadRequest(t *testing.T) {
 		t.Errorf("NewUnAuthUploadRequest(%v) URL = %v, expected %v", inURL, req.URL, outURL)
 	}
 
-	got, _ := ioutil.ReadAll(req.Body)
+	got, _ := io.ReadAll(req.Body)
 	if !bytes.Equal(got, outBody) {
 		t.Errorf("NewUnAuthUploadRequest(%v) Body = %v, expected %v", inBody, string(got), string(outBody))
 	}
@@ -299,7 +298,7 @@ func TestGetResponse(t *testing.T) {
 	res := &http.Response{
 		Request:    &http.Request{},
 		StatusCode: http.StatusBadRequest,
-		Body: ioutil.NopCloser(strings.NewReader(
+		Body: io.NopCloser(strings.NewReader(
 			`{"api_version": "3.1", "code": 400, "kind": "error", "message_list":
 				 [{"message": "bad Request"}], "state": "ERROR"}`)),
 	}
@@ -319,7 +318,7 @@ func TestCheckResponse(t *testing.T) {
 	res := &http.Response{
 		Request:    &http.Request{},
 		StatusCode: http.StatusBadRequest,
-		Body: ioutil.NopCloser(strings.NewReader(
+		Body: io.NopCloser(strings.NewReader(
 			`{"api_version": "3.1", "code": 400, "kind": "error", "message_list":
 				 [{"message": "bad Request"}], "state": "ERROR"}`)),
 	}
