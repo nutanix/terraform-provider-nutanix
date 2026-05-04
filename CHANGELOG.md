@@ -1,3 +1,9 @@
+### 2.3.5(May 4, 2026)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.4...v2.3.5)
+
+- **Fixed Bugs:**
+   - Memory hot-plug increase causing VM power off when using `nutanix_virtual_machine_v2` resource. [#1105](https://github.com/nutanix/terraform-provider-nutanix/issues/1105)
+
 ## 2.3.4 (November 14, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.3...v2.3.4)
 
