@@ -3,8 +3,9 @@ package foundation
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"os"
 	"reflect"
 	"testing"
 
@@ -125,8 +126,8 @@ func TestFMOperations_UploadImage(t *testing.T) {
 			t.Errorf("FileManagementOperations.UploadImage() expected URL %v, got %v", expectedURL, r.URL.String())
 		}
 
-		body, _ := ioutil.ReadAll(r.Body)
-		file, _ := ioutil.ReadFile(source)
+		body, _ := io.ReadAll(r.Body)
+		file, _ := os.ReadFile(source)
 
 		if !reflect.DeepEqual(body, file) {
 			t.Errorf("FileManagementOperations.UploadImage() error: different uploaded files")
@@ -169,7 +170,7 @@ func TestFMOperations_DeleteImage(t *testing.T) {
 	mux.HandleFunc("/foundation/delete/", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPost)
 
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			t.Fatalf("FileManagementOperations.DeleteImage() error reading request body = %v", err)
 		}

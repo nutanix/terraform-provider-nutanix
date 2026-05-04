@@ -3082,7 +3082,7 @@ func expandPolicyReference(pr interface{}) *config.PolicyReference {
 // extractTaskReferenceFromResponse extracts TaskReference from API response using reflection
 func extractTaskReferenceFromResponse(resp interface{}) (import1.TaskReference, error) {
 	respValue := reflect.ValueOf(resp)
-	if respValue.Kind() == reflect.Ptr {
+	if respValue.Kind() == reflect.Pointer {
 		respValue = respValue.Elem()
 	}
 	dataField := respValue.FieldByName("Data")
