@@ -504,7 +504,7 @@ func FlattenLinks(links interface{}) []map[string]interface{} {
 
 		// Use reflection to access Href and Rel fields
 		linkVal := reflect.ValueOf(link)
-		if linkVal.Kind() == reflect.Ptr {
+		if linkVal.Kind() == reflect.Pointer {
 			if linkVal.IsNil() {
 				continue
 			}
@@ -514,7 +514,7 @@ func FlattenLinks(links interface{}) []map[string]interface{} {
 		// Get Href field
 		hrefField := linkVal.FieldByName("Href")
 		if hrefField.IsValid() {
-			if hrefField.Kind() == reflect.Ptr {
+			if hrefField.Kind() == reflect.Pointer {
 				if !hrefField.IsNil() {
 					linkMap["href"] = hrefField.Elem().Interface()
 				}
@@ -526,7 +526,7 @@ func FlattenLinks(links interface{}) []map[string]interface{} {
 		// Get Rel field
 		relField := linkVal.FieldByName("Rel")
 		if relField.IsValid() {
-			if relField.Kind() == reflect.Ptr {
+			if relField.Kind() == reflect.Pointer {
 				if !relField.IsNil() {
 					linkMap["rel"] = relField.Elem().Interface()
 				}
