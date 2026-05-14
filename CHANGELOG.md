@@ -1,3 +1,11 @@
+## 2.4.3 (May 15, 2026)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.4.2...v2.4.3)
+
+**Fixed Bugs:**
+- `nutanix_ngt_insert_iso_v2`: Destroy/eject fails when `cdrom_ext_id` is null after provider upgrade (ISO was already ejected during NGT installation).
+- Typo fix in doc strings and README. [#1140](https://github.com/nutanix/terraform-provider-nutanix/pull/1140)
+
+
 ## 2.4.2(April 15, 2026) 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.4.0...v2.4.2)
 
