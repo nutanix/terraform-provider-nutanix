@@ -13,45 +13,22 @@ The provider is used to interact with the many resources and data sources suppor
 Use the navigation on the left to read about the available resources and data sources this provider can use.
 
 
-## Introducing Nutanix Terraform Provider Version v2.4.2
+## Introducing Nutanix Terraform Provider Version v2.4.3
 
-We're excited to announce the release of Nutanix Terraform Provider Version 2.4.2!
+We're excited to announce the release of Nutanix Terraform Provider Version 2.4.3!
 
-### What's New in v2.4.2
-
-- **New Resource Support**
-  - **Network Functions**: Create and manage Network Functions for service chaining and traffic forwarding use cases. [#982](https://github.com/nutanix/terraform-provider-nutanix/issues/982)
-  - **Entity Groups**: Create and manage Entity Groups for microsegmentation use cases. [#1030](https://github.com/nutanix/terraform-provider-nutanix/issues/1030)
-  - **Entities**: List and get IAM entities. Use Entities to configure and manage entities representing the resources over which permissions are defined. Users can use these datasource to list and fetch entities [#955](https://github.com/nutanix/terraform-provider-nutanix/issues/955)
-  - **Network Security Policy Rules**: List all network security policy rules by policy ExtID. [#1031](https://github.com/nutanix/terraform-provider-nutanix/issues/1031)
-  - **VM Affinity Policies**: Create, list, and get VM-Host affinity and VM-VM anti-affinity policies. Use VM Affinity Policies to govern where VMs run by specifying whether a VM should run on a selected set of hosts, or by keeping specified VMs apart on different hosts. Users can use these resources and data sources to configure, list, and fetch affinity policies [#997](https://github.com/nutanix/terraform-provider-nutanix/pull/997)
-
-- **Enhancements:**
-  - **Deploy from OVA**: Add support to update deployed virtual machines from OVA images. [#985](https://github.com/nutanix/terraform-provider-nutanix/pull/985)
-  - FNS 5.2: Add support for global scope, specific intratier rules, and subnet/VPC-based objects features. [#1032](https://github.com/nutanix/terraform-provider-nutanix/issues/1032)
-  - Support metadata on subnet V2 resource and data source. [#1085](https://github.com/nutanix/terraform-provider-nutanix/issues/1085)
-  - API key and custom headers as an alternative method of authorization. [#1062](https://github.com/nutanix/terraform-provider-nutanix/pull/1062)
+### What's New in v2.4.3
 
 - **Fixed Bugs:**
-   - `subnets_v2` update with `is_external` set to `true` fails. [#1063](https://github.com/nutanix/terraform-provider-nutanix/issues/1063)
-   - `nutanix_vpc_v2`: Unable to add more than one external routable prefix. [#1053](https://github.com/nutanix/terraform-provider-nutanix/issues/1053)
-   - Legacy NIC attributes in VMM v2 are still used across resources and data sources. [#1059](https://github.com/nutanix/terraform-provider-nutanix/issues/1059)
-   - `nutanix_network_security_policy_v2`: Failed to add a rule on an existing security policy. [#1052](https://github.com/nutanix/terraform-provider-nutanix/issues/1052)
-   - Add retries for VM power on/off operations in `nutanix_virtual_machine_v2` to avoid ETag mismatch errors. [#1089](https://github.com/nutanix/terraform-provider-nutanix/issues/1089)
-   - Bug: can not create global Nutanix security policy, defaults to VLAN. [#1087](https://github.com/nutanix/terraform-provider-nutanix/issues/1087)
-   - `nutanix_object_store_v2` update functionality. [#1094](https://github.com/nutanix/terraform-provider-nutanix/issues/1094)
-   - `nutanix_object_store_v2` gives no Terraform error on long name. [#1093](https://github.com/nutanix/terraform-provider-nutanix/issues/1093)
-   - `nutanix_user_key_v2` update tries to recreate the key object. [#1092](https://github.com/nutanix/terraform-provider-nutanix/issues/1092)
-   - Update of Guest Customization leads to delete and recreate of virtual machine resource. [#1108](https://github.com/nutanix/terraform-provider-nutanix/issues/1108)
-   - Memory hot-plug increase causing VM power off when using `nutanix_virtual_machine_v2` resource. [#1105](https://github.com/nutanix/terraform-provider-nutanix/issues/1105)
-   - Mark user key secrets as sensitive and persist `key_details` on create. [#1112](https://github.com/nutanix/terraform-provider-nutanix/issues/1112)
+  - `nutanix_ngt_insert_iso_v2`: Destroy/eject fails when `cdrom_ext_id` is null after provider upgrade (ISO was already ejected during NGT installation). [#1141](https://github.com/nutanix/terraform-provider-nutanix/issues/1141)
+  - Typo fix in doc strings and README. [#1140](https://github.com/nutanix/terraform-provider-nutanix/pull/1140)
 
 ### Software Requirements
-The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.4.2, ensure your Nutanix environment meets the following software requirements:
+The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.4.3, ensure your Nutanix environment meets the following software requirements:
 - Self Service version: 4.3.1 (Required only for running Self Service based resource and data source)
 - AOS Version: 7.5, 7.5.1
 - Prism Central Version: 7.5, 7.5.1 or later
-- Nutanix Terraform Provider Version: 2.4.2
+- Nutanix Terraform Provider Version: 2.4.3
 
 
 ~> **Important Notice:** Upcoming Deprecation of Legacy Nutanix Terraform Provider Resources. Starting with the Nutanix Terraform Provider release planned for Q4-CY2026, legacy resources which are based on v0.8,v1,v2 and v3 APIs will be deprecated and no longer supported. For more information, visit [Legacy API Deprecation Announcement](https://portal.nutanix.com/page/documents/eol/list?type=announcement) [Legacy API Deprecation - FAQs](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA0VO0000005rgP0AQ). Nutanix strongly encourages you to migrate your scripts and applications to the latest v2 version of the Nutanix Terraform Provider resources, which are built on our v4 APIs/SDKs. By adopting the latest v2 version based on v4 APIs and SDKs, our users can leverage the enhanced capabilities and latest innovations from Nutanix. We understand that this transition may require some effort, and we are committed to supporting you throughout the process. Please refer to our documentation and support channels for guidance and assistance.
@@ -65,6 +42,7 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
+| 2.4.3 | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
 | 2.4.2 | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
 | 2.4.1 (⚠️ Deprecated/Invalid) | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
 | 2.4.0 | 7.5 | pc7.5 or later | Self Service  v4.3.0 | yes |

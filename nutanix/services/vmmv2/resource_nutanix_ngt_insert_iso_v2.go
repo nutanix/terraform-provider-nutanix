@@ -281,7 +281,8 @@ func ResourceNutanixNGTInsertIsoV2Update(ctx context.Context, d *schema.Resource
 // ResourceNutanixNGTInsertIsoV2Delete eject the ngt iso from the cd-rom of the vm
 func ResourceNutanixNGTInsertIsoV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] ResourceNutanixNGTInsertIsoV2Delete : Ejecting NGT ISO from the CD-ROM %s of the VM %s", d.Get("cdrom_ext_id").(string), d.Get("vm_ext_id").(string))
-	if action, ok := d.GetOk("action"); ok && action.(string) == "eject" {
+	cdromExtID, cdromExists := d.GetOk("cdrom_ext_id")
+	if action, ok := d.GetOk("action"); ok && action.(string) == "eject" || !cdromExists || cdromExtID.(string) == "" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "NGT ISO is not inserted on the CD-ROM of the VM or ejected earlier using an action, Ignoring the request to eject the NGT ISO",
@@ -291,10 +292,18 @@ func ResourceNutanixNGTInsertIsoV2Delete(ctx context.Context, d *schema.Resource
 }
 
 func ejectCdromISO(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[DEBUG] Ejecting ISO from the CD-ROM %s of the VM %s", d.Get("cdrom_ext_id").(string), d.Get("vm_ext_id").(string))
 	conn := meta.(*conns.Client).VmmAPI
 	vmExtID := d.Get("vm_ext_id").(string)
-	extID := d.Get("cdrom_ext_id").(string)
+	cdromVal, cdromExists := d.GetOk("cdrom_ext_id")
+	if !cdromExists || cdromVal == nil || cdromVal.(string) == "" {
+		log.Printf("[DEBUG] ejectCdromISO: cdrom_ext_id is empty or not set, ISO was already ejected. Skipping.")
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "NGT ISO was already ejected (cdrom_ext_id is empty), skipping eject operation",
+		}}
+	}
+	extID := cdromVal.(string)
+	log.Printf("[DEBUG] Ejecting ISO from the CD-ROM %s of the VM %s", extID, vmExtID)
 
 	// This operation is async. Under cluster load, the task may sit in QUEUED state for a
 	// long time, and the VM ETag can change before the task actually starts, leading to a
