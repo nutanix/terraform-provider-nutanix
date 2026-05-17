@@ -13,6 +13,7 @@ import (
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/internal"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clusters"
+	cluster_managementv2 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/cluster_managementv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clustersv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/datapoliciesv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/dataprotectionv2"
@@ -334,6 +335,8 @@ func Provider() *schema.Provider {
 			"nutanix_protection_policies_v2":                  datapoliciesv2.DatasourceNutanixProtectionPoliciesV2(),
 			"nutanix_storage_policy_v2":                       datapoliciesv2.DataSourceNutanixStoragePolicyV2(),
 			"nutanix_storage_policies_v2":                     datapoliciesv2.DataSourceNutanixStoragePoliciesV2(),
+			"nutanix_rsyslog_server_v2":                       cluster_managementv2.DatasourceNutanixRsyslogServerV2(),
+			"nutanix_rsyslog_servers_v2":                      cluster_managementv2.DatasourceNutanixRsyslogServersV2(),
 			"nutanix_image_v2":                                vmmv2.DatasourceNutanixImageV4(),
 			"nutanix_images_v2":                               vmmv2.DatasourceNutanixImagesV4(),
 			"nutanix_ova_v2":                                  vmmv2.DatasourceNutanixOvaV2(),
@@ -465,6 +468,7 @@ func Provider() *schema.Provider {
 			"nutanix_restore_protected_resource_v2":           dataprotectionv2.ResourceNutanixRestoreProtectedResourceV2(),
 			"nutanix_protection_policy_v2":                    datapoliciesv2.ResourceNutanixProtectionPoliciesV2(),
 			"nutanix_storage_policy_v2":                       datapoliciesv2.ResourceNutanixStoragePoliciesV2(),
+			"nutanix_rsyslog_server_v2":                       cluster_managementv2.ResourceNutanixRsyslogServerV2(),
 			"nutanix_vm_revert_v2":                            vmmv2.ResourceNutanixRevertVMRecoveryPointV2(),
 			"nutanix_virtual_machine_v2":                      vmmv2.ResourceNutanixVirtualMachineV2(),
 			"nutanix_vm_shutdown_action_v2":                   vmmv2.ResourceNutanixVmsShutdownActionV2(),
