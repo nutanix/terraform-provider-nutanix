@@ -14,6 +14,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/internal"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clusters"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clustersv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/cluster_managementv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/datapoliciesv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/dataprotectionv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/foundation"
@@ -370,6 +371,8 @@ func Provider() *schema.Provider {
 			"nutanix_stigs_v2":                                securityv2.DatasourceNutanixStigsControlsV2(),
 			"nutanix_entity_group_v2":                         microsegv2.DatasourceNutanixEntityGroupV2(),
 			"nutanix_entity_groups_v2":                        microsegv2.DatasourceNutanixEntityGroupsV2(),
+			"nutanix_rsyslog_server_v2":                       cluster_managementv2.DatasourceNutanixRsyslogServerV2(),
+			"nutanix_rsyslog_servers_v2":                      cluster_managementv2.DatasourceNutanixRsyslogServersV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
@@ -501,6 +504,7 @@ func Provider() *schema.Provider {
 			"nutanix_object_store_certificate_v2":             objectstoresv2.ResourceNutanixObjectStoreCertificateV2(),
 			"nutanix_key_management_server_v2":                securityv2.ResourceNutanixKeyManagementServerV2(),
 			"nutanix_entity_group_v2":                         microsegv2.ResourceNutanixEntityGroupV2(),
+			"nutanix_rsyslog_server_v2":                       cluster_managementv2.ResourceNutanixRsyslogServerV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
