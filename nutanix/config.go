@@ -10,6 +10,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/karbon"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/selfservice"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/cluster_management"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/clusters"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/datapolicies"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/dataprotection"
@@ -140,6 +141,10 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	clusterManagementClient, err := cluster_management.NewClusterManagementClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Client{
 		WaitTimeout:         c.WaitTimeout,
@@ -161,6 +166,7 @@ func (c *Config) Client() (*Client, error) {
 		CalmAPI:             calmClient,
 		ObjectStoreAPI:      ObjectStoreClient,
 		SecurityAPI:         SecurityClient,
+		ClusterMgmtAPI:     clusterManagementClient,
 	}, nil
 }
 
@@ -185,4 +191,5 @@ type Client struct {
 	CalmAPI             *selfservice.Client
 	ObjectStoreAPI      *objectstores.Client
 	SecurityAPI         *security.Client
+	ClusterMgmtAPI     *cluster_management.Client
 }
