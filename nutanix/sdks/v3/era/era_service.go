@@ -1,9 +1,12 @@
 package era
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 )
@@ -88,10 +91,17 @@ type Service interface {
 	UpdateStretchedVlan(ctx context.Context, id string, req *StretchedVlansInput) (*StretchedVlanResponse, error)
 	DeleteStretchedVlan(ctx context.Context, id string) (*string, error)
 	RefreshClone(ctx context.Context, body *CloneRefreshInput, id string) (*ProvisionDatabaseResponse, error)
-	CreateCluster(ctx context.Context, body *ClusterIntentInput) (*ProvisionDatabaseResponse, error)
+	CreateCluster(ctx context.Context, body interface{}) (*ProvisionDatabaseResponse, error)
 	UpdateCluster(ctx context.Context, req *ClusterUpdateInput, id string) (*ListClusterResponse, error)
 	DeleteCluster(ctx context.Context, req *DeleteClusterInput, id string) (*ProvisionDatabaseResponse, error)
 	GetAvailableIPs(ctx context.Context, id string) (*GetNetworkAvailableIPs, error)
+	SetEraServerConfig(ctx context.Context, body *OnboardingEraServerConfig, configParams []string) (*OnboardingEraServerConfig, error)
+	ValidateEraServerConfig(ctx context.Context, body *OnboardingEraServerConfig, configParams []string) (*OnboardingEraServerConfig, error)
+	GetEraServerConfig(ctx context.Context) (*OnboardingEraServerConfig, error)
+	GetClusterStorageContainers(ctx context.Context, clusterID string) (map[string]interface{}, error)
+	UploadClusterWizardJSON(ctx context.Context, clusterID string, body map[string]interface{}, skipUpload bool, skipProfile bool, updateJSON bool) (string, error)
+	ReplaceClusterWizard(ctx context.Context, clusterID string, body map[string]interface{}) (string, error)
+	GetOperationsShortInfo(ctx context.Context) (*OperationsShortInfoResponse, error)
 }
 
 type ServiceClient struct {
@@ -820,7 +830,7 @@ func (sc ServiceClient) DeleteTimeMachineCluster(ctx context.Context, tmsID stri
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) CreateCluster(ctx context.Context, body *ClusterIntentInput) (*ProvisionDatabaseResponse, error) {
+func (sc ServiceClient) CreateCluster(ctx context.Context, body interface{}) (*ProvisionDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/clusters", body)
 	if err != nil {
 		return nil, err
@@ -1078,5 +1088,88 @@ func (sc ServiceClient) GetAvailableIPs(ctx context.Context, id string) (*GetNet
 		return nil, err
 	}
 	res := new(GetNetworkAvailableIPs)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) SetEraServerConfig(ctx context.Context, body *OnboardingEraServerConfig, configParams []string) (*OnboardingEraServerConfig, error) {
+	path := "/config/era-server"
+	if len(configParams) > 0 {
+		path += "?config-params=" + strings.Join(configParams, ",")
+	}
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPut, path, body)
+	if err != nil {
+		return nil, err
+	}
+	return body, sc.c.Do(ctx, httpReq, nil)
+}
+
+func (sc ServiceClient) ValidateEraServerConfig(ctx context.Context, body *OnboardingEraServerConfig, configParams []string) (*OnboardingEraServerConfig, error) {
+	path := "/config/era-server/validate"
+	if len(configParams) > 0 {
+		path += "?config-params=" + strings.Join(configParams, ",")
+	}
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPut, path, body)
+	if err != nil {
+		return nil, err
+	}
+	return body, sc.c.Do(ctx, httpReq, nil)
+}
+
+func (sc ServiceClient) GetEraServerConfig(ctx context.Context) (*OnboardingEraServerConfig, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/config/era-server", nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(OnboardingEraServerConfig)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) GetClusterStorageContainers(ctx context.Context, clusterID string) (map[string]interface{}, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/clusters/i/%s/storage-containers", clusterID), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := map[string]interface{}{}
+	return res, sc.c.Do(ctx, httpReq, &res)
+}
+
+func (sc ServiceClient) UploadClusterWizardJSON(ctx context.Context, clusterID string, body map[string]interface{}, skipUpload bool, skipProfile bool, updateJSON bool) (string, error) {
+	path := fmt.Sprintf("/clusters/%s/json?skip_upload=%t&skip_profile=%t&updateJson=%t", clusterID, skipUpload, skipProfile, updateJSON)
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return "", err
+	}
+	httpReq, err := sc.c.NewMultipartFormRequest(ctx, http.MethodPost, path, map[string]string{
+		"file": string(jsonBody),
+	})
+	if err != nil {
+		return "", err
+	}
+	var res bytes.Buffer
+	if err := sc.c.Do(ctx, httpReq, &res); err != nil {
+		return "", err
+	}
+	return res.String(), nil
+}
+
+func (sc ServiceClient) ReplaceClusterWizard(ctx context.Context, clusterID string, body map[string]interface{}) (string, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPut, fmt.Sprintf("/clusters/%s", clusterID), body)
+	if err != nil {
+		return "", err
+	}
+	var res bytes.Buffer
+	if err := sc.c.Do(ctx, httpReq, &res); err != nil {
+		return "", err
+	}
+	return res.String(), nil
+}
+
+func (sc ServiceClient) GetOperationsShortInfo(ctx context.Context) (*OperationsShortInfoResponse, error) {
+	path := "/operations/short-info?hide-subops=true&user-triggered=true&system-triggered=true&time-zone=Asia/Calcutta&count-summary=false&days=2&descending=false"
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(OperationsShortInfoResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }

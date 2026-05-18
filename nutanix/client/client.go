@@ -10,6 +10,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
@@ -336,6 +337,40 @@ func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, fi
 	c.applyAuthHeaders(req)
 	c.applyCustomHeaders(req)
 
+	return req, nil
+}
+
+// NewMultipartFormRequest creates an authenticated multipart/form-data request.
+func (c *Client) NewMultipartFormRequest(ctx context.Context, method, urlStr string, fields map[string]string) (*http.Request, error) {
+	if c.client == nil {
+		return nil, fmt.Errorf("%s", c.ErrorMsg)
+	}
+	rel, err := url.Parse(c.AbsolutePath + urlStr)
+	if err != nil {
+		return nil, err
+	}
+	u := c.BaseURL.ResolveReference(rel)
+
+	buf := &bytes.Buffer{}
+	writer := multipart.NewWriter(buf)
+	for k, v := range fields {
+		if err := writer.WriteField(k, v); err != nil {
+			return nil, err
+		}
+	}
+	if err := writer.Close(); err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(method, u.String(), buf)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", writer.FormDataContentType())
+	req.Header.Add("Accept", mediaType)
+	req.Header.Add("User-Agent", c.UserAgent)
+	c.applyAuthHeaders(req)
+	c.applyCustomHeaders(req)
 	return req, nil
 }
 

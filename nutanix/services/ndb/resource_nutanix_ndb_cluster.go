@@ -3,6 +3,7 @@ package ndb
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -45,7 +46,7 @@ func ResourceNutanixNDBCluster() *schema.Resource {
 			},
 			"storage_container": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"agent_vm_prefix": {
 				Type:     schema.TypeString,
@@ -72,9 +73,44 @@ func ResourceNutanixNDBCluster() *schema.Resource {
 				Optional: true,
 				Default:  "v2",
 			},
+			"prism_central_info": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ip_address": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"port": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  9440,
+						},
+						"username": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"password": {
+							Type:      schema.TypeString,
+							Required:  true,
+							Sensitive: true,
+						},
+					},
+				},
+			},
 			"agent_network_info": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"dns": {
@@ -90,7 +126,7 @@ func ResourceNutanixNDBCluster() *schema.Resource {
 			},
 			"networks_info": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -293,6 +329,9 @@ func resourceNutanixNDBClusterCreate(ctx context.Context, d *schema.ResourceData
 	if version, ok := d.GetOk("version"); ok {
 		req.Version = utils.StringPtr(version.(string))
 	}
+	if pcInfo, ok := d.GetOk("prism_central_info"); ok {
+		req.ManagementServer = expandPrismCentralInfo(pcInfo.([]interface{}))
+	}
 
 	if username, ok := d.GetOk("username"); ok {
 		creds := make([]*era.NameValueParams, 0)
@@ -317,7 +356,27 @@ func resourceNutanixNDBClusterCreate(ctx context.Context, d *schema.ResourceData
 	// api to create cluster
 	resp, err := conn.Service.CreateCluster(ctx, req)
 	if err != nil {
-		return diag.FromErr(err)
+		// Some NDB versions expect "ipAddresses/cloudType/username/password/status"
+		// instead of "clusterIP/clusterType/credentialsInfo/clusterDescription".
+		if strings.Contains(err.Error(), "Unrecognized field 'clusterIP'") ||
+			strings.Contains(err.Error(), "Unrecognized field 'clusterType'") ||
+			strings.Contains(err.Error(), "Unrecognized field 'clusterDescription'") {
+			altReq := map[string]interface{}{
+				"name":        d.Get("name").(string),
+				"ipAddresses": []string{d.Get("cluster_ip").(string)},
+				"cloudType":   d.Get("cluster_type").(string),
+				"version":     d.Get("version").(string),
+				"username":    d.Get("username").(string),
+				"password":    d.Get("password").(string),
+			}
+			if pcInfo, ok := d.GetOk("prism_central_info"); ok {
+				altReq["managementServerInfo"] = expandPrismCentralInfo(pcInfo.([]interface{}))
+			}
+			resp, err = conn.Service.CreateCluster(ctx, altReq)
+		}
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	// Get Operation ID from response of Cluster and poll for the operation to get completed.
@@ -596,34 +655,62 @@ func expandClusterNetworkInfo(pr []interface{}) []*era.NameValueParams {
 			val := v.(map[string]interface{})
 
 			if vlan, ok := val["vlan_name"]; ok {
-				networkInfos = append(networkInfos, &era.NameValueParams{
-					Name:  utils.StringPtr("vlanName"),
-					Value: utils.StringPtr(vlan.(string)),
-				})
+				if v := vlan.(string); v != "" {
+					networkInfos = append(networkInfos, &era.NameValueParams{
+						Name:  utils.StringPtr("vlanName"),
+						Value: utils.StringPtr(v),
+					})
+				}
 			}
 
 			if vlan, ok := val["static_ip"]; ok {
-				networkInfos = append(networkInfos, &era.NameValueParams{
-					Name:  utils.StringPtr("staticIP"),
-					Value: utils.StringPtr(vlan.(string)),
-				})
+				if v := vlan.(string); v != "" {
+					networkInfos = append(networkInfos, &era.NameValueParams{
+						Name:  utils.StringPtr("staticIP"),
+						Value: utils.StringPtr(v),
+					})
+				}
 			}
 
 			if vlan, ok := val["gateway"]; ok {
-				networkInfos = append(networkInfos, &era.NameValueParams{
-					Name:  utils.StringPtr("gateway"),
-					Value: utils.StringPtr(vlan.(string)),
-				})
+				if v := vlan.(string); v != "" {
+					networkInfos = append(networkInfos, &era.NameValueParams{
+						Name:  utils.StringPtr("gateway"),
+						Value: utils.StringPtr(v),
+					})
+				}
 			}
 
 			if vlan, ok := val["subnet_mask"]; ok {
-				networkInfos = append(networkInfos, &era.NameValueParams{
-					Name:  utils.StringPtr("subnetMask"),
-					Value: utils.StringPtr(vlan.(string)),
-				})
+				if v := vlan.(string); v != "" {
+					networkInfos = append(networkInfos, &era.NameValueParams{
+						Name:  utils.StringPtr("subnetMask"),
+						Value: utils.StringPtr(v),
+					})
+				}
 			}
 		}
 		return networkInfos
 	}
 	return nil
+}
+
+func expandPrismCentralInfo(pr []interface{}) map[string]interface{} {
+	if len(pr) == 0 {
+		return nil
+	}
+	val := pr[0].(map[string]interface{})
+	pc := map[string]interface{}{
+		"ipAddress": val["ip_address"].(string),
+		"port":      val["port"].(int),
+		"username":  val["username"].(string),
+		"password":  val["password"].(string),
+	}
+	if v, ok := val["name"]; ok && v.(string) != "" {
+		pc["name"] = v.(string)
+	}
+	if v, ok := val["description"]; ok && v.(string) != "" {
+		pc["description"] = v.(string)
+	}
+	return pc
 }
