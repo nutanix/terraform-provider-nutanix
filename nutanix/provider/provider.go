@@ -423,6 +423,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_stretched_vlan":                      ndb.ResourceNutanixNDBStretchedVlan(),
 			"nutanix_ndb_clone_refresh":                       ndb.ResourceNutanixNDBCloneRefresh(),
 			"nutanix_ndb_cluster":                             ndb.ResourceNutanixNDBCluster(),
+			"nutanix_ndb_onboarding":                          ndb.ResourceNutanixNDBOnboarding(),
 			"nutanix_self_service_app_provision":              selfservice.ResourceNutanixCalmAppProvision(),
 			"nutanix_self_service_app_patch":                  selfservice.ResourceNutanixCalmAppPatch(),
 			"nutanix_self_service_app_recovery_point":         selfservice.ResourceNutanixCalmAppRecoveryPoint(),
