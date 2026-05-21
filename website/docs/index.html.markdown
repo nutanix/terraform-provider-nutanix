@@ -20,7 +20,7 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.4.
 ### What's New in v2.4.3
 
 - **Fixed Bugs:**
-  - `nutanix_ngt_insert_iso_v2`: Destroy/eject fails when `cdrom_ext_id` is null after provider upgrade (ISO was already ejected during NGT installation). [#1141](https://github.com/nutanix/terraform-provider-nutanix/issues/1141)
+  - `nutanix_ngt_insert_iso_v2`: Destroy/eject fails when `cdrom_ext_id` is null after provider upgrade (ISO was already ejected during NGT installation).[#1176](https://github.com/nutanix/terraform-provider-nutanix/issues/1176)
   - Typo fix in doc strings and README. [#1140](https://github.com/nutanix/terraform-provider-nutanix/pull/1140)
 
 ### Software Requirements
