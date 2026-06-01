@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/common/v1/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/config"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/common/v1/response"
 	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/request/entitygroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -211,7 +211,7 @@ func flattenAllowedEntities(entities []import1.AllowedEntity) []map[string]inter
 				entityMap["select_by"] = flattenAllowedSelectBy(entity.SelectBy)
 			}
 			if entity.Type != nil {
-				entityMap["type"] = utils.StringValue(entity.Type)
+				entityMap["type"] = entity.Type.GetName()
 			}
 			entityList = append(entityList, entityMap)
 		}

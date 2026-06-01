@@ -21,6 +21,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iamv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/lcmv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/microsegv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/ndb"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networkingv2"
@@ -285,6 +286,10 @@ func Provider() *schema.Provider {
 			"nutanix_service_groups_v2":                       networkingv2.DatasourceNutanixServiceGroupsV2(),
 			"nutanix_address_group_v2":                        networkingv2.DatasourceNutanixAddressGroupV2(),
 			"nutanix_address_groups_v2":                       networkingv2.DatasourceNutanixAddressGroupsV2(),
+			"nutanix_directory_server_config_v2":              microsegv2.DatasourceNutanixDirectoryServerConfigV2(),
+			"nutanix_directory_server_configs_v2":             microsegv2.DatasourceNutanixDirectoryServerConfigsV2(),
+			"nutanix_category_mapping_v2":                    microsegv2.DatasourceNutanixCategoryMappingV2(),
+			"nutanix_category_mappings_v2":                   microsegv2.DatasourceNutanixCategoryMappingsV2(),
 			"nutanix_directory_service_v2":                    iamv2.DatasourceNutanixDirectoryServiceV2(),
 			"nutanix_directory_services_v2":                   iamv2.DatasourceNutanixDirectoryServicesV2(),
 			"nutanix_saml_identity_provider_v2":               iamv2.DatasourceNutanixSamlIDPV2(),
@@ -428,6 +433,7 @@ func Provider() *schema.Provider {
 			"nutanix_pbr_v2":                                  networkingv2.ResourceNutanixPbrsV2(),
 			"nutanix_service_groups_v2":                       networkingv2.ResourceNutanixServiceGroupsV2(),
 			"nutanix_address_groups_v2":                       networkingv2.ResourceNutanixAddressGroupsV2(),
+			"nutanix_directory_server_config_v2":              microsegv2.ResourceNutanixDirectoryServerConfigV2(),
 			"nutanix_directory_services_v2":                   iamv2.ResourceNutanixDirectoryServicesV2(),
 			"nutanix_user_groups_v2":                          iamv2.ResourceNutanixUserGroupsV2(),
 			"nutanix_roles_v2":                                iamv2.ResourceNutanixRolesV2(),

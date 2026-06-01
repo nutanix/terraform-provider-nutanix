@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/common/v1/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/config"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/request/entitygroups"
 	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/prism/v4/config"
 	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
@@ -409,12 +409,10 @@ func expandAllowedSelectBy(selectBy []interface{}) *import1.AllowedSelectBy {
 	}
 
 	selectByVal := selectBy[0].(map[string]interface{})
-	selectBySpec := import1.NewAllowedSelectBy()
-
-	// Add fields based on AllowedSelectBy struct if needed
 	_ = selectByVal
 
-	return selectBySpec
+	var s import1.AllowedSelectBy
+	return &s
 }
 
 func expandAllowedType(entityType string) *import1.AllowedType {
@@ -422,10 +420,6 @@ func expandAllowedType(entityType string) *import1.AllowedType {
 		return nil
 	}
 
-	// Map string to AllowedType enum
-	// This is a placeholder - adjust based on actual enum values
 	var allowedType import1.AllowedType
-	// Add enum mapping logic here based on actual AllowedType enum values
-
 	return &allowedType
 }

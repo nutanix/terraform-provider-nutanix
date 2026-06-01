@@ -40,6 +40,8 @@ func NewIamClient(credentials client.Credentials) (*Client, error) {
 		OperationsAPIInstance:       api.NewOperationsServiceApi(baseClient),
 		UsersAPIInstance:            api.NewUsersServiceApi(baseClient),
 		AuthAPIInstance:             api.NewAuthorizationPoliciesServiceApi(baseClient),
-		APIClientInstance:           iam.NewApiClient(),
-	}, nil
+		APIClientInstance:           baseClient,
+	}
+
+	return f, nil
 }
