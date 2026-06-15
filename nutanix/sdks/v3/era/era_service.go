@@ -6,10 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 )
+
+const defaultOperationsTimezone = "UTC"
 
 type Service interface {
 	ProvisionDatabase(ctx context.Context, req *ProvisionDatabaseRequest) (*ProvisionDatabaseResponse, error)
@@ -91,16 +94,22 @@ type Service interface {
 	UpdateStretchedVlan(ctx context.Context, id string, req *StretchedVlansInput) (*StretchedVlanResponse, error)
 	DeleteStretchedVlan(ctx context.Context, id string) (*string, error)
 	RefreshClone(ctx context.Context, body *CloneRefreshInput, id string) (*ProvisionDatabaseResponse, error)
-	CreateCluster(ctx context.Context, body interface{}) (*ProvisionDatabaseResponse, error)
+	// CreateCluster is the typed/default cluster create path.
+	CreateCluster(ctx context.Context, body *ClusterIntentInput) (*ProvisionDatabaseResponse, error)
+	// CreateClusterRaw supports NDB build-specific payload compatibility fallbacks.
+	CreateClusterRaw(ctx context.Context, body map[string]interface{}) (*ProvisionDatabaseResponse, error)
 	UpdateCluster(ctx context.Context, req *ClusterUpdateInput, id string) (*ListClusterResponse, error)
 	DeleteCluster(ctx context.Context, req *DeleteClusterInput, id string) (*ProvisionDatabaseResponse, error)
 	GetAvailableIPs(ctx context.Context, id string) (*GetNetworkAvailableIPs, error)
+
+	// NDB onboarding-specific endpoints.
 	SetEraServerConfig(ctx context.Context, body *OnboardingEraServerConfig, configParams []string) (*OnboardingEraServerConfig, error)
 	ValidateEraServerConfig(ctx context.Context, body *OnboardingEraServerConfig, configParams []string) (*OnboardingEraServerConfig, error)
 	GetEraServerConfig(ctx context.Context) (*OnboardingEraServerConfig, error)
 	GetClusterStorageContainers(ctx context.Context, clusterID string) (map[string]interface{}, error)
 	UploadClusterWizardJSON(ctx context.Context, clusterID string, body map[string]interface{}, skipUpload bool, skipProfile bool, updateJSON bool) (string, error)
 	ReplaceClusterWizard(ctx context.Context, clusterID string, body map[string]interface{}) (string, error)
+	ValidateDomainClusterDetails(ctx context.Context, ip string, port int, username string, password string) (map[string]interface{}, error)
 	GetOperationsShortInfo(ctx context.Context) (*OperationsShortInfoResponse, error)
 }
 
@@ -830,7 +839,16 @@ func (sc ServiceClient) DeleteTimeMachineCluster(ctx context.Context, tmsID stri
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) CreateCluster(ctx context.Context, body interface{}) (*ProvisionDatabaseResponse, error) {
+func (sc ServiceClient) CreateCluster(ctx context.Context, body *ClusterIntentInput) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/clusters", body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) CreateClusterRaw(ctx context.Context, body map[string]interface{}) (*ProvisionDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/clusters", body)
 	if err != nil {
 		return nil, err
@@ -1164,8 +1182,28 @@ func (sc ServiceClient) ReplaceClusterWizard(ctx context.Context, clusterID stri
 	return res.String(), nil
 }
 
+func (sc ServiceClient) ValidateDomainClusterDetails(ctx context.Context, ip string, port int, username string, password string) (map[string]interface{}, error) {
+	path := fmt.Sprintf(
+		"/domains/i/cluster-details?ipaddress=%s&port=%d&username=%s&password=%s",
+		url.QueryEscape(ip),
+		port,
+		url.QueryEscape(username),
+		url.QueryEscape(password),
+	)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+	res := map[string]interface{}{}
+	return res, sc.c.Do(ctx, httpReq, &res)
+}
+
 func (sc ServiceClient) GetOperationsShortInfo(ctx context.Context) (*OperationsShortInfoResponse, error) {
-	path := "/operations/short-info?hide-subops=true&user-triggered=true&system-triggered=true&time-zone=Asia/Calcutta&count-summary=false&days=2&descending=false"
+	// Use a neutral default timezone for deterministic behavior across environments.
+	path := fmt.Sprintf(
+		"/operations/short-info?hide-subops=true&user-triggered=true&system-triggered=true&time-zone=%s&count-summary=false&days=2&descending=false",
+		defaultOperationsTimezone,
+	)
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err

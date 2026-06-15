@@ -21,6 +21,14 @@ func ResourceNutanixNDBOnboarding() *schema.Resource {
 		ReadContext:   resourceNutanixNDBOnboardingRead,
 		UpdateContext: resourceNutanixNDBOnboardingUpdate,
 		DeleteContext: resourceNutanixNDBOnboardingDelete,
+		Description:   "Runs the NDB onboarding wizard workflow. This is a workflow-style resource: create executes onboarding, update is intentionally unsupported, and delete only removes Terraform state (non-destructive remote behavior).",
+		Timeouts: &schema.ResourceTimeout{
+			// Step 6 setup can legitimately run much longer than Terraform's default
+			// create timeout; align with onboarding setup windows.
+			Create: schema.DefaultTimeout(3 * time.Hour),
+			Update: schema.DefaultTimeout(3 * time.Hour),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
 		Schema: map[string]*schema.Schema{
 			"prism_central_info": {
 				Type:     schema.TypeList,
@@ -311,12 +319,18 @@ func resourceNutanixNDBOnboardingRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceNutanixNDBOnboardingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Re-run wizard flow to keep behavior deterministic.
-	return resourceNutanixNDBOnboardingCreate(ctx, d, meta)
+	// This resource models a one-time onboarding workflow. Re-running create on update
+	// can trigger unsafe side-effects, so require explicit recreate for changes.
+	return diag.Diagnostics{{
+		Severity: diag.Error,
+		Summary:  "update is not supported for nutanix_ndb_onboarding",
+		Detail:   "This resource represents a workflow execution and cannot be safely updated in place. Please run `terraform taint nutanix_ndb_onboarding.<name>` (or remove from state) and apply again.",
+	}}
 }
 
 func resourceNutanixNDBOnboardingDelete(_ context.Context, d *schema.ResourceData, _ interface{}) diag.Diagnostics {
-	// Onboarding is workflow-oriented; keep delete as state-only removal.
+	// Onboarding is workflow-oriented; delete is intentionally state-only and does
+	// not attempt to roll back cluster/era-server changes performed during create.
 	d.SetId("")
 	return nil
 }
@@ -326,7 +340,19 @@ func applyPrismCentralStep(ctx context.Context, svc era.Service, pcInfo []interf
 		return nil
 	}
 	pc := pcInfo[0].(map[string]interface{})
-	body := map[string]interface{}{
+	// Newer NDB UI flows validate PC details via domains/i/cluster-details before
+	// any cluster registration call; treat successful validation as step completion.
+	if _, domainErr := svc.ValidateDomainClusterDetails(
+		ctx,
+		pc["ip_address"].(string),
+		pc["port"].(int),
+		pc["username"].(string),
+		pc["password"].(string),
+	); domainErr == nil {
+		return nil
+	}
+
+	primaryBody := map[string]interface{}{
 		"name":      pc["name"].(string),
 		"ipAddress": pc["ip_address"].(string),
 		"port":      pc["port"].(int),
@@ -334,11 +360,64 @@ func applyPrismCentralStep(ctx context.Context, svc era.Service, pcInfo []interf
 		"password":  pc["password"].(string),
 	}
 	if desc, ok := pc["description"]; ok && desc.(string) != "" {
-		body["description"] = desc.(string)
+		primaryBody["description"] = desc.(string)
 	}
-	_, err := svc.CreateCluster(ctx, map[string]interface{}{
-		"managementServerInfo": body,
+	_, err := svc.CreateClusterRaw(ctx, map[string]interface{}{
+		"managementServerInfo": primaryBody,
 	})
+	if err == nil {
+		return nil
+	}
+	// Compatibility fallback for older NDB builds that expect legacy
+	// management server field names (ip/type/version/status).
+	if containsAny(err.Error(),
+		"Unrecognized field 'ipAddress'",
+		"Unrecognized field 'port'",
+		"Unrecognized field 'name'",
+		"Unrecognized field 'description'",
+	) {
+		legacyMgmtServer := map[string]interface{}{
+			"ip":       pc["ip_address"].(string),
+			"type":     "NTNX_PRISM_CENTRAL",
+			"version":  "v2",
+			"status":   "READY",
+			"username": pc["username"].(string),
+			"password": pc["password"].(string),
+		}
+		legacyReq := map[string]interface{}{
+			"clusterName":          "pc-bootstrap-" + strings.ReplaceAll(pc["ip_address"].(string), ".", "-"),
+			"clusterDescription":   "",
+			"clusterIP":            pc["ip_address"].(string),
+			"clusterType":          "NTNX_PRISM_CENTRAL",
+			"version":              "v2",
+			"managementServerInfo": legacyMgmtServer,
+			// Keep these as empty arrays so older backend code paths don't dereference nil collections.
+			"credentialsInfo": []map[string]interface{}{},
+			"properties":      []map[string]interface{}{},
+		}
+		_, legacyErr := svc.CreateClusterRaw(ctx, legacyReq)
+		if legacyErr == nil {
+			return nil
+		}
+		// Some builds reject legacy root keys (clusterDescription/clusterType) but
+		// still require legacy managementServerInfo.ip payload shape.
+		modernRootReq := map[string]interface{}{
+			"name":                 "pc-bootstrap-" + strings.ReplaceAll(pc["ip_address"].(string), ".", "-"),
+			"description":          "",
+			"ipAddresses":          []string{pc["ip_address"].(string)},
+			"cloudType":            "NTNX_PRISM_CENTRAL",
+			"version":              "v2",
+			"username":             pc["username"].(string),
+			"password":             pc["password"].(string),
+			"managementServerInfo": legacyMgmtServer,
+			"properties":           []map[string]interface{}{},
+		}
+		if _, modernRootErr := svc.CreateClusterRaw(ctx, modernRootReq); modernRootErr == nil {
+			return nil
+		} else {
+			return modernRootErr
+		}
+	}
 	return err
 }
 
@@ -407,7 +486,7 @@ func applyPrismElementStep(ctx context.Context, svc era.Service, peInfo []interf
 	)
 
 	for _, payload := range ladder {
-		resp, err = svc.CreateCluster(ctx, payload)
+		resp, err = svc.CreateClusterRaw(ctx, payload)
 		if err == nil {
 			break
 		}
@@ -452,7 +531,7 @@ func applyPrismElementStep(ctx context.Context, svc era.Service, peInfo []interf
 					},
 				},
 			}
-			resp, err = svc.CreateCluster(ctx, altPayload)
+			resp, err = svc.CreateClusterRaw(ctx, altPayload)
 		}
 	}
 	if err != nil {
@@ -551,13 +630,22 @@ func applyNDBConfigStep(ctx context.Context, svc era.Service, cfg onboardingReso
 	ntpServers := cfg.NTPServers
 	timezone := cfg.Timezone
 
-	// UI validates DNS+NTP first before sending split updates.
-	validateBody := &era.OnboardingEraServerConfig{
-		DNSServers: dnsServers,
-		NTPServers: ntpServers,
+	// Match UI-like tolerance: validate/apply only fields that are present
+	// in discovered or user-provided config, instead of forcing both DNS and NTP.
+	validateBody := &era.OnboardingEraServerConfig{}
+	validateParams := make([]string, 0, 2)
+	if len(dnsServers) > 0 {
+		validateBody.DNSServers = dnsServers
+		validateParams = append(validateParams, "dns")
 	}
-	if _, err := svc.ValidateEraServerConfig(ctx, validateBody, []string{"dns", "ntp"}); err != nil {
-		return err
+	if len(ntpServers) > 0 {
+		validateBody.NTPServers = ntpServers
+		validateParams = append(validateParams, "ntp")
+	}
+	if len(validateParams) > 0 {
+		if _, err := svc.ValidateEraServerConfig(ctx, validateBody, validateParams); err != nil {
+			return err
+		}
 	}
 
 	if len(dnsServers) > 0 {
@@ -997,10 +1085,10 @@ func resolveNDBConfig(raw interface{}, discovery *onboardingDiscovery) onboardin
 		}
 	}
 	if len(resolved.DNSServers) == 0 {
-		resolved.DNSServers = []string{"10.40.64.15", "10.40.64.16"}
+		resolved.DNSServers = []string{}
 	}
 	if len(resolved.NTPServers) == 0 {
-		resolved.NTPServers = []string{"pool.ntp.org"}
+		resolved.NTPServers = []string{}
 	}
 	return resolved
 }
@@ -1112,7 +1200,5 @@ func isRetryableStep4Error(err error) bool {
 	}
 	errText := strings.ToLower(err.Error())
 	return strings.Contains(errText, "could not get prism rest caller for cloudid") ||
-		strings.Contains(errText, "era-0000000") ||
-		strings.Contains(errText, "era-sql-0000001") ||
-		strings.Contains(errText, "an internal error has occurred")
+		strings.Contains(errText, "era-sql-0000001")
 }

@@ -43,9 +43,33 @@ variable "pe_password" {
   sensitive = true
 }
 
+variable "pc_ip" {
+  type    = string
+  default = ""
+}
+
+variable "pc_username" {
+  type    = string
+  default = ""
+}
+
+variable "pc_password" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
 variable "storage_container" {
   type = string
   default = ""
+}
+
+variable "dns_servers" {
+  type = list(string)
+}
+
+variable "ntp_servers" {
+  type = list(string)
 }
 
 resource "nutanix_ndb_onboarding" "wizard" {
@@ -55,12 +79,15 @@ resource "nutanix_ndb_onboarding" "wizard" {
   # strict: fail if user-provided selection is not found in discovered options.
   selection_mode = "auto"
 
-  # Step 1 (optional): uncomment to onboard with Prism Central details.
-  # prism_central_info {
-  #   ip_address = "10.0.0.50"
-  #   username   = "admin"
-  #   password   = "secret"
-  # }
+  # Step 1 (optional): provide Prism Central details when needed.
+  dynamic "prism_central_info" {
+    for_each = var.pc_ip != "" ? [1] : []
+    content {
+      ip_address = var.pc_ip
+      username   = var.pc_username
+      password   = var.pc_password
+    }
+  }
 
   # Step 2 (required): Prism Element.
   prism_element_info {
@@ -72,11 +99,12 @@ resource "nutanix_ndb_onboarding" "wizard" {
 
   # Step 3: optional DNS/NTP override.
   # If omitted, provider uses existing NDB DNS/NTP values.
-  # ndb_config {
-  #   dns_servers = ["10.40.64.15", "10.40.64.16"]
-  #   ntp_servers = ["pool.ntp.org"]
-  #   timezone    = "UTC"
-  # }
+  # Avoid hardcoded environment-specific defaults in shared examples.
+  ndb_config {
+    dns_servers = var.dns_servers
+    ntp_servers = var.ntp_servers
+    timezone    = "UTC"
+  }
 
   # Step 4: optional storage override.
   # If empty/missing in auto mode, provider selects first discovered container.
@@ -86,8 +114,8 @@ resource "nutanix_ndb_onboarding" "wizard" {
 
   # Step 5: network selection (choose existing network name or skip).
   network_details {
-    skip = true
-    # existing_network_name = "default.vlan228"
+    skip                  = false
+    existing_network_name = "vlan0"
   }
 
   # Step 6: setup trigger and wait timeout.

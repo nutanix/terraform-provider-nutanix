@@ -343,11 +343,14 @@ func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, fi
 // NewMultipartFormRequest creates an authenticated multipart/form-data request.
 func (c *Client) NewMultipartFormRequest(ctx context.Context, method, urlStr string, fields map[string]string) (*http.Request, error) {
 	if c.client == nil {
-		return nil, fmt.Errorf("%s", c.ErrorMsg)
+		if strings.TrimSpace(c.ErrorMsg) != "" {
+			return nil, fmt.Errorf("cannot build multipart request: client is not initialized (%s)", c.ErrorMsg)
+		}
+		return nil, fmt.Errorf("cannot build multipart request: client is not initialized")
 	}
 	rel, err := url.Parse(c.AbsolutePath + urlStr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot build multipart request: parse url: %w", err)
 	}
 	u := c.BaseURL.ResolveReference(rel)
 
@@ -355,16 +358,16 @@ func (c *Client) NewMultipartFormRequest(ctx context.Context, method, urlStr str
 	writer := multipart.NewWriter(buf)
 	for k, v := range fields {
 		if err := writer.WriteField(k, v); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("cannot build multipart request: write field %q: %w", k, err)
 		}
 	}
 	if err := writer.Close(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot build multipart request: finalize multipart body: %w", err)
 	}
 
 	req, err := http.NewRequest(method, u.String(), buf)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot build multipart request: create request: %w", err)
 	}
 	req.Header.Add("Content-Type", writer.FormDataContentType())
 	req.Header.Add("Accept", mediaType)
