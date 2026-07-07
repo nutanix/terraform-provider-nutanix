@@ -329,6 +329,185 @@ func TestAccV2NutanixNSPDataSource_NewAttributes(t *testing.T) {
 	})
 }
 
+// TestAccV2NutanixNetworkSecurityResource_WithEntityGroupReference covers the fix for
+// issue #1183: an application_rule_spec that references its secured group via
+// secured_group_entity_group_reference only (no secured_group_category_references).
+// Before the fix the schema made secured_group_category_references Required, so this
+// config could not even be planned.
+func TestAccV2NutanixNetworkSecurityResource_WithEntityGroupReference(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-nsp-eg-%d", r)
+	desc := "test nsp with secured_group_entity_group_reference only"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testNetworkSecurityConfigWithEntityGroupReference(name, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameNs, "name", name),
+					resource.TestCheckResourceAttr(resourceNameNs, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameNs, "state", "SAVE"),
+					resource.TestCheckResourceAttr(resourceNameNs, "type", "APPLICATION"),
+					resource.TestCheckResourceAttr(resourceNameNs, "scope", "GLOBAL"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.type", "APPLICATION"),
+					resource.TestCheckResourceAttrSet(resourceNameNs, "ext_id"),
+					resource.TestCheckResourceAttrPair(
+						resourceNameNs,
+						"rules.0.spec.0.application_rule_spec.0.secured_group_entity_group_reference",
+						"nutanix_entity_group_v2.test",
+						"id",
+					),
+				),
+			},
+		},
+	})
+}
+
+// TestAccV2NutanixNetworkSecurityResource_SecuredGroupBothSet_PlanError verifies that
+// setting both secured_group_category_references and secured_group_entity_group_reference
+// on an application_rule_spec is rejected at plan time (matching backend error MIC-30142),
+// instead of failing later during apply.
+func TestAccV2NutanixNetworkSecurityResource_SecuredGroupBothSet_PlanError(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-nsp-both-%d", r)
+	desc := "test nsp both secured group references set"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testNetworkSecurityConfigSecuredGroupBothSet(name, desc),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`(?s)only one of.*secured_group_entity_group_reference.*can be specified`),
+			},
+		},
+	})
+}
+
+// TestAccV2NutanixNetworkSecurityResource_SecuredGroupNeitherSet_PlanError verifies that
+// an application_rule_spec with neither secured_group_category_references nor
+// secured_group_entity_group_reference is rejected at plan time.
+func TestAccV2NutanixNetworkSecurityResource_SecuredGroupNeitherSet_PlanError(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-nsp-neither-%d", r)
+	desc := "test nsp neither secured group reference set"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testNetworkSecurityConfigSecuredGroupNeitherSet(name, desc),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`(?s)one of.*secured_group_entity_group_reference.*must be specified`),
+			},
+		},
+	})
+}
+
+func testNetworkSecurityConfigWithEntityGroupReference(name, desc string) string {
+	return fmt.Sprintf(`
+	data "nutanix_categories_v2" "test" {}
+
+	resource "nutanix_entity_group_v2" "test" {
+		name        = "%[1]s-eg"
+		description = "entity group for %[1]s"
+		allowed_config {
+			entities {
+				type              = "VM"
+				selected_by       = "CATEGORY_EXT_ID"
+				reference_ext_ids = [
+					data.nutanix_categories_v2.test.categories.0.ext_id,
+					data.nutanix_categories_v2.test.categories.1.ext_id,
+				]
+			}
+		}
+	}
+
+	resource "nutanix_network_security_policy_v2" "test" {
+		name        = "%[1]s"
+		description = "%[2]s"
+		state       = "SAVE"
+		type        = "APPLICATION"
+		scope       = "GLOBAL"
+		rules {
+			type = "APPLICATION"
+			spec {
+				application_rule_spec {
+					secured_group_entity_group_reference = nutanix_entity_group_v2.test.id
+					dest_allow_spec                      = "ALL"
+					is_all_protocol_allowed              = true
+				}
+			}
+		}
+		depends_on = [nutanix_entity_group_v2.test]
+	}
+`, name, desc)
+}
+
+func testNetworkSecurityConfigSecuredGroupBothSet(name, desc string) string {
+	return fmt.Sprintf(`
+	data "nutanix_categories_v2" "test" {}
+
+	resource "nutanix_entity_group_v2" "test" {
+		name        = "%[1]s-eg"
+		description = "entity group for %[1]s"
+		allowed_config {
+			entities {
+				type              = "VM"
+				selected_by       = "CATEGORY_EXT_ID"
+				reference_ext_ids = [
+					data.nutanix_categories_v2.test.categories.0.ext_id,
+					data.nutanix_categories_v2.test.categories.1.ext_id,
+				]
+			}
+		}
+	}
+
+	resource "nutanix_network_security_policy_v2" "test" {
+		name        = "%[1]s"
+		description = "%[2]s"
+		state       = "SAVE"
+		type        = "APPLICATION"
+		scope       = "GLOBAL"
+		rules {
+			type = "APPLICATION"
+			spec {
+				application_rule_spec {
+					secured_group_category_references    = [data.nutanix_categories_v2.test.categories.0.ext_id]
+					secured_group_entity_group_reference = nutanix_entity_group_v2.test.id
+					dest_allow_spec                      = "ALL"
+					is_all_protocol_allowed              = true
+				}
+			}
+		}
+		depends_on = [nutanix_entity_group_v2.test]
+	}
+`, name, desc)
+}
+
+func testNetworkSecurityConfigSecuredGroupNeitherSet(name, desc string) string {
+	return fmt.Sprintf(`
+	resource "nutanix_network_security_policy_v2" "test" {
+		name        = "%[1]s"
+		description = "%[2]s"
+		state       = "SAVE"
+		type        = "APPLICATION"
+		scope       = "GLOBAL"
+		rules {
+			type = "APPLICATION"
+			spec {
+				application_rule_spec {
+					dest_allow_spec         = "ALL"
+					is_all_protocol_allowed = true
+				}
+			}
+		}
+	}
+`, name, desc)
+}
+
 func testNetworkSecurityConfig(name, desc string) string {
 	return fmt.Sprintf(`
 

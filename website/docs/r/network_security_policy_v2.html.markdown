@@ -90,8 +90,8 @@ One of below rules spec.
 ### application_rule_spec
 
 - `secured_group_category_associated_entity_type`: (Optional) Entity type for the secured group category. Acceptable values are "SUBNET", "VM", "VPC". Default is "VM".
-- `secured_group_category_references`: (Required) A set of network endpoints which is protected by a Network Security Policy and defined as a list of categories.
-- `secured_group_entity_group_reference`: (Optional) Reference to the secured group entity group.
+- `secured_group_category_references`: (Optional) A set of network endpoints which is protected by a Network Security Policy and defined as a list of categories. Exactly one of `secured_group_category_references` and `secured_group_entity_group_reference` must be set.
+- `secured_group_entity_group_reference`: (Optional) Reference to the secured group entity group. Exactly one of `secured_group_category_references` and `secured_group_entity_group_reference` must be set.
 - `src_allow_spec`: (Optional) A specification to how allow mode traffic should be applied, either ALL or NONE.
 - `dest_allow_spec`: (Optional) A specification to how allow mode traffic should be applied, either ALL or NONE.
 - `src_category_associated_entity_type`: (Optional) Entity type for the source category. Acceptable values are "SUBNET", "VM", "VPC". Default is "VM".
