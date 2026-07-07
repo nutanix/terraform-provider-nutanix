@@ -3,6 +3,7 @@ package networkingv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -149,7 +150,7 @@ func ResourceNutanixServiceGroupsV2Create(ctx context.Context, d *schema.Resourc
 		spec.UdpServices = expandUDPPortRangeSpec(udp.([]interface{}))
 	}
 	if icmp, ok := d.GetOk("icmp_services"); ok {
-		spec.IcmpServices = expandIcmpTypeCodeSpec(icmp.([]interface{}))
+		spec.IcmpServices = expandIcmpTypeCodeSpec(d, "icmp_services", icmp.([]interface{}))
 	}
 
 	resp, err := conn.ServiceGroupAPIInstance.CreateServiceGroup(spec)
@@ -273,7 +274,7 @@ func ResourceNutanixServiceGroupsV2Update(ctx context.Context, d *schema.Resourc
 		updatedSpec.UdpServices = expandUDPPortRangeSpec(d.Get("udp_services").([]interface{}))
 	}
 	if d.HasChange("icmp_services") {
-		updatedSpec.IcmpServices = expandIcmpTypeCodeSpec(d.Get("icmp_services").([]interface{}))
+		updatedSpec.IcmpServices = expandIcmpTypeCodeSpec(d, "icmp_services", d.Get("icmp_services").([]interface{}))
 	}
 
 	// removing read only attribute from spec
@@ -374,7 +375,19 @@ func expandUDPPortRangeSpec(pr []interface{}) []import1.UdpPortRangeSpec {
 	return nil
 }
 
-func expandIcmpTypeCodeSpec(pr []interface{}) []import1.IcmpTypeCodeSpec {
+// expandIcmpTypeCodeSpec builds the ICMP spec payload. basePath is the raw
+// config path of the icmp_services list (e.g. "icmp_services" or
+// "rules.0.spec.0.application_rule_spec.0.icmp_services") so we can tell
+// whether the user explicitly set type/code.
+//
+// The microseg v4.2 API rejects a spec that sets is_all_allowed=true while
+// also carrying a specific type/code (MIC-30302 on service-groups, MIC-30113
+// on network-security-policies). Terraform's schema-driven d.Get fills unset
+// optional ints with 0, so a plain map check would always emit type:0/code:0
+// and trip that validation. We therefore only serialize type/code when they
+// are explicitly present in config, which also honors the valid specific case
+// type=0/code=0 without forcing it on wildcard specs.
+func expandIcmpTypeCodeSpec(d *schema.ResourceData, basePath string, pr []interface{}) []import1.IcmpTypeCodeSpec {
 	if len(pr) > 0 {
 		icmps := make([]import1.IcmpTypeCodeSpec, len(pr))
 
@@ -382,14 +395,15 @@ func expandIcmpTypeCodeSpec(pr []interface{}) []import1.IcmpTypeCodeSpec {
 			icmp := import1.IcmpTypeCodeSpec{}
 			val := v.(map[string]interface{})
 
-			if allAllow, ok := val["is_all_allowed"]; ok {
-				icmp.IsAllAllowed = utils.BoolPtr(allAllow.(bool))
+			if common.IsExplicitlySet(d, fmt.Sprintf("%s.%d.is_all_allowed", basePath, k)) {
+				allAllow := d.Get(fmt.Sprintf("%s.%d.is_all_allowed", basePath, k)).(bool)
+				icmp.IsAllAllowed = utils.BoolPtr(allAllow)
 			}
-			if code, ok := val["code"]; ok {
-				icmp.Code = utils.IntPtr(code.(int))
+			if common.IsExplicitlySet(d, fmt.Sprintf("%s.%d.type", basePath, k)) {
+				icmp.Type = utils.IntPtr(val["type"].(int))
 			}
-			if types, ok := val["type"]; ok {
-				icmp.Type = utils.IntPtr(types.(int))
+			if common.IsExplicitlySet(d, fmt.Sprintf("%s.%d.code", basePath, k)) {
+				icmp.Code = utils.IntPtr(val["code"].(int))
 			}
 			icmps[k] = icmp
 		}

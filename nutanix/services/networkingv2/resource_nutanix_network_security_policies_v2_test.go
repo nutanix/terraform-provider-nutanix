@@ -329,6 +329,32 @@ func TestAccV2NutanixNSPDataSource_NewAttributes(t *testing.T) {
 	})
 }
 
+// TestAccV2NutanixNetworkSecurityResource_ICMPAllAllowed covers the inline
+// ICMP wildcard case on application_rule_spec: is_all_allowed = true with no
+// type/code. The provider must omit type/code from the payload, otherwise the
+// microseg v4.2 API rejects the policy with MIC-30113 ("Application rule ICMP
+// protocol is set to allow all but also contains specific type/code").
+func TestAccV2NutanixNetworkSecurityResource_ICMPAllAllowed(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-nsp-icmp-%d", r)
+	desc := "test nsp ICMP wildcard"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testNetworkSecurityConfigICMPAllAllowed(name, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameNs, "name", name),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.spec.0.application_rule_spec.0.icmp_services.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.spec.0.application_rule_spec.0.icmp_services.0.is_all_allowed", "true"),
+					resource.TestCheckResourceAttrSet(resourceNameNs, "ext_id"),
+				),
+			},
+		},
+	})
+}
+
 func testNetworkSecurityConfig(name, desc string) string {
 	return fmt.Sprintf(`
 
@@ -383,6 +409,34 @@ func testNetworkSecurityConfigGlobalScope(name, desc string) string {
 			}
 		}
 		is_hitlog_enabled = false
+	}
+`, name, desc)
+}
+
+func testNetworkSecurityConfigICMPAllAllowed(name, desc string) string {
+	return fmt.Sprintf(`
+	data "nutanix_categories_v2" "test" {}
+
+	resource "nutanix_network_security_policy_v2" "test" {
+		name        = "%[1]s"
+		description = "%[2]s"
+		type        = "APPLICATION"
+		state       = "ENFORCE"
+		scope       = "GLOBAL"
+		rules {
+			type = "APPLICATION"
+			spec {
+				application_rule_spec {
+					secured_group_category_references = [
+						data.nutanix_categories_v2.test.categories.0.ext_id,
+					]
+					src_allow_spec = "ALL"
+					icmp_services {
+						is_all_allowed = true
+					}
+				}
+			}
+		}
 	}
 `, name, desc)
 }

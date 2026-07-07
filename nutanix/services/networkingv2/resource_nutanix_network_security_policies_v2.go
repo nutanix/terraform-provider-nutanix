@@ -3,6 +3,7 @@ package networkingv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -566,7 +567,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 		spec.State = common.ExpandEnum[import1.SecurityPolicyState](state.(string))
 	}
 	if rules, ok := d.GetOk("rules"); ok {
-		spec.Rules = expandNetworkSecurityPolicyRule(rules.([]interface{}))
+		spec.Rules = expandNetworkSecurityPolicyRule(d, rules.([]interface{}))
 	}
 	if isipv6, ok := d.GetOk("is_ipv6_traffic_allowed"); ok {
 		spec.IsIpv6TrafficAllowed = utils.BoolPtr(isipv6.(bool))
@@ -651,7 +652,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 	if len(getResp.Rules) > 0 {
 		// read the remote operations and local operations list
 		remoteOperations := flattenNetworkSecurityPolicyRule(getResp.Rules)
-		localOperations := expandNetworkSecurityPolicyRule(d.Get("rules").([]interface{}))
+		localOperations := expandNetworkSecurityPolicyRule(d, d.Get("rules").([]interface{}))
 
 		// final result for checking if operations are different
 		diff := false
@@ -755,7 +756,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema
 		updatedSpec.Description = utils.StringPtr(d.Get("description").(string))
 	}
 	if d.HasChange("rules") {
-		updatedSpec.Rules = expandNetworkSecurityPolicyRule(d.Get("rules").([]interface{}))
+		updatedSpec.Rules = expandNetworkSecurityPolicyRule(d, d.Get("rules").([]interface{}))
 	}
 	if d.HasChange("state") {
 		updatedSpec.State = common.ExpandEnum[import1.SecurityPolicyState](d.Get("state").(string))
@@ -829,7 +830,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Delete(ctx context.Context, d *schema
 	return nil
 }
 
-func expandNetworkSecurityPolicyRule(pr []interface{}) []import1.NetworkSecurityPolicyRule {
+func expandNetworkSecurityPolicyRule(d *schema.ResourceData, pr []interface{}) []import1.NetworkSecurityPolicyRule {
 	if len(pr) > 0 {
 		nets := make([]import1.NetworkSecurityPolicyRule, len(pr))
 
@@ -844,7 +845,7 @@ func expandNetworkSecurityPolicyRule(pr []interface{}) []import1.NetworkSecurity
 				net.Type = common.ExpandEnum[import1.RuleType](ty.(string))
 			}
 			if spec, ok := val["spec"]; ok {
-				net.Spec = expandOneOfNetworkSecurityPolicyRuleSpec(spec)
+				net.Spec = expandOneOfNetworkSecurityPolicyRuleSpec(d, fmt.Sprintf("rules.%d.spec", k), spec)
 			}
 			nets[k] = net
 		}
@@ -853,7 +854,7 @@ func expandNetworkSecurityPolicyRule(pr []interface{}) []import1.NetworkSecurity
 	return nil
 }
 
-func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetworkSecurityPolicyRuleSpec {
+func expandOneOfNetworkSecurityPolicyRuleSpec(d *schema.ResourceData, basePath string, pr interface{}) *import1.OneOfNetworkSecurityPolicyRuleSpec {
 	if pr != nil {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -939,7 +940,7 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 				app.UdpServices = expandUDPPortRangeSpec(udp.([]interface{}))
 			}
 			if icmp, ok := appVal["icmp_services"]; ok && len(icmp.([]interface{})) > 0 {
-				app.IcmpServices = expandIcmpTypeCodeSpec(icmp.([]interface{}))
+				app.IcmpServices = expandIcmpTypeCodeSpec(d, basePath+".0.application_rule_spec.0.icmp_services", icmp.([]interface{}))
 			}
 			if netFuncChain, ok := appVal["network_function_chain_reference"]; ok && len(netFuncChain.(string)) > 0 {
 				app.NetworkFunctionChainReference = utils.StringPtr(netFuncChain.(string))
@@ -978,7 +979,7 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 				intra.UdpServices = expandUDPPortRangeSpec(udp.([]interface{}))
 			}
 			if icmp, ok := intraVal["icmp_services"]; ok && len(icmp.([]interface{})) > 0 {
-				intra.IcmpServices = expandIcmpTypeCodeSpec(icmp.([]interface{}))
+				intra.IcmpServices = expandIcmpTypeCodeSpec(d, basePath+".0.intra_entity_group_rule_spec.0.icmp_services", icmp.([]interface{}))
 			}
 			policyRules.SetValue(*intra)
 		}
