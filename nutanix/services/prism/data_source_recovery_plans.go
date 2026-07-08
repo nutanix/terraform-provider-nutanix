@@ -158,6 +158,42 @@ func DataSourceNutanixRecoveryPlans() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"availability_zone_list": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"availability_zone_url": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"cluster_reference_list": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"kind": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+															"uuid": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+															"name": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"primary_location_index": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
 									"floating_ip_assignment_list": {
 										Type:     schema.TypeList,
 										Computed: true,
@@ -333,6 +369,10 @@ func DataSourceNutanixRecoveryPlans() *schema.Resource {
 																			Type:     schema.TypeString,
 																			Computed: true,
 																		},
+																		"subnet_uuid": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
 																	},
 																},
 															},
@@ -406,6 +446,10 @@ func DataSourceNutanixRecoveryPlans() *schema.Resource {
 																			Computed: true,
 																		},
 																		"name": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"subnet_uuid": {
 																			Type:     schema.TypeString,
 																			Computed: true,
 																		},
