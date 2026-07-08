@@ -3,7 +3,10 @@ package volumesv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
+	"sort"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -442,10 +445,277 @@ func ResourceNutanixVolumeGroupV2Read(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
+	// Disks are not part of the Volume Group GET payload (unless expanded) and are
+	// managed as a sub-collection. Refresh the size of the disks already tracked in
+	// state so that a resize applied here (or done out-of-band) is detected on the
+	// next plan. This is best-effort: a failure to list disks must not fail the read.
+	if err := refreshVolumeGroupDisksInState(d, meta); err != nil {
+		log.Printf("[WARN] unable to refresh volume group disks for %s: %v", d.Id(), err)
+	}
+
 	return nil
 }
 
+// refreshVolumeGroupDisksInState overlays the API-authoritative disk fields
+// (disk_size_bytes, index, description) onto the disks currently tracked in
+// state. The config-only disk_data_source_reference and disk_storage_features
+// blocks are left untouched to avoid a perpetual diff, since the Volume Group
+// disk GET does not echo the data source reference back.
+func refreshVolumeGroupDisksInState(d *schema.ResourceData, meta interface{}) error {
+	stateDisksRaw, ok := d.GetOk("disks")
+	if !ok {
+		return nil
+	}
+	stateDisks := stateDisksRaw.([]interface{})
+	if len(stateDisks) == 0 {
+		return nil
+	}
+
+	apiDisks, err := listVolumeGroupDisksSortedByIndex(meta, d.Id())
+	if err != nil {
+		return err
+	}
+
+	overlap := len(stateDisks)
+	if len(apiDisks) < overlap {
+		overlap = len(apiDisks)
+	}
+	for i := 0; i < overlap; i++ {
+		diskMap, ok := stateDisks[i].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		if apiDisks[i].DiskSizeBytes != nil {
+			diskMap["disk_size_bytes"] = int(utils.Int64Value(apiDisks[i].DiskSizeBytes))
+		}
+		if apiDisks[i].Index != nil {
+			diskMap["index"] = utils.IntValue(apiDisks[i].Index)
+		}
+		if apiDisks[i].Description != nil {
+			diskMap["description"] = utils.StringValue(apiDisks[i].Description)
+		}
+		stateDisks[i] = diskMap
+	}
+
+	return d.Set("disks", stateDisks)
+}
+
 func ResourceNutanixVolumeGroupV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).VolumeAPI
+	vgExtID := d.Id()
+
+	// Top-level Volume Group properties (name, description, sharing, iSCSI, load
+	// balancing) are updated through UpdateVolumeGroupById. Disks are NOT part of
+	// this payload in the v4 API and must be managed through the /disks
+	// sub-collection endpoints (see updateVolumeGroupDisks).
+	topLevelFields := []string{
+		"name",
+		"description",
+		"should_load_balance_vm_attachments",
+		"sharing_status",
+		"iscsi_features",
+	}
+	topLevelChanged := false
+	for _, f := range topLevelFields {
+		if d.HasChange(f) {
+			topLevelChanged = true
+			break
+		}
+	}
+
+	if topLevelChanged {
+		readResp, err := conn.VolumeAPIInstance.GetVolumeGroupById(utils.StringPtr(vgExtID), nil)
+		if err != nil {
+			return diag.Errorf("error while fetching Volume Group for update : %v", err)
+		}
+		updateSpec := readResp.Data.GetValue().(volumesClient.VolumeGroup)
+
+		// Extract E-Tag header for the If-Match precondition.
+		etagValue := conn.VolumeAPIInstance.ApiClient.GetEtag(readResp)
+		args := make(map[string]interface{})
+		args["If-Match"] = utils.StringPtr(etagValue)
+
+		if d.HasChange("name") {
+			updateSpec.Name = utils.StringPtr(d.Get("name").(string))
+		}
+		if d.HasChange("description") {
+			updateSpec.Description = utils.StringPtr(d.Get("description").(string))
+		}
+		if d.HasChange("should_load_balance_vm_attachments") {
+			updateSpec.ShouldLoadBalanceVmAttachments = utils.BoolPtr(d.Get("should_load_balance_vm_attachments").(bool))
+		}
+		if d.HasChange("sharing_status") {
+			updateSpec.SharingStatus = common.ExpandEnum[volumesClient.SharingStatus](d.Get("sharing_status"))
+		}
+		if d.HasChange("iscsi_features") {
+			updateSpec.IscsiFeatures = expandIscsiFeatures(d.Get("iscsi_features").([]interface{}))
+		}
+
+		updateResp, err := conn.VolumeAPIInstance.UpdateVolumeGroupById(utils.StringPtr(vgExtID), &updateSpec, args)
+		if err != nil {
+			return diag.Errorf("error while updating Volume Group : %v", err)
+		}
+
+		taskRef := updateResp.Data.GetValue().(volumesPrism.TaskReference)
+		if err := waitForVolumeGroupTask(ctx, meta, taskRef.ExtId, d.Timeout(schema.TimeoutUpdate), "update"); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if d.HasChange("disks") {
+		if err := updateVolumeGroupDisks(ctx, d, meta, vgExtID); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	return ResourceNutanixVolumeGroupV2Read(ctx, d, meta)
+}
+
+// listVolumeGroupDisksSortedByIndex returns all disks attached to the Volume
+// Group sorted by their index. The v4 list endpoint only supports ordering by
+// diskSizeBytes, so ordering by index is done client-side to keep the positional
+// matching used elsewhere deterministic.
+func listVolumeGroupDisksSortedByIndex(meta interface{}, vgExtID string) ([]volumesClient.VolumeDisk, error) {
+	conn := meta.(*conns.Client).VolumeAPI
+
+	listResp, err := conn.VolumeAPIInstance.ListVolumeDisksByVolumeGroupId(utils.StringPtr(vgExtID), nil, nil, nil, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	disks := make([]volumesClient.VolumeDisk, 0)
+	if listResp != nil && listResp.Data != nil {
+		disks = listResp.Data.GetValue().([]volumesClient.VolumeDisk)
+	}
+
+	sort.SliceStable(disks, func(i, j int) bool {
+		return utils.IntValue(disks[i].Index) < utils.IntValue(disks[j].Index)
+	})
+	return disks, nil
+}
+
+// updateVolumeGroupDisks reconciles the configured disks list against the disks
+// currently attached to the Volume Group. Disks are matched positionally (the
+// same order in which they were created), which mirrors how the create path
+// sends the list. It resizes existing disks, creates newly added disks and
+// deletes removed ones. Disk size can only be increased; a shrink is rejected
+// before any API call is made, matching the constraint enforced by the fabric.
+func updateVolumeGroupDisks(ctx context.Context, d *schema.ResourceData, meta interface{}, vgExtID string) error {
+	conn := meta.(*conns.Client).VolumeAPI
+
+	existing, err := listVolumeGroupDisksSortedByIndex(meta, vgExtID)
+	if err != nil {
+		return fmt.Errorf("error while listing Volume Group disks for update: %v", err)
+	}
+
+	desired := expandDisks(d.Get("disks").([]interface{}))
+
+	// Resize existing disks that overlap with the desired list (positional match).
+	overlap := len(existing)
+	if len(desired) < overlap {
+		overlap = len(desired)
+	}
+	for i := 0; i < overlap; i++ {
+		cur := existing[i]
+		want := desired[i]
+		if want.DiskSizeBytes == nil || cur.DiskSizeBytes == nil {
+			continue
+		}
+		if *want.DiskSizeBytes == *cur.DiskSizeBytes {
+			continue
+		}
+		if *want.DiskSizeBytes < *cur.DiskSizeBytes {
+			return fmt.Errorf(
+				"disk size can only be increased: disk at index %d has current size %d bytes, requested %d bytes",
+				i, *cur.DiskSizeBytes, *want.DiskSizeBytes,
+			)
+		}
+		if cur.ExtId == nil {
+			return fmt.Errorf("cannot resize disk at index %d: missing disk external id in API response", i)
+		}
+
+		diskExtID := utils.StringValue(cur.ExtId)
+		diskReadResp, err := conn.VolumeAPIInstance.GetVolumeDiskById(utils.StringPtr(vgExtID), utils.StringPtr(diskExtID))
+		if err != nil {
+			return fmt.Errorf("error while fetching Volume Group disk %s for resize: %v", diskExtID, err)
+		}
+		diskSpec := diskReadResp.Data.GetValue().(volumesClient.VolumeDisk)
+
+		etagValue := conn.VolumeAPIInstance.ApiClient.GetEtag(diskReadResp)
+		diskArgs := make(map[string]interface{})
+		diskArgs["If-Match"] = utils.StringPtr(etagValue)
+
+		diskSpec.DiskSizeBytes = want.DiskSizeBytes
+		// Index is immutable and DiskDataSourceReference must not be sent on an
+		// update; leave them out of the payload.
+		diskSpec.Index = nil
+		diskSpec.DiskDataSourceReference = nil
+
+		updateResp, err := conn.VolumeAPIInstance.UpdateVolumeDiskById(utils.StringPtr(vgExtID), utils.StringPtr(diskExtID), &diskSpec, diskArgs)
+		if err != nil {
+			return fmt.Errorf("error while resizing Volume Group disk %s: %v", diskExtID, err)
+		}
+		taskRef := updateResp.Data.GetValue().(volumesPrism.TaskReference)
+		if err := waitForVolumeGroupTask(ctx, meta, taskRef.ExtId, d.Timeout(schema.TimeoutUpdate), "disk resize"); err != nil {
+			return err
+		}
+	}
+
+	// Create disks that were added to the configuration.
+	for i := len(existing); i < len(desired); i++ {
+		newDisk := desired[i]
+		createResp, err := conn.VolumeAPIInstance.CreateVolumeDisk(utils.StringPtr(vgExtID), &newDisk)
+		if err != nil {
+			return fmt.Errorf("error while adding Volume Group disk at index %d: %v", i, err)
+		}
+		taskRef := createResp.Data.GetValue().(volumesPrism.TaskReference)
+		if err := waitForVolumeGroupTask(ctx, meta, taskRef.ExtId, d.Timeout(schema.TimeoutUpdate), "disk add"); err != nil {
+			return err
+		}
+	}
+
+	// Delete disks that were removed from the configuration.
+	for i := len(desired); i < len(existing); i++ {
+		cur := existing[i]
+		if cur.ExtId == nil {
+			continue
+		}
+		diskExtID := utils.StringValue(cur.ExtId)
+		deleteResp, err := conn.VolumeAPIInstance.DeleteVolumeDiskById(utils.StringPtr(vgExtID), utils.StringPtr(diskExtID))
+		if err != nil {
+			return fmt.Errorf("error while removing Volume Group disk %s: %v", diskExtID, err)
+		}
+		taskRef := deleteResp.Data.GetValue().(volumesPrism.TaskReference)
+		if err := waitForVolumeGroupTask(ctx, meta, taskRef.ExtId, d.Timeout(schema.TimeoutUpdate), "disk remove"); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// waitForVolumeGroupTask blocks until the given Prism task reaches a terminal
+// state and logs the resulting task details.
+func waitForVolumeGroupTask(ctx context.Context, meta interface{}, taskUUID *string, timeout time.Duration, action string) error {
+	taskconn := meta.(*conns.Client).PrismAPI
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: timeout,
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return fmt.Errorf("error waiting for volume group %s task (%s): %s", action, utils.StringValue(taskUUID), errWaitTask)
+	}
+
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return fmt.Errorf("error while fetching volume group %s task (%s): %v", action, utils.StringValue(taskUUID), err)
+	}
+	taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Volume Group %s Task Details: %s", action, string(aJSON))
 	return nil
 }
 

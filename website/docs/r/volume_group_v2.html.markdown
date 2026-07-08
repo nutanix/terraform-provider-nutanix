@@ -94,7 +94,7 @@ The flash mode features attribute supports the following:
 The disks attribute supports the following:
 
 - `index`: - Index of the disk in a Volume Group. This field is optional and immutable.
-- `disk_size_bytes`: - Size of the disk in bytes. This field is mandatory during Volume Group creation if a new disk is being created on the storage container.
+- `disk_size_bytes`: - Size of the disk in bytes. This field is mandatory during Volume Group creation if a new disk is being created on the storage container. This value can be increased on update to resize the disk, but it cannot be decreased.
 - `description`: - Volume Disk description.
 - `disk_data_source_reference`: -(Required) Disk Data Source Reference.
 - `disk_storage_features`: - Storage optimization features which must be enabled on the Volume Disks. This is an optional field. If omitted, the disks will honor the Volume Group specific storage features setting.
@@ -119,6 +119,18 @@ The disk_storage_features attribute supports the following:
 The flash mode features attribute supports the following:
 
 - `is_enabled`: - Indicates whether the flash mode is enabled for the Volume Group Disk.
+
+## Update Behavior
+
+The following changes are applied in place on `terraform apply`:
+
+- Top-level Volume Group properties: `name`, `description`, `should_load_balance_vm_attachments`, `sharing_status` and `iscsi_features` are updated through the Volume Group update API.
+- `disks`: changes to the disks list are reconciled against the Volume Group's disk sub-collection. Disks are matched by their position in the list (the order in which they were created):
+  - Increasing `disk_size_bytes` on an existing disk resizes that disk. Disk size can only be **increased**; a decrease is rejected before any API call is made.
+  - Adding a disk entry to the list creates a new disk.
+  - Removing a disk entry from the list deletes that disk.
+
+~> **Note:** `cluster_reference`, `usage_type`, `attachment_type`, `protocol` and `is_hidden` are effectively immutable for an existing Volume Group and are not modified by an update.
 
 ## Import
 

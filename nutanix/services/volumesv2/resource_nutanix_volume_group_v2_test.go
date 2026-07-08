@@ -120,6 +120,102 @@ func TestAccV2NutanixVolumeGroupResource_WithAttachmentTypeAndProtocolAndDisks(t
 	})
 }
 
+// TestAccV2NutanixVolumeGroupResource_UpdateDiskSize verifies that increasing
+// disk_size_bytes on an existing inline disk is actually applied to the Volume
+// Group (previously the update was a no-op: apply succeeded but the disk was
+// never resized and state silently reported the new size).
+func TestAccV2NutanixVolumeGroupResource_UpdateDiskSize(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-volume-group-%d", r)
+	desc := "test volume group disk resize"
+
+	const initialSize = "10737418240" // 10 GiB
+	const updatedSize = "21474836480" // 20 GiB
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixVolumeGroupV2Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVolumeGroupResourceConfigWithDiskSize(name, desc, "10"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVolumeGroup, "name", name),
+					resource.TestCheckResourceAttr(resourceNameVolumeGroup, "disks.0.disk_size_bytes", initialSize),
+				),
+			},
+			{
+				Config: testAccVolumeGroupResourceConfigWithDiskSize(name, desc, "20"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVolumeGroup, "name", name),
+					resource.TestCheckResourceAttr(resourceNameVolumeGroup, "disks.0.disk_size_bytes", updatedSize),
+				),
+			},
+		},
+	})
+}
+
+// TestAccV2NutanixVolumeGroupResource_UpdateDiskSizeShrinkFails verifies that
+// attempting to shrink an existing disk is rejected, matching the fabric
+// constraint that disk size can only be increased.
+func TestAccV2NutanixVolumeGroupResource_UpdateDiskSizeShrinkFails(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-volume-group-%d", r)
+	desc := "test volume group disk shrink"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixVolumeGroupV2Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVolumeGroupResourceConfigWithDiskSize(name, desc, "20"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVolumeGroup, "disks.0.disk_size_bytes", "21474836480"),
+				),
+			},
+			{
+				Config:      testAccVolumeGroupResourceConfigWithDiskSize(name, desc, "10"),
+				ExpectError: regexp.MustCompile("disk size can only be increased"),
+			},
+		},
+	})
+}
+
+func testAccVolumeGroupResourceConfigWithDiskSize(name, desc, sizeGiB string) string {
+	return fmt.Sprintf(`
+	data "nutanix_clusters_v2" "clusters" {}
+
+	locals {
+		cluster1 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
+	}
+
+	data "nutanix_storage_containers_v2" "test" {
+	  filter = "clusterExtId eq '${local.cluster1}' and startswith(name,'default-container-')"
+	  limit  = 1
+	}
+
+	resource "nutanix_volume_group_v2" "test" {
+		name              = "%[1]s"
+		description       = "%[2]s"
+		cluster_reference = local.cluster1
+
+		disks {
+			disk_size_bytes = %[3]s * 1024 * 1024 * 1024
+			index           = 1
+			disk_data_source_reference {
+			  name        = "vg-disk-%[1]s"
+			  ext_id      = data.nutanix_storage_containers_v2.test.storage_containers[0].ext_id
+			  entity_type = "STORAGE_CONTAINER"
+			}
+		}
+	  }
+	`, name, desc, sizeGiB)
+}
+
 // VG just required attributes
 func testAccVolumeGroupV2RequiredAttributes(name string) string {
 	return fmt.Sprintf(`
