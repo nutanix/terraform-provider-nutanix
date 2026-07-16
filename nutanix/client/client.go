@@ -86,6 +86,41 @@ type AdditionalFilter struct {
 	Values []string
 }
 
+type sensitiveQueryContextKey struct{}
+type sensitiveBodyContextKey struct{}
+
+type sensitiveQueryTransport struct {
+	base http.RoundTripper
+}
+
+func (t sensitiveQueryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	sensitiveQuery, _ := req.Context().Value(sensitiveQueryContextKey{}).(url.Values)
+	if len(sensitiveQuery) > 0 {
+		reqClone := req.Clone(req.Context())
+		urlClone := *req.URL
+		query := urlClone.Query()
+		for key, values := range sensitiveQuery {
+			query.Del(key)
+			for _, value := range values {
+				query.Add(key, value)
+			}
+		}
+		urlClone.RawQuery = query.Encode()
+		reqClone.URL = &urlClone
+		req = reqClone
+	}
+	if sensitiveBody, _ := req.Context().Value(sensitiveBodyContextKey{}).([]byte); len(sensitiveBody) > 0 {
+		reqClone := req.Clone(req.Context())
+		reqClone.Body = io.NopCloser(bytes.NewReader(sensitiveBody))
+		reqClone.ContentLength = int64(len(sensitiveBody))
+		reqClone.GetBody = func() (io.ReadCloser, error) {
+			return io.NopCloser(bytes.NewReader(sensitiveBody)), nil
+		}
+		req = reqClone
+	}
+	return t.base.RoundTrip(req)
+}
+
 // applyAuthHeaders adds the appropriate authentication header to the request
 // Priority: Cookies (session auth) > API Key > Basic Auth
 func (c *Client) applyAuthHeaders(req *http.Request) {
@@ -141,7 +176,7 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string, 
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
 		}
 		transCfg.Proxy = http.ProxyURL(proxy)
-		baseClient.client.Transport = logging.NewTransport("Nutanix", transCfg)
+		baseClient.client.Transport = logging.NewTransport("Nutanix", sensitiveQueryTransport{base: transCfg})
 	}
 
 	if credentials.SessionAuth {
@@ -185,7 +220,7 @@ func NewBaseClient(credentials *Credentials, absolutePath string, isHTTP bool) (
 			InsecureSkipVerify: credentials.Insecure,
 		},
 	}
-	httpClient.Transport = logging.NewTransport("Nutanix", transCfg)
+	httpClient.Transport = logging.NewTransport("Nutanix", sensitiveQueryTransport{base: transCfg})
 
 	protocol := httpsPrefix
 	if isHTTP {
@@ -464,6 +499,28 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 	return err
 }
 
+// DoWithSensitiveQuery performs the request with additional query parameters
+// added inside the inner transport. This keeps sensitive values out of the URL
+// seen by Terraform's HTTP logging transport while preserving the wire request.
+func (c *Client) DoWithSensitiveQuery(ctx context.Context, req *http.Request, v interface{}, sensitiveQuery url.Values) error {
+	if len(sensitiveQuery) == 0 {
+		return c.Do(ctx, req, v)
+	}
+	return c.Do(context.WithValue(ctx, sensitiveQueryContextKey{}, sensitiveQuery), req, v)
+}
+
+// DoWithSensitiveBody performs the request with the real JSON body restored
+// inside the inner transport. Callers should build req with a redacted body, so
+// Terraform's HTTP logging transport never sees secrets.
+func (c *Client) DoWithSensitiveBody(ctx context.Context, req *http.Request, v interface{}, sensitiveBody interface{}) error {
+	bodyBytes, err := json.Marshal(sensitiveBody)
+	if err != nil {
+		return err
+	}
+	bodyBytes = append(bodyBytes, '\n')
+	return c.Do(context.WithValue(ctx, sensitiveBodyContextKey{}, bodyBytes), req, v)
+}
+
 func searchSlice(slice []string, key string) bool {
 	for _, v := range slice {
 		if v == key {
@@ -635,12 +692,12 @@ func CheckResponse(r *http.Response) error {
 
 	errRes := &ErrorResponse{}
 	if status, ok := res["status"]; ok {
-		_, sok := status.(string)
-		if sok {
+		if _, sok := status.(string); sok {
 			return nil
 		}
-
-		err = fillStruct(status.(map[string]interface{}), errRes)
+		if statusMap, ok := status.(map[string]interface{}); ok {
+			err = fillStruct(statusMap, errRes)
+		}
 	} else if _, ok := res["state"]; ok {
 		err = fillStruct(res, errRes)
 	} else if _, ok := res["entities"]; ok {
@@ -660,6 +717,10 @@ func CheckResponse(r *http.Response) error {
 	if message, ok := res["message"]; ok {
 		log.Print(message)
 		return fmt.Errorf("error: %s", message)
+	}
+	if responseErr, ok := res["error"]; ok {
+		log.Print(responseErr)
+		return fmt.Errorf("error: %s", responseErr)
 	}
 	if errRes.State != "ERROR" {
 		return nil

@@ -17,6 +17,8 @@ func TestShouldRetryClusterCreateWithRawFallback(t *testing.T) {
 		{name: "clusterIP mismatch", err: errors.New("Unrecognized field 'clusterIP'"), want: true},
 		{name: "clusterType mismatch", err: errors.New("Unrecognized field 'clusterType'"), want: true},
 		{name: "clusterDescription mismatch", err: errors.New("Unrecognized field 'clusterDescription'"), want: true},
+		{name: "already registered is not retried", err: errors.New("cluster already exists"), want: false},
+		{name: "unauthorized is not retried", err: errors.New("401 unauthorized"), want: false},
 		{name: "other error", err: errors.New("timeout"), want: false},
 	}
 

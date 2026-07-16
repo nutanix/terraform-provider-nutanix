@@ -36,8 +36,9 @@ func ResourceNutanixNDBCluster() *schema.Resource {
 				Required: true,
 			},
 			"username": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
 			},
 			"password": {
 				Type:      schema.TypeString,
@@ -97,8 +98,9 @@ func ResourceNutanixNDBCluster() *schema.Resource {
 							Default:  9440,
 						},
 						"username": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:      schema.TypeString,
+							Required:  true,
+							Sensitive: true,
 						},
 						"password": {
 							Type:      schema.TypeString,

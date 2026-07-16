@@ -13,65 +13,6 @@ provider "nutanix" {
   insecure     = true
 }
 
-variable "ndb_endpoint" {
-  type = string
-}
-
-variable "ndb_username" {
-  type = string
-}
-
-variable "ndb_password" {
-  type      = string
-  sensitive = true
-}
-
-variable "pe_name" {
-  type = string
-}
-
-variable "pe_cluster_ip" {
-  type = string
-}
-
-variable "pe_username" {
-  type = string
-}
-
-variable "pe_password" {
-  type      = string
-  sensitive = true
-}
-
-variable "pc_ip" {
-  type    = string
-  default = ""
-}
-
-variable "pc_username" {
-  type    = string
-  default = ""
-}
-
-variable "pc_password" {
-  type      = string
-  sensitive = true
-  default   = ""
-}
-
-variable "storage_container" {
-  type = string
-  default = ""
-}
-
-variable "dns_servers" {
-  type = list(string)
-}
-
-variable "ntp_servers" {
-  type = list(string)
-}
-
 resource "nutanix_ndb_onboarding" "wizard" {
   # Full wizard mode: Step 1 (optional) -> Step 6.
   enable_full_onboarding = true
@@ -83,6 +24,7 @@ resource "nutanix_ndb_onboarding" "wizard" {
   dynamic "prism_central_info" {
     for_each = var.pc_ip != "" ? [1] : []
     content {
+      name       = var.pc_name != "" ? var.pc_name : "pc-${replace(var.pc_ip, ".", "-")}"
       ip_address = var.pc_ip
       username   = var.pc_username
       password   = var.pc_password
@@ -115,7 +57,7 @@ resource "nutanix_ndb_onboarding" "wizard" {
   # Step 5: network selection (choose existing network name or skip).
   network_details {
     skip                  = false
-    existing_network_name = "vlan0"
+    existing_network_name = "vlan.0"
   }
 
   # Step 6: setup trigger and wait timeout.

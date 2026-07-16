@@ -15,6 +15,18 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+const (
+	defaultPrismCentralNamePrefix = "pc-"
+
+	networkTypeDHCP   = "DHCP"
+	networkTypeStatic = "Static"
+
+	networkPropertyAdvancedNetworking = "ADVANCED_NETWORKING"
+	networkPropertyDisabled           = "FALSE"
+	networkPropertyGateway            = "VLAN_GATEWAY"
+	networkPropertySubnetMask         = "VLAN_SUBNET_MASK"
+)
+
 func ResourceNutanixNDBOnboarding() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceNutanixNDBOnboardingCreate,
@@ -40,7 +52,7 @@ func ResourceNutanixNDBOnboarding() *schema.Resource {
 						"description": {Type: schema.TypeString, Optional: true},
 						"ip_address":  {Type: schema.TypeString, Required: true},
 						"port":        {Type: schema.TypeInt, Optional: true, Default: 9440},
-						"username":    {Type: schema.TypeString, Required: true},
+						"username":    {Type: schema.TypeString, Required: true, Sensitive: true},
 						"password":    {Type: schema.TypeString, Required: true, Sensitive: true},
 					},
 				},
@@ -54,7 +66,7 @@ func ResourceNutanixNDBOnboarding() *schema.Resource {
 						"name":        {Type: schema.TypeString, Required: true},
 						"description": {Type: schema.TypeString, Optional: true},
 						"cluster_ip":  {Type: schema.TypeString, Required: true},
-						"username":    {Type: schema.TypeString, Required: true},
+						"username":    {Type: schema.TypeString, Required: true, Sensitive: true},
 						"password":    {Type: schema.TypeString, Required: true, Sensitive: true},
 						"version":     {Type: schema.TypeString, Optional: true, Default: "v2"},
 						"cloud_type":  {Type: schema.TypeString, Optional: true, Default: "NTNX"},
@@ -340,20 +352,28 @@ func applyPrismCentralStep(ctx context.Context, svc era.Service, pcInfo []interf
 		return nil
 	}
 	pc := pcInfo[0].(map[string]interface{})
+	pcName := strings.TrimSpace(pc["name"].(string))
+	if pcName == "" {
+		pcName = defaultPrismCentralNamePrefix + strings.ReplaceAll(pc["ip_address"].(string), ".", "-")
+	}
 	// Newer NDB UI flows validate PC details via domains/i/cluster-details before
 	// any cluster registration call; treat successful validation as step completion.
-	if _, domainErr := svc.ValidateDomainClusterDetails(
+	domainResp, domainErr := svc.ValidateDomainClusterDetails(
 		ctx,
 		pc["ip_address"].(string),
 		pc["port"].(int),
 		pc["username"].(string),
 		pc["password"].(string),
-	); domainErr == nil {
-		return nil
+	)
+	if domainErr == nil {
+		return validatePrismCentralDetailsResponse(domainResp)
+	}
+	if !isPrismCentralValidationEndpointUnsupported(domainErr) {
+		return fmt.Errorf("prism central validation failed: %w", domainErr)
 	}
 
 	primaryBody := map[string]interface{}{
-		"name":      pc["name"].(string),
+		"name":      pcName,
 		"ipAddress": pc["ip_address"].(string),
 		"port":      pc["port"].(int),
 		"username":  pc["username"].(string),
@@ -385,7 +405,7 @@ func applyPrismCentralStep(ctx context.Context, svc era.Service, pcInfo []interf
 			"password": pc["password"].(string),
 		}
 		legacyReq := map[string]interface{}{
-			"clusterName":          "pc-bootstrap-" + strings.ReplaceAll(pc["ip_address"].(string), ".", "-"),
+			"clusterName":          pcName,
 			"clusterDescription":   "",
 			"clusterIP":            pc["ip_address"].(string),
 			"clusterType":          "NTNX_PRISM_CENTRAL",
@@ -402,7 +422,7 @@ func applyPrismCentralStep(ctx context.Context, svc era.Service, pcInfo []interf
 		// Some builds reject legacy root keys (clusterDescription/clusterType) but
 		// still require legacy managementServerInfo.ip payload shape.
 		modernRootReq := map[string]interface{}{
-			"name":                 "pc-bootstrap-" + strings.ReplaceAll(pc["ip_address"].(string), ".", "-"),
+			"name":                 pcName,
 			"description":          "",
 			"ipAddresses":          []string{pc["ip_address"].(string)},
 			"cloudType":            "NTNX_PRISM_CENTRAL",
@@ -419,6 +439,31 @@ func applyPrismCentralStep(ctx context.Context, svc era.Service, pcInfo []interf
 		}
 	}
 	return err
+}
+
+func validatePrismCentralDetailsResponse(resp map[string]interface{}) error {
+	if len(resp) == 0 {
+		return fmt.Errorf("prism central validation returned an empty response")
+	}
+	for _, key := range []string{"message", "reason", "Reason", "error", "errorCode"} {
+		if msg, ok := resp[key].(string); ok && strings.TrimSpace(msg) != "" {
+			return fmt.Errorf("prism central validation failed: %s", msg)
+		}
+	}
+	for _, key := range []string{"name", "external_ip", "externalIp", "nxClusterUUID"} {
+		if v, ok := resp[key].(string); ok && strings.TrimSpace(v) != "" {
+			return nil
+		}
+	}
+	return fmt.Errorf("prism central validation returned an unexpected response: %#v", resp)
+}
+
+func isPrismCentralValidationEndpointUnsupported(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "not found") || strings.Contains(msg, "404")
 }
 
 func applyPrismElementStep(ctx context.Context, svc era.Service, peInfo []interface{}) (string, string, error) {
@@ -821,6 +866,7 @@ func applyNetworkStep(ctx context.Context, svc era.Service, clusterID string, ne
 		"port":       "9440",
 		"ip_address": ipAddress,
 		"clusterIp":  ipAddress,
+		"properties": []map[string]interface{}{},
 	}
 	if net.NetworkName != "" {
 		body["vlanName"] = net.NetworkName
@@ -831,7 +877,57 @@ func applyNetworkStep(ctx context.Context, svc era.Service, clusterID string, ne
 	if net.SubnetMask != "" {
 		body["subnetMask"] = net.SubnetMask
 	}
-	_, err = svc.UploadClusterWizardJSON(ctx, clusterID, body, true, false, false)
+	if _, err = svc.UploadClusterWizardJSON(ctx, clusterID, body, true, false, false); err != nil {
+		return err
+	}
+	return ensureNetworkInventory(ctx, svc, clusterID, net)
+}
+
+func ensureNetworkInventory(ctx context.Context, svc era.Service, clusterID string, net onboardingResolvedNetwork) error {
+	if net.NetworkName == "" {
+		return nil
+	}
+	networks, err := svc.ListNetwork(ctx)
+	if err == nil && networks != nil {
+		for _, n := range *networks {
+			if n == nil || n.Name == nil || n.ClusterID == nil {
+				continue
+			}
+			if *n.Name == net.NetworkName && *n.ClusterID == clusterID {
+				return nil
+			}
+		}
+	}
+
+	networkType := networkTypeDHCP
+	props := []*era.Properties{
+		{
+			Name:  utils.StringPtr(networkPropertyAdvancedNetworking),
+			Value: utils.StringPtr(networkPropertyDisabled),
+		},
+	}
+	if net.Gateway != "" || net.SubnetMask != "" {
+		networkType = networkTypeStatic
+		if net.Gateway != "" {
+			props = append(props, &era.Properties{
+				Name:  utils.StringPtr(networkPropertyGateway),
+				Value: utils.StringPtr(net.Gateway),
+			})
+		}
+		if net.SubnetMask != "" {
+			props = append(props, &era.Properties{
+				Name:  utils.StringPtr(networkPropertySubnetMask),
+				Value: utils.StringPtr(net.SubnetMask),
+			})
+		}
+	}
+	_, err = svc.CreateNetwork(ctx, &era.NetworkIntentInput{
+		Name:       utils.StringPtr(net.NetworkName),
+		Type:       utils.StringPtr(networkType),
+		ClusterID:  utils.StringPtr(clusterID),
+		Properties: props,
+		IPPools:    []*era.IPPools{},
+	})
 	return err
 }
 
@@ -850,6 +946,9 @@ func applySetupStep(ctx context.Context, svc era.Service, clusterID string, setu
 	}
 	if !trigger {
 		return "", nil
+	}
+	if operationID := findSetupOperationID(ctx, svc, clusterID); operationID != "" {
+		return operationID, waitForOperationCompletion(ctx, svc, operationID, time.Duration(timeoutMinutes)*time.Minute)
 	}
 	_, err := svc.UploadClusterWizardJSON(ctx, clusterID, map[string]interface{}{
 		"action": "setup",
@@ -888,20 +987,34 @@ func waitForSetupOperationID(ctx context.Context, svc era.Service, clusterID str
 		case <-timeout.C:
 			return "", fmt.Errorf("timed out waiting for setup operation id for cluster %s", clusterID)
 		case <-ticker.C:
-			shortInfo, err := svc.GetOperationsShortInfo(ctx)
-			if err != nil {
-				continue
-			}
-			for _, op := range shortInfo.Operations {
-				if op.Type == nil || op.NxClusterID == nil || op.ID == nil {
-					continue
-				}
-				if *op.Type == "configure_oob_software_profiles" && *op.NxClusterID == clusterID {
-					return *op.ID, nil
-				}
+			if operationID := findSetupOperationID(ctx, svc, clusterID); operationID != "" {
+				return operationID, nil
 			}
 		}
 	}
+}
+
+func findSetupOperationID(ctx context.Context, svc era.Service, clusterID string) string {
+	shortInfo, err := svc.GetOperationsShortInfo(ctx)
+	if err != nil {
+		return ""
+	}
+	for _, op := range shortInfo.Operations {
+		if op.Type == nil || op.NxClusterID == nil || op.ID == nil {
+			continue
+		}
+		if *op.Type != "configure_oob_software_profiles" || *op.NxClusterID != clusterID {
+			continue
+		}
+		if op.Status != nil {
+			switch *op.Status {
+			case "3", "4", "6", "8":
+				continue
+			}
+		}
+		return *op.ID
+	}
+	return ""
 }
 
 func waitForOperationCompletion(ctx context.Context, svc era.Service, operationID string, timeoutDuration time.Duration) error {

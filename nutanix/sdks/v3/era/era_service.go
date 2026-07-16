@@ -840,21 +840,57 @@ func (sc ServiceClient) DeleteTimeMachineCluster(ctx context.Context, tmsID stri
 }
 
 func (sc ServiceClient) CreateCluster(ctx context.Context, body *ClusterIntentInput) (*ProvisionDatabaseResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/clusters", body)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/clusters", redactClusterCredentialPayload(body))
 	if err != nil {
 		return nil, err
 	}
 	res := new(ProvisionDatabaseResponse)
-	return res, sc.c.Do(ctx, httpReq, res)
+	return res, sc.c.DoWithSensitiveBody(ctx, httpReq, res, body)
 }
 
 func (sc ServiceClient) CreateClusterRaw(ctx context.Context, body map[string]interface{}) (*ProvisionDatabaseResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/clusters", body)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/clusters", redactClusterCredentialPayload(body))
 	if err != nil {
 		return nil, err
 	}
 	res := new(ProvisionDatabaseResponse)
-	return res, sc.c.Do(ctx, httpReq, res)
+	return res, sc.c.DoWithSensitiveBody(ctx, httpReq, res, body)
+}
+
+func redactClusterCredentialPayload(body interface{}) interface{} {
+	raw, err := json.Marshal(body)
+	if err != nil {
+		return body
+	}
+	var payload interface{}
+	if err := json.Unmarshal(raw, &payload); err != nil {
+		return body
+	}
+	redactClusterCredentialValue(payload)
+	return payload
+}
+
+func redactClusterCredentialValue(value interface{}) {
+	switch v := value.(type) {
+	case map[string]interface{}:
+		for key, child := range v {
+			lowerKey := strings.ToLower(key)
+			if lowerKey == "username" || lowerKey == "password" {
+				v[key] = "REDACTED"
+				continue
+			}
+			redactClusterCredentialValue(child)
+		}
+		if name, ok := v["name"].(string); ok && (strings.EqualFold(name, "username") || strings.EqualFold(name, "password")) {
+			if _, ok := v["value"]; ok {
+				v["value"] = "REDACTED"
+			}
+		}
+	case []interface{}:
+		for _, child := range v {
+			redactClusterCredentialValue(child)
+		}
+	}
 }
 
 func (sc ServiceClient) CreateDBServerVM(ctx context.Context, body *DBServerInputRequest) (*ProvisionDatabaseResponse, error) {
@@ -1183,25 +1219,25 @@ func (sc ServiceClient) ReplaceClusterWizard(ctx context.Context, clusterID stri
 }
 
 func (sc ServiceClient) ValidateDomainClusterDetails(ctx context.Context, ip string, port int, username string, password string) (map[string]interface{}, error) {
-	path := fmt.Sprintf(
-		"/domains/i/cluster-details?ipaddress=%s&port=%d&username=%s&password=%s",
-		url.QueryEscape(ip),
-		port,
-		url.QueryEscape(username),
-		url.QueryEscape(password),
-	)
+	query := url.Values{}
+	query.Set("ipaddress", ip)
+	query.Set("port", fmt.Sprintf("%d", port))
+	path := "/domains/i/cluster-details?" + query.Encode()
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
 	res := map[string]interface{}{}
-	return res, sc.c.Do(ctx, httpReq, &res)
+	sensitiveQuery := url.Values{}
+	sensitiveQuery.Set("username", username)
+	sensitiveQuery.Set("password", password)
+	return res, sc.c.DoWithSensitiveQuery(ctx, httpReq, &res, sensitiveQuery)
 }
 
 func (sc ServiceClient) GetOperationsShortInfo(ctx context.Context) (*OperationsShortInfoResponse, error) {
 	// Use a neutral default timezone for deterministic behavior across environments.
 	path := fmt.Sprintf(
-		"/operations/short-info?hide-subops=true&user-triggered=true&system-triggered=true&time-zone=%s&count-summary=false&days=2&descending=false",
+		"/operations/short-info?hide-subops=false&user-triggered=true&system-triggered=true&time-zone=%s&count-summary=false&days=2&descending=true",
 		defaultOperationsTimezone,
 	)
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
