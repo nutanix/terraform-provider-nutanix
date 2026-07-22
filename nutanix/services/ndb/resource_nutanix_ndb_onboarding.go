@@ -817,7 +817,6 @@ func applyStorageStep(ctx context.Context, svc era.Service, clusterID, storageCo
 		if err == nil {
 			return nil
 		}
-		lastErr = err
 		// Fallback for NDB versions that reject the PUT shape during onboarding.
 		_, fallbackErr := svc.UploadClusterWizardJSON(ctx, clusterID, map[string]interface{}{
 			"storageContainer": storageContainer,
@@ -825,7 +824,7 @@ func applyStorageStep(ctx context.Context, svc era.Service, clusterID, storageCo
 		if fallbackErr == nil {
 			return nil
 		}
-		lastErr = err
+		lastErr = fallbackErr
 		if !isRetryableStep4Error(err) && !isRetryableStep4Error(fallbackErr) {
 			return err
 		}
