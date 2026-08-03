@@ -65,14 +65,30 @@ resource "nutanix_project" "project_test" {
     uuid = nutanix_subnet.subnet.metadata.uuid
   }
 
-  user_reference_list{
-    name= "{{user_name}}"
-    kind= "user"
-    uuid= "{{user_uuid}}"
-    }
-    subnet_reference_list{
-      uuid=resource.nutanix_subnet.sub.id
+  subnet_reference_list{
+    uuid=resource.nutanix_subnet.sub.id
   }
+
+  directory_reference_list {
+    uuid = "<DIRECTORY_SERVICE_UUID>"
+  }
+  
+  identity_providers_reference_list {
+    uuid = "<IDENTITY_PROVIDER_UUID>"
+  }
+
+  user_reference_list{
+    name= "{{active_directory_user_name}}"
+    kind= "user"
+    uuid= "{{active_directory_user_uuid}}"
+  }
+
+  user_reference_list{
+    name= "{{idp_user_name}}"
+    kind= "user"
+    uuid= "{{idp_user_name}}"
+  }
+
   acp{
     # acp name consists name_uuid string, it should be different for each acp. 
     name="{{acp_name}}"
@@ -82,9 +98,25 @@ resource "nutanix_project" "project_test" {
       name="Developer"
     }
     user_reference_list{
-      name= "{{user_name}}"
+      name= "{{active_directory_user_name}}"
       kind= "user"
-      uuid= "{{user_uuid}}"
+      uuid= "{{active_directory_user_uuid}}"
+    }
+    description= "{{description}}"
+  }
+
+   acp{
+    # acp name consists name_uuid string, it should be different for each acp. 
+    name="{{acp_name}}"
+    role_reference{
+      kind= "role"
+      uuid= "{{role_uuid}}"
+      name="Developer"
+    }
+    user_reference_list{
+      name= "{{idp_user_name}}"
+      kind= "user"
+      uuid= "{{idp_user_uuid}}"
     }
     description= "{{description}}"
   }
@@ -156,6 +188,7 @@ The following arguments are supported:
 * `use_project_internal` - (Optional) flag to use project internal for user role mapping
 * `cluster_uuid` - (Optional) The UUID of cluster. (Required when using project_internal flag).
 * `enable_collab` - (Optional) flag to allow collaboration of projects. (Use with project_internal flag)
+* `enable_directory_and_identity_provider_shortlist` - (Optional) flag to shortlist the directory services and identity providers associated with the project. Defaults to `true`.
 
 ### Resource Domain (Deprecated)
 * `resource_domain` - (Deprecated) Not supported starting from provider version `2.4.0` and ignored by the provider. Remove it from your configuration/scripts.
@@ -224,6 +257,16 @@ The following arguments are supported:
 * `default_environment_reference.kind` - (Optional) The kind name. Default value is `environment`
 * `default_environment_reference.uuid` - (Required) The UUID of a environment
 * `default_environment_reference.name` - (Optional/Computed) The name of a environment.
+
+### Directory Reference List
+* `directory_reference_list` - (Optional/Computed) List of directory services associated with the project.
+* `directory_reference_list.#.uuid` - (Required) The UUID of a directory service.
+* `directory_reference_list.#.kind` - (Optional) The kind name. Default value is `directory_service`
+
+### Identity Providers Reference List
+* `identity_providers_reference_list` - (Optional/Computed) List of identity providers associated with the project.
+* `identity_providers_reference_list.#.uuid` - (Required) The UUID of an identity provider.
+* `identity_providers_reference_list.#.kind` - (Optional) The kind name. Default value is `identity_provider`
 
 
 ### ACP

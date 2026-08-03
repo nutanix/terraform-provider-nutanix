@@ -7,7 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/content"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/ovas"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -35,7 +36,10 @@ func ResourceNutanixOvaDownloadV2Create(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.Client).VmmAPI
 
 	ovaExtID := d.Get("ova_ext_id")
-	resp, err := conn.OvasAPIInstance.GetFileByOvaId(utils.StringPtr(ovaExtID.(string)))
+	getFileByOvaIdRequest := import1.GetFileByOvaIdRequest{
+		OvaExtId: utils.StringPtr(ovaExtID.(string)),
+	}
+	resp, err := conn.OvasAPIInstance.GetFileByOvaId(ctx, &getFileByOvaIdRequest)
 	if err != nil {
 		return diag.Errorf("error Downloading Ova file: %v", err)
 	}

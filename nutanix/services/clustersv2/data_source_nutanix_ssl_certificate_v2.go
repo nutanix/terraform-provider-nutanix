@@ -9,7 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/sslcertificate"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -59,7 +60,10 @@ func DatasourceNutanixSSLCertificateV2Read(ctx context.Context, d *schema.Resour
 	retryDelay := 2 * time.Second
 
 	for attempt := 0; attempt < maxRetries; attempt++ {
-		resp, err = conn.SSLCertificateAPI.GetSSLCertificate(utils.StringPtr(clusterExtID))
+		getSSLCertificateRequest := import2.GetSSLCertificateRequest{
+			ClusterExtId: utils.StringPtr(clusterExtID),
+		}
+		resp, err = conn.SSLCertificateAPI.GetSSLCertificate(ctx, &getSSLCertificateRequest)
 		if err == nil {
 			break
 		}

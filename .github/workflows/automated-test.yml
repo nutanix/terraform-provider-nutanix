@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   lint-and-test:
-    name: Lint & Test
+    name: Vulnerability, Lint & Test
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Code Checkout
@@ -13,13 +13,25 @@ jobs:
       - name: ⚙️ Set up Go 🐹
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25.3"
+          go-version: "1.25.12"
+
+      - name: 🔐 Configure private Go modules
+        env:
+          INTERNAL_GH_TOKEN: ${{ secrets.PAT }}
+        run: |
+          git config --global url."https://${INTERNAL_GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          go env -w GOPRIVATE="github.com/nutanix-core/*"
+          go env -w GONOSUMCHECK="github.com/nutanix-core/*" 2>/dev/null || true
+          echo "GONOSUMCHECK=github.com/nutanix-core/*" >> "$GITHUB_ENV"
 
       - name: 🧹 Code Lint
         run: make tools && make lint
 
       - name: 🌐 Website Lint
         run: make tools && make website-lint
+
+      - name: 🛡️ Vulnerability Check
+        run: make tools && make vulncheck
 
       - name: ✅ Run Tests
         run: make test

@@ -74,6 +74,12 @@ The following arguments are supported:
 - `external_subnets`: (Optional) List of external subnets that the VPC is attached to.
 - `external_routing_domain_reference`: (Optional) External routing domain associated with this route table
 - `externally_routable_prefixes`: (Optional) CIDR blocks from the VPC which can talk externally without performing NAT. This is applicable when connecting to external subnets which have disabled NAT.
+- `project_ext_id`: (Optional) External identifier of the project associated with the VPC.
+- `shared_with_projects`: (Optional) List of project external identifiers with which the VPC is shared.
+- `should_advertise_connected_subnets`: (Optional) When set to True, the system advertises all connected subnet prefixes that are subsets of the VPC's externally routable prefixes (ERPs), instead of the VPC ERPs themselves.
+- `supported_multiple_external_subnet_type`: (Optional) Type of multiple external subnet support. Valid values: `NONE`, `ONLY_NONAT`, `ONLY_NAT`, `ALL`.
+- `scope`: (Optional) VPC scope. Valid values: `VMS`, `CONTAINERS`, `VMS_AND_CONTAINERS`.
+- `kubernetes_clusters`: (Optional) List of Kubernetes clusters associated with the VPC.
 
 ### common_dhcp_options
 
@@ -103,6 +109,26 @@ The following arguments are supported:
 - `ipv6`: (Optional) IP V6 Configuration
 - `ipv6.ip`: (Required) Reference to address configuration
 - `ipv6.prefix_length`: (Required) The prefix length of the network
+
+### kubernetes_clusters
+
+- `ext_id`: (Required) ExtID of the Kubernetes cluster.
+- `gateway_nodes_selector`: (Optional) Selector used to identify gateway node candidates within the Kubernetes cluster.
+- `namespace_selector`: (Optional) Selector used to identify namespaces within the Kubernetes cluster.
+- `pod_network`: (Optional) Pod network of the Kubernetes cluster.
+
+### gateway_nodes_selector, namespace_selector
+
+- `match_labels`: (Optional) Labels (key-value pairs) used to select entities.
+- `match_labels.name`: (Optional) The key of the label.
+- `match_labels.value`: (Optional) The value of the label.
+
+### pod_network
+
+- `cidr`: (Required) CIDR of the pod network (IPSubnet).
+- `cidr.ipv4`: (Optional) IPv4 Subnet Configuration.
+- `cidr.ipv6`: (Optional) IPv6 Subnet Configuration.
+- `host_slice`: (Optional) Host slice of the pod network. Default value is 24.
 
 ## Attributes Reference
 

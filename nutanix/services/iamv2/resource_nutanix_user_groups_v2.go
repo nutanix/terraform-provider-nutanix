@@ -2,6 +2,7 @@ package iamv2
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"regexp"
 	"strings"
@@ -9,7 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authn"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/usergroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -95,7 +97,11 @@ func ResourceNutanixUserGroupsV4Create(ctx context.Context, d *schema.ResourceDa
 		input.IdpId = utils.StringPtr(idp.(string))
 	}
 	if name, ok := d.GetOk("name"); ok {
-		if dName, ok := d.GetOk("distinguished_name"); ok {
+		// The name == CN(distinguished_name) check only makes sense for LDAP groups,
+		// where distinguished_name is a real DN ("cn=<name>,..."). SAML groups use a
+		// "<name>#<idpId>" distinguished name, so this validation must be skipped for
+		// them (otherwise extractCN returns the whole string and the check fails).
+		if dName, ok := d.GetOk("distinguished_name"); ok && d.Get("group_type").(string) == "LDAP" {
 			cn := extractCN(dName.(string))
 			log.Printf("[DEBUG] CN: %s, Name: %s", cn, name.(string))
 			if cn != name.(string) {
@@ -108,7 +114,24 @@ func ResourceNutanixUserGroupsV4Create(ctx context.Context, d *schema.ResourceDa
 		input.DistinguishedName = utils.StringPtr(dName.(string))
 	}
 
-	resp, err := conn.UserGroupsAPIInstance.CreateUserGroup(input)
+	// The IAM v4 schema requires distinguishedName for every user group, including
+	// SAML groups (IAM-20011 otherwise). For SAML the backend ignores the supplied
+	// value and recomputes it as "<name>#<idpId>", so send the name as a placeholder
+	// when the caller didn't provide a distinguished name.
+	if input.DistinguishedName == nil && d.Get("group_type").(string) == "SAML" {
+		if name, ok := d.GetOk("name"); ok {
+			input.DistinguishedName = utils.StringPtr(name.(string))
+		}
+	}
+
+	createUserGroupRequest := import2.CreateUserGroupRequest{
+		Body: input,
+	}
+
+	aJSON, _ := json.MarshalIndent(createUserGroupRequest, "", "  ")
+	log.Printf("[DEBUG] Create User Group Body: %s", string(aJSON))
+
+	resp, err := conn.UserGroupsAPIInstance.CreateUserGroup(ctx, &createUserGroupRequest)
 	if err != nil {
 		return diag.Errorf("error while creating user groups: %v", err)
 	}
@@ -120,7 +143,10 @@ func ResourceNutanixUserGroupsV4Create(ctx context.Context, d *schema.ResourceDa
 
 func ResourceNutanixUserGroupsV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
-	resp, err := conn.UserGroupsAPIInstance.GetUserGroupById(utils.StringPtr(d.Id()))
+	getUserGroupByIdRequest := import2.GetUserGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.UserGroupsAPIInstance.GetUserGroupById(ctx, &getUserGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching user groups: %v", err)
 	}
@@ -166,7 +192,10 @@ func ResourceNutanixUserGroupsV4Update(ctx context.Context, d *schema.ResourceDa
 func ResourceNutanixUserGroupsV4Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	readResp, err := conn.UserGroupsAPIInstance.GetUserGroupById(utils.StringPtr(d.Id()))
+	getUserGroupByIdRequest := import2.GetUserGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.UserGroupsAPIInstance.GetUserGroupById(ctx, &getUserGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching role: %v", err)
 	}
@@ -175,7 +204,10 @@ func ResourceNutanixUserGroupsV4Delete(ctx context.Context, d *schema.ResourceDa
 	headers := make(map[string]interface{})
 	headers["If-Match"] = utils.StringPtr(etagValue)
 
-	resp, err := conn.UserGroupsAPIInstance.DeleteUserGroupById(utils.StringPtr(d.Id()), headers)
+	deleteUserGroupByIdRequest := import2.DeleteUserGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.UserGroupsAPIInstance.DeleteUserGroupById(ctx, &deleteUserGroupByIdRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while deleting user group : %v", err)
 	}

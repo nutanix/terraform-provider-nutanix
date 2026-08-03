@@ -11,10 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	import3 "github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/common/v1/response"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/datapolicies/v4/config"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/prism/v4/config"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/common/v1/response"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/request/storagepolicies"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/prism/v4/config"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -171,7 +173,10 @@ func ResourceNutanixStoragePoliciesV2Create(ctx context.Context, d *schema.Resou
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Create Storage Policy Payload: %s", string(aJSON))
-	res, err := conn.StoragePolicies.CreateStoragePolicy(body)
+	createStoragePolicyRequest := import4.CreateStoragePolicyRequest{
+		Body: body,
+	}
+	res, err := conn.StoragePolicies.CreateStoragePolicy(ctx, &createStoragePolicyRequest)
 	if err != nil {
 		return diag.Errorf("error while creating Storage Policy: %v", err)
 	}
@@ -191,7 +196,10 @@ func ResourceNutanixStoragePoliciesV2Create(ctx context.Context, d *schema.Resou
 		return diag.Errorf("error waiting for storage policy (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import5.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching storage policy task: %v", err)
 	}
@@ -212,7 +220,10 @@ func ResourceNutanixStoragePoliciesV2Create(ctx context.Context, d *schema.Resou
 func ResourceNutanixStoragePoliciesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataPoliciesAPI
 
-	resp, err := conn.StoragePolicies.GetStoragePolicyById(utils.StringPtr(d.Id()))
+	getStoragePolicyByIdRequest := import4.GetStoragePolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.StoragePolicies.GetStoragePolicyById(ctx, &getStoragePolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while reading Storage Policy: %v", err)
 	}
@@ -225,7 +236,10 @@ func ResourceNutanixStoragePoliciesV2Read(ctx context.Context, d *schema.Resourc
 
 func ResourceNutanixStoragePoliciesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataPoliciesAPI
-	resp, err := conn.StoragePolicies.GetStoragePolicyById(utils.StringPtr(d.Id()))
+	getStoragePolicyByIdRequest := import4.GetStoragePolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.StoragePolicies.GetStoragePolicyById(ctx, &getStoragePolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Storage Policy: %v", err)
 	}
@@ -261,7 +275,11 @@ func ResourceNutanixStoragePoliciesV2Update(ctx context.Context, d *schema.Resou
 
 	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
 	log.Printf("[DEBUG] Update Storage Policy Payload: %s", string(aJSON))
-	res, err := conn.StoragePolicies.UpdateStoragePolicyById(utils.StringPtr(d.Id()), &updateSpec, headers)
+	updateStoragePolicyByIdRequest := import4.UpdateStoragePolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updateSpec,
+	}
+	res, err := conn.StoragePolicies.UpdateStoragePolicyById(ctx, &updateStoragePolicyByIdRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while updating Storage Policy: %v", err)
 	}
@@ -273,7 +291,10 @@ func ResourceNutanixStoragePoliciesV2Delete(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.Client).DataPoliciesAPI
 
 	// Fetch the e-tag
-	resp, err := conn.StoragePolicies.GetStoragePolicyById(utils.StringPtr(d.Id()))
+	getStoragePolicyByIdRequest := import4.GetStoragePolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.StoragePolicies.GetStoragePolicyById(ctx, &getStoragePolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Storage Policy: %v", err)
 	}
@@ -281,7 +302,10 @@ func ResourceNutanixStoragePoliciesV2Delete(ctx context.Context, d *schema.Resou
 	args := make(map[string]interface{})
 	args["If-Match"] = utils.StringPtr(etagValue)
 
-	res, err := conn.StoragePolicies.DeleteStoragePolicyById(utils.StringPtr(d.Id()), args)
+	deleteStoragePolicyByIdRequest := import4.DeleteStoragePolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	res, err := conn.StoragePolicies.DeleteStoragePolicyById(ctx, &deleteStoragePolicyByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while deleting Storage Policy: %v", err)
 	}
@@ -402,7 +426,10 @@ func waitForTaskCompletion(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("error waiting for storage policy (%s) to %s: %s", utils.StringValue(taskUUID), operation, errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import5.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching storage policy %s task: %v", operation, err)
 	}

@@ -52,6 +52,10 @@ The following attributes are exported:
     | PULSE_CONFIG                | Pulse status for a cluster                 |
     | NAME_SERVER_CONFIG          | Name server configuration                  |
     | RSYSLOG_SERVER_CONFIG       | RSYSLOG server configuration               |
+    | HTTP_PROXY_CONFIG           | HTTP proxy configuration                   |
+    | FAULT_TOLERANCE_CONFIG      | Fault tolerance configuration              |
+    | REBUILD_RESERVATION_CONFIG  | Rebuild reservation configuration          |
+    | RESILIENT_CAPACITY_WARNING_THRESHOLD_CONFIG | Resilient capacity warning threshold |
 
 * `name_server_ip_list`: - List of name servers on a cluster. This is a part of payload for both clusters create and update operations. Currently, only IPv4 address and FQDN (fully qualified domain name) values are supported for the create operation.
 * `ntp_server_ip_list`: - List of NTP servers on a cluster. This is a part of payload for both cluster create and update operations. Currently, only IPv4 address and FQDN (fully qualified domain name) values are supported for the create operation.
@@ -60,6 +64,11 @@ The following attributes are exported:
 * `snmp_config`: - SNMP information.
 * `rsyslog_server_list`: - RSYSLOG Server.
 * `pulse_status`: - Pulse status for a cluster.
+* `ntp_server_config_list`: - List of NTP server configurations with encryption authentication.
+* `http_proxy_config`: - HTTP proxy configuration for the cluster.
+* `fault_tolerance_config`: - Fault tolerant state of cluster.
+* `rebuild_reservation_config`: - Rebuild capacity reservation configuration.
+* `resilient_capacity_warning_threshold_config`: - Resilient capacity warning threshold configuration.
 
 ### Clusters
 
@@ -79,6 +88,10 @@ The clusters attribute supports the following:
     | PULSE_CONFIG                | Pulse status for a cluster                 |
     | NAME_SERVER_CONFIG          | Name server configuration                  |
     | RSYSLOG_SERVER_CONFIG       | RSYSLOG server configuration               |
+    | HTTP_PROXY_CONFIG           | HTTP proxy configuration                   |
+    | FAULT_TOLERANCE_CONFIG      | Fault tolerance configuration              |
+    | REBUILD_RESERVATION_CONFIG  | Rebuild reservation configuration          |
+    | RESILIENT_CAPACITY_WARNING_THRESHOLD_CONFIG | Resilient capacity warning threshold |
 
 ### Name Server IP List
 
@@ -158,6 +171,10 @@ The snmp_config attribute supports the following:
       |-----------|------------------------------|
       | SHA       | SHA SNMP authentication      |
       | MD5       | MD5 SNMP authentication      |
+      | SHA224    | SHA-224 SNMP authentication  |
+      | SHA256    | SHA-256 SNMP authentication  |
+      | SHA384    | SHA-384 SNMP authentication  |
+      | SHA512    | SHA-512 SNMP authentication  |
 
   * `auth_key` - (String) SNMP user authentication key (must not contain single quotes).
   * `priv_type` - (String) SNMP user encryption type. Allowed values:
@@ -166,6 +183,8 @@ The snmp_config attribute supports the following:
       |-----------|--------------------|
       | DES       | DES SNMP key       |
       | AES       | AES SNMP key       |
+      | AES192    | AES-192 SNMP key   |
+      | AES256    | AES-256 SNMP key   |
 
   * `priv_key` - (String) SNMP user encryption key (must not contain single quotes).
 
@@ -225,5 +244,47 @@ The pulse_status attribute supports the following:
     |----------|------------------------------------------------------------------------------------------------|
     | ALL      | Scrub All PII Information from Pulse including data like entity names and IP addresses        |
     | DEFAULT  | Default PII Scrubbing level. Data like entity names and IP addresses will not be scrubbed from Pulse |
+
+### NTP Server Config List
+
+The ntp_server_config_list attribute supports the following:
+
+* `ntp_server_address`: - NTP server address (supports IPv4, IPv6, and FQDN).
+* `encryption_algorithm`: - Encryption algorithm used for NTP server authentication. Values: `SHA256`, `SHA384`, `SHA512`.
+* `encryption_key`: - Encryption key in hexadecimal format used for NTP server authentication.
+* `encryption_key_id`: - Encryption key ID used for NTP server authentication.
+
+### HTTP Proxy Config
+
+The http_proxy_config attribute supports the following:
+
+* `proxy_list`: - List of HTTP proxy server configurations.
+  * `name` - HTTP proxy server name.
+  * `ip_address` - IP address of the proxy server.
+  * `port` - HTTP proxy server port.
+  * `username` - HTTP proxy server username.
+  * `proxy_types` - List of HTTP proxy types. Values: `HTTP`, `HTTPS`, `SOCKS`.
+
+* `proxy_white_list`: - Targets exempted from going through the configured HTTP proxy.
+  * `target` - Target identifier exempted from HTTP proxy.
+  * `target_type` - Type of the whitelist target. Values: `IPV4_ADDRESS`, `IPV6_ADDRESS`, `IPV4_NETWORK_MASK`, `DOMAIN_NAME_SUFFIX`, `HOST_NAME`.
+
+### Fault Tolerance Config
+
+The fault_tolerance_config attribute supports the following:
+
+* `desired_cluster_fault_tolerance`: - Desired cluster fault tolerance level. Values: `CFT_0N_AND_0D`, `CFT_1N_OR_1D`, `CFT_2N_OR_2D`, `CFT_1N_AND_1D`, `CFT_1N_OR_2D`.
+
+### Rebuild Reservation Config
+
+The rebuild_reservation_config attribute supports the following:
+
+* `is_rebuild_reservation_enabled`: - (default `false`) Whether rebuild capacity reservation is enabled to maintain free space for fault tolerance recovery operations.
+
+### Resilient Capacity Warning Threshold Config
+
+The resilient_capacity_warning_threshold_config attribute supports the following:
+
+* `resilient_capacity_warning_threshold_percentage`: - (default `75`) Warning threshold percentage for resilient storage capacity.
 
 See detailed information in [Nutanix Create Cluster Profile V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.2#tag/ClusterProfiles/operation/createClusterProfile).

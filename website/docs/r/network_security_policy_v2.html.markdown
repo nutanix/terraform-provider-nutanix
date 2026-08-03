@@ -58,19 +58,24 @@ resource "nutanix_network_security_policy_v2" "global-nsp" {
 The following arguments are supported:
 
 - `name`: (Required) Name of the Flow Network Security Policy.
-- `type`: (Required) Defines the type of rules that can be used in a policy. Acceptable values are "QUARANTINE", "ISOLATION", "APPLICATION", "SHAREDSERVICE".
+- `type`: (Required) Defines the type of rules that can be used in a policy. Acceptable values are "QUARANTINE", "ISOLATION", "APPLICATION", "SHAREDSERVICE", "CRITICAL", "COREINFRASTRUCTURE", "ZONE", "WORKLOAD". The "WORKLOAD", "CRITICAL", "COREINFRASTRUCTURE" and "ZONE" types are used with Flex rules (rule-centric / SMSP mode) and require `priority` to be set.
 - `description`: (Optional) A user defined annotation for a policy.
 - `state`: (Optional) Whether the policy is applied or monitored; can be omitted or set null to save the policy without applying or monitoring it. Acceptable values are "SAVE", "MONITOR", "ENFORCE".
-- `rules`: (Optional) A list of rules that form a policy. For isolation policies, use isolation rules; for application or quarantine policies, use application rules.
+- `priority`: (Optional) Policy priority. Mandatory for the Flex policy types (WORKLOAD/CRITICAL/COREINFRASTRUCTURE/ZONE); a lower value means higher precedence. For user-defined WORKLOAD policies use 1-349 (350 is reserved for the system catch-all).
+- `rules`: (Optional) A list of rules that form a policy. For isolation policies, use isolation rules; for application or quarantine policies, use application rules; for Flex policies, use flex rules only.
 - `is_ipv6_traffic_allowed`: (Optional) If Ipv6 Traffic is allowed.
 - `is_hitlog_enabled`: (Optional) If Hitlog is enabled.
-- `scope`: (Optional) Defines the scope of the policy. Acceptable values are "ALL_VLAN", "ALL_VPC", "VPC_LIST", and "GLOBAL".
+- `scope`: (Optional) Defines the scope of the policy. Acceptable values are "ALL_VLAN", "ALL_VPC", "VPC_LIST", "GLOBAL", and "VPC_AS_CATEGORY".
 - `vpc_reference`: (Optional) A list of external ids for VPCs, used only when the scope of policy is a list of VPCs.
+- `project_ext_id`: (Optional) Project external ID to associate with the network security policy. Note: This field cannot be updated after creation.
+- `is_shared_with_all_projects`: (Optional) Indicates whether the network security policy is shared with all projects.
 
 ### rules
 
 - `description`: (Optional) A user defined annotation for a rule.
-- `type`: (Required) The type for a rule—the value chosen here restricts which specification can be chosen. Acceptable values are "QUARANTINE", "TWO_ENV_ISOLATION", "APPLICATION", "INTRA_GROUP", "MULTI_ENV_ISOLATION", "SHARED_SERVICE".
+- `type`: (Required) The type for a rule—the value chosen here restricts which specification can be chosen. Acceptable values are "QUARANTINE", "TWO_ENV_ISOLATION", "APPLICATION", "INTRA_GROUP", "MULTI_ENV_ISOLATION", "SHARED_SERVICE", "FLEX".
+- `name`: (Optional) A user-defined name for the rule. Primarily used for Flex policy rules.
+- `is_logging_enabled`: (Optional) Specifies whether hit log is enabled for the rule.
 - `spec`: (Required) Spec for rules.
 
 ### spec
@@ -81,6 +86,7 @@ One of below rules spec.
 - `application_rule_spec`: (Optional) Application Rule Spec.
 - `intra_entity_group_rule_spec`: (Optional) Intra entity group Rule Spec
 - `multi_env_isolation_rule_spec`: (Optional) Multi Environment Isolation Rule Spec.
+- `flex_rule_spec`: (Optional) Flex Rule Spec.
 
 ### two_env_isolation_rule_spec
 
@@ -141,12 +147,34 @@ One of below rules spec.
 - `group_category_references`: (Required) External identifiers of categories belonging to the isolation group.
 - `group_entity_group_reference`: (Optional) Reference to the entity group for the isolation group.
 
+### flex_rule_spec
+
+- `action`: (Required) Action for the flex rule. Acceptable values are "ALLOW", "DENY", "REJECT".
+- `direction`: (Required) Direction of traffic. Acceptable values are "IN", "OUT", "IN_OUT".
+- `applied_to_entity_group_references`: (Optional) Entity group references to which the flex rule is applied.
+- `src_entity_group_references`: (Optional) Source entity group references.
+- `dest_entity_group_references`: (Optional) Destination entity group references.
+- `src_subnet`: (Optional) Source subnet (value, prefix_length).
+- `dest_subnet`: (Optional) Destination subnet (value, prefix_length).
+- `should_allow_any_src`: (Optional) Whether the rule should allow all sources.
+- `should_allow_any_dst`: (Optional) Whether the rule should allow all destinations.
+- `is_all_protocol_allowed`: (Optional) Whether traffic is allowed for all protocols.
+- `service_group_references`: (Optional) A list of service group references.
+- `tcp_services`: (Optional) TCP port ranges (start_port, end_port).
+- `udp_services`: (Optional) UDP port ranges (start_port, end_port).
+- `icmp_services`: (Optional) ICMP type/code specs.
+- `icmpv6_services`: (Optional) ICMPv6 type/code specs.
+- `network_function_reference`: (Optional) A reference to the network function.
+- `priority`: (Optional) Priority for the flex rule. Lower numbers indicate higher priority.
+- `ip_version`: (Optional) IP version scope. Acceptable values are "IPV4", "IPV6", "IPV4_IPV6".
+- `is_system_rule`: (Computed) Whether the flex rule is system-defined.
+
 ### tcp_services, udp_services
 
 - `start_port`: (Required) start port
 - `end_port`: (Required) end port
 
-### icmp_services
+### icmp_services, icmpv6_services
 
 - `is_all_allowed`: (Optional) Set this field to true if both Type and Code is ANY.
 - `type`: (Optional) Icmp service Type. Ignore this field if Type has to be ANY.
@@ -164,6 +192,8 @@ The following attributes are exported:
 - `tenant_id`: A globally unique identifier that represents the tenant that owns this entity
 - `last_update_time`: last updated time
 - `creation_time`: creation time of NSP
+- `project_ext_id`: Project external ID associated with the network security policy.
+- `is_shared_with_all_projects`: Whether the network security policy is shared with all projects.
 
 ## Import
 

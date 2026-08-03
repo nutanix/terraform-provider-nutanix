@@ -59,12 +59,13 @@ resource "nutanix_entity_group_v2" "with_allowed" {
 * `allowed_config` - (Optional) Configuration of the allowed entities in the Entity Group.
 * `except_config` - (Optional) Configuration of except entities in the Entity Group.
 * `policy_ext_ids` - (Optional) List of policy external identifiers.
+* `project_ext_id` - (Optional) Project external ID to associate with the entity group. Note: This field cannot be updated after creation.
 
 ### allowed_config
 
 * `entities` - (Optional) List of allowed entities. Each entity may contain:
   * `type` - (Required) The type of entity. Valid values: `KUBE_NAMESPACE`, `SUBNET`, `VM`, `VPC`, `KUBE_SERVICE`, `KUBE_CLUSTER`, `KUBE_PODS`, `ADDRESS_GROUP`.
-  * `selected_by` - (Optional) The selection method for the entity. Valid values: `IP_VALUES`, `EXT_ID`, `CATEGORY_EXT_ID`, `LABELS`, `NAME`.
+  * `selected_by` - (Optional) The selection method for the entity. Valid values: `IP_VALUES`, `EXT_ID`, `CATEGORY_EXT_ID`, `LABELS`, `NAME`, `REGEX`, `FQDN_VALUES`.
   * `addresses` - (Optional) With `ipv4_addresses` block(s):
     * `value` - (Required) IPv4 address value.
     * `prefix_length` - (Optional) Prefix length.
@@ -73,6 +74,9 @@ resource "nutanix_entity_group_v2" "with_allowed" {
     * `end_ip` - (Required) End IP of the range.
   * `kube_entities` - (Optional) List of kube entity identifiers. Required when `type` is a kube type (`KUBE_NAMESPACE`, `KUBE_SERVICE`, `KUBE_CLUSTER`, or `KUBE_PODS`).
   * `reference_ext_ids` - (Optional) List of reference external identifiers. Required when `selected_by` is `EXT_ID`.
+  * `fqdns` - (Optional) List of FQDNs. Required when `selected_by` is `FQDN_VALUES`.
+  * `match_criteria` - (Optional) Match criteria for regex-based entity selection. Valid values: `CONTAINS`, `STARTS_WITH`, `ENDS_WITH`, `EQUALS`.
+  * `reference_string` - (Optional) String pattern for matching entities. Required when `selected_by` is `REGEX`.
 
 ### except_config
 
@@ -99,14 +103,18 @@ The following validation rules apply to `allowed_config` entities:
 The combination of `selected_by` and `type` must be one of the following valid pairs:
 
 * `(CATEGORY_EXT_ID, VM)`
+* `(EXT_ID, VM)`
+* `(REGEX, VM)`
 * `(CATEGORY_EXT_ID, SUBNET)`
+* `(EXT_ID, SUBNET)`
 * `(CATEGORY_EXT_ID, VPC)`
 * `(EXT_ID, KUBE_CLUSTER)`
-* `(EXT_ID, ADDRESS_GROUP)`
 * `(LABELS, KUBE_PODS)`
 * `(NAME, KUBE_NAMESPACE)`
 * `(NAME, KUBE_SERVICE)`
+* `(EXT_ID, ADDRESS_GROUP)`
 * `(IP_VALUES, ADDRESS_GROUP)`
+* `(FQDN_VALUES, ADDRESS_GROUP)`
 
 Any other combination will result in a validation error.
 
@@ -122,6 +130,8 @@ Within one entity group, you cannot have two entities with the same `(selected_b
 * `links` - A HATEOAS style link for the response.
 * `owner_ext_id` - The external identifier of the user who created the Entity Group.
 * `tenant_id` - A globally unique identifier that represents the tenant that owns this entity.
+* `is_system_defined` - A flag indicating whether the entity group is system-defined.
+* `is_shared_with_all_projects` - Indicates whether the entity group is shared with all projects.
 
 ## Import
 

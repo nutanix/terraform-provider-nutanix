@@ -1,0 +1,11 @@
+# Dependencies for the testenv/ Python scripts (fill_test_config.py,
+# prepare_pc.py, e2e_nkp_deploy.py).
+#
+# fill_test_config.py / prepare_pc.py only need PyYAML, and only when using the
+# YAML config (testenv/config.yaml); their flat .env loader is stdlib-only.
+# e2e_nkp_deploy.py additionally needs requests + urllib3.
+#
+#   python3 -m pip install -r testenv/requirements.txt
+PyYAML>=6.0
+requests>=2.28
+urllib3>=1.26

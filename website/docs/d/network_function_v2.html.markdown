@@ -32,6 +32,7 @@ The following attributes are exported:
 - `ext_id`:  globally unique identifier of an instance that is suitable for external consumption.
 - `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 - `metadata`: Metadata associated with this resource.
+- `project_ext_id`: Project external ID associated with the network function.
 - `name`: Name of the network function.
 - `description`: Description of the network function.
 - `failure_handling`: Failure handling behavior when network function is unhealthy. Values:

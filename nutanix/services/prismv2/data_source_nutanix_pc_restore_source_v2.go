@@ -7,7 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/management"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/domainmanagerbackups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -117,8 +118,10 @@ func DatasourceNutanixRestoreSourceV2Read(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.Client).PrismAPI
 
 	restoreSourceExtID := d.Get("ext_id").(string)
-
-	resp, err := conn.DomainManagerBackupsAPIInstance.GetRestoreSourceById(utils.StringPtr(restoreSourceExtID), nil)
+	getRestoreSourceByIdRequest := import1.GetRestoreSourceByIdRequest{
+		ExtId: utils.StringPtr(restoreSourceExtID),
+	}
+	resp, err := conn.DomainManagerBackupsAPIInstance.GetRestoreSourceById(ctx, &getRestoreSourceByIdRequest)
 
 	if err != nil {
 		return diag.Errorf("error while fetching Restore Source: %s", err)

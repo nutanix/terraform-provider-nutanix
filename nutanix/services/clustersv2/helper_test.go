@@ -1,29 +1,93 @@
 package clustersv2_test
 
 import (
+	"context"
+	"crypto/ed25519"
+	"crypto/rand"
 	"fmt"
+	"log"
 	"strings"
+	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	clusterPrism "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusters"
+	clusterPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/prism/v4/config"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import7 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/categories"
+	import6 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+	"golang.org/x/crypto/ssh"
 )
 
 const timeout = 3 * time.Minute
 
+// smtpServerTestConfig holds the SMTP server values used by the cluster
+// acceptance tests. They are generated once per test run so the HCL we render
+// and the attributes we assert stay in sync, while keeping any real SMTP
+// details out of the test config file. The cluster API only stores these
+// settings (it does not validate connectivity), so syntactically valid
+// placeholder values are sufficient.
+type smtpServerTestConfig struct {
+	IP           string
+	Port         int
+	Username     string
+	Password     string
+	Type         string
+	EmailAddress string
+}
+
+// smtpTestServer is the SMTP server config injected into the cluster "all
+// config" test instead of being read from the test config JSON.
+var smtpTestServer = newSMTPServerTestConfig()
+
+func newSMTPServerTestConfig() smtpServerTestConfig {
+	suffix := acctest.RandIntRange(1, 1000000)
+	return smtpServerTestConfig{
+		IP:           fmt.Sprintf("10.%d.%d.%d", acctest.RandIntRange(0, 256), acctest.RandIntRange(0, 256), acctest.RandIntRange(1, 255)),
+		Port:         25,
+		Username:     fmt.Sprintf("smtp-user-%d", suffix),
+		Password:     fmt.Sprintf("smtp-pass-%d", suffix),
+		Type:         "STARTTLS",
+		EmailAddress: fmt.Sprintf("smtp-%d@example.com", suffix),
+	}
+}
+
+// randomSSHPublicKey generates an ephemeral ed25519 key pair and returns its
+// public key as an SSH authorized-key line (e.g. "ssh-ed25519 AAAA...").
+// It lets tests supply a valid, unique public key without persisting any key
+// material in the test config.
+func randomSSHPublicKey(t *testing.T) string {
+	t.Helper()
+	pub, _, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("error generating ssh key pair: %v", err)
+	}
+	sshPub, err := ssh.NewPublicKey(pub)
+	if err != nil {
+		t.Fatalf("error building ssh public key: %v", err)
+	}
+	// MarshalAuthorizedKey appends a trailing newline; trim it so callers can
+	// safely embed the value inside quotes in an HCL/JSON config.
+	return strings.TrimSpace(string(ssh.MarshalAuthorizedKey(sshPub)))
+}
+
 // helper function to check the delete task
 func taskStateRefreshPrismTaskGroupFunc(taskUUID string) resource.StateRefreshFunc {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	ctx := context.Background()
 
 	return func() (interface{}, string, error) {
 		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
 		// encodeUUID := data + ":" + taskUUID
-		vresp, err := conn.PrismAPI.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
+		getTaskByIdRequest := import6.GetTaskByIdRequest{
+			ExtId: utils.StringPtr(taskUUID),
+		}
+		vresp, err := conn.PrismAPI.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 
 		if err != nil {
 			return "", "", fmt.Errorf("error while polling prism task: %v", err)
@@ -212,13 +276,17 @@ func checkNtpServerList(resourceName, ntpPath string, expectedNtpServers []strin
 // helper function to check if the cluster is destroyed
 func testAccCheckNutanixClusterDestroy(s *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "nutanix_cluster_v2" {
 			continue
 		}
 
-		readResp, err := conn.ClusterAPI.ClusterEntityAPI.GetClusterById(utils.StringPtr(rs.Primary.ID), nil)
+		getClusterByIdRequest := import5.GetClusterByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		readResp, err := conn.ClusterAPI.ClusterEntityAPI.GetClusterById(ctx, &getClusterByIdRequest)
 		if err == nil {
 			// delete the cluster
 			//extract etag from read response
@@ -226,7 +294,11 @@ func testAccCheckNutanixClusterDestroy(s *terraform.State) error {
 			etagValue := conn.ClusterAPI.ClusterEntityAPI.ApiClient.GetEtag(readResp)
 			args["If-Match"] = utils.StringPtr(etagValue)
 
-			deleteResp, err := conn.ClusterAPI.ClusterEntityAPI.DeleteClusterById(utils.StringPtr(rs.Primary.ID), utils.BoolPtr(false), args)
+			deleteClusterByIdRequest := import5.DeleteClusterByIdRequest{
+				ExtId:   utils.StringPtr(rs.Primary.ID),
+				Dryrun_: utils.BoolPtr(false),
+			}
+			deleteResp, err := conn.ClusterAPI.ClusterEntityAPI.DeleteClusterById(ctx, &deleteClusterByIdRequest, args)
 			if err != nil {
 				return err
 			}
@@ -246,7 +318,10 @@ func testAccCheckNutanixClusterDestroy(s *terraform.State) error {
 				return fmt.Errorf("error waiting for cluster deletion task to complete: %s", taskErr)
 			}
 
-			_, err = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+			getTaskByIdRequest := import6.GetTaskByIdRequest{
+				ExtId: taskUUID,
+			}
+			_, err = taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 			if err != nil {
 				return fmt.Errorf("error while fetching Cluster Deletion Task Details: %s", err)
 			}
@@ -279,6 +354,7 @@ func isCategoryNotFoundErr(err error) bool {
 func testAccCheckNutanixClusterCategoriesDestroy(s *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 	categoryClient := conn.PrismAPI.CategoriesAPIInstance
+	ctx := context.Background()
 
 	// Collect all category IDs that should be destroyed
 	var categoryIDs []string
@@ -291,11 +367,17 @@ func testAccCheckNutanixClusterCategoriesDestroy(s *terraform.State) error {
 
 	// Check if categories still exist
 	for _, categoryID := range categoryIDs {
-		_, err := categoryClient.GetCategoryById(utils.StringPtr(categoryID), nil)
+		getCategoryByIdRequest := import7.GetCategoryByIdRequest{
+			ExtId: utils.StringPtr(categoryID),
+		}
+		_, err := categoryClient.GetCategoryById(ctx, &getCategoryByIdRequest)
 		if err == nil {
 			// Category still exists, try to delete it
 			fmt.Printf("[DEBUG] Category still exists, attempting to delete: %s\n", categoryID)
-			_, deleteErr := categoryClient.DeleteCategoryById(utils.StringPtr(categoryID))
+			deleteCategoryByIdRequest := import7.DeleteCategoryByIdRequest{
+				ExtId: utils.StringPtr(categoryID),
+			}
+			_, deleteErr := categoryClient.DeleteCategoryById(ctx, &deleteCategoryByIdRequest)
 			if deleteErr != nil {
 				return fmt.Errorf("error: Category %s still exists and could not be deleted: %v", categoryID, deleteErr)
 			}
@@ -308,4 +390,122 @@ func testAccCheckNutanixClusterCategoriesDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckNutanixSnmpUserDestroy(s *terraform.State) error {
+	conn := acc.TestAccProvider.Meta().(*conns.Client).ClusterAPI
+	ctx := context.Background()
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "nutanix_snmp_user_v2" {
+			continue
+		}
+		clusterExtID := rs.Primary.Attributes["cluster_ext_id"]
+		extID := rs.Primary.ID
+		if clusterExtID == "" || extID == "" {
+			continue
+		}
+
+		getReq := import5.GetSnmpUserByIdRequest{
+			ClusterExtId: utils.StringPtr(clusterExtID),
+			ExtId:        utils.StringPtr(extID),
+		}
+		_, errRead := conn.ClusterEntityAPI.GetSnmpUserById(ctx, &getReq)
+		if errRead != nil {
+			if isSnmpUserNotFound(errRead, extID) {
+				log.Printf("[INFO] CheckDestroy: SNMP user %s on cluster %s confirmed deleted",
+					extID, clusterExtID)
+				continue
+			}
+			return fmt.Errorf("CheckDestroy: read SNMP user %s on cluster %s: %w",
+				extID, clusterExtID, errRead)
+		}
+
+		// User still exists — best-effort clean-up so the next run is
+		// not poisoned, then fail loudly so the leak surfaces.
+		log.Printf("[WARN] CheckDestroy: SNMP user %s still exists on cluster %s; attempting force delete",
+			extID, clusterExtID)
+		delReq := import5.DeleteSnmpUserByIdRequest{
+			ClusterExtId: utils.StringPtr(clusterExtID),
+			ExtId:        utils.StringPtr(extID),
+		}
+		if _, err := conn.ClusterEntityAPI.DeleteSnmpUserById(ctx, &delReq); err != nil {
+			log.Printf("[WARN] CheckDestroy: force-delete of leaked SNMP user %s failed: %v",
+				extID, err)
+		}
+		return fmt.Errorf("CheckDestroy: SNMP user %s on cluster %s was not destroyed by Terraform",
+			extID, clusterExtID)
+	}
+	return nil
+}
+
+// testAccCheckNutanixSnmpTrapDestroy mirrors testAccCheckNutanixSnmpUserDestroy
+// for the SNMP trap resource: it walks the test state for every
+// nutanix_snmp_trap_v2 entry, calls GetSnmpTrapById, and treats only a
+// not-found-style error as a successful destroy. If the trap is still
+// readable we attempt a best-effort DeleteSnmpTrapById to leave the
+// cluster clean for the next run, then fail loudly so the leak is visible.
+func testAccCheckNutanixSnmpTrapDestroy(s *terraform.State) error {
+	conn := acc.TestAccProvider.Meta().(*conns.Client).ClusterAPI
+	ctx := context.Background()
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "nutanix_snmp_trap_v2" {
+			continue
+		}
+		clusterExtID := rs.Primary.Attributes["cluster_ext_id"]
+		extID := rs.Primary.ID
+		if clusterExtID == "" || extID == "" {
+			continue
+		}
+
+		getReq := import5.GetSnmpTrapByIdRequest{
+			ClusterExtId: utils.StringPtr(clusterExtID),
+			ExtId:        utils.StringPtr(extID),
+		}
+		_, errRead := conn.ClusterEntityAPI.GetSnmpTrapById(ctx, &getReq)
+		if errRead != nil {
+			if isSnmpUserNotFound(errRead, extID) {
+				log.Printf("[INFO] CheckDestroy: SNMP trap %s on cluster %s confirmed deleted",
+					extID, clusterExtID)
+				continue
+			}
+			return fmt.Errorf("CheckDestroy: read SNMP trap %s on cluster %s: %w",
+				extID, clusterExtID, errRead)
+		}
+
+		log.Printf("[WARN] CheckDestroy: SNMP trap %s still exists on cluster %s; attempting force delete",
+			extID, clusterExtID)
+		delReq := import5.DeleteSnmpTrapByIdRequest{
+			ClusterExtId: utils.StringPtr(clusterExtID),
+			ExtId:        utils.StringPtr(extID),
+		}
+		if _, err := conn.ClusterEntityAPI.DeleteSnmpTrapById(ctx, &delReq); err != nil {
+			log.Printf("[WARN] CheckDestroy: force-delete of leaked SNMP trap %s failed: %v",
+				extID, err)
+		}
+		return fmt.Errorf("CheckDestroy: SNMP trap %s on cluster %s was not destroyed by Terraform",
+			extID, clusterExtID)
+	}
+	return nil
+}
+
+// isSnmpUserNotFound reports whether the error returned by GetSnmpUserById
+// indicates the user no longer exists on the cluster. The upstream API is
+// inconsistent about how it surfaces this (404, CLU-10001 "doesn't belong to
+// cluster", rbac errors, etc.), so we match liberally on substrings.
+func isSnmpUserNotFound(err error, id string) bool {
+	if err == nil {
+		return false
+	}
+	s := strings.ToLower(fmt.Sprint(err))
+	return strings.Contains(s, "user "+strings.ToLower(id)+" not found") ||
+		strings.Contains(s, "not found") ||
+		strings.Contains(s, "404") ||
+		strings.Contains(s, "no snmp user") ||
+		strings.Contains(s, "doesn't belong to cluster") ||
+		strings.Contains(s, "does not belong to cluster") ||
+		strings.Contains(s, "clu-10001") ||
+		strings.Contains(s, "could not be fetched") ||
+		strings.Contains(s, "rbac_authorization_error")
 }

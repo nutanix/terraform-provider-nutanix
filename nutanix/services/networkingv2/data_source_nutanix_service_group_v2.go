@@ -5,7 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/request/servicegroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -113,6 +114,10 @@ func DatasourceNutanixServiceGroupV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -121,8 +126,10 @@ func DatasourceNutanixServiceGroupV2Read(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.Client).MicroSegAPI
 
 	extID := d.Get("ext_id")
-
-	resp, err := conn.ServiceGroupAPIInstance.GetServiceGroupById(utils.StringPtr(extID.(string)))
+	getServiceGroupByIdRequest := import2.GetServiceGroupByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.ServiceGroupAPIInstance.GetServiceGroupById(ctx, &getServiceGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching service group : %v", err)
 	}
@@ -161,6 +168,10 @@ func DatasourceNutanixServiceGroupV2Read(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 	if err := d.Set("tenant_id", utils.StringValue(getResp.TenantId)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
 		return diag.FromErr(err)
 	}
 

@@ -5,7 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/error"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/error"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/users"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -74,7 +75,11 @@ func resourceNutanixUserRevokeKeyV2Create(ctx context.Context, d *schema.Resourc
 		ExtID = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.UsersAPIInstance.RevokeUserKey(userExtID, ExtID)
+	revokeUserKeyRequest := import2.RevokeUserKeyRequest{
+		UserExtId: userExtID,
+		ExtId:     ExtID,
+	}
+	resp, err := conn.UsersAPIInstance.RevokeUserKey(ctx, &revokeUserKeyRequest)
 	if err != nil {
 		return diag.Errorf("error while revoking the user key: %v | ExtId: %s | userExtId: %s", err, *ExtID, *userExtID)
 	}

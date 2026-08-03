@@ -6,7 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/policies"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/policies"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/vmantiaffinitypolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -67,7 +68,14 @@ func DatasourceNutanixVMAntiAffinityPoliciesV2Read(ctx context.Context, d *schem
 		orderBy = nil
 	}
 
-	resp, err := conn.VMAntiAffinityPolicyAPIInstance.ListVmAntiAffinityPolicies(page, limit, filter, orderBy)
+	listRequest := import2.ListVmAntiAffinityPoliciesRequest{
+		Page_:    page,
+		Limit_:   limit,
+		Filter_:  filter,
+		Orderby_: orderBy,
+	}
+
+	resp, err := conn.VMAntiAffinityPolicyAPIInstance.ListVmAntiAffinityPolicies(ctx, &listRequest)
 
 	if err != nil {
 		return diag.Errorf("error while fetching policies : %v", err)
@@ -87,7 +95,7 @@ func DatasourceNutanixVMAntiAffinityPoliciesV2Read(ctx context.Context, d *schem
 		}}
 	}
 
-	getResp := resp.Data.GetValue().([]policies.VmAntiAffinityPolicy)
+	getResp := resp.Data.GetValue().([]import1.VmAntiAffinityPolicy)
 
 	if err := d.Set("policies", flattenVMAntiAffinityPolicyEntities(getResp)); err != nil {
 		return diag.FromErr(err)
@@ -98,7 +106,7 @@ func DatasourceNutanixVMAntiAffinityPoliciesV2Read(ctx context.Context, d *schem
 	return nil
 }
 
-func flattenVMAntiAffinityPolicyEntities(pr []policies.VmAntiAffinityPolicy) []interface{} {
+func flattenVMAntiAffinityPolicyEntities(pr []import1.VmAntiAffinityPolicy) []interface{} {
 	if len(pr) == 0 {
 		return nil
 	}

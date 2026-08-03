@@ -1,0 +1,778 @@
+{
+    "status": {},
+    "spec": {
+        "name": "test_terraform_bp_with_snapshot_config",
+        "description": "",
+        "resources": {
+            "service_definition_list": [
+                {
+                    "name": "Service1",
+                    "description": "",
+                    "variable_list": [],
+                    "action_list": [
+                        {
+                            "type": "system",
+                            "name": "action_create",
+                            "description": "System action for creating an application",
+                            "runbook": {
+                                "name": "2b4f6be2_runbook",
+                                "description": "",
+                                "task_definition_list": [
+                                    {
+                                        "type": "DAG",
+                                        "name": "1737fcd0_dag",
+                                        "description": "",
+                                        "attrs": {
+                                            "type": "",
+                                            "edges": []
+                                        },
+                                        "child_tasks_local_reference_list": [],
+                                        "variable_list": [],
+                                        "target_any_local_reference": {
+                                            "name": "Service1",
+                                            "kind": "app_service"
+                                        },
+                                        "timeout_secs": "0",
+                                        "retries": "0",
+                                        "inherit_target": false,
+                                        "status_map_list": []
+                                    }
+                                ],
+                                "main_task_local_reference": {
+                                    "name": "1737fcd0_dag",
+                                    "kind": "app_task"
+                                },
+                                "variable_list": []
+                            },
+                            "critical": false
+                        },
+                        {
+                            "type": "system",
+                            "name": "action_delete",
+                            "description": "System action for deleting an application. Deletes created VMs as well",
+                            "runbook": {
+                                "name": "64563ee8_runbook",
+                                "description": "",
+                                "task_definition_list": [
+                                    {
+                                        "type": "DAG",
+                                        "name": "9fde5afd_dag",
+                                        "description": "",
+                                        "attrs": {
+                                            "type": "",
+                                            "edges": []
+                                        },
+                                        "child_tasks_local_reference_list": [],
+                                        "variable_list": [],
+                                        "target_any_local_reference": {
+                                            "name": "Service1",
+                                            "kind": "app_service"
+                                        },
+                                        "timeout_secs": "0",
+                                        "retries": "0",
+                                        "inherit_target": false,
+                                        "status_map_list": []
+                                    }
+                                ],
+                                "main_task_local_reference": {
+                                    "name": "9fde5afd_dag",
+                                    "kind": "app_task"
+                                },
+                                "variable_list": []
+                            },
+                            "critical": false
+                        },
+                        {
+                            "type": "system",
+                            "name": "action_start",
+                            "description": "System action for starting an application",
+                            "runbook": {
+                                "name": "9d3aa823_runbook",
+                                "description": "",
+                                "task_definition_list": [
+                                    {
+                                        "type": "DAG",
+                                        "name": "5572d813_dag",
+                                        "description": "",
+                                        "attrs": {
+                                            "type": "",
+                                            "edges": []
+                                        },
+                                        "child_tasks_local_reference_list": [],
+                                        "variable_list": [],
+                                        "target_any_local_reference": {
+                                            "name": "Service1",
+                                            "kind": "app_service"
+                                        },
+                                        "timeout_secs": "0",
+                                        "retries": "0",
+                                        "inherit_target": false,
+                                        "status_map_list": []
+                                    }
+                                ],
+                                "main_task_local_reference": {
+                                    "name": "5572d813_dag",
+                                    "kind": "app_task"
+                                },
+                                "variable_list": []
+                            },
+                            "critical": false
+                        },
+                        {
+                            "type": "system",
+                            "name": "action_stop",
+                            "description": "System action for stopping an application",
+                            "runbook": {
+                                "name": "24ee14fa_runbook",
+                                "description": "",
+                                "task_definition_list": [
+                                    {
+                                        "type": "DAG",
+                                        "name": "5b88f628_dag",
+                                        "description": "",
+                                        "attrs": {
+                                            "type": "",
+                                            "edges": []
+                                        },
+                                        "child_tasks_local_reference_list": [],
+                                        "variable_list": [],
+                                        "target_any_local_reference": {
+                                            "name": "Service1",
+                                            "kind": "app_service"
+                                        },
+                                        "timeout_secs": "0",
+                                        "retries": "0",
+                                        "inherit_target": false,
+                                        "status_map_list": []
+                                    }
+                                ],
+                                "main_task_local_reference": {
+                                    "name": "5b88f628_dag",
+                                    "kind": "app_task"
+                                },
+                                "variable_list": []
+                            },
+                            "critical": false
+                        },
+                        {
+                            "type": "system",
+                            "name": "action_restart",
+                            "description": "System action for restarting an application",
+                            "runbook": {
+                                "name": "f4e70652_runbook",
+                                "description": "",
+                                "task_definition_list": [
+                                    {
+                                        "type": "DAG",
+                                        "name": "422064b8_dag",
+                                        "description": "",
+                                        "attrs": {
+                                            "type": "",
+                                            "edges": []
+                                        },
+                                        "child_tasks_local_reference_list": [],
+                                        "variable_list": [],
+                                        "target_any_local_reference": {
+                                            "name": "Service1",
+                                            "kind": "app_service"
+                                        },
+                                        "timeout_secs": "0",
+                                        "retries": "0",
+                                        "inherit_target": false,
+                                        "status_map_list": []
+                                    }
+                                ],
+                                "main_task_local_reference": {
+                                    "name": "422064b8_dag",
+                                    "kind": "app_task"
+                                },
+                                "variable_list": []
+                            },
+                            "critical": false
+                        }
+                    ],
+                    "depends_on_list": [],
+                    "port_list": [],
+                    "singleton": false,
+                    "tier": ""
+                }
+            ],
+            "published_service_definition_list": [],
+            "substrate_definition_list": [
+                {
+                    "type": "AHV_VM",
+                    "name": "VM1",
+                    "description": "",
+                    "variable_list": [],
+                    "action_list": [],
+                    "create_spec": {
+                        "type": "",
+                        "name": "vm-@@{calm_time}@@",
+                        "availability_zone_reference": null,
+                        "backup_policy": null,
+                        "cluster_reference": {
+                            "type": "",
+                            "kind": "cluster",
+                            "name": "auto_cluster_prod_f6bee16a73c4",
+                            "uuid": "00063125-0d92-06e0-185b-ac1f6b6f97e2"
+                        },
+                        "resources": {
+                            "type": "",
+                            "nic_list": [
+                                {
+                                    "type": "",
+                                    "nic_type": "NORMAL_NIC",
+                                    "subnet_reference": {
+                                        "type": "",
+                                        "kind": "subnet",
+                                        "name": "",
+                                        "uuid": "519bf77c-8424-414f-a51c-adcb201ed163"
+                                    },
+                                    "network_function_nic_type": "INGRESS",
+                                    "mac_address": "",
+                                    "ip_endpoint_list": [],
+                                    "network_function_chain_reference": null,
+                                    "vpc_reference": null
+                                }
+                            ],
+                            "power_state": "ON",
+                            "guest_tools": null,
+                            "num_vcpus_per_socket": 1,
+                            "num_sockets": 1,
+                            "memory_size_mib": 1024,
+                            "gpu_list": [],
+                            "parent_reference": null,
+                            "hardware_clock_timezone": "",
+                            "account_uuid": "cfc9c901-319d-4841-bb73-daed685a9188",
+                            "guest_customization": null,
+                            "boot_config": {
+                                "type": "",
+                                "boot_device": {
+                                    "type": "",
+                                    "disk_address": {
+                                        "type": "",
+                                        "device_index": 0,
+                                        "adapter_type": "SCSI"
+                                    }
+                                },
+                                "mac_address": "",
+                                "boot_type": "LEGACY"
+                            },
+                            "vtpm_config": null,
+                            "disk_list": [
+                                {
+                                    "type": "",
+                                    "data_source_reference": {
+                                        "type": "",
+                                        "kind": "image",
+                                        "name": "Centos7HadoopMaster",
+                                        "uuid": "4289bda3-f2f6-48a0-aa27-31ac94574ecc"
+                                    },
+                                    "volume_group_reference": null,
+                                    "device_properties": {
+                                        "type": "",
+                                        "disk_address": {
+                                            "type": "",
+                                            "device_index": 0,
+                                            "adapter_type": "SCSI"
+                                        },
+                                        "device_type": "DISK"
+                                    },
+                                    "disk_size_mib": 20480
+                                }
+                            ],
+                            "serial_port_list": []
+                        },
+                        "categories": {}
+                    },
+                    "os_type": "Linux",
+                    "readiness_probe": {
+                        "login_credential_local_reference": {
+                            "name": "admin",
+                            "kind": "app_credential"
+                        },
+                        "connection_type": "SSH",
+                        "connection_port": 22,
+                        "delay_secs": "60",
+                        "retries": "5",
+                        "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+                        "disable_readiness_probe": true,
+                        "connection_protocol": ""
+                    }
+                }
+            ],
+            "package_definition_list": [
+                {
+                    "type": "DEB",
+                    "name": "Package1",
+                    "description": "",
+                    "variable_list": [],
+                    "action_list": [],
+                    "service_local_reference_list": [
+                        {
+                            "name": "Service1",
+                            "kind": "app_service"
+                        }
+                    ],
+                    "version": "",
+                    "options": {
+                        "type": "",
+                        "install_runbook": {
+                            "name": "9d39b51d_runbook",
+                            "description": "",
+                            "task_definition_list": [
+                                {
+                                    "type": "DAG",
+                                    "name": "88774f18_dag",
+                                    "description": "",
+                                    "attrs": {
+                                        "type": "",
+                                        "edges": []
+                                    },
+                                    "child_tasks_local_reference_list": [],
+                                    "variable_list": [],
+                                    "target_any_local_reference": {
+                                        "name": "Package1",
+                                        "kind": "app_package"
+                                    },
+                                    "timeout_secs": "0",
+                                    "retries": "0",
+                                    "inherit_target": false,
+                                    "status_map_list": []
+                                }
+                            ],
+                            "main_task_local_reference": {
+                                "name": "88774f18_dag",
+                                "kind": "app_task"
+                            },
+                            "variable_list": []
+                        },
+                        "uninstall_runbook": {
+                            "name": "bdc3e239_runbook",
+                            "description": "",
+                            "task_definition_list": [
+                                {
+                                    "type": "DAG",
+                                    "name": "820d5e1a_dag",
+                                    "description": "",
+                                    "attrs": {
+                                        "type": "",
+                                        "edges": []
+                                    },
+                                    "child_tasks_local_reference_list": [],
+                                    "variable_list": [],
+                                    "target_any_local_reference": {
+                                        "name": "Package1",
+                                        "kind": "app_package"
+                                    },
+                                    "timeout_secs": "0",
+                                    "retries": "0",
+                                    "inherit_target": false,
+                                    "status_map_list": []
+                                }
+                            ],
+                            "main_task_local_reference": {
+                                "name": "820d5e1a_dag",
+                                "kind": "app_task"
+                            },
+                            "variable_list": []
+                        },
+                        "upgrade_runbook": {}
+                    }
+                }
+            ],
+            "app_profile_list": [
+                {
+                    "name": "Default",
+                    "description": "",
+                    "variable_list": [],
+                    "action_list": [
+                        {
+                            "type": "user",
+                            "name": "Snapshot_s1",
+                            "description": "",
+                            "runbook": {
+                                "name": "Default_Snapshot_Configs1_8a48_Runbook",
+                                "description": "",
+                                "task_definition_list": [
+                                    {
+                                        "type": "DAG",
+                                        "name": "Default_Snapshot_Configs1_8a48_Dag",
+                                        "description": "",
+                                        "attrs": {
+                                            "type": "",
+                                            "edges": []
+                                        },
+                                        "child_tasks_local_reference_list": [
+                                            {
+                                                "name": "Snapshot_Configs1_Task",
+                                                "kind": "app_task"
+                                            }
+                                        ],
+                                        "variable_list": [],
+                                        "timeout_secs": "0",
+                                        "retries": "0",
+                                        "inherit_target": false,
+                                        "status_map_list": []
+                                    },
+                                    {
+                                        "type": "CALL_CONFIG",
+                                        "name": "Snapshot_Configs1_Task",
+                                        "description": "",
+                                        "attrs": {
+                                            "type": "",
+                                            "config_spec_reference": {
+                                                "name": "Snapshot_Configs1",
+                                                "kind": "app_config_spec"
+                                            },
+                                            "inarg_list": []
+                                        },
+                                        "child_tasks_local_reference_list": [],
+                                        "variable_list": [],
+                                        "target_any_local_reference": {
+                                            "name": "deployment_bac2b568",
+                                            "kind": "app_blueprint_deployment"
+                                        },
+                                        "timeout_secs": "0",
+                                        "retries": "0",
+                                        "inherit_target": false,
+                                        "status_map_list": []
+                                    }
+                                ],
+                                "main_task_local_reference": {
+                                    "name": "Default_Snapshot_Configs1_8a48_Dag",
+                                    "kind": "app_task"
+                                },
+                                "variable_list": []
+                            },
+                            "critical": false
+                        },
+                        {
+                            "type": "user",
+                            "name": "Restore_s1",
+                            "description": "",
+                            "runbook": {
+                                "name": "Default_Restore_Configs1_debb_Runbook",
+                                "description": "",
+                                "task_definition_list": [
+                                    {
+                                        "type": "DAG",
+                                        "name": "Default_Restore_Configs1_debb_Dag",
+                                        "description": "",
+                                        "attrs": {
+                                            "type": "",
+                                            "edges": []
+                                        },
+                                        "child_tasks_local_reference_list": [
+                                            {
+                                                "name": "Restore_Configs1_Task",
+                                                "kind": "app_task"
+                                            }
+                                        ],
+                                        "variable_list": [],
+                                        "timeout_secs": "0",
+                                        "retries": "0",
+                                        "inherit_target": false,
+                                        "status_map_list": []
+                                    },
+                                    {
+                                        "type": "CALL_CONFIG",
+                                        "name": "Restore_Configs1_Task",
+                                        "description": "",
+                                        "attrs": {
+                                            "type": "",
+                                            "config_spec_reference": {
+                                                "name": "Restore_Configs1",
+                                                "kind": "app_config_spec"
+                                            },
+                                            "inarg_list": []
+                                        },
+                                        "child_tasks_local_reference_list": [],
+                                        "variable_list": [],
+                                        "target_any_local_reference": {
+                                            "name": "deployment_bac2b568",
+                                            "kind": "app_blueprint_deployment"
+                                        },
+                                        "timeout_secs": "0",
+                                        "retries": "0",
+                                        "inherit_target": false,
+                                        "status_map_list": []
+                                    }
+                                ],
+                                "main_task_local_reference": {
+                                    "name": "Default_Restore_Configs1_debb_Dag",
+                                    "kind": "app_task"
+                                },
+                                "variable_list": []
+                            },
+                            "critical": false
+                        }
+                    ],
+                    "deployment_create_list": [
+                        {
+                            "type": "GREENFIELD",
+                            "name": "deployment_bac2b568",
+                            "description": "",
+                            "variable_list": [],
+                            "action_list": [],
+                            "depends_on_list": [],
+                            "min_replicas": "1",
+                            "max_replicas": "1",
+                            "default_replicas": "1",
+                            "package_local_reference_list": [
+                                {
+                                    "name": "Package1",
+                                    "kind": "app_package"
+                                }
+                            ],
+                            "substrate_local_reference": {
+                                "name": "VM1",
+                                "kind": "app_substrate"
+                            },
+                            "published_service_local_reference_list": []
+                        }
+                    ],
+                    "snapshot_config_list": [
+                        {
+                            "type": "AHV_SNAPSHOT",
+                            "name": "Snapshot_Configs1",
+                            "description": "",
+                            "attrs_list": [
+                                {
+                                    "target_any_local_reference": {
+                                        "name": "deployment_bac2b568",
+                                        "kind": "app_blueprint_deployment"
+                                    },
+                                    "snapshot_name": "",
+                                    "snapshot_type": "CRASH_CONSISTENT",
+                                    "snapshot_location_type": "LOCAL",
+                                    "num_of_replicas": "ONE"
+                                }
+                            ],
+                            "variable_list": [
+                                {
+                                    "type": "LOCAL",
+                                    "name": "snapshot_name",
+                                    "description": "",
+                                    "is_hidden": false,
+                                    "is_mandatory": true,
+                                    "data_type": "BASE",
+                                    "val_type": "STRING",
+                                    "label": "",
+                                    "attrs": {
+                                        "type": ""
+                                    },
+                                    "editables": {
+                                        "value": true
+                                    },
+                                    "value": "snapshot-@@{calm_array_index}@@-@@{calm_time}@@"
+                                },
+                                {
+                                    "type": "LOCAL",
+                                    "name": "snapshot_type",
+                                    "description": "",
+                                    "is_hidden": false,
+                                    "is_mandatory": true,
+                                    "data_type": "BASE",
+                                    "val_type": "STRING",
+                                    "label": "",
+                                    "attrs": {
+                                        "type": ""
+                                    },
+                                    "editables": {
+                                        "value": true
+                                    },
+                                    "value": "CRASH_CONSISTENT"
+                                }
+                            ],
+                            "runbook": {
+                                "name": "SYS_GEN__Runbook_Snapshot_Configs1_c8813245_8f43_b023_1fde_154277939a70",
+                                "description": "",
+                                "task_definition_list": [
+                                    {
+                                        "type": "DAG",
+                                        "name": "SYS_GEN__DAG_Config_action_snapshot_create_c8813245_8f43_b023_1fde_154277939a70",
+                                        "description": "",
+                                        "attrs": {
+                                            "type": "DAG",
+                                            "edges": []
+                                        },
+                                        "child_tasks_local_reference_list": [
+                                            {
+                                                "name": "SYS_GEN__Nutanix_Snapshot_Create_de12fa34_f57c_6d14_03c4_292a47e14218",
+                                                "kind": "app_task"
+                                            }
+                                        ],
+                                        "variable_list": [],
+                                        "timeout_secs": "0",
+                                        "retries": "0",
+                                        "inherit_target": false,
+                                        "status_map_list": []
+                                    },
+                                    {
+                                        "type": "VM_SNAPSHOT_CREATE_NUTANIX",
+                                        "name": "SYS_GEN__Nutanix_Snapshot_Create_de12fa34_f57c_6d14_03c4_292a47e14218",
+                                        "description": "",
+                                        "attrs": {
+                                            "type": "GENERIC_OPERATION",
+                                            "operation_type": "action_snapshot_create"
+                                        },
+                                        "child_tasks_local_reference_list": [],
+                                        "variable_list": [],
+                                        "target_any_local_reference": {
+                                            "name": "VM1",
+                                            "kind": "app_substrate"
+                                        },
+                                        "timeout_secs": "0",
+                                        "retries": "0",
+                                        "inherit_target": false,
+                                        "status_map_list": []
+                                    }
+                                ],
+                                "main_task_local_reference": {
+                                    "name": "SYS_GEN__DAG_Config_action_snapshot_create_c8813245_8f43_b023_1fde_154277939a70",
+                                    "kind": "app_task"
+                                },
+                                "variable_list": []
+                            },
+                            "config_reference_list": [
+                                {
+                                    "name": "Restore_Configs1",
+                                    "kind": "app_config_spec"
+                                }
+                            ],
+                            "is_system_generated": false
+                        }
+                    ],
+                    "restore_config_list": [
+                        {
+                            "type": "AHV_RESTORE",
+                            "name": "Restore_Configs1",
+                            "description": "",
+                            "attrs_list": [
+                                {
+                                    "target_any_local_reference": {
+                                        "name": "deployment_bac2b568",
+                                        "kind": "app_blueprint_deployment"
+                                    },
+                                    "recovery_point_group_uuid": "",
+                                    "delete_vm_post_restore": false,
+                                    "snapshot_location_type": "LOCAL",
+                                    "num_of_replicas": "ONE"
+                                }
+                            ],
+                            "variable_list": [
+                                {
+                                    "type": "LOCAL",
+                                    "name": "snapshot_uuids",
+                                    "description": "",
+                                    "is_hidden": false,
+                                    "is_mandatory": true,
+                                    "data_type": "BASE",
+                                    "val_type": "STRING",
+                                    "label": "",
+                                    "attrs": {
+                                        "type": ""
+                                    },
+                                    "editables": {
+                                        "value": true
+                                    },
+                                    "value": ""
+                                }
+                            ],
+                            "runbook": {
+                                "name": "SYS_GEN__Runbook_Restore_Configs1_4a47a11d_ce9a_0e43_28ca_ae8b73d5fd9e",
+                                "description": "",
+                                "task_definition_list": [
+                                    {
+                                        "type": "DAG",
+                                        "name": "SYS_GEN__DAG_Config_action_restore_4a47a11d_ce9a_0e43_28ca_ae8b73d5fd9e",
+                                        "description": "",
+                                        "attrs": {
+                                            "type": "DAG",
+                                            "edges": []
+                                        },
+                                        "child_tasks_local_reference_list": [
+                                            {
+                                                "name": "SYS_GEN__Nutanix_Restore_de12fa34_f57c_6d14_03c4_292a47e14218",
+                                                "kind": "app_task"
+                                            }
+                                        ],
+                                        "variable_list": [],
+                                        "timeout_secs": "0",
+                                        "retries": "0",
+                                        "inherit_target": false,
+                                        "status_map_list": []
+                                    },
+                                    {
+                                        "type": "VM_RESTORE_NUTANIX",
+                                        "name": "SYS_GEN__Nutanix_Restore_de12fa34_f57c_6d14_03c4_292a47e14218",
+                                        "description": "",
+                                        "attrs": {
+                                            "type": "GENERIC_OPERATION",
+                                            "operation_type": "action_restore"
+                                        },
+                                        "child_tasks_local_reference_list": [],
+                                        "variable_list": [],
+                                        "target_any_local_reference": {
+                                            "name": "VM1",
+                                            "kind": "app_substrate"
+                                        },
+                                        "timeout_secs": "0",
+                                        "retries": "0",
+                                        "inherit_target": false,
+                                        "status_map_list": []
+                                    }
+                                ],
+                                "main_task_local_reference": {
+                                    "name": "SYS_GEN__DAG_Config_action_restore_4a47a11d_ce9a_0e43_28ca_ae8b73d5fd9e",
+                                    "kind": "app_task"
+                                },
+                                "variable_list": []
+                            },
+                            "config_reference_list": [],
+                            "is_system_generated": false
+                        }
+                    ],
+                    "environment_reference_list": [],
+                    "application_url": "",
+                    "patch_list": []
+                }
+            ],
+            "credential_definition_list": [
+                {
+                    "type": "PASSWORD",
+                    "name": "admin",
+                    "description": "",
+                    "username": "root",
+                    "secret": {
+                        "attrs": {
+                            "secret_reference": {},
+                            "is_secret_modified": false
+                        }
+                    },
+                    "cred_class": "static"
+                }
+            ],
+            "default_credential_local_reference": {
+                "name": "admin",
+                "kind": "app_credential"
+            },
+            "type": "USER",
+            "client_attrs": {}
+        }
+    },
+    "api_version": "3.0",
+    "product_version": "4.1.0",
+    "metadata": {
+        "last_update_time": "1744720520932488",
+        "creation_time": "1744720468951833",
+        "spec_version": 3,
+        "name": "test_terraform_bp_with_snapshot_config",
+        "kind": "blueprint",
+        "categories": {
+            "TemplateType": "Vm"
+        }
+    },
+    "contains_secrets": false
+}

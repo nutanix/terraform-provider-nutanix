@@ -107,6 +107,7 @@ The following attributes are exported:
   | QCOW2 | The QCOW2 disk format of an OVA. |
 - `create_time`: - Time when the OVA was created time.
 - `last_update_time`: - Time when the OVA was last updated time.
+- `project_ext_id`: - External identifier of the project associated with the OVA.
 
 ### Links
 

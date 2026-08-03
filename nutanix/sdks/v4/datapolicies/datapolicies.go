@@ -1,15 +1,15 @@
 package datapolicies
 
 import (
-	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/api"
-	datapolicies "github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/client"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/api"
+	datapolicies "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/sdkconfig"
 )
 
 type Client struct {
-	ProtectionPolicies *api.ProtectionPoliciesApi
-	StoragePolicies    *api.StoragePoliciesApi
+	ProtectionPolicies *api.ProtectionPoliciesServiceApi
+	StoragePolicies    *api.StoragePoliciesServiceApi
 }
 
 func NewDataPoliciesClient(credentials client.Credentials) (*Client, error) {
@@ -25,9 +25,10 @@ func NewDataPoliciesClient(credentials client.Credentials) (*Client, error) {
 		pcClient.AllowVersionNegotiation = cfg.AllowVersionNegotiation
 		baseClient = pcClient
 	}
+	f := &Client{
+		ProtectionPolicies: api.NewProtectionPoliciesServiceApi(baseClient),
+		StoragePolicies:    api.NewStoragePoliciesServiceApi(baseClient),
+	}
 
-	return &Client{
-		ProtectionPolicies: api.NewProtectionPoliciesApi(baseClient),
-		StoragePolicies:    api.NewStoragePoliciesApi(baseClient),
-	}, nil
+	return f, nil
 }

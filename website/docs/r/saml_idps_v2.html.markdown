@@ -13,6 +13,7 @@ Provides a resource to Create a SAML Identity Provider.
 ## Example Usage
 
 ```hcl
+# Create a SAML IDENTITY with system defined project
 resource "nutanix_saml_identity_providers_v2" "idp" {
   name                        = "example_idp_name"
   idp_metadata {
@@ -22,6 +23,69 @@ resource "nutanix_saml_identity_providers_v2" "idp" {
     error_url = "error_url"
     certificate = "certificate"
   }
+  username_attribute          = "username"
+  email_attribute             = "email"
+  groups_attribute            = "groups"
+  groups_delim                = "," # such as ',' or ';'
+  idp_metadata_xml            = "<IDENTITY_PROVIDER_METADATA_XML content>"
+  entity_issuer               = "entity_issuer_issuer"
+  is_signed_authn_req_enabled = true
+  custom_attributes           = ["custom1", "custom2"]
+}
+
+# Create a SAML IDENTITY with system defined project, share it with All projects
+resource "nutanix_saml_identity_providers_v2" "idp" {
+  name                        = "example_idp_name"
+  idp_metadata {
+    entity_id = "entity_id"
+    login_url = "login_url"
+    logout_url = "logout_url"
+    error_url = "error_url"
+    certificate = "certificate"
+  }
+  share_with_all_projects     = true
+  username_attribute          = "username"
+  email_attribute             = "email"
+  groups_attribute            = "groups"
+  groups_delim                = "," # such as ',' or ';'
+  idp_metadata_xml            = "<IDENTITY_PROVIDER_METADATA_XML content>"
+  entity_issuer               = "entity_issuer_issuer"
+  is_signed_authn_req_enabled = true
+  custom_attributes           = ["custom1", "custom2"]
+}
+
+# Create a SAML IDENTITY with system defined project, share it with specific projects
+resource "nutanix_saml_identity_providers_v2" "idp" {
+  name                        = "example_idp_name"
+  idp_metadata {
+    entity_id = "entity_id"
+    login_url = "login_url"
+    logout_url = "logout_url"
+    error_url = "error_url"
+    certificate = "certificate"
+  }
+  shared_with_projects = ["<project1_uuid>", "<projects2_uuid>"]
+  username_attribute          = "username"
+  email_attribute             = "email"
+  groups_attribute            = "groups"
+  groups_delim                = "," # such as ',' or ';'
+  idp_metadata_xml            = "<IDENTITY_PROVIDER_METADATA_XML content>"
+  entity_issuer               = "entity_issuer_issuer"
+  is_signed_authn_req_enabled = true
+  custom_attributes           = ["custom1", "custom2"]
+}
+
+# Create a SAML IDENTITY with user defined project
+resource "nutanix_saml_identity_providers_v2" "idp" {
+  name                        = "example_idp_name"
+  idp_metadata {
+    entity_id = "entity_id"
+    login_url = "login_url"
+    logout_url = "logout_url"
+    error_url = "error_url"
+    certificate = "certificate"
+  }
+  project_ext_id              = "<project_uuid>"
   username_attribute          = "username"
   email_attribute             = "email"
   groups_attribute            = "groups"
@@ -42,6 +106,9 @@ The following arguments are supported:
 * `idp_metadata_xml`: -(Optional) Base64 encoded metadata in XML format with IDP details.
 * `idp_metadata`: -(Optional) Type of the User Group. LDAP (User Group belonging to a Directory Service (Open LDAP/AD)),  SAML (User Group belonging to a SAML IDP.)
 * `name`: -(Required) Unique name of the IDP.
+* `project_ext_id`: -(Optional) Project reference for the SAML Identity Provider.
+* `shared_with_projects`: -(Optional) List of projects with which the SAML Identity Provider is shared.
+* `share_with_all_projects`: -(Optional)  Flag indicating whether the SAML Identity Provider is shared with all projects or not.
 * `username_attr`: -(Optional) SAML assertion Username attribute element.
 * `email_attr`: -(Optional) SAML assertion email attribute element.
 * `groups_attr`: -(Optional) SAML assertion groups attribute element.
@@ -75,10 +142,13 @@ The idp_metadata attribute supports the following:
 The following attributes are exported:
 
 * `tenant_id` - A globally unique identifier that represents the tenant that owns this entity. The system automatically assigns it, and it and is immutable from an API consumer perspective (some use cases may cause this Id to change - For instance, a use case may require the transfer of ownership of the entity, but these cases are handled automatically on the server).
-* `ext_id` - The External Identifier of the User Group.
+* `ext_id` - The External Identifier of the SAML Identity Provider.
 * `links`: - A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 * `idp_metadata`: - Type of the User Group. LDAP (User Group belonging to a Directory Service (Open LDAP/AD)),  SAML (User Group belonging to a SAML IDP.)
 * `name`: - Unique name of the IDP.
+* `project_ext_id`: - Project reference for the SAML Identity Provider.
+* `shared_with_projects`: - List of projects with which the SAML Identity Provider is shared.
+* `share_with_all_projects`: - Flag indicating whether the SAML Identity Provider is shared with all projects or not.
 * `username_attr`: - SAML assertion Username attribute element.
 * `email_attr`: - SAML assertion email attribute element.
 * `groups_attr`: - SAML assertion groups attribute element.

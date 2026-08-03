@@ -5,7 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
+	volumesClient "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/request/volumegroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -132,6 +133,10 @@ func DatasourceNutanixVolumeGroupV2() *schema.Resource {
 				Type:        schema.TypeBool,
 				Computed:    true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -140,8 +145,10 @@ func DatasourceNutanixVolumeGroupV2Read(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.Client).VolumeAPI
 
 	extID := d.Get("ext_id")
-
-	resp, err := conn.VolumeAPIInstance.GetVolumeGroupById(utils.StringPtr(extID.(string)), nil)
+	getVolumeGroupByIdRequest := import1.GetVolumeGroupByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.VolumeAPIInstance.GetVolumeGroupById(ctx, &getVolumeGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Volume Group : %v", err)
 	}
@@ -182,6 +189,9 @@ func DatasourceNutanixVolumeGroupV2Read(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 	if err := d.Set("is_hidden", getResp.IsHidden); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
 		return diag.FromErr(err)
 	}
 

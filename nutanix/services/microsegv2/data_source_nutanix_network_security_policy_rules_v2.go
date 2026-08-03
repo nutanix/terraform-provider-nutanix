@@ -6,9 +6,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	config "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/common/v1/config"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/common/v1/response"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
+	config "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/common/v1/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/common/v1/response"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/request/networksecuritypolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -148,27 +149,27 @@ func DataSourceNutanixNetworkSecurityPolicyRulesV2Read(ctx context.Context, d *s
 	conn := meta.(*conns.Client).MicroSegAPI
 
 	policyExtID := d.Get("policy_ext_id").(string)
-	var page, limit *int
-	var filter, orderBy, select_ *string
+	listNetworkSecurityPolicyRulesRequest := import3.ListNetworkSecurityPolicyRulesRequest{
+		PolicyExtId: utils.StringPtr(policyExtID),
+	}
 
 	if v, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(v.(int))
+		listNetworkSecurityPolicyRulesRequest.Page_ = utils.IntPtr(v.(int))
 	}
 	if v, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(v.(int))
+		listNetworkSecurityPolicyRulesRequest.Limit_ = utils.IntPtr(v.(int))
 	}
 	if v, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(v.(string))
+		listNetworkSecurityPolicyRulesRequest.Filter_ = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(v.(string))
+		listNetworkSecurityPolicyRulesRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("select"); ok {
-		select_ = utils.StringPtr(v.(string))
+		listNetworkSecurityPolicyRulesRequest.Select_ = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.NetworkingSecurityInstance.ListNetworkSecurityPolicyRules(
-		utils.StringPtr(policyExtID), page, limit, filter, orderBy, select_)
+	resp, err := conn.NetworkingSecurityInstance.ListNetworkSecurityPolicyRules(ctx, &listNetworkSecurityPolicyRulesRequest)
 	if err != nil {
 		return diag.Errorf("error listing network security policy rules: %v", err)
 	}

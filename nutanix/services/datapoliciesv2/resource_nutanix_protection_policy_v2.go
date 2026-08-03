@@ -7,14 +7,17 @@ import (
 	"reflect"
 	"sort"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/datapolicies/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/dataprotection/v4/common"
-	prism "github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/prism/v4/config"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/request/protectionpolicies"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/dataprotection/v4/common"
+	prism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/prism/v4/config"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	commonUtils "github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -77,6 +80,11 @@ func ResourceNutanixProtectionPoliciesV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -96,16 +104,21 @@ func ResourceNutanixProtectionPoliciesV2Create(ctx context.Context, d *schema.Re
 		bodySpec.ReplicationLocations = expandReplicationLocations(replicationLocations.([]interface{}))
 	}
 	if replicationConfigurations, ok := d.GetOk("replication_configurations"); ok {
-		bodySpec.ReplicationConfigurations = expandReplicationConfigurations(replicationConfigurations.([]interface{}))
+		bodySpec.ReplicationConfigurations = expandReplicationConfigurations(replicationConfigurations.([]interface{}), false, d.GetRawConfig())
 	}
 	if categoryIds, ok := d.GetOk("category_ids"); ok {
 		bodySpec.CategoryIds = commonUtils.ExpandListOfString(categoryIds.([]interface{}))
 	}
-
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		bodySpec.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 	aJSON, _ := json.MarshalIndent(bodySpec, "", "  ")
 	log.Printf("[DEBUG] Create Protection Policy Body Spec: %s", string(aJSON))
 
-	resp, err := conn.ProtectionPolicies.CreateProtectionPolicy(bodySpec)
+	createProtectionPolicyRequest := import2.CreateProtectionPolicyRequest{
+		Body: bodySpec,
+	}
+	resp, err := conn.ProtectionPolicies.CreateProtectionPolicy(ctx, &createProtectionPolicyRequest)
 	if err != nil {
 		return diag.Errorf("error while creating Protection Policy: %v", err)
 	}
@@ -125,7 +138,10 @@ func ResourceNutanixProtectionPoliciesV2Create(ctx context.Context, d *schema.Re
 		return diag.Errorf("error waiting for protection policy (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import3.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching protection policy task: %v", err)
 	}
@@ -149,7 +165,10 @@ func ResourceNutanixProtectionPoliciesV2Read(ctx context.Context, d *schema.Reso
 
 	extID := d.Id()
 
-	resp, err := conn.ProtectionPolicies.GetProtectionPolicyById(utils.StringPtr(extID))
+	getProtectionPolicyByIdRequest := import2.GetProtectionPolicyByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	resp, err := conn.ProtectionPolicies.GetProtectionPolicyById(ctx, &getProtectionPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Protection Policy: %s", err)
 	}
@@ -189,14 +208,21 @@ func ResourceNutanixProtectionPoliciesV2Read(ctx context.Context, d *schema.Reso
 	if err := d.Set("owner_ext_id", getResp.OwnerExtId); err != nil {
 		return diag.FromErr(err)
 	}
-
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
 func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataPoliciesAPI
-
-	readResp, err := conn.ProtectionPolicies.GetProtectionPolicyById(utils.StringPtr(d.Id()))
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
+	getProtectionPolicyByIdRequest := import2.GetProtectionPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.ProtectionPolicies.GetProtectionPolicyById(ctx, &getProtectionPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Protection Policy: %v", err)
 	}
@@ -217,13 +243,18 @@ func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.Re
 		updateSpec.ReplicationLocations = expandReplicationLocations(replicationLocations.([]interface{}))
 	}
 	if replicationConfigurations, ok := d.GetOk("replication_configurations"); ok {
-		updateSpec.ReplicationConfigurations = expandReplicationConfigurations(replicationConfigurations.([]interface{}))
+		updateSpec.ReplicationConfigurations = expandReplicationConfigurations(replicationConfigurations.([]interface{}), true, d.GetRawConfig())
 	}
 	if categoryIds, ok := d.GetOk("category_ids"); ok {
 		updateSpec.CategoryIds = commonUtils.ExpandListOfString(categoryIds.([]interface{}))
 	}
-
-	resp, err := conn.ProtectionPolicies.UpdateProtectionPolicyById(utils.StringPtr(d.Id()), updateSpec, args)
+	updateProtectionPolicyByIdRequest := import2.UpdateProtectionPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  updateSpec,
+	}
+	aJSONbody, _ := json.MarshalIndent(updateProtectionPolicyByIdRequest, "", "  ")
+	log.Printf("[DEBUG] Update Protection Policy Body Spec: %s", string(aJSONbody))
+	resp, err := conn.ProtectionPolicies.UpdateProtectionPolicyById(ctx, &updateProtectionPolicyByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while updating Protection Policy: %v", err)
 	}
@@ -243,7 +274,10 @@ func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.Re
 		return diag.Errorf("error waiting for protection policy (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import3.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching protection policy task: %v", err)
 	}
@@ -257,7 +291,10 @@ func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.Re
 func ResourceNutanixProtectionPoliciesV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataPoliciesAPI
 
-	resp, err := conn.ProtectionPolicies.DeleteProtectionPolicyById(utils.StringPtr(d.Id()))
+	deleteProtectionPolicyByIdRequest := import2.DeleteProtectionPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ProtectionPolicies.DeleteProtectionPolicyById(ctx, &deleteProtectionPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting Protection Policy: %v", err)
 	}
@@ -276,7 +313,10 @@ func ResourceNutanixProtectionPoliciesV2Delete(ctx context.Context, d *schema.Re
 		return diag.Errorf("error waiting for protection policy (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import3.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching protection policy delete task: %v", err)
 	}
@@ -443,6 +483,20 @@ func schemaReplicationConfigurations() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IntAtMost(300), //nolint:gomnd
 						},
+						"latest_recovery_point_retention_seconds": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"is_replication_paused": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+						"schedule_ext_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -509,14 +563,14 @@ func expandOneOfReplicationLocationReplicationSubLocation(oneOfReplicationLocati
 	return oneOfReplicationLocationReplicationSubLocationSpec
 }
 
-func expandReplicationConfigurations(replicationConfigurationsData []interface{}) []config.ReplicationConfiguration {
+func expandReplicationConfigurations(replicationConfigurationsData []interface{}, isUpdate bool, rawConfig cty.Value) []config.ReplicationConfiguration {
 	if len(replicationConfigurationsData) == 0 {
 		return nil
 	}
 
 	replicationConfigurations := make([]config.ReplicationConfiguration, 0)
 
-	for _, replicationConfigurationData := range replicationConfigurationsData {
+	for i, replicationConfigurationData := range replicationConfigurationsData {
 		replicationConfigurationDataMap := replicationConfigurationData.(map[string]interface{})
 
 		replicationConfiguration := config.ReplicationConfiguration{}
@@ -527,7 +581,8 @@ func expandReplicationConfigurations(replicationConfigurationsData []interface{}
 			replicationConfiguration.RemoteLocationLabel = utils.StringPtr(remoteLocationLabel.(string))
 		}
 		if schedule, ok := replicationConfigurationDataMap["schedule"]; ok {
-			replicationConfiguration.Schedule = expandSchedule(schedule.([]interface{}))
+			retentionSet := isLatestRetentionSetInConfig(rawConfig, i)
+			replicationConfiguration.Schedule = expandSchedule(schedule.([]interface{}), isUpdate, retentionSet)
 		}
 		replicationConfigurations = append(replicationConfigurations, replicationConfiguration)
 	}
@@ -535,7 +590,40 @@ func expandReplicationConfigurations(replicationConfigurationsData []interface{}
 	return replicationConfigurations
 }
 
-func expandSchedule(scheduleData []interface{}) *config.Schedule {
+// isLatestRetentionSetInConfig reports whether latest_recovery_point_retention_seconds
+// was explicitly set by the user in the config for the replication configuration at the
+// given index. It inspects the raw config because the attribute is a plain Optional int:
+// once omitted it still carries the zero value in the resource data, so we cannot tell
+// "unset" from "set to 0" without the raw config.
+func isLatestRetentionSetInConfig(rawConfig cty.Value, replicationIdx int) bool {
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return false
+	}
+	replicationConfigs := rawConfig.GetAttr("replication_configurations")
+	if replicationConfigs.IsNull() || !replicationConfigs.IsKnown() {
+		return false
+	}
+
+	idx := 0
+	for it := replicationConfigs.ElementIterator(); it.Next(); idx++ {
+		if idx != replicationIdx {
+			continue
+		}
+		_, replicationCfg := it.Element()
+		scheduleVal := replicationCfg.GetAttr("schedule")
+		if scheduleVal.IsNull() || !scheduleVal.IsKnown() || scheduleVal.LengthInt() == 0 {
+			return false
+		}
+		for sit := scheduleVal.ElementIterator(); sit.Next(); {
+			_, scheduleElem := sit.Element()
+			retention := scheduleElem.GetAttr("latest_recovery_point_retention_seconds")
+			return !retention.IsNull() && retention.IsKnown()
+		}
+	}
+	return false
+}
+
+func expandSchedule(scheduleData []interface{}, isUpdate bool, retentionSetInConfig bool) *config.Schedule {
 	if len(scheduleData) == 0 {
 		return nil
 	}
@@ -557,6 +645,22 @@ func expandSchedule(scheduleData []interface{}) *config.Schedule {
 	}
 	if syncReplicationAutoSuspendTimeoutSeconds, ok := scheduleDataMap["sync_replication_auto_suspend_timeout_seconds"]; ok {
 		schedule.SyncReplicationAutoSuspendTimeoutSeconds = utils.IntPtr(syncReplicationAutoSuspendTimeoutSeconds.(int))
+	}
+	// latest_recovery_point_retention_seconds is a plain Optional int, so it always
+	// carries the zero value in the resource data even when omitted. Only send it when
+	// the user explicitly set it in the config; otherwise it is left out of the payload.
+	// This also avoids the API rejecting it for synchronous replication (RPO = 0), where
+	// the field must not be specified.
+	if v, ok := scheduleDataMap["latest_recovery_point_retention_seconds"]; ok && retentionSetInConfig {
+		schedule.LatestRecoveryPointRetentionSeconds = utils.IntPtr(v.(int))
+	}
+	if v, ok := scheduleDataMap["is_replication_paused"]; ok {
+		schedule.IsReplicationPaused = utils.BoolPtr(v.(bool))
+	}
+	// schedule_ext_id is a system-generated, computed ID. It must not be sent in the
+	// create request; it is only included on update to identify and retain the same schedule.
+	if v, ok := scheduleDataMap["schedule_ext_id"]; ok && isUpdate && v.(string) != "" {
+		schedule.ScheduleExtId = utils.StringPtr(v.(string))
 	}
 
 	return schedule

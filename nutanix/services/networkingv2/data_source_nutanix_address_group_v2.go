@@ -5,9 +5,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	config "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/common/v1/config"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/common/v1/response"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
+	config "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/common/v1/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/common/v1/response"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/request/addressgroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -76,6 +77,10 @@ func DatasourceNutanixAddressGroupV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -84,7 +89,10 @@ func DatasourceNutanixAddressGroupV2Read(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.Client).MicroSegAPI
 
 	extID := d.Get("ext_id")
-	resp, err := conn.AddressGroupAPIInstance.GetAddressGroupById(utils.StringPtr(extID.(string)))
+	getAddressGroupByIdRequest := import3.GetAddressGroupByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.AddressGroupAPIInstance.GetAddressGroupById(ctx, &getAddressGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching address group : %v", err)
 	}
@@ -117,6 +125,10 @@ func DatasourceNutanixAddressGroupV2Read(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 	if err := d.Set("created_by", getResp.CreatedBy); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
 		return diag.FromErr(err)
 	}
 

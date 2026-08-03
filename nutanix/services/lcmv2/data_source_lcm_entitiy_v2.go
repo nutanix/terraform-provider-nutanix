@@ -7,9 +7,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	lcmConfigPkg "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/common/v1/config"
-	"github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/common"
-	lcmEntityPkg "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/resources"
+	lcmConfigPkg "github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/common/v1/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/lifecycle/v4/common"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/lifecycle/v4/request/entities"
+	lcmEntityPkg "github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/lifecycle/v4/resources"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -114,6 +115,10 @@ func DatasourceNutanixLcmEntityV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"has_previous_inventory_failed": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -121,8 +126,10 @@ func DatasourceNutanixLcmEntityV2() *schema.Resource {
 func DatasourceNutanixLcmEntityV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
 	extID := d.Get("ext_id").(string)
-
-	resp, err := conn.LcmEntitiesAPIInstance.GetEntityById(utils.StringPtr(extID))
+	getEntityByIdRequest := import1.GetEntityByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	resp, err := conn.LcmEntitiesAPIInstance.GetEntityById(ctx, &getEntityByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching the Lcm etity : %v", err)
 	}
@@ -183,6 +190,9 @@ func DatasourceNutanixLcmEntityV2Create(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 	if err := d.Set("hardware_vendor", lcmEntity.HardwareVendor); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("has_previous_inventory_failed", utils.BoolValue(lcmEntity.HasPreviousInventoryFailed)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -428,7 +438,7 @@ func flattenAvailableVersions(availableVersions []lcmEntityPkg.AvailableVersion)
 			"order":                  availableVersion.Order,
 			"disablement_reason":     availableVersion.DisablementReason,
 			"release_notes":          availableVersion.ReleaseNotes,
-			"release_date":           availableVersion.ReleaseDate,
+			"release_date":           flattenTime(availableVersion.ReleaseDate),
 			"custom_message":         availableVersion.CustomMessage,
 			"child_entities":         availableVersion.ChildEntities,
 			"group_uuid":             availableVersion.GroupUuid,

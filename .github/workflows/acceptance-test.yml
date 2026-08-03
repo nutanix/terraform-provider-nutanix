@@ -16,6 +16,13 @@ jobs:
         run: |
           echo "🐧 This job is now running on runner: $RUNNER_NAME (OS: ${{ runner.os }})"
 
+      - name: Install base tooling
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            curl ca-certificates git unzip sshpass build-essential sudo nmap
+
       - name: Pull Request Info
         run: |
           echo "your repository is ${{ github.repository }}."
@@ -37,8 +44,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25.3"
-          check-latest: true # Ensures the latest patch of Go 1.25.3 is installed
+          go-version: "1.25.12"
+          check-latest: true
           cache: true # Enables module caching
 
       - name: Verify Go Installation
@@ -104,6 +111,9 @@ jobs:
             echo "NDB_USERNAME=${{ secrets.NDB_USERNAME }}" >> $GITHUB_ENV
             echo "PROTECTION_RULES_TEST_FLAG=${{ secrets.PROTECTION_RULES_TEST_FLAG }}" >> $GITHUB_ENV
             echo "CGO_ENABLED=${{ secrets.CGO_ENABLED }}" >> $GITHUB_ENV
+            echo "TF_LOG_SDK_HELPER_RESOURCE=OFF" >> $GITHUB_ENV
+            echo "TF_LOG_SDK=OFF" >> $GITHUB_ENV
+            echo "TF_LOG_CORE=OFF" >> $GITHUB_ENV
 
       - name: Check gofmt
         run: |

@@ -7,53 +7,31 @@ import (
 	"os"
 	"testing"
 
-	"github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4/models/objects/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/models/objects/v4/config"
+	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
-	import1 "github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4/models/common/v1/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17/models/common/v1/config"
 )
 
-type TestConfig struct {
-	UsernameForTest string `json:"username_for_test"`
-	PasswordForTest string `json:"password_for_test"`
-	ObjectStore     struct {
-		ImgURL              string   `json:"img_url"`
-		SubnetName          string   `json:"subnet_name"`
-		BucketName          string   `json:"bucket_name"`
-		Domain              string   `json:"domain"`
-		PublicNetworkIPs    []string `json:"public_network_ips"`
-		StorageNetworkDNSIP []string `json:"storage_network_dns_ip"`
-		StorageNetworkVip   []string `json:"storage_network_vip"`
-	} `json:"object_store"`
-}
-
-var testVars TestConfig
-
+// testVars holds the shared test fixtures loaded from test_config_v2.json.
+// filepath is the absolute path to that file, injected into Terraform configs
+// that read the fixtures directly via jsondecode(file(...)).
+// certificateJSONFile is generated in TestMain from the fixtures.
 var (
-	path, _             = os.Getwd()
-	filepath            = path + "/../../../test_config_v2.json"
-	certificateJSONFile = path + "/../../../object_store_cert.json"
+	testVars            = acc.MustConfig()
+	filepath            = acc.ConfigPath()
+	certificateJSONFile = func() string {
+		wd, _ := os.Getwd()
+		return wd + "/../../../object_store_cert.json"
+	}()
 )
-
-func loadVars(filepath string, varStuct interface{}) {
-	// Read config.json from home current path
-	configData, err := os.ReadFile(filepath)
-	if err != nil {
-		log.Printf("Got this error while reading config.json: %s", err.Error())
-		os.Exit(1)
-	}
-
-	err = json.Unmarshal(configData, varStuct)
-	if err != nil {
-		log.Printf("Got this error while unmarshalling config.json: %s", err.Error())
-		os.Exit(1)
-	}
-}
 
 func TestMain(m *testing.M) {
 	log.Println("Do some crazy stuff before tests!")
-	loadVars("../../../test_config_v2.json", &testVars)
-	createCertificateJSONFile()
+	if err := createCertificateJSONFile(); err != nil {
+		log.Printf("warning: failed to create certificate JSON file: %s", err)
+	}
 	os.Exit(m.Run())
 }
 
@@ -70,12 +48,10 @@ func createCertificateJSONFile() error {
 		}
 	}
 
-	// Marshal the certificate data to JSON
 	certificateJSON, err := json.MarshalIndent(certificate, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal certificate data: %w", err)
 	}
-	// Write the JSON data to a file
 	err = os.WriteFile(certificateJSONFile, certificateJSON, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write certificate file: %w", err)

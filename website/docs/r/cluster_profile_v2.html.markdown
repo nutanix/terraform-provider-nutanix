@@ -133,6 +133,10 @@ The following arguments are supported:
     | PULSE_CONFIG                | Pulse status for a cluster                 |
     | NAME_SERVER_CONFIG          | Name server configuration                  |
     | RSYSLOG_SERVER_CONFIG       | RSYSLOG server configuration               |
+    | HTTP_PROXY_CONFIG           | HTTP proxy configuration                   |
+    | FAULT_TOLERANCE_CONFIG      | Fault tolerance configuration              |
+    | REBUILD_RESERVATION_CONFIG  | Rebuild reservation configuration          |
+    | RESILIENT_CAPACITY_WARNING_THRESHOLD_CONFIG | Resilient capacity warning threshold |
 
 * `name_server_ip_list`: - (Optional) List of name servers on a cluster. This is a part of payload for both clusters create and update operations. Currently, only IPv4 address and FQDN (fully qualified domain name) values are supported for the create operation.
 
@@ -147,6 +151,16 @@ The following arguments are supported:
 * `rsyslog_server_list`: - (Optional) RSYSLOG Server.
 
 * `pulse_status`: - (Optional) Pulse status for a cluster.
+
+* `ntp_server_config_list`: - (Optional) List of NTP server configurations with encryption authentication.
+
+* `http_proxy_config`: - (Optional) HTTP proxy configuration for the cluster.
+
+* `fault_tolerance_config`: - (Optional) Fault tolerant state of cluster.
+
+* `rebuild_reservation_config`: - (Optional) Rebuild capacity reservation configuration.
+
+* `resilient_capacity_warning_threshold_config`: - (Optional) Resilient capacity warning threshold configuration.
 
 ### Name Server IP List
 
@@ -231,6 +245,10 @@ The snmp_config attribute supports the following:
       |-----------|------------------------------|
       | SHA       | SHA SNMP authentication      |
       | MD5       | MD5 SNMP authentication      |
+      | SHA224    | SHA-224 SNMP authentication  |
+      | SHA256    | SHA-256 SNMP authentication  |
+      | SHA384    | SHA-384 SNMP authentication  |
+      | SHA512    | SHA-512 SNMP authentication  |
 
   * `auth_key` (Required) - (String) SNMP user authentication key (must not contain single quotes).
   * `priv_type` (Optional) - (String) SNMP user encryption type. Allowed values:
@@ -239,6 +257,8 @@ The snmp_config attribute supports the following:
       |-----------|--------------------|
       | DES       | DES SNMP key       |
       | AES       | AES SNMP key       |
+      | AES192    | AES-192 SNMP key   |
+      | AES256    | AES-256 SNMP key   |
 
   * `priv_key` (Optional) - (String) SNMP user encryption key (must not contain single quotes).
 
@@ -372,6 +392,78 @@ The pulse_status attribute supports the following:
     |----------|------------------------------------------------------------------------------------------------|
     | ALL      | Scrub All PII Information from Pulse including data like entity names and IP addresses        |
     | DEFAULT  | Default PII Scrubbing level. Data like entity names and IP addresses will not be scrubbed from Pulse |
+
+### NTP Server Config List
+
+The ntp_server_config_list attribute supports the following:
+
+* `ntp_server_address`: - (Required) NTP server address (supports IPv4, IPv6, and FQDN).
+* `encryption_algorithm`: - (Optional) Encryption algorithm used for NTP server authentication.
+
+    | Enum     | Description         |
+    |----------|---------------------|
+    | SHA256   | SHA-256 algorithm   |
+    | SHA384   | SHA-384 algorithm   |
+    | SHA512   | SHA-512 algorithm   |
+
+* `encryption_key`: - (Optional, Sensitive) Encryption key in hexadecimal format used for NTP server authentication.
+* `encryption_key_id`: - (Optional) Encryption key ID used for NTP server authentication.
+
+### HTTP Proxy Config
+
+The http_proxy_config attribute supports the following:
+
+* `proxy_list`: - (Optional) List of HTTP proxy server configurations. Each proxy object supports:
+  * `name` (Required) - HTTP proxy server name.
+  * `ip_address` (Optional) - IP address of the proxy server.
+  * `port` (Optional) - HTTP proxy server port.
+  * `username` (Optional) - HTTP proxy server username.
+  * `password` (Optional, Sensitive) - HTTP proxy server password.
+  * `proxy_types` (Optional) - List of HTTP proxy types. Allowed values:
+
+      | Enum     | Description         |
+      |----------|---------------------|
+      | HTTP     | HTTP proxy          |
+      | HTTPS    | HTTPS proxy         |
+      | SOCKS    | SOCKS proxy         |
+
+* `proxy_white_list`: - (Optional) Targets exempted from going through the configured HTTP proxy. Each whitelist entry supports:
+  * `target` (Required) - Target identifier exempted from HTTP proxy.
+  * `target_type` (Required) - Type of the whitelist target. Allowed values:
+
+      | Enum                 | Description              |
+      |----------------------|--------------------------|
+      | IPV4_ADDRESS         | IPv4 address             |
+      | IPV6_ADDRESS         | IPv6 address             |
+      | IPV4_NETWORK_MASK    | IPv4 network mask        |
+      | DOMAIN_NAME_SUFFIX   | Domain name suffix       |
+      | HOST_NAME            | Host name                |
+
+### Fault Tolerance Config
+
+The fault_tolerance_config attribute supports the following:
+
+* `desired_cluster_fault_tolerance`: - (Optional) Desired cluster fault tolerance level. Allowed values:
+
+    | Enum             | Description                         |
+    |------------------|-------------------------------------|
+    | CFT_0N_AND_0D    | No fault tolerance                  |
+    | CFT_1N_OR_1D     | Tolerate 1 node or 1 disk failure   |
+    | CFT_2N_OR_2D     | Tolerate 2 node or 2 disk failures  |
+    | CFT_1N_AND_1D    | Tolerate 1 node and 1 disk failure  |
+    | CFT_1N_OR_2D     | Tolerate 1 node or 2 disk failures  |
+
+### Rebuild Reservation Config
+
+The rebuild_reservation_config attribute supports the following:
+
+* `is_rebuild_reservation_enabled`: - (Optional, default `false`) Enable rebuild capacity reservation to maintain free space for fault tolerance recovery operations.
+
+### Resilient Capacity Warning Threshold Config
+
+The resilient_capacity_warning_threshold_config attribute supports the following:
+
+* `resilient_capacity_warning_threshold_percentage`: - (Optional, default `75`) Warning threshold percentage for resilient storage capacity.
 
 ## Import
 

@@ -89,6 +89,7 @@ The `subnets` object contains the following attributes:
 - `vpc_reference`: UUID of Virtual Private Cloud this subnet belongs to (type Overlay only).
 - `is_nat_enabled`: Indicates whether NAT must be enabled for VPCs attached to the subnet. This is supported only for external subnets. NAT is enabled by default on external subnets.
 - `is_external`: Indicates whether the subnet is used for external connectivity.
+- `is_connected`: Indicates whether the subnet is connected.
 - `reserved_ip_addresses`: List of IPs that are excluded while allocating IP addresses to VM ports.
 - `dynamic_ip_addresses`: List of IPs, which are a subset from the reserved IP address list, that must be advertised to the SDN gateway.
 - `network_function_chain_reference`: UUID of the Network function chain entity that this subnet belongs to (type VLAN only).
@@ -102,6 +103,8 @@ The `subnets` object contains the following attributes:
 - `ip_usage`: IP usage statistics.
 - `migration_state`: Migration state of the subnet. This field is read-only.
 - `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
+- `project_ext_id`: External identifier of the project associated with the Subnet.
+- `shared_with_projects`: List of project external identifiers with which the Subnet is shared.
 
 ### dhcp_options
 

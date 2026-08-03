@@ -74,6 +74,7 @@ The `service_groups` object contains the following attributes:
 * `created_by`: created by.
 * `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 * `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
+* `project_ext_id`: Project external ID associated with the service group.
 
 
 ### tcp_services, udp_services

@@ -82,6 +82,8 @@ The `roles` attribute contains list of Role objects. Each Role object contains t
 * `description`: - Description of the Role.
 * `client_name`: - Client that created the entity.
 * `operations`: - List of operations for the role.
+* `project_ext_id`: - Project reference for the role.
+* `share_with_all_projects`: - Flag indicating whether the role is shared with all projects or not.
 * `accessible_clients`: - List of Accessible Clients for the Role.
 * `accessible_entity_types`: - List of Accessible Entity Types for the Role.
 * `assigned_users_count`: - Number of Users assigned to given Role.

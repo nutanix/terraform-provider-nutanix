@@ -2,12 +2,12 @@ package networkingv2
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/routes"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -57,6 +57,10 @@ func DatasourceNutanixRouteV2() *schema.Resource {
 				Computed: true,
 			},
 			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"project_ext_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -135,8 +139,11 @@ func DatasourceNutanixRouteV2Read(ctx context.Context, d *schema.ResourceData, m
 
 	routeTableExtID := d.Get("route_table_ext_id").(string)
 	extID := d.Get("ext_id").(string)
-
-	resp, err := conn.Routes.GetRouteForRouteTableById(&extID, &routeTableExtID)
+	getRouteForRouteTableByIdRequest := import1.GetRouteForRouteTableByIdRequest{
+		RouteTableExtId: utils.StringPtr(routeTableExtID),
+		ExtId:           utils.StringPtr(extID),
+	}
+	resp, err := conn.Routes.GetRouteForRouteTableById(ctx, &getRouteForRouteTableByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching route : %v", err)
 	}
@@ -161,10 +168,13 @@ func DatasourceNutanixRouteV2Read(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("description", getResp.Description); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("destination", flattenDestination(getResp.Destination)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("next_hop", flattenNextHop(getResp.Nexthop)); err != nil {
+	if err := d.Set("next_hop", flattenNextHops(getResp.Nexthops)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("route_table_reference", getResp.RouteTableReference); err != nil {
@@ -238,26 +248,28 @@ func flattenDestination(destination *config.IPSubnet) interface{} {
 	return []interface{}{destinationMap}
 }
 
-func flattenNextHop(nextHops *config.Nexthop) interface{} {
-	if nextHops != nil {
-		nextHop := make(map[string]interface{})
-		aJSON, _ := json.Marshal(nextHops)
-		log.Printf("[DEBUG] NextHops: %s", string(aJSON))
-		if nextHops.NexthopType != nil {
-			nextHop["next_hop_type"] = flattenNextHopType(nextHops.NexthopType)
-		}
-		if nextHops.NexthopReference != nil {
-			nextHop["next_hop_reference"] = nextHops.NexthopReference
-		}
-		if nextHops.NexthopIpAddress != nil {
-			nextHop["next_hop_ip_address"] = flattenIPAddress(nextHops.NexthopIpAddress)
-		}
-		if nextHops.NexthopName != nil {
-			nextHop["next_hop_name"] = nextHops.NexthopName
-		}
-		return []interface{}{nextHop}
+func flattenNextHops(nexthops []config.Nexthop) []map[string]interface{} {
+	if len(nexthops) == 0 {
+		return nil
 	}
-	return nil
+	result := make([]map[string]interface{}, 0, len(nexthops))
+	for _, nh := range nexthops {
+		nhMap := make(map[string]interface{})
+		if nh.NexthopType != nil {
+			nhMap["next_hop_type"] = flattenNextHopType(nh.NexthopType)
+		}
+		if nh.NexthopReference != nil {
+			nhMap["next_hop_reference"] = nh.NexthopReference
+		}
+		if nh.NexthopIpAddress != nil {
+			nhMap["next_hop_ip_address"] = flattenIPAddress(nh.NexthopIpAddress)
+		}
+		if nh.NexthopName != nil {
+			nhMap["next_hop_name"] = nh.NexthopName
+		}
+		result = append(result, nhMap)
+	}
+	return result
 }
 
 func flattenNextHopType(nextHopType *config.NexthopType) string {

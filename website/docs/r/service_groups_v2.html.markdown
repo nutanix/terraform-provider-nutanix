@@ -68,6 +68,7 @@ The following arguments are supported:
 * `tcp_services`: (Optional) List of TCP ports in the service.
 * `udp_services`: (Optional) List of UDP ports in the service.
 * `icmp_services`: (Optional) Icmp Type Code List.
+* `project_ext_id`: (Optional) Project external ID to associate with the service group. Note: This field cannot be updated after creation.
 
 
 ### tcp_services, udp_services
@@ -90,6 +91,7 @@ The following attributes are exported:
 * `policy_references`: Reference to policy associated with Address Group.
 * `created_by`: created by.
 * `is_system_defined`: Service Group is system defined or not.
+* `project_ext_id`: Project external ID associated with the service group.
 
 ## Import
 

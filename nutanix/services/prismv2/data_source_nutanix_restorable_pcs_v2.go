@@ -7,7 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/management"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/domainmanagerbackups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -43,22 +44,24 @@ func DatasourceNutanixListRestorablePcsV2() *schema.Resource {
 
 func DatasourceNutanixListRestorablePcsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).PrismAPI
-	var filter *string
-	var page, limit *int
-
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	}
 
 	restoreSourceExtID := d.Get("restore_source_ext_id").(string)
 
-	resp, err := conn.DomainManagerBackupsAPIInstance.ListRestorableDomainManagers(utils.StringPtr(restoreSourceExtID), page, limit, filter)
+	listRestorableDomainManagersRequest := import1.ListRestorableDomainManagersRequest{
+		RestoreSourceExtId: utils.StringPtr(restoreSourceExtID),
+	}
+
+	if v, ok := d.GetOk("page"); ok {
+		listRestorableDomainManagersRequest.Page_ = utils.IntPtr(v.(int))
+	}
+	if v, ok := d.GetOk("limit"); ok {
+		listRestorableDomainManagersRequest.Limit_ = utils.IntPtr(v.(int))
+	}
+	if v, ok := d.GetOk("filter"); ok {
+		listRestorableDomainManagersRequest.Filter_ = utils.StringPtr(v.(string))
+	}
+
+	resp, err := conn.DomainManagerBackupsAPIInstance.ListRestorableDomainManagers(ctx, &listRestorableDomainManagersRequest)
 	if err != nil {
 		return diag.Errorf("Error while Listing Restorable Domain Managers configurations Details: %v", err)
 	}

@@ -6,7 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	iamConfig "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
+	iamConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authn"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/users"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -176,8 +177,10 @@ func datasourceNutanixUserV2Read(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.Client).IamAPI
 
 	extID := d.Get("ext_id")
-
-	resp, err := conn.UsersAPIInstance.GetUserById(utils.StringPtr(extID.(string)))
+	getUserByIdRequest := import1.GetUserByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.UsersAPIInstance.GetUserById(ctx, &getUserByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching user : %v", err)
 	}

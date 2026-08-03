@@ -6,7 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusters"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -56,47 +57,31 @@ func DatasourceNutanixClusterEntitiesV2() *schema.Resource {
 func DatasourceNutanixClusterEntitiesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ClusterAPI
 
-	// initialize query params
-	var filter, orderBy, apply, expand, selectQ *string
-	var page, limit *int
+	listClustersRequest := import2.ListClustersRequest{}
 
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
+	if v, ok := d.GetOk("page"); ok {
+		listClustersRequest.Page_ = utils.IntPtr(v.(int))
 	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
+	if v, ok := d.GetOk("limit"); ok {
+		listClustersRequest.Limit_ = utils.IntPtr(v.(int))
 	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
+	if v, ok := d.GetOk("filter"); ok {
+		listClustersRequest.Filter_ = utils.StringPtr(v.(string))
 	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
+	if v, ok := d.GetOk("order_by"); ok {
+		listClustersRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
-	if applyf, ok := d.GetOk("apply"); ok {
-		apply = utils.StringPtr(applyf.(string))
-	} else {
-		apply = nil
+	if v, ok := d.GetOk("apply"); ok {
+		listClustersRequest.Apply_ = utils.StringPtr(v.(string))
 	}
-	if expandf, ok := d.GetOk("expand"); ok {
-		expand = utils.StringPtr(expandf.(string))
-	} else {
-		expand = nil
+	if v, ok := d.GetOk("expand"); ok {
+		listClustersRequest.Expand_ = utils.StringPtr(v.(string))
 	}
-	if selectQy, ok := d.GetOk("select"); ok {
-		selectQ = utils.StringPtr(selectQy.(string))
-	} else {
-		selectQ = nil
+	if v, ok := d.GetOk("select"); ok {
+		listClustersRequest.Select_ = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.ClusterEntityAPI.ListClusters(page, limit, filter, orderBy, apply, expand, selectQ)
+	resp, err := conn.ClusterEntityAPI.ListClusters(ctx, &listClustersRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching cluster entities : %v", err)
 	}

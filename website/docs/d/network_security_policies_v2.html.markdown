@@ -92,12 +92,16 @@ The following attributes are exported:
 - `created_by`: created by.
 - `tenant_id`: A globally unique identifier that represents the tenant that owns this entity
 - `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
+- `project_ext_id`: Project external ID associated with the network security policy.
+- `is_shared_with_all_projects`: Whether the network security policy is shared with all projects.
 
 ### rules
 
 - `ext_id`: A globally unique identifier of an instance that is suitable for external consumption.
 - `description`: A user defined annotation for a rule.
 - `type`: The type for a rule - the value chosen here restricts which specification can be chosen.
+- `name`: A user-defined name for the rule.
+- `is_logging_enabled`: Whether hit log is enabled for the rule.
 - `spec`: Spec for rules.
 - `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 
@@ -107,6 +111,7 @@ The following attributes are exported:
 - `application_rule_spec`: Application Rule Spec.
 - `intra_entity_group_rule_spec`: Intra entity group Rule Spec
 - `multi_env_isolation_rule_spec`: Multi Environment Isolation Rule Spec.
+- `flex_rule_spec`: Flex Rule Spec.
 
 ### two_env_isolation_rule_spec
 
@@ -167,12 +172,34 @@ The following attributes are exported:
 - `group_category_references`: External identifiers of categories belonging to the isolation group.
 - `group_entity_group_reference`: (Computed) Reference to the entity group for the isolation group.
 
+### flex_rule_spec
+
+- `action`: Action for the flex rule (ALLOW, DENY, REJECT).
+- `direction`: Direction of traffic (IN, OUT, IN_OUT).
+- `applied_to_entity_group_references`: Entity group references to which the flex rule is applied.
+- `src_entity_group_references`: Source entity group references.
+- `dest_entity_group_references`: Destination entity group references.
+- `src_subnet`: Source subnet (value, prefix_length).
+- `dest_subnet`: Destination subnet (value, prefix_length).
+- `should_allow_any_src`: Whether the rule allows all sources.
+- `should_allow_any_dst`: Whether the rule allows all destinations.
+- `is_all_protocol_allowed`: Whether traffic is allowed for all protocols.
+- `service_group_references`: A list of service group references.
+- `tcp_services`: TCP port ranges (start_port, end_port).
+- `udp_services`: UDP port ranges (start_port, end_port).
+- `icmp_services`: ICMP type/code specs.
+- `icmpv6_services`: ICMPv6 type/code specs.
+- `network_function_reference`: A reference to the network function.
+- `priority`: Priority for the flex rule.
+- `ip_version`: IP version scope (IPV4, IPV6, IPV4_IPV6).
+- `is_system_rule`: Whether the flex rule is system-defined.
+
 ### tcp_services, udp_services
 
 - `start_port`: start port
 - `end_port`: end port
 
-### icmp_services
+### icmp_services, icmpv6_services
 
 - `is_all_allowed`: Set this field to true if both Type and Code is ANY.
 - `type`: Icmp service Type. Ignore this field if Type has to be ANY.
