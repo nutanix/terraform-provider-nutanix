@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	cmgmtConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
-	cmgmtRequest "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusters"
+	cmgmtConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
+	cmgmtRequest "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/request/clusters"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/clusters"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )

@@ -1,8 +1,8 @@
 package security
 
 import (
-	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/api"
-	security "github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/client"
+	"github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/api"
+	security "github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/sdkconfig"
 )
