@@ -165,6 +165,93 @@ func testAccVolumeGroupV2ConfigWithNoClusterReference(name string) string {
 `, name)
 }
 
+func TestAccV2NutanixVolumeGroupResource_ProjectAssociation(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-vg-projassoc-%d", r)
+	desc := "volume group project association test"
+	projectName := fmt.Sprintf("tf-vg-pa-proj-%d", r)
+	dataSourceNameVolumeGroupsV2 := "data.nutanix_volume_groups_v2.list_volume_groups"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testVolumeGroupProjectAssociationConfig(name, desc, projectName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair("nutanix_volume_group_v2.create", "project_ext_id", "nutanix_project_v2.test", "ext_id"),
+					resource.TestCheckResourceAttrPair("data.nutanix_volume_group_v2.test", "project_ext_id", "nutanix_project_v2.test", "ext_id"),
+					resource.TestCheckResourceAttrSet(dataSourceNameVolumeGroupsV2, "volumes.#"),
+					resource.TestCheckResourceAttr(dataSourceNameVolumeGroupsV2, "volumes.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceNameVolumeGroupsV2, "volumes.0.project_ext_id", "nutanix_project_v2.test", "ext_id"),
+				),
+			},
+			{
+				Config:      testVolumeGroupProjectAssociationConfig(name, desc, projectName, "00000000-0000-0000-0000-000000000000"),
+				ExpectError: regexp.MustCompile("Update of project_ext_id is not supported"),
+			},
+		},
+	})
+}
+
+func vgProjectExtIDLine(override string) string {
+	if override == "" {
+		return `project_ext_id = nutanix_project_v2.test.ext_id`
+	}
+	return fmt.Sprintf(`project_ext_id = "%s"`, override)
+}
+
+func testVolumeGroupProjectAssociationConfig(name, desc, projectName, projectExtIDOverride string) string {
+	return fmt.Sprintf(`
+	data "nutanix_clusters_v2" "clusters" {}
+	data "nutanix_storage_containers_v2" "storage_container" {}
+	locals {
+		cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
+		storage_container0 = [
+			for storage_container in data.nutanix_storage_containers_v2.storage_container.storage_containers :
+			storage_container.ext_id if storage_container.name == "SelfServiceContainer"
+		][0]
+	}
+
+	resource "nutanix_project_v2" "test" {
+		name        = "%[3]s"
+		project_id  = "%[3]s"
+		description = "project association test"
+	}
+
+	resource "nutanix_resource_group_v2" "rg" {
+		name           = "tf-vg-pa-rg-%[3]s"
+		project_ext_id = nutanix_project_v2.test.ext_id
+		placement_targets {
+			cluster_ext_id = local.cluster0
+			storage_containers {
+				ext_id = local.storage_container0
+			}
+		}
+	}
+
+	resource "nutanix_volume_group_v2" "create" {
+		name              = "%[1]s"
+		description       = "%[2]s"
+		cluster_reference = local.cluster0
+		%[4]s
+		depends_on = [nutanix_project_v2.test, nutanix_resource_group_v2.rg]
+	}
+
+	data "nutanix_volume_group_v2" "test" {
+		ext_id     = nutanix_volume_group_v2.create.id
+		depends_on = [nutanix_volume_group_v2.create]
+	}
+
+	data "nutanix_volume_groups_v2" "list_volume_groups" {
+		filter = "projectExtId eq '${nutanix_project_v2.test.ext_id}'"
+		depends_on = [nutanix_volume_group_v2.create]
+	}
+	`, name, desc, projectName, vgProjectExtIDLine(projectExtIDOverride))
+}
+
 func testAccVolumeGroupResourceConfigWithAttachmentTypeAndProtocolAndDisks(name string, desc string) string {
 	return fmt.Sprintf(`
 	data "nutanix_clusters_v2" "clusters" {}

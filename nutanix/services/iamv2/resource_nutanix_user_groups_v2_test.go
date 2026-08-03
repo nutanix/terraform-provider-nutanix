@@ -47,6 +47,7 @@ func TestAccV2NutanixUserGroupsResource_SAMLUserGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "name", testVars.Iam.UserGroups.SAMLName),
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "idp_id", testVars.Iam.Users.IdpID),
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "group_type", "SAML"),
+					resource.TestCheckResourceAttr(resourceNameUserGroups, "distinguished_name", testVars.Iam.UserGroups.SAMLName+"#"+testVars.Iam.Users.IdpID),
 				),
 			},
 			{
@@ -124,6 +125,7 @@ func testSAMLUserGroupsResourceConfig(filepath string) string {
 		group_type = "SAML"
 		idp_id = local.users.idp_id
 		name = local.user_groups.saml_name
+		distinguished_name = "${local.user_groups.saml_name}#${local.users.idp_id}"
 	  }`, filepath)
 }
 

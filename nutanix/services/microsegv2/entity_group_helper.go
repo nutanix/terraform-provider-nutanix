@@ -1,9 +1,9 @@
 package microsegv2
 
 import (
-	commonconfig "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/common/v1/config"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/common/v1/response"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
+	commonconfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/common/v1/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/common/v1/response"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/config"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -44,6 +44,15 @@ func expandAllowedEntities(l []interface{}) []import2.AllowedEntity {
 		}
 		if v, ok := m["reference_ext_ids"].([]interface{}); ok {
 			ent.ReferenceExtIds = common.ExpandListOfString(v)
+		}
+		if v, ok := m["fqdns"].([]interface{}); ok {
+			ent.Fqdns = common.ExpandListOfString(v)
+		}
+		if v, ok := m["match_criteria"].(string); ok && v != "" {
+			ent.MatchCriteria = common.ExpandEnum[import2.MatchCriteria](v)
+		}
+		if v, ok := m["reference_string"].(string); ok && v != "" {
+			ent.ReferenceString = utils.StringPtr(v)
 		}
 		out = append(out, ent)
 	}
@@ -183,6 +192,11 @@ func flattenAllowedEntities(entities []import2.AllowedEntity) []map[string]inter
 			"ip_ranges":         flattenIpRanges(e.IpRanges),
 			"kube_entities":     e.KubeEntities,
 			"reference_ext_ids": e.ReferenceExtIds,
+			"fqdns":             e.Fqdns,
+			"reference_string":  utils.StringValue(e.ReferenceString),
+		}
+		if e.MatchCriteria != nil {
+			m["match_criteria"] = e.MatchCriteria.GetName()
 		}
 		result = append(result, m)
 	}

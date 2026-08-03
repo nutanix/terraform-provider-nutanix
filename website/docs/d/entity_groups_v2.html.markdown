@@ -76,10 +76,13 @@ Each element in `entity_groups` contains:
 * `links` - A HATEOAS style link for the response.
 * `owner_ext_id` - The external identifier of the user who created the Entity Group.
 * `tenant_id` - A globally unique identifier that represents the tenant that owns this entity.
+* `project_ext_id` - Project external ID associated with the entity group.
+* `is_shared_with_all_projects` - Indicates whether the Entity Group is shared with all projects.
+* `is_system_defined` - A flag indicating whether the entity group is system-defined.
 
 ### allowed_config (list element)
 
-* `entities` - List of allowed entities. Each entity may contain `type`, `selected_by`, `addresses`, `ip_ranges`, `kube_entities`, `reference_ext_ids`.
+* `entities` - List of allowed entities. Each entity may contain `type`, `selected_by`, `addresses`, `ip_ranges`, `kube_entities`, `reference_ext_ids`, `fqdns`, `match_criteria`, `reference_string`.
 
 ### except_config (list element)
 

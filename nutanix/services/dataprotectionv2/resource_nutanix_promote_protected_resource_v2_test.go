@@ -32,9 +32,9 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVm(t *testing.T) {
 	datasourceNamePromotedVM := "data.nutanix_virtual_machines_v2.promoted-vm"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		Providers:    acc.TestAccProviders,
-		CheckDestroy: testCheckDestroyProtectedResourceAndCleanupForPromoteVM,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
+		CheckDestroy:             testCheckDestroyProtectedResourceAndCleanupForPromoteVM,
 		Steps: []resource.TestStep{
 			// create protection policy and protected vm
 			{
@@ -83,8 +83,11 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVG(t *testing.T) {
 	vgResourceName := "nutanix_volume_group_v2.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		Providers:    acc.TestAccProviders,
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {Source: "hashicorp/null"},
+		},
 		CheckDestroy: testCheckDestroyProtectedResourceAndCleanup,
 		Steps: []resource.TestStep{
 			//// create protection policy and protected vg
@@ -182,18 +185,43 @@ resource "nutanix_protection_policy_v2" "test" {
   category_ids = [nutanix_category_v2.test.id]
 }
 
+data "nutanix_storage_containers_v2" "ngt-sc" {
+	filter = "clusterExtId eq '${local.clusterExtId}' and startswith(name,'default-container-')"
+	limit = 1
+}
+  
 resource "nutanix_virtual_machine_v2" "test" {
   name                 = "%[2]s"
   description          = "%[3]s"
   num_cores_per_socket = 1
   num_sockets          = 1
   cluster {
-    ext_id = data.nutanix_clusters_v2.clusters.cluster_entities.0.ext_id
+    ext_id = local.clusterExtId
   }
   categories {
     ext_id = nutanix_category_v2.test.id
   }
-  power_state = "OFF"
+power_state = "ON"
+  disks {
+    disk_address{
+      bus_type = "SCSI"
+      index = 0
+    }
+    backing_info{
+      vm_disk{
+        disk_size_bytes = "1073741824" # 10 GB
+        storage_container{
+          ext_id = data.nutanix_storage_containers_v2.ngt-sc.storage_containers[0].ext_id
+        }
+      }
+    }
+  }
+  cd_roms {
+    disk_address {
+      bus_type = "IDE"
+      index    = 0
+    }
+  }
   depends_on = [nutanix_protection_policy_v2.test]
 }
 
@@ -279,13 +307,13 @@ locals {
   localClusterVIP  = local.data_protection.local_cluster_vip
   remoteClusterIP  = local.data_protection.remote_cluster_pe
   remoteClusterVIP = local.data_protection.remote_cluster_vip
-  username         = local.clusters.nodes[0].username
-  password         = local.clusters.nodes[0].password
+  username         = local.config.pe_username
+  password         = local.config.pe_password
 
   resetClusterPassword = "/home/nutanix/prism/cli/ncli user reset-password user-name=${local.username} password=${local.password}"
 
-  remoteClusterSSHCommand = "sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.remoteClusterIP}"
-  localClusterSSHCommand  = "sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.localClusterIP}"
+  remoteClusterSSHCommand = "sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no ${local.config.ssh_pe_username}@${local.remoteClusterIP}"
+  localClusterSSHCommand  = "sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no ${local.config.ssh_pe_username}@${local.localClusterIP}"
 
   resetClusterPasswordCommand = "${local.remoteClusterSSHCommand} '${local.resetClusterPassword}'"
 
@@ -293,6 +321,15 @@ locals {
   modifyFirewallRulesCommand       = "/usr/local/nutanix/cluster/bin/modify_firewall -f -r"
   modifyLocalClusterFirewallRules  = "${local.localClusterSSHCommand} '${local.modifyFirewallRulesCommand} ${local.remoteClusterIP},${local.remoteClusterVIP} -p 2030,2036,2073,2090,8740 -i eth0'"
   modifyRemoteClusterFirewallRules = "${local.remoteClusterSSHCommand} '${local.modifyFirewallRulesCommand} ${local.localClusterIP},${local.localClusterVIP}  -p 2030,2036,2073,2090,8740 -i eth0'"
+
+  # KB 12749: a PE cannot be unregistered while it still has synchronously
+  # protected entities. Deleting the policy/removing the category above only
+  # *starts* unprotection; the stretch params take time (~10 min) to clear from
+  # the target PE. Poll the target PE until stretch_params_printer reports no
+  # remaining stretch params (bounded ~15 min) before the cluster/registration is
+  # destroyed, instead of a fixed sleep that can under-wait and trigger
+  # "error_code 50 / Unregistration failure".
+  waitForStretchClearedOnTarget = "${local.remoteClusterSSHCommand} 'source /etc/profile >/dev/null 2>&1; for i in $(seq 1 60); do o=$(stretch_params_printer 2>/dev/null); if [ -z \"$o\" ]; then echo \"stretch params cleared on target PE\"; exit 0; fi; echo \"waiting for stretch params to clear ($i/60)\"; sleep 15; done; echo \"WARN: timed out (~15m) waiting for stretch params to clear\"; exit 0'"
 }
 
 # check if the nodes is un configured or not
@@ -329,10 +366,10 @@ resource "nutanix_cluster_v2" "test" {
     }
   }
   config {
-    cluster_function = local.clusters.config.cluster_functions
-    cluster_arch     = local.clusters.config.cluster_arch
+    cluster_function = ["AOS"]
+    cluster_arch     = "X86_64"
     fault_tolerance_state {
-      domain_awareness_level = local.clusters.config.fault_tolerance_state.domain_awareness_level
+      domain_awareness_level = "DISK"
     }
     redundancy_factor = 1
   }
@@ -386,11 +423,40 @@ resource "nutanix_pc_registration_v2" "node-registration" {
   depends_on = [nutanix_cluster_v2.test]
 }
 
+# After registering the remote PE to PC, Prism Central takes a few seconds to
+# list the newly registered cluster. Poll the clusters API until it appears so
+# the data.nutanix_clusters_v2.new-cls lookup below doesn't read an empty list
+# (which surfaced as "Invalid index" on cluster_entities.0.ext_id).
+resource "null_resource" "wait_cluster_registered" {
+  triggers = {
+    cluster_name = nutanix_cluster_v2.test.name
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      for i in $(seq 1 60); do
+        if curl -ksS -u "$NUTANIX_USERNAME:$NUTANIX_PASSWORD" \
+             "https://$NUTANIX_ENDPOINT:$NUTANIX_PORT/api/clustermgmt/v4.0/config/clusters" \
+             | grep -q "\"${self.triggers.cluster_name}\""; then
+          echo "cluster ${self.triggers.cluster_name} is now listed on PC"
+          exit 0
+        fi
+        echo "waiting for cluster ${self.triggers.cluster_name} to appear on PC (attempt $i)"
+        sleep 5
+      done
+      echo "ERROR: timed out waiting for cluster ${self.triggers.cluster_name} to appear on PC"
+      exit 1
+    EOT
+  }
+
+  depends_on = [nutanix_pc_registration_v2.node-registration]
+}
+
 # create a category, protection policy, volume group and associate it to the volume group
 # list Clusters
 data "nutanix_clusters_v2" "new-cls" {
   filter = "name eq '${nutanix_cluster_v2.test.name}'"
-  depends_on = [nutanix_pc_registration_v2.node-registration]
+  depends_on = [null_resource.wait_cluster_registered]
 }
 
 locals {
@@ -407,12 +473,27 @@ resource "nutanix_category_v2" "test" {
     command    = local.modifyLocalClusterFirewallRules
     on_failure = continue
   }
-  # Delay 8 minutes before destroying the resource to make sure that synced data is deleted
+  depends_on = [nutanix_pc_registration_v2.node-registration, nutanix_cluster_v2.test]
+}
+
+# Before the cluster/registration is destroyed, wait until the target PE has no
+# synchronously protected entities left (stretch params cleared) so it can be
+# unregistered cleanly (KB 12749). A destroy-time provisioner may only reference
+# "self", so the poll command is captured in triggers and read via self.triggers.
+# depends_on ties this to the cluster/registration (so it is destroyed before
+# them), and the protection policy depends on it (so it is destroyed after the
+# policy, i.e. only once unprotection has been triggered by the policy delete).
+resource "null_resource" "wait_stretch_cleared" {
+  triggers = {
+    wait_cmd = local.waitForStretchClearedOnTarget
+  }
+
   provisioner "local-exec" {
-    command    = "sleep 480"
+    command    = self.triggers.wait_cmd
     when       = destroy
     on_failure = continue
   }
+
   depends_on = [nutanix_pc_registration_v2.node-registration, nutanix_cluster_v2.test]
 }
 
@@ -461,6 +542,10 @@ resource "nutanix_protection_policy_v2" "test" {
   }
 
   category_ids = [nutanix_category_v2.test.id]
+
+  # Ensure the stretch-cleared wait is destroyed *after* this policy, so the poll
+  # runs only once the policy delete has triggered unprotection.
+  depends_on = [null_resource.wait_stretch_cleared]
 }
 
 resource "nutanix_volume_group_v2" "test" {

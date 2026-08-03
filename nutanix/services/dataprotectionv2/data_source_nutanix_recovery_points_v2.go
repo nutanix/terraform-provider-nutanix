@@ -6,7 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/request/recoverypoints"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -56,39 +57,29 @@ func DatasourceNutanixRecoveryPointsV2() *schema.Resource {
 func DatasourceNutanixRecoveryPointsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataProtectionAPI
 
-	// initialize query params
-	var filter, orderBy, selectQ *string
-	var page, limit *int
-
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
-	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
-	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
-	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
-	}
-	if selectQy, ok := d.GetOk("select"); ok {
-		selectQ = utils.StringPtr(selectQy.(string))
-	} else {
-		selectQ = nil
-	}
-
 	clusterID := d.Get("cluster_id").(string)
 
-	resp, err := conn.RecoveryPoint.ListRecoveryPoints(&clusterID, page, limit, filter, orderBy, selectQ)
+	listRecoveryPointsRequest := import1.ListRecoveryPointsRequest{
+		XClusterId: utils.StringPtr(clusterID),
+	}
+
+	if v, ok := d.GetOk("page"); ok {
+		listRecoveryPointsRequest.Page_ = utils.IntPtr(v.(int))
+	}
+	if v, ok := d.GetOk("limit"); ok {
+		listRecoveryPointsRequest.Limit_ = utils.IntPtr(v.(int))
+	}
+	if v, ok := d.GetOk("filter"); ok {
+		listRecoveryPointsRequest.Filter_ = utils.StringPtr(v.(string))
+	}
+	if v, ok := d.GetOk("order_by"); ok {
+		listRecoveryPointsRequest.Orderby_ = utils.StringPtr(v.(string))
+	}
+	if v, ok := d.GetOk("select"); ok {
+		listRecoveryPointsRequest.Select_ = utils.StringPtr(v.(string))
+	}
+
+	resp, err := conn.RecoveryPoint.ListRecoveryPoints(ctx, &listRecoveryPointsRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Recovery Points : %v", err)
 	}
@@ -138,6 +129,7 @@ func flattenRecoveryPoints(recoveryPoints []config.RecoveryPoint) []interface{} 
 			"location_references":          flattenLocationReferences(recoveryPoint.LocationReferences),
 			"vm_recovery_points":           flattenVMRecoveryPoints(recoveryPoint.VmRecoveryPoints),
 			"volume_group_recovery_points": flattenVolumeGroupRecoveryPoints(recoveryPoint.VolumeGroupRecoveryPoints),
+			"project_ext_id":               recoveryPoint.ProjectExtId,
 		}
 	}
 	return result

@@ -79,6 +79,7 @@ The `routing_policies` object contains the following attributes:
 - `policies`: Routing Policies
 - `vpc_ext_id`: ExtId of the VPC extId to which the routing policy belongs.
 - `vpc`: VPC name for projections
+- `project_ext_id`: External identifier of the project associated with the Routing Policy.
 
 ### Links
 
@@ -117,8 +118,8 @@ The `metadata` object contains the following attributes:
 
 ### subnet_prefix
 
-- `ip`: IP of address
-- `prefix_length`: The prefix length of the network to which this host IPv4/IPv6 address belongs.
+- `ip`: The base IP address of the subnet. The address's own `prefix_length` is canonicalized by the server to `32` for IPv4 (`128` for IPv6).
+- `prefix_length`: The subnet mask length (for example, `24`), distinct from the address `ip.prefix_length` above.
 
 ### protocol_parameters
 

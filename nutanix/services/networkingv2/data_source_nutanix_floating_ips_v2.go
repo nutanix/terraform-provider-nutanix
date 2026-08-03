@@ -6,7 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/floatingips"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -183,6 +184,10 @@ func DatasourceNutanixFloatingIPsV2() *schema.Resource {
 								Schema: DatasourceMetadataSchemaV2(),
 							},
 						},
+						"project_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -193,37 +198,25 @@ func DatasourceNutanixFloatingIPsV2() *schema.Resource {
 func datasourceNutanixFloatingIPsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	// initialize query params
-	var filter, orderBy, expand *string
-	var page, limit *int
+	listFloatingIpsRequest := import2.ListFloatingIpsRequest{}
 
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
+	if v, ok := d.GetOk("page"); ok {
+		listFloatingIpsRequest.Page_ = utils.IntPtr(v.(int))
 	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
+	if v, ok := d.GetOk("limit"); ok {
+		listFloatingIpsRequest.Limit_ = utils.IntPtr(v.(int))
 	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
+	if v, ok := d.GetOk("filter"); ok {
+		listFloatingIpsRequest.Filter_ = utils.StringPtr(v.(string))
 	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
+	if v, ok := d.GetOk("order_by"); ok {
+		listFloatingIpsRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
-	if expandf, ok := d.GetOk("expand"); ok {
-		expand = utils.StringPtr(expandf.(string))
-	} else {
-		expand = nil
+	if v, ok := d.GetOk("expand"); ok {
+		listFloatingIpsRequest.Expand_ = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.FloatingIPAPIInstance.ListFloatingIps(page, limit, filter, orderBy, expand)
+	resp, err := conn.FloatingIPAPIInstance.ListFloatingIps(ctx, &listFloatingIpsRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching floating_ips : %v", err)
 	}
@@ -275,6 +268,7 @@ func flattenFloatingIPsEntities(pr []import1.FloatingIp) []map[string]interface{
 			fip["links"] = flattenLinks(v.Links)
 			fip["tenant_id"] = v.TenantId
 			fip["metadata"] = flattenMetadata(v.Metadata)
+			fip["project_ext_id"] = v.ProjectExtId
 
 			fips[k] = fip
 		}

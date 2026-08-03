@@ -25,6 +25,7 @@ func TestAccNutanixNetworkSecurityRule_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
+		ErrorCheck:   acc.SkipIfV3FlowNextGen(t),
 		CheckDestroy: testAccCheckNutanixNetworkSecurityRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -60,6 +61,7 @@ func TestAccNutanixNetworkSecurityRule_isolation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
+		ErrorCheck:   acc.SkipIfV3FlowNextGen(t),
 		CheckDestroy: testAccCheckNutanixNetworkSecurityRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -89,6 +91,7 @@ func TestAccNutanixNetworkSecurityRule_adrule(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
+		ErrorCheck:   acc.SkipIfV3FlowNextGen(t),
 		CheckDestroy: testAccCheckNutanixNetworkSecurityRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -128,6 +131,7 @@ func TestAccNutanixNetworkSecurityRuleWithServiceAndAddressGroupsInInbound(t *te
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
+		ErrorCheck:   acc.SkipIfV3FlowNextGen(t),
 		CheckDestroy: testAccCheckNutanixNetworkSecurityRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -167,6 +171,7 @@ func TestAccNutanixNetworkSecurityRuleWithServiceAndAddressGroupsInOutbound(t *t
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
+		ErrorCheck:   acc.SkipIfV3FlowNextGen(t),
 		CheckDestroy: testAccCheckNutanixNetworkSecurityRuleDestroy,
 		Steps: []resource.TestStep{
 			{

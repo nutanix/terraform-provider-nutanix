@@ -9,11 +9,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-	import4 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/common/v1/config"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
-	import5 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import6 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/common/v1/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/config"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/content"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/templates"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -70,7 +72,8 @@ func ResourceNutanixTemplateDeployV2() *schema.Resource {
 							Optional: true,
 							Elem:     nicsElemSchemaV2(),
 						},
-						"guest_customization": schemaForGuestCustomization(),
+						"guest_customization":                schemaForGuestCustomization(),
+						"guest_customization_profile_config": schemaForVmGcProfileConfig(),
 					},
 				},
 			},
@@ -101,9 +104,13 @@ func ResourceNutanixTemplateDeployV2Create(ctx context.Context, d *schema.Resour
 		body.OverrideVmConfigMap = expandVMConfigOverride(overrideCfg, d)
 	}
 
+	deployTemplateRequest := import3.DeployTemplateRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+		Body:  body,
+	}
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Payload to deploy template: %s", string(aJSON))
-	resp, err := conn.TemplatesAPIInstance.DeployTemplate(utils.StringPtr(extID.(string)), body)
+	resp, err := conn.TemplatesAPIInstance.DeployTemplate(ctx, &deployTemplateRequest)
 	if err != nil {
 		return diag.Errorf("error while deploying template : %v", err)
 	}
@@ -125,7 +132,10 @@ func ResourceNutanixTemplateDeployV2Create(ctx context.Context, d *schema.Resour
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import6.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching template deploy task (%s): %v", utils.StringValue(taskUUID), err)
 	}
@@ -190,6 +200,9 @@ func expandVMConfigOverride(pr interface{}, d *schema.ResourceData) map[string]i
 		}
 		if guest, ok := val["guest_customization"]; ok {
 			vmConfig.GuestCustomization = expandTemplateGuestCustomizationParams(guest)
+		}
+		if gcProfileConfig, ok := val["guest_customization_profile_config"]; ok {
+			vmConfig.GuestCustomizationProfileConfig = expandVmGcProfileConfigOverride(gcProfileConfig)
 		}
 
 		cfg["0"] = vmConfig

@@ -1,7 +1,7 @@
 package clustersv2
 
 import (
-	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 )
 
@@ -65,6 +65,7 @@ var (
 		config.CLUSTERFAULTTOLERANCEREF_CFT_1N_OR_1D,
 		config.CLUSTERFAULTTOLERANCEREF_CFT_2N_OR_2D,
 		config.CLUSTERFAULTTOLERANCEREF_CFT_1N_AND_1D,
+		config.CLUSTERFAULTTOLERANCEREF_CFT_1N_OR_2D,
 		config.CLUSTERFAULTTOLERANCEREF_CFT_0N_AND_0D,
 	}
 
@@ -129,14 +130,30 @@ var (
 		config.CONFIGTYPE_PULSE_CONFIG,
 		config.CONFIGTYPE_NAME_SERVER_CONFIG,
 		config.CONFIGTYPE_RSYSLOG_SERVER_CONFIG,
+		config.CONFIGTYPE_HTTP_PROXY_CONFIG,
+		config.CONFIGTYPE_FAULT_TOLERANCE_CONFIG,
+		config.CONFIGTYPE_REBUILD_RESERVATION_CONFIG,
+		config.CONFIGTYPE_RESILIENT_CAPACITY_WARNING_THRESHOLD_CONFIG,
+	}
+
+	EncryptionAlgorithms = []config.EncryptionAlgorithm{
+		config.ENCRYPTIONALGORITHM_SHA256,
+		config.ENCRYPTIONALGORITHM_SHA384,
+		config.ENCRYPTIONALGORITHM_SHA512,
 	}
 	SnmpAuthTypes = []config.SnmpAuthType{
 		config.SNMPAUTHTYPE_MD5,
 		config.SNMPAUTHTYPE_SHA,
+		config.SNMPAUTHTYPE_SHA224,
+		config.SNMPAUTHTYPE_SHA256,
+		config.SNMPAUTHTYPE_SHA384,
+		config.SNMPAUTHTYPE_SHA512,
 	}
 	SnmpPrivTypes = []config.SnmpPrivType{
 		config.SNMPPRIVTYPE_DES,
 		config.SNMPPRIVTYPE_AES,
+		config.SNMPPRIVTYPE_AES192,
+		config.SNMPPRIVTYPE_AES256,
 	}
 	SnmpProtocols = []config.SnmpProtocol{
 		config.SNMPPROTOCOL_TCP,
@@ -211,6 +228,7 @@ var (
 
 	// Cluster Profiles
 	AllowedOverridesStrings        = common.EnumToStrings(AllowedOverrides)
+	EncryptionAlgorithmStrings     = common.EnumToStrings(EncryptionAlgorithms)
 	SnmpAuthTypeStrings            = common.EnumToStrings(SnmpAuthTypes)
 	SnmpPrivTypeStrings            = common.EnumToStrings(SnmpPrivTypes)
 	SnmpProtocolStrings            = common.EnumToStrings(SnmpProtocols)

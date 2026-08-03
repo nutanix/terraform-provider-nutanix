@@ -1,9 +1,8 @@
 package microsegv2_test
 
 import (
-	"testing"
+	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-func TestMain(m *testing.M) {
-	m.Run()
-}
+// testVars holds the shared test fixtures loaded from test_config_v2.json.
+var testVars = acc.MustConfig()

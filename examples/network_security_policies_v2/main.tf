@@ -225,9 +225,83 @@ resource "nutanix_network_security_policy_v2" "multi-env-isolation-nsp" {
     nutanix_vpc_v2.vpc.id
   ]
   is_hitlog_enabled = false
-  depends_on        = [ nutanix_vpc_v2.vpc]
+  depends_on        = [nutanix_vpc_v2.vpc]
 }
 
+
+# Network Security Policy FLEX rule (rule-centric / SMSP "flex" mode).
+# Requires Flow flex mode (SMSP) enabled on Prism Central. Flex rules reference
+# entity groups (not raw categories) and are only allowed in WORKLOAD/CRITICAL/
+# COREINFRASTRUCTURE/ZONE policies, which require a policy `priority`.
+
+# Entity groups the flex rule applies to / matches as source / destination.
+resource "nutanix_entity_group_v2" "flex_applied" {
+  name        = "tf-flex-applied"
+  description = "applied-to entity group for the flex policy"
+  allowed_config {
+    entities {
+      type              = "VM"
+      selected_by       = "CATEGORY_EXT_ID"
+      reference_ext_ids = [data.nutanix_categories_v2.category-list.categories.0.ext_id]
+    }
+  }
+}
+
+resource "nutanix_entity_group_v2" "flex_src" {
+  name        = "tf-flex-src"
+  description = "source entity group for the flex policy"
+  allowed_config {
+    entities {
+      type              = "VM"
+      selected_by       = "CATEGORY_EXT_ID"
+      reference_ext_ids = [data.nutanix_categories_v2.category-list.categories.1.ext_id]
+    }
+  }
+}
+
+resource "nutanix_entity_group_v2" "flex_dst" {
+  name        = "tf-flex-dst"
+  description = "destination entity group for the flex policy"
+  allowed_config {
+    entities {
+      type              = "VM"
+      selected_by       = "CATEGORY_EXT_ID"
+      reference_ext_ids = [data.nutanix_categories_v2.category-list.categories.2.ext_id]
+    }
+  }
+}
+
+resource "nutanix_network_security_policy_v2" "flex-nsp" {
+  name        = "flex_policy"
+  description = "flex policy example"
+  type        = "WORKLOAD"
+  state       = "SAVE"
+  # Mandatory for flex policy types; 1-349 for user-defined WORKLOAD policies
+  # (350 is reserved for the system catch-all). Lower value = higher precedence.
+  priority = 300
+  rules {
+    name               = "allow-app-to-db"
+    description        = "flex rule example"
+    type               = "FLEX"
+    is_logging_enabled = true
+    spec {
+      flex_rule_spec {
+        action                             = "ALLOW"
+        direction                          = "IN_OUT"
+        priority                           = 1000
+        applied_to_entity_group_references = [nutanix_entity_group_v2.flex_applied.id]
+        src_entity_group_references        = [nutanix_entity_group_v2.flex_src.id]
+        dest_entity_group_references       = [nutanix_entity_group_v2.flex_dst.id]
+        is_all_protocol_allowed            = true
+      }
+    }
+  }
+  depends_on = [
+    nutanix_entity_group_v2.flex_applied,
+    nutanix_entity_group_v2.flex_src,
+    nutanix_entity_group_v2.flex_dst,
+  ]
+}
 
 # get network security policies
 data "nutanix_network_security_policies_v2" "list-nsps" {

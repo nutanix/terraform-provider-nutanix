@@ -1,12 +1,14 @@
 package vmmv2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/vm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
@@ -22,139 +24,86 @@ func TestAccV2NutanixVmsShutdownResource_Basic(t *testing.T) {
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm power action "
 
+	// Best-practice acceptance test for the VM power-action resource:
+	//   * A single resource.Test exercises the full apply/destroy lifecycle of the
+	//     resource across every action (shutdown, reboot, guest_reboot, guest_shutdown)
+	//     as ordered steps.
+	//   * shutdown/reboot and their guest_* variants are all handled asynchronously
+	//     (ACPI signals for the guest ones), so we never assert power state from a racy
+	//     immediate read. Instead the action resource blocks until the VM reaches its
+	//     terminal power state, and each step asserts the live power state via the
+	//     nutanix_virtual_machine_v2 data source (which depends_on the action) rather
+	//     than relying on time.Sleep.
+	//   * The shutdown/guest_shutdown steps ignore_changes on the VM's power_state so
+	//     the async transition to OFF does not race the SDK idempotency plan; the OFF
+	//     result is proven by the data source instead of via plan drift.
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testAccCheckNutanixVirtualMachineV2Destroy,
 		Steps: []resource.TestStep{
-			// 1. create a vm with ngt
+			// 1. create a vm
 			{
-				Config: testVMV2Config(name, desc, "ON"),
+				Config: testVMV2Config(name, desc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("nutanix_virtual_machine_v2.rtest", "id"),
+					resource.TestCheckResourceAttr("nutanix_virtual_machine_v2.rtest", "power_state", "ON"),
 				),
 			},
-			// 2. install ngt on the vm
+			// 2. install ngt on the vm (needs the guest booted, hence the settle window)
 			{
 				PreConfig: func() {
-					//sleep for 1 minute before installing ngt
 					time.Sleep(1 * time.Minute)
 				},
-				Config: testVMV2Config(name, desc, "ON") + testNGTConfig(),
+				Config: testVMV2Config(name, desc) + testNGTConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("nutanix_virtual_machine_v2.rtest", "power_state", "ON"),
 				),
 			},
-			// 3. create a vm shutdown action
+			// 3. shutdown: action blocks until the VM reaches OFF. power_state is ignored on
+			// the VM resource so the async OFF does not race the idempotency plan; the OFF
+			// state is verified via the data source.
 			{
-				Config: testVMV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("shutdown"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("nutanix_virtual_machine_v2.rtest", "id"),
-				),
-			},
-			// 4. check the power state of the vm
-			{
-				PreConfig: func() {
-					//sleep for 1 minute to allow the vm to shut down
-					time.Sleep(1 * time.Minute)
-				},
-				Config: testVMV2Config(name, desc, "OFF") + testNGTConfig() + testVmsShutdownV2Config("shutdown") + vmDataSource,
+				Config: testVMV2ConfigIgnorePower(name, desc) + testNGTConfig() + testVmsShutdownV2Config("shutdown") + vmDataSource,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVMShutdown, "power_state", "OFF"),
 				),
 			},
-			// 5. power on the vm
+			// 4. power the vm back on
 			{
-				Config: testVMV2Config(name, desc, "ON") + testNGTConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("nutanix_virtual_machine_v2.rtest", "id"),
-				),
-			},
-			// 6. check the power state of the vm
-			{
-				PreConfig: func() {
-					//sleep for 1 Minute to allow the vm to power on
-					time.Sleep(1 * time.Minute)
-				},
-				Config: testVMV2Config(name, desc, "ON") + testNGTConfig(),
+				Config: testVMV2Config(name, desc) + testNGTConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("nutanix_virtual_machine_v2.rtest", "power_state", "ON"),
 				),
 			},
-			// 7. reboot the vm
+			// 5. reboot: VM ends ON, so no drift and no ExpectNonEmptyPlan
 			{
-				PreConfig: func() {
-					//sleep for 1 Minute to allow the vm to power on
-					time.Sleep(1 * time.Minute)
-				},
-				Config: testVMV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("reboot"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("nutanix_virtual_machine_v2.rtest", "id"),
-				),
-			},
-			// 8. check the power state of the vm
-			{
-				PreConfig: func() {
-					//sleep for 1 Minute to allow the vm to reboot
-					time.Sleep(1 * time.Minute)
-				},
-				Config: testVMV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("reboot") + vmDataSource,
+				Config: testVMV2Config(name, desc) + testNGTConfig() + testVmsShutdownV2Config("reboot") + vmDataSource,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVMShutdown, "power_state", "ON"),
 				),
 			},
-			// 9. guest_reboot the vm
+			// 6. guest_reboot: VM ends ON
 			{
-				Config: testVMV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("guest_reboot"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("nutanix_virtual_machine_v2.rtest", "id"),
-				),
-			},
-			// 10. check the power state of the vm
-			{
-				PreConfig: func() {
-					//sleep for 2 Minute to allow the vm to reboot
-					time.Sleep(timeSleep)
-				},
-				Config: testVMV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("guest_reboot") + vmDataSource,
+				Config: testVMV2Config(name, desc) + testNGTConfig() + testVmsShutdownV2Config("guest_reboot") + vmDataSource,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVMShutdown, "power_state", "ON"),
 				),
 			},
-			// 11. guest_shutdown the vm
+			// 7. guest_shutdown: action blocks until the VM reaches OFF. power_state is ignored
+			// on the VM resource so the async OFF does not race the idempotency plan; the OFF
+			// state is verified via the data source.
 			{
-				Config: testVMV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("guest_shutdown"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("nutanix_virtual_machine_v2.rtest", "id"),
-				),
-			},
-			// 12. check the power state of the vm
-			{
-				PreConfig: func() {
-					//sleep for 2 Minute to allow the vm to shut down
-					time.Sleep(timeSleep)
-				},
-				Config: testVMV2Config(name, desc, "OFF") + testNGTConfig() + testVmsShutdownV2Config("guest_shutdown") + vmDataSource,
+				Config: testVMV2ConfigIgnorePower(name, desc) + testNGTConfig() + testVmsShutdownV2Config("guest_shutdown") + vmDataSource,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVMShutdown, "power_state", "OFF"),
 				),
 			},
-			// 13. power on the vm to uninstall ngt and delete the vm
+			// 8. power the vm back on so ngt uninstall/vm delete on destroy succeeds
 			{
-				Config: testVMV2Config(name, desc, "ON") + testNGTConfig(),
+				Config: testVMV2Config(name, desc) + testNGTConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("nutanix_virtual_machine_v2.rtest", "id"),
-				),
-			},
-			// 14. check the power state of the vm before uninstalling ngt
-			{
-				PreConfig: func() {
-					//sleep for 1 Minute to allow the vm to power on
-					time.Sleep(1 * time.Minute)
-				},
-				Config: testVMV2Config(name, desc, "ON") + testNGTConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("nutanix_virtual_machine_v2.rtest", "id"),
+					resource.TestCheckResourceAttr("nutanix_virtual_machine_v2.rtest", "power_state", "ON"),
 				),
 			},
 		},
@@ -164,15 +113,22 @@ func TestAccV2NutanixVmsShutdownResource_Basic(t *testing.T) {
 func testAccCheckNutanixVirtualMachineV2Destroy(s *terraform.State) error {
 	fmt.Println("Destroying VMs")
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	ctx := context.Background()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "nutanix_virtual_machine_v2" {
 			continue
 		}
-		_, err := conn.VmmAPI.VMAPIInstance.GetVmById(utils.StringPtr(rs.Primary.ID))
+		getVmByIdRequest := import1.GetVmByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		_, err := conn.VmmAPI.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 		if err == nil {
 			// delete the vm
 			fmt.Printf("Deleting VM with ID: %s\n", rs.Primary.ID)
-			_, errVM := conn.VmmAPI.VMAPIInstance.DeleteVmById(utils.StringPtr(rs.Primary.ID))
+			deleteVmByIdRequest := import1.DeleteVmByIdRequest{
+				ExtId: utils.StringPtr(rs.Primary.ID),
+			}
+			_, errVM := conn.VmmAPI.VMAPIInstance.DeleteVmById(ctx, &deleteVmByIdRequest)
 			if errVM != nil {
 				return errVM
 			}
@@ -198,7 +154,25 @@ func TestAccV2NutanixVmsShutdownResource_WithError(t *testing.T) {
 	})
 }
 
-func testVMV2Config(name, desc, powerState string) string {
+func testVMV2Config(name, desc string, powerState ...string) string {
+	ps := "ON"
+	if len(powerState) > 0 {
+		ps = powerState[0]
+	}
+	return testVMV2ConfigWithLifecycle(name, desc, ps, "[guest_tools]")
+}
+
+// testVMV2ConfigIgnorePower builds the VM config with power_state added to
+// ignore_changes. It is used by the shutdown/guest_shutdown steps: the action
+// (not the VM resource) drives the VM to OFF asynchronously, so ignoring
+// power_state keeps the post-apply idempotency plan deterministically empty
+// while the actual OFF state is still asserted via the nutanix_virtual_machine_v2
+// data source. The power-on steps use testVMV2Config so power_state stays active.
+func testVMV2ConfigIgnorePower(name, desc string) string {
+	return testVMV2ConfigWithLifecycle(name, desc, "ON", "[guest_tools, power_state]")
+}
+
+func testVMV2ConfigWithLifecycle(name, desc, ps, ignoreChanges string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
 
@@ -208,12 +182,12 @@ func testVMV2Config(name, desc, powerState string) string {
 				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 			config = jsondecode(file("%[4]s"))
-			preEnv = local.config.pre_env
+			images = local.config.images
 			vmm    = local.config.vmm
 		}
 
 		data "nutanix_images_v2" "ngt-image" {
-		  filter = "name eq '${local.preEnv.ngt_image.name}'"
+		  filter = "name eq '${local.images.ngt_image}'"
 		}
 
 		data "nutanix_subnets_v2" "subnet" {
@@ -281,13 +255,13 @@ func testVMV2Config(name, desc, powerState string) string {
 			power_state = "%[3]s"
 			
 			lifecycle {
-				ignore_changes = [guest_tools]
+				ignore_changes = %[5]s
 			}
 			
 			depends_on = [data.nutanix_clusters_v2.clusters, data.nutanix_images_v2.ngt-image]			
 		}
 		
-`, name, desc, powerState, filepath)
+`, name, desc, ps, filepath, ignoreChanges)
 }
 
 func testNGTConfig() string {
@@ -326,7 +300,6 @@ func testVmsShutdownV4ConfigWithError(name, desc, state string) string {
 			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 			config = jsondecode(file("%[4]s"))
-			preEnv = local.config.pre_env
 			vmm    = local.config.vmm
 		}
 

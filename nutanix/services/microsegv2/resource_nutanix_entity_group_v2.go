@@ -8,9 +8,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
-	prismMicroseg "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/prism/v4/config"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/request/entitygroups"
+	prismMicroseg "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/prism/v4/config"
+	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -47,11 +49,17 @@ func ResourceNutanixEntityGroupV2Create(ctx context.Context, d *schema.ResourceD
 	if v, ok := d.GetOk("policy_ext_ids"); ok {
 		body.PolicyExtIds = common.ExpandListOfString(v.([]interface{}))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		body.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Create Entity Group Body: %s", string(aJSON))
 
-	resp, err := conn.EntityGroupsAPIInstance.CreateEntityGroup(body)
+	createEntityGroupRequest := import3.CreateEntityGroupRequest{
+		Body: body,
+	}
+	resp, err := conn.EntityGroupsAPIInstance.CreateEntityGroup(ctx, &createEntityGroupRequest)
 	if err != nil {
 		return diag.Errorf("error creating Entity Group: %v", err)
 	}
@@ -73,7 +81,10 @@ func ResourceNutanixEntityGroupV2Create(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("error waiting for Entity Group create: %s", errWait)
 	}
 
-	taskResp, err := taskConn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIDRequest := import5.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskConn.TaskRefAPI.GetTaskById(ctx, &getTaskByIDRequest)
 	if err != nil {
 		return diag.Errorf("error fetching Entity Group create task: %v", err)
 	}
@@ -91,7 +102,10 @@ func ResourceNutanixEntityGroupV2Create(ctx context.Context, d *schema.ResourceD
 func ResourceNutanixEntityGroupV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	resp, err := conn.EntityGroupsAPIInstance.GetEntityGroupById(utils.StringPtr(d.Id()))
+	getEntityGroupByIDRequest := import3.GetEntityGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.EntityGroupsAPIInstance.GetEntityGroupById(ctx, &getEntityGroupByIDRequest)
 	if err != nil {
 		return diag.Errorf("error reading Entity Group: %v", err)
 	}
@@ -112,11 +126,17 @@ func ResourceNutanixEntityGroupV2Read(ctx context.Context, d *schema.ResourceDat
 	_ = d.Set("links", flattenLinksEntityGroup(getResp.Links))
 	_ = d.Set("creation_time", utils.TimeStringValue(getResp.CreationTime))
 	_ = d.Set("last_update_time", utils.TimeStringValue(getResp.LastUpdateTime))
+	_ = d.Set("project_ext_id", utils.StringValue(getResp.ProjectExtId))
+	_ = d.Set("is_shared_with_all_projects", utils.BoolValue(getResp.IsSharedWithAllProjects))
+	_ = d.Set("is_system_defined", utils.BoolValue(getResp.IsSystemDefined))
 
 	return nil
 }
 
 func ResourceNutanixEntityGroupV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 	conn := meta.(*conns.Client).MicroSegAPI
 
 	body := import2.NewEntityGroup()
@@ -133,15 +153,21 @@ func ResourceNutanixEntityGroupV2Update(ctx context.Context, d *schema.ResourceD
 	if v, ok := d.GetOk("policy_ext_ids"); ok {
 		body.PolicyExtIds = common.ExpandListOfString(v.([]interface{}))
 	}
-
 	args := make(map[string]interface{})
-	readResp, err := conn.EntityGroupsAPIInstance.GetEntityGroupById(utils.StringPtr(d.Id()))
+	getEntityGroupByIDRequest := import3.GetEntityGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.EntityGroupsAPIInstance.GetEntityGroupById(ctx, &getEntityGroupByIDRequest)
 	if err == nil {
 		etag := conn.EntityGroupsAPIInstance.ApiClient.GetEtag(readResp)
 		args["If-Match"] = utils.StringPtr(etag)
 	}
 
-	resp, err := conn.EntityGroupsAPIInstance.UpdateEntityGroupById(utils.StringPtr(d.Id()), body, args)
+	updateEntityGroupByIDRequest := import3.UpdateEntityGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  body,
+	}
+	resp, err := conn.EntityGroupsAPIInstance.UpdateEntityGroupById(ctx, &updateEntityGroupByIDRequest, args)
 	if err != nil {
 		return diag.Errorf("error updating Entity Group: %v", err)
 	}
@@ -169,7 +195,10 @@ func ResourceNutanixEntityGroupV2Update(ctx context.Context, d *schema.ResourceD
 func ResourceNutanixEntityGroupV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	resp, err := conn.EntityGroupsAPIInstance.DeleteEntityGroupById(utils.StringPtr(d.Id()))
+	deleteEntityGroupByIDRequest := import3.DeleteEntityGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.EntityGroupsAPIInstance.DeleteEntityGroupById(ctx, &deleteEntityGroupByIDRequest)
 	if err != nil {
 		return diag.Errorf("error deleting Entity Group: %v", err)
 	}

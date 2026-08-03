@@ -5,7 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/request/entitygroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -84,6 +85,18 @@ func schemaForEntityGroupListElem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"is_shared_with_all_projects": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"is_system_defined": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -91,26 +104,24 @@ func schemaForEntityGroupListElem() *schema.Resource {
 func DatasourceNutanixEntityGroupsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	var page, limit *int
-	var filter, orderBy, selectVal *string
-
+	listEntityGroupsRequest := import3.ListEntityGroupsRequest{}
 	if v, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(v.(int))
+		listEntityGroupsRequest.Page_ = utils.IntPtr(v.(int))
 	}
 	if v, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(v.(int))
+		listEntityGroupsRequest.Limit_ = utils.IntPtr(v.(int))
 	}
 	if v, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(v.(string))
+		listEntityGroupsRequest.Filter_ = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(v.(string))
+		listEntityGroupsRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("select"); ok {
-		selectVal = utils.StringPtr(v.(string))
+		listEntityGroupsRequest.Select_ = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.EntityGroupsAPIInstance.ListEntityGroups(page, limit, filter, orderBy, selectVal)
+	resp, err := conn.EntityGroupsAPIInstance.ListEntityGroups(ctx, &listEntityGroupsRequest)
 	if err != nil {
 		return diag.Errorf("error while listing Entity Groups: %s", err)
 	}
@@ -156,6 +167,7 @@ func flattenEntityGroups(groups []import2.EntityGroup) []map[string]interface{} 
 			"owner_ext_id":   utils.StringValue(g.OwnerExtId),
 			"tenant_id":      utils.StringValue(g.TenantId),
 			"links":          flattenLinksEntityGroup(g.Links),
+			"project_ext_id": utils.StringValue(g.ProjectExtId),
 		}
 		if g.CreationTime != nil {
 			m["creation_time"] = g.CreationTime.Format("2006-01-02T15:04:05.000Z")
@@ -163,6 +175,8 @@ func flattenEntityGroups(groups []import2.EntityGroup) []map[string]interface{} 
 		if g.LastUpdateTime != nil {
 			m["last_update_time"] = g.LastUpdateTime.Format("2006-01-02T15:04:05.000Z")
 		}
+		m["is_shared_with_all_projects"] = utils.BoolValue(g.IsSharedWithAllProjects)
+		m["is_system_defined"] = utils.BoolValue(g.IsSystemDefined)
 		result = append(result, m)
 	}
 	return result

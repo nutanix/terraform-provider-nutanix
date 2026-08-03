@@ -12,8 +12,9 @@ import (
 func TestAccNutanixAddressGroupDataSource_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:   func() { acc.TestAccPreCheck(t) },
+		Providers:  acc.TestAccProviders,
+		ErrorCheck: acc.SkipIfV3FlowNextGen(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddressGroupDataSourceConfig(rInt),

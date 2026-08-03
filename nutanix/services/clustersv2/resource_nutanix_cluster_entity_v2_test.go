@@ -21,11 +21,12 @@ const (
 )
 
 func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T) {
-	if testVars.Clusters.Nodes[0].CvmIP == "" {
+	if testVars.Clusters.Nodes[0] == "" {
 		t.Skip("Skipping test as No available node to be used for testing")
 	}
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-cluster-%d", r)
+	clusterProfileName := fmt.Sprintf("tf-first-cluster-profile-%d", r)
 
 	clusterProfileResourceName := "nutanix_cluster_profile_v2.test"
 	clusterProfileDataSourceName := "data.nutanix_cluster_profile_v2.test"
@@ -53,10 +54,10 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(clusterResourceName, "name", name),
 					resource.TestCheckResourceAttr(clusterResourceName, "dryrun", "false"),
-					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
+					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0]),
 					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.number_of_nodes", "1"),
-					resource.TestCheckResourceAttr(clusterResourceName, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
-					resource.TestCheckResourceAttr(clusterResourceName, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.cluster_arch", "X86_64"),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.fault_tolerance_state.0.domain_awareness_level", "DISK"),
 				),
 			},
 			// Create cluster profile and associate with cluster
@@ -65,7 +66,7 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 					fmt.Println("Step 3: Associating the cluster profile with the cluster")
 				},
 				Config: testAccClusterResourceMinimumConfig(name, "cluster_profile_ext_id = nutanix_cluster_profile_v2.test.id", "nutanix_category_v2.cat-1.id, nutanix_category_v2.cat-2.id, nutanix_category_v2.cat-3.id") +
-					testAccClusterProfileResourceConfig("tf-first-cluster-profile") +
+					testAccClusterProfileResourceConfig(clusterProfileName) +
 					`				
 				 # get the cluster data
 				 data "nutanix_cluster_v2" "cluster" {
@@ -104,7 +105,7 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 						"nutanix_category_v2.cat-3",
 					}),
 
-					resource.TestCheckResourceAttr(clusterProfileResourceName, "name", "tf-first-cluster-profile"),
+					resource.TestCheckResourceAttr(clusterProfileResourceName, "name", clusterProfileName),
 					resource.TestCheckResourceAttrSet(clusterProfileResourceName, "ext_id"),
 					resource.TestCheckResourceAttrPair(clusterProfileResourceName, "id", clusterProfileDataSourceName, "ext_id"),
 					resource.TestCheckResourceAttrPair(clusterProfileResourceName, "name", clusterProfileDataSourceName, "name"),
@@ -115,9 +116,9 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 				PreConfig: func() {
 					fmt.Println("Step 5: Getting the cluster profile details")
 				},
-				Config: testAccClusterResourceMinimumConfig(name, "cluster_profile_ext_id = nutanix_cluster_profile_v2.test.id", "") + testAccClusterProfileResourceConfig("tf-first-cluster-profile"),
+				Config: testAccClusterResourceMinimumConfig(name, "cluster_profile_ext_id = nutanix_cluster_profile_v2.test.id", "") + testAccClusterProfileResourceConfig(clusterProfileName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(clusterProfileResourceName, "name", "tf-first-cluster-profile"),
+					resource.TestCheckResourceAttr(clusterProfileResourceName, "name", clusterProfileName),
 					resource.TestCheckResourceAttr(clusterProfileDataSourceName, "clusters.#", "1"),
 					resource.TestCheckResourceAttrPair(clusterProfileDataSourceName, "clusters.0.ext_id", clusterResourceName, "id"),
 				),
@@ -127,7 +128,7 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 				PreConfig: func() {
 					fmt.Println("Step 4: De-associating the cluster profile from the cluster")
 				},
-				Config: testAccClusterResourceMinimumConfig(name, "", "") + testAccClusterProfileResourceConfig("tf-first-cluster-profile") +
+				Config: testAccClusterResourceMinimumConfig(name, "", "") + testAccClusterProfileResourceConfig(clusterProfileName) +
 					`				
 					# get the cluster data
 					data "nutanix_cluster_v2" "cluster" {
@@ -151,7 +152,7 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 				PreConfig: func() {
 					fmt.Println("Step 6: Getting the cluster profile details after de-association")
 				},
-				Config: testAccClusterResourceMinimumConfig(name, "", "") + testAccClusterProfileResourceConfig("tf-first-cluster-profile") +
+				Config: testAccClusterResourceMinimumConfig(name, "", "") + testAccClusterProfileResourceConfig(clusterProfileName) +
 					`				
 					# get the cluster data
 					data "nutanix_cluster_v2" "cluster" {
@@ -170,7 +171,7 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 }
 
 func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
-	if testVars.Clusters.Nodes[0].CvmIP == "" {
+	if testVars.Clusters.Nodes[0] == "" {
 		t.Skip("Skipping test as No available node to be used for testing")
 	}
 	r := acctest.RandIntRange(1, 10000)
@@ -195,26 +196,26 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					// check the unconfigured node is discovered or not
 					resource.TestCheckResourceAttr(resourceNameDiscoverUnConfigNode, "address_type", "IPV4"),
-					resource.TestCheckResourceAttr(resourceNameDiscoverUnConfigNode, "ip_filter_list.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
+					resource.TestCheckResourceAttr(resourceNameDiscoverUnConfigNode, "ip_filter_list.0.ipv4.0.value", testVars.Clusters.Nodes[0]),
 					resource.TestCheckResourceAttr(resourceNameDiscoverUnConfigNode, "unconfigured_nodes.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameDiscoverUnConfigNode, "unconfigured_nodes.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
+					resource.TestCheckResourceAttr(resourceNameDiscoverUnConfigNode, "unconfigured_nodes.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0]),
 					resource.TestCheckResourceAttrSet(resourceNameDiscoverUnConfigNode, "unconfigured_nodes.0.nos_version"),
 					resource.TestCheckResourceAttrSet(resourceNameDiscoverUnConfigNode, "unconfigured_nodes.0.hypervisor_type"),
 
 					// check the cluster is created with minimum config
 					resource.TestCheckResourceAttr(clusterResourceName, "name", name),
 					resource.TestCheckResourceAttr(clusterResourceName, "dryrun", "false"),
-					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
+					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0]),
 					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.number_of_nodes", "1"),
-					resource.TestCheckResourceAttr(clusterResourceName, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
-					resource.TestCheckResourceAttr(clusterResourceName, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.cluster_arch", "X86_64"),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.fault_tolerance_state.0.domain_awareness_level", "DISK"),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.external_address.0.ipv4.0.value", testVars.Clusters.Network.VirtualIP),
 					// check on cluster ntp server list
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.#", "4"),
-					checkNtpServerList(clusterResourceName, "network.0.ntp_server_ip_list", testVars.Clusters.Network.NTPServers),
+					checkNtpServerList(clusterResourceName, "network.0.ntp_server_ip_list", testVars.NTPServers),
 					resource.TestCheckResourceAttrSet(clusterResourceNameRegistration, "pc_ext_id"),
-					resource.TestCheckResourceAttr(clusterResourceNameRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.address.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
-					resource.TestCheckResourceAttr(clusterResourceNameRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.credentials.0.authentication.0.username", testVars.Clusters.Nodes[0].Username),
+					resource.TestCheckResourceAttr(clusterResourceNameRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.address.0.ipv4.0.value", testVars.Clusters.Nodes[0]),
+					resource.TestCheckResourceAttr(clusterResourceNameRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.credentials.0.authentication.0.username", testVars.PEUsername),
 				),
 			},
 			// ############################################## Associate categories with cluster ##############################################
@@ -292,7 +293,6 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 			// Step 8: Check if categories are disassociated from cluster, resource check for categories
 			{
 				Config: testAccClusterResourceAllConfig(name, "", r),
-				Taint:  []string{clusterResourceName},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(clusterResourceName, "categories.#", "0"),
 				),
@@ -307,24 +307,24 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(clusterResourceName, "name", name+"-updated"),
 					resource.TestCheckResourceAttr(clusterResourceName, "dryrun", "false"),
-					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
+					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0]),
 					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.number_of_nodes", "1"),
-					resource.TestCheckResourceAttr(clusterResourceName, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
-					resource.TestCheckResourceAttr(clusterResourceName, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.cluster_arch", "X86_64"),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.fault_tolerance_state.0.domain_awareness_level", "DISK"),
 					resource.TestCheckResourceAttr(clusterResourceName, "config.0.pulse_status.0.is_enabled", "true"),
 					resource.TestCheckResourceAttr(clusterResourceName, "config.0.pulse_status.0.pii_scrubbing_level", "DEFAULT"),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.external_address.0.ipv4.0.value", testVars.Clusters.Network.VirtualIP),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.external_data_services_ip.0.ipv4.0.value", testVars.Clusters.Network.IscsiIP),
 					// check on cluster ntp server list
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.#", "4"),
-					checkNtpServerList(clusterResourceName, "network.0.ntp_server_ip_list", testVars.Clusters.Network.NTPServers),
+					checkNtpServerList(clusterResourceName, "network.0.ntp_server_ip_list", testVars.NTPServers),
 					// check on cluster smtp server list
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.#", "1"),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.email_address", testVars.Clusters.Network.SMTPServer.EmailAddress),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.ip_address.0.ipv4.0.value", testVars.Clusters.Network.SMTPServer.IP),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.port", strconv.Itoa(testVars.Clusters.Network.SMTPServer.Port)),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.username", testVars.Clusters.Network.SMTPServer.Username),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.type", testVars.Clusters.Network.SMTPServer.Type),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.email_address", smtpTestServer.EmailAddress),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.ip_address.0.ipv4.0.value", smtpTestServer.IP),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.port", strconv.Itoa(smtpTestServer.Port)),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.username", smtpTestServer.Username),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.type", smtpTestServer.Type),
 				)},
 			// Step 10: Disable the cluster pulse status and check on cluster resource for config
 			{
@@ -335,21 +335,21 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(clusterResourceName, "name", name+"-updated"),
 					resource.TestCheckResourceAttr(clusterResourceName, "dryrun", "false"),
-					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
+					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0]),
 					resource.TestCheckResourceAttr(clusterResourceName, "nodes.0.number_of_nodes", "1"),
-					resource.TestCheckResourceAttr(clusterResourceName, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
-					resource.TestCheckResourceAttr(clusterResourceName, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.cluster_arch", "X86_64"),
+					resource.TestCheckResourceAttr(clusterResourceName, "config.0.fault_tolerance_state.0.domain_awareness_level", "DISK"),
 					resource.TestCheckResourceAttr(clusterResourceName, "config.0.pulse_status.0.is_enabled", "false"),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.external_address.0.ipv4.0.value", testVars.Clusters.Network.VirtualIP),
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.external_data_services_ip.0.ipv4.0.value", testVars.Clusters.Network.IscsiIP),
 					// check on cluster ntp server list
 					resource.TestCheckResourceAttr(clusterResourceName, "network.0.ntp_server_ip_list.#", "4"),
-					checkNtpServerList(clusterResourceName, "network.0.ntp_server_ip_list", testVars.Clusters.Network.NTPServers),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.email_address", testVars.Clusters.Network.SMTPServer.EmailAddress),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.ip_address.0.ipv4.0.value", testVars.Clusters.Network.SMTPServer.IP),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.port", strconv.Itoa(testVars.Clusters.Network.SMTPServer.Port)),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.username", testVars.Clusters.Network.SMTPServer.Username),
-					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.type", testVars.Clusters.Network.SMTPServer.Type),
+					checkNtpServerList(clusterResourceName, "network.0.ntp_server_ip_list", testVars.NTPServers),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.email_address", smtpTestServer.EmailAddress),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.ip_address.0.ipv4.0.value", smtpTestServer.IP),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.port", strconv.Itoa(smtpTestServer.Port)),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.server.0.username", smtpTestServer.Username),
+					resource.TestCheckResourceAttr(clusterResourceName, "network.0.smtp_server.0.type", smtpTestServer.Type),
 				),
 			},
 		},
@@ -357,9 +357,9 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 }
 
 func TestAccV2NutanixClusterResource_ExpandCluster(t *testing.T) {
-	if testVars.Clusters.Nodes[1].CvmIP == "" &&
-		testVars.Clusters.Nodes[2].CvmIP == "" &&
-		testVars.Clusters.Nodes[3].CvmIP == "" {
+	if testVars.Clusters.Nodes[1] == "" &&
+		testVars.Clusters.Nodes[2] == "" &&
+		testVars.Clusters.Nodes[3] == "" {
 		t.Skip("Skipping test as No available nodes to be used for testing")
 	}
 
@@ -395,12 +395,12 @@ func TestAccV2NutanixClusterResource_ExpandCluster(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName3NodesCluster, "name", clusterName),
 					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.#", "3"),
 					checkNodesIPs([]string{
-						testVars.Clusters.Nodes[0].CvmIP,
-						testVars.Clusters.Nodes[1].CvmIP,
-						testVars.Clusters.Nodes[2].CvmIP,
+						testVars.Clusters.Nodes[0],
+						testVars.Clusters.Nodes[1],
+						testVars.Clusters.Nodes[2],
 					}),
-					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_function.0", testVars.Clusters.Config.ClusterFunctions[0]),
-					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_function.0", "AOS"),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_arch", "X86_64"),
 				),
 			},
 
@@ -415,13 +415,13 @@ func TestAccV2NutanixClusterResource_ExpandCluster(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName3NodesCluster, "name", clusterName+"_add_node"),
 					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.#", "4"),
 					checkNodesIPs([]string{
-						testVars.Clusters.Nodes[0].CvmIP,
-						testVars.Clusters.Nodes[1].CvmIP,
-						testVars.Clusters.Nodes[2].CvmIP,
-						testVars.Clusters.Nodes[3].CvmIP,
+						testVars.Clusters.Nodes[0],
+						testVars.Clusters.Nodes[1],
+						testVars.Clusters.Nodes[2],
+						testVars.Clusters.Nodes[3],
 					}),
-					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_function.0", testVars.Clusters.Config.ClusterFunctions[0]),
-					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_function.0", "AOS"),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_arch", "X86_64"),
 				),
 			},
 			// step 4: remove node from cluster by reducing to 3 nodes and updating the name
@@ -437,12 +437,12 @@ func TestAccV2NutanixClusterResource_ExpandCluster(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName3NodesCluster, "name", clusterName),
 					resource.TestCheckResourceAttr(resourceName3NodesCluster, "nodes.0.node_list.#", "3"),
 					checkNodesIPs([]string{
-						testVars.Clusters.Nodes[0].CvmIP,
-						testVars.Clusters.Nodes[2].CvmIP,
-						testVars.Clusters.Nodes[3].CvmIP,
+						testVars.Clusters.Nodes[0],
+						testVars.Clusters.Nodes[2],
+						testVars.Clusters.Nodes[3],
 					}),
-					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_function.0", testVars.Clusters.Config.ClusterFunctions[0]),
-					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_function.0", "AOS"),
+					resource.TestCheckResourceAttr(resourceName3NodesCluster, "config.0.cluster_arch", "X86_64"),
 				),
 			},
 		},
@@ -484,36 +484,18 @@ func testAccClusterResourceMinimumConfig(name, clusterProfileExtID string, categ
 			key         = "test-cat1-key-%[2]s"
 			value       = "test-cat1-value-%[2]s"
 			description = "first category for cluster"
-			# Delay 5 minutes before destroying the resource to make sure that synced data is deleted
-			provisioner "local-exec" {
-				command    = "sleep 300"
-				when       = destroy
-				on_failure = continue
-			}
 		}
 
 		resource "nutanix_category_v2" "cat-2" {
 			key         = "test-cat2-key-%[2]s"
 			value       = "test-cat2-value-%[2]s"
 			description = "second category for cluster"
-			# Delay 5 minutes before destroying the resource to make sure that synced data is deleted
-			provisioner "local-exec" {
-				command    = "sleep 300"
-				when       = destroy
-				on_failure = continue
-			}
 		}
 
 		resource "nutanix_category_v2" "cat-3" {
 			key         = "test-cat3-key-%[2]s"
 			value       = "test-cat3-value-%[2]s"
 			description = "third category for cluster"
-			# Delay 5 minutes before destroying the resource to make sure that synced data is deleted
-			provisioner "local-exec" {
-				command    = "sleep 300"
-				when       = destroy
-				on_failure = continue
-			}
 		}
 
 		# check if the nodes is un configured or not
@@ -522,7 +504,7 @@ func testAccClusterResourceMinimumConfig(name, clusterProfileExtID string, categ
 		  address_type = "IPV4"
 		  ip_filter_list {
 			ipv4 {
-			  value = local.clusters.nodes[0].cvm_ip
+			  value = local.clusters.nodes[0]
 			}
 		  }
 		  depends_on = [data.nutanix_clusters_v2.clusters]
@@ -531,7 +513,7 @@ func testAccClusterResourceMinimumConfig(name, clusterProfileExtID string, categ
 		  lifecycle {
 			postcondition {
 			  condition     = length(self.unconfigured_nodes) == 1
-			  error_message = "The node ${local.clusters.nodes[0].cvm_ip} are not unconfigured"
+			  error_message = "The node ${local.clusters.nodes[0]} are not unconfigured"
 			}
 		  }
 		}
@@ -544,16 +526,16 @@ func testAccClusterResourceMinimumConfig(name, clusterProfileExtID string, categ
 			node_list {
 			  controller_vm_ip {
 				ipv4 {
-				  value = local.clusters.nodes[0].cvm_ip
+				  value = local.clusters.nodes[0]
 				}
 			  }
 			}
 		  }
 		  config {
-			cluster_function = local.clusters.config.cluster_functions
-			cluster_arch     = local.clusters.config.cluster_arch
+			cluster_function = ["AOS"]
+			cluster_arch     = "X86_64"
 			fault_tolerance_state {
-			  domain_awareness_level          = local.clusters.config.fault_tolerance_state.domain_awareness_level
+			  domain_awareness_level          = "DISK"
 			}
 		  }
 
@@ -562,7 +544,7 @@ func testAccClusterResourceMinimumConfig(name, clusterProfileExtID string, categ
 		  # associate categories to the cluster
 		  categories = [%[3]s]
 		  provisioner "local-exec" {
-			command = "ssh-keygen -f '~/.ssh/known_hosts' -R '${local.clusters.nodes[0].cvm_ip}';  sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[0].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}' "
+			command = "ssh-keygen -f '~/.ssh/known_hosts' -R '${local.clusters.nodes[0]}';  sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no ${local.config.ssh_pe_username}@${local.clusters.nodes[0]} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.config.pe_username} password=${local.config.pe_password}' "
 
 			on_failure = continue
 		  }
@@ -583,19 +565,26 @@ func testAccClusterResourceMinimumConfig(name, clusterProfileExtID string, categ
 			  remote_cluster {
 				address {
 				  ipv4 {
-					value = local.clusters.nodes[0].cvm_ip
+					value = local.clusters.nodes[0]
 				  }
 				}
 				credentials {
 				  authentication {
-					username = local.clusters.nodes[0].username
-					password = local.clusters.nodes[0].password
+					username = local.config.pe_username
+					password = local.config.pe_password
 				  }
 				}
 			  }
 			}
 		  }
 		  depends_on = [nutanix_cluster_v2.test]
+
+		  # Wait for Prism Central to sync the registered cluster (incl. its name)
+		  # before the post-apply read; the name-based lookup races PC propagation.
+		  provisioner "local-exec" {
+			command    = "sleep 30"
+			on_failure = continue
+		  }
 		}
 `, clusterConfig, name, categories, clusterProfileExtIDLine)
 }
@@ -610,7 +599,7 @@ func testAccClusterResourceAllConfig(name, categories string, r int) string {
 		  address_type = "IPV4"
 		  ip_filter_list {
 			ipv4 {
-			  value = local.clusters.nodes[0].cvm_ip
+			  value = local.clusters.nodes[0]
 			}
 		  }
 		  depends_on = [data.nutanix_clusters_v2.clusters]
@@ -619,7 +608,7 @@ func testAccClusterResourceAllConfig(name, categories string, r int) string {
 		  lifecycle {
 			postcondition {
 			  condition     = length(self.unconfigured_nodes) == 1
-			  error_message = "The node ${local.clusters.nodes[0].cvm_ip} are not unconfigured"
+			  error_message = "The node ${local.clusters.nodes[0]} are not unconfigured"
 			}
 		  }
 		}
@@ -666,16 +655,16 @@ func testAccClusterResourceAllConfig(name, categories string, r int) string {
 				node_list {
 					controller_vm_ip {
 						ipv4 {
-							value = local.clusters.nodes[0].cvm_ip
+							value = local.clusters.nodes[0]
 						}
 					}
 				}
 		  }
 		  config {
-				cluster_function = local.clusters.config.cluster_functions
-				cluster_arch     = local.clusters.config.cluster_arch
+				cluster_function = ["AOS"]
+				cluster_arch     = "X86_64"
 				fault_tolerance_state {
-					domain_awareness_level          = local.clusters.config.fault_tolerance_state.domain_awareness_level
+					domain_awareness_level          = "DISK"
 				}
 		  }
 		  network {
@@ -686,22 +675,22 @@ func testAccClusterResourceAllConfig(name, categories string, r int) string {
 				}
 				ntp_server_ip_list {
 					fqdn {
-						value = local.clusters.network.ntp_servers[0]
+						value = local.config.ntp_servers[0]
 					}
 				}
 				ntp_server_ip_list {
 					fqdn {
-						value = local.clusters.network.ntp_servers[1]
+						value = local.config.ntp_servers[1]
 					}
 				}
 				ntp_server_ip_list {
 					fqdn {
-						value = local.clusters.network.ntp_servers[2]
+						value = local.config.ntp_servers[2]
 					}
 				}
 				ntp_server_ip_list {
 					fqdn {
-						value = local.clusters.network.ntp_servers[3]
+						value = local.config.ntp_servers[3]
 					}
 				}
 		  }
@@ -712,7 +701,7 @@ func testAccClusterResourceAllConfig(name, categories string, r int) string {
 		  }
 
 		  provisioner "local-exec" {
-				command = "ssh-keygen -f '~/.ssh/known_hosts' -R '${local.clusters.nodes[0].cvm_ip}'; sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[0].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}' "
+				command = "ssh-keygen -f '~/.ssh/known_hosts' -R '${local.clusters.nodes[0]}'; sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no ${local.config.ssh_pe_username}@${local.clusters.nodes[0]} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.config.pe_username} password=${local.config.pe_password}' "
 
 				on_failure = continue
 		  }
@@ -727,19 +716,26 @@ func testAccClusterResourceAllConfig(name, categories string, r int) string {
 					remote_cluster {
 						address {
 							ipv4 {
-								value = local.clusters.nodes[0].cvm_ip
+								value = local.clusters.nodes[0]
 							}
 						}
 						credentials {
 							authentication {
-								username = local.clusters.nodes[0].username
-								password = local.clusters.nodes[0].password
+								username = local.config.pe_username
+								password = local.config.pe_password
 							}
 						}
 					}
 				}
 		  }
 		  depends_on = [nutanix_cluster_v2.test]
+
+		  # Wait for Prism Central to sync the registered cluster (incl. its name)
+		  # before the post-apply read; the name-based lookup races PC propagation.
+		  provisioner "local-exec" {
+			command    = "sleep 30"
+			on_failure = continue
+		  }
 		}
 
 	`, clusterConfig, name, categories, r)
@@ -756,7 +752,7 @@ func testAccClusterResourceUpdateConfig(updatedName, pulseStatus string) string 
 		  address_type = "IPV4"
 		  ip_filter_list {
 			ipv4 {
-			  value = local.clusters.nodes[0].cvm_ip
+			  value = local.clusters.nodes[0]
 			}
 		  }
 		  depends_on = [data.nutanix_clusters_v2.clusters]
@@ -765,7 +761,7 @@ func testAccClusterResourceUpdateConfig(updatedName, pulseStatus string) string 
 		  lifecycle {
 			postcondition {
 			  condition     = length(self.unconfigured_nodes) == 1
-			  error_message = "The node ${local.clusters.nodes[0].cvm_ip} are not unconfigured"
+			  error_message = "The node ${local.clusters.nodes[0]} are not unconfigured"
 			}
 		  }
 		}
@@ -792,16 +788,16 @@ func testAccClusterResourceUpdateConfig(updatedName, pulseStatus string) string 
 			node_list {
 			  controller_vm_ip {
 				ipv4 {
-				  value = local.clusters.nodes[0].cvm_ip
+				  value = local.clusters.nodes[0]
 				}
 			  }
 			}
 		  }
 		  config {
-			cluster_function = local.clusters.config.cluster_functions
-			cluster_arch     = local.clusters.config.cluster_arch
+			cluster_function = ["AOS"]
+			cluster_arch     = "X86_64"
 			fault_tolerance_state {
-			  domain_awareness_level          = local.clusters.config.fault_tolerance_state.domain_awareness_level
+			  domain_awareness_level          = "DISK"
 			}
 		    pulse_status {
 		      is_enabled = %[3]s
@@ -822,37 +818,37 @@ func testAccClusterResourceUpdateConfig(updatedName, pulseStatus string) string 
 			}
 			ntp_server_ip_list {
 			  fqdn {
-				value = local.clusters.network.ntp_servers[0]
+				value = local.config.ntp_servers[0]
 			  }
 			}
 			ntp_server_ip_list {
 			  fqdn {
-				value = local.clusters.network.ntp_servers[1]
+				value = local.config.ntp_servers[1]
 			  }
 			}
 			ntp_server_ip_list {
 			  fqdn {
-				value = local.clusters.network.ntp_servers[2]
+				value = local.config.ntp_servers[2]
 			  }
 			}
 			ntp_server_ip_list {
 			  fqdn {
-				value = local.clusters.network.ntp_servers[3]
+				value = local.config.ntp_servers[3]
 			  }
 			}
 			smtp_server {
-			  email_address = local.clusters.network.smtp_server.email_address
+			  email_address = "%[4]s"
 			  server {
 				ip_address {
 				  ipv4 {
-					value = local.clusters.network.smtp_server.ip
+					value = "%[5]s"
 				  }
 				}
-				port     = local.clusters.network.smtp_server.port
-				username = local.clusters.network.smtp_server.username
-				password = local.clusters.network.smtp_server.password
+				port     = %[6]d
+				username = "%[7]s"
+				password = "%[8]s"
 			  }
-			  type = local.clusters.network.smtp_server.type
+			  type = "%[9]s"
 			}
 		  }
 
@@ -861,7 +857,7 @@ func testAccClusterResourceUpdateConfig(updatedName, pulseStatus string) string 
 		  }
 
 		  provisioner "local-exec" {
-			command = "ssh-keygen -f '~/.ssh/known_hosts' -R '${local.clusters.nodes[0].cvm_ip}';  sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[0].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}' "
+			command = "ssh-keygen -f '~/.ssh/known_hosts' -R '${local.clusters.nodes[0]}';  sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no ${local.config.ssh_pe_username}@${local.clusters.nodes[0]} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.config.pe_username} password=${local.config.pe_password}' "
 			on_failure = continue
 		  }
 		  depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node, nutanix_category_v2.test]
@@ -875,22 +871,31 @@ func testAccClusterResourceUpdateConfig(updatedName, pulseStatus string) string 
 			  remote_cluster {
 				address {
 				  ipv4 {
-					value = local.clusters.nodes[0].cvm_ip
+					value = local.clusters.nodes[0]
 				  }
 				}
 				credentials {
 				  authentication {
-					username = local.clusters.nodes[0].username
-					password = local.clusters.nodes[0].password
+					username = local.config.pe_username
+					password = local.config.pe_password
 				  }
 				}
 			  }
 			}
 		  }
 		  depends_on = [nutanix_cluster_v2.test]
+
+		  # Wait for Prism Central to sync the registered cluster (incl. its name)
+		  # before the post-apply read; the name-based lookup races PC propagation.
+		  provisioner "local-exec" {
+			command    = "sleep 30"
+			on_failure = continue
+		  }
 		}
 
-`, clusterConfig, updatedName, pulseStatus)
+`, clusterConfig, updatedName, pulseStatus,
+		smtpTestServer.EmailAddress, smtpTestServer.IP, smtpTestServer.Port,
+		smtpTestServer.Username, smtpTestServer.Password, smtpTestServer.Type)
 }
 
 func testAcc3NodeClustersConfig(clusterName string) string {
@@ -916,17 +921,17 @@ resource "nutanix_clusters_discover_unconfigured_nodes_v2" "cluster-nodes" {
   address_type = "IPV4"
   ip_filter_list {
     ipv4 {
-      value = local.clusters.nodes[0].cvm_ip
+      value = local.clusters.nodes[0]
     }
   }
   ip_filter_list {
     ipv4 {
-      value = local.clusters.nodes[1].cvm_ip
+      value = local.clusters.nodes[1]
     }
   }
   ip_filter_list {
     ipv4 {
-      value = local.clusters.nodes[2].cvm_ip
+      value = local.clusters.nodes[2]
     }
   }
   depends_on = [data.nutanix_clusters_v2.clusters]
@@ -948,28 +953,28 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
     node_list {
       controller_vm_ip {
         ipv4 {
-          value = local.clusters.nodes[0].cvm_ip
+          value = local.clusters.nodes[0]
         }
       }
     }
     node_list {
       controller_vm_ip {
         ipv4 {
-          value = local.clusters.nodes[1].cvm_ip
+          value = local.clusters.nodes[1]
         }
       }
     }
     node_list {
       controller_vm_ip {
         ipv4 {
-          value = local.clusters.nodes[2].cvm_ip
+          value = local.clusters.nodes[2]
         }
       }
     }
   }
   config {
-    cluster_function = local.clusters.config.cluster_functions
-    cluster_arch     = local.clusters.config.cluster_arch
+    cluster_function = ["AOS"]
+    cluster_arch     = "X86_64"
     fault_tolerance_state {
       domain_awareness_level          = "NODE"
     }
@@ -983,28 +988,28 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
 		}
 		ntp_server_ip_list {
 			fqdn {
-				value = local.clusters.network.ntp_servers[0]
+				value = local.config.ntp_servers[0]
 			}
 		}
 		ntp_server_ip_list {
 			fqdn {
-				value = local.clusters.network.ntp_servers[1]
+				value = local.config.ntp_servers[1]
 			}
 		}
 		ntp_server_ip_list {
 			fqdn {
-				value = local.clusters.network.ntp_servers[2]
+				value = local.config.ntp_servers[2]
 			}
 		}
 		ntp_server_ip_list {
 			fqdn {
-				value = local.clusters.network.ntp_servers[3]
+				value = local.config.ntp_servers[3]
 			}
 		}
 	}
 
   provisioner "local-exec" {
-    command = "ssh-keygen -f ~/.ssh/known_hosts -R ${local.clusters.nodes[1].cvm_ip};   sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[1].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[1].username} password=${local.clusters.nodes[1].password}'"
+    command = "ssh-keygen -f ~/.ssh/known_hosts -R ${local.clusters.nodes[1]};   sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no ${local.config.ssh_pe_username}@${local.clusters.nodes[1]} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.config.pe_username} password=${local.config.pe_password}'"
 
     on_failure = continue
   }
@@ -1029,13 +1034,13 @@ resource "nutanix_pc_registration_v2" "nodes-registration" {
       remote_cluster {
         address {
           ipv4 {
-            value = local.clusters.nodes[1].cvm_ip
+            value = local.clusters.nodes[1]
           }
         }
         credentials {
           authentication {
-            username = local.clusters.nodes[1].username
-            password = local.clusters.nodes[1].password
+            username = local.config.pe_username
+            password = local.config.pe_password
           }
         }
       }
@@ -1043,8 +1048,10 @@ resource "nutanix_pc_registration_v2" "nodes-registration" {
   }
   depends_on = [nutanix_cluster_v2.cluster-3nodes]
 
+  # Wait for Prism Central to sync the registered cluster (incl. its name)
+  # before the post-apply read; the name-based lookup races PC propagation.
   provisioner "local-exec" {
-    command    = " sleep 5s"
+    command    = "sleep 30"
     on_failure = continue
   }
 }
@@ -1074,17 +1081,17 @@ resource "nutanix_clusters_discover_unconfigured_nodes_v2" "cluster-nodes" {
   address_type = "IPV4"
   ip_filter_list {
     ipv4 {
-      value = local.clusters.nodes[0].cvm_ip
+      value = local.clusters.nodes[0]
     }
   }
   ip_filter_list {
     ipv4 {
-      value = local.clusters.nodes[1].cvm_ip
+      value = local.clusters.nodes[1]
     }
   }
   ip_filter_list {
     ipv4 {
-      value = local.clusters.nodes[2].cvm_ip
+      value = local.clusters.nodes[2]
     }
   }
   depends_on = [data.nutanix_clusters_v2.clusters]
@@ -1106,28 +1113,28 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
     node_list {
       controller_vm_ip {
         ipv4 {
-          value = local.clusters.nodes[0].cvm_ip
+          value = local.clusters.nodes[0]
         }
       }
     }
     node_list {
       controller_vm_ip {
         ipv4 {
-          value = local.clusters.nodes[1].cvm_ip
+          value = local.clusters.nodes[1]
         }
       }
     }
     node_list {
       controller_vm_ip {
         ipv4 {
-          value = local.clusters.nodes[2].cvm_ip
+          value = local.clusters.nodes[2]
         }
       }
     }
     node_list {
       controller_vm_ip {
         ipv4 {
-          value = local.clusters.nodes[3].cvm_ip
+          value = local.clusters.nodes[3]
         }
       }
 			should_skip_imaging = true
@@ -1144,8 +1151,8 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
     }
   }
   config {
-    cluster_function = local.clusters.config.cluster_functions
-    cluster_arch     = local.clusters.config.cluster_arch
+    cluster_function = ["AOS"]
+    cluster_arch     = "X86_64"
     fault_tolerance_state {
       domain_awareness_level          = "NODE"
     }
@@ -1159,28 +1166,28 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
 		}
 		ntp_server_ip_list {
 			fqdn {
-				value = local.clusters.network.ntp_servers[0]
+				value = local.config.ntp_servers[0]
 			}
 		}
 		ntp_server_ip_list {
 			fqdn {
-				value = local.clusters.network.ntp_servers[1]
+				value = local.config.ntp_servers[1]
 			}
 		}
 		ntp_server_ip_list {
 			fqdn {
-				value = local.clusters.network.ntp_servers[2]
+				value = local.config.ntp_servers[2]
 			}
 		}
 		ntp_server_ip_list {
 			fqdn {
-				value = local.clusters.network.ntp_servers[3]
+				value = local.config.ntp_servers[3]
 			}
 		}
 	}
 
   provisioner "local-exec" {
-    command = "ssh-keygen -f ~/.ssh/known_hosts -R ${local.clusters.nodes[1].cvm_ip};   sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[1].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[1].username} password=${local.clusters.nodes[1].password}'"
+    command = "ssh-keygen -f ~/.ssh/known_hosts -R ${local.clusters.nodes[1]};   sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no ${local.config.ssh_pe_username}@${local.clusters.nodes[1]} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.config.pe_username} password=${local.config.pe_password}'"
 
     on_failure = continue
   }
@@ -1217,17 +1224,17 @@ resource "nutanix_clusters_discover_unconfigured_nodes_v2" "cluster-nodes" {
   address_type = "IPV4"
   ip_filter_list {
     ipv4 {
-      value = local.clusters.nodes[0].cvm_ip
+      value = local.clusters.nodes[0]
     }
   }
   ip_filter_list {
     ipv4 {
-      value = local.clusters.nodes[1].cvm_ip
+      value = local.clusters.nodes[1]
     }
   }
   ip_filter_list {
     ipv4 {
-      value = local.clusters.nodes[2].cvm_ip
+      value = local.clusters.nodes[2]
     }
   }
   depends_on = [data.nutanix_clusters_v2.clusters]
@@ -1249,21 +1256,21 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
     node_list {
       controller_vm_ip {
         ipv4 {
-          value = local.clusters.nodes[0].cvm_ip
+          value = local.clusters.nodes[0]
         }
       }
     }
     node_list {
       controller_vm_ip {
         ipv4 {
-          value = local.clusters.nodes[2].cvm_ip
+          value = local.clusters.nodes[2]
         }
       }
     }
     node_list {
       controller_vm_ip {
         ipv4 {
-          value = local.clusters.nodes[3].cvm_ip
+          value = local.clusters.nodes[3]
         }
       }
 			should_skip_imaging = true
@@ -1279,8 +1286,8 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
     }
   }
   config {
-    cluster_function = local.clusters.config.cluster_functions
-    cluster_arch     = local.clusters.config.cluster_arch
+    cluster_function = ["AOS"]
+    cluster_arch     = "X86_64"
     fault_tolerance_state {
       domain_awareness_level          = "NODE"
     }
@@ -1294,28 +1301,28 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
 		}
 		ntp_server_ip_list {
 			fqdn {
-				value = local.clusters.network.ntp_servers[0]
+				value = local.config.ntp_servers[0]
 			}
 		}
 		ntp_server_ip_list {
 			fqdn {
-				value = local.clusters.network.ntp_servers[1]
+				value = local.config.ntp_servers[1]
 			}
 		}
 		ntp_server_ip_list {
 			fqdn {
-				value = local.clusters.network.ntp_servers[2]
+				value = local.config.ntp_servers[2]
 			}
 		}
 		ntp_server_ip_list {
 			fqdn {
-				value = local.clusters.network.ntp_servers[3]
+				value = local.config.ntp_servers[3]
 			}
 		}
 	}
 
   provisioner "local-exec" {
-    command = "ssh-keygen -f ~/.ssh/known_hosts -R ${local.clusters.nodes[1].cvm_ip};   sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[1].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[1].username} password=${local.clusters.nodes[1].password}'"
+    command = "ssh-keygen -f ~/.ssh/known_hosts -R ${local.clusters.nodes[1]};   sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no ${local.config.ssh_pe_username}@${local.clusters.nodes[1]} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.config.pe_username} password=${local.config.pe_password}'"
 
     on_failure = continue
   }
@@ -1337,13 +1344,13 @@ resource "nutanix_cluster_profile_v2" "test" {
   allowed_overrides = ["NTP_SERVER_CONFIG", "SNMP_SERVER_CONFIG"]
 
   name_server_ip_list {
-    ipv4 { value = "240.29.254.180" }
-    ipv6 { value = "1a7d:9a64:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
+    ipv4 { value = "10.29.254.180" }
+    ipv6 { value = "2001:db8:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
   }
 
   ntp_server_ip_list {
-    ipv4 { value = "240.29.254.180" }
-    ipv6 { value = "1a7d:9a64:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
+    ipv4 { value = "10.29.254.180" }
+    ipv6 { value = "2001:db8:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
     fqdn { value = "ntp.example.com" }
   }
 
@@ -1352,8 +1359,8 @@ resource "nutanix_cluster_profile_v2" "test" {
     type = "SSL"
     server {
       ip_address {
-        ipv4 { value = "240.29.254.180" }
-        ipv6 { value = "1a7d:9a64:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
+        ipv4 { value = "10.29.254.180" }
+        ipv6 { value = "2001:db8:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
         fqdn { value = "smtp.example.com" }
       }
       port     = 587
@@ -1380,10 +1387,10 @@ resource "nutanix_cluster_profile_v2" "test" {
     traps {
       address {
         ipv4 {
-					value         = "240.29.254.180"
+					value         = "10.29.254.180"
 					prefix_length = 24
 				}
-        ipv6 { value = "1a7d:9a64:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
+        ipv6 { value = "2001:db8:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
       }
       username         = "trapuser"
       protocol         = "UDP"
@@ -1401,8 +1408,8 @@ resource "nutanix_cluster_profile_v2" "test" {
     port             = 29
     network_protocol = "UDP"
     ip_address {
-      ipv4 { value = "240.29.254.180" }
-      ipv6 { value = "1a7d:9a64:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
+      ipv4 { value = "10.29.254.180" }
+      ipv6 { value = "2001:db8:df8d:dfd8:39c6:c4ea:e35c:0ba4" }
     }
     modules {
       name                     = "CASSANDRA"

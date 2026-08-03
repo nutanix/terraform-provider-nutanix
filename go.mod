@@ -1,151 +1,101 @@
 module github.com/terraform-providers/terraform-provider-nutanix
 
-go 1.25.3
+go 1.25.12
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
-	github.com/client9/misspell v0.3.4
-	github.com/golangci/golangci-lint v1.25.0
-	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
-	github.com/hashicorp/go-uuid v1.0.2
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
+	github.com/hashicorp/go-cty v1.5.0
+	github.com/hashicorp/go-uuid v1.0.3
+	github.com/hashicorp/terraform-plugin-go v0.31.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.1
 	github.com/jinzhu/copier v0.4.0
-	github.com/mitchellh/gox v1.0.1
-	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.2.2
-	github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4 v4.2.2
-	github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4 v4.3.1
-	github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4 v4.1.2-beta.2
-	github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.2.2
-	github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.2.2
-	github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.3.1
-	github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4 v4.0.3
-	github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.3.1
-	github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4 v4.1.2
-	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.2.2
-	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.2.2
-	github.com/spf13/cast v1.8.0
-	github.com/stretchr/testify v1.7.2
+	github.com/masterzen/winrm v0.0.0-20260407182533-5570be7f80cf
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17 v17.7.0-22255
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17 v17.7.0-21597
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17 v17.7.0-21863
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17 v17.6.0-22211
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17 v17.7.0-22250
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17 v17.7.0-22186
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17 v17.7.0-22244
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17 v17.7.0-22181
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17 v17.7.0-22191
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17 v17.7.0-22278
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17 v17.7.0-22185
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17 v17.7.0-22241
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17 v17.7.0-22178
+	github.com/spf13/cast v1.10.0
+	github.com/stretchr/testify v1.11.1
+	golang.org/x/crypto v0.53.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
-	github.com/BurntSushi/toml v0.3.1 // indirect
-	github.com/OpenPeeDeeP/depguard v1.0.1 // indirect
-	github.com/PaesslerAG/gval v1.0.0 // indirect
+	github.com/Azure/go-ntlmssp v0.0.0-20221128193559-754e69321358 // indirect
+	github.com/ChrisTrenkamp/goxpath v0.0.0-20210404020558-97928f7e12b6 // indirect
+	github.com/PaesslerAG/gval v1.2.4 // indirect
+	github.com/ProtonMail/go-crypto v1.4.1 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
-	github.com/apparentlymart/go-cidr v1.0.1 // indirect
-	github.com/apparentlymart/go-textseg v1.0.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
-	github.com/bombsimon/wsl/v3 v3.0.0 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/bodgit/ntlmssp v0.0.0-20240506230425-31973bb52d9b // indirect
+	github.com/bodgit/windows v1.0.1 // indirect
+	github.com/cloudflare/circl v1.6.3 // indirect
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fatih/color v1.18.0 // indirect
-	github.com/fsnotify/fsnotify v1.4.7 // indirect
-	github.com/go-critic/go-critic v0.4.1 // indirect
-	github.com/go-lintpack/lintpack v0.5.2 // indirect
-	github.com/go-toolsmith/astcast v1.0.0 // indirect
-	github.com/go-toolsmith/astcopy v1.0.0 // indirect
-	github.com/go-toolsmith/astequal v1.0.0 // indirect
-	github.com/go-toolsmith/astfmt v1.0.0 // indirect
-	github.com/go-toolsmith/astp v1.0.0 // indirect
-	github.com/go-toolsmith/strparse v1.0.0 // indirect
-	github.com/go-toolsmith/typep v1.0.0 // indirect
-	github.com/gobwas/glob v0.2.3 // indirect
-	github.com/gofrs/flock v0.0.0-20190320160742-5135e617513b // indirect
-	github.com/gogo/protobuf v1.2.1 // indirect
-	github.com/golang/protobuf v1.4.2 // indirect
-	github.com/golangci/check v0.0.0-20180506172741-cfe4005ccda2 // indirect
-	github.com/golangci/dupl v0.0.0-20180902072040-3e9179ac440a // indirect
-	github.com/golangci/errcheck v0.0.0-20181223084120-ef45e06d44b6 // indirect
-	github.com/golangci/go-misc v0.0.0-20180628070357-927a3d87b613 // indirect
-	github.com/golangci/goconst v0.0.0-20180610141641-041c5f2b40f3 // indirect
-	github.com/golangci/gocyclo v0.0.0-20180528134321-2becd97e67ee // indirect
-	github.com/golangci/gofmt v0.0.0-20190930125516-244bba706f1a // indirect
-	github.com/golangci/ineffassign v0.0.0-20190609212857-42439a7714cc // indirect
-	github.com/golangci/lint-1 v0.0.0-20191013205115-297bf364a8e0 // indirect
-	github.com/golangci/maligned v0.0.0-20180506175553-b1d89398deca // indirect
-	github.com/golangci/misspell v0.0.0-20180809174111-950f5d19e770 // indirect
-	github.com/golangci/prealloc v0.0.0-20180630174525-215b22d4de21 // indirect
-	github.com/golangci/revgrep v0.0.0-20180526074752-d9c87f5ffaf0 // indirect
-	github.com/golangci/unconvert v0.0.0-20180507085042-28b1c447d1f4 // indirect
+	github.com/go-git/go-git/v5 v5.19.1 // indirect
+	github.com/go-logr/logr v1.4.3 // indirect
+	github.com/gofrs/uuid v4.4.0+incompatible // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/gostaticanalysis/analysisutil v0.0.0-20190318220348-4088753ea4d3 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/hashicorp/go-plugin v1.4.1 // indirect
-	github.com/hashicorp/go-retryablehttp v0.7.1 // indirect
-	github.com/hashicorp/go-version v1.7.0 // indirect
-	github.com/hashicorp/hc-install v0.3.1 // indirect
-	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hashicorp/hcl/v2 v2.3.0 // indirect
+	github.com/hashicorp/go-plugin v1.7.0 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
+	github.com/hashicorp/go-version v1.9.0 // indirect
+	github.com/hashicorp/hc-install v0.9.4 // indirect
+	github.com/hashicorp/hcl/v2 v2.24.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
-	github.com/hashicorp/terraform-exec v0.15.0 // indirect
+	github.com/hashicorp/terraform-exec v0.25.1 // indirect
 	github.com/hashicorp/terraform-json v0.27.2 // indirect
-	github.com/hashicorp/terraform-plugin-go v0.5.0 // indirect
-	github.com/hashicorp/terraform-plugin-log v0.2.0 // indirect
-	github.com/hashicorp/terraform-registry-address v0.0.0-20210412075316-9b2996cce896 // indirect
-	github.com/hashicorp/terraform-svchost v0.0.0-20200729002733-f050f53b9734 // indirect
-	github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/jingyugao/rowserrcheck v0.0.0-20191204022205-72ab7603b68a // indirect
-	github.com/jirfag/go-printf-func-name v0.0.0-20191110105641-45db9963cdd3 // indirect
-	github.com/kisielk/gotool v1.0.0 // indirect
-	github.com/magiconair/properties v1.8.1 // indirect
-	github.com/maratori/testpackage v1.0.1 // indirect
-	github.com/matoous/godox v0.0.0-20190911065817-5d6d842e92eb // indirect
+	github.com/hashicorp/terraform-plugin-log v0.10.0 // indirect
+	github.com/hashicorp/terraform-registry-address v0.4.0 // indirect
+	github.com/hashicorp/terraform-svchost v0.1.1 // indirect
+	github.com/hashicorp/yamux v0.1.2 // indirect
+	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
+	github.com/jcmturner/dnsutils/v2 v2.0.0 // indirect
+	github.com/jcmturner/gofork v1.7.6 // indirect
+	github.com/jcmturner/goidentity/v6 v6.0.1 // indirect
+	github.com/jcmturner/gokrb5/v8 v8.4.4 // indirect
+	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
+	github.com/masterzen/simplexml v0.0.0-20190410153822-31eea3082786 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
-	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
-	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
-	github.com/mitchellh/iochan v1.0.0 // indirect
-	github.com/mitchellh/mapstructure v1.1.2 // indirect
+	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/nakabonne/nestif v0.3.0 // indirect
-	github.com/nbutton23/zxcvbn-go v0.0.0-20180912185939-ae427f1e4c1d // indirect
-	github.com/oklog/run v1.0.0 // indirect
-	github.com/pelletier/go-toml v1.2.0 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/ryancurrah/gomodguard v1.0.2 // indirect
-	github.com/securego/gosec v0.0.0-20200103095621-79fbf3af8d83 // indirect
-	github.com/sirupsen/logrus v1.9.0 // indirect
-	github.com/sourcegraph/go-diff v0.5.1 // indirect
-	github.com/spf13/afero v1.1.2 // indirect
-	github.com/spf13/cobra v0.0.5 // indirect
-	github.com/spf13/jwalterweatherman v1.0.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.6.1 // indirect
-	github.com/stretchr/objx v0.2.0 // indirect
-	github.com/subosito/gotenv v1.2.0 // indirect
-	github.com/tetafro/godot v0.2.5 // indirect
-	github.com/timakin/bodyclose v0.0.0-20190930140734-f7f2e9bca95e // indirect
-	github.com/tommy-muehle/go-mnd v1.3.1-0.20200224220436-e6f9a994e8fa // indirect
-	github.com/ultraware/funlen v0.0.2 // indirect
-	github.com/ultraware/whitespace v0.0.4 // indirect
-	github.com/uudashr/gocognit v1.0.1 // indirect
+	github.com/oklog/run v1.1.0 // indirect
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
+	github.com/shopspring/decimal v1.3.1 // indirect
+	github.com/sirupsen/logrus v1.9.4 // indirect
+	github.com/tidwall/transform v0.0.0-20201103190739-32f242e2dbde // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
-	github.com/zclconf/go-cty v1.16.4 // indirect
-	golang.org/x/crypto v0.38.0 // indirect
-	golang.org/x/mod v0.17.0 // indirect
-	golang.org/x/net v0.25.0 // indirect
-	golang.org/x/sync v0.14.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/text v0.25.0 // indirect
-	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
-	google.golang.org/appengine v1.6.6 // indirect
-	google.golang.org/genproto v0.0.0-20200711021454-869866162049 // indirect
-	google.golang.org/grpc v1.32.0 // indirect
-	google.golang.org/protobuf v1.25.0 // indirect
-	gopkg.in/ini.v1 v1.51.0 // indirect
+	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
+	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
+	github.com/zclconf/go-cty v1.18.1 // indirect
+	golang.org/x/mod v0.37.0 // indirect
+	golang.org/x/net v0.56.0 // indirect
+	golang.org/x/sync v0.21.0 // indirect
+	golang.org/x/sys v0.46.0 // indirect
+	golang.org/x/text v0.39.0 // indirect
+	golang.org/x/tools v0.47.0 // indirect
+	google.golang.org/appengine v1.6.8 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260610212136-7ab31c22f7ad // indirect
+	google.golang.org/grpc v1.82.1 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	honnef.co/go/tools v0.0.1-2020.1.4 // indirect
-	mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed // indirect
-	mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b // indirect
-	mvdan.cc/unparam v0.0.0-20190720180237-d51796306d8f // indirect
-	sourcegraph.com/sqs/pbtypes v0.0.0-20180604144634-d3ebe8f20ae4 // indirect
 )

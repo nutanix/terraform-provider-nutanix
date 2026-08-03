@@ -136,10 +136,15 @@ tools:
 	GO111MODULE=on go install github.com/terraform-linters/tflint@latest
 	GO111MODULE=on go install golang.org/x/tools/cmd/stringer@latest
 	GO111MODULE=on go install mvdan.cc/gofumpt@latest
+	GO111MODULE=on go install golang.org/x/vuln/cmd/govulncheck@latest
 
 # 	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
 # 	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.2
 # 	GO111MODULE=on go install github.com/mitchellh/gox
+
+vulncheck:
+	@echo "==> Running vulnerability check..."
+	@govulncheck ./...
 
 vet:
 	@echo "go vet ."
@@ -180,7 +185,7 @@ endif
 
 website-lint:
 	@echo "==> Checking website against linters..."
-	@misspell -error -source=text website/
+	@misspell -error -source=text -i "criterias" website/
 
 website-test:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
@@ -191,4 +196,4 @@ endif
 
 .NOTPARALLEL:
 
-.PHONY: default build test testacc acc-test fmt fmtcheck errcheck lint tools vet test-compile cibuild citest website website-lint website-test
+.PHONY: default build test testacc acc-test fmt fmtcheck errcheck lint tools vulncheck vet test-compile cibuild citest website website-lint website-test

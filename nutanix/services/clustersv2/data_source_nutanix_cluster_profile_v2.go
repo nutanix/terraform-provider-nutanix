@@ -5,7 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusterprofiles"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -346,6 +347,129 @@ func DatasourceNutanixClusterProfileV2() *schema.Resource {
 					},
 				},
 			},
+			"ntp_server_config_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ntp_server_address": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Set:      common.HashIPItem,
+							Elem:     common.SchemaForIPList(true),
+						},
+						"encryption_algorithm": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"encryption_key": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"encryption_key_id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"http_proxy_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"proxy_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"ip_address": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem:     common.SchemaForIPList(false),
+									},
+									"port": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"username": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"password": {
+										Type:      schema.TypeString,
+										Computed:  true,
+										Sensitive: true,
+									},
+									"proxy_types": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
+						},
+						"proxy_white_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"target": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"target_type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"fault_tolerance_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"desired_cluster_fault_tolerance": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"rebuild_reservation_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"is_rebuild_reservation_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"resilient_capacity_warning_threshold_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"resilient_capacity_warning_threshold_percentage": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -354,9 +478,11 @@ func DatasourceNutanixClusterProfileV2Read(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.Client).ClusterAPI
 
 	extID := d.Get("ext_id").(string)
-
+	getClusterProfileByIdRequest := import1.GetClusterProfileByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
 	// Fetch the Cluster Profile by UUID
-	clusterProfileResp, err := conn.ClusterProfilesAPI.GetClusterProfileById(utils.StringPtr(extID))
+	clusterProfileResp, err := conn.ClusterProfilesAPI.GetClusterProfileById(ctx, &getClusterProfileByIdRequest)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -431,6 +557,21 @@ func DatasourceNutanixClusterProfileV2Read(ctx context.Context, d *schema.Resour
 		return diag.FromErr(err)
 	}
 	if err := d.Set("pulse_status", flattenPulseStatus(clusterProfile.PulseStatus)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("ntp_server_config_list", flattenNtpServerConfigList(clusterProfile.NtpServerConfigList)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("http_proxy_config", flattenHttpProxyConfig(clusterProfile.HttpProxyConfig)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("fault_tolerance_config", flattenFaultToleranceConfig(clusterProfile.FaultToleranceConfig)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("rebuild_reservation_config", flattenRebuildReservationConfig(clusterProfile.RebuildReservationConfig)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("resilient_capacity_warning_threshold_config", flattenResilientCapacityWarningThresholdConfig(clusterProfile.ResilientCapacityWarningThresholdConfig)); err != nil {
 		return diag.FromErr(err)
 	}
 

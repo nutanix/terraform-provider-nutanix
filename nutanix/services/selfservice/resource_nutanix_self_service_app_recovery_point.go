@@ -72,14 +72,23 @@ func resourceNutanixCalmAppRecoveryPointCreate(ctx context.Context, d *schema.Re
 		return diag.FromErr(err)
 	}
 
-	entities := AppNameStatus[0].(map[string]interface{})
-
-	if entity, ok := entities["metadata"].(map[string]interface{}); ok {
-		appUUID = entity["uuid"].(string)
+	if len(AppNameStatus) > 0 {
+		if entities, ok := AppNameStatus[0].(map[string]interface{}); ok {
+			if entity, ok := entities["metadata"].(map[string]interface{}); ok {
+				if uuidVal, ok := entity["uuid"].(string); ok {
+					appUUID = uuidVal
+				}
+			}
+		}
 	}
 
+	// app_uuid, when supplied, takes precedence over the name lookup.
 	if appUUIDRead, ok := d.GetOk("app_uuid"); ok {
 		appUUID = appUUIDRead.(string)
+	}
+
+	if appUUID == "" {
+		return diag.Errorf("could not determine application uuid: no application found matching name %q and app_uuid was not set", appName)
 	}
 
 	snapshotActionName := d.Get("action_name").(string)
@@ -198,10 +207,23 @@ func resourceNutanixCalmAppRecoveryPointDelete(ctx context.Context, d *schema.Re
 		return diag.FromErr(err)
 	}
 
-	entities := AppNameStatus[0].(map[string]interface{})
+	if len(AppNameStatus) > 0 {
+		if entities, ok := AppNameStatus[0].(map[string]interface{}); ok {
+			if entity, ok := entities["metadata"].(map[string]interface{}); ok {
+				if uuidVal, ok := entity["uuid"].(string); ok {
+					appUUID = uuidVal
+				}
+			}
+		}
+	}
 
-	if entity, ok := entities["metadata"].(map[string]interface{}); ok {
-		appUUID = entity["uuid"].(string)
+	// app_uuid, when supplied, takes precedence over the name lookup.
+	if appUUIDRead, ok := d.GetOk("app_uuid"); ok {
+		appUUID = appUUIDRead.(string)
+	}
+
+	if appUUID == "" {
+		return diag.Errorf("could not determine application uuid: no application found matching name %q and app_uuid was not set", appName)
 	}
 	log.Println("[Debug] App uuid: ", appUUID)
 

@@ -5,7 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authz"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/operations"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -81,8 +82,10 @@ func DatasourceNutanixOperationV4Read(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.Client).IamAPI
 
 	extID := d.Get("ext_id")
-
-	resp, err := conn.OperationsAPIInstance.GetOperationById(utils.StringPtr(extID.(string)))
+	getOperationByIdRequest := import2.GetOperationByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.OperationsAPIInstance.GetOperationById(ctx, &getOperationByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching image placement : %v", err)
 	}
@@ -148,7 +151,7 @@ func flattenAssociatedEndpointList(pr []import1.AssociatedEndpoint) []map[string
 		for _, v := range pr {
 			endpoint := make(map[string]interface{})
 
-			endpoint["api_version"] = flattenAPIVersion(v.ApiVersion)
+			endpoint["api_version"] = utils.StringValue(v.ApiVersion)
 			endpoint["endpoint_url"] = v.EndpointUrl
 			endpoint["http_method"] = flattenHTTPMethod(v.HttpMethod)
 
@@ -157,19 +160,6 @@ func flattenAssociatedEndpointList(pr []import1.AssociatedEndpoint) []map[string
 		return endpoints
 	}
 	return nil
-}
-
-func flattenAPIVersion(pr *import1.ApiVersion) string {
-	if pr != nil {
-		const two, three = 2, 3
-		if *pr == import1.ApiVersion(two) {
-			return "V3"
-		}
-		if *pr == import1.ApiVersion(three) {
-			return "V4"
-		}
-	}
-	return "UNKNOWN"
 }
 
 func flattenHTTPMethod(pr *import1.HttpMethod) string {

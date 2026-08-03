@@ -1,87 +1,84 @@
 {
-    "subnet_name": "",
-    "default_container_name": "",
-    "account_uuid": "",
-    "user_group_with_distinguished_name": [
-        {
-            "distinguished_name": "",
-            "display_name": "",
-            "uuid": ""
-        },
-        {
-            "distinguished_name": ""
-        },
-        {
-            "distinguished_name": ""
-        },
-        {
-            "distinguished_name": ""
-        }
-    ],
-    "permissions": [
-        {
-            "name": "",
-            "uuid": ""
-        },
-        {
-            "name": "",
-            "uuid": ""
-        }
-    ],
-    "users": [
-        {
-            "principal_name": "",
-            "expected_display_name": "",
-            "directory_service_uuid": ""
-        },
-        {
-            "principal_name": "",
-            "expected_display_name": "",
-            "directory_service_uuid": ""
-        },
-        {
-            "principal_name": "",
-            "expected_display_name": "",
-            "directory_service_uuid": ""
-        }
-    ],
-    "node_os_version": "",
-    "kubernetes_version": "",
-    "ad_rule_target": {
-        "name": "",
-        "values": ""
+  "subnet_name": "",
+  "default_container_name": "",
+  "account_uuid": "",
+  "user_group_with_distinguished_name": [
+    {
+      "distinguished_name": "",
+      "display_name": "",
+      "uuid": ""
     },
-    "protection_policy":{
-        "local_az":{
-            "uuid":"",
-            "cluster_uuid":""
-        },
-        "destination_az":{
-            "uuid":"",
-            "cluster_uuid":""
-        }
+    {
+      "distinguished_name": ""
     },
-    "ssh_key":"",
-    "ndb":{
-        "register_cluster_info":{
-            "cluster_ip": "",
-            "username": "",
-            "password":"",
-            "strorage_container":"",
-            "dns":"",
-            "ntp":"",
-            "static_ip":"",
-            "gateway":"",
-            "subnet_mask":"" 
-        },
-        "test_static_network":""
+    {
+      "distinguished_name": ""
     },
-    "self_service": {
-        "bp_name_with_snapshot_config": "",
-        "bp_name": "",
-        "app_name_with_snapshot_config": ""
+    {
+      "distinguished_name": ""
     }
+  ],
+  "permissions": [
+    {
+      "name": "",
+      "uuid": ""
+    },
+    {
+      "name": "",
+      "uuid": ""
+    }
+  ],
+  "users": [
+    {
+      "principal_name": "",
+      "expected_display_name": "",
+      "directory_service_uuid": ""
+    },
+    {
+      "principal_name": "",
+      "expected_display_name": "",
+      "directory_service_uuid": ""
+    },
+    {
+      "principal_name": "",
+      "expected_display_name": "",
+      "directory_service_uuid": ""
+    }
+  ],
+  "node_os_version": "",
+  "kubernetes_version": "",
+  "ad_rule_target": {
+    "name": "",
+    "values": ""
+  },
+  "protection_policy": {
+    "local_az": {
+      "uuid": "",
+      "cluster_uuid": ""
+    },
+    "destination_az": {
+      "uuid": "",
+      "cluster_uuid": ""
+    }
+  },
+  "ssh_key": "",
+  "ndb": {
+    "register_cluster_info": {
+      "cluster_ip": "",
+      "username": "",
+      "password": "",
+      "strorage_container": "",
+      "dns": "",
+      "ntp": "",
+      "static_ip": "",
+      "gateway": "",
+      "subnet_mask": ""
+    },
+    "test_static_network": ""
+  },
+  "self_service": {
+    "bp_name_with_snapshot_config": "",
+    "bp_name": "",
+    "app_name_with_snapshot_config": ""
+  }
 }
-
-
-

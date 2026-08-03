@@ -13,6 +13,20 @@ description: |-
 
 Creates a protection policy to automate the recovery point creation and replication process.
 
+## Notes
+
+> **Please review the following behaviors before configuring a protection policy:**
+
+* **`latest_recovery_point_retention_seconds`**
+  * Must be a multiple of `3600` seconds (i.e., whole hours).
+  * Set it to `0` to indicate that the latest recovery point should **not** be retained past its expiry time.
+  * It is only sent to the API when explicitly set in the configuration. If you omit it, it is left out of the request entirely and the latest recovery point will be retained for a minimum of 30 days.
+  * It **cannot** be specified for **synchronous** replication (`recovery_point_objective_time_seconds = 0`). The API rejects the request if it is provided for a synchronous schedule.
+
+* **`is_replication_paused`**
+  * `true` is supported **only** for **synchronous** replication.
+  * It can be set **only** through an **update** request.
+
 
 
 ## Example—Synchronous Protection Policy
@@ -66,7 +80,8 @@ resource "nutanix_protection_policy_v2" "linear-retention-protection-policy" {
     source_location_label = "source"
     remote_location_label = "target"
     schedule {
-      recovery_point_objective_time_seconds = 7200
+      recovery_point_objective_time_seconds = 7200 # retention for two hours
+      latest_recovery_point_retention_seconds = 7200
       recovery_point_type                   = "CRASH_CONSISTENT"
       retention {
         linear_retention {
@@ -80,7 +95,8 @@ resource "nutanix_protection_policy_v2" "linear-retention-protection-policy" {
     source_location_label = "target"
     remote_location_label = "source"
     schedule {
-      recovery_point_objective_time_seconds = 7200
+      recovery_point_objective_time_seconds = 7200 # retention for two hours
+      latest_recovery_point_retention_seconds = 7200
       recovery_point_type                   = "CRASH_CONSISTENT"
       retention {
         linear_retention {
@@ -186,6 +202,7 @@ The following arguments are supported:
 * `replication_locations`: -(Required) Hypervisor details.
 * `replication_configurations`: -(Required) Cluster reference for an entity.
 * `category_ids`: -(Optional) Host entity with its attributes.
+* `project_ext_id`: -(Optional) Project external ID to associate with the protection policy. Note: This field cannot be updated after creation.
 
 
 ### Replication Locations
@@ -227,6 +244,9 @@ The schedule attribute supports the following:
 * `retention`: -(Optional) Specifies the retention policy for the recovery point schedule.
 * `start_time`: -(Optional) Represents the protection start time for the new entities added to the policy after the policy is created in h:m format. The values must be between 00h:00m and 23h:59m and in UTC timezone. It specifies the time when the first snapshot is taken and replicated for any entity added to the policy. If this is not specified, the snapshot is taken immediately and replicated for any new entity added to the policy.
 * `sync_replication_auto_suspend_timeout_seconds`: -(Optional) Auto suspend timeout if there is a connection failure between locations for synchronous replication. If this value is not set, then the policy will not be suspended.
+* `latest_recovery_point_retention_seconds`: -(Optional) Duration (in seconds) that the latest recovery point is retained past its expiry time if the entity is unprotected, deleted, or migrated. If not specified, the latest recovery point will be retained for a minimum of 30 days. Set to 0 to not retain past expiry. This attribute is only applicable to asynchronous replication (`recovery_point_objective_time_seconds` > 0); it must not be specified for synchronous replication (`recovery_point_objective_time_seconds` = 0).
+* `is_replication_paused`: -(Optional) Indicates whether replication is paused for all VMs and volume groups associated with the remote replication location. Ignored in create requests, only used in update requests. Only 0 RPO schedules support this field. Pause replication is not supported for asynchronous or near synchronous replications.
+* `schedule_ext_id`: -(Optional) System-generated schedule ID for the replication configuration. Must not be provided in create requests. In update requests, it can be included to identify and retain the same schedule.
 
 #### Retention
 > One of `linear_retention` or `auto_rollup_retention` must be specified.

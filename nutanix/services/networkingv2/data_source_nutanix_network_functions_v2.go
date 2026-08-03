@@ -6,7 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/request/networkfunctions"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -32,23 +33,21 @@ func DataSourceNutanixNetworkFunctionsV2() *schema.Resource {
 func DataSourceNutanixNetworkFunctionsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	var filter, orderBy *string
-	var page, limit *int
-
+	listNetworkFunctionsRequest := import2.ListNetworkFunctionsRequest{}
 	if v, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(v.(int))
+		listNetworkFunctionsRequest.Page_ = utils.IntPtr(v.(int))
 	}
 	if v, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(v.(int))
+		listNetworkFunctionsRequest.Limit_ = utils.IntPtr(v.(int))
 	}
 	if v, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(v.(string))
+		listNetworkFunctionsRequest.Filter_ = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(v.(string))
+		listNetworkFunctionsRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.NetworkFunctionAPI.ListNetworkFunctions(page, limit, filter, orderBy)
+	resp, err := conn.NetworkFunctionAPI.ListNetworkFunctions(ctx, &listNetworkFunctionsRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching network functions : %v", err)
 	}
@@ -106,6 +105,7 @@ func flattenNetworkFunctionEntities(items []import1.NetworkFunction) []interface
 		m["traffic_forwarding_mode"] = common.FlattenPtrEnum(nf.TrafficForwardingMode)
 		m["data_plane_health_check_config"] = flattenDataPlaneHealthCheckConfig(nf.DataPlaneHealthCheckConfig)
 		m["nic_pairs"] = flattenNicPairs(nf.NicPairs)
+		m["project_ext_id"] = nf.ProjectExtId
 		out[i] = m
 	}
 	return out

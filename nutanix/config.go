@@ -1,7 +1,13 @@
 package nutanix
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"log"
+	"sort"
+	"strings"
+	"sync"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
@@ -16,6 +22,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/lcm"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/microseg"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/multidomain"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/objectstores"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
@@ -47,8 +54,62 @@ type Config struct {
 	CustomHeaders      map[string]string // Custom headers to add to all requests (e.g., for Cloudflare Access)
 }
 
+// clientCache memoizes fully constructed *Client instances for the lifetime of
+// the process, keyed by the connection parameters in Config. Terraform core
+// calls the provider's ConfigureContextFunc (which ends up here) once per graph
+// walk - plan, apply, refresh and destroy, and once per test step - so without
+// caching every one of those calls rebuilds all ~19 SDK sub-clients from
+// scratch. Each fresh v4 *ApiClient has negotiationCompleted=false, so it
+// re-runs the lazy OPTIONS ".../unversioned/info" version negotiation against
+// every service endpoint again. Reusing the same *Client keeps the negotiation
+// state (negotiationCompleted) on the underlying *ApiClient, so version
+// negotiation happens at most once per unique config per process instead of
+// once per Configure.
+var (
+	clientCacheMu sync.Mutex
+	clientCache   = map[string]*Client{}
+)
+
+// cacheKey builds a stable fingerprint of every Config field that influences
+// how the SDK clients are constructed. Two Configs with the same key are
+// interchangeable, so they can safely share one *Client.
+func (c *Config) cacheKey() string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "%s\x00%s\x00%s\x00%s\x00%t\x00%t\x00%d\x00%s\x00%s\x00%s\x00%s\x00%s\x00%s\x00%s\x00",
+		c.Endpoint, c.Username, c.Password, c.Port, c.Insecure, c.SessionAuth,
+		c.WaitTimeout, c.ProxyURL, c.FoundationEndpoint, c.FoundationPort,
+		c.NdbEndpoint, c.NdbUsername, c.NdbPassword, c.APIKey)
+
+	// Custom headers, serialized in a deterministic (sorted) order.
+	headerKeys := make([]string, 0, len(c.CustomHeaders))
+	for k := range c.CustomHeaders {
+		headerKeys = append(headerKeys, k)
+	}
+	sort.Strings(headerKeys)
+	for _, k := range headerKeys {
+		fmt.Fprintf(&b, "%s=%s\x01", k, c.CustomHeaders[k])
+	}
+
+	sum := sha256.Sum256([]byte(b.String()))
+	return hex.EncodeToString(sum[:])
+}
+
 // Client ...
 func (c *Config) Client() (*Client, error) {
+	key := c.cacheKey()
+
+	// Hold the lock across the whole construction. Construction itself is cheap
+	// (no network I/O - v4 version negotiation is lazy and only fires on the
+	// first real API call), and serializing it means concurrent Configure calls
+	// build the client once and everyone else reuses it.
+	clientCacheMu.Lock()
+	defer clientCacheMu.Unlock()
+
+	if cached, ok := clientCache[key]; ok {
+		log.Printf("[DEBUG] reusing cached Nutanix API client; skipping SDK client construction and version negotiation")
+		return cached, nil
+	}
+
 	configCreds := client.Credentials{
 		URL:                fmt.Sprintf("%s:%s", c.Endpoint, c.Port),
 		Endpoint:           c.Endpoint,
@@ -140,8 +201,12 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	MultidomainClient, err := multidomain.NewMultidomainClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 
-	return &Client{
+	builtClient := &Client{
 		WaitTimeout:         c.WaitTimeout,
 		API:                 v3Client,
 		KarbonAPI:           karbonClient,
@@ -161,7 +226,11 @@ func (c *Config) Client() (*Client, error) {
 		CalmAPI:             calmClient,
 		ObjectStoreAPI:      ObjectStoreClient,
 		SecurityAPI:         SecurityClient,
-	}, nil
+		MultidomainAPI:      MultidomainClient,
+	}
+
+	clientCache[key] = builtClient
+	return builtClient, nil
 }
 
 // Client represents the nutanix API client
@@ -185,4 +254,15 @@ type Client struct {
 	CalmAPI             *selfservice.Client
 	ObjectStoreAPI      *objectstores.Client
 	SecurityAPI         *security.Client
+	MultidomainAPI      *multidomain.Client
+}
+
+// GetWaitTimeout returns the provider-level wait_timeout in minutes.
+// A return value of 0 means the operator did not configure one and
+// callers should fall back to per-resource defaults.
+func (c *Client) GetWaitTimeout() int64 {
+	if c == nil {
+		return 0
+	}
+	return c.WaitTimeout
 }

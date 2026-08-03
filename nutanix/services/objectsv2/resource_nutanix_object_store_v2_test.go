@@ -277,6 +277,7 @@ func testAccObjectStoreWithOneWorkerNodeConfig(objectStoreName, objectStoreName2
 locals {
   config = jsondecode(file("%[1]s"))
   objectStore      = local.config.object_store
+  images = local.config.images
   clusterExtId = [
     for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
     cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
@@ -876,7 +877,7 @@ resource "terraform_data" "config_aws_endpoint_url" {
 resource "terraform_data" "download_disk_image" {
   provisioner "local-exec" {
     when       = create
-    command    = "curl -o ${local.disk_image_dest} ${local.objectStore.img_url}"
+    command    = "curl -o ${local.disk_image_dest} ${local.config.images.centos_image_url}"
     on_failure = fail
   }
   depends_on = [terraform_data.config_aws_endpoint_url]

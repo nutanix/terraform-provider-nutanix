@@ -45,6 +45,7 @@ The following arguments are supported:
 * `expand` : A URL query parameter that allows clients to request related resources when a resource that satisfies a particular request is retrieved. Each expanded item is evaluated relative to the entity containing the property being expanded. Other query options can be applied to an expanded property by appending a semicolon-separated list of query options, enclosed in parentheses, to the property name. Permissible system query options are \$filter, \$select and \$orderby. The following expansion keys are supported. The expand can be applied to the following fields:
   - clusterReference
   - metadata
+  - volumeGroupStats
 * `select` : A query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the \$select must conform to the OData V4.01 URL conventions. If a \$select expression consists of a single select item that is an asterisk (i.e., \*), then all properties on the matching resource will be returned. The select can be applied to the following fields:
   - clusterReference
   - extId
@@ -73,6 +74,7 @@ The `volume_groups` contains list of Volume Groups. Each Volume Group contains t
 * `storage_features`: - Storage optimization features which must be enabled on the Volume Group.
 * `usage_type`: - Expected usage type for the Volume Group. This is an indicative hint on how the caller will consume the Volume Group.  Valid values are BACKUP_TARGET, INTERNAL, TEMPORARY, USER
 * `is_hidden`: - Indicates whether the Volume Group is meant to be hidden or not.
+* `project_ext_id`: - External identifier of the project associated with the Volume Group.
 
 #### Links
 

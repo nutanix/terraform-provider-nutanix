@@ -17,9 +17,9 @@ func TestAccV2NutanixProtectionPoliciesDatasource_Basic(t *testing.T) {
 	description := "terraform test protection policy CRUD"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		Providers:    acc.TestAccProviders,
-		CheckDestroy: testProtectionPolicyV2CheckDestroy,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
+		CheckDestroy:             testProtectionPolicyV2CheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testProtectionPolicyResourceConfig(name, description) + testProtectionPoliciesDatasourceConfig(),
@@ -38,9 +38,9 @@ func TestAccV2NutanixProtectionPoliciesDatasource_WithFilter(t *testing.T) {
 	description := "terraform test protection policy CRUD"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		Providers:    acc.TestAccProviders,
-		CheckDestroy: testProtectionPolicyV2CheckDestroy,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
+		CheckDestroy:             testProtectionPolicyV2CheckDestroy,
 		Steps: []resource.TestStep{
 
 			{
@@ -83,9 +83,9 @@ func TestAccV2NutanixProtectionPoliciesDatasource_WithLimit(t *testing.T) {
 	page := 0
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		Providers:    acc.TestAccProviders,
-		CheckDestroy: testProtectionPolicyV2CheckDestroy,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
+		CheckDestroy:             testProtectionPolicyV2CheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testProtectionPolicyResourceConfig(name, description) + testProtectionPoliciesDatasourceConfigWithLimit(limit, page),
@@ -102,9 +102,9 @@ func TestAccV2NutanixProtectionPoliciesDatasource_WithLimit(t *testing.T) {
 
 func TestAccV2NutanixProtectionPoliciesDatasource_WithInvalidFilter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		Providers:    acc.TestAccProviders,
-		CheckDestroy: testProtectionPolicyV2CheckDestroy,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
+		CheckDestroy:             testProtectionPolicyV2CheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testProtectionPoliciesDatasourceConfigWithInvalidFilter(),
@@ -150,7 +150,7 @@ data "nutanix_protection_policies_v2" "test" {
 }
 
 func testProtectionPoliciesDatasourceConfigWithInvalidFilter() string {
-	return getProviderConfigForAPINonSupportedTests() + `
+	return `
 
 data "nutanix_protection_policies_v2" "test" {
 	filter = "name eq 'invalid_filter'"

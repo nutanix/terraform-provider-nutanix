@@ -5,9 +5,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/common/v1/response"
-	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/datapolicies/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/dataprotection/v4/common"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/common/v1/response"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/request/protectionpolicies"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/dataprotection/v4/common"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -58,6 +59,10 @@ func DatasourceNutanixProtectionPolicyV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -66,8 +71,10 @@ func DatasourceNutanixProtectionPolicyV2Read(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.Client).DataPoliciesAPI
 
 	extID := d.Get("ext_id")
-
-	resp, err := conn.ProtectionPolicies.GetProtectionPolicyById(utils.StringPtr(extID.(string)))
+	getProtectionPolicyByIdRequest := import1.GetProtectionPolicyByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.ProtectionPolicies.GetProtectionPolicyById(ctx, &getProtectionPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Protection Policy: %s", err)
 	}
@@ -101,7 +108,9 @@ func DatasourceNutanixProtectionPolicyV2Read(ctx context.Context, d *schema.Reso
 	if err := d.Set("owner_ext_id", getResp.OwnerExtId); err != nil {
 		return diag.FromErr(err)
 	}
-
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	d.SetId(utils.StringValue(getResp.ExtId))
 	return nil
 }
@@ -251,6 +260,15 @@ func flattenSchedule(schedule *config.Schedule) []map[string]interface{} {
 		}
 		if schedule.SyncReplicationAutoSuspendTimeoutSeconds != nil {
 			scheduleMap["sync_replication_auto_suspend_timeout_seconds"] = utils.IntValue(schedule.SyncReplicationAutoSuspendTimeoutSeconds)
+		}
+		if schedule.LatestRecoveryPointRetentionSeconds != nil {
+			scheduleMap["latest_recovery_point_retention_seconds"] = utils.IntValue(schedule.LatestRecoveryPointRetentionSeconds)
+		}
+		if schedule.IsReplicationPaused != nil {
+			scheduleMap["is_replication_paused"] = utils.BoolValue(schedule.IsReplicationPaused)
+		}
+		if schedule.ScheduleExtId != nil {
+			scheduleMap["schedule_ext_id"] = utils.StringValue(schedule.ScheduleExtId)
 		}
 
 		scheduleList = append(scheduleList, scheduleMap)

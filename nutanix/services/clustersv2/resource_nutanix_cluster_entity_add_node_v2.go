@@ -9,9 +9,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
-	clustermgmtPrism "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/config"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/clustermgmt/v4/request/clusters"
+	clustermgmtPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -486,7 +488,11 @@ func ResourceNutanixClusterAddNodeV2Create(ctx context.Context, d *schema.Resour
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] Add Node Request Body: %s", string(aJSON))
 
-	resp, err := conn.ClusterEntityAPI.ExpandCluster(utils.StringPtr(clusterExtID.(string)), &body)
+	expandClusterRequest := import3.ExpandClusterRequest{
+		ClusterExtId: utils.StringPtr(clusterExtID.(string)),
+		Body:         &body,
+	}
+	resp, err := conn.ClusterEntityAPI.ExpandCluster(ctx, &expandClusterRequest)
 	if err != nil {
 		return diag.Errorf("error while adding node : %v", err)
 	}
@@ -506,7 +512,10 @@ func ResourceNutanixClusterAddNodeV2Create(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error waiting for node (%s) to add: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(utils.StringValue(taskUUID)),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching add node task: %v", err)
 	}
@@ -563,7 +572,11 @@ func ResourceNutanixClusterAddNodeV2Delete(ctx context.Context, d *schema.Resour
 
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] Remove Node Request Body: %s", string(aJSON))
-	resp, err := conn.ClusterEntityAPI.RemoveNode(utils.StringPtr(clusterExtID.(string)), body)
+	removeNodeRequest := import3.RemoveNodeRequest{
+		ClusterExtId: utils.StringPtr(clusterExtID.(string)),
+		Body:         body,
+	}
+	resp, err := conn.ClusterEntityAPI.RemoveNode(ctx, &removeNodeRequest)
 	if err != nil {
 		return diag.Errorf("error while Removing node : %v", err)
 	}
@@ -580,14 +593,20 @@ func ResourceNutanixClusterAddNodeV2Delete(ctx context.Context, d *schema.Resour
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		taskResp, _ := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		getTaskByIdRequest := import4.GetTaskByIdRequest{
+			ExtId: utils.StringPtr(utils.StringValue(taskUUID)),
+		}
+		taskResp, _ := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 		taskDetails := taskResp.Data.GetValue().(import2.Task)
 		aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
 		log.Printf("[ERROR] Remove Node Task Details: %s", string(aJSON))
 		return diag.Errorf("error waiting for node (%s) to remove: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(utils.StringValue(taskUUID)),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching remove node task: %v", err)
 	}
