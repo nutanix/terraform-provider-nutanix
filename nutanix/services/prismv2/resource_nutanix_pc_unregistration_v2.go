@@ -55,7 +55,9 @@ func ResourceNutanixUnregisterClusterV2Create(ctx context.Context, d *schema.Res
 	args["If-Match"] = utils.StringPtr(eTag)
 
 	extID := d.Get("ext_id")
-	body := management.NewClusterUnregistrationSpec()
+	// SDK expects a ClusterReference payload for unregistering a cluster.
+	// The previous ClusterUnregistrationSpec type was replaced upstream.
+	body := management.NewClusterReference()
 	body.ExtId = utils.StringPtr(extID.(string))
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
