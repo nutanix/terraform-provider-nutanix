@@ -375,6 +375,7 @@ func Provider() *schema.Provider {
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
 			"nutanix_image":                                   vmm.ResourceNutanixImage(),
 			"nutanix_subnet":                                  networking.ResourceNutanixSubnet(),
+			"nutanix_host":                                    clusters.ResourceNutanixHost(),
 			"nutanix_category_key":                            prism.ResourceNutanixCategoryKey(),
 			"nutanix_category_value":                          prism.ResourceNutanixCategoryValue(),
 			"nutanix_network_security_rule":                   networking.ResourceNutanixNetworkSecurityRule(),

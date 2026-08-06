@@ -2879,6 +2879,104 @@ func TestOperations_GetHost(t *testing.T) {
 	}
 }
 
+func TestOperations_UpdateHost(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/hosts/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodPut)
+
+		expected := map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"kind": "host",
+				"categories": map[string]interface{}{
+					"Environment": "Staging",
+				},
+			},
+		}
+
+		var v map[string]interface{}
+		err := json.NewDecoder(r.Body).Decode(&v)
+		if err != nil {
+			t.Fatalf("decode json: %v", err)
+		}
+
+		if !reflect.DeepEqual(v, expected) {
+			t.Errorf("Request body\n got=%#v\nwant=%#v", v, expected)
+		}
+
+		fmt.Fprintf(w, `{
+			"metadata": {
+				"kind": "host",
+				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc",
+				"categories": {
+					"Environment": "Staging"
+				}
+			}
+		}`)
+	})
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		UUID string
+		body *HostIntentInput
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *HostResponse
+		wantErr bool
+	}{
+		{
+			"Test UpdateHost",
+			fields{
+				c,
+			},
+			args{
+				"cfde831a-4e87-4a75-960f-89b0148aa2cc",
+				&HostIntentInput{
+					Metadata: &Metadata{
+						Kind:       utils.StringPtr("host"),
+						Categories: map[string]string{"Environment": "Staging"},
+					},
+				},
+			},
+			&HostResponse{
+				Metadata: &Metadata{
+					Kind:       utils.StringPtr("host"),
+					UUID:       utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					Categories: map[string]string{"Environment": "Staging"},
+				},
+			},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.UpdateHost(tt.args.UUID, tt.args.body)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.UpdateHost() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.UpdateHost() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestOperations_ListHost(t *testing.T) {
 	mux, c, server := setup()
 

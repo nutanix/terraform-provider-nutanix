@@ -1,16 +1,38 @@
 package clusters
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 const (
 	// ERROR ..
-	ERROR = "ERROR"
+	ERROR              = "ERROR"
+	DEFAULTWAITTIMEOUT = 60
 )
+
+func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		v, err := client.V3.GetTask(taskUUID)
+		if err != nil {
+			if strings.Contains(fmt.Sprint(err), "INVALID_UUID") {
+				return v, ERROR, nil
+			}
+			return nil, "", err
+		}
+
+		if *v.Status == "INVALID_UUID" || *v.Status == "FAILED" {
+			return v, *v.Status,
+				fmt.Errorf("error_detail: %s, progress_message: %s", utils.StringValue(v.ErrorDetail), utils.StringValue(v.ProgressMessage))
+		}
+		return v, *v.Status, nil
+	}
+}
 
 func setRSEntityMetadata(v *v3.Metadata) (map[string]interface{}, []interface{}) {
 	metadata := make(map[string]interface{})

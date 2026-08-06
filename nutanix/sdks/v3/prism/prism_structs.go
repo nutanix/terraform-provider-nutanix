@@ -1930,6 +1930,7 @@ type HostStatus struct {
 	Name             string             `json:"name,omitempty"`
 	Resources        *HostResources     `json:"resources,omitempty"`
 	ClusterReference *ReferenceValues   `json:"cluster_reference,omitempty"`
+	ExecutionContext *ExecutionContext  `json:"execution_context,omitempty"`
 }
 
 // HostResponse Response object for intentful operations on a Host
@@ -1945,6 +1946,13 @@ type HostListResponse struct {
 	APIVersion string              `json:"api_version,omitempty"`
 	Entities   []*HostResponse     `json:"entities,omitempty"`
 	Metadata   *ListMetadataOutput `json:"metadata,omitempty"`
+}
+
+// HostIntentInput Request object for intentful operations on a Host
+type HostIntentInput struct {
+	APIVersion string    `json:"api_version,omitempty"`
+	Metadata   *Metadata `json:"metadata,omitempty"`
+	Spec       *HostSpec `json:"spec,omitempty"`
 }
 
 /* Project Resource */

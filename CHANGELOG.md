@@ -1,3 +1,8 @@
+## Unreleased
+
+**New Features:**
+- **`nutanix_host` (Prism):** New resource to manage categories on an existing Nutanix host, consistent with how categories are already handled on `nutanix_subnet` and other resource types. Hosts are discovered rather than created/destroyed by the API, so this resource adopts an existing host by `host_id` and manages its category assignment only. [#1218](https://github.com/nutanix/terraform-provider-nutanix/issues/1218)
+
 ## 2.4.2(April 15, 2026) 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.4.0...v2.4.2)
 
