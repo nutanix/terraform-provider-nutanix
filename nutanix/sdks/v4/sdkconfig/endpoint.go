@@ -37,15 +37,15 @@ func ShouldUseNCIAM(creds client.Credentials) bool {
 
 // ResolveEndpoint determines the correct endpoint based on NC mode and service type.
 //
-// If NC mode is OFF (nc_endpoint not set):
+// If NC mode is OFF (nutanix_central_endpoint not set):
 //   - Returns endpoint as-is (traditional PC Admin flow)
 //
-// If NC mode is ON (nc_endpoint is set):
-//   - Service Provider calls: sp.services.<nc_endpoint>
+// If NC mode is ON (nutanix_central_endpoint is set):
+//   - Service Provider calls: sp.services.<nutanix_central_endpoint>
 //   - IAM calls:
-//   - If tenant_name is set OR use_nc_iam is true: iam.services.<nc_endpoint>
-//   - Otherwise: <domain_name>.domains.<nc_endpoint>
-//   - All other calls: <domain_name>.domains.<nc_endpoint> (if domain_name is set)
+//   - If tenant_name is set OR use_nc_iam is true: iam.services.<nutanix_central_endpoint>
+//   - Otherwise: <domain_name>.domains.<nutanix_central_endpoint>
+//   - All other calls: <domain_name>.domains.<nutanix_central_endpoint> (if domain_name is set)
 func ResolveEndpoint(creds client.Credentials, serviceType ServiceType) string {
 	// If not in NC mode, return default endpoint as-is
 	if !IsNCMode(creds) {

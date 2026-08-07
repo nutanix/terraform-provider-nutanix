@@ -17,7 +17,6 @@ type Client struct {
 	OperationsAPIInstance       *api.OperationsServiceApi
 	AuthAPIInstance             *api.AuthorizationPoliciesServiceApi
 	RoleMembershipAPIInstance   *api.RoleMembershipServiceApi
-	ScopeTemplatesAPIInstance   *api.ScopeTemplatesServiceApi
 	EntityAPIInstance           *api.EntitiesServiceApi
 }
 
@@ -44,7 +43,6 @@ func NewIamClient(credentials client.Credentials) (*Client, error) {
 		UsersAPIInstance:            api.NewUsersServiceApi(baseClient),
 		AuthAPIInstance:             api.NewAuthorizationPoliciesServiceApi(baseClient),
 		RoleMembershipAPIInstance:   api.NewRoleMembershipServiceApi(baseClient),
-		ScopeTemplatesAPIInstance:   api.NewScopeTemplatesServiceApi(baseClient),
 		EntityAPIInstance:           api.NewEntitiesServiceApi(baseClient),
 		APIClientInstance:           baseClient,
 	}, nil

@@ -56,9 +56,9 @@ type Config struct {
 
 	// Nutanix Cloud (NC) multi-tenancy configuration
 	NCEndpoint string // NC base endpoint (e.g., "nconprem-10-102-176-12.ccpnx.com")
-	DomainName string // Domain name for PC (constructs: <domain_name>.domains.<nc_endpoint>)
+	DomainName string // Domain name for PC (constructs: <domain_name>.domains.<nutanix_central_endpoint>)
 	TenantName string // Tenant name for Tenant Admin scenarios
-	UseNCIAM   bool   // When true, use NC IAM endpoint (iam.services.<nc_endpoint>) for IAM calls
+	UseNCIAM   bool   // When true, use NC IAM endpoint (iam.services.<nutanix_central_endpoint>) for IAM calls
 }
 
 // clientCache memoizes fully constructed *Client instances for the lifetime of
