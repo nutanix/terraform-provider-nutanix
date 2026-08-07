@@ -76,6 +76,12 @@ type Credentials struct {
 	NdbPassword        string
 	APIKey             string            // API key for authentication (alternative to username/password)
 	CustomHeaders      map[string]string // Custom headers to add to all requests (e.g., for Cloudflare Access)
+
+	// Nutanix Central (NC) multi-tenancy configuration
+	NCEndpoint string // Nutanix Central base endpoint (e.g., "nconprem-10-102-176-12.ccpnx.com")
+	DomainName string // Domain name for PC (constructs: <domain_name>.domains.<nc_endpoint>)
+	TenantName string // Tenant name for Tenant Admin scenarios. Used to pass as a header in requests to NC or to domain
+	UseNCIAM   bool   // When true, use NC IAM endpoint (iam.services.<nc_endpoint>) for IAM calls
 }
 
 // AdditionalFilter specification for client side filters

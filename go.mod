@@ -21,6 +21,7 @@ require (
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17 v17.7.0-22191
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17 v17.7.0-22278
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17 v17.7.0-22185
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17 v17.7.0-23167
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17 v17.7.0-22241
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17 v17.7.0-22178
 	github.com/spf13/cast v1.10.0

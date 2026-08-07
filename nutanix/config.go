@@ -29,6 +29,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/security"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/volumes"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/service_provider"
 )
 
 // Version represents api version
@@ -52,6 +53,12 @@ type Config struct {
 	NdbPassword        string
 	APIKey             string            // API key for authentication (alternative to username/password)
 	CustomHeaders      map[string]string // Custom headers to add to all requests (e.g., for Cloudflare Access)
+
+	// Nutanix Cloud (NC) multi-tenancy configuration
+	NCEndpoint string // NC base endpoint (e.g., "nconprem-10-102-176-12.ccpnx.com")
+	DomainName string // Domain name for PC (constructs: <domain_name>.domains.<nc_endpoint>)
+	TenantName string // Tenant name for Tenant Admin scenarios
+	UseNCIAM   bool   // When true, use NC IAM endpoint (iam.services.<nc_endpoint>) for IAM calls
 }
 
 // clientCache memoizes fully constructed *Client instances for the lifetime of
@@ -79,6 +86,10 @@ func (c *Config) cacheKey() string {
 		c.Endpoint, c.Username, c.Password, c.Port, c.Insecure, c.SessionAuth,
 		c.WaitTimeout, c.ProxyURL, c.FoundationEndpoint, c.FoundationPort,
 		c.NdbEndpoint, c.NdbUsername, c.NdbPassword, c.APIKey)
+
+	// NC multi-tenancy fields
+	fmt.Fprintf(&b, "%s\x00%s\x00%s\x00%t\x00",
+		c.NCEndpoint, c.DomainName, c.TenantName, c.UseNCIAM)
 
 	// Custom headers, serialized in a deterministic (sorted) order.
 	headerKeys := make([]string, 0, len(c.CustomHeaders))
@@ -127,6 +138,10 @@ func (c *Config) Client() (*Client, error) {
 		RequiredFields:     c.RequiredFields,
 		APIKey:             c.APIKey,
 		CustomHeaders:      c.CustomHeaders,
+		NCEndpoint:         c.NCEndpoint,
+		DomainName:         c.DomainName,
+		TenantName:         c.TenantName,
+		UseNCIAM:           c.UseNCIAM,
 	}
 
 	v3Client, err := v3.NewV3Client(configCreds)
@@ -205,6 +220,14 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	NCDomainManagementClient, err := multidomain.NewNCDomainManagementClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
+	ServiceProviderManagementClient, err := service_provider.NewServiceProviderManagementClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 
 	builtClient := &Client{
 		WaitTimeout:         c.WaitTimeout,
@@ -227,6 +250,8 @@ func (c *Config) Client() (*Client, error) {
 		ObjectStoreAPI:      ObjectStoreClient,
 		SecurityAPI:         SecurityClient,
 		MultidomainAPI:      MultidomainClient,
+		NCDomainManagementAPI: NCDomainManagementClient,
+		ServiceProviderManagementAPI: ServiceProviderManagementClient,
 	}
 
 	clientCache[key] = builtClient
@@ -255,6 +280,8 @@ type Client struct {
 	ObjectStoreAPI      *objectstores.Client
 	SecurityAPI         *security.Client
 	MultidomainAPI      *multidomain.Client
+	NCDomainManagementAPI *multidomain.NCDomainManagementClient
+	ServiceProviderManagementAPI *service_provider.ServiceProviderManagementClient
 }
 
 // GetWaitTimeout returns the provider-level wait_timeout in minutes.

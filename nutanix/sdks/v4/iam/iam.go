@@ -17,6 +17,7 @@ type Client struct {
 	OperationsAPIInstance       *api.OperationsServiceApi
 	AuthAPIInstance             *api.AuthorizationPoliciesServiceApi
 	RoleMembershipAPIInstance   *api.RoleMembershipServiceApi
+	ScopeTemplatesAPIInstance   *api.ScopeTemplatesServiceApi
 	EntityAPIInstance           *api.EntitiesServiceApi
 }
 
@@ -24,7 +25,8 @@ func NewIamClient(credentials client.Credentials) (*Client, error) {
 	var baseClient *iam.ApiClient
 
 	pcClient := iam.NewApiClient()
-	if cfg := sdkconfig.ConfigureV4Client(credentials, pcClient); cfg != nil {
+	// Use IAM-specific endpoint resolution for NC Admin/Tenant Admin scenarios
+	if cfg := sdkconfig.ConfigureV4ClientForIAM(credentials, pcClient); cfg != nil {
 		pcClient.Host = cfg.Host
 		pcClient.Port = cfg.Port
 		pcClient.Username = cfg.Username
@@ -42,6 +44,7 @@ func NewIamClient(credentials client.Credentials) (*Client, error) {
 		UsersAPIInstance:            api.NewUsersServiceApi(baseClient),
 		AuthAPIInstance:             api.NewAuthorizationPoliciesServiceApi(baseClient),
 		RoleMembershipAPIInstance:   api.NewRoleMembershipServiceApi(baseClient),
+		ScopeTemplatesAPIInstance:   api.NewScopeTemplatesServiceApi(baseClient),
 		EntityAPIInstance:           api.NewEntitiesServiceApi(baseClient),
 		APIClientInstance:           baseClient,
 	}, nil
