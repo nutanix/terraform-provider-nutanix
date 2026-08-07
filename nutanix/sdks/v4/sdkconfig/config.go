@@ -53,11 +53,11 @@ func ConfigureV4ClientForService(credentials client.Credentials, apiClient V4Api
 	hasBasicAuth := credentials.Username != "" && credentials.Password != ""
 	hasAPIKey := credentials.APIKey != ""
 	hasEndpoint := credentials.Endpoint != ""
-	hasNCEndpoint := credentials.NCEndpoint != ""
+	hasNutanixCentralEndpoint := credentials.NutanixCentralEndpoint != ""
 	isTenant := credentials.TenantName != ""
 
-	// For NC modes, we need NCEndpoint; for PC Admin mode, we need Endpoint
-	if !hasNCEndpoint && !hasEndpoint {
+	// For NC modes, we need NutanixCentralEndpoint; for PC Admin mode, we need Endpoint
+	if !hasNutanixCentralEndpoint && !hasEndpoint {
 		return nil
 	}
 	if !hasBasicAuth && !hasAPIKey {
@@ -71,7 +71,7 @@ func ConfigureV4ClientForService(credentials client.Credentials, apiClient V4Api
 	// - NC mode defaults to 443 (HTTPS on FQDN)
 	// - PC mode uses configured port or DefaultPort (9440)
 	var port int
-	if hasNCEndpoint {
+	if hasNutanixCentralEndpoint {
 		// NC mode defaults to 443, but can be overridden if explicitly set
 		port = 443
 		if credentials.Port != "" && credentials.Port != "9440" {

@@ -55,10 +55,10 @@ type Config struct {
 	CustomHeaders      map[string]string // Custom headers to add to all requests (e.g., for Cloudflare Access)
 
 	// Nutanix Cloud (NC) multi-tenancy configuration
-	NCEndpoint string // NC base endpoint (e.g., "nconprem-10-102-176-12.ccpnx.com")
-	DomainName string // Domain name for PC (constructs: <domain_name>.domains.<nutanix_central_endpoint>)
-	TenantName string // Tenant name for Tenant Admin scenarios
-	UseNCIAM   bool   // When true, use NC IAM endpoint (iam.services.<nutanix_central_endpoint>) for IAM calls
+	NutanixCentralEndpoint string // NC base endpoint (e.g., "nconprem-10-102-176-12.ccpnx.com")
+	DomainName             string // Domain name for PC (constructs: <domain_name>.domains.<nutanix_central_endpoint>)
+	TenantName             string // Tenant name for Tenant Admin scenarios
+	UseNCIAM               bool   // When true, use NC IAM endpoint (iam.services.<nutanix_central_endpoint>) for IAM calls
 }
 
 // clientCache memoizes fully constructed *Client instances for the lifetime of
@@ -89,7 +89,7 @@ func (c *Config) cacheKey() string {
 
 	// NC multi-tenancy fields
 	fmt.Fprintf(&b, "%s\x00%s\x00%s\x00%t\x00",
-		c.NCEndpoint, c.DomainName, c.TenantName, c.UseNCIAM)
+		c.NutanixCentralEndpoint, c.DomainName, c.TenantName, c.UseNCIAM)
 
 	// Custom headers, serialized in a deterministic (sorted) order.
 	headerKeys := make([]string, 0, len(c.CustomHeaders))
@@ -122,26 +122,26 @@ func (c *Config) Client() (*Client, error) {
 	}
 
 	configCreds := client.Credentials{
-		URL:                fmt.Sprintf("%s:%s", c.Endpoint, c.Port),
-		Endpoint:           c.Endpoint,
-		Username:           c.Username,
-		Password:           c.Password,
-		Port:               c.Port,
-		Insecure:           c.Insecure,
-		SessionAuth:        c.SessionAuth,
-		ProxyURL:           c.ProxyURL,
-		FoundationEndpoint: c.FoundationEndpoint,
-		FoundationPort:     c.FoundationPort,
-		NdbEndpoint:        c.NdbEndpoint,
-		NdbUsername:        c.NdbUsername,
-		NdbPassword:        c.NdbPassword,
-		RequiredFields:     c.RequiredFields,
-		APIKey:             c.APIKey,
-		CustomHeaders:      c.CustomHeaders,
-		NCEndpoint:         c.NCEndpoint,
-		DomainName:         c.DomainName,
-		TenantName:         c.TenantName,
-		UseNCIAM:           c.UseNCIAM,
+		URL:                    fmt.Sprintf("%s:%s", c.Endpoint, c.Port),
+		Endpoint:               c.Endpoint,
+		Username:               c.Username,
+		Password:               c.Password,
+		Port:                   c.Port,
+		Insecure:               c.Insecure,
+		SessionAuth:            c.SessionAuth,
+		ProxyURL:               c.ProxyURL,
+		FoundationEndpoint:     c.FoundationEndpoint,
+		FoundationPort:         c.FoundationPort,
+		NdbEndpoint:            c.NdbEndpoint,
+		NdbUsername:            c.NdbUsername,
+		NdbPassword:            c.NdbPassword,
+		RequiredFields:         c.RequiredFields,
+		APIKey:                 c.APIKey,
+		CustomHeaders:          c.CustomHeaders,
+		NutanixCentralEndpoint: c.NutanixCentralEndpoint,
+		DomainName:             c.DomainName,
+		TenantName:             c.TenantName,
+		UseNCIAM:               c.UseNCIAM,
 	}
 
 	v3Client, err := v3.NewV3Client(configCreds)

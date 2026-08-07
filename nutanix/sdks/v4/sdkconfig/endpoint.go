@@ -24,7 +24,7 @@ const (
 
 // IsNCMode returns true if the provider is configured for Nutanix Cloud (NC) mode
 func IsNCMode(creds client.Credentials) bool {
-	return creds.NCEndpoint != ""
+	return creds.NutanixCentralEndpoint != ""
 }
 
 // ShouldUseNCIAM returns true if IAM calls should use the NC IAM endpoint.
@@ -56,25 +56,25 @@ func ResolveEndpoint(creds client.Credentials, serviceType ServiceType) string {
 	switch serviceType {
 	case ServiceTypeSP:
 		// Service Provider calls always go to sp.services
-		return fmt.Sprintf("sp.services.%s", creds.NCEndpoint)
+		return fmt.Sprintf("sp.services.%s", creds.NutanixCentralEndpoint)
 
 	case ServiceTypeIAM:
 		// IAM calls: use NC IAM if tenant_name is set OR use_nc_iam is true
 		if ShouldUseNCIAM(creds) {
-			return fmt.Sprintf("iam.services.%s", creds.NCEndpoint)
+			return fmt.Sprintf("iam.services.%s", creds.NutanixCentralEndpoint)
 		} else {
-			return fmt.Sprintf("%s.domains.%s", creds.DomainName, creds.NCEndpoint)
+			return fmt.Sprintf("%s.domains.%s", creds.DomainName, creds.NutanixCentralEndpoint)
 		}
 
 	case ServiceTypeDomainManagement:
 		// Domain Management calls always go to Nutanix Central
-		return creds.NCEndpoint
+		return creds.NutanixCentralEndpoint
 
 	default:
 		// All other PC calls go to domain if set
 		if creds.DomainName != "" {
-			return fmt.Sprintf("%s.domains.%s", creds.DomainName, creds.NCEndpoint)
+			return fmt.Sprintf("%s.domains.%s", creds.DomainName, creds.NutanixCentralEndpoint)
 		}
-		return creds.NCEndpoint
+		return creds.NutanixCentralEndpoint
 	}
 }

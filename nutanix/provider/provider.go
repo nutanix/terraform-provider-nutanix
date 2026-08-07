@@ -718,10 +718,10 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		APIKey:             apiKey,
 		CustomHeaders:      customHeaders,
 		// Nutanix Central (NC) multi-tenancy configuration
-		NCEndpoint: d.Get("nutanix_central_endpoint").(string),
-		DomainName: d.Get("domain_name").(string),
-		TenantName: d.Get("tenant_name").(string),
-		UseNCIAM:   d.Get("use_nc_iam").(bool),
+		NutanixCentralEndpoint: d.Get("nutanix_central_endpoint").(string),
+		DomainName:             d.Get("domain_name").(string),
+		TenantName:             d.Get("tenant_name").(string),
+		UseNCIAM:               d.Get("use_nc_iam").(bool),
 	}
 	c, err := config.Client()
 	if err != nil {
