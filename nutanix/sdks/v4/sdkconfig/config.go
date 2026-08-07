@@ -54,7 +54,7 @@ func ConfigureV4ClientForService(credentials client.Credentials, apiClient V4Api
 	hasAPIKey := credentials.APIKey != ""
 	hasEndpoint := credentials.Endpoint != ""
 	hasNCEndpoint := credentials.NCEndpoint != ""
-	isTenant := credentials.TenantName != "" 
+	isTenant := credentials.TenantName != ""
 
 	// For NC modes, we need NCEndpoint; for PC Admin mode, we need Endpoint
 	if !hasNCEndpoint && !hasEndpoint {
@@ -100,7 +100,7 @@ func ConfigureV4ClientForService(credentials client.Credentials, apiClient V4Api
 	}
 
 	// Set tenant header - use configured tenant_name
-  if isTenant {
+	if isTenant {
 		apiClient.AddDefaultHeader("x-tenant-name", credentials.TenantName)
 	}
 

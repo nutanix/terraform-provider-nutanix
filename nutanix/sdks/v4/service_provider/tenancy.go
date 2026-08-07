@@ -8,8 +8,8 @@ import (
 )
 
 type ServiceProviderManagementClient struct {
-	TenantMembershipAPIInstance   *api.MembershipServiceApi
-	TenantManagementAPIInstance   *api.TenantsServiceApi
+	TenantMembershipAPIInstance *api.MembershipServiceApi
+	TenantManagementAPIInstance *api.TenantsServiceApi
 	APIClientInstance           *serviceProviderClient.ApiClient
 }
 
@@ -31,7 +31,7 @@ func NewServiceProviderManagementClient(credentials client.Credentials) (*Servic
 	f := &ServiceProviderManagementClient{
 		TenantMembershipAPIInstance: api.NewMembershipServiceApi(baseClient),
 		TenantManagementAPIInstance: api.NewTenantsServiceApi(baseClient),
-		APIClientInstance: baseClient,
+		APIClientInstance:           baseClient,
 	}
 
 	return f, nil

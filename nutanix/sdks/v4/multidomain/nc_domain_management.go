@@ -8,8 +8,8 @@ import (
 )
 
 type NCDomainManagementClient struct {
-	DomainServiceAPIInstance    *api.DomainServiceApi
-	APIClientInstance *multidomainClient.ApiClient
+	DomainServiceAPIInstance *api.DomainServiceApi
+	APIClientInstance        *multidomainClient.ApiClient
 }
 
 func NewNCDomainManagementClient(credentials client.Credentials) (*NCDomainManagementClient, error) {

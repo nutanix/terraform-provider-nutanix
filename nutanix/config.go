@@ -27,9 +27,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/objectstores"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/security"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/service_provider"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/volumes"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/service_provider"
 )
 
 // Version represents api version
@@ -230,27 +230,27 @@ func (c *Config) Client() (*Client, error) {
 	}
 
 	builtClient := &Client{
-		WaitTimeout:         c.WaitTimeout,
-		API:                 v3Client,
-		KarbonAPI:           karbonClient,
-		FoundationClientAPI: foundationClient,
-		FoundationCentral:   fcClient,
-		Era:                 eraClient,
-		NetworkingAPI:       networkingClient,
-		PrismAPI:            prismClient,
-		MicroSegAPI:         microsegClient,
-		IamAPI:              iamClient,
-		ClusterAPI:          clustersClient,
-		VolumeAPI:           volumeClient,
-		DataProtectionAPI:   dataprotectionClient,
-		VmmAPI:              vmmClient,
-		DataPoliciesAPI:     dataPoliciesClient,
-		LcmAPI:              LcmClient,
-		CalmAPI:             calmClient,
-		ObjectStoreAPI:      ObjectStoreClient,
-		SecurityAPI:         SecurityClient,
-		MultidomainAPI:      MultidomainClient,
-		NCDomainManagementAPI: NCDomainManagementClient,
+		WaitTimeout:                  c.WaitTimeout,
+		API:                          v3Client,
+		KarbonAPI:                    karbonClient,
+		FoundationClientAPI:          foundationClient,
+		FoundationCentral:            fcClient,
+		Era:                          eraClient,
+		NetworkingAPI:                networkingClient,
+		PrismAPI:                     prismClient,
+		MicroSegAPI:                  microsegClient,
+		IamAPI:                       iamClient,
+		ClusterAPI:                   clustersClient,
+		VolumeAPI:                    volumeClient,
+		DataProtectionAPI:            dataprotectionClient,
+		VmmAPI:                       vmmClient,
+		DataPoliciesAPI:              dataPoliciesClient,
+		LcmAPI:                       LcmClient,
+		CalmAPI:                      calmClient,
+		ObjectStoreAPI:               ObjectStoreClient,
+		SecurityAPI:                  SecurityClient,
+		MultidomainAPI:               MultidomainClient,
+		NCDomainManagementAPI:        NCDomainManagementClient,
 		ServiceProviderManagementAPI: ServiceProviderManagementClient,
 	}
 
@@ -260,27 +260,27 @@ func (c *Config) Client() (*Client, error) {
 
 // Client represents the nutanix API client
 type Client struct {
-	API                 *v3.Client
-	KarbonAPI           *karbon.Client
-	FoundationClientAPI *foundation.Client
-	WaitTimeout         int64
-	FoundationCentral   *foundation_central.Client
-	Era                 *era.Client
-	NetworkingAPI       *networking.Client
-	PrismAPI            *prism.Client
-	MicroSegAPI         *microseg.Client
-	IamAPI              *iam.Client
-	ClusterAPI          *clusters.Client
-	VolumeAPI           *volumes.Client
-	DataProtectionAPI   *dataprotection.Client
-	VmmAPI              *vmm.Client
-	DataPoliciesAPI     *datapolicies.Client
-	LcmAPI              *lcm.Client
-	CalmAPI             *selfservice.Client
-	ObjectStoreAPI      *objectstores.Client
-	SecurityAPI         *security.Client
-	MultidomainAPI      *multidomain.Client
-	NCDomainManagementAPI *multidomain.NCDomainManagementClient
+	API                          *v3.Client
+	KarbonAPI                    *karbon.Client
+	FoundationClientAPI          *foundation.Client
+	WaitTimeout                  int64
+	FoundationCentral            *foundation_central.Client
+	Era                          *era.Client
+	NetworkingAPI                *networking.Client
+	PrismAPI                     *prism.Client
+	MicroSegAPI                  *microseg.Client
+	IamAPI                       *iam.Client
+	ClusterAPI                   *clusters.Client
+	VolumeAPI                    *volumes.Client
+	DataProtectionAPI            *dataprotection.Client
+	VmmAPI                       *vmm.Client
+	DataPoliciesAPI              *datapolicies.Client
+	LcmAPI                       *lcm.Client
+	CalmAPI                      *selfservice.Client
+	ObjectStoreAPI               *objectstores.Client
+	SecurityAPI                  *security.Client
+	MultidomainAPI               *multidomain.Client
+	NCDomainManagementAPI        *multidomain.NCDomainManagementClient
 	ServiceProviderManagementAPI *service_provider.ServiceProviderManagementClient
 }
 

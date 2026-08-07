@@ -65,7 +65,7 @@ func ResolveEndpoint(creds client.Credentials, serviceType ServiceType) string {
 		} else {
 			return fmt.Sprintf("%s.domains.%s", creds.DomainName, creds.NCEndpoint)
 		}
-	
+
 	case ServiceTypeDomainManagement:
 		// Domain Management calls always go to Nutanix Central
 		return creds.NCEndpoint
