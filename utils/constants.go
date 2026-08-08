@@ -44,6 +44,7 @@ const (
 	RelEntityTypeTemplatePlacementPolicy     = "vmm:config:template-placement-policy"
 	RelEntityTypeProject                     = "multidomain:config:Project"
 	RelEntityTypeResourceGroup               = "multidomain:config:nutanix-resource-group"
+	RelEntityTypeRegisteredDomain            = "multidomain:config:registered-domain"
 	RelEntityTypeImageRateLimitPolicy        = "vmm:images:config:rate-limit-policy"
 	RelEntityTypeVmGuestCustomizationProfile = "vmm:ahv:config:vm-guest-customization-profile"
 )
