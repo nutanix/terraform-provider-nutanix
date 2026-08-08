@@ -182,8 +182,8 @@ github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17 v17
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17 v17.6.0-21944/go.mod h1:E/xKTvXQqJAxmM6757OOWZhkhvMmRRXhOv4rOxKIBGQ=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17 v17.6.0-21622 h1:r5WjTG5TZPZVRRfHDsaE8k6Rk4ar9gBMv6adbAtLgXc=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17 v17.6.0-21622/go.mod h1:vYrjhLq714ukYD7z37aYzN6+IdiyZQSgzuACpfGTR8s=
-github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17 v17.6.0-23084 h1:vIpcNgUk+hhzFYvE6Y3A38i/75ztKtKTqQsHobOQuIU=
-github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17 v17.6.0-23084/go.mod h1:s0gmxR0zulPXHRo9z+DwTrhZxQwGDsBYl/zv5KMXLy0=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17 v17.7.0-22868 h1:Z+jgv2s2AibyYFKL8gkmD/KGTPIJZq9Mcal/9OULv1g=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17 v17.7.0-22868/go.mod h1:s0gmxR0zulPXHRo9z+DwTrhZxQwGDsBYl/zv5KMXLy0=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17 v17.6.0-21305 h1:OCUrjSxuiEfNfK7kF8vIpEMr5TSVShuOBTfp/U8XbZg=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17 v17.6.0-21305/go.mod h1:J2B5VUjWe4WZEJZf33ye29+RyiqBrY+G3UdArtAPJuU=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17 v17.6.0-21531 h1:gAtRNh4HwCM66EQztwBlbzb/b0kmUva3REMDaCBvCkg=
