@@ -12,7 +12,7 @@ import (
 
 const (
 	// ERROR ..
-	ERROR              = "ERROR"
+	ERROR = "ERROR"
 )
 
 func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefreshFunc {
