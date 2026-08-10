@@ -13,7 +13,6 @@ import (
 const (
 	// ERROR ..
 	ERROR              = "ERROR"
-	DEFAULTWAITTIMEOUT = 60
 )
 
 func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefreshFunc {
