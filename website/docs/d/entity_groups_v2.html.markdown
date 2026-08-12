@@ -88,4 +88,4 @@ Each element in `entity_groups` contains:
 
 * `entities` - List of except entities. Each entity may contain `addresses`, `ip_ranges`, `reference_ext_ids`.
 
-See detailed information in [Nutanix List Entity Groups V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.2#tag/EntityGroups/operation/listEntityGroups).
+See detailed information in [Nutanix List Entity Groups V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.3#tag/EntityGroups/operation/listEntityGroups).

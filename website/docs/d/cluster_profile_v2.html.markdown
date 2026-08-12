@@ -287,4 +287,4 @@ The resilient_capacity_warning_threshold_config attribute supports the following
 
 * `resilient_capacity_warning_threshold_percentage`: - (default `75`) Warning threshold percentage for resilient storage capacity.
 
-See detailed information in [Nutanix Create Cluster Profile V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.2#tag/ClusterProfiles/operation/createClusterProfile).
+See detailed information in [Nutanix Create Cluster Profile V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.3#tag/ClusterProfiles/operation/createClusterProfile).

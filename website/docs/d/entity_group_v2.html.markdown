@@ -67,4 +67,4 @@ The following attributes are exported:
   * `ip_ranges` - With `ipv4_ranges` (start_ip, end_ip).
   * `reference_ext_ids` - List of reference external identifiers.
 
-See detailed information in [Nutanix Get Entity Group V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.2#tag/EntityGroups/operation/getEntityGroupById).
+See detailed information in [Nutanix Get Entity Group V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.3#tag/EntityGroups/operation/getEntityGroupById).

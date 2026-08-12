@@ -362,4 +362,4 @@ resource "nutanix_template_v2" "import_template" {}
 terraform import nutanix_template_v2.import_template <UUID>
 ```
 
-See detailed information in [Nutanix Create Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Templates/operation/createTemplate).
+See detailed information in [Nutanix Create Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/Templates/operation/createTemplate).

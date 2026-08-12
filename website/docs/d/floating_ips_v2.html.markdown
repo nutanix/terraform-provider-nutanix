@@ -116,4 +116,4 @@ The `links` attribute supports the following:
 
 
 
-See detailed information in [Nutanix List Floating IPs v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/FloatingIps/operation/listFloatingIps).
+See detailed information in [Nutanix List Floating IPs v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/FloatingIps/operation/listFloatingIps).

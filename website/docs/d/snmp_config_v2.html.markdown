@@ -87,4 +87,4 @@ The `links` block exports the following:
   that is returned by the URL. The unique value of `self` identifies the URL
   for the object.
 
-See detailed information in [Nutanix Get SNMP Config](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0).
+See detailed information in [Nutanix Get SNMP Config](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.3).

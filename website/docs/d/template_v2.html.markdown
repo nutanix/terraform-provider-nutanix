@@ -316,4 +316,4 @@ Status of a Guest Update.
 * `updated_by`: Last updated by this User ID.
 
 
-See detailed information in [Nutanix Get Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Templates/operation/getTemplateById).
+See detailed information in [Nutanix Get Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/Templates/operation/getTemplateById).
