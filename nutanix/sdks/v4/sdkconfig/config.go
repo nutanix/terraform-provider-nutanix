@@ -67,26 +67,10 @@ func ConfigureV4ClientForService(credentials client.Credentials, apiClient V4Api
 	// Resolve the endpoint based on admin type and service type
 	host := ResolveEndpoint(credentials, serviceType)
 
-	// Determine port:
-	// - NC mode defaults to 443 (HTTPS on FQDN)
-	// - PC mode uses configured port or DefaultPort (9440)
-	var port int
-	if hasNutanixCentralEndpoint {
-		// NC mode defaults to 443, but can be overridden if explicitly set
-		port = 443
-		if credentials.Port != "" && credentials.Port != "9440" {
-			// Only override if user explicitly set a non-default port
-			if p, err := strconv.Atoi(credentials.Port); err == nil {
-				port = p
-			}
-		}
-	} else {
-		// PC mode uses configured port or default
-		port = DefaultPort
-		if credentials.Port != "" {
-			if p, err := strconv.Atoi(credentials.Port); err == nil {
-				port = p
-			}
+	port := DefaultPort
+	if credentials.Port != "" {
+		if p, err := strconv.Atoi(credentials.Port); err == nil {
+			port = p
 		}
 	}
 
