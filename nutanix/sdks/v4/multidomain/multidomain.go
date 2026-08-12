@@ -10,7 +10,6 @@ import (
 type Client struct {
 	Projects          *api.ProjectsServiceApi
 	ResourceGroups    *api.ResourceGroupsServiceApi
-	Locations         *api.LocationsServiceApi
 	APIClientInstance *multidomainClient.ApiClient
 }
 
@@ -28,11 +27,10 @@ func NewMultidomainClient(credentials client.Credentials) (*Client, error) {
 		pcClient.AllowVersionNegotiation = cfg.AllowVersionNegotiation
 		baseClient = pcClient
 	}
-
+ 
 	f := &Client{
 		Projects:          api.NewProjectsServiceApi(baseClient),
 		ResourceGroups:    api.NewResourceGroupsServiceApi(baseClient),
-		Locations:         api.NewLocationsServiceApi(baseClient),
 		APIClientInstance: baseClient,
 	}
 

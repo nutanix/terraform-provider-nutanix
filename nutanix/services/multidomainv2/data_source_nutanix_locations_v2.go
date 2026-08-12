@@ -70,7 +70,7 @@ func DatasourceNutanixLocationsV2() *schema.Resource {
 }
 
 func DatasourceNutanixLocationsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).MultidomainAPI
+	conn := meta.(*conns.Client).NCDomainManagementAPI
 
 	listReq := import1.ListLocationsRequest{}
 	if v, ok := d.GetOk("page"); ok {
