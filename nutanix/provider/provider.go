@@ -442,6 +442,7 @@ func Provider() *schema.Provider {
 			"nutanix_resource_groups_v2":            multidomainv2.DatasourceNutanixResourceGroupsV2(),
 			"nutanix_registered_domain_v2":          multidomainv2.DatasourceNutanixRegisteredDomainV2(),
 			"nutanix_registered_domains_v2":         multidomainv2.DatasourceNutanixRegisteredDomainsV2(),
+			"nutanix_locations_v2":                  multidomainv2.DatasourceNutanixLocationsV2(),
 			"nutanix_entity_group_v2":               microsegv2.DatasourceNutanixEntityGroupV2(),
 			"nutanix_entity_groups_v2":              microsegv2.DatasourceNutanixEntityGroupsV2(),
 			"nutanix_directory_server_config_v2":    microsegv2.DatasourceNutanixDirectoryServerConfigV2(),
