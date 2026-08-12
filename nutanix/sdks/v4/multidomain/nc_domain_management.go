@@ -10,7 +10,7 @@ import (
 type NCDomainManagementClient struct {
 	DomainServiceAPIInstance *api.DomainServiceApi
 	APIClientInstance        *multidomainClient.ApiClient
-	Locations         *api.LocationsServiceApi
+	Locations                *api.LocationsServiceApi
 }
 
 func NewNCDomainManagementClient(credentials client.Credentials) (*NCDomainManagementClient, error) {
@@ -28,7 +28,7 @@ func NewNCDomainManagementClient(credentials client.Credentials) (*NCDomainManag
 	}
 	f := &NCDomainManagementClient{
 		DomainServiceAPIInstance: api.NewDomainServiceApi(baseClient),
-		Locations:         api.NewLocationsServiceApi(baseClient),
+		Locations:                api.NewLocationsServiceApi(baseClient),
 		APIClientInstance:        baseClient,
 	}
 	return f, nil
