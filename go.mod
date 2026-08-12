@@ -10,19 +10,19 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.1
 	github.com/jinzhu/copier v0.4.0
 	github.com/masterzen/winrm v0.0.0-20260407182533-5570be7f80cf
-	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.2.2
-	github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4 v4.2.2
-	github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4 v4.3.1
-	github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4 v4.1.2-beta.2
-	github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.2.2
-	github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.2.2
-	github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.3.1
-	github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4 v4.0.3
-	github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.3.1
+	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.3.1
+	github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4 v4.3.1
+	github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4 v4.4.1
+	github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4 v4.1.2-beta.3
+	github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.3.1
+	github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.3.1
+	github.com/nutanix/ntnx-api-golang-clients/multidomain-go-client/v4 v4.4.1-beta.1
+	github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.4.1
+	github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4 v4.1.1
+	github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.4.1
 	github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4 v4.1.2
-	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.2.2
-	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.2.2
-	github.com/nutanix/ntnx-api-golang-clients/multidomain-go-client/v4 v4.3.1
+	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.3.1
+	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.3.1
 	github.com/spf13/cast v1.10.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.54.0
