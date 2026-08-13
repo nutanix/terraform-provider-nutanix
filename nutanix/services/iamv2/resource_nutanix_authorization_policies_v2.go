@@ -171,9 +171,10 @@ func ResourceNutanixAuthPoliciesV2Create(ctx context.Context, d *schema.Resource
 			"PREDEFINED_UPDATE_IDENTITY_ONLY": five,
 			"SERVICE_DEFINED_READ_ONLY":       six,
 		}
-		pInt := subMap[authPolicyType.(string)]
-		p := import1.AuthorizationPolicyType(pInt.(int))
-		input.AuthorizationPolicyType = &p
+		if pInt, ok := subMap[authPolicyType.(string)].(int); ok {
+			p := import1.AuthorizationPolicyType(pInt)
+			input.AuthorizationPolicyType = &p
+		}
 	}
 
 	resp, err := conn.AuthAPIInstance.CreateAuthorizationPolicy(input)
@@ -293,9 +294,10 @@ func ResourceNutanixAuthPoliciesV2Update(ctx context.Context, d *schema.Resource
 			"PREDEFINED_UPDATE_IDENTITY_ONLY": five,
 			"SERVICE_DEFINED_READ_ONLY":       six,
 		}
-		pInt := subMap[d.Get("authorization_policy_type").(string)]
-		p := import1.AuthorizationPolicyType(pInt.(int))
-		updatedSpec.AuthorizationPolicyType = &p
+		if pInt, ok := subMap[d.Get("authorization_policy_type").(string)].(int); ok {
+			p := import1.AuthorizationPolicyType(pInt)
+			updatedSpec.AuthorizationPolicyType = &p
+		}
 	}
 
 	updatedResp, err := conn.AuthAPIInstance.UpdateAuthorizationPolicyById(utils.StringPtr(d.Id()), &updatedSpec, headers)

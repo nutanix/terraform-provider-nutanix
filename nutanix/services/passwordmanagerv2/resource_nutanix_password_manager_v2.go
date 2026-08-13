@@ -71,15 +71,16 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 		body.NewPassword = utils.StringPtr(newPassword.(string))
 	}
 
-	aJSON, _ := json.MarshalIndent(body, "", "  ")
-	log.Printf("[DEBUG] Change Password Request body: %s", aJSON)
+	// The request body carries the current and new cluster passwords in cleartext and
+	// must never be logged: Terraform debug logs are routinely attached to bug reports.
+	log.Printf("[DEBUG] Submitting password change for ext_id %s", utils.StringValue(extID))
 
 	resp, err := conn.PasswordManagerAPI.ChangeSystemUserPasswordById(extID, body)
 	if err != nil {
 		return diag.Errorf("error while performing password change: %v", err)
 	}
 
-	aJSON, _ = json.MarshalIndent(resp, "", "  ")
+	aJSON, _ := json.MarshalIndent(resp, "", "  ")
 	log.Printf("[DEBUG] Change Password Response: %s", aJSON)
 
 	TaskRef := resp.Data.GetValue().(import1.TaskReference)
@@ -109,14 +110,10 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 			return diag.Errorf("error while creating new prism client: %v", prismErr)
 		}
 
-		newTaskconn, err := prism.NewPrismClient(newCredentials)
-		if err != nil {
-			return diag.Errorf("error while creating new prism client: %v", err)
-		}
 		// retry to fetch the task
 		log.Printf("[DEBUG]  creating new taskconn with new password and retrying to fetch the task: %s", utils.StringValue(taskUUID))
 
-		_, taskErr = newTaskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		_, taskErr = newPrismClient.TaskRefAPI.GetTaskById(taskUUID, nil)
 		if taskErr != nil {
 			return diag.Errorf("error while fetching task by ID %s: %v", utils.StringValue(taskUUID), taskErr)
 		}
@@ -133,9 +130,9 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 		}
 
 		// Get task details for logging
-		taskResp, err := newPrismClient.TaskRefAPI.GetTaskById(taskUUID, nil)
-		if err != nil {
-			return diag.Errorf("error while fetching password change task: %v", err)
+		taskResp, taskFetchErr := newPrismClient.TaskRefAPI.GetTaskById(taskUUID, nil)
+		if taskFetchErr != nil {
+			return diag.Errorf("error while fetching password change task: %v", taskFetchErr)
 		}
 		taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 		aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")

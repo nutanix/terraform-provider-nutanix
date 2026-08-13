@@ -207,7 +207,7 @@ func datsourceNutanixCalmAppRead(ctx context.Context, d *schema.ResourceData, me
 	}
 	if specErr := json.Unmarshal([]byte(resp.Spec), &AppResp.Spec); specErr != nil {
 		log.Println("[DEBUG] Error unmarshalling App:", specErr)
-		return diag.FromErr(err)
+		return diag.FromErr(specErr)
 	}
 
 	if err := d.Set("api_version", resp.APIVersion); err != nil {

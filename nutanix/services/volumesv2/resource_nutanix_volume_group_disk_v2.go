@@ -392,10 +392,10 @@ func expandDiskDataSourceReference(entityReference interface{}) *config.EntityRe
 				"DISK_RECOVERY_POINT": twentytwo,
 			}
 
-			pInt := subMap[entityType.(string)]
-			p := config.EntityType(pInt.(int))
-
-			diskDataSourceReference.EntityType = &p
+			if pInt, ok := subMap[entityType.(string)].(int); ok {
+				p := config.EntityType(pInt)
+				diskDataSourceReference.EntityType = &p
+			}
 		}
 		log.Printf("[DEBUG] Disk Data Source Reference : %v", diskDataSourceReference)
 		return &diskDataSourceReference

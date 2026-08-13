@@ -1050,7 +1050,7 @@ func flattenContinousRegion(pr *era.ContinuousRegion) []map[string]interface{} {
 
 func flattenDBLogs(pr []*era.DBLogs) []map[string]interface{} {
 	if len(pr) > 0 {
-		res := make([]map[string]interface{}, len(pr))
+		res := make([]map[string]interface{}, 0, len(pr))
 
 		for _, v := range pr {
 			val := map[string]interface{}{}
@@ -1202,7 +1202,7 @@ func flattenLastContinousSnapshotMetadata(pr *era.LastContinuousSnapshotMetadata
 
 func flattenProcessedRanges(pr []*era.ProcessedRanges) []interface{} {
 	if len(pr) > 0 {
-		res := make([]interface{}, len(pr))
+		res := make([]interface{}, 0, len(pr))
 
 		for _, v := range pr {
 			proRanges := map[string]interface{}{}

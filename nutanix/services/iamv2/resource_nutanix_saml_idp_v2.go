@@ -382,9 +382,10 @@ func expandIdpMetadata(pr interface{}) *import1.IdpMetadata {
 				"persistent":                 nine,
 				"transient":                  ten,
 			}
-			pInt := subMap[policyFormat.(string)]
-			p := import1.NameIdPolicyFormat(pInt.(int))
-			idp.NameIdPolicyFormat = &p
+			if pInt, ok := subMap[policyFormat.(string)].(int); ok {
+				p := import1.NameIdPolicyFormat(pInt)
+				idp.NameIdPolicyFormat = &p
+			}
 		}
 		log.Printf("idp: %v", idp)
 		return idp

@@ -127,7 +127,7 @@ func dataSourceFoundationDiscoverNodesRead(ctx context.Context, d *schema.Resour
 	}
 
 	if setErr := d.Set("entities", entities); setErr != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(setErr)
 	}
 
 	d.SetId(resource.UniqueId())

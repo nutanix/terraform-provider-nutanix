@@ -6,10 +6,11 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -85,6 +86,23 @@ type AdditionalFilter struct {
 	Values []string
 }
 
+// JoinHostPort joins a configured endpoint and port into a URL authority.
+//
+// net.JoinHostPort is not used directly because it brackets any host containing a
+// colon, which would also bracket endpoints that were configured with a scheme
+// (e.g. "https://pc.example.com") and produce an unparseable URL. Only genuine IPv6
+// literals require brackets, so that case is detected explicitly; every other input
+// keeps the plain "host:port" form this provider has always produced.
+func JoinHostPort(host, port string) string {
+	if port == "" {
+		return host
+	}
+	if ip := net.ParseIP(host); ip != nil && ip.To4() == nil {
+		return "[" + host + "]:" + port
+	}
+	return host + ":" + port
+}
+
 // applyAuthHeaders adds the appropriate authentication header to the request
 // Priority: Cookies (session auth) > API Key > Basic Auth
 func (c *Client) applyAuthHeaders(req *http.Request) {
@@ -134,11 +152,7 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string, 
 			return nil, fmt.Errorf("error parsing proxy url: %s", err)
 		}
 
-		// override transport config incase of using proxy
-		transCfg := &http.Transport{
-			//nolint:gas
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
-		}
+		transCfg := newTransport(credentials.Insecure)
 		transCfg.Proxy = http.ProxyURL(proxy)
 		baseClient.client.Transport = logging.NewTransport("Nutanix", transCfg)
 	}
@@ -156,18 +170,34 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string, 
 		if err != nil {
 			return baseClient, err
 		}
-		defer func() {
-			if rerr := resp.Body.Close(); err == nil {
-				err = rerr
-			}
-		}()
+		defer resp.Body.Close()
 
-		err = CheckResponse(resp)
+		// A failed session handshake must surface here. Continuing would hand back a
+		// cookie-less client that fails later with an unrelated-looking error.
+		if err := CheckResponse(resp); err != nil {
+			return baseClient, fmt.Errorf("session authentication failed: %w", err)
+		}
 
 		baseClient.Cookies = resp.Cookies()
 	}
 
 	return baseClient, nil
+}
+
+// newTransport builds a dedicated HTTP transport for a single client.
+//
+// Each client must own its transport: sharing one (for example via http.DefaultClient)
+// would let one client's TLS or proxy settings silently apply to every other client in
+// the process, including ones talking to a different host.
+func newTransport(insecure bool) *http.Transport {
+	transport, ok := http.DefaultTransport.(*http.Transport)
+	if !ok {
+		transport = &http.Transport{}
+	}
+	transCfg := transport.Clone()
+	//nolint:gosec // InsecureSkipVerify is the documented `insecure` provider opt-in.
+	transCfg.TLSClientConfig = &tls.Config{InsecureSkipVerify: insecure}
+	return transCfg
 }
 
 // NewBaseClient returns a basic http/https client based on isHttp flag
@@ -176,15 +206,9 @@ func NewBaseClient(credentials *Credentials, absolutePath string, isHTTP bool) (
 		return nil, fmt.Errorf("absolutePath argument must be passed")
 	}
 
-	httpClient := http.DefaultClient
-
-	transCfg := &http.Transport{
-
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: credentials.Insecure,
-		},
+	httpClient := &http.Client{
+		Transport: logging.NewTransport("Nutanix", newTransport(credentials.Insecure)),
 	}
-	httpClient.Transport = logging.NewTransport("Nutanix", transCfg)
 
 	protocol := httpsPrefix
 	if isHTTP {
@@ -196,7 +220,12 @@ func NewBaseClient(credentials *Credentials, absolutePath string, isHTTP bool) (
 		return nil, err
 	}
 
-	c := &Client{credentials, httpClient, baseURL, "", nil, nil, absolutePath, ""}
+	c := &Client{
+		Credentials:  credentials,
+		client:       httpClient,
+		BaseURL:      baseURL,
+		AbsolutePath: absolutePath,
+	}
 
 	return c, nil
 }
@@ -251,8 +280,7 @@ func (c *Client) NewUnAuthRequest(ctx context.Context, method, urlStr string, bo
 
 	buf := new(bytes.Buffer)
 	if body != nil {
-		er := json.NewEncoder(buf).Encode(body)
-		if err != nil {
+		if er := json.NewEncoder(buf).Encode(body); er != nil {
 			return nil, er
 		}
 	}
@@ -393,37 +421,38 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 		return err
 	}
 
-	defer func() {
-		if rerr := resp.Body.Close(); err == nil {
-			err = rerr
-		}
-	}()
+	defer resp.Body.Close()
 
-	err = CheckResponse(resp)
-
-	if err != nil {
+	if err := CheckResponse(resp); err != nil {
 		return err
 	}
 
-	if v != nil {
-		if w, ok := v.(io.Writer); ok {
-			_, err = io.Copy(w, resp.Body)
-			if err != nil {
-				fmt.Printf("Error io.Copy %s", err)
-				return err
-			}
-		} else {
-			err = json.NewDecoder(resp.Body).Decode(v)
-			if err != nil {
-				return fmt.Errorf("error unmarshalling json: %s", err)
-			}
-		}
+	if err := decodeResponse(resp, v); err != nil {
+		return err
 	}
 
 	if c.onRequestCompleted != nil {
 		c.onRequestCompleted(req, resp, v)
 	}
-	return err
+	return nil
+}
+
+// decodeResponse writes the response body into v, which may be an io.Writer or any
+// json-decodable value. A nil v discards the body.
+func decodeResponse(resp *http.Response, v interface{}) error {
+	if v == nil {
+		return nil
+	}
+	if w, ok := v.(io.Writer); ok {
+		if _, err := io.Copy(w, resp.Body); err != nil {
+			return fmt.Errorf("error copying response body: %w", err)
+		}
+		return nil
+	}
+	if err := json.NewDecoder(resp.Body).Decode(v); err != nil {
+		return fmt.Errorf("error unmarshalling json: %s", err)
+	}
+	return nil
 }
 
 func searchSlice(slice []string, key string) bool {
@@ -447,14 +476,9 @@ func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interfa
 		return err
 	}
 
-	defer func() {
-		if rerr := resp.Body.Close(); err == nil {
-			err = rerr
-		}
-	}()
+	defer resp.Body.Close()
 
-	err = CheckResponse(resp)
-	if err != nil {
+	if err = CheckResponse(resp); err != nil {
 		return err
 	}
 
@@ -463,26 +487,15 @@ func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interfa
 		return err
 	}
 
-	if v != nil {
-		if w, ok := v.(io.Writer); ok {
-			_, err = io.Copy(w, resp.Body)
-			if err != nil {
-				fmt.Printf("Error io.Copy %s", err)
-				return err
-			}
-		} else {
-			err = json.NewDecoder(resp.Body).Decode(v)
-			if err != nil {
-				return fmt.Errorf("error unmarshalling json: %s", err)
-			}
-		}
+	if err := decodeResponse(resp, v); err != nil {
+		return err
 	}
 
 	if c.onRequestCompleted != nil {
 		c.onRequestCompleted(req, resp, v)
 	}
 
-	return err
+	return nil
 }
 
 func filter(body io.ReadCloser, filters []*AdditionalFilter, baseSearchPaths []string) (io.ReadCloser, error) {
@@ -498,7 +511,16 @@ func filter(body io.ReadCloser, filters []*AdditionalFilter, baseSearchPaths []s
 	if err != nil {
 		return body, err
 	}
-	json.Unmarshal(b, &res)
+	if err := json.Unmarshal(b, &res); err != nil {
+		return body, fmt.Errorf("error unmarshalling response for filtering: %w", err)
+	}
+
+	// Nothing to filter if the payload has no entities collection (error pages, empty
+	// results). Returning the body unchanged lets the caller decode and report properly.
+	entities, ok := res["entities"].([]interface{})
+	if !ok {
+		return io.NopCloser(bytes.NewReader(b)), nil
+	}
 
 	// Full search paths
 	searchPaths := map[string][]string{}
@@ -517,13 +539,15 @@ func filter(body io.ReadCloser, filters []*AdditionalFilter, baseSearchPaths []s
 	// Entities that pass filters
 	var filteredEntities []interface{}
 
-	entities := res["entities"].([]interface{})
 	for _, entity := range entities {
+		searchTarget, ok := entity.(map[string]interface{})
+		if !ok {
+			continue
+		}
 		filtersPassed := 0
 	filter_loop:
 		for filter, filterSearchPaths := range searchPaths {
 			for _, searchPath := range filterSearchPaths {
-				searchTarget := entity.(map[string]interface{})
 				val, err := jsonpath.Get(searchPath, searchTarget)
 				if err != nil {
 					continue
@@ -552,6 +576,11 @@ func filter(body io.ReadCloser, filters []*AdditionalFilter, baseSearchPaths []s
 	return io.NopCloser(bytes.NewReader(filteredBody)), nil
 }
 
+// ErrNotFound reports that the API answered 404. Callers use errors.Is to tell
+// "this resource is gone" apart from "this request failed", which decides whether
+// Terraform drops the resource from state or surfaces an error to the operator.
+var ErrNotFound = errors.New("resource not found")
+
 // CheckResponse checks errors if exist errors in request
 func CheckResponse(r *http.Response) error {
 	c := r.StatusCode
@@ -567,26 +596,36 @@ func CheckResponse(r *http.Response) error {
 	}
 
 	if c == http.StatusBadRequest {
-		bodyBytes, err := ioutil.ReadAll(r.Body)
+		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
 			return fmt.Errorf("bad Request: failed to read body: %w", err)
 		}
 		return fmt.Errorf("bad Request: %s", string(bodyBytes))
 	}
 
-	buf, err := ioutil.ReadAll(r.Body)
+	buf, err := io.ReadAll(r.Body)
 	if err != nil {
 		return err
 	}
 
-	rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
+	rdr2 := io.NopCloser(bytes.NewBuffer(buf))
 
 	r.Body = rdr2
+
+	if c == http.StatusNotFound {
+		if len(buf) == 0 {
+			return ErrNotFound
+		}
+		return fmt.Errorf("%w: %s", ErrNotFound, string(buf))
+	}
+
 	// if has entities -> return nil
 	// if has message_list -> check_error["state"]
 	// if has status -> check_error["status.state"]
 	if len(buf) == 0 {
-		return nil
+		// A non-2xx with no body still failed. Returning nil here used to let callers
+		// carry on with a zero-value response and nil-dereference it.
+		return fmt.Errorf("request failed with status %d", c)
 	}
 
 	var res map[string]interface{}
@@ -597,12 +636,17 @@ func CheckResponse(r *http.Response) error {
 
 	errRes := &ErrorResponse{}
 	if status, ok := res["status"]; ok {
-		_, sok := status.(string)
-		if sok {
+		// A string `status` is a successful non-error payload for some endpoints.
+		if _, sok := status.(string); sok {
 			return nil
 		}
 
-		err = fillStruct(status.(map[string]interface{}), errRes)
+		// Any other scalar carries no structured error detail. Skip the struct fill
+		// rather than asserting blindly, which used to panic on numeric/bool/array
+		// values inside the error handler itself.
+		if statusMap, mok := status.(map[string]interface{}); mok {
+			err = fillStruct(statusMap, errRes)
+		}
 	} else if _, ok := res["state"]; ok {
 		err = fillStruct(res, errRes)
 	} else if _, ok := res["entities"]; ok {

@@ -144,7 +144,7 @@ func flattenOperationType(pr *import1.OperationType) string {
 
 func flattenAssociatedEndpointList(pr []import1.AssociatedEndpoint) []map[string]interface{} {
 	if len(pr) > 0 {
-		endpoints := make([]map[string]interface{}, len(pr))
+		endpoints := make([]map[string]interface{}, 0, len(pr))
 		for _, v := range pr {
 			endpoint := make(map[string]interface{})
 

@@ -534,9 +534,10 @@ func expandSubnet(pr interface{}) *import1.Subnet {
 				"OVERLAY": two,
 				"VLAN":    three,
 			}
-			pInt := subMap[subType.(string)]
-			p := import1.SubnetType(pInt.(int))
-			sub.SubnetType = &p
+			if pInt, ok := subMap[subType.(string)].(int); ok {
+				p := import1.SubnetType(pInt)
+				sub.SubnetType = &p
+			}
 		}
 		if dhcp, ok := val["dhcp_options"]; ok {
 			sub.DhcpOptions = expandDhcpOptions(dhcp.([]interface{}))

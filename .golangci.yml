@@ -1,11 +1,8 @@
 # =========================
 # GolangCI-Lint Configuration
 # =========================
-
-# =========================
-# Config Version
-# =========================
-version: 2
+# Schema version. Must be the string "2" — a bare `2` is rejected as a number.
+version: "2"
 
 # =========================
 # Run Settings
@@ -17,75 +14,19 @@ run:
   # Include test files
   tests: true
 
-    # which dirs to skip: they won't be analyzed;
-  skip-dirs:
-    - vendor
-    - future
-
-# =========================
-# Linter Settings
-# =========================
-linters-settings:
-  # golint linter settings
-  golint:
-    min-confidence: 0
-
-  govet:
-    check-shadowing: true
-    check-print-funcs: false
-
-  # maligned suggests field reordering for memory alignment
-  maligned:
-    suggest-new: true
-
-  # goconst identifies repeated string constants
-  goconst:
-    min-len: 2
-    min-occurrences: 2
-
-  # depguard controls allowed/forbidden imports
-  depguard:
-    list-type: blacklist
-    packages:
-      # logging is allowed only by logutils.Log, logrus
-      # is allowed to use only in logutils package
-      - github.com/sirupsen/logrus
-
-  # spelling linter
-  misspell:
-    locale: US
-
-  # line length linter
-  lll:
-    # Default is 120. '\t' is counted as 1 character.
-    # set our project to 200, as things like v3_structs with inline comments end up being a touch long
-    # also, for anyone using vscode, use the following configs:
-    # "rewrap.wrappingColumn": 200 ... requires the rewrap plugin
-    # "editor.rulers": [200]
-    line-length: 500
-
-  # gocritic linter settings
-  gocritic:
-    disable:
-      - ifElseChain
-
 # =========================
 # Linter Enable/Disable
 # =========================
 linters:
-  enable-all: true
+  default: all
   disable:
     - gocyclo
       # disabled gocyclo as we do have a lot of large methods to iterate thru the large JSON specs
     - dupl
       # disabled dupl as we do have a lot of duplicated code between resources and their tests, which gets flagged by this
     - errcheck
-      # errocheck disabled to silience errors here: https://travis-ci.com/nutanix/terraform-provider-nutanix/jobs/131154435
-      # Example error:
-      # nutanix/data_source_nutanix_image.go:61:7: Error return value of `d.Set` is not checked (errcheck)
-      # d.Set("name", utils.StringValue(resp.Status.Name))
-      # waiting on terraform/hashi to let us know how they want us to changle those errors
-      # see Error return value of `d.Set` is not checked (errcheck)
+      # errcheck disabled to silence errors on unchecked d.Set(...) returns across every
+      # resource. Re-enabling is tracked separately; it is a large, mechanical cleanup.
     - gosec
     - gochecknoinits
     - gochecknoglobals
@@ -93,36 +34,113 @@ linters:
     - gocognit
     - godox
     - wsl
+    - wsl_v5
     - nestif
     - godot
     - goconst
     - unparam
     - unused
     - staticcheck
+    - lll
+    - mnd
+    - varnamelen
+    - exhaustruct
+    - ireturn
+    - depguard
+    - nlreturn
+    - cyclop
+    - maintidx
+    - err113
+    - wrapcheck
+    - testpackage
+    - paralleltest
+    - tparallel
+    - noctx
+    - forcetypeassert
+    - errorlint
+    - nonamedreturns
+    - exhaustive
+    - gocritic
+    - revive
+    - prealloc
+    - intrange
+    - perfsprint
+    - inamedparam
+    - tagliatelle
+    - musttag
+    - contextcheck
+    - containedctx
+    - dupword
+    - predeclared
+
+    # --------------------------------------------------------------------------
+    # Linters added to golangci-lint after this config was last updated. They are
+    # disabled to keep the gate at parity with the previously-intended rule set
+    # rather than landing several hundred unrelated changes at once. Re-enabling
+    # them one at a time is tracked as follow-up work.
+    # --------------------------------------------------------------------------
+    - canonicalheader
+    - copyloopvar
+    - embeddedstructfieldcheck
+    - errchkjson
+    - errname
+    - forbidigo
+    - funcorder
+    - godoclint
+    - interfacebloat
+    - modernize
+    - nilnil
+    - noinlineerr
+    - nosprintfhostport
+    - tagalign
+    - testifylint
+    - thelper
+    - unconvert
+    - usestdlibvars
+    - usetesting
+    - wastedassign
+    - whitespace
+
+  # =========================
+  # Linter Settings
+  # =========================
+  settings:
+    govet:
+      enable:
+        - shadow
+      disable:
+        # The `inline` analyzer compares against the toolchain's stdlib rather than
+        # the module's go directive, so it reports unactionable diffs on every build
+        # with a newer Go than go.mod declares.
+        - inline
+
+    goconst:
+      min-len: 2
+      min-occurrences: 2
+
+    misspell:
+      locale: US
+
+  # =========================
+  # Exclusions
+  # =========================
+  exclusions:
+    paths:
+      - vendor
+      - future
+    rules:
+      - path: _test\.go
+        linters:
+          - testpackage
 
 # =========================
-# Issues exclusions
+# Formatters
 # =========================
-issues:
-  # Maximum issues count per one linter. Set to 0 to disable. Default is 50.
-  max-issues-per-linter: 0
-
-  # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
-  max-same-issues: 0
-
-  exclude:
-    - composite literal uses unkeyed fields
-
-  # Ignore specific linters for tests
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - testpackage
-      # part of the golangci govet package is picking up things that go vet doesn't. Seems flaky, shutting that specific error off
-    - path: client/client.go
-      linters:
-        - interfacer
-      # interfacer lint on `filter` func suggests lint changes that dont compile
-      # Details: linter suggests to convert `body` param to io.Reader since we don't use Close method, but return type requires
-      ## io.ReadCloser thus failing to compile
-
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    paths:
+      - vendor
+      - future

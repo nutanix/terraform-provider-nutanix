@@ -235,9 +235,10 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 			"OFF":  three,
 			"ON":   four,
 		}
-		pVal := subMap[erasureCode.(string)]
-		p := clustermgmtConfig.ErasureCodeStatus(pVal.(int))
-		body.ErasureCode = &p
+		if pVal, ok := subMap[erasureCode.(string)].(int); ok {
+			p := clustermgmtConfig.ErasureCodeStatus(pVal)
+			body.ErasureCode = &p
+		}
 	}
 	if isInlineEcEnabled, ok := d.GetOk("is_inline_ec_enabled"); ok {
 		body.IsInlineEcEnabled = utils.BoolPtr(isInlineEcEnabled.(bool))
@@ -255,9 +256,10 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 			"OFF":  three,
 			"ON":   four,
 		}
-		pVal := subMap[cacheDeduplication.(string)]
-		p := clustermgmtConfig.CacheDeduplication(pVal.(int))
-		body.CacheDeduplication = &p
+		if pVal, ok := subMap[cacheDeduplication.(string)].(int); ok {
+			p := clustermgmtConfig.CacheDeduplication(pVal)
+			body.CacheDeduplication = &p
+		}
 	}
 	if onDiskDedup, ok := d.GetOk("on_disk_dedup"); ok {
 		const two, three, four = 2, 3, 4
@@ -266,9 +268,10 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 			"OFF":          three,
 			"POST_PROCESS": four,
 		}
-		pVal := subMap[onDiskDedup.(string)]
-		p := clustermgmtConfig.OnDiskDedup(pVal.(int))
-		body.OnDiskDedup = &p
+		if pVal, ok := subMap[onDiskDedup.(string)].(int); ok {
+			p := clustermgmtConfig.OnDiskDedup(pVal)
+			body.OnDiskDedup = &p
+		}
 	}
 	if isCompressionEnabled, ok := d.GetOk("is_compression_enabled"); ok {
 		body.IsCompressionEnabled = utils.BoolPtr(isCompressionEnabled.(bool))
@@ -481,9 +484,10 @@ func ResourceNutanixStorageContainersV2Update(ctx context.Context, d *schema.Res
 			"OFF":  three,
 			"ON":   four,
 		}
-		pVal := subMap[d.Get("erasure_code").(string)]
-		p := clustermgmtConfig.ErasureCodeStatus(pVal.(int))
-		updateSpec.ErasureCode = &p
+		if pVal, ok := subMap[d.Get("erasure_code").(string)].(int); ok {
+			p := clustermgmtConfig.ErasureCodeStatus(pVal)
+			updateSpec.ErasureCode = &p
+		}
 	}
 	if d.HasChange("is_inline_ec_enabled") {
 		updateSpec.IsInlineEcEnabled = utils.BoolPtr(d.Get("is_inline_ec_enabled").(bool))
@@ -501,9 +505,10 @@ func ResourceNutanixStorageContainersV2Update(ctx context.Context, d *schema.Res
 			"OFF":  three,
 			"ON":   four,
 		}
-		pVal := subMap[d.Get("cache_deduplication").(string)]
-		p := clustermgmtConfig.CacheDeduplication(pVal.(int))
-		updateSpec.CacheDeduplication = &p
+		if pVal, ok := subMap[d.Get("cache_deduplication").(string)].(int); ok {
+			p := clustermgmtConfig.CacheDeduplication(pVal)
+			updateSpec.CacheDeduplication = &p
+		}
 	}
 	if d.HasChange("on_disk_dedup") {
 		const two, three, four = 2, 3, 4
@@ -512,9 +517,10 @@ func ResourceNutanixStorageContainersV2Update(ctx context.Context, d *schema.Res
 			"OFF":          three,
 			"POST_PROCESS": four,
 		}
-		pVal := subMap[d.Get("on_disk_dedup").(string)]
-		p := clustermgmtConfig.OnDiskDedup(pVal.(int))
-		updateSpec.OnDiskDedup = &p
+		if pVal, ok := subMap[d.Get("on_disk_dedup").(string)].(int); ok {
+			p := clustermgmtConfig.OnDiskDedup(pVal)
+			updateSpec.OnDiskDedup = &p
+		}
 	}
 	if d.HasChange("is_compression_enabled") {
 		updateSpec.IsCompressionEnabled = utils.BoolPtr(d.Get("is_compression_enabled").(bool))

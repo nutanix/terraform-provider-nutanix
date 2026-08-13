@@ -35,7 +35,7 @@ func dataSourceNutanixNDBTimeMachinesRead(ctx context.Context, d *schema.Resourc
 	uuid, er := uuid.GenerateUUID()
 
 	if er != nil {
-		return diag.Errorf("Error generating UUID for era time machines: %+v", err)
+		return diag.Errorf("Error generating UUID for era time machines: %+v", er)
 	}
 	d.SetId(uuid)
 	return nil

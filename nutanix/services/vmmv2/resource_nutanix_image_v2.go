@@ -245,9 +245,10 @@ func ResourceNutanixImageV4Create(ctx context.Context, d *schema.ResourceData, m
 			"DISK_IMAGE": two,
 			"ISO_IMAGE":  three,
 		}
-		pVal := subMap[types.(string)]
-		p := import5.ImageType(pVal.(int))
-		body.Type = &p
+		if pVal, ok := subMap[types.(string)].(int); ok {
+			p := import5.ImageType(pVal)
+			body.Type = &p
+		}
 	}
 	if checksum, ok := d.GetOk("checksum"); ok {
 		body.Checksum = expandOneOfImageChecksum(checksum)
@@ -389,9 +390,10 @@ func ResourceNutanixImageV4Update(ctx context.Context, d *schema.ResourceData, m
 			"DISK_IMAGE": two,
 			"ISO_IMAGE":  three,
 		}
-		pVal := subMap[d.Get("type").(string)]
-		p := import5.ImageType(pVal.(int))
-		updateSpec.Type = &p
+		if pVal, ok := subMap[d.Get("type").(string)].(int); ok {
+			p := import5.ImageType(pVal)
+			updateSpec.Type = &p
+		}
 	}
 	if d.HasChange("checksum") {
 		updateSpec.Checksum = expandOneOfImageChecksum(d.Get("checksum"))
@@ -408,7 +410,7 @@ func ResourceNutanixImageV4Update(ctx context.Context, d *schema.ResourceData, m
 
 	updateResp, er := conn.ImagesAPIInstance.UpdateImageById(utils.StringPtr(d.Id()), &updateSpec)
 	if er != nil {
-		return diag.Errorf("error while updating images : %v", err)
+		return diag.Errorf("error while updating images : %v", er)
 	}
 	TaskRef := updateResp.Data.GetValue().(import1.TaskReference)
 	taskUUID := TaskRef.ExtId

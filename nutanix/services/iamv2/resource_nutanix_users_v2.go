@@ -217,9 +217,10 @@ func resourceNutanixUserV2Create(ctx context.Context, d *schema.ResourceData, me
 			"EXTERNAL":        five,
 			"SERVICE_ACCOUNT": six,
 		}
-		pInt := usertypeMap[ut.(string)]
-		p := import1.UserType(pInt.(int))
-		spec.UserType = &p
+		if pInt, ok := usertypeMap[ut.(string)].(int); ok {
+			p := import1.UserType(pInt)
+			spec.UserType = &p
+		}
 	}
 	if description, ok := d.GetOk("description"); ok {
 		spec.Description = utils.StringPtr(description.(string))
@@ -261,9 +262,10 @@ func resourceNutanixUserV2Create(ctx context.Context, d *schema.ResourceData, me
 			"ACTIVE":   two,
 			"INACTIVE": three,
 		}
-		pInt := statusMap[status.(string)]
-		p := import1.UserStatusType(pInt.(int))
-		spec.Status = &p
+		if pInt, ok := statusMap[status.(string)].(int); ok {
+			p := import1.UserStatusType(pInt)
+			spec.Status = &p
+		}
 	}
 	if lastLogin, ok := d.GetOk("last_login_time"); ok {
 		t := lastLogin.(time.Time)
@@ -414,9 +416,10 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 			"EXTERNAL":        five,
 			"SERVICE_ACCOUNT": six,
 		}
-		pInt := usertypeMap[d.Get("user_type").(string)]
-		p := import1.UserType(pInt.(int))
-		updateSpec.UserType = &p
+		if pInt, ok := usertypeMap[d.Get("user_type").(string)].(int); ok {
+			p := import1.UserType(pInt)
+			updateSpec.UserType = &p
+		}
 	}
 	if d.HasChange("description") {
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
@@ -472,9 +475,10 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 			"ACTIVE":   two,
 			"INACTIVE": three,
 		}
-		pInt := statusMap[d.Get("status").(string)]
-		p := import1.UserStatusType(pInt.(int))
-		updateSpec.Status = &p
+		if pInt, ok := statusMap[d.Get("status").(string)].(int); ok {
+			p := import1.UserStatusType(pInt)
+			updateSpec.Status = &p
+		}
 	}
 	if d.HasChange("additional_attributes") {
 		updateSpec.AdditionalAttributes = expandKVPair(d.Get("additional_attributes").([]interface{}))

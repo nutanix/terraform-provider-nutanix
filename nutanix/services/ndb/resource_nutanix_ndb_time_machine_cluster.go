@@ -111,7 +111,7 @@ func resourceNutanixNDBTmsClusterCreate(ctx context.Context, d *schema.ResourceD
 	uuid, er := uuid.GenerateUUID()
 
 	if er != nil {
-		return diag.Errorf("Error generating UUID for era clusters: %+v", err)
+		return diag.Errorf("Error generating UUID for era clusters: %+v", er)
 	}
 	d.SetId(uuid)
 	log.Printf("NDB Time Machine Cluster with %s id is created successfully", d.Id())

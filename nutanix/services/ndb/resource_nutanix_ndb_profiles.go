@@ -596,7 +596,7 @@ func resourceNutanixNDBProfileCreate(ctx context.Context, d *schema.ResourceData
 
 			if cls, ok := val["version_cluster_association"]; ok {
 				clster := cls.([]interface{})
-				out := make([]*era.VersionClusterAssociation, len(clster))
+				out := make([]*era.VersionClusterAssociation, 0, len(clster))
 				for _, v := range clster {
 					val := v.(map[string]interface{})
 
@@ -851,7 +851,7 @@ func resourceNutanixNDBProfileUpdate(ctx context.Context, d *schema.ResourceData
 
 			if cls, ok := val["version_cluster_association"]; ok {
 				clster := cls.([]interface{})
-				out := make([]*era.VersionClusterAssociation, len(clster))
+				out := make([]*era.VersionClusterAssociation, 0, len(clster))
 				for _, v := range clster {
 					val := v.(map[string]interface{})
 

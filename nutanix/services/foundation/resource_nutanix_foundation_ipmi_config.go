@@ -189,16 +189,16 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if setErr := d.Set("ipmi_user", resp.IpmiUser); setErr != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(setErr)
 	}
 	if setErr := d.Set("ipmi_password", resp.IpmiPassword); setErr != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(setErr)
 	}
 	if setErr := d.Set("ipmi_gateway", resp.IpmiGateway); setErr != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(setErr)
 	}
 	if setErr := d.Set("ipmi_netmask", resp.IpmiNetmask); setErr != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(setErr)
 	}
 
 	// flatten blocks and nodes list for every block and set appropriately

@@ -146,7 +146,7 @@ func flattenLinksMicroSeg(pr []import2.ApiLink) []map[string]interface{} {
 
 func flattenListofString(str []string) []string {
 	if len(str) > 0 {
-		strList := make([]string, len(str))
+		strList := make([]string, 0, len(str))
 
 		strList = append(strList, str...)
 		return strList

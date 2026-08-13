@@ -78,7 +78,7 @@ func resourceNutanixNDBAuthorizeDBServerCreate(ctx context.Context, d *schema.Re
 		uuid, er := uuid.GenerateUUID()
 
 		if er != nil {
-			return diag.Errorf("Error generating UUID for era clusters: %+v", err)
+			return diag.Errorf("Error generating UUID for era clusters: %+v", er)
 		}
 		d.SetId(uuid)
 	}

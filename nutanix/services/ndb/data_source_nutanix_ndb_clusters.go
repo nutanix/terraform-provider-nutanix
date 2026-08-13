@@ -179,14 +179,14 @@ func dataSourceNutanixEraClustersRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if e := d.Set("clusters", flattenClustersResponse(resp)); err != nil {
+	if e := d.Set("clusters", flattenClustersResponse(resp)); e != nil {
 		return diag.FromErr(e)
 	}
 
 	uuid, er := uuid.GenerateUUID()
 
 	if er != nil {
-		return diag.Errorf("Error generating UUID for era clusters: %+v", err)
+		return diag.Errorf("Error generating UUID for era clusters: %+v", er)
 	}
 	d.SetId(uuid)
 	return nil

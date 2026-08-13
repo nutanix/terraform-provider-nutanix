@@ -169,9 +169,10 @@ func ResourceNutanixVolumeGroupIscsiClientV2Create(ctx context.Context, d *schem
 			"CHAP": two,
 			"NONE": three,
 		}
-		pInt := enabledAuthenticationsMap[enabledAuthentications.(string)]
-		p := volumesClient.AuthenticationType(pInt.(int))
-		body.EnabledAuthentications = &p
+		if pInt, ok := enabledAuthenticationsMap[enabledAuthentications.(string)].(int); ok {
+			p := volumesClient.AuthenticationType(pInt)
+			body.EnabledAuthentications = &p
+		}
 	}
 	if numVirtualTargets, ok := d.GetOk("num_virtual_targets"); ok {
 		body.NumVirtualTargets = utils.IntPtr(numVirtualTargets.(int))
@@ -182,9 +183,10 @@ func ResourceNutanixVolumeGroupIscsiClientV2Create(ctx context.Context, d *schem
 			"SECONDARY": two,
 			"PRIMARY":   three,
 		}
-		pInt := attachmentSiteMap[attachmentSite.(string)]
-		p := volumesClient.VolumeGroupAttachmentSite(pInt.(int))
-		body.AttachmentSite = &p
+		if pInt, ok := attachmentSiteMap[attachmentSite.(string)].(int); ok {
+			p := volumesClient.VolumeGroupAttachmentSite(pInt)
+			body.AttachmentSite = &p
+		}
 	}
 
 	resp, err := conn.VolumeAPIInstance.AttachIscsiClient(utils.StringPtr(volumeGroupExtID.(string)), &body)

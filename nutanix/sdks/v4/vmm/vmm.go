@@ -21,7 +21,11 @@ func NewVmmClient(credentials client.Credentials) (*Client, error) {
 	var baseClient *vmm.ApiClient
 
 	pcClient := vmm.NewApiClient()
-	if cfg := sdkconfig.ConfigureV4Client(credentials, pcClient); cfg != nil {
+	cfg, err := sdkconfig.ConfigureV4Client(credentials, pcClient)
+	if err != nil {
+		return nil, err
+	}
+	if cfg != nil {
 		pcClient.Host = cfg.Host
 		pcClient.Port = cfg.Port
 		pcClient.Username = cfg.Username

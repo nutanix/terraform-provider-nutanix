@@ -409,7 +409,7 @@ func ResourceNutanixTemplatesV2Update(ctx context.Context, d *schema.ResourceDat
 			versionSource.VersionId = tmplVersion.ExtId
 			errVs := updateSpec.TemplateVersionSpec.VersionSource.SetValue(versionSource)
 			if errVs != nil {
-				return diag.Errorf("error while setting version source : %v", err)
+				return diag.Errorf("error while setting version source : %v", errVs)
 			}
 		case vmmContent.TemplateVmReference:
 			log.Printf("[DEBUG] Template vm reference type, no need to set version id")
@@ -2091,9 +2091,10 @@ func expandTemplateVMSpec(vmSpec interface{}) *vmmConfig.Vm {
 				"PSERIES": three,
 				"Q35":     four,
 			}
-			pVal := subMap[machineType.(string)]
-			p := vmmConfig.MachineType(pVal.(int))
-			vm.MachineType = &p
+			if pVal, ok := subMap[machineType.(string)].(int); ok {
+				p := vmmConfig.MachineType(pVal)
+				vm.MachineType = &p
+			}
 		}
 		if powerState, ok := vmVal["power_state"]; ok && powerState != "" {
 			const two, three, four, five = 2, 3, 4, 5
@@ -2103,9 +2104,10 @@ func expandTemplateVMSpec(vmSpec interface{}) *vmmConfig.Vm {
 				"PAUSED":       four,
 				"UNDETERMINED": five,
 			}
-			pVal := subMap[powerState.(string)]
-			p := vmmConfig.PowerState(pVal.(int))
-			vm.PowerState = &p
+			if pVal, ok := subMap[powerState.(string)].(int); ok {
+				p := vmmConfig.PowerState(pVal)
+				vm.PowerState = &p
+			}
 		}
 		if vtpmConfig, ok := vmVal["vtpm_config"]; ok {
 			vm.VtpmConfig = expandVtpmConfig(vtpmConfig)
@@ -2141,9 +2143,10 @@ func expandTemplateVMSpec(vmSpec interface{}) *vmmConfig.Vm {
 				"PD_PROTECTED":   three,
 				"RULE_PROTECTED": four,
 			}
-			pVal := subMap[protectionType.(string)]
-			p := vmmConfig.ProtectionType(pVal.(int))
-			vm.ProtectionType = &p
+			if pVal, ok := subMap[protectionType.(string)].(int); ok {
+				p := vmmConfig.ProtectionType(pVal)
+				vm.ProtectionType = &p
+			}
 		}
 		if protectionPolicyState, ok := vmVal["protection_policy_state"]; ok {
 			vm.ProtectionPolicyState = expandProtectionPolicyState(protectionPolicyState)

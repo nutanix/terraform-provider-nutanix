@@ -126,7 +126,7 @@ func ResourceNutanixTemplateActionsV2Create(ctx context.Context, d *schema.Resou
 		TaskRef := resp.Data.GetValue().(import1.TaskReference)
 		taskUUID = TaskRef.ExtId
 
-		// Wait for the guest OS update to be cancelled
+		// Wait for the guest OS update to be canceled
 		stateConf := &resource.StateChangeConf{
 			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 			Target:  []string{"SUCCEEDED"},

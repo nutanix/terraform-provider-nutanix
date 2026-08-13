@@ -2,6 +2,7 @@ package nke
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
@@ -9,7 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/karbon"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func ResourceNutanixKarbonPrivateRegistry() *schema.Resource {
@@ -127,16 +130,22 @@ func resourceNutanixKarbonPrivateRegistryRead(ctx context.Context, d *schema.Res
 	}
 	resp, err := conn.PrivateRegistry.GetKarbonPrivateRegistry(name.(string))
 	if err != nil {
-		d.SetId("")
-		return nil
+		// Only an actual "gone" answer may clear the ID. Treating every error as
+		// deletion let a transient failure silently drop the resource from state,
+		// which Terraform then recreates.
+		if errors.Is(err, client.ErrNotFound) {
+			d.SetId("")
+			return nil
+		}
+		return diag.Errorf("error reading Karbon private registry %s: %s", d.Id(), err)
 	}
-	if err := d.Set("name", *resp.Name); err != nil {
+	if err := d.Set("name", utils.StringValue(resp.Name)); err != nil {
 		return diag.Errorf("error setting name for Karbon private registry %s: %s", d.Id(), err)
 	}
-	if err := d.Set("endpoint", *resp.Endpoint); err != nil {
+	if err := d.Set("endpoint", utils.StringValue(resp.Endpoint)); err != nil {
 		return diag.Errorf("error setting endpoint for Karbon private registry %s: %s", d.Id(), err)
 	}
-	d.SetId(*resp.UUID)
+	d.SetId(utils.StringValue(resp.UUID))
 	return nil
 }
 
@@ -172,8 +181,11 @@ func resourceNutanixKarbonPrivateRegistryExists(d *schema.ResourceData, meta int
 	}
 	_, err := conn.PrivateRegistry.GetKarbonPrivateRegistry(name.(string))
 	if err != nil {
-		d.SetId("")
-		return false, nil
+		if errors.Is(err, client.ErrNotFound) {
+			d.SetId("")
+			return false, nil
+		}
+		return false, err
 	}
 	return true, nil
 }

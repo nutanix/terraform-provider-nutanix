@@ -159,7 +159,7 @@ func dataSourceNodeNetworkDetailsRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if setErr := d.Set("nodes", nodes); setErr != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(setErr)
 	}
 
 	d.SetId(resource.UniqueId())

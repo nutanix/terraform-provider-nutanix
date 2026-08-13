@@ -117,10 +117,10 @@ func ResourceNutanixCategoriesV2Create(ctx context.Context, d *schema.ResourceDa
 			"INTERNAL": four,
 		}
 
-		pInt := subMap[types.(string)]
-		p := import1.CategoryType(pInt.(int))
-
-		input.Type = &p
+		if pInt, ok := subMap[types.(string)].(int); ok {
+			p := import1.CategoryType(pInt)
+			input.Type = &p
+		}
 	}
 	if desc, ok := d.GetOk("description"); ok {
 		input.Description = utils.StringPtr(desc.(string))
@@ -198,9 +198,10 @@ func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceDa
 			"INTERNAL": four,
 		}
 
-		pInt := subMap[d.Get("type").(string)]
-		p := import1.CategoryType(pInt.(int))
-		updatedInput.Type = &p
+		if pInt, ok := subMap[d.Get("type").(string)].(int); ok {
+			p := import1.CategoryType(pInt)
+			updatedInput.Type = &p
+		}
 	}
 	if d.HasChange("owner_uuid") {
 		updatedInput.OwnerUuid = utils.StringPtr(d.Get("owner_uuid").(string))
@@ -208,7 +209,7 @@ func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceDa
 
 	_, er := conn.CategoriesAPIInstance.UpdateCategoryById(utils.StringPtr(d.Id()), &updatedInput)
 	if er != nil {
-		return diag.Errorf("error while updating categories : %v", err)
+		return diag.Errorf("error while updating categories : %v", er)
 	}
 	log.Println("[DEBUG] Category updated successfully")
 	return ResourceNutanixCategoriesV2Read(ctx, d, meta)

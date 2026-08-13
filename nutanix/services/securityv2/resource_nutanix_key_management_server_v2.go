@@ -302,14 +302,14 @@ func ResourceNutanixKeyManagementServerV2Update(ctx context.Context, d *schema.R
 
 	// Update name if it has changed
 	if d.HasChange("name") {
-		if v, ok := d.GetOk("name"); ok {
+		if v, hasName := d.GetOk("name"); hasName {
 			updateSpec.Name = utils.StringPtr(v.(string))
 		}
 	}
 
 	// Update access_information if it has changed
 	if d.HasChange("access_information") {
-		if v, ok := d.GetOk("access_information"); ok {
+		if v, hasAccessInfo := d.GetOk("access_information"); hasAccessInfo {
 			accessInfo, expandErr := expandAccessInformation(v.([]interface{}))
 			if expandErr != nil {
 				return diag.FromErr(expandErr)
@@ -362,8 +362,8 @@ func ResourceNutanixKeyManagementServerV2Update(ctx context.Context, d *schema.R
 				accessInfo = azure
 			}
 
-			if err := updateSpec.SetAccessInformation(accessInfo); err != nil {
-				return diag.FromErr(err)
+			if setErr := updateSpec.SetAccessInformation(accessInfo); setErr != nil {
+				return diag.FromErr(setErr)
 			}
 		}
 	}
@@ -469,8 +469,8 @@ func expandAccessInformation(accessInfo []interface{}) (interface{}, error) {
 	}
 
 	if len(azureList) > 0 {
-		azureMap, ok := azureList[0].(map[string]interface{})
-		if !ok {
+		azureMap, isAzureMap := azureList[0].(map[string]interface{})
+		if !isAzureMap {
 			return nil, fmt.Errorf("azure_key_vault must be a map")
 		}
 

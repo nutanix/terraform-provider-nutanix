@@ -645,9 +645,10 @@ func expandOneOfGuestCustomizationParamsConfig(pr interface{}) *config.OneOfGues
 					"FRESH":    two,
 					"PREPARED": three,
 				}
-				pVal := subMap[installType.(string)]
-				p := config.InstallType(pVal.(int))
-				sysPrepInput.InstallType = &p
+				if pVal, ok := subMap[installType.(string)].(int); ok {
+					p := config.InstallType(pVal)
+					sysPrepInput.InstallType = &p
+				}
 			}
 			if sysScript, ok := val["sysprep_script"]; ok {
 				sysPrepInput.SysprepScript = expandOneOfSysprepSysprepScript(sysScript)
@@ -665,9 +666,10 @@ func expandOneOfGuestCustomizationParamsConfig(pr interface{}) *config.OneOfGues
 				subMap := map[string]interface{}{
 					"CONFIG_DRIVE_V2": two,
 				}
-				pVal := subMap[ds.(string)]
-				p := config.CloudInitDataSourceType(pVal.(int))
-				cloud.DatasourceType = &p
+				if pVal, ok := subMap[ds.(string)].(int); ok {
+					p := config.CloudInitDataSourceType(pVal)
+					cloud.DatasourceType = &p
+				}
 			}
 			if meta, ok := val["metadata"]; ok && len(meta.(string)) > 0 {
 				cloud.Metadata = utils.StringPtr(meta.(string))
