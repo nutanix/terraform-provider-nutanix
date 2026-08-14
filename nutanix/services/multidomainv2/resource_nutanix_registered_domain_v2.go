@@ -3,21 +3,21 @@ package multidomainv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import7 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/models/multidomain/v4/common"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/models/multidomain/v4/config"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/models/multidomain/v4/request/registereddomains"
 	multidomainPrism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/models/prism/v4/config"
-	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
-	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	commonUtils "github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/multidomain"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -33,8 +33,7 @@ func ResourceNutanixRegisteredDomainV2() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 			},
 			"dns_name": {
 				Type:     schema.TypeString,
@@ -48,13 +47,11 @@ func ResourceNutanixRegisteredDomainV2() *schema.Resource {
 			},
 			"domain_ext_id": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 			},
 			"location_ext_id": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 			},
 			"credential_issuer": {
 				Type:     schema.TypeString,
@@ -218,7 +215,7 @@ func schemaRegisteredDomainTunnel() *schema.Resource {
 }
 
 func ResourceNutanixRegisteredDomainV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).MultidomainAPI
+	conn := meta.(*conns.Client).NCDomainManagementAPI
 
 	body := expandRegisteredDomain(d)
 
@@ -238,39 +235,52 @@ func ResourceNutanixRegisteredDomainV2Create(ctx context.Context, d *schema.Reso
 		return diag.Errorf("create registered domain response did not contain task reference")
 	}
 	taskUUID := taskRef.ExtId
+	log.Printf("[DEBUG] Task UUID: %s", taskUUID)
 
-	taskconn := meta.(*conns.Client).PrismAPI
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: commonUtils.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+	// Wait for the task to complete
+	// Nutanix Central Task API is not yet GA'ed/ not avilable in SDK. So depending on the list api to check if the domain registration is completed.
+	listReq := import1.ListRegisteredDomainsRequest{
+		Filter_: utils.StringPtr(fmt.Sprintf("name eq '%s'", utils.StringValue(body.Name))),
+		Limit_:  utils.IntPtr(1),
 	}
-	if _, errWait := stateConf.WaitForStateContext(ctx); errWait != nil {
-		return diag.Errorf("error waiting for registered domain create task (%s): %s", utils.StringValue(taskUUID), errWait)
-	}
+	domainName := utils.StringValue(body.Name)
+	timeout := time.NewTimer(3 * time.Minute)
+	defer timeout.Stop()
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
 
-	getTaskReq := import3.GetTaskByIdRequest{ExtId: taskUUID}
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskReq)
-	if err != nil {
-		return diag.Errorf("error fetching registered domain create task: %v", err)
-	}
-	taskDetails, ok := taskResp.Data.GetValue().(prismConfig.Task)
-	if !ok {
-		return diag.Errorf("error parsing task response")
-	}
+	for {
+		log.Printf("[DEBUG] Polling registered domains for name %q", domainName)
+		listResp, err := conn.RegisteredDomains.ListRegisteredDomains(ctx, &listReq)
+		if err != nil {
+			return diag.Errorf("error while listing registered domains: %v", err)
+		}
 
-	uuid, err := commonUtils.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeRegisteredDomain, "Registered domain")
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	d.SetId(utils.StringValue(uuid))
+		if listResp.Data != nil {
+			registeredDomains, ok := listResp.Data.GetValue().([]config.RegisteredDomain)
+			if !ok {
+				return diag.Errorf("unexpected registered domains list response")
+			}
+			for _, registeredDomain := range registeredDomains {
+				if utils.StringValue(registeredDomain.Name) == domainName {
+					d.SetId(utils.StringValue(registeredDomain.ExtId))
+					return ResourceNutanixRegisteredDomainV2Read(ctx, d, meta)
+				}
+			}
+		}
 
-	return ResourceNutanixRegisteredDomainV2Read(ctx, d, meta)
+		select {
+		case <-ctx.Done():
+			return diag.FromErr(ctx.Err())
+		case <-timeout.C:
+			return diag.Errorf("registered domain %q did not appear within 3 minutes", domainName)
+		case <-ticker.C:
+		}
+	}
 }
 
 func ResourceNutanixRegisteredDomainV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).MultidomainAPI
+	conn := meta.(*conns.Client).NCDomainManagementAPI
 
 	extID := d.Id()
 	getReq := import1.GetRegisteredDomainByIdRequest{
@@ -286,7 +296,10 @@ func ResourceNutanixRegisteredDomainV2Read(ctx context.Context, d *schema.Resour
 }
 
 func ResourceNutanixRegisteredDomainV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).MultidomainAPI
+	conn := meta.(*conns.Client).NCDomainManagementAPI
+	if d.HasChange("domain_ext_id") {
+		return diag.Errorf("domain_ext_id is not allowed to be updated")
+	}
 
 	extID := d.Id()
 	getReq := import1.GetRegisteredDomainByIdRequest{
@@ -296,47 +309,21 @@ func ResourceNutanixRegisteredDomainV2Update(ctx context.Context, d *schema.Reso
 	if err != nil {
 		return diag.Errorf("error while fetching registered domain: %v", err)
 	}
-	updateSpec := resp.Data.GetValue().(config.RegisteredDomain)
-
+	getSpec := resp.Data.GetValue().(config.RegisteredDomain)
+	updateSpecNew := config.NewRegisteredDomain()
 	if d.HasChange("name") {
-		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
-	}
-	if d.HasChange("dns_name") {
-		updateSpec.DnsName = utils.StringPtr(d.Get("dns_name").(string))
-	}
-	if d.HasChange("fqdn") {
-		updateSpec.Fqdn = utils.StringPtr(d.Get("fqdn").(string))
-	}
-	if d.HasChange("domain_ext_id") {
-		updateSpec.DomainExtId = utils.StringPtr(d.Get("domain_ext_id").(string))
+		updateSpecNew.Name = utils.StringPtr(d.Get("name").(string))
+	} else {
+		updateSpecNew.Name = getSpec.Name
 	}
 	if d.HasChange("location_ext_id") {
-		updateSpec.LocationExtId = utils.StringPtr(d.Get("location_ext_id").(string))
+		updateSpecNew.LocationExtId = utils.StringPtr(d.Get("location_ext_id").(string))
+	} else {
+		updateSpecNew.LocationExtId = getSpec.LocationExtId
 	}
-	if d.HasChange("credential_issuer") {
-		updateSpec.CredentialIssuer = utils.StringPtr(d.Get("credential_issuer").(string))
-	}
-	if d.HasChange("created_by") {
-		updateSpec.CreatedBy = utils.StringPtr(d.Get("created_by").(string))
-	}
-	if d.HasChange("api_credential_status") {
-		updateSpec.ApiCredentialStatus = commonUtils.ExpandEnum[config.ApiCredentialStatus](d.Get("api_credential_status").(string))
-	}
-	if d.HasChange("registration_state") {
-		updateSpec.RegistrationState = commonUtils.ExpandEnum[import7.RegistrationState](d.Get("registration_state").(string))
-	}
-	if d.HasChange("registered_time") {
-		updateSpec.RegisteredTime = expandRegisteredDomainTime(d.Get("registered_time").(string))
-	}
-	if d.HasChange("platform_data") {
-		updateSpec.PlatformData = expandRegisteredDomainPlatformData(d.Get("platform_data").([]interface{}))
-	}
-	if d.HasChange("registration_config") {
-		updateSpec.RegistrationConfig = expandRegisteredDomainRegistrationConfig(d.Get("registration_config").([]interface{}))
-	}
-	if d.HasChange("tunnel") {
-		updateSpec.Tunnel = expandRegisteredDomainTunnel(d.Get("tunnel").([]interface{}))
-	}
+
+	// Domain ExtId is same as ExtId.
+	updateSpecNew.DomainExtId = getSpec.ExtId
 
 	getRespBeforeUpdate, err := conn.RegisteredDomains.GetRegisteredDomainById(ctx, &getReq)
 	if err != nil {
@@ -348,10 +335,10 @@ func ResourceNutanixRegisteredDomainV2Update(ctx context.Context, d *schema.Reso
 
 	updateReq := import1.UpdateRegisteredDomainByIdRequest{
 		ExtId: utils.StringPtr(extID),
-		Body:  &updateSpec,
+		Body:  updateSpecNew,
 	}
 
-	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
+	aJSON, _ := json.MarshalIndent(updateSpecNew, "", "  ")
 	log.Printf("[DEBUG] Update RegisteredDomain Body: %s", string(aJSON))
 	updateResp, err := conn.RegisteredDomains.UpdateRegisteredDomainById(ctx, &updateReq, args)
 	if err != nil {
@@ -363,23 +350,17 @@ func ResourceNutanixRegisteredDomainV2Update(ctx context.Context, d *schema.Reso
 		return diag.Errorf("update registered domain response did not contain task reference")
 	}
 	taskUUID := taskRef.ExtId
+	log.Printf("[DEBUG] Task UUID: %s", utils.StringValue(taskUUID))
 
-	taskconn := meta.(*conns.Client).PrismAPI
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: commonUtils.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
-	}
-	if _, errWait := stateConf.WaitForStateContext(ctx); errWait != nil {
-		return diag.Errorf("error waiting for registered domain update task (%s): %s", utils.StringValue(taskUUID), errWait)
+	if err := waitForRegisteredDomainTask(ctx, conn, utils.StringValue(taskUUID), "update"); err != nil {
+		return diag.FromErr(err)
 	}
 
 	return ResourceNutanixRegisteredDomainV2Read(ctx, d, meta)
 }
 
 func ResourceNutanixRegisteredDomainV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).MultidomainAPI
+	conn := meta.(*conns.Client).NCDomainManagementAPI
 
 	extID := d.Id()
 	getReq := import1.GetRegisteredDomainByIdRequest{
@@ -406,19 +387,35 @@ func ResourceNutanixRegisteredDomainV2Delete(ctx context.Context, d *schema.Reso
 		return diag.Errorf("delete registered domain response did not contain task reference")
 	}
 	taskUUID := taskRef.ExtId
+	log.Printf("[DEBUG] Task UUID: %s", utils.StringValue(taskUUID))
 
-	taskconn := meta.(*conns.Client).PrismAPI
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: commonUtils.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutDelete),
+	if err := waitForRegisteredDomainTask(ctx, conn, utils.StringValue(taskUUID), "delete"); err != nil {
+		return diag.FromErr(err)
 	}
-	if _, errWait := stateConf.WaitForStateContext(ctx); errWait != nil {
-		return diag.Errorf("error waiting for registered domain delete task (%s): %s", utils.StringValue(taskUUID), errWait)
-	}
-
 	d.SetId("")
+	return nil
+}
+
+func waitForRegisteredDomainTask(
+	ctx context.Context,
+	conn *multidomain.NCDomainManagementClient,
+	taskUUID string,
+	operation string,
+) error {
+	log.Printf("[DEBUG] Waiting for registered domain task %s", taskUUID)
+	taskStatus, err := conn.Tasks.WaitForTerminalState(ctx, taskUUID, 10*time.Second)
+	if err != nil {
+		return fmt.Errorf("waiting for registered domain %s task %q: %w", operation, taskUUID, err)
+	}
+	if !strings.EqualFold(taskStatus.State(), "SUCCEEDED") {
+		return fmt.Errorf(
+			"registered domain %s task %q ended with status %s: %s",
+			operation,
+			taskUUID,
+			taskStatus.State(),
+			taskStatus.Data.SubStateInfo.ErrorDetail,
+		)
+	}
 	return nil
 }
 
@@ -577,7 +574,7 @@ func setRegisteredDomainToResourceData(d *schema.ResourceData, rd *config.Regist
 	if err := d.Set("fqdn", utils.StringValue(rd.Fqdn)); err != nil {
 		return err
 	}
-	if err := d.Set("domain_ext_id", utils.StringValue(rd.DomainExtId)); err != nil {
+	if err := d.Set("domain_ext_id", utils.StringValue(rd.ExtId)); err != nil {
 		return err
 	}
 	if err := d.Set("location_ext_id", utils.StringValue(rd.LocationExtId)); err != nil {

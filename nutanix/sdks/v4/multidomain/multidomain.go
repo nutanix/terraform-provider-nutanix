@@ -10,7 +10,6 @@ import (
 type Client struct {
 	Projects          *api.ProjectsServiceApi
 	ResourceGroups    *api.ResourceGroupsServiceApi
-	RegisteredDomains *api.RegisteredDomainsServiceApi
 	APIClientInstance *multidomainClient.ApiClient
 }
 
@@ -32,7 +31,6 @@ func NewMultidomainClient(credentials client.Credentials) (*Client, error) {
 	f := &Client{
 		Projects:          api.NewProjectsServiceApi(baseClient),
 		ResourceGroups:    api.NewResourceGroupsServiceApi(baseClient),
-		RegisteredDomains: api.NewRegisteredDomainsServiceApi(baseClient),
 		APIClientInstance: baseClient,
 	}
 

@@ -162,7 +162,7 @@ func schemaDatasourceRegisteredDomainTunnel() *schema.Resource {
 }
 
 func DatasourceNutanixRegisteredDomainV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).MultidomainAPI
+	conn := meta.(*conns.Client).NCDomainManagementAPI
 
 	extID := d.Get("ext_id").(string)
 	getReq := import1.GetRegisteredDomainByIdRequest{

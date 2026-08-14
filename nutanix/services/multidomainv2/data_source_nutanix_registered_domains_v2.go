@@ -49,7 +49,7 @@ func DatasourceNutanixRegisteredDomainsV2() *schema.Resource {
 }
 
 func DatasourceNutanixRegisteredDomainsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).MultidomainAPI
+	conn := meta.(*conns.Client).NCDomainManagementAPI
 
 	listReq := import1.ListRegisteredDomainsRequest{}
 	if v, ok := d.GetOk("page"); ok {
@@ -107,7 +107,7 @@ func flattenRegisteredDomains(registeredDomains []config.RegisteredDomain) []map
 			"name":                  utils.StringValue(rd.Name),
 			"dns_name":              utils.StringValue(rd.DnsName),
 			"fqdn":                  utils.StringValue(rd.Fqdn),
-			"domain_ext_id":         utils.StringValue(rd.DomainExtId),
+			"domain_ext_id":         utils.StringValue(rd.ExtId),
 			"location_ext_id":       utils.StringValue(rd.LocationExtId),
 			"credential_issuer":     utils.StringValue(rd.CredentialIssuer),
 			"created_by":            utils.StringValue(rd.CreatedBy),

@@ -32,7 +32,7 @@ func ResourceNutanixRegisteredDomainRefreshApiCredentialsV2() *schema.Resource {
 }
 
 func ResourceNutanixRegisteredDomainRefreshApiCredentialsV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).MultidomainAPI
+	conn := meta.(*conns.Client).NCDomainManagementAPI
 
 	extID := d.Get("ext_id").(string)
 
