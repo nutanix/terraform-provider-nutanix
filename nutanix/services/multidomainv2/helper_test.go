@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/models/multidomain/v4/request/projects"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/models/multidomain/v4/request/registereddomains"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/models/multidomain/v4/request/resourcegroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
@@ -16,6 +17,27 @@ import (
 
 const resourceNameProjectV2 = "nutanix_project_v2.test"
 const resourceNameResourceGroupV2 = "nutanix_resource_group_v2.test"
+const resourceNameRegisteredDomainV2 = "nutanix_registered_domain_v2.test"
+
+func testRegisteredDomainV2CheckDestroy(state *terraform.State) error {
+	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	client := conn.MultidomainAPI.RegisteredDomains
+	ctx := context.Background()
+
+	for _, rs := range state.RootModule().Resources {
+		if rs.Type != "nutanix_registered_domain_v2" {
+			continue
+		}
+		getReq := import3.GetRegisteredDomainByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		_, err := client.GetRegisteredDomainById(ctx, &getReq)
+		if err == nil {
+			return fmt.Errorf("registered domain still exists: %s", rs.Primary.ID)
+		}
+	}
+	return nil
+}
 
 func testProjectV2CheckDestroy(state *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
