@@ -1009,13 +1009,13 @@ def downgrade_lcm(client: PcClient, env: Env) -> bool:
     #      the `test_downgrade` precheck and fails the whole inventory (LIF-20039).
     #      When pc_prep.lcm.framework_url is set, point LCM at a build whose
     #      framework version is >= the installed one so the precheck passes.
-    framework_url = env.get("PC_PREP_LCM_FRAMEWORK_URL")
-    if framework_url:
-        if not _set_lcm_source_url(host, ssh_user, ssh_pass, framework_url):
-            logger.error("Not running inventory: the LCM framework URL could not be set, so "
-                         "the pre-inventory framework auto-update would fail test_downgrade "
-                         "(LIF-20039) again.")
-            return False
+    # framework_url = env.get("PC_PREP_LCM_FRAMEWORK_URL")
+    # if framework_url:
+    #     if not _set_lcm_source_url(host, ssh_user, ssh_pass, framework_url):
+    #         logger.error("Not running inventory: the LCM framework URL could not be set, so "
+    #                      "the pre-inventory framework auto-update would fail test_downgrade "
+    #                      "(LIF-20039) again.")
+    #         return False
 
     # 4. Kick off an LCM inventory and wait for it.
     timeout = int(env.get("PC_PREP_LCM_INVENTORY_TIMEOUT", "1800") or 1800)

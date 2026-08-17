@@ -28,10 +28,6 @@ func ResourceNutanixVMHostAffinityPolicyV2() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"ext_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -42,6 +38,24 @@ func ResourceNutanixVMHostAffinityPolicyV2() *schema.Resource {
 				Optional: true,
 			},
 			"create_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"vm_categories": {
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"host_categories": {
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"ext_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,20 +73,6 @@ func ResourceNutanixVMHostAffinityPolicyV2() *schema.Resource {
 			"last_updated_by": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"vm_categories": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"host_categories": {
-				Type:     schema.TypeSet,
-				Required: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

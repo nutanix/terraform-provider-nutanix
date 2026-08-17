@@ -67,6 +67,7 @@ import logging
 import os
 import re
 import shutil
+import socket
 import ssl
 import subprocess
 import sys
@@ -289,9 +290,10 @@ class IamClient:
 
     def _request(self, method: str, url: str, body: dict | None = None) -> dict:
         data = json.dumps(body).encode() if body is not None else None
+        redacted_body = _truncate(json.dumps(_redact(body))) if body is not None else "<none>"
         if body is not None:
             logger.debug("HTTP %s %s\n  request: %s", method, url,
-                         _truncate(json.dumps(_redact(body))))
+                         redacted_body)
         else:
             logger.debug("HTTP %s %s", method, url)
         req = urllib.request.Request(url, data=data, method=method)
@@ -299,20 +301,35 @@ class IamClient:
         req.add_header("Accept", "application/json")
         if data is not None:
             req.add_header("Content-Type", "application/json")
+        started = time.monotonic()
         try:
             with urllib.request.urlopen(req, context=self.ctx, timeout=60) as resp:
                 raw = resp.read().decode()
                 status = getattr(resp, "status", resp.getcode())
         except urllib.error.HTTPError as exc:
+            elapsed = time.monotonic() - started
             detail = exc.read().decode(errors="replace")
-            logger.error("HTTP %s %s -> %d\n  response: %s", method, url, exc.code,
-                         _truncate(detail))
+            logger.error("HTTP %s %s -> %d after %.1fs\n  request: %s\n  response: %s",
+                         method, url, exc.code, elapsed, redacted_body, _truncate(detail))
             raise RuntimeError(f"{method} {url} -> HTTP {exc.code}: {detail}") from None
+        except (socket.timeout, TimeoutError) as exc:
+            elapsed = time.monotonic() - started
+            logger.error("HTTP %s %s -> timeout after %.1fs (timeout=60s): %s\n  request: %s",
+                         method, url, elapsed, exc, redacted_body)
+            raise RuntimeError(f"{method} {url} -> timeout after {elapsed:.1f}s: {exc}") from None
         except urllib.error.URLError as exc:
-            logger.error("HTTP %s %s -> connection error: %s", method, url, exc.reason)
+            elapsed = time.monotonic() - started
+            if isinstance(exc.reason, (socket.timeout, TimeoutError)):
+                logger.error("HTTP %s %s -> timeout after %.1fs (timeout=60s): %s\n  request: %s",
+                             method, url, elapsed, exc.reason, redacted_body)
+                raise RuntimeError(
+                    f"{method} {url} -> timeout after {elapsed:.1f}s: {exc.reason}") from None
+            logger.error("HTTP %s %s -> connection error after %.1fs: %s\n  request: %s",
+                         method, url, elapsed, exc.reason, redacted_body)
             raise RuntimeError(f"{method} {url} -> connection error: {exc.reason}") from None
-        logger.debug("HTTP %s %s -> %s (%d bytes)\n  response: %s", method, url, status,
-                     len(raw), _safe_json(raw) if raw.strip() else "<empty>")
+        elapsed = time.monotonic() - started
+        logger.debug("HTTP %s %s -> %s in %.1fs (%d bytes)\n  response: %s", method, url,
+                     status, elapsed, len(raw), _safe_json(raw) if raw.strip() else "<empty>")
         return json.loads(raw) if raw.strip() else {}
 
     def _send(self, method: str, url: str, body: dict | None = None,
@@ -322,8 +339,9 @@ class IamClient:
         http.client message object. Pass quiet=True to log expected failures
         (e.g. version probes) at debug level instead of error."""
         data = json.dumps(body).encode() if body is not None else None
+        redacted_body = _truncate(json.dumps(_redact(body))) if body is not None else "<none>"
         logger.debug("HTTP %s %s%s", method, url,
-                     "" if body is None else f"\n  request: {_truncate(json.dumps(_redact(body)))}")
+                     "" if body is None else f"\n  request: {redacted_body}")
         req = urllib.request.Request(url, data=data, method=method)
         req.add_header("Authorization", self.auth_header)
         req.add_header("Accept", "application/json")
@@ -332,19 +350,38 @@ class IamClient:
         for key, value in (headers or {}).items():
             if value is not None:
                 req.add_header(key, value)
+        started = time.monotonic()
         try:
             with urllib.request.urlopen(req, context=self.ctx, timeout=60) as resp:
                 raw = resp.read().decode()
                 resp_headers = resp.headers
         except urllib.error.HTTPError as exc:
+            elapsed = time.monotonic() - started
             detail = exc.read().decode(errors="replace")
             (logger.debug if quiet else logger.error)(
-                "HTTP %s %s -> %d\n  response: %s", method, url, exc.code, _truncate(detail))
+                "HTTP %s %s -> %d after %.1fs\n  request: %s\n  response: %s",
+                method, url, exc.code, elapsed, redacted_body, _truncate(detail))
             raise RuntimeError(f"{method} {url} -> HTTP {exc.code}: {detail}") from None
-        except urllib.error.URLError as exc:
+        except (socket.timeout, TimeoutError) as exc:
+            elapsed = time.monotonic() - started
             (logger.debug if quiet else logger.error)(
-                "HTTP %s %s -> connection error: %s", method, url, exc.reason)
+                "HTTP %s %s -> timeout after %.1fs (timeout=60s): %s\n  request: %s",
+                method, url, elapsed, exc, redacted_body)
+            raise RuntimeError(f"{method} {url} -> timeout after {elapsed:.1f}s: {exc}") from None
+        except urllib.error.URLError as exc:
+            elapsed = time.monotonic() - started
+            if isinstance(exc.reason, (socket.timeout, TimeoutError)):
+                (logger.debug if quiet else logger.error)(
+                    "HTTP %s %s -> timeout after %.1fs (timeout=60s): %s\n  request: %s",
+                    method, url, elapsed, exc.reason, redacted_body)
+                raise RuntimeError(
+                    f"{method} {url} -> timeout after {elapsed:.1f}s: {exc.reason}") from None
+            (logger.debug if quiet else logger.error)(
+                "HTTP %s %s -> connection error after %.1fs: %s\n  request: %s",
+                method, url, elapsed, exc.reason, redacted_body)
             raise RuntimeError(f"{method} {url} -> connection error: {exc.reason}") from None
+        logger.debug("HTTP %s %s -> completed in %.1fs (%d bytes)", method, url,
+                     time.monotonic() - started, len(raw))
         return (json.loads(raw) if raw.strip() else {}), resp_headers
 
     def share_directory_service_with_all_projects(self, ext_id: str) -> None:
@@ -868,20 +905,43 @@ def build_directory_service(client: IamClient, env: Env, prefix: str,
             },
         }
         payload = {k: v for k, v in payload.items() if v not in ("", None)}
-        entity = client.get_or_create("directory-services", "name", service_name, payload,
-                                      "directory service", resolvers=[("domainName", domain_name)])
-        ext_id = entity.get("extId", "")
+        try:
+            entity = client.get_or_create("directory-services", "name", service_name, payload,
+                                          "directory service", resolvers=[("domainName", domain_name)])
+            ext_id = entity.get("extId", "")
+        except RuntimeError as exc:
+            logger.warning(
+                "IAM: directory service '%s' could not be registered; continuing with "
+                "values only. Dependent AD user/group ext_ids will be left empty. Error: %s",
+                service_name, exc)
+            ext_id = ""
 
         # Role membership targets these AD identities by IAM extId, so they must
         # exist as IAM user/user-group entities (a directory search alone yields
         # an id the role-membership API rejects with IAM-20027). Create the
         # references and record the resulting IAM extIds.
         users_map = {}
-        for user in env.list(f"{prefix}_USERS"):
-            users_map[user] = materialize_ad_user(client, ext_id, user)
+        if ext_id:
+            for user in env.list(f"{prefix}_USERS"):
+                try:
+                    users_map[user] = materialize_ad_user(client, ext_id, user)
+                except RuntimeError as exc:
+                    logger.warning(
+                        "IAM: AD user '%s' in directory service '%s' could not be "
+                        "materialized; leaving its ext_id empty. Error: %s",
+                        user, service_name, exc)
+                    users_map[user] = ""
         groups_map = {}
-        for group in env.list(f"{prefix}_GROUPS"):
-            groups_map[group] = materialize_ad_group(client, ext_id, group)
+        if ext_id:
+            for group in env.list(f"{prefix}_GROUPS"):
+                try:
+                    groups_map[group] = materialize_ad_group(client, ext_id, group)
+                except RuntimeError as exc:
+                    logger.warning(
+                        "IAM: AD group '%s' in directory service '%s' could not be "
+                        "materialized; leaving its ext_id empty. Error: %s",
+                        group, service_name, exc)
+                    groups_map[group] = ""
 
     block = {
         "name": name,
@@ -928,7 +988,14 @@ def build_user(client: IamClient, env: Env, idp_ext_id: str,
         payload["idpId"] = directory_service_id
     payload = {k: v for k, v in payload.items() if v not in ("", None)}
 
-    entity = client.get_or_create("users", "username", name, payload, "user")
+    try:
+        entity = client.get_or_create("users", "username", name, payload, "user")
+        ext_id = entity.get("extId", "")
+    except RuntimeError as exc:
+        logger.warning(
+            "IAM: user '%s' could not be created/resolved; continuing with values "
+            "only and leaving ext_id empty. Error: %s", name, exc)
+        ext_id = ""
     return {
         "name": name,
         "idp_id": idp_id,
@@ -939,7 +1006,7 @@ def build_user(client: IamClient, env: Env, idp_ext_id: str,
         "region": env.get("IAM_USER_REGION"),
         "password": env.get("IAM_USER_PASSWORD"),
         "force_reset_password": env.bool("IAM_USER_FORCE_RESET"),
-        "ext_id": entity.get("extId", ""),
+        "ext_id": ext_id,
     }
 
 
@@ -963,12 +1030,19 @@ def build_user_group(client: IamClient, env: Env,
         payload["distinguishedName"] = distinguished_name
     payload = {k: v for k, v in payload.items() if v not in ("", None)}
 
-    entity = client.get_or_create("user-groups", "name", name, payload, "user group")
+    try:
+        entity = client.get_or_create("user-groups", "name", name, payload, "user group")
+        ext_id = entity.get("extId", "")
+    except RuntimeError as exc:
+        logger.warning(
+            "IAM: user group '%s' could not be created/resolved; continuing with "
+            "values only and leaving ext_id empty. Error: %s", name, exc)
+        ext_id = ""
     return {
         "name": name,
         "saml_name": env.get("IAM_GROUP_SAML_NAME") or name,
         "distinguished_name": distinguished_name,
-        "ext_id": entity.get("extId", ""),
+        "ext_id": ext_id,
     }
 
 
@@ -1007,9 +1081,15 @@ def build_openldap_directory(client: IamClient, env: Env) -> str:
         "groupSearchType": env.get("IAM_OPENLDAP_GROUP_SEARCH_TYPE"),
     }
     payload = _prune_empty(payload)
-    entity = client.get_or_create("directory-services", "name", service_name, payload,
-                                  "OpenLDAP directory", resolvers=[("domainName", domain)])
-    return entity.get("extId", "")
+    try:
+        entity = client.get_or_create("directory-services", "name", service_name, payload,
+                                      "OpenLDAP directory", resolvers=[("domainName", domain)])
+        return entity.get("extId", "")
+    except RuntimeError as exc:
+        logger.warning(
+            "IAM: OpenLDAP directory '%s' could not be registered; continuing without "
+            "OpenLDAP-discovered user/group values. Error: %s", service_name, exc)
+        return ""
 
 
 def discover_ldap_group(client: IamClient, ds_ext_id: str) -> dict | None:
@@ -2567,8 +2647,8 @@ def build_v3_test_config(env: Env, existing: dict, dry_run: bool = False,
                          discover: bool = True) -> dict:
     """Build the fields for the legacy test_config.json (create_json_v3.tf).
 
-    subnet_name / ad_rule_target are static config.yaml inputs. The rest is
-    discovered from the local PC (PC_ENDPOINT) and the AZ remote PC
+    subnet_name / ad_rule_target / self_service are static config.yaml inputs.
+    The rest is discovered from the local PC (PC_ENDPOINT) and the AZ remote PC
     (AZ_REMOTE_PC_IP): default_container_name, account_uuid, the users'
     directory_service_uuid, and protection_policy.{local,destination}_az. Fields
     that cannot be discovered are omitted so the existing file value is kept.
@@ -2583,6 +2663,23 @@ def build_v3_test_config(env: Env, existing: dict, dry_run: bool = False,
     ad_values = env.get("TEST_CONFIG_AD_RULE_TARGET_VALUES")
     if ad_name or ad_values:
         out["ad_rule_target"] = {"name": ad_name, "values": ad_values}
+    self_service = {
+        "bp_name_with_snapshot_config": (
+            env.get("TEST_CONFIG_SELF_SERVICE_BP_NAME_WITH_SNAPSHOT_CONFIG")
+            or env.get("PC_PREP_SELF_SERVICE_BLUEPRINT2_NAME")
+        ),
+        "bp_name": (
+            env.get("TEST_CONFIG_SELF_SERVICE_BP_NAME")
+            or env.get("PC_PREP_SELF_SERVICE_BLUEPRINT1_NAME")
+        ),
+        "app_name_with_snapshot_config": (
+            env.get("TEST_CONFIG_SELF_SERVICE_APP_NAME_WITH_SNAPSHOT_CONFIG")
+            or env.get("PC_PREP_SELF_SERVICE_BP2_APP_NAME")
+        ),
+    }
+    self_service = {k: v for k, v in self_service.items() if v}
+    if self_service:
+        out["self_service"] = self_service
 
     if not discover:
         log("test_config.json: filling static fields only (discovery disabled)")

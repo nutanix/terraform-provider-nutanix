@@ -28,10 +28,6 @@ func ResourceNutanixVMAntiAffinityPolicyV2() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"ext_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -39,6 +35,22 @@ func ResourceNutanixVMAntiAffinityPolicyV2() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
+			},
+			"categories": {
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"ext_id": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"create_time": {
@@ -59,13 +71,6 @@ func ResourceNutanixVMAntiAffinityPolicyV2() *schema.Resource {
 			"updated_by": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"categories": {
-				Type:     schema.TypeSet,
-				Required: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -99,6 +104,9 @@ func ResourceNutanixVMAntiAffinityPolicyV2Create(ctx context.Context, d *schema.
 	if cats, ok := d.GetOk("categories"); ok {
 		catStrings := common.ExpandListOfString(common.InterfaceToSlice(cats))
 		body.Categories = expandPolicyCategoryReference(catStrings)
+	}
+	if projectExtId, ok := d.GetOk("project_ext_id"); ok {
+		body.ProjectExtId = utils.StringPtr(projectExtId.(string))
 	}
 
 	aJSON, _ := json.MarshalIndent(body, "", " ")
@@ -205,7 +213,11 @@ func ResourceNutanixVMAntiAffinityPolicyV2Update(ctx context.Context, d *schema.
 			updateSpec.Categories = expandPolicyCategoryReference(catStrings)
 		}
 	}
-
+	if d.HasChange("project_ext_id") {
+		if projectExtId, ok := d.GetOk("project_ext_id"); ok {
+			updateSpec.ProjectExtId = utils.StringPtr(projectExtId.(string))
+		}
+	}
 	aJSON, _ := json.MarshalIndent(updateSpec, "", " ")
 	log.Printf("[DEBUG] VM Anti Affinity Policy Update Request Body: %s", string(aJSON))
 

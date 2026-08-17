@@ -1448,7 +1448,7 @@ func ResourceNutanixVMCloneV2Read(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("storage_config", flattenADSFVmStorageConfig(getResp.StorageConfig)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("disks", flattenDisk(getResp.Disks)); err != nil {
+	if err := d.Set("disks", flattenDisk(getResp.Disks, d)); err != nil {
 		log.Printf("[ERROR] error while setting disks : %v", err)
 		return diag.FromErr(err)
 	}

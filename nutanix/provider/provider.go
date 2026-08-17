@@ -540,6 +540,7 @@ func Provider() *schema.Provider {
 			"nutanix_snmp_user_v2":                            clustersv2.ResourceNutanixSnmpUserV2(),
 			"nutanix_snmp_trap_v2":                            clustersv2.ResourceNutanixSnmpTrapV2(),
 			"nutanix_snmp_config_v2":                          clustersv2.ResourceNutanixSnmpConfigV2(),
+			"nutanix_cluster_category_associations_v2":        clustersv2.ResourceNutanixClusterCategoriesV2(),
 			"nutanix_password_change_request_v2":              passwordmanagerv2.ResourceNutanixPasswordManagerV2(),
 			"nutanix_lcm_perform_inventory_v2":                lcmv2.ResourceNutanixLcmPerformInventoryV2(),
 			"nutanix_lcm_prechecks_v2":                        lcmv2.ResourceNutanixPreChecksV2(),
