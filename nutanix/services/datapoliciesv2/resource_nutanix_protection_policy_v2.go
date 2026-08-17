@@ -80,11 +80,6 @@ func ResourceNutanixProtectionPoliciesV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"project_ext_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -108,9 +103,6 @@ func ResourceNutanixProtectionPoliciesV2Create(ctx context.Context, d *schema.Re
 	}
 	if categoryIds, ok := d.GetOk("category_ids"); ok {
 		bodySpec.CategoryIds = commonUtils.ExpandListOfString(categoryIds.([]interface{}))
-	}
-	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
-		bodySpec.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
 	aJSON, _ := json.MarshalIndent(bodySpec, "", "  ")
 	log.Printf("[DEBUG] Create Protection Policy Body Spec: %s", string(aJSON))
@@ -208,17 +200,11 @@ func ResourceNutanixProtectionPoliciesV2Read(ctx context.Context, d *schema.Reso
 	if err := d.Set("owner_ext_id", getResp.OwnerExtId); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
-		return diag.FromErr(err)
-	}
 	return nil
 }
 
 func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataPoliciesAPI
-	if d.HasChange("project_ext_id") {
-		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
-	}
 	getProtectionPolicyByIdRequest := import2.GetProtectionPolicyByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}

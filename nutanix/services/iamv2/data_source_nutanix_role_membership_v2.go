@@ -25,11 +25,6 @@ func DatasourceNutanixRoleMembershipV2() *schema.Resource {
 				Computed: true,
 			},
 			"links": schemaForLinks(),
-			"authorization_policy_ext_id": {
-				Description: "External identifier of the authorization policy.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
 			"role_ext_id": {
 				Description: "External identifier of the role.",
 				Type:        schema.TypeString,
@@ -99,9 +94,6 @@ func DatasourceNutanixRoleMembershipV2Read(ctx context.Context, d *schema.Resour
 		return diag.FromErr(err)
 	}
 	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("authorization_policy_ext_id", utils.StringValue(getResp.AuthorizationPolicyExtId)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("role_ext_id", utils.StringValue(getResp.RoleExtId)); err != nil {
