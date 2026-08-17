@@ -70,7 +70,7 @@ pc:
 # Tunables for enabling Network Controller/Flow, NuCalm/DR, and Objects. All
 # optional -- sensible defaults are baked into the script.
 pc_prep:
-  objects:
+  #objects:
     # Objects has no dedicated enable API; prepare_pc launches it as a Marketplace
     # app, mirroring the Prism UI: it discovers the published "Objects" marketplace
     # item, fetches its blueprint template spec (which already carries this PC's
@@ -81,26 +81,14 @@ pc_prep:
     #                             #           (else auto-discovered by name + version)
     #                             #   pre-baked spec verbatim instead of discovering it
     # poll: true                  # set false to launch without waiting
-    poll_timeout_seconds: 3600    # Objects deploy is slow; wait up to 1h
+    #poll_timeout_seconds: 3600    # Objects deploy is slow; wait up to 1h
   lcm:
     # Version to downgrade the Policy Engine (Calm) LCM entity to, so the newer
     # version appears as an available upgrade for the lcm tests. Uses the SSH
     # creds (ssh.pc_username / ssh.pc_password) to reach the CVM. Requires sshpass.
     # Requires the `policy` step (Policy Engine) to have been deployed first.
-    downgrade_version: "4.1.0"
-    # LCM syncs its own framework from this URL at the start of every inventory.
-    # If the current URL advertises an OLDER framework than is installed, the
-    # pre-inventory auto-update fails the test_downgrade precheck (LIF-20039) and
-    # aborts inventory. Set framework_url (via configure_lcm -u over SSH) to a
-    # build whose framework version is >= the installed one. Leave empty to skip.
-    # NOTE: there is no supported way to disable the framework auto-update, and
-    # --disable_framework_upgrade_downgrade_check is unsafe (genesis crash-loop).
-    #
-    # Installed framework here is 3.4.x, so use the matching 3.4 QA-staging build.
-    # Alternatives (must be reachable from the PCVM; pick one matching your build):
-    #   master staging: http://download.nutanix.com/lcm/qa-staging/lcm-master/release
-    #   endor mirror:   http://endor.dyn.nutanix.com/builds/lcm-cci-builds/master/latest/release/
-    framework_url: "http://endor.dyn.nutanix.com/builds/lcm-cci-builds/master/latest/release/"
+    downgrade_version: "4.3.1"
+
   iscsi:
     # iSCSI-client VM (prepare_pc.py --only iscsi): creates a Linux VM from the
     # ubuntu image (images.ubuntu_image*), configures open-iscsi in-guest and
@@ -144,9 +132,9 @@ pc_prep:
     # Blueprint JSONs copied under testenv/payloads/ (uploaded via
     # /blueprints/import_file then patched with the resolved refs).
     blueprint1_file: testenv/payloads/test_terraform_bp.json
-    blueprint1_name: test_terraform_bp
+    blueprint1_name: &self_service_bp_name test_terraform_bp
     blueprint2_file: testenv/payloads/test_terraform_bp_with_snapshot_config.json
-    blueprint2_name: test_terraform_bp_with_snapshot_config
+    blueprint2_name: &self_service_bp_name_with_snapshot_config test_terraform_bp_with_snapshot_config
     blueprint_disk_size_mib: 40960
     # Guest image the blueprints deploy from. Omitted on purpose so it falls back
     # to images.ngt_image / images.ngt_image_url (the Rocky8 image the ngt step
@@ -159,7 +147,7 @@ pc_prep:
     # import + patch the blueprints.
     # Temporarily skipping app launch for now -- only import + patch blueprints.
     launch_apps: false
-    bp2_app_name: test_terraform_snapshot_restore_app
+    bp2_app_name: &self_service_app_name_with_snapshot_config test_terraform_snapshot_restore_app
     bp2_app_description: "Self-Service snapshot restore app for acceptance testing"
     bp2_action_name: Snapshot_s1
   flow:
@@ -337,7 +325,7 @@ az:
 iam:
   # IAM v4 API path version (v4.0 matches the proven preEnv scripts; the provider
   # SDK uses v4.1.b3 -- both generally work).
-  api_version: v4.0
+  api_version: v4.1.b3
   # Wire "format version" used only for the directory-service search envelope.
   fv: v4.r0.b3
 
@@ -771,6 +759,11 @@ terraform:
 test_config:
   # Subnet the calm/self-service tests attach VMs to (looked up by name).
   subnet_name: vlan.800
+  # Legacy test_config.json self_service names (mirrors preEnv/main_v3.tf).
+  self_service:
+    bp_name_with_snapshot_config: *self_service_bp_name_with_snapshot_config
+    bp_name: *self_service_bp_name
+    app_name_with_snapshot_config: *self_service_app_name_with_snapshot_config
   # AD group rule target asserted by the self-service ACP/quota tests.
   ad_rule_target:
     name: ADGroup

@@ -64,6 +64,11 @@ func ResourceNutanixVolumeGroupDiskV2() *schema.Resource {
 				Type:        schema.TypeInt,
 				Required:    true,
 			},
+			"storage_container_id": {
+				Description: "The ID of the storage container.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"description": {
 				Description: "Volume Disk description. This is an optional field.",
 				Type:        schema.TypeString,
@@ -237,10 +242,21 @@ func ResourceNutanixVolumeGroupDiskV2Read(ctx context.Context, d *schema.Resourc
 	if err := d.Set("description", getResp.Description); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("disk_data_source_reference", flattenDiskDataSourceReference(getResp.DiskDataSourceReference)); err != nil {
-		return diag.FromErr(err)
+	if getResp.DiskDataSourceReference != nil {
+		if err := d.Set("disk_data_source_reference", flattenDiskDataSourceReference(getResp.DiskDataSourceReference)); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		// keep the disk_data_source_reference as defined in the configuration
+		diskDataSourceReference := d.Get("disk_data_source_reference").([]interface{})
+		if err := d.Set("disk_data_source_reference", diskDataSourceReference); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if err := d.Set("disk_storage_features", flattenDiskStorageFeatures(getResp.DiskStorageFeatures)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("storage_container_id", getResp.StorageContainerId); err != nil {
 		return diag.FromErr(err)
 	}
 

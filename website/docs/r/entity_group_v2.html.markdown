@@ -145,4 +145,4 @@ resource "nutanix_entity_group_v2" "import_entity_group"{}
 terraform import nutanix_entity_group_v2.import_entity_group <entityGroupUUID>
 ```
 
-See detailed information in [Nutanix Entity Groups V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.2#tag/EntityGroups/operation/createEntityGroup).
+See detailed information in [Nutanix Entity Groups V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.3#tag/EntityGroups/operation/createEntityGroup).

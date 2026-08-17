@@ -186,4 +186,4 @@ VM Guest Customization Profiles can be imported using the `ext_id`.
 terraform import nutanix_vm_guest_customization_profile_v2.example <ext_id>
 ```
 
-See detailed information in [Nutanix VM Guest Customization Profiles V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/VmGuestCustomizationProfiles)
+See detailed information in [Nutanix VM Guest Customization Profiles V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/VmGuestCustomizationProfiles)

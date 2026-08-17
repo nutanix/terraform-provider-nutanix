@@ -90,11 +90,6 @@ func ResourceNutanixRoleMembershipV2() *schema.Resource {
 				Computed: true,
 			},
 			"links": schemaForLinks(),
-			"authorization_policy_ext_id": {
-				Description: "External identifier of the authorization policy.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
 			"created_by": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -175,9 +170,6 @@ func ResourceNutanixRoleMembershipV2Read(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("authorization_policy_ext_id", utils.StringValue(getResp.AuthorizationPolicyExtId)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("role_ext_id", utils.StringValue(getResp.RoleExtId)); err != nil {

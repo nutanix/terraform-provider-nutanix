@@ -28,8 +28,6 @@ func NewMultidomainClient(credentials client.Credentials) (*Client, error) {
 			pcClient.VerifySSL = cfg.VerifySSL
 			pcClient.AllowVersionNegotiation = cfg.AllowVersionNegotiation
 		}
-		pcClient.VerifySSL = false
-		pcClient.AllowVersionNegotiation = sdkconfig.AllowVersionNegotiation
 		baseClient = pcClient
 	}
 

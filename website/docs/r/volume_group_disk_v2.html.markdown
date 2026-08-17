@@ -42,11 +42,13 @@ resource "nutanix_volume_group_disk_v2" "example"{
 }
 ```
 
+> **Volume Group disk workflow:** Create the disk with `nutanix_volume_group_disk_v2` and attach it to a VM with `nutanix_volume_group_vm_v2`.
+
 ## Argument Reference
 
 The following arguments are supported:
 
-- `volume_group_ext_id `: -(Required) The external identifier of the Volume Group.
+- `volume_group_ext_id`: -(Required) The external identifier of the Volume Group.
 
 - `ext_id`: - A globally unique identifier of an instance that is suitable for external consumption.
 
@@ -59,7 +61,7 @@ The following arguments are supported:
 - `disk_data_source_reference`: -(Required) Disk Data Source Reference.
 - `disk_storage_features`: - Storage optimization features which must be enabled on the Volume Disks. This is an optional field. If omitted, the disks will honor the Volume Group specific storage features setting.
 
-#### Disk Data Source Reference
+### Disk Data Source Reference
 
 The disk_data_source_reference attribute supports the following:
 
@@ -72,13 +74,13 @@ The disk_data_source_reference attribute supports the following:
   - VOLUME_DISK
   - DISK_RECOVERY_POINT
 
-#### Disk Storage Features
+### Disk Storage Features
 
 The disk_storage_features attribute supports the following:
 
 - `flash_mode`: - this field will avoid down migration of data from the hot tier unless the overrides field is specified for the virtual disks.
 
-##### Flash Mode
+#### Flash Mode
 
 The flash mode features attribute supports the following:
 
@@ -107,4 +109,4 @@ data "nutanix_volume_group_disks_v2" "fetch_vg_disks"{
 terraform import nutanix_volume_group_disk_v2.import_vg_disk <volume_group_ext_id>/<disk_ext_id>
 ```
 
-See detailed information in [Nutanix Create Volume Disk V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.2#tag/VolumeGroups/operation/createVolumeDisk).
+See detailed information in [Nutanix Create Volume Disk V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.3#tag/VolumeGroups/operation/createVolumeDisk).

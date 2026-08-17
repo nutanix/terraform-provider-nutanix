@@ -448,7 +448,6 @@ func ResourceNutanixVolumeGroupV2Update(ctx context.Context, d *schema.ResourceD
 	// attachments/attachment_type/protocol/disks are configured out-of-band).
 	body.ClusterReference = nil
 	body.ExtId = nil
-	body.CreatedTime = nil
 	body.Links = nil
 	body.TenantId = nil
 	body.Attachments = nil
@@ -456,12 +455,6 @@ func ResourceNutanixVolumeGroupV2Update(ctx context.Context, d *schema.ResourceD
 	body.Protocol = nil
 	body.Disks = nil
 	body.HydrationStatus = nil
-	// The server auto-generates the iSCSI target name/prefix; echoing them back
-	// makes the backend treat the update as an attempt to re-set the same target
-	// name, which collides with the VG itself. Only send target_name when the
-	// user explicitly manages it.
-	body.IscsiTargetName = nil
-	body.IscsiTargetPrefix = nil
 	// The server also derives/echoes the external client target name & prefix.
 	// Re-sending the server-populated value makes the backend attempt to re-set
 	// the same iSCSI target name (which collides with the VG itself), so only
