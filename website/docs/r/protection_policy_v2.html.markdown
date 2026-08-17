@@ -288,4 +288,4 @@ resource "nutanix_protection_policy_v2" "import_pp" {}
 terraform import nutanix_protection_policy_v2.import_pp <UUID>
 ```
 
-See detailed information in [Nutanix Protection Policy v4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.2#tag/ProtectionPolicies/operation/createProtectionPolicy).
+See detailed information in [Nutanix Protection Policy v4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.3#tag/ProtectionPolicies/operation/createProtectionPolicy).

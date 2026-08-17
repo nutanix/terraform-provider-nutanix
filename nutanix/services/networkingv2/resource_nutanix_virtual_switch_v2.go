@@ -264,15 +264,6 @@ func ResourceNutanixVirtualSwitchV2() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"PC", "PE"}, false),
 				Description:  "Owner type.",
 			},
-			"shared_with_projects": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Computed:    true,
-				Description: "List of project UUIDs this virtual switch is shared with.",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
 			"has_deployment_error": {
 				Type:        schema.TypeBool,
 				Computed:    true,
@@ -460,16 +451,6 @@ func resourceNutanixVirtualSwitchV2StandardCreate(ctx context.Context, d *schema
 		return diags
 	}
 
-	// Share the freshly-created Virtual Switch with each configured project
-	// through the dedicated share endpoint. The standard create endpoint
-	// does not honor shared_with_projects, so this must be done explicitly.
-	if sharedWithProjects, ok := d.GetOk("shared_with_projects"); ok {
-		projectIDs := common.ExpandListOfString(sharedWithProjects.([]interface{}))
-		if diags := shareVirtualSwitchWithProjects(ctx, meta, d.Id(), projectIDs, d.Timeout(schema.TimeoutCreate)); diags != nil {
-			return diags
-		}
-	}
-
 	return resourceNutanixVirtualSwitchV2Read(ctx, d, meta)
 }
 
@@ -544,7 +525,6 @@ func warnIgnoredMigrateFields(d *schema.ResourceData) {
 		{"mtu", "migrate does not set mtu -- update the VS after migration if needed"},
 		{"igmp_spec", "migrate does not configure igmp_spec -- update the VS after migration if needed"},
 		{"is_quick_mode", "migrate does not honor is_quick_mode"},
-		{"shared_with_projects", "migrate does not honor shared_with_projects -- set it via update after migration"},
 		{"owner_type", "migrate does not honor owner_type"},
 	}
 	for _, c := range candidates {
@@ -665,9 +645,6 @@ func resourceNutanixVirtualSwitchV2Read(ctx context.Context, d *schema.ResourceD
 	if err := d.Set("project_ext_id", vs.ProjectExtId); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("shared_with_projects", vs.SharedWithProjects); err != nil {
-		return diag.FromErr(err)
-	}
 	if err := d.Set("links", flattenLinks(vs.Links)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -768,22 +745,6 @@ func resourceNutanixVirtualSwitchV2Update(ctx context.Context, d *schema.Resourc
 		}
 	}
 
-	// Reconcile sharing: compute the projects that were added and removed,
-	// then share/unshare each one through the dedicated endpoints.
-	if d.HasChange("shared_with_projects") {
-		oldRaw, newRaw := d.GetChange("shared_with_projects")
-		oldProjects := common.ExpandListOfString(oldRaw.([]interface{}))
-		newProjects := common.ExpandListOfString(newRaw.([]interface{}))
-		added, removed := diffProjectLists(oldProjects, newProjects)
-
-		if diags := shareVirtualSwitchWithProjects(ctx, meta, d.Id(), added, d.Timeout(schema.TimeoutUpdate)); diags != nil {
-			return diags
-		}
-		if diags := unshareVirtualSwitchFromProjects(ctx, meta, d.Id(), removed, d.Timeout(schema.TimeoutUpdate)); diags != nil {
-			return diags
-		}
-	}
-
 	return resourceNutanixVirtualSwitchV2Read(ctx, d, meta)
 }
 
@@ -841,72 +802,6 @@ func diffProjectLists(oldProjects, newProjects []string) (added, removed []strin
 		}
 	}
 	return added, removed
-}
-
-// shareVirtualSwitchWithProjects shares the Virtual Switch identified by extID
-// with each project UUID in projectIDs, waiting for every share task to reach
-// the SUCCEEDED state before returning.
-func shareVirtualSwitchWithProjects(ctx context.Context, meta interface{}, extID string, projectIDs []string, timeout time.Duration) diag.Diagnostics {
-	conn := meta.(*conns.Client).NetworkingAPI
-
-	for _, projectExtID := range projectIDs {
-		shareReq := networkingVsReq.ShareVirtualSwitchByIdRequest{
-			ExtId: utils.StringPtr(extID),
-			Body: &networkingConfig.ProjectReference{
-				ProjectExtId: utils.StringPtr(projectExtID),
-			},
-		}
-
-		aJSON, _ := json.MarshalIndent(shareReq, "", " ")
-		log.Printf("[DEBUG] VirtualSwitch share payload: %s", string(aJSON))
-
-		resp, err := conn.VirtualSwitchAPI.ShareVirtualSwitchById(ctx, &shareReq)
-		if err != nil {
-			return diag.Errorf("error while sharing Virtual Switch (%s) with project (%s): %v", extID, projectExtID, err)
-		}
-
-		taskRef := resp.Data.GetValue().(import4.TaskReference)
-		if err := waitForVirtualSwitchTask(ctx, meta, taskRef.ExtId, timeout); err != nil {
-			return diag.Errorf("error waiting for Virtual Switch (%s) share with project (%s): %s", extID, projectExtID, err)
-		}
-
-		aJSON, _ = json.MarshalIndent(taskRef, "", " ")
-		log.Printf("[DEBUG] VirtualSwitch share task: %s", string(aJSON))
-	}
-	return nil
-}
-
-// unshareVirtualSwitchFromProjects unshares the Virtual Switch identified by
-// extID from each project UUID in projectIDs, waiting for every unshare task
-// to reach the SUCCEEDED state before returning.
-func unshareVirtualSwitchFromProjects(ctx context.Context, meta interface{}, extID string, projectIDs []string, timeout time.Duration) diag.Diagnostics {
-	conn := meta.(*conns.Client).NetworkingAPI
-
-	for _, projectExtID := range projectIDs {
-		unshareReq := networkingVsReq.UnshareVirtualSwitchByIdRequest{
-			ExtId: utils.StringPtr(extID),
-			Body: &networkingConfig.ProjectReference{
-				ProjectExtId: utils.StringPtr(projectExtID),
-			},
-		}
-
-		aJSON, _ := json.MarshalIndent(unshareReq, "", " ")
-		log.Printf("[DEBUG] VirtualSwitch unshare payload: %s", string(aJSON))
-
-		resp, err := conn.VirtualSwitchAPI.UnshareVirtualSwitchById(ctx, &unshareReq)
-		if err != nil {
-			return diag.Errorf("error while unsharing Virtual Switch (%s) from project (%s): %v", extID, projectExtID, err)
-		}
-
-		taskRef := resp.Data.GetValue().(import4.TaskReference)
-		if err := waitForVirtualSwitchTask(ctx, meta, taskRef.ExtId, timeout); err != nil {
-			return diag.Errorf("error waiting for Virtual Switch (%s) unshare from project (%s): %s", extID, projectExtID, err)
-		}
-
-		aJSON, _ = json.MarshalIndent(taskRef, "", " ")
-		log.Printf("[DEBUG] VirtualSwitch unshare task: %s", string(aJSON))
-	}
-	return nil
 }
 
 // waitForVirtualSwitchTask blocks until the prism task identified by taskUUID

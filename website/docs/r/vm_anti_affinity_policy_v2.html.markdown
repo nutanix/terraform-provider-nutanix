@@ -70,4 +70,4 @@ resource "nutanix_vm_anti_affinity_policy_v2" "imported" {}
 
 ```
 
-See detailed information in [Nutanix VM-VM Anti-Affinity Policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/VmAntiAffinityPolicies)
+See detailed information in [Nutanix VM-VM Anti-Affinity Policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/VmAntiAffinityPolicies)

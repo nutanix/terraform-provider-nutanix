@@ -89,4 +89,4 @@ The `service_groups` object contains the following attributes:
 
 
 
-See detailed information in [Nutanix List Service Groups v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.2#tag/ServiceGroups/operation/listServiceGroups).
+See detailed information in [Nutanix List Service Groups v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.3#tag/ServiceGroups/operation/listServiceGroups).

@@ -3638,6 +3638,9 @@ func setVMConfig(d *schema.ResourceData, getResp config.Vm) diag.Diagnostics {
 		return diags
 	}
 	for k, v := range fields {
+		if k == "disks" {
+			continue
+		}
 		if err := d.Set(k, v); err != nil {
 			return diag.FromErr(fmt.Errorf("failed setting %q: %w", k, err))
 		}
@@ -3742,7 +3745,7 @@ func setVMConfig(d *schema.ResourceData, getResp config.Vm) diag.Diagnostics {
 	if err := d.Set("storage_config", flattenADSFVmStorageConfig(getResp.StorageConfig)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("disks", flattenDisk(getResp.Disks)); err != nil {
+	if err := d.Set("disks", flattenDisk(getResp.Disks, d)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("cd_roms", flattenCdRom(getResp.CdRoms)); err != nil {

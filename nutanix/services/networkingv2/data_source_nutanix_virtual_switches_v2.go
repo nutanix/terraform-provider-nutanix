@@ -117,7 +117,6 @@ func flattenVirtualSwitchesEntities(vsList []networkingConfig.VirtualSwitch) []m
 			"has_update_in_progress": utils.BoolValue(vs.HasUpdateInProgress),
 			"has_delete_in_progress": utils.BoolValue(vs.HasDeleteInProgress),
 			"project_ext_id":         utils.StringValue(vs.ProjectExtId),
-			"shared_with_projects":   vs.SharedWithProjects,
 			"links":                  flattenLinks(vs.Links),
 			"metadata":               flattenMetadata(vs.Metadata),
 			"tenant_id":              utils.StringValue(vs.TenantId),

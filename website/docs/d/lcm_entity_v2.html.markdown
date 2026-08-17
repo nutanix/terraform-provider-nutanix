@@ -124,4 +124,4 @@ The `sub_entities` attribute supports the following
 * `entity_version`: Current version of an LCM entity.
 * `hardware_family`: A hardware family for a LCM entity.
 
-See detailed information in [Nutanix LCM Entity V4](https://developers.nutanix.com/api-reference?namespace=lifecycle&version=v4.2#tag/Entities/operation/getEntityById).
+See detailed information in [Nutanix LCM Entity V4](https://developers.nutanix.com/api-reference?namespace=lifecycle&version=v4.3#tag/Entities/operation/getEntityById).

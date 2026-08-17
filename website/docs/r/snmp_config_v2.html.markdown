@@ -91,4 +91,4 @@ config is a singleton with no per-mode server-assigned identifier, and the
 Terraform id is synthesized at create time as either `<cluster_ext_id>:status`
 (status mode) or `<cluster_ext_id>:<port>:<protocol>` (transport mode).
 
-See detailed information in [Nutanix SNMP Config](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0).
+See detailed information in [Nutanix SNMP Config](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.3).

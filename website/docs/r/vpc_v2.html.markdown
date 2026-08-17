@@ -151,4 +151,4 @@ resource "nutanix_vpc_v2" "import_vpc" {}
 terraform import nutanix_vpc_v2.import_vpc <UUID>
 ```
 
-See detailed information in [Nutanix VPC v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/Vpcs/operation/createVpc).
+See detailed information in [Nutanix VPC v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/Vpcs/operation/createVpc).

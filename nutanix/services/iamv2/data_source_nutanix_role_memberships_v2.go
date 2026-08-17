@@ -118,9 +118,6 @@ func flattenRoleMembershipEntities(memberships []iamConfig.RoleMembershipProject
 		if m.Links != nil {
 			membership["links"] = flattenLinks(m.Links)
 		}
-		if m.AuthorizationPolicyExtId != nil {
-			membership["authorization_policy_ext_id"] = utils.StringValue(m.AuthorizationPolicyExtId)
-		}
 		if m.RoleExtId != nil {
 			membership["role_ext_id"] = utils.StringValue(m.RoleExtId)
 		}

@@ -150,55 +150,12 @@ func testAccImageDataSourceConfigV2WithPlacementPolicy(name string, categoryName
 			description = "category for image placement policy IT test"
 		}
 
-		# Attach the test category to an existing AOS cluster so the IPP's
-		# cluster_entity_filter resolves to at least one cluster. Without this,
-		# PC leaves placement_policy_status empty on the image and the regression
-		# assertions below would never fire.
-		#
-		# This calls the PC v4 cluster API directly because there is no
-		# nutanix_associate_category_to_cluster_v2 resource (only the volume
-		# group variant exists).
-		resource "null_resource" "attach_category_to_cluster" {
-			depends_on = [nutanix_category_v2.test-category]
-
-			triggers = {
-				cluster_ext_id  = data.nutanix_clusters_v2.aos.cluster_entities[0].ext_id
-				category_ext_id = nutanix_category_v2.test-category.id
-			}
-
-			provisioner "local-exec" {
-				when    = create
-				command = <<-EOT
-					set -e
-					ACTION='$actions/associate-categories'
-					curl -ksSf \
-					  -u "$NUTANIX_USERNAME:$NUTANIX_PASSWORD" \
-					  -X POST \
-					  -H 'Content-Type: application/json' \
-					  -d '{"categories": ["${self.triggers.category_ext_id}"]}' \
-					  "https://$NUTANIX_ENDPOINT:$NUTANIX_PORT/api/clustermgmt/v4.0/config/clusters/${self.triggers.cluster_ext_id}/$ACTION"
-				EOT
-			}
-
-			provisioner "local-exec" {
-				when       = destroy
-				on_failure = continue
-				command    = <<-EOT
-					set -e
-					ACTION='$actions/disassociate-categories'
-					curl -ksSf \
-					  -u "$NUTANIX_USERNAME:$NUTANIX_PASSWORD" \
-					  -X POST \
-					  -H 'Content-Type: application/json' \
-					  -d '{"categories": ["${self.triggers.category_ext_id}"]}' \
-					  "https://$NUTANIX_ENDPOINT:$NUTANIX_PORT/api/clustermgmt/v4.0/config/clusters/${self.triggers.cluster_ext_id}/$ACTION"
-				EOT
-			}
+		resource "nutanix_cluster_category_associations_v2" "attach_category_to_cluster" {
+			cluster_ext_id = data.nutanix_clusters_v2.aos.cluster_entities.0.ext_id
+			categories = [nutanix_category_v2.test-category.id]
 		}
 
 		resource "nutanix_image_placement_policy_v2" "test-ipp" {
-			depends_on = [null_resource.attach_category_to_cluster]
-
 			name           = "ipp-%[1]s"
 			description    = "image placement policy for image data source IT test"
 			placement_type = "SOFT"

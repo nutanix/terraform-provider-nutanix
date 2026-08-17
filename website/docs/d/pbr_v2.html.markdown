@@ -117,4 +117,4 @@ The `metadata` object contains the following attributes:
 - `value`: ip value
 - `prefix_length`: The prefix length of the network to which this host IPv4/IPv6 address belongs.
 
-See detailed information in [Nutanix Routing Policy v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/RoutingPolicies/operation/getRoutingPolicyById).
+See detailed information in [Nutanix Routing Policy v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/RoutingPolicies/operation/getRoutingPolicyById).

@@ -193,13 +193,6 @@ func DatasourceNutanixVirtualSwitchV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"shared_with_projects": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
 			"links": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -289,9 +282,6 @@ func datasourceNutanixVirtualSwitchV2Read(ctx context.Context, d *schema.Resourc
 		}
 	}
 	if err := d.Set("project_ext_id", vs.ProjectExtId); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("shared_with_projects", vs.SharedWithProjects); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("links", flattenLinks(vs.Links)); err != nil {

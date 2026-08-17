@@ -30,7 +30,6 @@ import (
 //     - TestAccV2NutanixVirtualSwitch_Minimum:              Create with minimum fields.
 //     - TestAccV2NutanixVirtualSwitch_WithAllAttributes:    Create with the full set of user-configurable attributes.
 //     - TestAccV2NutanixVirtualSwitch_FromExistingBridge:   Migrate an existing host-side OVS bridge into a Virtual Switch (requires lab prep).
-//     - TestAccV2NutanixVirtualSwitch_ShareUnshareLifecycle: Create with no shares, add a share, swap shares, then remove all shares.
 //     - TestAccV2NutanixVirtualSwitch_Basic:                Create + update + import + read-via-datasource.
 //     - TestAccV2NutanixVirtualSwitchDatasource_List:       Read list of virtual switches.
 //     - TestAccV2NutanixNodeSchedulableStatuses:            Read node schedulable statuses.
@@ -175,65 +174,6 @@ func TestAccV2NutanixVirtualSwitch_FromExistingBridge(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "clusters.0.hosts.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "clusters.0.hosts.0.ext_id"),
 					resource.TestCheckResourceAttr(resourceName, "clusters.0.hosts.0.internal_bridge_name", bridgeName),
-				),
-			},
-		},
-	})
-}
-
-// TestAccV2NutanixVirtualSwitch_ShareUnshareLifecycle exercises the full
-// native share/unshare lifecycle now handled directly by the
-// nutanix_virtual_switch_v2 resource (the standalone
-// nutanix_share_virtual_switch_v2 resource was removed in favor of the
-// shared_with_projects attribute):
-//
-//	Step 1: create the Virtual Switch with no shares          -> shared_with_projects empty.
-//	Step 2: add a share with project 1                        -> ShareVirtualSwitchById fires once.
-//	Step 3: swap the share to project 2                       -> one Unshare (proj1) + one Share (proj2).
-//	Step 4: clear shared_with_projects entirely               -> UnshareVirtualSwitchById fires for proj2.
-//
-// Two nutanix_project resources are created so the share/unshare endpoints
-// have real project UUIDs to operate on. CheckDestroy guarantees the VS is
-// gone (and thus unshared) at the end of the test.
-func TestAccV2NutanixVirtualSwitch_ShareUnshareLifecycle(t *testing.T) {
-	resourceName := "nutanix_virtual_switch_v2.test_vs"
-	rName := acctest.RandomWithPrefix("tf-vs-share")
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		Providers:    acc.TestAccProviders,
-		CheckDestroy: testAccCheckNutanixVirtualSwitchDestroy,
-		Steps: []resource.TestStep{
-			// Step 1: Create Virtual Switch (No Shares).
-			{
-				Config: testAccVirtualSwitchShareStep1Config(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "ext_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", "acc-test-vswitch-"+rName),
-					resource.TestCheckResourceAttr(resourceName, "shared_with_projects.#", "0"),
-				),
-			},
-			// Step 2: Update to Add Share (share with project 1).
-			{
-				Config: testAccVirtualSwitchShareStep2Config(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "shared_with_projects.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "shared_with_projects.0", "nutanix_project_v2.test_project_1", "ext_id"),
-				),
-			},
-			// Step 3: Update to Swap Shares (share project 2, unshare project 1).
-			{
-				Config: testAccVirtualSwitchShareStep3Config(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "shared_with_projects.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "shared_with_projects.0", "nutanix_project_v2.test_project_2", "ext_id"),
-				),
-			},
-			// Step 4: Update to Remove All Shares.
-			{
-				Config: testAccVirtualSwitchShareStep4Config(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "shared_with_projects.#", "0"),
 				),
 			},
 		},
@@ -902,93 +842,6 @@ resource "nutanix_virtual_switch_v2" "test" {
   }
 }
 `, name, description, bridgeName)
-}
-
-// -- Share / unshare lifecycle --
-
-// testAccVirtualSwitchShareBaseConfig builds the common scaffolding for the
-// share/unshare lifecycle test: cluster + host data sources, an optional pair
-// of project resources (projectsBlock), and the Virtual Switch resource with
-// an optional shared_with_projects argument (sharedBlock).
-func testAccVirtualSwitchShareBaseConfig(name, projectsBlock, sharedBlock string) string {
-	return fmt.Sprintf(`
-# Fetch cluster and host information for virtual switch creation.
-data "nutanix_clusters_v2" "test" {
-  filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
-}
-# Only fetch hosts that belong to the selected cluster (server-side OData filter
-# on cluster/uuid), so host_entities[0] is guaranteed to be in cluster_ext_id.
-# The backend rejects a VS whose host UUID is not part of the target cluster
-# ("host config list contains unknown host UUIDs ... in cluster ...").
-data "nutanix_hosts_v2" "test" {
-  filter = "cluster/uuid eq '${data.nutanix_clusters_v2.test.cluster_entities[0].ext_id}'"
-}
-
-locals {
-  cluster_ext_id = data.nutanix_clusters_v2.test.cluster_entities[0].ext_id
-  host_ext_id    = data.nutanix_hosts_v2.test.host_entities[0].ext_id
-}
-%[2]s
-resource "nutanix_virtual_switch_v2" "test_vs" {
-  name        = "acc-test-vswitch-%[1]s"
-  description = "Virtual Switch created by Terraform Acc Test"
-  # bond_mode NONE: ACTIVE_BACKUP requires >= 2 uplink ports per host, which
-  # this config does not specify. This test exercises share/unshare, not bonding.
-  bond_mode   = "NONE"
-  clusters {
-    ext_id = local.cluster_ext_id
-    hosts {
-      ext_id = local.host_ext_id
-    }
-  }
-%[3]s
-}
-`, name, projectsBlock, sharedBlock)
-}
-
-// testAccVirtualSwitchShareProjectsBlock declares the two projects the
-// Virtual Switch is shared with across steps 2-4.
-func testAccVirtualSwitchShareProjectsBlock(name string) string {
-	return fmt.Sprintf(`
-resource "nutanix_project_v2" "test_project_1" {
-  name        = "acc-test-proj1-%[1]s"
-  project_id  = "acc-test-proj1-%[1]s"
-  description = "Test Project 1"
-}
-
-resource "nutanix_project_v2" "test_project_2" {
-  name        = "acc-test-proj2-%[1]s"
-  project_id  = "acc-test-proj2-%[1]s"
-  description = "Test Project 2"
-}
-`, name)
-}
-
-// Step 1: create the Virtual Switch with no projects and no shares.
-func testAccVirtualSwitchShareStep1Config(name string) string {
-	return testAccVirtualSwitchShareBaseConfig(name, "", "")
-}
-
-// Step 2: declare both projects and share the Virtual Switch with project 1.
-func testAccVirtualSwitchShareStep2Config(name string) string {
-	shared := `  shared_with_projects = [
-    nutanix_project_v2.test_project_1.ext_id
-  ]`
-	return testAccVirtualSwitchShareBaseConfig(name, testAccVirtualSwitchShareProjectsBlock(name), shared)
-}
-
-// Step 3: swap the share -- unshare project 1, share project 2.
-func testAccVirtualSwitchShareStep3Config(name string) string {
-	shared := `  shared_with_projects = [
-    nutanix_project_v2.test_project_2.ext_id
-  ]`
-	return testAccVirtualSwitchShareBaseConfig(name, testAccVirtualSwitchShareProjectsBlock(name), shared)
-}
-
-// Step 4: clear shared_with_projects entirely (unshare project 2).
-func testAccVirtualSwitchShareStep4Config(name string) string {
-	shared := `  shared_with_projects = []`
-	return testAccVirtualSwitchShareBaseConfig(name, testAccVirtualSwitchShareProjectsBlock(name), shared)
 }
 
 func testAccVirtualSwitchConfig(name, description string) string {

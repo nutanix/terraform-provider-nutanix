@@ -48,4 +48,4 @@ The following arguments are supported:
 
 * `node_list`: (Optional) List of node UUIDs to inventory. Required when `inventory_type` is set to `NODE`; ignored for other inventory types.
 
-See detailed information in [Nutanix LCM Perform Inventory v4](https://developers.nutanix.com/api-reference?namespace=lifecycle&version=v4.2#tag/Inventory/operation/performInventory)
+See detailed information in [Nutanix LCM Perform Inventory v4](https://developers.nutanix.com/api-reference?namespace=lifecycle&version=v4.3#tag/Inventory/operation/performInventory)
