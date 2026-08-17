@@ -55,3 +55,5 @@ The following attributes are exported:
 
 * `category_ext_ids` - Filter to match entities based on the provided categories.
 * `type` - The match type for categories. Valid values: `CATEGORIES_MATCH_ALL`, `CATEGORIES_MATCH_ANY`.
+
+See detailed information in [Nutanix List Template Placement Policies V2](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/TemplatePlacementPolicies/operation/listTemplatePlacementPolicies).

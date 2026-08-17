@@ -77,4 +77,4 @@ In addition to all arguments above, the following attributes are exported:
   * `href` - The URL at which the entity described by the link can be accessed.
   * `rel` - A name that identifies the relationship of the link to the object that is returned by the URL.
 
-See detailed information in [Nutanix VM Startup Policy V2](https://developers.nutanix.com/).
+See detailed information in [Nutanix VM Startup Policy V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/VmStartupPolicies/operation/createVmStartupPolicy).

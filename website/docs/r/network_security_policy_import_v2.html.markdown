@@ -71,4 +71,4 @@ The following arguments are supported:
 * **Update** — not applicable; all inputs are `ForceNew`.
 * **Delete** — deletes each imported network security policy from the cluster and waits for the deletion tasks to complete.
 
-See detailed information in [Nutanix Network Security Policy Import V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.4#tag/NetworkSecurityPolicies/operation/applyNetworkSecurityPolicyImport).
+See detailed information in [Nutanix Network Security Policy Import V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.3#tag/NetworkSecurityPolicies/operation/applyNetworkSecurityPolicyImport).

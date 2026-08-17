@@ -133,4 +133,4 @@ to import.
 terraform import nutanix_snmp_trap_v2.example <trap-ext-id>
 ```
 
-See detailed information in [Nutanix Create SNMP Trap](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.3).
+See detailed information in [Nutanix Create SNMP Trap](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.3#tag/Clusters/operation/createSnmpTrap).

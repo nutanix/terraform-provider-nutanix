@@ -51,3 +51,5 @@ Each summary in `summaries` exports the following:
 * `groups_count` - Count of distinct groups in the project.
 * `roles_count` - Count of distinct roles assigned in the project.
 * `total_identities_count` - Total count of distinct identities (users and groups) in the project.
+
+See detailed information in [Nutanix List Role Membership Summary V2](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/RoleMembership/operation/listRoleMembershipSummary).

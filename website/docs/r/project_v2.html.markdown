@@ -62,3 +62,5 @@ The `links` attribute supports the following:
 
 * `href`:- The URL at which the entity described by the link can be accessed.
 * `rel`:- A name that identifies the relationship of the link to the object.
+
+See detailed information in [Nutanix Project V4](https://developers.nutanix.com/api-reference?namespace=multidomain&version=v4.4.b1#tag/Projects/operation/createProject).

@@ -39,4 +39,4 @@ data "nutanix_directory_server_config_v2" "get-config" {
 * `links` - A HATEOAS style link for the response.
 * `tenant_id` - A globally unique identifier that represents the tenant that owns this entity.
 
-See detailed information in [Nutanix Directory Server Configs V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.3).
+See detailed information in [Nutanix Directory Server Configs V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.3#tag/DirectoryServerConfigs/operation/getDirectoryServerConfigById).
