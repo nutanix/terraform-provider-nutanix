@@ -192,8 +192,8 @@ github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17 v17.6.0
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17 v17.6.0-20556/go.mod h1:q5BSa4/8U3RVMNYDrMuHOK/JbMC2IiE00Dox7zurs0Q=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17 v17.6.0-22016 h1:/QOeDD53YxnT5zOHPTiJP2gVaUYjhy+gck2wLIKnZVM=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17 v17.6.0-22016/go.mod h1:Jek26Yb6Xx5tsegDBM0PJ2YIV5SeC61RAlqESJA7wh8=
-github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17 v17.7.0-23167 h1:IBn7N77HnhezY0cP0QtFordCFKliF5FunyBg+dOHj7M=
-github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17 v17.7.0-23167/go.mod h1:dhzh+s8gM+dVIIR21kw/YxR3AdzguEuM/EPEctwQjBY=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17 v17.7.0-23760 h1:EJHL81EXzc/EZg4FWOI5Vc8gyksd9orIXi6VQxHuebs=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17 v17.7.0-23760/go.mod h1:dhzh+s8gM+dVIIR21kw/YxR3AdzguEuM/EPEctwQjBY=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17 v17.6.0-21491 h1:RC+RRfO7Y9wtZx2RwGynYcn2Sg57L9/1D08faXe1qV8=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17 v17.6.0-21491/go.mod h1:J/h/ocM5U9K6c51tBhU3KSHfJ/0PJyCpMXwcDNJ3IYw=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17 v17.6.0-21921 h1:c5QfjX/E5bItUTc87D8/QvLs5CEO8RheRzevGidn+SU=
