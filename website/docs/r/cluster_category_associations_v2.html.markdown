@@ -51,3 +51,5 @@ This resource supports importing an existing cluster category association by clu
 ```bash
 terraform import nutanix_cluster_category_associations_v2.cluster_categories <cluster_ext_id>
 ```
+
+See detailed information in [Nutanix Cluster - Category Associations V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.3#tag/Clusters/operation/associateCategoriesToCluster).

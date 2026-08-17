@@ -29,4 +29,4 @@ data "nutanix_vm_startup_policy_dependency_conflict_dependee_vms_v2" "example" {
 * `vms` - List of VM references.
   * `ext_id` - The external ID (UUID) of the VM.
 
-See detailed information in [Nutanix VM Startup Policy V2](https://developers.nutanix.com/).
+See detailed information in [Nutanix List VM Startup Policy Dependency Conflict Dependee VMs V2](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/VmStartupPolicies/operation/listVmStartupPolicyDependencyConflictDependeeVms).

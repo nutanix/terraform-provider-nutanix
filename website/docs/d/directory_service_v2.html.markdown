@@ -78,4 +78,4 @@ The user_group_configuration attribute supports the following:
 * `group_member_attribute_value`: - User attribute value that will be used in group entity to associate User to the group.
 
 
-See detailed information in [Nutanix Get Directory Service v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/DirectoryServices/operation/getDirectoryServiceById).
+See detailed information in [Nutanix Get Directory Service v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/DirectoryServices/operation/getDirectoryServiceById).

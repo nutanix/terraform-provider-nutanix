@@ -208,4 +208,4 @@ resource "nutanix_directory_services_v2" "import_dir_service" {}
 // execute the below command. UUID can be fetched using datasource. Example: data "nutanix_directory_services_v2" "fetch_dirs"{}
 terraform import nutanix_directory_services_v2.import_dir_service <UUID>
 ```
-See detailed information in [Nutanix Directory Services v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/DirectoryServices/operation/createDirectoryService).
+See detailed information in [Nutanix Directory Services v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/DirectoryServices/operation/createDirectoryService).

@@ -30,3 +30,5 @@ data "nutanix_node_schedulable_statuses_v2" "example" {}
 * `is_never_schedulable` - The boolean value to indicate whether or not node is a storage only node.
 * `tenant_id` - A globally unique identifier that represents the tenant that owns this entity.
 * `links` - A HATEOAS style link for the response.
+
+See detailed information in [Nutanix Node Schedulable Statuses V4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/VirtualSwitches/operation/listNodeSchedulableStatus).

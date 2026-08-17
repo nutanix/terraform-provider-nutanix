@@ -171,3 +171,5 @@ terraform import nutanix_virtual_switch_v2.example <ext_id>
 ```
 
 **Note on Imports:** Imported Virtual Switches will always reflect `clusters[].existing_bridge_name = ""` in Terraform state, regardless of whether they were originally created via the standard or migration paths. This is expected behavior because the Nutanix API does not record or return the original migration hint.
+
+See detailed information in [Nutanix Create Virtual Switch V4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/VirtualSwitches/operation/createVirtualSwitch).
