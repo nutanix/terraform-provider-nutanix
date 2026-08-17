@@ -34,6 +34,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/securityv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/selfservice"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/storagecontainersv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/tenancyv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/vmmv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/volumesv2"
@@ -449,6 +450,12 @@ func Provider() *schema.Provider {
 			"nutanix_directory_server_configs_v2":   microsegv2.DatasourceNutanixDirectoryServerConfigsV2(),
 			"nutanix_ad_group_category_mapping_v2":  microsegv2.DatasourceNutanixCategoryMappingV2(),
 			"nutanix_ad_group_category_mappings_v2": microsegv2.DatasourceNutanixCategoryMappingsV2(),
+			// tenancy
+			"nutanix_tenant_v2":                             tenancyv2.DatasourceNutanixTenantV2(),
+			"nutanix_tenants_v2":                            tenancyv2.DatasourceNutanixTenantsV2(),
+			"nutanix_tenant_domain_allocation_v2":           tenancyv2.DatasourceNutanixTenantDomainAllocationV2(),
+			"nutanix_tenant_domain_allocations_v2":          tenancyv2.DatasourceNutanixTenantDomainAllocationsV2(),
+			"nutanix_tenant_external_network_connection_v2": tenancyv2.DatasourceNutanixTenantExternalNetworkConnectionV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                              vmm.ResourceNutanixVirtualMachine(),
@@ -598,6 +605,13 @@ func Provider() *schema.Provider {
 			"nutanix_ad_group_category_mapping_v2":                 microsegv2.ResourceNutanixCategoryMappingV2(),
 			"nutanix_network_security_policy_import_v2":            microsegv2.ResourceNutanixNetworkSecurityPolicyImportV2(),
 			"nutanix_network_security_policy_export_v2":            microsegv2.ResourceNutanixNetworkSecurityPolicyExportV2(),
+			// tenancy
+			"nutanix_tenant_v2":                             tenancyv2.ResourceNutanixTenantV2(),
+			"nutanix_tenant_domain_allocation_v2":           tenancyv2.ResourceNutanixTenantDomainAllocationV2(),
+			"nutanix_tenant_external_network_connection_v2": tenancyv2.ResourceNutanixTenantExternalNetworkConnectionV2(),
+			"nutanix_suspend_tenant_v2":                     tenancyv2.ResourceNutanixSuspendTenantV2(),
+			"nutanix_restore_tenant_v2":                     tenancyv2.ResourceNutanixRestoreTenantV2(),
+			"nutanix_scheduled_delete_tenant_v2":            tenancyv2.ResourceNutanixScheduledDeleteTenantV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
