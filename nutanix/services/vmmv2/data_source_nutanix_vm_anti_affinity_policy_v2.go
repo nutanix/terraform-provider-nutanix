@@ -56,6 +56,10 @@ func DatasourceNutanixVMAntiAffinityPolicyV2() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"num_compliant_vms": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -127,6 +131,9 @@ func flattenVMAntiAffinityPolicyEntity(policy import1.VmAntiAffinityPolicy) map[
 	}
 	if policy.Categories != nil {
 		result["categories"] = flattenPolicyCategoryReference(policy.Categories)
+	}
+	if policy.ProjectExtId != nil {
+		result["project_ext_id"] = *policy.ProjectExtId
 	}
 	if policy.NumCompliantVms != nil {
 		result["num_compliant_vms"] = *policy.NumCompliantVms
