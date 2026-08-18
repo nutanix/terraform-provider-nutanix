@@ -27,16 +27,9 @@ func NewMultidomainClient(credentials client.Credentials) (*Client, error) {
 		baseClient = pcClient
 	}
 	return &Client{
-		DirectoryServiceAPIInstance: api.NewDirectoryServicesServiceApi(baseClient),
-		SamlIdentityAPIInstance:     api.NewSAMLIdentityProvidersServiceApi(baseClient),
-		UserGroupsAPIInstance:       api.NewUserGroupsServiceApi(baseClient),
-		RolesAPIInstance:            api.NewRolesServiceApi(baseClient),
-		OperationsAPIInstance:       api.NewOperationsServiceApi(baseClient),
-		UsersAPIInstance:            api.NewUsersServiceApi(baseClient),
-		AuthAPIInstance:             api.NewAuthorizationPoliciesServiceApi(baseClient),
-		RoleMembershipAPIInstance:   api.NewRoleMembershipServiceApi(baseClient),
-		EntityAPIInstance:           api.NewEntitiesServiceApi(baseClient),
-		APIClientInstance:           baseClient,
+		Projects:          api.NewProjectsServiceApi(baseClient),
+		ResourceGroups:    api.NewResourceGroupsServiceApi(baseClient),
+		APIClientInstance: baseClient,
 	}, nil
 
 }
