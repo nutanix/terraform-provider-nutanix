@@ -299,7 +299,7 @@ func ResourceNutanixNGTInsertIsoV2Update(ctx context.Context, d *schema.Resource
 func ResourceNutanixNGTInsertIsoV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] ResourceNutanixNGTInsertIsoV2Delete : Ejecting NGT ISO from the CD-ROM %s of the VM %s", d.Get("cdrom_ext_id").(string), d.Get("vm_ext_id").(string))
 
-	if cdromExtID, cdromExists := d.GetOk("cdrom_ext_id")
+	cdromExtID, cdromExists := d.GetOk("cdrom_ext_id")
 	if action, ok := d.GetOk("action"); ok && action.(string) == "eject" || !cdromExists || cdromExtID.(string) == ""  {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
