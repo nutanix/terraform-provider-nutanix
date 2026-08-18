@@ -96,7 +96,7 @@ func ResourceNutanixLocalDomainV2Create(ctx context.Context, d *schema.ResourceD
 
 	body := management.NewLocalDomainRegistrationSpec()
 	if v, ok := d.GetOk("credentials"); ok {
-		body.Credentials = expandRegistrationCredentials(v.([]interface{}))
+		body.Credentials = expandLocalDomainRegistrationCredentials(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("domain_ext_id"); ok {
 		body.DomainExtId = utils.StringPtr(v.(string))
@@ -205,7 +205,7 @@ func ResourceNutanixLocalDomainV2Delete(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func expandRegistrationCredentials(in []interface{}) *multidomainCommon.RegistrationCredentials {
+func expandLocalDomainRegistrationCredentials(in []interface{}) *multidomainCommon.RegistrationCredentials {
 	if len(in) == 0 {
 		return nil
 	}

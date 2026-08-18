@@ -162,11 +162,11 @@ func flattenLocalDomainLocation(location *multidomainConfig.Location) []map[stri
 	m["name"] = utils.StringValue(location.Name)
 	m["country"] = utils.StringValue(location.Country)
 	m["state"] = utils.StringValue(location.State)
-	m["coordinates"] = flattenGeographicCoordinates(location.Coordinates)
+	m["coordinates"] = flattenLocalDomainGeographicCoordinates(location.Coordinates)
 	return []map[string]interface{}{m}
 }
 
-func flattenGeographicCoordinates(coords *multidomainConfig.GeographicCoordinates) []map[string]interface{} {
+func flattenLocalDomainGeographicCoordinates(coords *multidomainConfig.GeographicCoordinates) []map[string]interface{} {
 	if coords == nil {
 		return []map[string]interface{}{}
 	}
