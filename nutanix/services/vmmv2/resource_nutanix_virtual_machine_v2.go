@@ -1615,9 +1615,6 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 	}
 
 	if checkForUpdateParams {
-		args := make(map[string]interface{})
-		args["If-Match"] = getEtagHeader(updatedVMResp, conn)
-
 		aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
 		log.Printf("[DEBUG] vm update spec: %s", string(aJSON))
 
@@ -1625,6 +1622,12 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 			ExtId: utils.StringPtr(d.Id()),
 			Body:  &updateSpec,
 		}
+		readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
+		if err != nil {
+			return diag.Errorf("error while reading vm for update: %v", err)
+		}
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(readResp, conn)
 		updateResp, err := conn.VMAPIInstance.UpdateVmById(ctx, &updateVmByIdRequest, args)
 		if err != nil {
 			return diag.Errorf("error while updating Virtual Machines : %v", err)
