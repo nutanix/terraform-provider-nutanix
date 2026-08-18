@@ -22,6 +22,13 @@ resource "nutanix_subnet_v2" "vlan-112" {
   subnet_type       = "VLAN"
   network_id        = 122
   is_external       = true
+  metadata {
+    owner_reference_id   = "d0f5c9b0-7b3c-4f5a-9d5b-0a1b2c3d4e5f"
+    owner_user_name      = "admin"
+    project_reference_id = "2defe0f5-6e48-4c9b-b07c-bdd2dc004225"
+    project_name         = "default"
+    category_ids         = ["4c9b0f5d-6e48-2def-b07c-bdd2dc004225"]
+  }
   ip_config {
 
     ipv4 {
@@ -106,6 +113,7 @@ resource "nutanix_subnet_v2" "van-114" {
 - `description`: (Optional) Description of the subnet.
 - `subnet_type`: (Required) Type of subnet. Acceptables values are "OVERLAY", "VLAN".
 - `network_id`: (Optional) For VLAN subnet, this field represents VLAN Id, valid range is from 0 to 4095; For overlay subnet, this field represents 24-bit VNI, this field is read-only.
+- `metadata`: (Optional) Metadata associated with the subnet.
 - `dhcp_options`: (Optional) List of DHCP options to be configured.
 - `ip_config`: (Optional) IP configuration for the subnet.
 - `cluster_reference`: (Optional) UUID of the cluster this subnet belongs to.
@@ -126,6 +134,14 @@ resource "nutanix_subnet_v2" "van-114" {
 - `ip_prefix`: (Optional) IP Prefix in CIDR format.
 - `project_ext_id`: (Optional) External identifier of the project associated with the Subnet.
 - `shared_with_projects`: (Optional) List of project external identifiers with which the Subnet is shared.
+
+### metadata
+
+- `owner_reference_id`: (Optional) External identifier of the owner associated with the subnet.
+- `owner_user_name`: (Optional) User name of the subnet owner.
+- `project_reference_id`: (Optional) External identifier of the project associated with the subnet.
+- `project_name`: (Optional) Name of the project associated with the subnet.
+- `category_ids`: (Optional) Set of category external identifiers associated with the subnet.
 
 ### dhcp_options
 
