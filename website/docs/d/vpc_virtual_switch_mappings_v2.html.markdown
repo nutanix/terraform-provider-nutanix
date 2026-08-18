@@ -57,3 +57,5 @@ The `metadata` block exports the following attributes:
 * `project_reference_id` - A globally unique identifier (UUID) of the Nutanix Project this resource belongs to.
 * `project_name` - The human-readable name of the Nutanix Project this resource is assigned to.
 * `category_ids` - A list of globally unique identifiers (UUIDs) representing the categories (tags) associated with the mapping.
+
+See detailed information in [Nutanix List VPC Virtual Switch Mappings V2](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/VpcVirtualSwitchMappings/operation/listVpcVirtualSwitchMappings).

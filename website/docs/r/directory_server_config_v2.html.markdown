@@ -110,4 +110,4 @@ Directory Server Config can be imported using its `ext_id`:
 terraform import nutanix_directory_server_config_v2.example <directoryServerConfigUUID>
 ```
 
-See detailed information in [Nutanix Directory Server Configs V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.3).
+See detailed information in [Nutanix Directory Server Configs V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.3#tag/DirectoryServerConfigs/operation/createDirectoryServerConfig).

@@ -91,4 +91,4 @@ resource "nutanix_authorization_policy_v2" "import_policy" {}
 terraform import nutanix_authorization_policy_v2.import_policy <UUID>
 ```
 
-See detailed information in [Nutanix Authorization Policy v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/AuthorizationPolicies/operation/createAuthorizationPolicy).
+See detailed information in [Nutanix Authorization Policy v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/AuthorizationPolicies/operation/createAuthorizationPolicy).

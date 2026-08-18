@@ -70,4 +70,4 @@ Category Mapping can be imported using its `ext_id`:
 terraform import nutanix_ad_group_category_mapping_v2.example <categoryMappingUUID>
 ```
 
-See detailed information in [Nutanix Directory Server Configs V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.3).
+See detailed information in [Nutanix Directory Server Configs V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.3#tag/DirectoryServerConfigs/operation/createCategoryMapping).

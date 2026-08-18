@@ -96,4 +96,4 @@ The following attributes are exported:
 * `name`: - Name of the attribute.
 * `values`: - List of values for the attribute.
 
-See detailed information in [Nutanix Directory Service Search v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/DirectoryServices/operation/searchDirectoryService).
+See detailed information in [Nutanix Directory Service Search v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/DirectoryServices/operation/searchDirectoryService).
