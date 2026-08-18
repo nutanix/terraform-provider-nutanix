@@ -32,4 +32,4 @@ data "nutanix_vm_startup_policies_v2" "filtered" {
 
 * `policies` - List of VM startup policies. Each entry has the same attributes as the `nutanix_vm_startup_policy_v2` datasource, including `project_ext_id`.
 
-See detailed information in [Nutanix VM Startup Policies V2](https://developers.nutanix.com/).
+See detailed information in [Nutanix VM Startup Policies V2](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/VmStartupPolicies/operation/listVmStartupPolicies).

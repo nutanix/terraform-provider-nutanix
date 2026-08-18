@@ -39,4 +39,4 @@ The following attributes are exported:
 * `error_group`: - The error group associated with this message of severity ERROR.
 * `arguments_map`: - The map of argument name to value.
 
-See detailed information in [Nutanix Revoke the requested key V4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Users/operation/revokeUserKey)
+See detailed information in [Nutanix Revoke the requested key V4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/Users/operation/revokeUserKey)
