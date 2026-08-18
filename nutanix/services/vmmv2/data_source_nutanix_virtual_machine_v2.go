@@ -2523,7 +2523,6 @@ func flattenNicWithResourceData(nic []config.Nic, d *schema.ResourceData) []inte
 			}
 
 			if shouldAssignIP, ok := configuredShouldAssignIP(d, k); ok {
-				setShouldAssignIPInFlattenedNetworkInfo(nics["network_info"], shouldAssignIP)
 				setShouldAssignIPInFlattenedNicNetworkInfo(nics["nic_network_info"], shouldAssignIP)
 			}
 
@@ -2554,9 +2553,6 @@ func configuredShouldAssignIP(d *schema.ResourceData, nicIndex int) (bool, bool)
 		return false, false
 	}
 
-	if value, ok := configuredShouldAssignIPFromLegacyNetworkInfo(nicConfigs[nicIndex]); ok {
-		return value, true
-	}
 	return configuredShouldAssignIPFromNicNetworkInfo(nicConfigs[nicIndex])
 }
 
@@ -2584,9 +2580,6 @@ func configuredShouldAssignIPFromState(nics interface{}, nicIndex int) (bool, bo
 }
 
 func configuredShouldAssignIPFromFlattenedNic(nic map[string]interface{}) (bool, bool) {
-	if value, ok := configuredShouldAssignIPFromFlattenedNetworkInfo(nic["network_info"]); ok {
-		return value, true
-	}
 	return configuredShouldAssignIPFromFlattenedNicNetworkInfo(nic["nic_network_info"])
 }
 
@@ -2627,14 +2620,6 @@ func configuredShouldAssignIPFromFlattenedNetworkInfo(networkInfo interface{}) (
 		})
 	})
 	return result, found
-}
-
-func configuredShouldAssignIPFromLegacyNetworkInfo(nicConfig cty.Value) (bool, bool) {
-	networkInfo, ok := rawConfigAttribute(nicConfig, "network_info")
-	if !ok {
-		return false, false
-	}
-	return configuredShouldAssignIPFromNetworkInfoList(networkInfo)
 }
 
 func configuredShouldAssignIPFromNicNetworkInfo(nicConfig cty.Value) (bool, bool) {
