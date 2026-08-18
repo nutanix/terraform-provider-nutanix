@@ -16,26 +16,20 @@ type Client struct {
 func NewMultidomainClient(credentials client.Credentials) (*Client, error) {
 	var baseClient *multidomainClient.ApiClient
 
-	// check if all required fields are present. Else create an empty client
-	if credentials.Username != "" && credentials.Password != "" && credentials.Endpoint != "" {
-		pcClient := multidomainClient.NewApiClient()
-
-		if cfg := sdkconfig.ConfigureV4Client(credentials, pcClient); cfg != nil {
-			pcClient.Host = cfg.Host
-			pcClient.Port = cfg.Port
-			pcClient.Username = cfg.Username
-			pcClient.Password = cfg.Password
-			pcClient.VerifySSL = cfg.VerifySSL
-			pcClient.AllowVersionNegotiation = cfg.AllowVersionNegotiation
-		}
+	pcClient := multidomainClient.NewApiClient()
+	if cfg := sdkconfig.ConfigureV4Client(credentials, pcClient); cfg != nil {
+		pcClient.Host = cfg.Host
+		pcClient.Port = cfg.Port
+		pcClient.Username = cfg.Username
+		pcClient.Password = cfg.Password
+		pcClient.VerifySSL = cfg.VerifySSL
+		pcClient.AllowVersionNegotiation = cfg.AllowVersionNegotiation
 		baseClient = pcClient
 	}
-
-	f := &Client{
+	return &Client{
 		Projects:          api.NewProjectsServiceApi(baseClient),
 		ResourceGroups:    api.NewResourceGroupsServiceApi(baseClient),
 		APIClientInstance: baseClient,
-	}
+	}, nil
 
-	return f, nil
 }
