@@ -2541,7 +2541,7 @@ func configuredShouldAssignIP(d *schema.ResourceData, nicIndex int) (bool, bool)
 
 	rawConfig := d.GetRawConfig()
 	if rawConfig.IsNull() || !rawConfig.IsKnown() || rawConfig.Type() == cty.NilType {
-		return false, false
+		return configuredShouldAssignIPFromState(d.Get("nics"), nicIndex)
 	}
 
 	nics, ok := rawConfigAttribute(rawConfig, "nics")
@@ -2558,6 +2558,75 @@ func configuredShouldAssignIP(d *schema.ResourceData, nicIndex int) (bool, bool)
 		return value, true
 	}
 	return configuredShouldAssignIPFromNicNetworkInfo(nicConfigs[nicIndex])
+}
+
+func configuredShouldAssignIPFromState(nics interface{}, nicIndex int) (bool, bool) {
+	if nicIndex < 0 {
+		return false, false
+	}
+
+	switch nicList := nics.(type) {
+	case []interface{}:
+		if nicIndex >= len(nicList) {
+			return false, false
+		}
+		if nic, ok := nicList[nicIndex].(map[string]interface{}); ok {
+			return configuredShouldAssignIPFromFlattenedNic(nic)
+		}
+	case []map[string]interface{}:
+		if nicIndex >= len(nicList) {
+			return false, false
+		}
+		return configuredShouldAssignIPFromFlattenedNic(nicList[nicIndex])
+	}
+
+	return false, false
+}
+
+func configuredShouldAssignIPFromFlattenedNic(nic map[string]interface{}) (bool, bool) {
+	if value, ok := configuredShouldAssignIPFromFlattenedNetworkInfo(nic["network_info"]); ok {
+		return value, true
+	}
+	return configuredShouldAssignIPFromFlattenedNicNetworkInfo(nic["nic_network_info"])
+}
+
+func configuredShouldAssignIPFromFlattenedNicNetworkInfo(nicNetworkInfo interface{}) (bool, bool) {
+	var result bool
+	found := false
+	forEachFlattenedMap(nicNetworkInfo, func(nicNetworkInfoItem map[string]interface{}) {
+		if found {
+			return
+		}
+		for _, networkInfoKey := range []string{"virtual_ethernet_nic_network_info", "dp_offload_nic_network_info"} {
+			value, ok := configuredShouldAssignIPFromFlattenedNetworkInfo(nicNetworkInfoItem[networkInfoKey])
+			if ok {
+				result = value
+				found = true
+				return
+			}
+		}
+	})
+	return result, found
+}
+
+func configuredShouldAssignIPFromFlattenedNetworkInfo(networkInfo interface{}) (bool, bool) {
+	var result bool
+	found := false
+	forEachFlattenedMap(networkInfo, func(networkInfoItem map[string]interface{}) {
+		if found {
+			return
+		}
+		forEachFlattenedMap(networkInfoItem["ipv4_config"], func(ipv4ConfigItem map[string]interface{}) {
+			if found {
+				return
+			}
+			if shouldAssignIP, ok := ipv4ConfigItem["should_assign_ip"].(bool); ok {
+				result = shouldAssignIP
+				found = true
+			}
+		})
+	})
+	return result, found
 }
 
 func configuredShouldAssignIPFromLegacyNetworkInfo(nicConfig cty.Value) (bool, bool) {
@@ -2616,14 +2685,23 @@ func setShouldAssignIPInFlattenedNicNetworkInfo(nicNetworkInfo interface{}, valu
 
 func setShouldAssignIPInFlattenedNetworkInfo(networkInfo interface{}, value bool) {
 	forEachFlattenedMap(networkInfo, func(networkInfoItem map[string]interface{}) {
-		setShouldAssignIPInFlattenedIPv4Config(networkInfoItem["ipv4_config"], value)
+		if !setShouldAssignIPInFlattenedIPv4Config(networkInfoItem["ipv4_config"], value) {
+			networkInfoItem["ipv4_config"] = []interface{}{
+				map[string]interface{}{
+					"should_assign_ip": value,
+				},
+			}
+		}
 	})
 }
 
-func setShouldAssignIPInFlattenedIPv4Config(ipv4Config interface{}, value bool) {
+func setShouldAssignIPInFlattenedIPv4Config(ipv4Config interface{}, value bool) bool {
+	updated := false
 	forEachFlattenedMap(ipv4Config, func(ipv4ConfigItem map[string]interface{}) {
 		ipv4ConfigItem["should_assign_ip"] = value
+		updated = true
 	})
+	return updated
 }
 
 func forEachFlattenedMap(value interface{}, fn func(map[string]interface{})) {

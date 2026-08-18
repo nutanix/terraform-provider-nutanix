@@ -184,6 +184,31 @@ func TestAccV2NutanixVmsResource_WithNic(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixVmsResource_WithNicShouldAssignIP(t *testing.T) {
+	r := acctest.RandInt()
+	desc := "test vm description"
+	config := testVmsV4ConfigWithNicShouldAssignIP(r, desc, false)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixVmsResourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", fmt.Sprintf("tf-test-vm-%d", r)),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.ipv4_config.0.should_assign_ip", "false"),
+				),
+			},
+			{
+				Config:   config,
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccV2NutanixVmsResource_WithNicTrunk(t *testing.T) {
 	r := acctest.RandInt()
 	desc := "test vm description"
@@ -1399,6 +1424,69 @@ func testVmsV4ConfigWithNic(r int, desc string, isConnected bool) string {
 			power_state = "ON"
 		}
 `, r, desc, filepath, isConnected)
+}
+
+func testVmsV4ConfigWithNicShouldAssignIP(r int, desc string, shouldAssignIP bool) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+			cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
+			config = jsondecode(file("%[3]s"))
+			vmm = local.config.vmm
+		}
+
+		data "nutanix_subnets_v2" "subnets" {
+			filter = "name eq '${local.vmm.subnet_name}'"
+		}
+
+		data "nutanix_storage_containers_v2" "ngt-sc" {
+		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
+		  limit = 1
+		}
+
+		resource "nutanix_virtual_machine_v2" "test"{
+			name= "tf-test-vm-%[1]d"
+			description =  "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets = 1
+			cluster {
+				ext_id = local.cluster0
+			}
+			disks{
+				disk_address{
+					bus_type = "SCSI"
+					index = 0
+				}
+				backing_info{
+					vm_disk{
+						disk_size_bytes = "1073741824"
+						storage_container{
+							ext_id = data.nutanix_storage_containers_v2.ngt-sc.storage_containers[0].ext_id
+						}
+					}
+				}
+			}
+			nics{
+				nic_network_info{
+					virtual_ethernet_nic_network_info{
+						nic_type = "NORMAL_NIC"
+						subnet{
+							ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+						}
+						vlan_mode = "ACCESS"
+						ipv4_config {
+							should_assign_ip = %[4]t
+						}
+					}
+				}
+			}
+			power_state = "OFF"
+		}
+`, r, desc, filepath, shouldAssignIP)
 }
 
 func testVmsV4ConfigWithNicWithTrunkVlan(r int, desc string) string {
