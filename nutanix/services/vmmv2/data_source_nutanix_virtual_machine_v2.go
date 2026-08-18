@@ -2460,6 +2460,10 @@ func flattenCdRomBusType(pr *config.CdRomBusType) string {
 }
 
 func flattenNic(nic []config.Nic) []interface{} {
+	return flattenNicWithResourceData(nic, nil)
+}
+
+func flattenNicWithResourceData(nic []config.Nic, d *schema.ResourceData) []interface{} {
 	if len(nic) > 0 {
 		nicList := make([]interface{}, len(nic))
 
@@ -2518,11 +2522,123 @@ func flattenNic(nic []config.Nic) []interface{} {
 				}
 			}
 
+			if shouldAssignIP, ok := configuredShouldAssignIP(d, k); ok {
+				setShouldAssignIPInFlattenedNetworkInfo(nics["network_info"], shouldAssignIP)
+				setShouldAssignIPInFlattenedNicNetworkInfo(nics["nic_network_info"], shouldAssignIP)
+			}
+
 			nicList[k] = nics
 		}
 		return nicList
 	}
 	return nil
+}
+
+func configuredShouldAssignIP(d *schema.ResourceData, nicIndex int) (bool, bool) {
+	if d == nil {
+		return false, false
+	}
+
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() || rawConfig.Type() == cty.NilType {
+		return false, false
+	}
+
+	nics, ok := rawConfigAttribute(rawConfig, "nics")
+	if !ok {
+		return false, false
+	}
+
+	nicConfigs := rawConfigCollection(nics)
+	if nicIndex < 0 || nicIndex >= len(nicConfigs) {
+		return false, false
+	}
+
+	if value, ok := configuredShouldAssignIPFromLegacyNetworkInfo(nicConfigs[nicIndex]); ok {
+		return value, true
+	}
+	return configuredShouldAssignIPFromNicNetworkInfo(nicConfigs[nicIndex])
+}
+
+func configuredShouldAssignIPFromLegacyNetworkInfo(nicConfig cty.Value) (bool, bool) {
+	networkInfo, ok := rawConfigAttribute(nicConfig, "network_info")
+	if !ok {
+		return false, false
+	}
+	return configuredShouldAssignIPFromNetworkInfoList(networkInfo)
+}
+
+func configuredShouldAssignIPFromNicNetworkInfo(nicConfig cty.Value) (bool, bool) {
+	nicNetworkInfo, ok := rawConfigAttribute(nicConfig, "nic_network_info")
+	if !ok {
+		return false, false
+	}
+
+	for _, nicNetworkInfoItem := range rawConfigCollection(nicNetworkInfo) {
+		for _, networkInfoKey := range []string{"virtual_ethernet_nic_network_info", "dp_offload_nic_network_info"} {
+			networkInfo, ok := rawConfigAttribute(nicNetworkInfoItem, networkInfoKey)
+			if !ok {
+				continue
+			}
+			if value, ok := configuredShouldAssignIPFromNetworkInfoList(networkInfo); ok {
+				return value, true
+			}
+		}
+	}
+
+	return false, false
+}
+
+func configuredShouldAssignIPFromNetworkInfoList(networkInfo cty.Value) (bool, bool) {
+	for _, networkInfoItem := range rawConfigCollection(networkInfo) {
+		ipv4Config, ok := rawConfigAttribute(networkInfoItem, "ipv4_config")
+		if !ok {
+			continue
+		}
+		for _, ipv4ConfigItem := range rawConfigCollection(ipv4Config) {
+			shouldAssignIP, ok := rawConfigAttribute(ipv4ConfigItem, "should_assign_ip")
+			if !ok || shouldAssignIP.Type() != cty.Bool {
+				continue
+			}
+			return shouldAssignIP.True(), true
+		}
+	}
+
+	return false, false
+}
+
+func setShouldAssignIPInFlattenedNicNetworkInfo(nicNetworkInfo interface{}, value bool) {
+	forEachFlattenedMap(nicNetworkInfo, func(nicNetworkInfoItem map[string]interface{}) {
+		setShouldAssignIPInFlattenedNetworkInfo(nicNetworkInfoItem["virtual_ethernet_nic_network_info"], value)
+		setShouldAssignIPInFlattenedNetworkInfo(nicNetworkInfoItem["dp_offload_nic_network_info"], value)
+	})
+}
+
+func setShouldAssignIPInFlattenedNetworkInfo(networkInfo interface{}, value bool) {
+	forEachFlattenedMap(networkInfo, func(networkInfoItem map[string]interface{}) {
+		setShouldAssignIPInFlattenedIPv4Config(networkInfoItem["ipv4_config"], value)
+	})
+}
+
+func setShouldAssignIPInFlattenedIPv4Config(ipv4Config interface{}, value bool) {
+	forEachFlattenedMap(ipv4Config, func(ipv4ConfigItem map[string]interface{}) {
+		ipv4ConfigItem["should_assign_ip"] = value
+	})
+}
+
+func forEachFlattenedMap(value interface{}, fn func(map[string]interface{})) {
+	switch items := value.(type) {
+	case []interface{}:
+		for _, item := range items {
+			if itemMap, ok := item.(map[string]interface{}); ok {
+				fn(itemMap)
+			}
+		}
+	case []map[string]interface{}:
+		for _, itemMap := range items {
+			fn(itemMap)
+		}
+	}
 }
 
 func flattenEmulatedNic(pr *config.EmulatedNic) []map[string]interface{} {

@@ -3638,7 +3638,7 @@ func setVMConfig(d *schema.ResourceData, getResp config.Vm) diag.Diagnostics {
 		return diags
 	}
 	for k, v := range fields {
-		if k == "disks" {
+		if k == "disks" || k == "nics" {
 			continue
 		}
 		if err := d.Set(k, v); err != nil {
@@ -3751,7 +3751,7 @@ func setVMConfig(d *schema.ResourceData, getResp config.Vm) diag.Diagnostics {
 	if err := d.Set("cd_roms", flattenCdRom(getResp.CdRoms)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("nics", flattenNic(getResp.Nics)); err != nil {
+	if err := d.Set("nics", flattenNicWithResourceData(getResp.Nics, d)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("gpus", flattenGpu(getResp.Gpus)); err != nil {
