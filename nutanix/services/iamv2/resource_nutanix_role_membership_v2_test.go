@@ -252,7 +252,7 @@ func testAccNutanixRoleMembershipV2Config() string {
 			value = nutanix_project_v2.test.ext_id
 		}
 	}
-	
+
 	resource "nutanix_role_membership_v2" "developer_role" {
 		role_ext_id      = local.developer_role_ext_id
 		identity_type    = "GROUP"
@@ -269,7 +269,7 @@ func testAccNutanixRoleMembershipV2Config() string {
 	data "nutanix_role_membership_v2" "get_role_membership_by_id" {
 		ext_id = nutanix_role_membership_v2.project_admin_role.ext_id
 	}
-	
+
 	data "nutanix_role_memberships_v2" "get_role_memberships" {
 		filter = "projectExtId eq '${nutanix_project_v2.test.ext_id}'"
 		depends_on = [nutanix_role_membership_v2.project_admin_role, nutanix_role_membership_v2.developer_role]

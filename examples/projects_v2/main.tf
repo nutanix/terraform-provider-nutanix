@@ -67,5 +67,3 @@ data "nutanix_resource_group_v2" "fetch_rg" {
 data "nutanix_resource_groups_v2" "all_rg" {
   filter = "projectExtId eq '${nutanix_project_v2.example.ext_id}'"
 }
-
-

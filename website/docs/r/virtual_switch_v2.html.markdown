@@ -8,7 +8,7 @@ description: |-
 
 # nutanix_virtual_switch_v2
 
-The `nutanix_virtual_switch_v2` resource allows you to create, manage, update, and delete Virtual Switches across your Nutanix clusters. 
+The `nutanix_virtual_switch_v2` resource allows you to create, manage, update, and delete Virtual Switches across your Nutanix clusters.
 
 This resource exposes two distinct create paths through one schema. The
 provider picks the path based on whether `clusters[].existing_bridge_name`
@@ -30,7 +30,7 @@ resource "nutanix_virtual_switch_v2" "example" {
 
   clusters {
     ext_id = "00000000-0000-0000-0000-000000000000"
-    
+
     hosts {
       ext_id    = "00000000-0000-0000-0000-000000000001"
       host_nics = ["eth0", "eth1"]
@@ -75,7 +75,7 @@ resource "nutanix_virtual_switch_v2" "from_existing_bridge" {
   clusters {
     ext_id               = "00000000-0000-0000-0000-000000000000"
     existing_bridge_name = "br1"
-    
+
     hosts {
       ext_id = "00000000-0000-0000-0000-000000000001"
     }
@@ -92,14 +92,14 @@ resource "nutanix_virtual_switch_v2" "from_existing_bridge" {
 
 ### Important Migration Limitations
 
-When the migrate path is triggered, the Nutanix API **silently ignores** the following top-level fields during creation, even if they are defined in your Terraform schema: 
+When the migrate path is triggered, the Nutanix API **silently ignores** the following top-level fields during creation, even if they are defined in your Terraform schema:
 * `bond_mode`, `mtu`, `igmp_spec`, `is_quick_mode`, `shared_with_projects`, and `owner_type`.
 
 The provider will emit a `[WARN]` log for each ignored field. To apply these configurations to a migrated bridge, you must run `terraform apply` a second time. The standard *update* endpoint (used during the second apply) will successfully process these fields.
 
 Additionally:
 * `existing_bridge_name` is a **create-time-only** parameter. Because the API never returns this field on reads, Terraform preserves the initial value in the state file to prevent constant drift during `terraform plan`.
-* Changing `existing_bridge_name` after creation has no effect; treat it as immutable. 
+* Changing `existing_bridge_name` after creation has no effect; treat it as immutable.
 * Setting `existing_bridge_name` on multiple `clusters[]` blocks will be rejected by the provider at apply time. Define it only on `clusters[0]`.
 
 ## Argument Reference

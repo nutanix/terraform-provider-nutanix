@@ -72,7 +72,7 @@ resource "nutanix_project" "project_test" {
   directory_reference_list {
     uuid = "<DIRECTORY_SERVICE_UUID>"
   }
-  
+
   identity_providers_reference_list {
     uuid = "<IDENTITY_PROVIDER_UUID>"
   }
@@ -90,7 +90,7 @@ resource "nutanix_project" "project_test" {
   }
 
   acp{
-    # acp name consists name_uuid string, it should be different for each acp. 
+    # acp name consists name_uuid string, it should be different for each acp.
     name="{{acp_name}}"
     role_reference{
       kind= "role"
@@ -106,7 +106,7 @@ resource "nutanix_project" "project_test" {
   }
 
    acp{
-    # acp name consists name_uuid string, it should be different for each acp. 
+    # acp name consists name_uuid string, it should be different for each acp.
     name="{{acp_name}}"
     role_reference{
       kind= "role"
@@ -146,7 +146,7 @@ resource "nutanix_project" "project_test" {
       uuid=resource.nutanix_subnet.sub.id
   }
   acp{
-    # acp name consists name_uuid string, it should be different for each acp. 
+    # acp name consists name_uuid string, it should be different for each acp.
     name="{{acp_name}}"
     role_reference{
       kind= "role"
@@ -270,8 +270,8 @@ The following arguments are supported:
 
 
 ### ACP
-* `acp` - (Optional) The list of ACPs to be attached to the users belonging to a project. It is mandate to provide cluster_uuid while using ACP. It helps to get the context list based on user role. 
-* `acp.#.name` - (Required) Name of the Access Control Policy.  
+* `acp` - (Optional) The list of ACPs to be attached to the users belonging to a project. It is mandate to provide cluster_uuid while using ACP. It helps to get the context list based on user role.
+* `acp.#.name` - (Required) Name of the Access Control Policy.
 * `acp.#.description` -  The description of the association of a role to a user in a given context.
 
 * `acp.#.user_reference_list` - The User(s) being assigned a given role.
@@ -290,38 +290,38 @@ The following arguments are supported:
 * `acp.#.role_reference.name` - (Optional/Computed) The name of a role.
 
 ### User List
-* `user_list` - (Optional) The list of user specification to be associated with the project. It is only required when user is not added in the PC. 
+* `user_list` - (Optional) The list of user specification to be associated with the project. It is only required when user is not added in the PC.
 * `user_list.#.directory_service_user` - (Optional) A Directory Service user.
-* `user_list.#.directory_service_user.user_principal_name` - (Required) The UserPrincipalName of the user from the directory service. 
-* `user_list.#.directory_service_user.directory_service_reference` - (Required) Reference to a directory_service . 
-* `user_list.#.directory_service_user.directory_service_reference.uuid` - (Required) The uuid to a directory_service. 
+* `user_list.#.directory_service_user.user_principal_name` - (Required) The UserPrincipalName of the user from the directory service.
+* `user_list.#.directory_service_user.directory_service_reference` - (Required) Reference to a directory_service .
+* `user_list.#.directory_service_user.directory_service_reference.uuid` - (Required) The uuid to a directory_service.
 * `user_list.#.directory_service_user.directory_service_reference.kind` - (Optional) The kind to a directory_service.
 
 * `user_list.#.identity_provider_user` - (Optional) An Identity Provider user.
 * `user_list.#.identity_provider_user.username` - (Required) The username from the identity provider. Name Id for SAML Identity Provider.
-* `user_list.#.identity_provider_user.identity_provider_reference` - (Required) The reference to a identity_provider. 
-* `user_list.#.identity_provider_user.identity_provider_reference.uuid` - (Required) The uuid to a identity_provider. 
+* `user_list.#.identity_provider_user.identity_provider_reference` - (Required) The reference to a identity_provider.
+* `user_list.#.identity_provider_user.identity_provider_reference.uuid` - (Required) The uuid to a identity_provider.
 * `user_list.#.identity_provider_user.identity_provider_reference.kind` - (Optional) The kind to a identity_provider.
 * `user_list.#.metadata` - (Required) Metadata Reference for user
 * `user_list.#.metadata.uuid` - (Required) UUID of the USER
-* `user_list.#.metadata.Kind` - Kind of the USER. 
+* `user_list.#.metadata.Kind` - Kind of the USER.
 
 
 ### User Group
 
-* `user_group` - (Optional) The list of user group specification to be associated with the project. It is only Required when user group is not added in the PC. 
+* `user_group` - (Optional) The list of user group specification to be associated with the project. It is only Required when user group is not added in the PC.
 * `user_group.#.directory_service_user_group` - (Optional) A Directory Service user group.
-* `user_group.#.directory_service_user_group.distinguished_name` -  (Required) The Distinguished name for the user group. 
+* `user_group.#.directory_service_user_group.distinguished_name` -  (Required) The Distinguished name for the user group.
 
 * `user_group.#.saml_user_group` - (Optional) A SAML Service user group.
-* `user_group.#.saml_user_group.idp_uuid` - (Required) The UUID of the Identity Provider that the group belongs to. 
-* `user_group.#.saml_user_group.name` - (Required) The name of the SAML group which the IDP provides as attribute in SAML response. 
+* `user_group.#.saml_user_group.idp_uuid` - (Required) The UUID of the Identity Provider that the group belongs to.
+* `user_group.#.saml_user_group.name` - (Required) The name of the SAML group which the IDP provides as attribute in SAML response.
 
-* `user_group.#.directory_service_ou` - (Optional) A Directory Service user group. 
-* `user_group.#.directory_service_ou.distinguished_name` -  (Required) The Distinguished name for the user group. 
+* `user_group.#.directory_service_ou` - (Optional) A Directory Service user group.
+* `user_group.#.directory_service_ou.distinguished_name` -  (Required) The Distinguished name for the user group.
 * `user_group.#.metadata` - (Required) Metadata Reference for user group
 * `user_group.#.metadata.uuid` - (Required) UUID of the USER Group
-* `user_group.#.metadata.Kind` - Kind of the USER Group. 
+* `user_group.#.metadata.Kind` - Kind of the USER Group.
 
 
 ## Attributes Reference
@@ -391,6 +391,6 @@ The `project_reference`, `owner_reference` attributes supports the following:
 * `name` - (Optional) the name.
 * `uuid` - (Required) the UUID.
 
-Note: Few attributes which are added to support ACPs for Project are dependent on PC version. Features such as VPC, Cluster Reference requires pc2022.4 while Tunnel Reference requires pc2022.6 . 
+Note: Few attributes which are added to support ACPs for Project are dependent on PC version. Features such as VPC, Cluster Reference requires pc2022.4 while Tunnel Reference requires pc2022.6 .
 
 See detailed information in [Nutanix Project](https://www.nutanix.dev/api_references/prism-central-v3/#/8411486d42e4a-create-a-new-project).

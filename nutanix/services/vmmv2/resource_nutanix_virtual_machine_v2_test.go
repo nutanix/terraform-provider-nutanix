@@ -1147,7 +1147,7 @@ func testVmsV4Config(name, desc string) string {
 func testVmsV4ConfigWithDisk(r int, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {
-			filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"		
+			filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
 		}
 
 		resource "nutanix_subnet_v2" "subnet" {
@@ -1194,7 +1194,7 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 				ignore_changes = [placement_targets]
 			}
 		}
-		
+
 		data "nutanix_storage_containers_v2" "ngt-sc" {
 		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 		  limit = 1

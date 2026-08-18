@@ -163,13 +163,13 @@ func TestAccV2NutanixVolumeGroupResource_WithAttachmentTypeAndProtocolAndDisks(t
 			  ext_id      = data.nutanix_storage_containers_v2.test.storage_containers[0].ext_id
 			  entity_type = "STORAGE_CONTAINER"
 			  uris        = ["uri3","uri4"]
-			}	
+			}
 			disk_storage_features {
 				flash_mode {
 					is_enabled = false
 				}
 			}
-		}		
+		}
 	`, name, 20*gb)
 	disk1Updated := fmt.Sprintf(`
 		disks {
@@ -486,7 +486,7 @@ func testAccVolumeGroupResourceConfigWithAttachmentTypeAndProtocolAndDisksUpdate
 		cluster_reference                  = local.cluster1
 		attachment_type = "EXTERNAL"
 		protocol = "NVMF"
-		
+
 		%[3]s
 
 		%[4]s

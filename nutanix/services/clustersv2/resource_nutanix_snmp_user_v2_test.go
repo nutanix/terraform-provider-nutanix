@@ -87,7 +87,7 @@ data "nutanix_clusters_v2" "aos" {
 
 locals {
   clusterExtID = data.nutanix_clusters_v2.aos.cluster_entities[0].ext_id
-} 
+}
 
 resource "nutanix_snmp_user_v2" "test" {
   cluster_ext_id = local.clusterExtID
@@ -108,7 +108,7 @@ data "nutanix_clusters_v2" "aos" {
 
 locals {
   clusterExtID = data.nutanix_clusters_v2.aos.cluster_entities[0].ext_id
-} 
+}
 
 resource "nutanix_snmp_user_v2" "test" {
   cluster_ext_id = local.clusterExtID

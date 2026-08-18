@@ -8,7 +8,7 @@ description: |-
 
 # nutanix_virtual_switch_v2
 
-The `nutanix_virtual_switch_v2` data source allows you to retrieve comprehensive configuration and status details of a specific Virtual Switch within your Nutanix environment, given its Universally Unique Identifier (UUID). 
+The `nutanix_virtual_switch_v2` data source allows you to retrieve comprehensive configuration and status details of a specific Virtual Switch within your Nutanix environment, given its Universally Unique Identifier (UUID).
 
 This data source is extremely useful when you need to reference an existing Virtual Switch's configuration—such as its bonding mode, physical host NIC mappings, or VLAN identifiers—to provision dependencies like Virtual Machines or VPC Mappings.
 

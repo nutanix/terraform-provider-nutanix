@@ -40,7 +40,7 @@ resource "nutanix_ad_group_category_mapping_v2" "example" {
   # Recommendation is to use the name of the Active Directory group as the name of the Category Mapping.
 
   category_value = "infra_team" # This is the value of the category that will be mapped to the Active Directory group.
-  
+
   category_name = "ADGroup"
   # By default it is ADGroup.
   # Recommendation is to use the same key for all the Active Directory groups Category mappings. This is the key of the category that will be mapped to the Active Directory group.

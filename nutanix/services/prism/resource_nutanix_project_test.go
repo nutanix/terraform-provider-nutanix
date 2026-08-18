@@ -639,8 +639,8 @@ func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, descr
 
 			external_user_group_reference_list {
 				name= "%[7]s"
-			   	kind= "user_group"
-			   	uuid= "%[8]s"
+				kind= "user_group"
+				uuid= "%[8]s"
 			}
 
 			acp{
@@ -653,8 +653,8 @@ func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, descr
 
 				user_group_reference_list {
 					name= "%[7]s"
-					kind= "user_group"
-					uuid= "%[8]s"
+				kind= "user_group"
+				uuid= "%[8]s"
 				}
 
 				description= "untitledAcp-54acc50f-ab94-640a-5f06-5c855cc09539"

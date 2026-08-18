@@ -105,5 +105,5 @@ data "nutanix_virtual_switch_v2" "get_standard_vs" {
 # Retrieve a list of all Virtual Switches in the environment
 data "nutanix_virtual_switches_v2" "list_all_vs" {}
 
-# Retrieve node schedulable statuses 
+# Retrieve node schedulable statuses
 data "nutanix_node_schedulable_statuses_v2" "statuses" {}

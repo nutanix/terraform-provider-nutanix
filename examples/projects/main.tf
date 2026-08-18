@@ -16,7 +16,7 @@ provider "nutanix" {
   insecure = true
 }
 
-# set use_project_internal flag to use user-role mapping 
+# set use_project_internal flag to use user-role mapping
 
 data "nutanix_clusters" "clusters" {}
 
@@ -56,7 +56,7 @@ resource "nutanix_subnet" "infra-managed-network-140" {
 
   dhcp_domain_name_server_list = ["10.xx.xx.xx"]
   dhcp_domain_search_list      = ["ntnxlab.local"]
-  #ip_config_pool_list_ranges   = ["10.xx.xx.xx 10.xx.xx.xx"] 
+  #ip_config_pool_list_ranges   = ["10.xx.xx.xx 10.xx.xx.xx"]
 }
 
 # Note: user reference and acp->user_reference should be same for mapping the role. Also whenever acp is given
@@ -69,7 +69,7 @@ resource "nutanix_project" "testp1" {
   # cluster uuid is required to map acp in projects
   cluster_uuid = local.cluster1
 
-  # set this use_project_internal flag for using projects_internal API 
+  # set this use_project_internal flag for using projects_internal API
   use_project_internal = true
 
   # set project collaboration, default it is true
@@ -101,7 +101,7 @@ resource "nutanix_project" "testp1" {
     uuid = resource.nutanix_subnet.sub.id
   }
   acp {
-    # acp name consists name_uuid string, it should be different for each acp. 
+    # acp name consists name_uuid string, it should be different for each acp.
     name = "{{acp_name}}"
     role_reference {
       kind = "role"

@@ -189,7 +189,7 @@ data "nutanix_storage_containers_v2" "ngt-sc" {
 	filter = "clusterExtId eq '${local.clusterExtId}' and startswith(name,'default-container-')"
 	limit = 1
 }
-  
+
 resource "nutanix_virtual_machine_v2" "test" {
   name                 = "%[2]s"
   description          = "%[3]s"

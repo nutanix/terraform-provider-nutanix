@@ -939,7 +939,7 @@ func testVpcNonDefaultProjectConfig(name, desc string, vlanID int, proj1, proj2,
 		project_id = "%[5]s"
 		description = "second project for vpc test"
 	}
-	
+
 	resource "nutanix_subnet_v2" "test" {
 		name              = "terraform-test-subnet-vpc-nondfl"
 		description       = "test subnet for vpc non-default project test"

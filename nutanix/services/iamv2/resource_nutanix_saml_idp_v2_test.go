@@ -298,7 +298,7 @@ func testSamlIdpProjectConfig(projectName, groupsDelim, shareState string) strin
 		custom_attributes = local.identity_providers.custom_attributes
 		depends_on = [nutanix_project_v2.share_project]
 		lifecycle {
-   	  ignore_changes = [
+			ignore_changes = [
 			  idp_metadata,
 		  ]
 		}
@@ -357,7 +357,7 @@ func testSamlIdpNonDefaultProjectConfig(proj1, proj2, shareState string) string 
 		%[4]s
 		depends_on = [nutanix_project_v2.project1, nutanix_project_v2.project2]
 		lifecycle {
-   	  ignore_changes = [
+			ignore_changes = [
 			  idp_metadata,
 		  ]
 		}
@@ -483,7 +483,7 @@ func testSamlIdpShareAllConfig(projectName, groupsDelim, shareState string) stri
 		%[4]s
 		depends_on = [nutanix_project_v2.share_project]
 		lifecycle {
-   	  ignore_changes = [
+			ignore_changes = [
 			  idp_metadata,
 		  ]
 		}

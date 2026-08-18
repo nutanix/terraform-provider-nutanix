@@ -122,7 +122,7 @@ resource "nutanix_network_security_policy_export_v2" "export_all" {
 # -----------------------------------------------------------------------------
 
 # Export a snapshot of specific policies that belong to a specific project.
-# This ensures that only the policies matching both the provided IDs and the 
+# This ensures that only the policies matching both the provided IDs and the
 # project context are exported.
 resource "nutanix_network_security_policy_export_v2" "export_selected_with_project" {
   policy_ext_ids = [

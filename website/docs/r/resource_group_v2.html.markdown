@@ -52,7 +52,7 @@ The `storage_containers` attribute supports the following:
 ## Attributes Reference
 
 The following attributes are exported:
-* `name`:- Resource Group name 
+* `name`:- Resource Group name
 * `project_ext_id`:- External identifier of the project this resource group belongs to.
 * `placement_targets`:- List of placement targets.
 * `ext_id`:- A globally unique identifier of the resource group.

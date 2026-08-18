@@ -78,7 +78,7 @@ The following arguments are supported:
 `name`, `description`, `should_load_balance_vm_attachments`, `sharing_status`,
 `target_prefix`, `target_name`, `enabled_authentications`, `iscsi_features`,
 `created_by`, `storage_features`, `usage_type`, and `is_hidden`.
-- `disks` can be updated in place. 
+- `disks` can be updated in place.
 - Updating `project_ext_id` is not supported.
 
 ### Iscsi Features
