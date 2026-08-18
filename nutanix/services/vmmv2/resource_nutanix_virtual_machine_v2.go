@@ -332,31 +332,26 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 									"boot_device": {
 										Type:     schema.TypeList,
 										Optional: true,
-										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"boot_device_disk": {
 													Type:     schema.TypeList,
 													Optional: true,
-													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"disk_address": {
 																Type:     schema.TypeList,
 																Optional: true,
-																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"bus_type": {
 																			Type:         schema.TypeString,
 																			Optional:     true,
-																			Computed:     true,
 																			ValidateFunc: validation.StringInSlice([]string{"SCSI", "SPAPR", "PCI", "IDE", "SATA"}, false),
 																		},
 																		"index": {
 																			Type:     schema.TypeInt,
 																			Optional: true,
-																			Computed: true,
 																		},
 																	},
 																},
@@ -367,13 +362,11 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 												"boot_device_nic": {
 													Type:     schema.TypeList,
 													Optional: true,
-													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"mac_address": {
 																Type:     schema.TypeString,
 																Optional: true,
-																Computed: true,
 															},
 														},
 													},
@@ -548,31 +541,26 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 									"boot_device": {
 										Type:     schema.TypeList,
 										Optional: true,
-										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"boot_device_disk": {
 													Type:     schema.TypeList,
 													Optional: true,
-													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"disk_address": {
 																Type:     schema.TypeList,
 																Optional: true,
-																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"bus_type": {
 																			Type:         schema.TypeString,
 																			Optional:     true,
-																			Computed:     true,
 																			ValidateFunc: validation.StringInSlice([]string{"SCSI", "SPAPR", "PCI", "IDE", "SATA"}, false),
 																		},
 																		"index": {
 																			Type:     schema.TypeInt,
 																			Optional: true,
-																			Computed: true,
 																		},
 																	},
 																},
@@ -583,13 +571,11 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 												"boot_device_nic": {
 													Type:     schema.TypeList,
 													Optional: true,
-													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"mac_address": {
 																Type:     schema.TypeString,
 																Optional: true,
-																Computed: true,
 															},
 														},
 													},
@@ -1596,15 +1582,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		checkForUpdateParams = true
 	}
 	if d.HasChange("machine_type") {
-		const two, three, four = 2, 3, 4
-		subMap := map[string]interface{}{
-			"PC":      two,
-			"PSERIES": three,
-			"Q35":     four,
-		}
-		pVal := subMap[d.Get("machine_type").(string)]
-		p := config.MachineType(pVal.(int))
-		updateSpec.MachineType = &p
+		updateSpec.MachineType = common.ExpandEnum[config.MachineType](d.Get("machine_type").(string))
 		checkForUpdateParams = true
 	}
 	if d.HasChange("vtpm_config") {
@@ -1624,15 +1602,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		checkForUpdateParams = true
 	}
 	if d.HasChange("protection_type") {
-		const two, three, four = 2, 3, 4
-		subMap := map[string]interface{}{
-			"UNPROTECTED":    two,
-			"PD_PROTECTED":   three,
-			"RULE_PROTECTED": four,
-		}
-		pVal := subMap[d.Get("protection_type").(string)]
-		p := config.ProtectionType(pVal.(int))
-		updateSpec.ProtectionType = &p
+		updateSpec.ProtectionType = common.ExpandEnum[config.ProtectionType](d.Get("protection_type").(string))
 		checkForUpdateParams = true
 	}
 	if d.HasChange("protection_policy_state") {
@@ -1645,11 +1615,17 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 	}
 
 	if checkForUpdateParams {
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(updatedVMResp, conn)
+
+		aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
+		log.Printf("[DEBUG] vm update spec: %s", string(aJSON))
+
 		updateVmByIdRequest := import3.UpdateVmByIdRequest{
 			ExtId: utils.StringPtr(d.Id()),
 			Body:  &updateSpec,
 		}
-		updateResp, err := conn.VMAPIInstance.UpdateVmById(ctx, &updateVmByIdRequest)
+		updateResp, err := conn.VMAPIInstance.UpdateVmById(ctx, &updateVmByIdRequest, args)
 		if err != nil {
 			return diag.Errorf("error while updating Virtual Machines : %v", err)
 		}
