@@ -62,3 +62,5 @@ Template placement policies can be imported using the `ext_id`:
 ```shell
 terraform import nutanix_template_placement_policy_v2.example <ext_id>
 ```
+
+See detailed information in [Nutanix Template Placement Policy V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/TemplatePlacementPolicies/operation/createTemplatePlacementPolicy).

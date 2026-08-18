@@ -59,3 +59,5 @@ The `metadata` block allows you to attach logical grouping and RBAC (Role-Based 
 * `project_reference_id` - (Optional, ForceNew) A globally unique identifier (UUID) of the Nutanix Project this resource belongs to. This is heavily used for multi-tenancy and resource isolation.
 * `project_name` - (Optional, ForceNew) The human-readable name of the Nutanix Project this resource is assigned to.
 * `category_ids` - (Optional, ForceNew) A list of globally unique identifiers (UUIDs) representing the categories (tags) associated with the mapping. Categories are useful for policy enforcement, granular filtering, or billing attribution.
+
+See detailed information in [Nutanix VPC Virtual Switch Mapping V4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/VpcVirtualSwitchMappings/operation/createVpcVirtualSwitchMapping).

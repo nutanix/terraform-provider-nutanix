@@ -43,3 +43,5 @@ The following attributes are exported:
   * `name` - The name of the variable.
   * `value` - The value to substitute.
 * `project_ext_id` - External identifier of the project associated with the role membership.
+
+See detailed information in [Nutanix Get Role Membership V2](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/RoleMembership/operation/getRoleMembershipById).

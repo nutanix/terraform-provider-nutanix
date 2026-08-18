@@ -204,4 +204,4 @@ terraform import nutanix_saml_identity_providers_v2.import_saml_idp <UUID>
 ```
 
 
-See detailed information in [Nutanix SAML Identity Providers v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0).
+See detailed information in [Nutanix SAML Identity Providers v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/SAMLIdentityProviders/operation/createSamlIdentityProvider).

@@ -26,4 +26,4 @@ data "nutanix_vm_startup_policy_start_condition_conflicts_v2" "example" {
 
 * `start_condition_conflicts` - List of start condition conflicts. Each entry has the same attributes as the `nutanix_vm_startup_policy_start_condition_conflict_v2` datasource, except `dependee_vms` and `dependent_vms` which are only populated when using the single-item datasource.
 
-See detailed information in [Nutanix VM Startup Policy V2](https://developers.nutanix.com/).
+See detailed information in [Nutanix List VM Startup Policy Start Condition Conflicts V2](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/VmStartupPolicies/operation/listVmStartupPolicyStartConditionConflicts).

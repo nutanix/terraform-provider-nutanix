@@ -95,3 +95,5 @@ resource "nutanix_role_membership_v2" "import_role_membership" {}
 
 terraform import nutanix_role_membership_v2.import_role_membership <ext_id>
 ```
+
+See detailed information in [Nutanix Role Membership V4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/RoleMembership/operation/createRoleMembership).

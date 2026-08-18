@@ -84,4 +84,4 @@ resource "nutanix_roles_v2" "import_role" {}
 terraform import nutanix_roles_v2.import_role <UUID>
 ```
 
-See detailed information in [Nutanix Create Role ](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Roles/operation/createRole).
+See detailed information in [Nutanix Create Role ](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/Roles/operation/createRole).
