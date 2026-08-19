@@ -575,6 +575,10 @@ func ResourceNutanixVolumeGroupV2Update(ctx context.Context, d *schema.ResourceD
 		aJSON, _ := json.MarshalIndent(updateVolumeGroupByIdRequest, "", "  ")
 		log.Printf("[DEBUG] Update Volume Group Request: %s", string(aJSON))
 
+		readResp, err = conn.VolumeAPIInstance.GetVolumeGroupById(ctx, &getVolumeGroupByIdRequest)
+		if err != nil {
+			return diag.Errorf("error while fetching Volume Group : %v", err)
+		}
 		// Extract E-Tag Header for the If-Match precondition.
 		etagValue := conn.VolumeAPIInstance.ApiClient.GetEtag(readResp)
 		args := make(map[string]interface{})
