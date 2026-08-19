@@ -69,7 +69,17 @@ The following arguments are supported:
   - ISCSI : Volume Group uses iSCSI protocol.
   - NVMF : Volume Group uses NVMf protocol.
 - `is_hidden`: -(Optional) Indicates whether the Volume Group is meant to be hidden or not.
+- `project_ext_id`: -(Optional) External identifier of the project associated with the Volume Group. Updating this field is not supported.
 - `disks`: -(Optional) A list of Volume Disks to be attached to the Volume Group.
+
+## Update
+
+- The following arguments can be updated in place (via the Update Volume Group API):
+`name`, `description`, `should_load_balance_vm_attachments`, `sharing_status`,
+`target_prefix`, `target_name`, `enabled_authentications`, `iscsi_features`,
+`created_by`, `storage_features`, `usage_type`, and `is_hidden`.
+- `disks` can be updated in place.
+- Updating `project_ext_id` is not supported.
 
 ### Iscsi Features
 
@@ -144,4 +154,4 @@ resource "nutanix_volume_group_v2" "import_vg" {}
 terraform import nutanix_volume_group_v2.import_vg <UUID>
 ```
 
-See detailed information in [Nutanix Create Volume Group V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.2#tag/VolumeGroups/operation/createVolumeGroup).
+See detailed information in [Nutanix Create Volume Group V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.3#tag/VolumeGroups/operation/createVolumeGroup).

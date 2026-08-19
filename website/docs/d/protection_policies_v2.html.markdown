@@ -71,6 +71,7 @@ The `protection_policies` is a list of protection policies. Each protection poli
 * `category_ids`: - Host entity with its attributes.
 * `is_approval_policy_needed`: - Disks attached to host.
 * `owner_ext_id`: - Node degraded status.
+* `project_ext_id`: - Project external ID associated with the protection policy.
 
 
 ### Links
@@ -118,6 +119,9 @@ The schedule attribute supports the following:
 * `retention`: - Specifies the retention policy for the recovery point schedule.
 * `start_time`: - Represents the protection start time for the new entities added to the policy after the policy is created in h:m format. The values must be between 00h:00m and 23h:59m and in UTC timezone. It specifies the time when the first snapshot is taken and replicated for any entity added to the policy. If this is not specified, the snapshot is taken immediately and replicated for any new entity added to the policy.
 * `sync_replication_auto_suspend_timeout_seconds`: - Auto suspend timeout if there is a connection failure between locations for synchronous replication. If this value is not set, then the policy will not be suspended.
+* `latest_recovery_point_retention_seconds`: - Duration (in seconds) that the latest recovery point is retained past its expiry time if the entity is unprotected, deleted, or migrated. If not specified, the latest recovery point will be retained for a minimum of 30 days. Set to 0 to not retain past expiry.
+* `is_replication_paused`: - Indicates whether replication is paused for all VMs and volume groups associated with the remote replication location.
+* `schedule_ext_id`: - System-generated schedule ID for the replication configuration.
 
 #### Retention
 > One of `linear_retention` or `auto_rollup_retention` :
@@ -151,4 +155,4 @@ The local, remote attribute in the auto_rollup_retention supports the following:
 
 
 
-See detailed information in [Nutanix List Protection Policies V4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.2#tag/ProtectionPolicies/operation/listProtectionPolicies).
+See detailed information in [Nutanix List Protection Policies V4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.3#tag/ProtectionPolicies/operation/listProtectionPolicies).

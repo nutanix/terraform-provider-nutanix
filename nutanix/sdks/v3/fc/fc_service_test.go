@@ -19,7 +19,7 @@ func setup() (*http.ServeMux, *client.Client, *httptest.Server) {
 	c, _ := client.NewClient(&client.Credentials{
 		URL:      "https://10.2.242.13:9440",
 		Username: "admin",
-		Password: "Nutanix.123",
+		Password: "REDACTED",
 		Port:     "9440",
 		Endpoint: "10.2.242.13",
 		Insecure: true,

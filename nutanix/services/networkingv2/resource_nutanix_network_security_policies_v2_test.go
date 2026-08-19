@@ -37,6 +37,162 @@ func TestAccV2NutanixNetworkSecurityResource_Basic(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixNetworkSecurityResource_FlexRule(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-nsp-flex-%d", r)
+	desc := "test nsp flex rule description"
+	updatedDesc := "test nsp flex rule description updated"
+
+	// NOTE: The currently pinned microseg SDK exposes the rule type as "FLEX"
+	// (microseg.v4.config.FlexRuleSpec, RULETYPE_FLEX). The v4 API is renaming
+	// this to "ENVIRONMENT" (ENG-824731); update this test and the resource
+	// schema when the SDK is bumped to expose the new type.
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			// Create with a FLEX rule referencing real entity groups.
+			{
+				Config: testNetworkSecurityConfigWithFlexRule(name, desc, "ALLOW", "IN_OUT", 100, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameNs, "name", name),
+					resource.TestCheckResourceAttr(resourceNameNs, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameNs, "type", "WORKLOAD"),
+					resource.TestCheckResourceAttr(resourceNameNs, "priority", "300"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.type", "FLEX"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.name", fmt.Sprintf("tf-flex-rule-%s", name)),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.is_logging_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.spec.0.flex_rule_spec.0.action", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.spec.0.flex_rule_spec.0.direction", "IN_OUT"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.spec.0.flex_rule_spec.0.priority", "100"),
+					resource.TestCheckResourceAttrSet(resourceNameNs, "rules.0.spec.0.flex_rule_spec.0.applied_to_entity_group_references.#"),
+					resource.TestCheckResourceAttrSet(resourceNameNs, "rules.0.spec.0.flex_rule_spec.0.src_entity_group_references.#"),
+					resource.TestCheckResourceAttrSet(resourceNameNs, "rules.0.spec.0.flex_rule_spec.0.dest_entity_group_references.#"),
+					resource.TestCheckResourceAttrSet(resourceNameNs, "is_shared_with_all_projects"),
+				),
+			},
+			// Update the FLEX rule (action/direction/priority/logging) to exercise the update path.
+			{
+				Config: testNetworkSecurityConfigWithFlexRule(name, updatedDesc, "DENY", "IN", 200, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameNs, "description", updatedDesc),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.type", "FLEX"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.is_logging_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.spec.0.flex_rule_spec.0.action", "DENY"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.spec.0.flex_rule_spec.0.direction", "IN"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.spec.0.flex_rule_spec.0.priority", "200"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccV2NutanixNetworkSecurityResource_ProjectAssociation(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-nsp-projassoc-%d", r)
+	desc := "nsp project association test"
+	projectName := fmt.Sprintf("tf-nsp-pa-proj-%d", r)
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testNSPProjectAssociationConfig(name, desc, projectName, "", true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceNameNs, "project_ext_id", "nutanix_project_v2.test", "ext_id"),
+					resource.TestCheckResourceAttrPair("data.nutanix_network_security_policy_v2.test", "project_ext_id", "nutanix_project_v2.test", "ext_id"),
+					resource.TestCheckResourceAttr("data.nutanix_network_security_policies_v2.test", "network_policies.#", "1"),
+					resource.TestCheckResourceAttrPair("data.nutanix_network_security_policies_v2.test", "network_policies.0.ext_id", resourceNameNs, "ext_id"),
+					resource.TestCheckResourceAttrPair("data.nutanix_network_security_policies_v2.test", "network_policies.0.project_ext_id", "nutanix_project_v2.test", "ext_id"),
+				),
+			},
+			{
+				Config:      testNSPProjectAssociationConfig(name, desc, projectName, "00000000-0000-0000-0000-000000000000", true),
+				ExpectError: regexp.MustCompile("Update of project_ext_id is not supported"),
+			},
+			{
+				Config: testNSPProjectAssociationCleanupConfig(projectName),
+			},
+		},
+	})
+}
+
+func nspProjectExtIDLine(override string) string {
+	if override == "" {
+		return `project_ext_id = nutanix_project_v2.test.ext_id`
+	}
+	return fmt.Sprintf(`project_ext_id = "%s"`, override)
+}
+
+func testNSPProjectAssociationConfig(name, desc, projectName, projectExtIDOverride string, shareCategories bool) string {
+	shareBlock := `shared_with_projects = []`
+	if shareCategories {
+		shareBlock = `shared_with_projects = [nutanix_project_v2.test.ext_id]`
+	}
+	return fmt.Sprintf(`
+	resource "nutanix_project_v2" "test" {
+		name        = "%[3]s"
+		project_id  = "%[3]s"
+		description = "project association test"
+	}
+
+	resource "nutanix_category_v2" "nsp_cat" {
+		count       = 2
+		key         = "tf_nsp_pa_%[3]s_${count.index}_key"
+		value       = "tf_nsp_pa_%[3]s_${count.index}_value"
+		description = "category for NSP project association test"
+		%[5]s
+	}
+
+	resource "nutanix_network_security_policy_v2" "test" {
+		name        = "%[1]s"
+		description = "%[2]s"
+		state       = "SAVE"
+		type        = "ISOLATION"
+		rules {
+			type = "TWO_ENV_ISOLATION"
+			spec {
+				two_env_isolation_rule_spec {
+					first_isolation_group  = [nutanix_category_v2.nsp_cat[0].id]
+					second_isolation_group = [nutanix_category_v2.nsp_cat[1].id]
+				}
+			}
+		}
+		is_hitlog_enabled = false
+		%[4]s
+		depends_on = [nutanix_project_v2.test]
+	}
+
+	data "nutanix_network_security_policy_v2" "test" {
+		ext_id     = nutanix_network_security_policy_v2.test.ext_id
+		depends_on = [nutanix_network_security_policy_v2.test]
+	}
+
+	data "nutanix_network_security_policies_v2" "test" {
+		filter     = "name eq '${nutanix_network_security_policy_v2.test.name}'"
+		depends_on = [nutanix_network_security_policy_v2.test]
+	}
+	`, name, desc, projectName, nspProjectExtIDLine(projectExtIDOverride), shareBlock)
+}
+
+func testNSPProjectAssociationCleanupConfig(projectName string) string {
+	return fmt.Sprintf(`
+	resource "nutanix_project_v2" "test" {
+		name        = "%[1]s"
+		project_id  = "%[1]s"
+		description = "project association test"
+	}
+
+	resource "nutanix_category_v2" "nsp_cat" {
+		count       = 2
+		key         = "tf_nsp_pa_%[1]s_${count.index}_key"
+		value       = "tf_nsp_pa_%[1]s_${count.index}_value"
+		description = "category for NSP project association test"
+		shared_with_projects = []
+	}
+	`, projectName)
+}
+
 func TestAccV2NutanixNetworkSecurityResource_WithRules(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-nsp-%d", r)
@@ -219,7 +375,7 @@ func TestAccV2NutanixNetworkSecurityResource_ServiceInsertion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameNs, "is_ipv6_traffic_allowed", "false"),
 					resource.TestCheckResourceAttr(resourceNameNs, "rules.#", "2"),
 					// Rule 0: Outbound (Secured -> Dest via NF)
-					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.description", "OUTBOUND: Traffic from Web (Secured) -> DB"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.description", "OUTBOUND: Traffic from Web (Secured) to DB"),
 					resource.TestCheckResourceAttrSet(resourceNameNs, "rules.0.spec.0.application_rule_spec.0.secured_group_category_references.#"),
 					resource.TestCheckResourceAttrSet(resourceNameNs, "rules.0.spec.0.application_rule_spec.0.dest_category_references.#"),
 					resource.TestCheckResourceAttrPair(
@@ -230,7 +386,7 @@ func TestAccV2NutanixNetworkSecurityResource_ServiceInsertion(t *testing.T) {
 					),
 					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.spec.0.application_rule_spec.0.is_all_protocol_allowed", "true"),
 					// Rule 1: Inbound (Src -> Secured via NF)
-					resource.TestCheckResourceAttr(resourceNameNs, "rules.1.description", "INBOUND: Traffic from DB -> Web (Secured)"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.1.description", "INBOUND: Traffic from DB to Web (Secured)"),
 					resource.TestCheckResourceAttrSet(resourceNameNs, "rules.1.spec.0.application_rule_spec.0.secured_group_category_references.#"),
 					resource.TestCheckResourceAttrSet(resourceNameNs, "rules.1.spec.0.application_rule_spec.0.src_category_references.#"),
 					resource.TestCheckResourceAttrPair(
@@ -599,6 +755,94 @@ func testNetworkSecurityConfigWithMultiEnvIsolationRuleSpecRule(name, desc strin
 		depends_on = [nutanix_vpc_v2.test]
 	  }
 	  `, name, desc)
+}
+
+func testNetworkSecurityConfigWithFlexRule(name, desc, action, direction string, priority int, loggingEnabled bool) string {
+	return fmt.Sprintf(`
+	# Categories are used to select the workloads that make up each entity group.
+	resource "nutanix_category_v2" "flex" {
+		count = 3
+		key   = "tf-nsp-flex-%[1]s-${count.index}"
+		value = "tf-nsp-flex-val-${count.index}"
+	}
+
+	# Entity group the FLEX rule is applied to.
+	resource "nutanix_entity_group_v2" "flex_applied" {
+		name        = "tf-nsp-flex-applied-%[1]s"
+		description = "applied-to entity group for flex nsp acc test"
+		allowed_config {
+			entities {
+				type              = "VM"
+				selected_by       = "CATEGORY_EXT_ID"
+				reference_ext_ids = [nutanix_category_v2.flex[0].id]
+			}
+		}
+	}
+
+	# Source entity group referenced by the FLEX rule.
+	resource "nutanix_entity_group_v2" "flex_src" {
+		name        = "tf-nsp-flex-src-%[1]s"
+		description = "source entity group for flex nsp acc test"
+		allowed_config {
+			entities {
+				type              = "VM"
+				selected_by       = "CATEGORY_EXT_ID"
+				reference_ext_ids = [nutanix_category_v2.flex[1].id]
+			}
+		}
+	}
+
+	# Destination entity group referenced by the FLEX rule. A Flex rule must define
+	# both a source and a destination (MIC-30149); here both are explicit entity groups.
+	resource "nutanix_entity_group_v2" "flex_dst" {
+		name        = "tf-nsp-flex-dst-%[1]s"
+		description = "destination entity group for flex nsp acc test"
+		allowed_config {
+			entities {
+				type              = "VM"
+				selected_by       = "CATEGORY_EXT_ID"
+				reference_ext_ids = [nutanix_category_v2.flex[2].id]
+			}
+		}
+	}
+
+	resource "nutanix_network_security_policy_v2" "test" {
+		name        = "%[1]s"
+		description = "%[2]s"
+		# Flex rules are only allowed in CRITICAL, COREINFRASTRUCTURE, ZONE or WORKLOAD
+		# policy types (MIC-30156). WORKLOAD is the type for user-created Flex policies.
+		type  = "WORKLOAD"
+		state = "SAVE"
+		# Policy priority is mandatory for these policy types (MIC-30157). In Flow
+		# rule-centric / SMSP (flex) mode with fixed priority allocation, priority
+		# 350 is reserved for the system-defined WORKLOAD catch-all policy, so a
+		# user-defined WORKLOAD policy must use 1-349 (lower value = higher
+		# precedence). Using 350 fails validation with MIC-10007.
+		priority = 300
+
+		# A Flex policy may only contain Flex rules (they cannot be mixed with other
+		# rule types - MIC-30148). Both "name" and "priority" are mandatory for Flex rules.
+		rules {
+			name               = "tf-flex-rule-%[1]s"
+			description        = "flex rule for acc test"
+			type               = "FLEX"
+			is_logging_enabled = %[5]t
+			spec {
+				flex_rule_spec {
+					action                             = "%[3]s"
+					direction                          = "%[4]s"
+					priority                           = %[6]d
+					applied_to_entity_group_references = [nutanix_entity_group_v2.flex_applied.id]
+					src_entity_group_references        = [nutanix_entity_group_v2.flex_src.id]
+					dest_entity_group_references        = [nutanix_entity_group_v2.flex_dst.id]
+					is_all_protocol_allowed            = true
+				}
+			}
+		}
+
+		depends_on = [nutanix_entity_group_v2.flex_applied, nutanix_entity_group_v2.flex_src, nutanix_entity_group_v2.flex_dst]
+	}
+	`, name, desc, action, direction, loggingEnabled, priority)
 }
 
 func testNetworkSecurityInvalidConfig(name, desc string) string {
@@ -1308,7 +1552,7 @@ func testAccNSPServiceInsertionConfig(name, desc string) string {
 		scope                   = "ALL_VLAN"
 		is_ipv6_traffic_allowed = false
 		rules {
-			description = "OUTBOUND: Traffic from Web (Secured) -> DB"
+			description = "OUTBOUND: Traffic from Web (Secured) to DB"
 			type        = "APPLICATION"
 			spec {
 				application_rule_spec {
@@ -1322,7 +1566,7 @@ func testAccNSPServiceInsertionConfig(name, desc string) string {
 			}
 		}
 		rules {
-			description = "INBOUND: Traffic from DB -> Web (Secured)"
+			description = "INBOUND: Traffic from DB to Web (Secured)"
 			type        = "APPLICATION"
 			spec {
 				application_rule_spec {

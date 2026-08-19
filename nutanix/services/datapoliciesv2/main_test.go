@@ -1,46 +1,37 @@
 package datapoliciesv2_test
 
 import (
-	"encoding/json"
-	"log"
 	"os"
 	"testing"
+
+	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-type TestConfig struct {
-	UsernameForTest  string `json:"username_for_test"`
-	PasswordForTest  string `json:"password_for_test"`
-	AvailabilityZone struct {
-		PcExtID      string `json:"pc_ext_id"`
-		ClusterExtID string `json:"cluster_ext_id"`
-		RemotePcIP   string `json:"remote_pc_ip"`
-	} `json:"availability_zone"`
-}
-
-var testVars TestConfig
-
+// testVars holds the shared test fixtures loaded from test_config_v2.json.
+// filepath is the absolute path to that file, injected into Terraform configs
+// that read the fixtures directly via jsondecode(file(...)).
 var (
-	path, _  = os.Getwd()
-	filepath = path + "/../../../test_config_v2.json"
+	testVars = acc.MustConfig()
+	filepath = acc.ConfigPath()
 )
 
-func loadVars(filepath string, varStuct interface{}) {
-	// Read config.json from home current path
-	configData, err := os.ReadFile(filepath)
-	if err != nil {
-		log.Printf("Got this error while reading config.json: %s", err.Error())
-		os.Exit(1)
-	}
-
-	err = json.Unmarshal(configData, varStuct)
-	if err != nil {
-		log.Printf("Got this error while unmarshalling config.json: %s", err.Error())
-		os.Exit(1)
-	}
-}
-
+// TestMain forces basic-auth for this package's acceptance tests.
+//
+// The data-policies APIs (protection policy) do not support API-key
+// authentication. Rather than declaring a basic-auth `provider "nutanix"` block
+// in every test config, we swap the API key for the basic-auth credentials from
+// test_config_v2.json here, before the provider is configured. The tests use
+// ProtoV5ProviderFactories, so the default "nutanix" provider is configured from
+// these environment variables.
+//
+// In a basic-auth environment (NUTANIX_API_KEY unset) this is a no-op.
 func TestMain(m *testing.M) {
-	log.Println("Do some crazy stuff before tests!")
-	loadVars("../../../test_config_v2.json", &testVars)
+	if os.Getenv("NUTANIX_API_KEY") != "" {
+		if testVars.UsernameForTest != "" && testVars.PasswordForTest != "" {
+			os.Setenv("NUTANIX_USERNAME", testVars.UsernameForTest)
+			os.Setenv("NUTANIX_PASSWORD", testVars.PasswordForTest)
+		}
+		os.Unsetenv("NUTANIX_API_KEY")
+	}
 	os.Exit(m.Run())
 }

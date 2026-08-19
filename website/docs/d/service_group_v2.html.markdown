@@ -39,6 +39,7 @@ The following attributes are exported:
 * `created_by`: created by.
 * `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 * `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
+* `project_ext_id`: Project external ID associated with the service group.
 
 
 ### tcp_services, udp_services
@@ -50,4 +51,4 @@ The following attributes are exported:
 * `code`: Icmp service Code. Ignore this field if Code has to be ANY
 * `is_all_allowed`: Set this field to true if both Type and Code is ANY.
 
-See detailed information in [Nutanix Get Service Group v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.2#tag/ServiceGroups/operation/getServiceGroupById).
+See detailed information in [Nutanix Get Service Group v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.3#tag/ServiceGroups/operation/getServiceGroupById).

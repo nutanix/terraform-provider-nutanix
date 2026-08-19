@@ -46,6 +46,8 @@ func TestAccV2NutanixPromoteProtectedResourceDatasource_GetProtectedVm(t *testin
 			{
 				PreConfig: func() {
 					fmt.Printf("Step 2: Get protected vm details\n")
+					// Step 2: Add a PreConfig to pause before Terraform runs the refresh/apply for the data source
+					time.Sleep(90 * time.Second)
 				},
 				Config: testGetProtectedResourceVMConfig() +
 					testCreateProtectedResourceVMConfig(vmName, ppName, description, r),
@@ -181,18 +183,46 @@ resource "nutanix_protection_policy_v2" "test" {
   category_ids = [nutanix_category_v2.synchronous-pp-category.id]
 }
 
+data "nutanix_storage_containers_v2" "ngt-sc" {
+	filter = "clusterExtId eq '${local.clusterExtId}' and startswith(name,'default-container-')"
+	limit = 1
+}
+
 resource "nutanix_virtual_machine_v2" "test" {
   name                 = "%[2]s"
   description          = "%[3]s"
   num_cores_per_socket = 1
   num_sockets          = 1
   cluster {
-    ext_id = data.nutanix_clusters_v2.clusters.cluster_entities.0.ext_id
+    ext_id = local.clusterExtId
   }
   categories {
     ext_id = nutanix_category_v2.synchronous-pp-category.id
   }
-  power_state = "OFF"
+  power_state = "ON"
+
+  disks {
+    disk_address{
+			bus_type = "SCSI"
+			index = 0
+		}
+		backing_info{
+			vm_disk{
+				disk_size_bytes = "1073741824" # 10 GB
+				storage_container{
+					ext_id = data.nutanix_storage_containers_v2.ngt-sc.storage_containers[0].ext_id
+				}
+			}
+		}
+  }
+
+  cd_roms {
+    disk_address {
+      bus_type = "IDE"
+      index    = 0
+    }
+  }
+
   depends_on = [nutanix_protection_policy_v2.test]
 }
 
@@ -285,14 +315,29 @@ resource "nutanix_protection_policy_v2" "test" {
     domain_manager_ext_id = data.nutanix_pcs_v2.pcs-list.pcs[0].ext_id
     label                 = "source"
     is_primary            = true
+    replication_sub_location {
+      cluster_ext_ids {
+        cluster_ext_ids = [local.clusterExtId]
+      }
+    }
   }
   replication_locations {
     domain_manager_ext_id = local.availability_zone.pc_ext_id
     label                 = "target"
     is_primary            = false
+    replication_sub_location {
+      cluster_ext_ids {
+        cluster_ext_ids = [local.availability_zone.cluster_ext_id]
+      }
+    }
   }
 
   category_ids = [nutanix_category_v2.test.id]
+}
+
+data "nutanix_storage_containers_v2" "vg-sc" {
+  filter = "clusterExtId eq '${local.clusterExtId}' and startswith(name,'default-container-')"
+  limit  = 1
 }
 
 resource "nutanix_volume_group_v2" "test" {
@@ -301,11 +346,31 @@ resource "nutanix_volume_group_v2" "test" {
   cluster_reference                  = local.clusterExtId
 }
 
+# A Volume Group must contain at least one vdisk to be protectable; an empty VG
+# has no storage objects to replicate and is skipped, staying UNPROTECTED.
+resource "nutanix_volume_group_disk_v2" "test" {
+  volume_group_ext_id = nutanix_volume_group_v2.test.id
+  index               = 0
+  description         = "disk for protected vg"
+  disk_size_bytes     = 1073741824
+  disk_data_source_reference {
+    name        = "%[2]s-disk"
+    ext_id      = data.nutanix_storage_containers_v2.vg-sc.storage_containers[0].ext_id
+    entity_type = "STORAGE_CONTAINER"
+  }
+  # The v4 GET does not return disk_data_source_reference (it is a create-time-only
+  # source reference), so it would otherwise show a perpetual add-in-place diff.
+  lifecycle {
+    ignore_changes = [disk_data_source_reference]
+  }
+}
+
 resource "nutanix_associate_category_to_volume_group_v2" "test" {
   ext_id = nutanix_volume_group_v2.test.id
   categories {
     ext_id = nutanix_category_v2.test.id
   }
+  depends_on = [nutanix_volume_group_disk_v2.test]
 }
 
 
