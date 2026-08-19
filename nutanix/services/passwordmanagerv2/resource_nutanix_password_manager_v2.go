@@ -119,7 +119,6 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 			return diag.Errorf("error while creating new prism client: %v", prismErr)
 		}
 
-
 		// retry to fetch the task
 		log.Printf("[DEBUG]  creating new taskconn with new password and retrying to fetch the task: %s", utils.StringValue(taskUUID))
 
