@@ -183,9 +183,10 @@ func schemaRegisteredDomainRegistrationConfig() *schema.Resource {
 							Sensitive: true,
 						},
 						"key_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Type:      schema.TypeString,
+							Optional:  true,
+							Computed:  true,
+							Sensitive: true,
 						},
 					},
 				},
@@ -235,7 +236,7 @@ func ResourceNutanixRegisteredDomainV2Create(ctx context.Context, d *schema.Reso
 		return diag.Errorf("create registered domain response did not contain task reference")
 	}
 	taskUUID := taskRef.ExtId
-	log.Printf("[DEBUG] Task UUID: %s", taskUUID)
+	log.Printf("[DEBUG] Task UUID: %s", utils.StringValue(taskUUID))
 
 	// Wait for the task to complete
 	// Nutanix Central Task API is not yet GA'ed/ not avilable in SDK. So depending on the list api to check if the domain registration is completed.

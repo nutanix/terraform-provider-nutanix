@@ -138,6 +138,7 @@ func schemaDatasourceRegisteredDomainRegistrationConfig() *schema.Resource {
 						"key_id": {
 							Type:     schema.TypeString,
 							Computed: true,
+							Sensitive: true,
 						},
 					},
 				},

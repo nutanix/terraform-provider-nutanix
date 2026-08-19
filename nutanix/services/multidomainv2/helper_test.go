@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/models/multidomain/v4/management"
+	localdomainReq "github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/models/multidomain/v4/request/localdomain"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/models/multidomain/v4/request/projects"
 	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/models/multidomain/v4/request/registereddomains"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/models/multidomain/v4/request/resourcegroups"
@@ -17,11 +19,42 @@ import (
 
 const resourceNameProjectV2 = "nutanix_project_v2.test"
 const resourceNameResourceGroupV2 = "nutanix_resource_group_v2.test"
+const resourceNameLocalDomainV2 = "nutanix_local_domain_v2.test"
 const resourceNameRegisteredDomainV2 = "nutanix_registered_domain_v2.test"
+
+// testLocalDomainV2CheckDestroy verifies the local domain is unregistered after
+// the test. LocalDomain is a singleton — after unregister its registration state
+// must no longer be REGISTERED.
+func testLocalDomainV2CheckDestroy(state *terraform.State) error {
+	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	client := conn.MultidomainAPI.LocalDomain
+	ctx := context.Background()
+
+	for _, rs := range state.RootModule().Resources {
+		if rs.Type != "nutanix_local_domain_v2" {
+			continue
+		}
+		resp, err := client.GetLocalDomain(ctx, &localdomainReq.GetLocalDomainRequest{})
+		if err != nil {
+			// A fetch error is acceptable — the domain is gone.
+			return nil
+		}
+		domain, ok := resp.Data.GetValue().(management.LocalDomain)
+		if !ok {
+			return nil
+		}
+		if domain.RegistrationStatus != nil && domain.RegistrationStatus.State != nil {
+			if domain.RegistrationStatus.State.GetName() == "REGISTERED" {
+				return fmt.Errorf("local domain still registered: %s", rs.Primary.ID)
+			}
+		}
+	}
+	return nil
+}
 
 func testRegisteredDomainV2CheckDestroy(state *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
-	client := conn.MultidomainAPI.RegisteredDomains
+	client := conn.NCDomainManagementAPI.RegisteredDomains
 	ctx := context.Background()
 
 	for _, rs := range state.RootModule().Resources {
