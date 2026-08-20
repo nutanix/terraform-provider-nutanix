@@ -501,7 +501,6 @@ func testAccVolumeGroupResourceConfigWithAttachmentTypeAndProtocolAndDisksUpdate
 	`, name, desc, disk1, disk2)
 }
 
-
 // TestAccV2NutanixVolumeGroupResource_UpdateDiskSize verifies that increasing
 // disk_size_bytes on an existing inline disk is actually applied to the Volume
 // Group (previously the update was a no-op: apply succeeded but the disk was
