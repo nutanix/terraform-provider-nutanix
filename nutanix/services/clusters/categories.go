@@ -31,6 +31,18 @@ func categoriesSchema() *schema.Schema {
 	}
 }
 
+func expandCategories(categoriesSet interface{}) map[string]string {
+	categories := categoriesSet.(*schema.Set).List()
+	output := make(map[string]string)
+
+	for _, v := range categories {
+		category := v.(map[string]interface{})
+		output[category["name"].(string)] = category["value"].(string)
+	}
+
+	return output
+}
+
 func flattenCategories(categories map[string]string) []interface{} {
 	c := make([]interface{}, 0)
 

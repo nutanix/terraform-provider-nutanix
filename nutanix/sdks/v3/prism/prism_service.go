@@ -65,6 +65,7 @@ type Service interface {
 	GetHost(taskUUID string) (*HostResponse, error)
 	ListHost(getEntitiesRequest *DSMetadata) (*HostListResponse, error)
 	ListAllHost() (*HostListResponse, error)
+	UpdateHost(uuid string, body *HostIntentInput) (*HostResponse, error)
 	CreateProject(request *Project) (*Project, error)
 	GetProject(projectUUID string) (*Project, error)
 	ListProject(getEntitiesRequest *DSMetadata) (*ProjectListResponse, error)
@@ -1211,6 +1212,20 @@ func (op Operations) GetHost(hostUUID string) (*HostResponse, error) {
 	}
 
 	return host, op.client.Do(ctx, req, host)
+}
+
+func (op Operations) UpdateHost(uuid string, body *HostIntentInput) (*HostResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/hosts/%s", uuid)
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
+	hostResponse := new(HostResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return hostResponse, op.client.Do(ctx, req, hostResponse)
 }
 
 // ListHost ...
