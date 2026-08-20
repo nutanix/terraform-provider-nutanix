@@ -5,7 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/policies"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/policies"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/request/vmantiaffinitypolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -55,6 +56,10 @@ func DatasourceNutanixVMAntiAffinityPolicyV2() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"num_compliant_vms": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -76,13 +81,17 @@ func DatasourceNutanixVMAntiAffinityPolicyV2Read(ctx context.Context, d *schema.
 
 	extID := d.Get("ext_id")
 
-	resp, err := conn.VMAntiAffinityPolicyAPIInstance.GetVmAntiAffinityPolicyById(utils.StringPtr(extID.(string)))
+	getRequest := import2.GetVmAntiAffinityPolicyByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+
+	resp, err := conn.VMAntiAffinityPolicyAPIInstance.GetVmAntiAffinityPolicyById(ctx, &getRequest)
 
 	if err != nil {
 		return diag.Errorf("error while fetching policy : %v", err)
 	}
 
-	getResp := resp.Data.GetValue().(policies.VmAntiAffinityPolicy)
+	getResp := resp.Data.GetValue().(import1.VmAntiAffinityPolicy)
 
 	flattenedPolicy := flattenVMAntiAffinityPolicyEntity(getResp)
 
@@ -97,7 +106,7 @@ func DatasourceNutanixVMAntiAffinityPolicyV2Read(ctx context.Context, d *schema.
 	return nil
 }
 
-func flattenVMAntiAffinityPolicyEntity(policy policies.VmAntiAffinityPolicy) map[string]interface{} {
+func flattenVMAntiAffinityPolicyEntity(policy import1.VmAntiAffinityPolicy) map[string]interface{} {
 	result := make(map[string]interface{})
 	if policy.ExtId != nil {
 		result["ext_id"] = *policy.ExtId
@@ -122,6 +131,9 @@ func flattenVMAntiAffinityPolicyEntity(policy policies.VmAntiAffinityPolicy) map
 	}
 	if policy.Categories != nil {
 		result["categories"] = flattenPolicyCategoryReference(policy.Categories)
+	}
+	if policy.ProjectExtId != nil {
+		result["project_ext_id"] = *policy.ProjectExtId
 	}
 	if policy.NumCompliantVms != nil {
 		result["num_compliant_vms"] = *policy.NumCompliantVms

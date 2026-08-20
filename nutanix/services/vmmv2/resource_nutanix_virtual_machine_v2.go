@@ -14,8 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import4 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
+	import3 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/request/vm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
@@ -330,31 +332,26 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 									"boot_device": {
 										Type:     schema.TypeList,
 										Optional: true,
-										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"boot_device_disk": {
 													Type:     schema.TypeList,
 													Optional: true,
-													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"disk_address": {
 																Type:     schema.TypeList,
 																Optional: true,
-																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"bus_type": {
 																			Type:         schema.TypeString,
 																			Optional:     true,
-																			Computed:     true,
 																			ValidateFunc: validation.StringInSlice([]string{"SCSI", "SPAPR", "PCI", "IDE", "SATA"}, false),
 																		},
 																		"index": {
 																			Type:     schema.TypeInt,
 																			Optional: true,
-																			Computed: true,
 																		},
 																	},
 																},
@@ -365,13 +362,11 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 												"boot_device_nic": {
 													Type:     schema.TypeList,
 													Optional: true,
-													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"mac_address": {
 																Type:     schema.TypeString,
 																Optional: true,
-																Computed: true,
 															},
 														},
 													},
@@ -546,31 +541,26 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 									"boot_device": {
 										Type:     schema.TypeList,
 										Optional: true,
-										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"boot_device_disk": {
 													Type:     schema.TypeList,
 													Optional: true,
-													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"disk_address": {
 																Type:     schema.TypeList,
 																Optional: true,
-																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"bus_type": {
 																			Type:         schema.TypeString,
 																			Optional:     true,
-																			Computed:     true,
 																			ValidateFunc: validation.StringInSlice([]string{"SCSI", "SPAPR", "PCI", "IDE", "SATA"}, false),
 																		},
 																		"index": {
 																			Type:     schema.TypeInt,
 																			Optional: true,
-																			Computed: true,
 																		},
 																	},
 																},
@@ -581,13 +571,11 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 												"boot_device_nic": {
 													Type:     schema.TypeList,
 													Optional: true,
-													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"mac_address": {
 																Type:     schema.TypeString,
 																Optional: true,
-																Computed: true,
 															},
 														},
 													},
@@ -1349,10 +1337,12 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.Client).VmmAPI
 	VMConfigMap := resourceDataToMap(d, ResourceNutanixVirtualMachineV2().Schema)
 	body := prepareVMConfigFromMap(VMConfigMap)
+	createVmRequest := import3.CreateVmRequest{
+		Body: body,
+	}
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] Vm Create Request Payload: %s", string(aJSON))
-
-	resp, err := conn.VMAPIInstance.CreateVm(body)
+	resp, err := conn.VMAPIInstance.CreateVm(ctx, &createVmRequest)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -1379,7 +1369,10 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching VM UUID : %v", err)
 	}
@@ -1421,7 +1414,7 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 		waitIPConf := &resource.StateChangeConf{
 			Pending:    []string{"WAITING"},
 			Target:     []string{"AVAILABLE"},
-			Refresh:    waitForIPRefreshFunc(conn, utils.StringValue(uuid)),
+			Refresh:    waitForIPRefreshFunc(ctx, conn, utils.StringValue(uuid)),
 			Timeout:    timeout,
 			Delay:      delay,
 			MinTimeout: delay,
@@ -1451,7 +1444,10 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 func ResourceNutanixVirtualMachineV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	resp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+	getVmByIdRequest := import3.GetVmByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching vm : %v", err)
 	}
@@ -1468,11 +1464,16 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 	// Power Off of VM is required for specific VM update operations.
 	isCpuHotplugEnabled := d.Get("is_cpu_hotplug_enabled").(bool)
 	if checkForHotPlugChanges(d) || (!isCpuHotplugEnabled && d.HasChange("num_sockets")) || checkMemoryAndSocketsDecreased(d) {
-		log.Printf("[DEBUG] callingForPowerOffVM func")
-		callForPowerOffVM(ctx, conn, d, meta)
+		if !isVMPowerOff(ctx, d, conn) {
+			log.Printf("[DEBUG] callingForPowerOffVM func")
+			callForPowerOffVM(ctx, conn, d, meta)
+		}
 	}
 
-	updatedVMResp, _ := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+	getVmByIdRequest := import3.GetVmByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	updatedVMResp, _ := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 
 	respVM := updatedVMResp.Data.GetValue().(config.Vm)
 
@@ -1581,15 +1582,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		checkForUpdateParams = true
 	}
 	if d.HasChange("machine_type") {
-		const two, three, four = 2, 3, 4
-		subMap := map[string]interface{}{
-			"PC":      two,
-			"PSERIES": three,
-			"Q35":     four,
-		}
-		pVal := subMap[d.Get("machine_type").(string)]
-		p := config.MachineType(pVal.(int))
-		updateSpec.MachineType = &p
+		updateSpec.MachineType = common.ExpandEnum[config.MachineType](d.Get("machine_type").(string))
 		checkForUpdateParams = true
 	}
 	if d.HasChange("vtpm_config") {
@@ -1609,15 +1602,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		checkForUpdateParams = true
 	}
 	if d.HasChange("protection_type") {
-		const two, three, four = 2, 3, 4
-		subMap := map[string]interface{}{
-			"UNPROTECTED":    two,
-			"PD_PROTECTED":   three,
-			"RULE_PROTECTED": four,
-		}
-		pVal := subMap[d.Get("protection_type").(string)]
-		p := config.ProtectionType(pVal.(int))
-		updateSpec.ProtectionType = &p
+		updateSpec.ProtectionType = common.ExpandEnum[config.ProtectionType](d.Get("protection_type").(string))
 		checkForUpdateParams = true
 	}
 	if d.HasChange("protection_policy_state") {
@@ -1630,7 +1615,20 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 	}
 
 	if checkForUpdateParams {
-		updateResp, err := conn.VMAPIInstance.UpdateVmById(utils.StringPtr(d.Id()), &updateSpec)
+		aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
+		log.Printf("[DEBUG] vm update spec: %s", string(aJSON))
+
+		updateVmByIdRequest := import3.UpdateVmByIdRequest{
+			ExtId: utils.StringPtr(d.Id()),
+			Body:  &updateSpec,
+		}
+		readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
+		if err != nil {
+			return diag.Errorf("error while reading vm for update: %v", err)
+		}
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(readResp, conn)
+		updateResp, err := conn.VMAPIInstance.UpdateVmById(ctx, &updateVmByIdRequest, args)
 		if err != nil {
 			return diag.Errorf("error while updating Virtual Machines : %v", err)
 		}
@@ -1691,16 +1689,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 				nicExtID := nicInput.ExtId
 
-				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-				if err != nil {
-					return diag.Errorf("error while fetching vm : %v", err)
+				deleteNicByIdRequest := import3.DeleteNicByIdRequest{
+					VmExtId: utils.StringPtr(d.Id()),
+					ExtId:   nicExtID,
 				}
-
-				// // Extract E-Tag Header
-				args := make(map[string]interface{})
-				args["If-Match"] = getEtagHeader(ReadVMResp, conn)
-
-				resp, err := conn.VMAPIInstance.DeleteNicById(utils.StringPtr(d.Id()), nicExtID, args)
+				resp, err := conn.VMAPIInstance.DeleteNicById(ctx, &deleteNicByIdRequest)
 				if err != nil {
 					return diag.Errorf("error while deleting nic : %v", err)
 				}
@@ -1743,20 +1736,26 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 				nicExtID := nicInput.ExtId
 
-				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-				if err != nil {
-					return diag.Errorf("error while fetching vm : %v", err)
-				}
-
-				// // Extract E-Tag Header
-				args := make(map[string]interface{})
-				args["If-Match"] = getEtagHeader(ReadVMResp, conn)
-
 				log.Printf("[DEBUG] updating nic: %+v", *nicExtID)
 				aJSON, _ := json.MarshalIndent(nicInput, "", "  ")
 				log.Printf("[DEBUG] update nic payload: %s", string(aJSON))
 
-				resp, err := conn.VMAPIInstance.UpdateNicById(utils.StringPtr(d.Id()), nicExtID, &nicInput, args)
+				getVmByIdRequest := import3.GetVmByIdRequest{
+					ExtId: utils.StringPtr(d.Id()),
+				}
+				readResp, errR := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
+				if errR != nil {
+					return diag.Errorf("error while reading vm for nic update: %v", errR)
+				}
+				args := make(map[string]interface{})
+				args["If-Match"] = getEtagHeader(readResp, conn)
+
+				updateNicByIdRequest := import3.UpdateNicByIdRequest{
+					VmExtId: utils.StringPtr(d.Id()),
+					ExtId:   nicExtID,
+					Body:    &nicInput,
+				}
+				resp, err := conn.VMAPIInstance.UpdateNicById(ctx, &updateNicByIdRequest, args)
 				if err != nil {
 					return diag.Errorf("error while updating Nic : %v", err)
 				}
@@ -1781,16 +1780,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 			for _, nic := range newAddedNic {
 				nicInput := expandNic([]interface{}{nic}, nil, "")[0]
 
-				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-				if err != nil {
-					return diag.Errorf("error while fetching vm : %v", err)
+				createNicRequest := import3.CreateNicRequest{
+					VmExtId: utils.StringPtr(d.Id()),
+					Body:    &nicInput,
 				}
-
-				// // Extract E-Tag Header
-				args := make(map[string]interface{})
-				args["If-Match"] = getEtagHeader(ReadVMResp, conn)
-
-				resp, err := conn.VMAPIInstance.CreateNic(utils.StringPtr(d.Id()), &nicInput, args)
+				resp, err := conn.VMAPIInstance.CreateNic(ctx, &createNicRequest)
 				if err != nil {
 					return diag.Errorf("error while creating NIC : %v", err)
 				}
@@ -1820,16 +1814,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 			for _, cdrom := range newAddedCdRom {
 				cdromInput := expandCdRom([]interface{}{cdrom})[0]
 
-				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-				if err != nil {
-					return diag.Errorf("error while fetching vm : %v", err)
+				createCdRomRequest := import3.CreateCdRomRequest{
+					VmExtId: utils.StringPtr(d.Id()),
+					Body:    &cdromInput,
 				}
-
-				// // Extract E-Tag Header
-				args := make(map[string]interface{})
-				args["If-Match"] = getEtagHeader(ReadVMResp, conn)
-
-				resp, err := conn.VMAPIInstance.CreateCdRom(utils.StringPtr(d.Id()), &cdromInput, args)
+				resp, err := conn.VMAPIInstance.CreateCdRom(ctx, &createCdRomRequest)
 				if err != nil {
 					return diag.Errorf("error while creating CdRom : %v", err)
 				}
@@ -1857,16 +1846,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 				cdromExtID := cdromInput.ExtId
 
-				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-				if err != nil {
-					return diag.Errorf("error while fetching vm : %v", err)
+				deleteCdRomByIdRequest := import3.DeleteCdRomByIdRequest{
+					VmExtId: utils.StringPtr(d.Id()),
+					ExtId:   cdromExtID,
 				}
-
-				// // Extract E-Tag Header
-				args := make(map[string]interface{})
-				args["If-Match"] = getEtagHeader(ReadVMResp, conn)
-
-				resp, err := conn.VMAPIInstance.DeleteCdRomById(utils.StringPtr(d.Id()), cdromExtID, args)
+				resp, err := conn.VMAPIInstance.DeleteCdRomById(ctx, &deleteCdRomByIdRequest)
 				if err != nil {
 					return diag.Errorf("error while deleting cdrom : %v", err)
 				}
@@ -1899,16 +1883,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 				serialPortExtID := serialPortInput.ExtId
 
-				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-				if err != nil {
-					return diag.Errorf("error while fetching vm : %v", err)
+				deleteSerialPortByIdRequest := import3.DeleteSerialPortByIdRequest{
+					VmExtId: utils.StringPtr(d.Id()),
+					ExtId:   serialPortExtID,
 				}
-
-				// // Extract E-Tag Header
-				args := make(map[string]interface{})
-				args["If-Match"] = getEtagHeader(ReadVMResp, conn)
-
-				resp, err := conn.VMAPIInstance.DeleteSerialPortById(utils.StringPtr(d.Id()), serialPortExtID, args)
+				resp, err := conn.VMAPIInstance.DeleteSerialPortById(ctx, &deleteSerialPortByIdRequest)
 				if err != nil {
 					return diag.Errorf("error while deleting serial port : %v", err)
 				}
@@ -1935,16 +1914,22 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 				portExtTD := serialPortInput.ExtId
 
-				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-				if err != nil {
-					return diag.Errorf("error while fetching vm : %v", err)
+				getVmByIdRequest := import3.GetVmByIdRequest{
+					ExtId: utils.StringPtr(d.Id()),
 				}
-
-				// // Extract E-Tag Header
+				readResp, errR := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
+				if errR != nil {
+					return diag.Errorf("error while reading vm for serial port update: %v", errR)
+				}
 				args := make(map[string]interface{})
-				args["If-Match"] = getEtagHeader(ReadVMResp, conn)
+				args["If-Match"] = getEtagHeader(readResp, conn)
 
-				resp, err := conn.VMAPIInstance.UpdateSerialPortById(utils.StringPtr(d.Id()), portExtTD, &serialPortInput, args)
+				updateSerialPortByIdRequest := import3.UpdateSerialPortByIdRequest{
+					VmExtId: utils.StringPtr(d.Id()),
+					ExtId:   portExtTD,
+					Body:    &serialPortInput,
+				}
+				resp, err := conn.VMAPIInstance.UpdateSerialPortById(ctx, &updateSerialPortByIdRequest, args)
 				if err != nil {
 					return diag.Errorf("error while updating serial port : %v", err)
 				}
@@ -1969,16 +1954,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 			for _, serialPort := range newAddedSerialPorts {
 				serialPortInput := expandSerialPort([]interface{}{serialPort})[0]
 
-				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-				if err != nil {
-					return diag.Errorf("error while fetching vm : %v", err)
+				createSerialPortRequest := import3.CreateSerialPortRequest{
+					VmExtId: utils.StringPtr(d.Id()),
+					Body:    &serialPortInput,
 				}
-
-				// // Extract E-Tag Header
-				args := make(map[string]interface{})
-				args["If-Match"] = getEtagHeader(ReadVMResp, conn)
-
-				resp, err := conn.VMAPIInstance.CreateSerialPort(utils.StringPtr(d.Id()), &serialPortInput, args)
+				resp, err := conn.VMAPIInstance.CreateSerialPort(ctx, &createSerialPortRequest)
 				if err != nil {
 					return diag.Errorf("error while creating SerialPort : %v", err)
 				}
@@ -2009,16 +1989,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 			for _, gpu := range newAddedGpus {
 				gpuInput := expandGpu([]interface{}{gpu})[0]
 
-				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-				if err != nil {
-					return diag.Errorf("error while fetching vm : %v", err)
+				createGpuRequest := import3.CreateGpuRequest{
+					VmExtId: utils.StringPtr(d.Id()),
+					Body:    &gpuInput,
 				}
-
-				// // Extract E-Tag Header
-				args := make(map[string]interface{})
-				args["If-Match"] = getEtagHeader(ReadVMResp, conn)
-
-				resp, err := conn.VMAPIInstance.CreateGpu(utils.StringPtr(d.Id()), &gpuInput, args)
+				resp, err := conn.VMAPIInstance.CreateGpu(ctx, &createGpuRequest)
 				if err != nil {
 					return diag.Errorf("error while creating Gpu : %v", err)
 				}
@@ -2045,16 +2020,12 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				gpuInput := expandGpu([]interface{}{gpu})[0]
 
 				gpuExtID := gpuInput.ExtId
-				ReadVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-				if err != nil {
-					return diag.Errorf("error while fetching vm : %v", err)
+
+				deleteGpuByIdRequest := import3.DeleteGpuByIdRequest{
+					VmExtId: utils.StringPtr(d.Id()),
+					ExtId:   gpuExtID,
 				}
-
-				// // Extract E-Tag Header
-				args := make(map[string]interface{})
-				args["If-Match"] = getEtagHeader(ReadVMResp, conn)
-
-				resp, err := conn.VMAPIInstance.DeleteGpuById(utils.StringPtr(d.Id()), gpuExtID, args)
+				resp, err := conn.VMAPIInstance.DeleteGpuById(ctx, &deleteGpuByIdRequest)
 				if err != nil {
 					return diag.Errorf("error while deleting gpu : %v", err)
 				}
@@ -2088,15 +2059,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 			body.Categories = expandCategoryReference(oldDeletedCategories)
 
-			readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-			if err != nil {
-				return diag.Errorf("error while reading vm : %v", err)
+			disassociateCategoriesRequest := import3.DisassociateCategoriesRequest{
+				ExtId: utils.StringPtr(d.Id()),
+				Body:  &body,
 			}
-			// Extract E-Tag Header
-			args := make(map[string]interface{})
-			args["If-Match"] = getEtagHeader(readResp, conn)
-
-			resp, err := conn.VMAPIInstance.DisassociateCategories(utils.StringPtr(d.Id()), &body, args)
+			resp, err := conn.VMAPIInstance.DisassociateCategories(ctx, &disassociateCategoriesRequest)
 			if err != nil {
 				return diag.Errorf("error while diassociate categories : %v", err)
 			}
@@ -2123,15 +2090,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 			body.Categories = expandCategoryReference(newAddedCategories)
 
-			readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-			if err != nil {
-				return diag.Errorf("error while reading vm : %v", err)
+			associateCategoriesRequest := import3.AssociateCategoriesRequest{
+				ExtId: utils.StringPtr(d.Id()),
+				Body:  &body,
 			}
-			// Extract E-Tag Header
-			args := make(map[string]interface{})
-			args["If-Match"] = getEtagHeader(readResp, conn)
-
-			resp, err := conn.VMAPIInstance.AssociateCategories(utils.StringPtr(d.Id()), &body, args)
+			resp, err := conn.VMAPIInstance.AssociateCategories(ctx, &associateCategoriesRequest)
 			if err != nil {
 				return diag.Errorf("error while associating categories : %v", err)
 			}
@@ -2188,15 +2151,10 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 func ResourceNutanixVirtualMachineV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-	if err != nil {
-		return diag.Errorf("error while reading vm : %v", err)
+	deleteVmByIdRequest := import3.DeleteVmByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
 	}
-	// Extract E-Tag Header
-	args := make(map[string]interface{})
-	args["If-Match"] = getEtagHeader(readResp, conn)
-
-	resp, err := conn.VMAPIInstance.DeleteVmById(utils.StringPtr(d.Id()), args)
+	resp, err := conn.VMAPIInstance.DeleteVmById(ctx, &deleteVmByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting vm : %v", err)
 	}
@@ -3082,7 +3040,7 @@ func expandPolicyReference(pr interface{}) *config.PolicyReference {
 // extractTaskReferenceFromResponse extracts TaskReference from API response using reflection
 func extractTaskReferenceFromResponse(resp interface{}) (import1.TaskReference, error) {
 	respValue := reflect.ValueOf(resp)
-	if respValue.Kind() == reflect.Ptr {
+	if respValue.Kind() == reflect.Pointer {
 		respValue = respValue.Elem()
 	}
 	dataField := respValue.FieldByName("Data")
@@ -3103,16 +3061,10 @@ func extractTaskReferenceFromResponse(resp interface{}) (import1.TaskReference, 
 
 // powerOnVM performs a single power-on API call. Retries are handled at the task layer in callForPowerOnVM.
 func powerOnVM(ctx context.Context, conn *vmm.Client, vmID *string) (import1.TaskReference, error) {
-	readResp, errR := conn.VMAPIInstance.GetVmById(vmID)
-	if errR != nil {
-		return import1.TaskReference{}, fmt.Errorf("error while fetching vm : %v", errR)
+	powerOnVmRequest := import3.PowerOnVmRequest{
+		ExtId: vmID,
 	}
-
-	args := make(map[string]interface{})
-
-	args["If-Match"] = getEtagHeader(readResp, conn)
-
-	resp, err := conn.VMAPIInstance.PowerOnVm(vmID, args)
+	resp, err := conn.VMAPIInstance.PowerOnVm(ctx, &powerOnVmRequest)
 	if err != nil {
 		return import1.TaskReference{}, fmt.Errorf("error powering on VM: %v", err)
 	}
@@ -3127,16 +3079,10 @@ func powerOnVM(ctx context.Context, conn *vmm.Client, vmID *string) (import1.Tas
 
 // powerOffVM performs a single power-off API call. Retries are handled at the task layer in callForPowerOffVM.
 func powerOffVM(ctx context.Context, conn *vmm.Client, vmID *string) (import1.TaskReference, error) {
-	readResp, errR := conn.VMAPIInstance.GetVmById(vmID)
-	if errR != nil {
-		return import1.TaskReference{}, fmt.Errorf("error while fetching vm : %v", errR)
+	powerOffVmRequest := import3.PowerOffVmRequest{
+		ExtId: vmID,
 	}
-
-	args := make(map[string]interface{})
-
-	args["If-Match"] = getEtagHeader(readResp, conn)
-
-	resp, err := conn.VMAPIInstance.PowerOffVm(vmID, args)
+	resp, err := conn.VMAPIInstance.PowerOffVm(ctx, &powerOffVmRequest)
 	if err != nil {
 		return import1.TaskReference{}, fmt.Errorf("error powering off VM: %v", err)
 	}
@@ -3168,161 +3114,51 @@ func flattenPowerState(pr *config.PowerState) string {
 	return "UNKNOWN"
 }
 
-const (
-	// maxPowerRetries is used for both API-layer retries (power-on/power-off call) and task-layer retries (wait for task).
-	maxPowerRetries     = 10
-	powerTaskRetryDelay = 5 * time.Second
-)
-
 func callForPowerOffVM(ctx context.Context, conn *vmm.Client, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	prismConn := meta.(*conns.Client).PrismAPI
-	var lastErr error
-	var taskUUID *string
 
-	for taskAttempt := 0; taskAttempt < maxPowerRetries; taskAttempt++ {
-		readResp, errR := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-		if errR != nil {
-			return diag.Errorf("error while reading vm : %v", errR)
-		}
-		vmResp := readResp.Data.GetValue().(config.Vm)
-		currentPower := vmResp.PowerState.GetName()
-		log.Printf("[DEBUG] Power-off task attempt %d/%d: VM current power_state=%s", taskAttempt+1, maxPowerRetries, currentPower)
-		if currentPower == "OFF" {
-			log.Printf("[DEBUG] VM is already in OFF state")
-			return nil
-		}
-
-		TaskRef, err := powerOffVM(ctx, conn, utils.StringPtr(d.Id()))
-		if err != nil {
-			lastErr = err
-			if taskAttempt < maxPowerRetries-1 {
-				log.Printf("[DEBUG] Power-off API failed (attempt %d/%d), retrying in %v: %v",
-					taskAttempt+1, maxPowerRetries, powerTaskRetryDelay, err)
-				select {
-				case <-ctx.Done():
-					return diag.FromErr(ctx.Err())
-				case <-time.After(powerTaskRetryDelay):
-					continue
-				}
-			}
-			return diag.Errorf("error while powering off Virtual Machine after %d attempts: %v", maxPowerRetries, err)
-		}
-		taskUUID = TaskRef.ExtId
-
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-			Target:  []string{"SUCCEEDED"},
-			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
-			Timeout: d.Timeout(schema.TimeoutCreate),
-		}
-
-		_, errWaitTask := stateConf.WaitForStateContext(ctx)
-		if errWaitTask == nil {
-			log.Printf("[DEBUG] Power-off task reported SUCCEEDED for task %s; verifying VM power_state", utils.StringValue(taskUUID))
-			verifyResp, errV := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-			if errV != nil {
-				log.Printf("[DEBUG] Could not re-read VM after task success: %v", errV)
-				return nil
-			}
-			verifyVM := verifyResp.Data.GetValue().(config.Vm)
-			actualPower := verifyVM.PowerState.GetName()
-			log.Printf("[DEBUG] VM power_state after task: %s (expected OFF)", actualPower)
-			if actualPower != "OFF" {
-				log.Printf("[DEBUG] WARNING: Task reported SUCCEEDED but VM power_state is %s (expected OFF) - possible backend inconsistency or race", actualPower)
-			}
-			return nil
-		}
-		lastErr = errWaitTask
-		if taskAttempt < maxPowerRetries-1 {
-			log.Printf("[DEBUG] Power-off task failed or timed out (attempt %d/%d), retrying API call and task in %v: %v",
-				taskAttempt+1, maxPowerRetries, powerTaskRetryDelay, errWaitTask)
-			select {
-			case <-ctx.Done():
-				return diag.FromErr(ctx.Err())
-			case <-time.After(powerTaskRetryDelay):
-				// continue to next task retry
-			}
-		}
+	TaskRef, err := powerOffVM(ctx, conn, utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while powering off Virtual Machine: %v", err)
 	}
-	log.Printf("[DEBUG] Power-off failed after %d attempts; last error: %v", maxPowerRetries, lastErr)
-	return diag.Errorf("error waiting for virtual machine (%s) to power off after %d attempts: %s",
-		utils.StringValue(taskUUID), maxPowerRetries, lastErr)
+	taskUUID := TaskRef.ExtId
+
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for virtual machine (%s) to power off: %s",
+			utils.StringValue(taskUUID), errWaitTask)
+	}
+	return nil
 }
 
 func callForPowerOnVM(ctx context.Context, conn *vmm.Client, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	prismConn := meta.(*conns.Client).PrismAPI
-	var lastErr error
-	var taskUUID *string
 
-	for taskAttempt := 0; taskAttempt < maxPowerRetries; taskAttempt++ {
-		readResp, errR := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-		if errR != nil {
-			return diag.Errorf("error while reading vm : %v", errR)
-		}
-		vmResp := readResp.Data.GetValue().(config.Vm)
-		currentPower := vmResp.PowerState.GetName()
-		log.Printf("[DEBUG] Power-on task attempt %d/%d: VM current power_state=%s", taskAttempt+1, maxPowerRetries, currentPower)
-		if currentPower == "ON" {
-			log.Printf("[DEBUG] VM is already in ON state")
-			return nil
-		}
-
-		TaskRef, err := powerOnVM(ctx, conn, utils.StringPtr(d.Id()))
-		if err != nil {
-			lastErr = err
-			if taskAttempt < maxPowerRetries-1 {
-				log.Printf("[DEBUG] Power-on API failed (attempt %d/%d), retrying in %v: %v",
-					taskAttempt+1, maxPowerRetries, powerTaskRetryDelay, err)
-				select {
-				case <-ctx.Done():
-					return diag.FromErr(ctx.Err())
-				case <-time.After(powerTaskRetryDelay):
-					continue
-				}
-			}
-			return diag.Errorf("error while powering on Virtual Machine after %d attempts: %v", maxPowerRetries, err)
-		}
-		taskUUID = TaskRef.ExtId
-		log.Printf("[DEBUG] PowerOn Response: TaskReference ExtId: %s (waiting for task)", utils.StringValue(taskUUID))
-
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-			Target:  []string{"SUCCEEDED"},
-			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
-			Timeout: d.Timeout(schema.TimeoutUpdate),
-		}
-
-		_, errWaitTask := stateConf.WaitForStateContext(ctx)
-		if errWaitTask == nil {
-			log.Printf("[DEBUG] Power-on task reported SUCCEEDED for task %s; verifying VM power_state", utils.StringValue(taskUUID))
-			verifyResp, errV := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
-			if errV != nil {
-				log.Printf("[DEBUG] Could not re-read VM after task success: %v", errV)
-				return nil
-			}
-			verifyVM := verifyResp.Data.GetValue().(config.Vm)
-			actualPower := verifyVM.PowerState.GetName()
-			log.Printf("[DEBUG] VM power_state after task: %s (expected ON)", actualPower)
-			if actualPower != "ON" {
-				log.Printf("[DEBUG] WARNING: Task reported SUCCEEDED but VM power_state is %s (expected ON) - possible backend inconsistency or race", actualPower)
-			}
-			return nil
-		}
-		lastErr = errWaitTask
-		if taskAttempt < maxPowerRetries-1 {
-			log.Printf("[DEBUG] Power-on task failed or timed out (attempt %d/%d), retrying API call and task in %v: %v",
-				taskAttempt+1, maxPowerRetries, powerTaskRetryDelay, errWaitTask)
-			select {
-			case <-ctx.Done():
-				return diag.FromErr(ctx.Err())
-			case <-time.After(powerTaskRetryDelay):
-				// continue to next task retry
-			}
-		}
+	TaskRef, err := powerOnVM(ctx, conn, utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while powering on Virtual Machine: %v", err)
 	}
-	log.Printf("[DEBUG] Power-on failed after %d attempts; last error: %v", maxPowerRetries, lastErr)
-	return diag.Errorf("error waiting for virtual machine (%s) to power on after %d attempts: %s",
-		utils.StringValue(taskUUID), maxPowerRetries, lastErr)
+	taskUUID := TaskRef.ExtId
+	log.Printf("[DEBUG] PowerOn Response: TaskReference ExtId: %s (waiting for task)", utils.StringValue(taskUUID))
+
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for virtual machine (%s) to power on: %s",
+			utils.StringValue(taskUUID), errWaitTask)
+	}
+	return nil
 }
 
 func diffConfig(oldValue []interface{}, newValue []interface{}) ([]interface{}, []interface{}, []interface{}) {
@@ -3428,8 +3264,11 @@ func checkMemoryAndSocketsDecreased(d *schema.ResourceData) bool {
 	return false
 }
 
-func isVMPowerOff(d *schema.ResourceData, conn *vmm.Client) bool {
-	readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+func isVMPowerOff(ctx context.Context, d *schema.ResourceData, conn *vmm.Client) bool {
+	getVmByIdRequest := import3.GetVmByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 	if err != nil {
 		return false
 	}
@@ -3526,9 +3365,12 @@ func getFirstIPAddress(nic config.Nic) string {
 	return ""
 }
 
-func waitForIPRefreshFunc(client *vmm.Client, vmUUID string) resource.StateRefreshFunc {
+func waitForIPRefreshFunc(ctx context.Context, client *vmm.Client, vmUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		resp, err := client.VMAPIInstance.GetVmById(utils.StringPtr(vmUUID))
+		getVmByIdRequest := import3.GetVmByIdRequest{
+			ExtId: utils.StringPtr(vmUUID),
+		}
+		resp, err := client.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 		if err != nil {
 			return nil, "", err
 		}
@@ -3775,6 +3617,9 @@ func setVMConfig(d *schema.ResourceData, getResp config.Vm) diag.Diagnostics {
 		return diags
 	}
 	for k, v := range fields {
+		if k == "disks" {
+			continue
+		}
 		if err := d.Set(k, v); err != nil {
 			return diag.FromErr(fmt.Errorf("failed setting %q: %w", k, err))
 		}
@@ -3879,7 +3724,7 @@ func setVMConfig(d *schema.ResourceData, getResp config.Vm) diag.Diagnostics {
 	if err := d.Set("storage_config", flattenADSFVmStorageConfig(getResp.StorageConfig)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("disks", flattenDisk(getResp.Disks)); err != nil {
+	if err := d.Set("disks", flattenDisk(getResp.Disks, d)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("cd_roms", flattenCdRom(getResp.CdRoms)); err != nil {

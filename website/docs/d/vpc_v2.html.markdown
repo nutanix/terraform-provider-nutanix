@@ -40,7 +40,33 @@ The following attributes are exported:
 * `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
 * `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 * `metadata`: Metadata associated with this resource.
+* `project_ext_id`: External identifier of the project associated with the VPC.
+* `shared_with_projects`: List of project external identifiers with which the VPC is shared.
+* `should_advertise_connected_subnets`: When set to True, the system advertises all connected subnet prefixes that are subsets of the VPC's externally routable prefixes.
+* `supported_multiple_external_subnet_type`: Type of multiple external subnet support. Valid values: `NONE`, `ONLY_NONAT`, `ONLY_NAT`, `ALL`.
+* `scope`: VPC scope. Valid values: `VMS`, `CONTAINERS`, `VMS_AND_CONTAINERS`.
+* `kubernetes_clusters`: List of Kubernetes clusters associated with the VPC.
 
+
+### kubernetes_clusters
+
+* `ext_id`: ExtID of the Kubernetes cluster.
+* `gateway_nodes_selector`: Selector used to identify gateway node candidates within the Kubernetes cluster.
+* `namespace_selector`: Selector used to identify namespaces within the Kubernetes cluster.
+* `pod_network`: Pod network of the Kubernetes cluster.
+
+### gateway_nodes_selector, namespace_selector
+
+* `match_labels`: Labels (key-value pairs) used to select entities.
+* `match_labels.name`: The key of the label.
+* `match_labels.value`: The value of the label.
+
+### pod_network
+
+* `cidr`: CIDR of the pod network (IPSubnet).
+* `cidr.ipv4`: IPv4 Subnet Configuration.
+* `cidr.ipv6`: IPv6 Subnet Configuration.
+* `host_slice`: Host slice of the pod network. Default value is 24.
 
 ### common_dhcp_options
 
@@ -81,4 +107,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix Get VPC v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/Vpcs/operation/getVpcById).
+See detailed information in [Nutanix Get VPC v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/Vpcs/operation/getVpcById).

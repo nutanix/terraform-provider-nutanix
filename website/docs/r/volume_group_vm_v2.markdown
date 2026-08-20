@@ -20,13 +20,15 @@ resource "nutanix_volume_group_vm_v2" "vg_vm_example"{
 }
 ```
 
-## Argument Reference
-The following arguments are supported:
+> **Volume Group disk attachments:** To add a Volume Group disk to a VM, manage the disk with `nutanix_volume_group_disk_v2` and attach the VM to the Volume Group with `nutanix_volume_group_vm_v2`.
 
+## Argument Reference
+
+The following§ arguments are supported:
 
 * `volume_group_ext_id`: -(Required) The external identifier of the volume group.
 * `vm_ext_id`: -(Required) A globally unique identifier of an instance that is suitable for external consumption.
 * `index`: -(Optional) The index on the SCSI bus to attach the VM to the Volume Group.
 
 
-See detailed information in [Nutanix Attach VM to Volume Group V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.2#tag/VolumeGroups/operation/attachVm).
+See detailed information in [Nutanix Attach VM to Volume Group V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.3#tag/VolumeGroups/operation/attachVm).

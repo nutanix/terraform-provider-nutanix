@@ -25,7 +25,7 @@ func TestAccV2NutanixNetworkFunctionResource_Egress_Ingress(t *testing.T) {
 
 	networkFunctionConfig := testAccNetworkFunctionV2ConfigPrerequisites(subnet_name, vmm_1_name, vmm_2_name) +
 		testAccNetworkFunctionV2EgressIngressConfig(name)
-
+	defaultProjectExtID := "00000000-0000-0000-0000-000000000000"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
@@ -77,6 +77,7 @@ func TestAccV2NutanixNetworkFunctionResource_Egress_Ingress(t *testing.T) {
 						"description",
 						"First Network function managed by Terraform",
 					),
+					resource.TestCheckResourceAttr(resourceNameNetworkFunctionV2_1, "project_ext_id", defaultProjectExtID),
 					resource.TestCheckResourceAttr(resourceNameNetworkFunctionV2_1, "high_availability_mode", "ACTIVE_PASSIVE"),
 					resource.TestCheckResourceAttr(resourceNameNetworkFunctionV2_1, "traffic_forwarding_mode", "INLINE"),
 					resource.TestCheckResourceAttr(resourceNameNetworkFunctionV2_1, "failure_handling", "FAIL_CLOSE"),
@@ -112,6 +113,7 @@ func TestAccV2NutanixNetworkFunctionResource_Egress_Ingress(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.nutanix_network_function_v2.ntf", "id"),
 					resource.TestCheckResourceAttr("data.nutanix_network_function_v2.ntf", "name", name),
+					resource.TestCheckResourceAttr("data.nutanix_network_function_v2.ntf", "project_ext_id", defaultProjectExtID),
 					resource.TestCheckResourceAttr("data.nutanix_network_function_v2.ntf", "high_availability_mode", "ACTIVE_PASSIVE"),
 					resource.TestCheckResourceAttr("data.nutanix_network_function_v2.ntf", "nic_pairs.#", "2"),
 					testAccCheckNetworkFunctionDataSourcePair(
@@ -331,12 +333,12 @@ data "nutanix_clusters_v2" "clusters" {
 
 locals {
   cluster_ext_id = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
-  img_name       = local.config.ubuntu_image
+  img_name       = local.config.images.ubuntu_image
   gz_ntf         = <<EOT
 #cloud-config
 chpasswd:
   list: |
-    ubuntu:nutanix/4u
+    ubuntu:REDACTED
   expire: false
 disable_root: false
 ssh_pwauth:   true
@@ -634,6 +636,13 @@ locals {
 }
 
 	`, filepath, subnet_name, vmm_1_name, vmm_2_name)
+}
+
+func nfProjectExtIDLine(override string) string {
+	if override == "" {
+		return `project_ext_id = nutanix_project_v2.test.ext_id`
+	}
+	return fmt.Sprintf(`project_ext_id = "%s"`, override)
 }
 
 func testAccNetworkFunctionV2EgressIngressConfig(name string) string {

@@ -257,6 +257,107 @@ resource "nutanix_ova_v2" "test" {
 `, filepath, vmName, vmDescription, ovaName)
 }
 
+func TestAccV2NutanixOvaResource_ProjectAssociation(t *testing.T) {
+	r := acctest.RandInt()
+	vmName := fmt.Sprintf("tf-ova-pa-vm-%d", r)
+	vmDesc := "ova project association vm"
+	ovaName := fmt.Sprintf("tf-ova-projassoc-%d", r)
+	projectName := fmt.Sprintf("tf-ova-pa-proj-%d", r)
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testOvaProjectAssociationConfig(vmName, vmDesc, ovaName, projectName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair("nutanix_ova_v2.test", "project_ext_id", "nutanix_project_v2.test", "ext_id"),
+					resource.TestCheckResourceAttrPair("data.nutanix_ova_v2.test", "project_ext_id", "nutanix_project_v2.test", "ext_id"),
+					resource.TestCheckResourceAttr("data.nutanix_ovas_v2.test", "ovas.#", "1"),
+					resource.TestCheckResourceAttrPair("data.nutanix_ovas_v2.test", "ovas.0.ext_id", "nutanix_ova_v2.test", "ext_id"),
+					resource.TestCheckResourceAttrPair("data.nutanix_ovas_v2.test", "ovas.0.project_ext_id", "nutanix_project_v2.test", "ext_id"),
+				),
+			},
+			{
+				Config:      testOvaProjectAssociationConfig(vmName, vmDesc, ovaName, projectName, "00000000-0000-0000-0000-000000000000"),
+				ExpectError: regexp.MustCompile("Update of project_ext_id is not supported"),
+			},
+		},
+	})
+}
+
+func ovaProjectExtIDLine(override string) string {
+	if override == "" {
+		return `project_ext_id = nutanix_project_v2.test.ext_id`
+	}
+	return fmt.Sprintf(`project_ext_id = "%s"`, override)
+}
+
+func testOvaProjectAssociationConfig(vmName, vmDesc, ovaName, projectName, projectExtIDOverride string) string {
+	return fmt.Sprintf(`
+	data "nutanix_clusters_v2" "clusters" {}
+
+	locals {
+		config  = (jsondecode(file("%[6]s")))
+		cluster_ext_id = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
+	}
+
+	resource "nutanix_project_v2" "test" {
+		name        = "%[4]s"
+		project_id  = "%[4]s"
+		description = "project association test"
+	}
+
+	resource "nutanix_resource_group_v2" "rg" {
+		name           = "tf-ova-pa-rg-%[4]s"
+		project_ext_id = nutanix_project_v2.test.ext_id
+		placement_targets {
+			cluster_ext_id = local.cluster_ext_id
+		}
+		# Ignore changes to placement_targets to avoid perpetual diffs after apply.
+		lifecycle {
+			ignore_changes = [placement_targets]
+		}
+	}
+
+	resource "nutanix_virtual_machine_v2" "ova_pa_vm" {
+		name        = "%[1]s"
+		description = "%[2]s"
+		cluster {
+			ext_id = local.cluster_ext_id
+		}
+		project {
+			ext_id = nutanix_project_v2.test.ext_id
+		}
+		depends_on = [nutanix_resource_group_v2.rg]
+	}
+
+	resource "nutanix_ova_v2" "test" {
+		name = "%[3]s"
+		source {
+			ova_vm_source {
+				vm_ext_id        = nutanix_virtual_machine_v2.ova_pa_vm.id
+				disk_file_format = "QCOW2"
+			}
+		}
+		%[5]s
+		depends_on = [nutanix_project_v2.test, nutanix_virtual_machine_v2.ova_pa_vm]
+	}
+
+	data "nutanix_ova_v2" "test" {
+		ext_id     = nutanix_ova_v2.test.id
+		depends_on = [nutanix_ova_v2.test]
+	}
+
+	data "nutanix_ovas_v2" "test" {
+		filter     = "name eq '%[3]s'"
+		depends_on = [nutanix_ova_v2.test]
+	}
+	`, vmName, vmDesc, ovaName, projectName, ovaProjectExtIDLine(projectExtIDOverride), filepath)
+}
+
 func testOvaResourceConfigCreateOvaFromVMDoseNotExists(ovaName string) string {
 	return fmt.Sprintf(`
 resource "nutanix_ova_v2" "test" {

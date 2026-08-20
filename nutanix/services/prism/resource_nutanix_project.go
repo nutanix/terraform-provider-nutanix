@@ -757,6 +757,47 @@ func ResourceNutanixProject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"enable_directory_and_identity_provider_shortlist": {
+				Type:     schema.TypeBool,
+				Default:  true,
+				Optional: true,
+			},
+			"directory_reference_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"uuid": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"kind": {
+							Type:     schema.TypeString,
+							Default:  "directory_service",
+							Optional: true,
+						},
+					},
+				},
+			},
+			"identity_providers_reference_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"uuid": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"kind": {
+							Type:     schema.TypeString,
+							Default:  "identity_provider",
+							Optional: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -987,6 +1028,17 @@ func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, met
 		if err := d.Set("default_environment_reference", flattenReferenceValuesList(project.Spec.ProjectDetail.Resources.DefaultEnvironmentReference)); err != nil {
 			return diag.Errorf("error setting `default_environment_reference` for Project(%s): %s", d.Id(), err)
 		}
+		if project.Spec.ProjectDetail.Resources.EnableDirectoryAndIdentityProviderShortlist != nil {
+			if err := d.Set("enable_directory_and_identity_provider_shortlist", *project.Spec.ProjectDetail.Resources.EnableDirectoryAndIdentityProviderShortlist); err != nil {
+				return diag.Errorf("error setting `enable_directory_and_identity_provider_shortlist` for Project(%s): %s", d.Id(), err)
+			}
+		}
+		if err := d.Set("directory_reference_list", flattenDirectoryReferenceList(project.Spec.ProjectDetail.Resources.DirectoryReferenceList)); err != nil {
+			return diag.Errorf("error setting `directory_reference_list` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("identity_providers_reference_list", flattenDirectoryReferenceList(project.Spec.ProjectDetail.Resources.IdentityProvidersReferenceList)); err != nil {
+			return diag.Errorf("error setting `identity_providers_reference_list` for Project(%s): %s", d.Id(), err)
+		}
 		remoteACPFlat := flattenProjectAcp(project.Status.AccessControlPolicyListStatus)
 		if err := d.Set("acp", orderACPsLikeState(d, remoteACPFlat)); err != nil {
 			return diag.Errorf("error setting `acp` for Project(%s): %s", d.Id(), err)
@@ -1057,6 +1109,17 @@ func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, met
 		}
 		if err := d.Set("external_network_list", flattenReferenceList(project.Spec.Resources.ExternalNetworkList)); err != nil {
 			return diag.Errorf("error setting `external_network_list` for Project(%s): %s", d.Id(), err)
+		}
+		if project.Spec.Resources.EnableDirectoryAndIdentityProviderShortlist != nil {
+			if err := d.Set("enable_directory_and_identity_provider_shortlist", *project.Spec.Resources.EnableDirectoryAndIdentityProviderShortlist); err != nil {
+				return diag.Errorf("error setting `enable_directory_and_identity_provider_shortlist` for Project(%s): %s", d.Id(), err)
+			}
+		}
+		if err := d.Set("directory_reference_list", flattenDirectoryReferenceList(project.Spec.Resources.DirectoryReferenceList)); err != nil {
+			return diag.Errorf("error setting `directory_reference_list` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("identity_providers_reference_list", flattenDirectoryReferenceList(project.Spec.Resources.IdentityProvidersReferenceList)); err != nil {
+			return diag.Errorf("error setting `identity_providers_reference_list` for Project(%s): %s", d.Id(), err)
 		}
 		if err := d.Set("metadata", m); err != nil {
 			return diag.Errorf("error setting `metadata` for Project(%s): %s", d.Id(), err)
@@ -1153,6 +1216,24 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 		if d.HasChange("default_environment_reference") {
 			projDetails.Resources.DefaultEnvironmentReference = expandOptionalReference(d, "default_environment_reference", "environment")
 		}
+		if d.HasChange("enable_directory_and_identity_provider_shortlist") {
+			v := d.Get("enable_directory_and_identity_provider_shortlist").(bool)
+			projDetails.Resources.EnableDirectoryAndIdentityProviderShortlist = utils.BoolPtr(v)
+		}
+		if d.HasChange("directory_reference_list") {
+			if v, ok := d.GetOk("directory_reference_list"); ok {
+				projDetails.Resources.DirectoryReferenceList = expandDirectoryReferenceList(v.([]interface{}))
+			} else {
+				projDetails.Resources.DirectoryReferenceList = []*v3.ReferenceValues{}
+			}
+		}
+		if d.HasChange("identity_providers_reference_list") {
+			if v, ok := d.GetOk("identity_providers_reference_list"); ok {
+				projDetails.Resources.IdentityProvidersReferenceList = expandDirectoryReferenceList(v.([]interface{}))
+			} else {
+				projDetails.Resources.IdentityProvidersReferenceList = []*v3.ReferenceValues{}
+			}
+		}
 
 		if d.HasChange("metadata") || d.HasChange("project_reference") ||
 			d.HasChange("owner_reference") || d.HasChange("categories") {
@@ -1241,6 +1322,24 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 		if d.HasChange("external_network_list") {
 			project.Spec.Resources.ExternalNetworkList = expandReferenceList(d, "external_network_list")
 		}
+		if d.HasChange("enable_directory_and_identity_provider_shortlist") {
+			v := d.Get("enable_directory_and_identity_provider_shortlist").(bool)
+			project.Spec.Resources.EnableDirectoryAndIdentityProviderShortlist = utils.BoolPtr(v)
+		}
+		if d.HasChange("directory_reference_list") {
+			if v, ok := d.GetOk("directory_reference_list"); ok {
+				project.Spec.Resources.DirectoryReferenceList = expandDirectoryReferenceList(v.([]interface{}))
+			} else {
+				project.Spec.Resources.DirectoryReferenceList = []*v3.ReferenceValues{}
+			}
+		}
+		if d.HasChange("identity_providers_reference_list") {
+			if v, ok := d.GetOk("identity_providers_reference_list"); ok {
+				project.Spec.Resources.IdentityProvidersReferenceList = expandDirectoryReferenceList(v.([]interface{}))
+			} else {
+				project.Spec.Resources.IdentityProvidersReferenceList = []*v3.ReferenceValues{}
+			}
+		}
 		if d.HasChange("metadata") || d.HasChange("project_reference") ||
 			d.HasChange("owner_reference") || d.HasChange("categories") {
 			if err = getMetadataAttributes(d, project.Metadata, "project"); err != nil {
@@ -1307,18 +1406,31 @@ func resourceNutanixProjectDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func expandProjectSpec(d *schema.ResourceData) *v3.ProjectSpec {
+	resources := &v3.ProjectResources{
+		AccountReferenceList:           expandReferenceList(d, "account_reference_list"),
+		EnvironmentReferenceList:       expandReferenceList(d, "environment_reference_list"),
+		DefaultSubnetReference:         expandReferenceList(d, "default_subnet_reference")[0],
+		UserReferenceList:              expandReferenceSet(d, "user_reference_list"),
+		ExternalUserGroupReferenceList: expandReferenceSet(d, "external_user_group_reference_list"),
+		SubnetReferenceList:            expandReferenceSet(d, "subnet_reference_list"),
+		ExternalNetworkList:            expandReferenceList(d, "external_network_list"),
+	}
+
+	//nolint:staticcheck
+	if v, ok := d.GetOkExists("enable_directory_and_identity_provider_shortlist"); ok {
+		resources.EnableDirectoryAndIdentityProviderShortlist = utils.BoolPtr(v.(bool))
+	}
+	if v, ok := d.GetOk("directory_reference_list"); ok {
+		resources.DirectoryReferenceList = expandDirectoryReferenceList(v.([]interface{}))
+	}
+	if v, ok := d.GetOk("identity_providers_reference_list"); ok {
+		resources.IdentityProvidersReferenceList = expandDirectoryReferenceList(v.([]interface{}))
+	}
+
 	return &v3.ProjectSpec{
 		Name:       d.Get("name").(string),
 		Descripion: d.Get("description").(string),
-		Resources: &v3.ProjectResources{
-			AccountReferenceList:           expandReferenceList(d, "account_reference_list"),
-			EnvironmentReferenceList:       expandReferenceList(d, "environment_reference_list"),
-			DefaultSubnetReference:         expandReferenceList(d, "default_subnet_reference")[0],
-			UserReferenceList:              expandReferenceSet(d, "user_reference_list"),
-			ExternalUserGroupReferenceList: expandReferenceSet(d, "external_user_group_reference_list"),
-			SubnetReferenceList:            expandReferenceSet(d, "subnet_reference_list"),
-			ExternalNetworkList:            expandReferenceList(d, "external_network_list"),
-		},
+		Resources:  resources,
 	}
 }
 
@@ -1387,6 +1499,29 @@ func expandReferenceSet(d *schema.ResourceData, key string) []*v3.ReferenceValue
 	return list
 }
 
+func expandDirectoryReferenceList(refs []interface{}) []*v3.ReferenceValues {
+	list := make([]*v3.ReferenceValues, len(refs))
+	for i, r := range refs {
+		ref := cast.ToStringMap(r)
+		list[i] = &v3.ReferenceValues{
+			UUID: cast.ToString(ref["uuid"]),
+			Kind: cast.ToString(ref["kind"]),
+		}
+	}
+	return list
+}
+
+func flattenDirectoryReferenceList(refs []*v3.ReferenceValues) []map[string]interface{} {
+	result := make([]map[string]interface{}, len(refs))
+	for i, ref := range refs {
+		result[i] = map[string]interface{}{
+			"uuid": ref.UUID,
+			"kind": ref.Kind,
+		}
+	}
+	return result
+}
+
 func expandMetadata(d *schema.ResourceData, kind string) *v3.Metadata {
 	metadata := new(v3.Metadata)
 
@@ -1397,22 +1532,35 @@ func expandMetadata(d *schema.ResourceData, kind string) *v3.Metadata {
 }
 
 func expandProjectDetails(d *schema.ResourceData) *v3.ProjectDetails {
+	resources := &v3.ProjectInternalResources{
+		AccountReferenceList:           expandReferenceList(d, "account_reference_list"),
+		EnvironmentReferenceList:       expandReferenceList(d, "environment_reference_list"),
+		DefaultSubnetReference:         expandReferenceList(d, "default_subnet_reference")[0],
+		UserReferenceList:              expandReferenceSet(d, "user_reference_list"),
+		ExternalUserGroupReferenceList: expandReferenceSet(d, "external_user_group_reference_list"),
+		SubnetReferenceList:            expandReferenceSet(d, "subnet_reference_list"),
+		ExternalNetworkList:            expandReferenceList(d, "external_network_list"),
+		TunnelReferenceList:            expandReferenceList(d, "tunnel_reference_list"),
+		ClusterReferenceList:           expandReferenceList(d, "cluster_reference_list"),
+		VPCReferenceList:               expandReferenceList(d, "vpc_reference_list"),
+		DefaultEnvironmentReference:    expandOptionalReference(d, "default_environment_reference", "environment"),
+	}
+
+	//nolint:staticcheck
+	if v, ok := d.GetOkExists("enable_directory_and_identity_provider_shortlist"); ok {
+		resources.EnableDirectoryAndIdentityProviderShortlist = utils.BoolPtr(v.(bool))
+	}
+	if v, ok := d.GetOk("directory_reference_list"); ok {
+		resources.DirectoryReferenceList = expandDirectoryReferenceList(v.([]interface{}))
+	}
+	if v, ok := d.GetOk("identity_providers_reference_list"); ok {
+		resources.IdentityProvidersReferenceList = expandDirectoryReferenceList(v.([]interface{}))
+	}
+
 	return &v3.ProjectDetails{
 		Name:        utils.StringPtr(d.Get("name").(string)),
 		Description: utils.StringPtr(d.Get("description").(string)),
-		Resources: &v3.ProjectInternalResources{
-			AccountReferenceList:           expandReferenceList(d, "account_reference_list"),
-			EnvironmentReferenceList:       expandReferenceList(d, "environment_reference_list"),
-			DefaultSubnetReference:         expandReferenceList(d, "default_subnet_reference")[0],
-			UserReferenceList:              expandReferenceSet(d, "user_reference_list"),
-			ExternalUserGroupReferenceList: expandReferenceSet(d, "external_user_group_reference_list"),
-			SubnetReferenceList:            expandReferenceSet(d, "subnet_reference_list"),
-			ExternalNetworkList:            expandReferenceList(d, "external_network_list"),
-			TunnelReferenceList:            expandReferenceList(d, "tunnel_reference_list"),
-			ClusterReferenceList:           expandReferenceList(d, "cluster_reference_list"),
-			VPCReferenceList:               expandReferenceList(d, "vpc_reference_list"),
-			DefaultEnvironmentReference:    expandOptionalReference(d, "default_environment_reference", "environment"),
-		},
+		Resources:   resources,
 	}
 }
 
