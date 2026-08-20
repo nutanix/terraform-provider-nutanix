@@ -1094,7 +1094,7 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(d *schema.ResourceData, basePath s
 		}
 
 		if flexRule, ok := val["flex_rule_spec"]; ok && len(flexRule.([]interface{})) > 0 {
-			flex := expandFlexRuleSpec(flexRule.([]interface{}))
+			flex := expandFlexRuleSpec(d, basePath, flexRule.([]interface{}))
 			if flex != nil {
 				if err := policyRules.SetValue(*flex); err != nil {
 					log.Printf("[ERROR] Error while setting value for flex rule: %v", err)
