@@ -2187,10 +2187,22 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 func ResourceNutanixVirtualMachineV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
+	taskconn := meta.(*conns.Client).PrismAPI
 
 	readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
 	if err != nil {
 		return diag.Errorf("error while reading vm : %v", err)
+	}
+
+	if detachErr := detachADSFVolumeGroupReferences(ctx, d, meta, conn, readResp.Data.GetValue().(config.Vm)); detachErr != nil {
+		return detachErr
+	}
+
+	// Detaching ADFS-backed disks mutates the VM and changes its ETag.
+	// Re-read the VM so DeleteVmById uses the latest If-Match value.
+	readResp, err = conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while refreshing vm before delete : %v", err)
 	}
 	// Extract E-Tag Header
 	args := make(map[string]interface{})
@@ -2204,8 +2216,6 @@ func ResourceNutanixVirtualMachineV2Delete(ctx context.Context, d *schema.Resour
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
-
-	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the task to complete
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
@@ -2217,6 +2227,51 @@ func ResourceNutanixVirtualMachineV2Delete(ctx context.Context, d *schema.Resour
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for vm (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
+	return nil
+}
+
+func detachADSFVolumeGroupReferences(ctx context.Context, d *schema.ResourceData, meta interface{}, conn *vmm.Client, vm config.Vm) diag.Diagnostics {
+	taskconn := meta.(*conns.Client).PrismAPI
+	const adfsBackingType = "vmm.v4.ahv.config.ADSFVolumeGroupReference"
+
+	for _, disk := range vm.Disks {
+		if disk.ExtId == nil || disk.BackingInfo == nil || disk.BackingInfo.ObjectType_ == nil {
+			continue
+		}
+		if *disk.BackingInfo.ObjectType_ != adfsBackingType {
+			continue
+		}
+
+		log.Printf("[DEBUG] Detaching ADFS volume group reference from disk %s before VM deletion", utils.StringValue(disk.ExtId))
+
+		readVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+		if err != nil {
+			return diag.Errorf("error while reading vm before detaching ADFS volume group reference: %v", err)
+		}
+
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(readVMResp, conn)
+
+		resp, err := conn.VMAPIInstance.DeleteDiskById(utils.StringPtr(d.Id()), disk.ExtId, args)
+		if err != nil {
+			return diag.Errorf("error while detaching ADFS volume group reference from disk %s: %v", utils.StringValue(disk.ExtId), err)
+		}
+
+		taskRef := resp.Data.GetValue().(import1.TaskReference)
+		taskUUID := taskRef.ExtId
+
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutDelete),
+		}
+
+		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+			return diag.Errorf("error waiting for ADFS volume group detachment task (%s): %s", utils.StringValue(taskUUID), errWaitTask)
+		}
+	}
+
 	return nil
 }
 
