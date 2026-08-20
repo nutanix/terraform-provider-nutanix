@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"strings"
+	"time"
 )
 
 // PrintToJSON method helper to debug responses
@@ -113,4 +114,26 @@ func ExtractErrorFromV4APIResponse(err error) string {
 	errorList := data["error"].([]interface{})
 	errorMessage := errorList[0].(map[string]interface{})["message"]
 	return errorMessage.(string)
+}
+
+// waitTimeoutGetter lets utils consume *conns.Client without importing the
+// nutanix package (which would create an import cycle). Implementers must
+// return the value in MINUTES; 0 (or negative) means "unset".
+type waitTimeoutGetter interface {
+	GetWaitTimeout() int64
+}
+
+// ResolveWaitTimeout returns the effective wait duration for a long-running
+// operation. If meta exposes GetWaitTimeout() and the configured value is
+// positive, it is interpreted as minutes and returned. Otherwise the caller's
+// defaultTimeout is returned unchanged (typically d.Timeout(schema.TimeoutXxx)).
+//
+// Unit contract: provider wait_timeout is expressed in MINUTES.
+func ResolveWaitTimeout(meta interface{}, defaultTimeout time.Duration) time.Duration {
+	if c, ok := meta.(waitTimeoutGetter); ok {
+		if wt := c.GetWaitTimeout(); wt > 0 {
+			return time.Duration(wt) * time.Minute
+		}
+	}
+	return defaultTimeout
 }

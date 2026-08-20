@@ -16,6 +16,9 @@ import (
 const resourceNameRestorePC = "nutanix_pc_restore_v2.test"
 
 func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
+	if os.Getenv(resource.EnvTfAcc) == "" {
+		t.Skip("Acceptance tests skipped unless env 'TF_ACC' set")
+	}
 	if testVars.Prism.PCRestore.SkipPCRestoreTest {
 		// We are skipping the PC restore tests because they require powering off the PC VM,
 		// which could affect the execution of other test cases running in parallel.
@@ -31,7 +34,7 @@ func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreventPostDestroyRefresh: true,
 			PreCheck:                  func() { acc.TestAccPreCheck(t) },
-			Providers:                 acc.TestAccProviders,
+			ProtoV5ProviderFactories:  acc.TestAccProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
 				// Step 1: List backup targets and delete if backup target exists
 				{
@@ -63,7 +66,7 @@ func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreventPostDestroyRefresh: true,
 			PreCheck:                  func() { acc.TestAccPreCheck(t) },
-			Providers:                 acc.TestAccProviders,
+			ProtoV5ProviderFactories:  acc.TestAccProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
 				// Step 3: power off PC
 				{
@@ -111,9 +114,12 @@ func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
 
 	// Restore PC Sub-test Case
 	t.Run("PC restore test: ", func(t *testing.T) {
+		if restorePcConfig == "" {
+			t.Fatal("restorePcConfig was not populated by the 'power of PC' sub-test — check its Check function/output names")
+		}
 		resource.Test(t, resource.TestCase{
-			PreCheck:  func() { acc.TestAccPreCheck(t) },
-			Providers: acc.TestAccProviders,
+			PreCheck:                 func() { acc.TestAccPreCheck(t) },
+			ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
 				// Step 5: Restore PC
 				{
@@ -139,6 +145,9 @@ func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
 }
 
 func TestAccV2NutanixRestorePCResource_ObjectRestoreSourceRestorePC(t *testing.T) {
+	if os.Getenv(resource.EnvTfAcc) == "" {
+		t.Skip("Acceptance tests skipped unless env 'TF_ACC' set")
+	}
 	if testVars.Prism.PCRestore.SkipPCRestoreTest {
 		// We are skipping the PC restore tests because they require powering off the PC VM,
 		// which could affect the execution of other test cases running in parallel.
@@ -154,7 +163,7 @@ func TestAccV2NutanixRestorePCResource_ObjectRestoreSourceRestorePC(t *testing.T
 		resource.Test(t, resource.TestCase{
 			PreventPostDestroyRefresh: true,
 			PreCheck:                  func() { acc.TestAccPreCheck(t) },
-			Providers:                 acc.TestAccProviders,
+			ProtoV5ProviderFactories:  acc.TestAccProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
 				// Step 1: List backup targets and create if backup target does not exist
 				{
@@ -186,7 +195,7 @@ func TestAccV2NutanixRestorePCResource_ObjectRestoreSourceRestorePC(t *testing.T
 		resource.Test(t, resource.TestCase{
 			PreventPostDestroyRefresh: true,
 			PreCheck:                  func() { acc.TestAccPreCheck(t) },
-			Providers:                 acc.TestAccProviders,
+			ProtoV5ProviderFactories:  acc.TestAccProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
 				// Step 3: power off PC
 				{
@@ -234,9 +243,12 @@ func TestAccV2NutanixRestorePCResource_ObjectRestoreSourceRestorePC(t *testing.T
 
 	// Restore PC Sub-test Case
 	t.Run("PC restore test: ", func(t *testing.T) {
+		if restorePcConfig == "" {
+			t.Fatal("restorePcConfig was not populated by the 'power of PC' sub-test — check its Check function/output names")
+		}
 		resource.Test(t, resource.TestCase{
-			PreCheck:  func() { acc.TestAccPreCheck(t) },
-			Providers: acc.TestAccProviders,
+			PreCheck:                 func() { acc.TestAccPreCheck(t) },
+			ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
 				// Step 5: Restore PC
 				{
@@ -421,12 +433,12 @@ func restorePcResourceConfig(pcDetails map[string]interface{}, restoreSourceExtI
 	// Build remote commands to reset the admin password.
 	remoteCommands := ""
 	for pass := range uniquePasswords {
-		cmd := fmt.Sprintf("/home/nutanix/prism/cli/ncli user reset-password user-name=%s password=%s", testVars.Prism.PCRestore.Username, pass)
+		cmd := fmt.Sprintf("/home/nutanix/prism/cli/ncli user reset-password user-name=%s password=%s", testVars.PCUsername, pass)
 		remoteCommands += cmd + " ; "
 	}
 
 	// Append a fallback command using the previous password.
-	fallbackCmd := fmt.Sprintf("/home/nutanix/prism/cli/ncli user reset-password user-name=%s password=%s", testVars.Prism.PCRestore.Username, testVars.Prism.PCRestore.Password)
+	fallbackCmd := fmt.Sprintf("/home/nutanix/prism/cli/ncli user reset-password user-name=%s password=%s", testVars.PCUsername, testVars.PCPassword)
 	remoteCommands += fallbackCmd
 
 	// Build the two remote password reset commands.
@@ -435,7 +447,7 @@ func restorePcResourceConfig(pcDetails map[string]interface{}, restoreSourceExtI
 
 	// Build the full SSH command. Note the single quotes around the remoteCommands.
 	resetCommand := fmt.Sprintf("ssh-keygen -f ~/.ssh/known_hosts -R %[3]s; sshpass -p '%[1]s' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %[2]s@%[3]s '%[4]s'",
-		testVars.Prism.RestoreSource.SSHPassword, testVars.Prism.RestoreSource.SSHUser, pcIP, remoteCommands)
+		testVars.SshPcPassword, testVars.SshPcUsername, pcIP, remoteCommands)
 
 	// pe config
 	username, password := getBasicAuthForAPINonSupportedTests()

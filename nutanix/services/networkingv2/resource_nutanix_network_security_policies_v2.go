@@ -12,8 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	config "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
+	import3 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/request/networksecuritypolicies"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import5 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -38,7 +40,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"QUARANTINE", "ISOLATION", "APPLICATION", "SHAREDSERVICE"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"QUARANTINE", "ISOLATION", "APPLICATION", "SHAREDSERVICE", "CRITICAL", "COREINFRASTRUCTURE", "ZONE", "WORKLOAD"}, false),
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -48,6 +50,11 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SAVE", "MONITOR", "ENFORCE"}, false),
+			},
+			"priority": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
 			},
 			"rules": {
 				Type:     schema.TypeList,
@@ -66,7 +73,17 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"QUARANTINE", "TWO_ENV_ISOLATION", "APPLICATION", "INTRA_GROUP", "MULTI_ENV_ISOLATION", "SHARED_SERVICE"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"QUARANTINE", "TWO_ENV_ISOLATION", "APPLICATION", "INTRA_GROUP", "MULTI_ENV_ISOLATION", "SHARED_SERVICE", "FLEX"}, false),
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"is_logging_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
 						},
 						"spec": {
 							Type:     schema.TypeList,
@@ -455,6 +472,13 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 											},
 										},
 									},
+									"flex_rule_spec": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: flexRuleSpecSchema(false),
+										},
+									},
 								},
 							},
 						},
@@ -545,6 +569,15 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 					},
 				},
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"is_shared_with_all_projects": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -566,6 +599,9 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 	if state, ok := d.GetOk("state"); ok {
 		spec.State = common.ExpandEnum[import1.SecurityPolicyState](state.(string))
 	}
+	if priority, ok := d.GetOk("priority"); ok {
+		spec.Priority = utils.IntPtr(priority.(int))
+	}
 	if rules, ok := d.GetOk("rules"); ok {
 		spec.Rules = expandNetworkSecurityPolicyRule(d, rules.([]interface{}))
 	}
@@ -581,11 +617,17 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 	if vpcRef, ok := d.GetOk("vpc_reference"); ok {
 		spec.VpcReferences = common.ExpandListOfString(vpcRef.([]interface{}))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		spec.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 
 	aJSON, _ := json.MarshalIndent(spec, "", "  ")
 	log.Printf("[DEBUG] Create Network Security Policy Payload: %s", string(aJSON))
 
-	resp, err := conn.NetworkingSecurityInstance.CreateNetworkSecurityPolicy(&spec)
+	createNetworkSecurityPolicyRequest := import3.CreateNetworkSecurityPolicyRequest{
+		Body: &spec,
+	}
+	resp, err := conn.NetworkingSecurityInstance.CreateNetworkSecurityPolicy(ctx, &createNetworkSecurityPolicyRequest)
 	if err != nil {
 		return diag.Errorf("error while creating network security policy: %v", err)
 	}
@@ -605,11 +647,20 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		// Fetch and log the task details to aid debugging of the failed create.
+		if taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &import5.GetTaskByIdRequest{ExtId: taskUUID}); err == nil {
+			taskDetails := taskResp.Data.GetValue().(import2.Task)
+			aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+			log.Printf("[DEBUG] Create Network Security Policy Failed Task Details: %s", string(aJSON))
+		}
 		return diag.Errorf("error waiting for network security policy (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import5.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching network security policy task: %v", err)
 	}
@@ -629,7 +680,10 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	resp, err := conn.NetworkingSecurityInstance.GetNetworkSecurityPolicyById(utils.StringPtr((d.Id())))
+	getNetworkSecurityPolicyByIdRequest := import3.GetNetworkSecurityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.NetworkingSecurityInstance.GetNetworkSecurityPolicyById(ctx, &getNetworkSecurityPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching network security policy: %v", err)
 	}
@@ -645,6 +699,9 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 		return diag.FromErr(err)
 	}
 	if err := d.Set("state", common.FlattenPtrEnum(getResp.State)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("priority", utils.IntValue(getResp.Priority)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -731,15 +788,27 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 	if err := d.Set("links", flattenLinksMicroSeg(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("is_shared_with_all_projects", utils.BoolValue(getResp.IsSharedWithAllProjects)); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
 func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 	conn := meta.(*conns.Client).MicroSegAPI
 
 	updatedSpec := import1.NetworkSecurityPolicy{}
 
-	resp, err := conn.NetworkingSecurityInstance.GetNetworkSecurityPolicyById(utils.StringPtr((d.Id())))
+	getNetworkSecurityPolicyByIdRequest := import3.GetNetworkSecurityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.NetworkingSecurityInstance.GetNetworkSecurityPolicyById(ctx, &getNetworkSecurityPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching network security : %v", err)
 	}
@@ -761,6 +830,9 @@ func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema
 	if d.HasChange("state") {
 		updatedSpec.State = common.ExpandEnum[import1.SecurityPolicyState](d.Get("state").(string))
 	}
+	if d.HasChange("priority") {
+		updatedSpec.Priority = utils.IntPtr(d.Get("priority").(int))
+	}
 	if d.HasChange("is_ipv6_traffic_allowed") {
 		updatedSpec.IsIpv6TrafficAllowed = utils.BoolPtr(d.Get("is_ipv6_traffic_allowed").(bool))
 	}
@@ -773,11 +845,14 @@ func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema
 	if d.HasChange("vpc_reference") {
 		updatedSpec.VpcReferences = common.ExpandListOfString(d.Get("vpc_reference").([]interface{}))
 	}
-
 	aJSON, _ := json.MarshalIndent(updatedSpec, "", "  ")
 	log.Printf("[DEBUG] Update Network Security Policy Payload: %s", string(aJSON))
 
-	updatedResp, err := conn.NetworkingSecurityInstance.UpdateNetworkSecurityPolicyById(utils.StringPtr(d.Id()), &updatedSpec)
+	updateNetworkSecurityPolicyByIdRequest := import3.UpdateNetworkSecurityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updatedSpec,
+	}
+	updatedResp, err := conn.NetworkingSecurityInstance.UpdateNetworkSecurityPolicyById(ctx, &updateNetworkSecurityPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while updating network security: %v", err)
 	}
@@ -805,7 +880,10 @@ func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema
 func ResourceNutanixNetworkSecurityPolicyV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	resp, err := conn.NetworkingSecurityInstance.DeleteNetworkSecurityPolicyById(utils.StringPtr(d.Id()))
+	deleteNetworkSecurityPolicyByIdRequest := import3.DeleteNetworkSecurityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.NetworkingSecurityInstance.DeleteNetworkSecurityPolicyById(ctx, &deleteNetworkSecurityPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting network security: %v", err)
 	}
@@ -843,6 +921,12 @@ func expandNetworkSecurityPolicyRule(d *schema.ResourceData, pr []interface{}) [
 			}
 			if ty, ok := val["type"]; ok {
 				net.Type = common.ExpandEnum[import1.RuleType](ty.(string))
+			}
+			if name, ok := val["name"]; ok && len(name.(string)) > 0 {
+				net.Name = utils.StringPtr(name.(string))
+			}
+			if isLogging, ok := val["is_logging_enabled"]; ok {
+				net.IsLoggingEnabled = utils.BoolPtr(isLogging.(bool))
 			}
 			if spec, ok := val["spec"]; ok {
 				net.Spec = expandOneOfNetworkSecurityPolicyRuleSpec(d, fmt.Sprintf("rules.%d.spec", k), spec)
@@ -1006,6 +1090,16 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(d *schema.ResourceData, basePath s
 			if err != nil {
 				log.Printf("[ERROR] Error while setting value for multi env isolation rule: %v", err)
 				return nil
+			}
+		}
+
+		if flexRule, ok := val["flex_rule_spec"]; ok && len(flexRule.([]interface{})) > 0 {
+			flex := expandFlexRuleSpec(flexRule.([]interface{}))
+			if flex != nil {
+				if err := policyRules.SetValue(*flex); err != nil {
+					log.Printf("[ERROR] Error while setting value for flex rule: %v", err)
+					return nil
+				}
 			}
 		}
 		aJSON, _ := json.Marshal(policyRules)

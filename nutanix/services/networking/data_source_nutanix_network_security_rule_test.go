@@ -19,8 +19,9 @@ func TestAccNutanixNetworkSecurityRuleDataSource_basic(t *testing.T) {
 	r := acctest.RandIntRange(0, 500)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:   func() { acc.TestAccPreCheck(t) },
+		Providers:  acc.TestAccProviders,
+		ErrorCheck: acc.SkipIfV3FlowNextGen(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkSecurityRuleDataSourceConfig(r),
@@ -44,8 +45,9 @@ func TestAccNutanixNetworkSecurityRuleDataSource_isolation(t *testing.T) {
 	r := acctest.RandIntRange(0, 500)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:   func() { acc.TestAccPreCheck(t) },
+		Providers:  acc.TestAccProviders,
+		ErrorCheck: acc.SkipIfV3FlowNextGen(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkSecurityRuleDataSourceConfigIsolation(r),
@@ -67,8 +69,9 @@ func TestAccNutanixNetworkSecurityRuleDataSource_advanced(t *testing.T) {
 	r := acctest.RandIntRange(0, 500)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:   func() { acc.TestAccPreCheck(t) },
+		Providers:  acc.TestAccProviders,
+		ErrorCheck: acc.SkipIfV3FlowNextGen(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkSecurityRuleDataSourceAdvancedConfig(r),

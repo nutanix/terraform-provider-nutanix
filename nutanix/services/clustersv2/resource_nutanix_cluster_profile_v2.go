@@ -11,9 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
+	import4 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/request/clusterprofiles"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
 	import3 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import5 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -358,6 +360,156 @@ func ResourceNutanixClusterProfileV2() *schema.Resource {
 					},
 				},
 			},
+			"ntp_server_config_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ntp_server_address": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MaxItems: 1,
+							Set:      common.HashIPItem,
+							Elem:     common.SchemaForIPList(true),
+						},
+						"encryption_algorithm": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(EncryptionAlgorithmStrings, false),
+						},
+						"encryption_key": {
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
+						},
+						"encryption_key_id": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"http_proxy_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"proxy_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"ip_address": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem:     common.SchemaForIPList(false),
+									},
+									"port": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+									},
+									"username": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"password": {
+										Type:      schema.TypeString,
+										Optional:  true,
+										Sensitive: true,
+									},
+									"proxy_types": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringInSlice(HTTPProxyTypeStrings, false),
+										},
+									},
+								},
+							},
+						},
+						"proxy_white_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"target": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"target_type": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(HTTPProxyWhiteListTargetStrings, false),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"fault_tolerance_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"desired_cluster_fault_tolerance": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(ClusterFaultToleranceStrings, false),
+						},
+					},
+				},
+			},
+			"rebuild_reservation_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"is_rebuild_reservation_enabled": {
+							Type:     schema.TypeBool,
+							Default:  false,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"resilient_capacity_warning_threshold_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"resilient_capacity_warning_threshold_percentage": {
+							Type:     schema.TypeInt,
+							Default:  75,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"dryrun": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -432,7 +584,10 @@ func ResourceNutanixClusterProfileV2Create(ctx context.Context, d *schema.Resour
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Cluster Profile Create Payload: %s", string(aJSON))
 
-	createResp, createErr := conn.ClusterProfilesAPI.CreateClusterProfile(body)
+	createClusterProfileRequest := import4.CreateClusterProfileRequest{
+		Body: body,
+	}
+	createResp, createErr := conn.ClusterProfilesAPI.CreateClusterProfile(ctx, &createClusterProfileRequest)
 	if createErr != nil {
 		return diag.FromErr(createErr)
 	}
@@ -452,7 +607,10 @@ func ResourceNutanixClusterProfileV2Create(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error waiting for cluster profile (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import5.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching cluster profile task: %v", err)
 	}
@@ -475,7 +633,10 @@ func ResourceNutanixClusterProfileV2Read(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.Client).ClusterAPI
 
 	// Fetch the Cluster Profile by UUID
-	clusterProfileResp, err := conn.ClusterProfilesAPI.GetClusterProfileById(utils.StringPtr(d.Id()))
+	getClusterProfileByIdRequest := import4.GetClusterProfileByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	clusterProfileResp, err := conn.ClusterProfilesAPI.GetClusterProfileById(ctx, &getClusterProfileByIdRequest)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -552,6 +713,21 @@ func ResourceNutanixClusterProfileV2Read(ctx context.Context, d *schema.Resource
 	if err := d.Set("pulse_status", flattenPulseStatus(clusterProfile.PulseStatus)); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("ntp_server_config_list", flattenNtpServerConfigList(clusterProfile.NtpServerConfigList)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("http_proxy_config", flattenHttpProxyConfig(clusterProfile.HttpProxyConfig)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("fault_tolerance_config", flattenFaultToleranceConfig(clusterProfile.FaultToleranceConfig)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("rebuild_reservation_config", flattenRebuildReservationConfig(clusterProfile.RebuildReservationConfig)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("resilient_capacity_warning_threshold_config", flattenResilientCapacityWarningThresholdConfig(clusterProfile.ResilientCapacityWarningThresholdConfig)); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -560,7 +736,10 @@ func ResourceNutanixClusterProfileV2Update(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.Client).ClusterAPI
 
 	// Fetch the Cluster Profile by UUID
-	clusterProfileResp, err := conn.ClusterProfilesAPI.GetClusterProfileById(utils.StringPtr(d.Id()))
+	getClusterProfileByIdRequest := import4.GetClusterProfileByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	clusterProfileResp, err := conn.ClusterProfilesAPI.GetClusterProfileById(ctx, &getClusterProfileByIdRequest)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -586,6 +765,11 @@ func ResourceNutanixClusterProfileV2Update(ctx context.Context, d *schema.Resour
 	}
 	if d.HasChange("description") {
 		body.Description = utils.StringPtr(d.Get("description").(string))
+	} else {
+		// The update API is a full-replacement PUT: an omitted description is
+		// cleared server-side, causing a perpetual diff when other fields change
+		// but description does not. Carry the current value forward.
+		body.Description = clusterProfile.Description
 	}
 	if d.HasChange("allowed_overrides") {
 		aoList, _ := d.GetOk("allowed_overrides")
@@ -629,6 +813,26 @@ func ResourceNutanixClusterProfileV2Update(ctx context.Context, d *schema.Resour
 		pulseStatusList := common.InterfaceToSlice(pulseStatusRaw)
 		body.PulseStatus = expandPulseStatus(pulseStatusList)
 	}
+	if d.HasChange("ntp_server_config_list") {
+		ntpConfigRaw, _ := d.GetOk("ntp_server_config_list")
+		body.NtpServerConfigList = expandNtpServerConfigList(common.InterfaceToSlice(ntpConfigRaw))
+	}
+	if d.HasChange("http_proxy_config") {
+		httpProxyRaw, _ := d.GetOk("http_proxy_config")
+		body.HttpProxyConfig = expandHttpProxyConfig(common.InterfaceToSlice(httpProxyRaw))
+	}
+	if d.HasChange("fault_tolerance_config") {
+		ftRaw, _ := d.GetOk("fault_tolerance_config")
+		body.FaultToleranceConfig = expandFaultToleranceConfig(common.InterfaceToSlice(ftRaw))
+	}
+	if d.HasChange("rebuild_reservation_config") {
+		rrRaw, _ := d.GetOk("rebuild_reservation_config")
+		body.RebuildReservationConfig = expandRebuildReservationConfig(common.InterfaceToSlice(rrRaw))
+	}
+	if d.HasChange("resilient_capacity_warning_threshold_config") {
+		rcRaw, _ := d.GetOk("resilient_capacity_warning_threshold_config")
+		body.ResilientCapacityWarningThresholdConfig = expandResilientCapacityWarningThresholdConfig(common.InterfaceToSlice(rcRaw))
+	}
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Cluster Profile Update Payload: %s", string(aJSON))
@@ -638,8 +842,9 @@ func ResourceNutanixClusterProfileV2Update(ctx context.Context, d *schema.Resour
 		dryRun = utils.BoolPtr(v.(bool))
 	}
 
-	// Extract E-tag from read response
-	getClusterProfileResp, getErr := conn.ClusterProfilesAPI.GetClusterProfileById(utils.StringPtr(d.Id()))
+	// Extract E-tag from read response (reuse existing request variable)
+	getClusterProfileByIdRequest.ExtId = utils.StringPtr(d.Id())
+	getClusterProfileResp, getErr := conn.ClusterProfilesAPI.GetClusterProfileById(ctx, &getClusterProfileByIdRequest)
 	if getErr != nil {
 		return diag.Errorf("error fetching cluster profile: %v", getErr)
 	}
@@ -650,7 +855,12 @@ func ResourceNutanixClusterProfileV2Update(ctx context.Context, d *schema.Resour
 	args["If-Match"] = utils.StringPtr(etagValue)
 
 	// Update Cluster Profile
-	updateResp, updateErr := conn.ClusterProfilesAPI.UpdateClusterProfileById(utils.StringPtr(d.Id()), body, dryRun, args)
+	updateClusterProfileByIdRequest := import4.UpdateClusterProfileByIdRequest{
+		ExtId:   utils.StringPtr(d.Id()),
+		Body:    body,
+		Dryrun_: dryRun,
+	}
+	updateResp, updateErr := conn.ClusterProfilesAPI.UpdateClusterProfileById(ctx, &updateClusterProfileByIdRequest, args)
 	if updateErr != nil {
 		return diag.FromErr(updateErr)
 	}
@@ -670,7 +880,10 @@ func ResourceNutanixClusterProfileV2Update(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error waiting for cluster profile (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import5.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching cluster profile task: %v", err)
 	}
@@ -684,7 +897,10 @@ func ResourceNutanixClusterProfileV2Update(ctx context.Context, d *schema.Resour
 func ResourceNutanixClusterProfileV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ClusterAPI
 
-	deleteResp, deleteErr := conn.ClusterProfilesAPI.DeleteClusterProfileById(utils.StringPtr(d.Id()))
+	deleteClusterProfileByIdRequest := import4.DeleteClusterProfileByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	deleteResp, deleteErr := conn.ClusterProfilesAPI.DeleteClusterProfileById(ctx, &deleteClusterProfileByIdRequest)
 	if deleteErr != nil {
 		return diag.FromErr(deleteErr)
 	}
@@ -703,7 +919,10 @@ func ResourceNutanixClusterProfileV2Delete(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error waiting for cluster profile (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import5.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching cluster profile delete task: %v", err)
 	}
@@ -778,6 +997,31 @@ func expandClusterProfile(d *schema.ResourceData) *config.ClusterProfile {
 	if pulseStatusRaw, ok := d.GetOk("pulse_status"); ok {
 		pulseStatusList := common.InterfaceToSlice(pulseStatusRaw)
 		body.PulseStatus = expandPulseStatus(pulseStatusList)
+	}
+
+	// NTP server config list
+	if ntpConfigRaw, ok := d.GetOk("ntp_server_config_list"); ok {
+		body.NtpServerConfigList = expandNtpServerConfigList(common.InterfaceToSlice(ntpConfigRaw))
+	}
+
+	// HTTP proxy config
+	if httpProxyRaw, ok := d.GetOk("http_proxy_config"); ok {
+		body.HttpProxyConfig = expandHttpProxyConfig(common.InterfaceToSlice(httpProxyRaw))
+	}
+
+	// Fault tolerance config
+	if ftRaw, ok := d.GetOk("fault_tolerance_config"); ok {
+		body.FaultToleranceConfig = expandFaultToleranceConfig(common.InterfaceToSlice(ftRaw))
+	}
+
+	// Rebuild reservation config
+	if rrRaw, ok := d.GetOk("rebuild_reservation_config"); ok {
+		body.RebuildReservationConfig = expandRebuildReservationConfig(common.InterfaceToSlice(rrRaw))
+	}
+
+	// Resilient capacity warning threshold config
+	if rcRaw, ok := d.GetOk("resilient_capacity_warning_threshold_config"); ok {
+		body.ResilientCapacityWarningThresholdConfig = expandResilientCapacityWarningThresholdConfig(common.InterfaceToSlice(rcRaw))
 	}
 
 	return body
@@ -1047,4 +1291,243 @@ func flattenRsyslogServerList(rsyslogServers []config.RsyslogServer) interface{}
 	}
 
 	return result
+}
+
+func expandIPAddressOrFQDNSingle(pr []interface{}) *import1.IPAddressOrFQDN {
+	ips := expandIPAddressOrFQDN(pr)
+	if len(ips) > 0 {
+		return &ips[0]
+	}
+	return nil
+}
+
+func expandNtpServerConfigList(ntpConfigList []interface{}) []config.NtpServerConfig {
+	if len(ntpConfigList) == 0 {
+		return nil
+	}
+
+	result := make([]config.NtpServerConfig, 0, len(ntpConfigList))
+	for _, item := range ntpConfigList {
+		itemMap := item.(map[string]interface{})
+		ntpConfig := config.NtpServerConfig{}
+
+		if addrRaw, ok := itemMap["ntp_server_address"]; ok {
+			addrList := common.InterfaceToSlice(addrRaw)
+			if len(addrList) > 0 {
+				ntpConfig.NtpServerAddress = expandIPAddressOrFQDNSingle(addrList)
+			}
+		}
+		if v, ok := itemMap["encryption_algorithm"].(string); ok && v != "" {
+			ntpConfig.EncryptionAlgorithm = common.ExpandEnum[config.EncryptionAlgorithm](v)
+		}
+		if v, ok := itemMap["encryption_key"].(string); ok && v != "" {
+			ntpConfig.EncryptionKey = utils.StringPtr(v)
+		}
+		if v, ok := itemMap["encryption_key_id"].(int); ok && v != 0 {
+			ntpConfig.EncryptionKeyId = utils.IntPtr(v)
+		}
+
+		result = append(result, ntpConfig)
+	}
+	return result
+}
+
+func expandHttpProxyConfig(httpProxyList []interface{}) *config.HttpProxyConfiguration {
+	if len(httpProxyList) == 0 || httpProxyList[0] == nil {
+		return nil
+	}
+
+	raw := httpProxyList[0].(map[string]interface{})
+	httpProxy := &config.HttpProxyConfiguration{}
+
+	if proxyListRaw, ok := raw["proxy_list"]; ok {
+		proxyList := common.InterfaceToSlice(proxyListRaw)
+		httpProxy.ProxyList = make([]config.HttpProxyConfig, 0, len(proxyList))
+		for _, p := range proxyList {
+			pMap := p.(map[string]interface{})
+			proxy := config.HttpProxyConfig{
+				Name: utils.StringPtr(pMap["name"].(string)),
+			}
+			if ipRaw, ok := pMap["ip_address"]; ok {
+				ipList := common.InterfaceToSlice(ipRaw)
+				if len(ipList) > 0 && ipList[0] != nil {
+					ipMap := ipList[0].(map[string]interface{})
+					proxy.IpAddress = expandIPAddress(common.InterfaceToSlice(ipMap))
+				}
+			}
+			if v, ok := pMap["port"].(int); ok && v != 0 {
+				proxy.Port = utils.IntPtr(v)
+			}
+			if v, ok := pMap["username"].(string); ok && v != "" {
+				proxy.Username = utils.StringPtr(v)
+			}
+			if v, ok := pMap["password"].(string); ok && v != "" {
+				proxy.Password = utils.StringPtr(v)
+			}
+			if ptRaw, ok := pMap["proxy_types"]; ok {
+				proxy.ProxyTypes = common.ExpandEnumList[config.HttpProxyType](ptRaw)
+			}
+			httpProxy.ProxyList = append(httpProxy.ProxyList, proxy)
+		}
+	}
+
+	if whiteListRaw, ok := raw["proxy_white_list"]; ok {
+		whiteList := common.InterfaceToSlice(whiteListRaw)
+		httpProxy.ProxyWhiteList = make([]config.HttpProxyWhiteListConfig, 0, len(whiteList))
+		for _, w := range whiteList {
+			wMap := w.(map[string]interface{})
+			whiteListItem := config.HttpProxyWhiteListConfig{
+				Target:     utils.StringPtr(wMap["target"].(string)),
+				TargetType: common.ExpandEnum[config.HttpProxyWhiteListTargetType](wMap["target_type"].(string)),
+			}
+			httpProxy.ProxyWhiteList = append(httpProxy.ProxyWhiteList, whiteListItem)
+		}
+	}
+
+	return httpProxy
+}
+
+func expandFaultToleranceConfig(ftList []interface{}) *config.FaultToleranceConfiguration {
+	if len(ftList) == 0 || ftList[0] == nil {
+		return nil
+	}
+
+	raw := ftList[0].(map[string]interface{})
+	ft := &config.FaultToleranceConfiguration{}
+
+	if v, ok := raw["desired_cluster_fault_tolerance"].(string); ok && v != "" {
+		ft.DesiredClusterFaultTolerance = common.ExpandEnum[config.ClusterFaultToleranceRef](v)
+	}
+
+	return ft
+}
+
+func expandRebuildReservationConfig(rrList []interface{}) *config.RebuildReservationConfig {
+	if len(rrList) == 0 || rrList[0] == nil {
+		return nil
+	}
+
+	raw := rrList[0].(map[string]interface{})
+	rr := &config.RebuildReservationConfig{}
+
+	if v, ok := raw["is_rebuild_reservation_enabled"]; ok {
+		rr.IsRebuildReservationEnabled = utils.BoolPtr(v.(bool))
+	}
+
+	return rr
+}
+
+func expandResilientCapacityWarningThresholdConfig(rcList []interface{}) *config.ResilientCapacityWarningThresholdConfig {
+	if len(rcList) == 0 || rcList[0] == nil {
+		return nil
+	}
+
+	raw := rcList[0].(map[string]interface{})
+	rc := &config.ResilientCapacityWarningThresholdConfig{}
+
+	if v, ok := raw["resilient_capacity_warning_threshold_percentage"].(int); ok {
+		rc.ResilientCapacityWarningThresholdPercentage = utils.IntPtr(v)
+	}
+
+	return rc
+}
+
+func flattenNtpServerConfigList(ntpConfigList []config.NtpServerConfig) []interface{} {
+	if len(ntpConfigList) == 0 {
+		return nil
+	}
+
+	result := make([]interface{}, 0, len(ntpConfigList))
+	for _, ntpConfig := range ntpConfigList {
+		m := map[string]interface{}{
+			"encryption_key":    utils.StringValue(ntpConfig.EncryptionKey),
+			"encryption_key_id": utils.IntValue(ntpConfig.EncryptionKeyId),
+		}
+		if ntpConfig.NtpServerAddress != nil {
+			m["ntp_server_address"] = flattenIPAddressOrFQDN([]import1.IPAddressOrFQDN{*ntpConfig.NtpServerAddress})
+		}
+		if ntpConfig.EncryptionAlgorithm != nil {
+			m["encryption_algorithm"] = ntpConfig.EncryptionAlgorithm.GetName()
+		}
+		result = append(result, m)
+	}
+	return result
+}
+
+func flattenHttpProxyConfig(httpProxy *config.HttpProxyConfiguration) []interface{} {
+	if httpProxy == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if len(httpProxy.ProxyList) > 0 {
+		proxyList := make([]interface{}, 0, len(httpProxy.ProxyList))
+		for _, p := range httpProxy.ProxyList {
+			proxy := map[string]interface{}{
+				"name":     utils.StringValue(p.Name),
+				"port":     utils.IntValue(p.Port),
+				"username": utils.StringValue(p.Username),
+			}
+			if p.IpAddress != nil {
+				proxy["ip_address"] = flattenIPAddress(p.IpAddress)
+			}
+			if len(p.ProxyTypes) > 0 {
+				proxy["proxy_types"] = common.FlattenEnumValueList(p.ProxyTypes)
+			}
+			proxyList = append(proxyList, proxy)
+		}
+		m["proxy_list"] = proxyList
+	}
+
+	if len(httpProxy.ProxyWhiteList) > 0 {
+		whiteList := make([]interface{}, 0, len(httpProxy.ProxyWhiteList))
+		for _, w := range httpProxy.ProxyWhiteList {
+			wl := map[string]interface{}{
+				"target":      utils.StringValue(w.Target),
+				"target_type": common.FlattenPtrEnum(w.TargetType),
+			}
+			whiteList = append(whiteList, wl)
+		}
+		m["proxy_white_list"] = whiteList
+	}
+
+	return []interface{}{m}
+}
+
+func flattenFaultToleranceConfig(ft *config.FaultToleranceConfiguration) []interface{} {
+	if ft == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+	if ft.DesiredClusterFaultTolerance != nil {
+		m["desired_cluster_fault_tolerance"] = ft.DesiredClusterFaultTolerance.GetName()
+	}
+
+	return []interface{}{m}
+}
+
+func flattenRebuildReservationConfig(rr *config.RebuildReservationConfig) []interface{} {
+	if rr == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"is_rebuild_reservation_enabled": utils.BoolValue(rr.IsRebuildReservationEnabled),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenResilientCapacityWarningThresholdConfig(rc *config.ResilientCapacityWarningThresholdConfig) []interface{} {
+	if rc == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"resilient_capacity_warning_threshold_percentage": utils.IntValue(rc.ResilientCapacityWarningThresholdPercentage),
+	}
+
+	return []interface{}{m}
 }

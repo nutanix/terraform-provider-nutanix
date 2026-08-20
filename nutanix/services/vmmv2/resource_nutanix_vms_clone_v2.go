@@ -10,8 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import4 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
+	import3 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/request/vm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -357,6 +359,7 @@ func ResourceNutanixVMCloneV2() *schema.Resource {
 					},
 				},
 			},
+			"guest_customization_profile_config": schemaForVmGcProfileConfig(),
 			"guest_customization": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -1229,14 +1232,6 @@ func ResourceNutanixVMCloneV2Create(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.Client).VmmAPI
 	vmExtID := d.Get("vm_ext_id")
 
-	readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(vmExtID.(string)))
-	if err != nil {
-		return diag.Errorf("error while reading vm : %v", err)
-	}
-	// Extract E-Tag Header
-	args := make(map[string]interface{})
-	args["If-Match"] = getEtagHeader(readResp, conn)
-
 	body := &config.CloneOverrideParams{}
 
 	if name, ok := d.GetOk("name"); ok {
@@ -1257,11 +1252,21 @@ func ResourceNutanixVMCloneV2Create(ctx context.Context, d *schema.ResourceData,
 	if guestCstm, ok := d.GetOk("guest_customization"); ok {
 		body.GuestCustomization = expandGuestCustomizationParams(guestCstm)
 	}
+	if gcProfileConfig, ok := d.GetOk("guest_customization_profile_config"); ok {
+		body.GuestCustomizationProfileConfig = expandVmGcProfileConfigOverride(gcProfileConfig)
+	}
 	if bootConfig, ok := d.GetOk("boot_config"); ok {
 		body.BootConfig = expandOneOfCloneVMBootConfig(bootConfig)
 	}
+	if nicsRaw, ok := d.GetOk("nics"); ok {
+		body.Nics = expandNic(nicsRaw.([]interface{}), nil, "")
+	}
 
-	resp, err := conn.VMAPIInstance.CloneVm(utils.StringPtr(vmExtID.(string)), body, args)
+	cloneVmRequest := import3.CloneVmRequest{
+		ExtId: utils.StringPtr(vmExtID.(string)),
+		Body:  body,
+	}
+	resp, err := conn.VMAPIInstance.CloneVm(ctx, &cloneVmRequest)
 	if err != nil {
 		return diag.Errorf("error while Cloning Vm : %v", err)
 	}
@@ -1283,7 +1288,10 @@ func ResourceNutanixVMCloneV2Create(ctx context.Context, d *schema.ResourceData,
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching VM clone task (%s): %v", utils.StringValue(taskUUID), err)
 	}
@@ -1302,7 +1310,10 @@ func ResourceNutanixVMCloneV2Create(ctx context.Context, d *schema.ResourceData,
 func ResourceNutanixVMCloneV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	resp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+	getVmByIdRequest := import3.GetVmByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -1437,12 +1448,16 @@ func ResourceNutanixVMCloneV2Read(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("storage_config", flattenADSFVmStorageConfig(getResp.StorageConfig)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("disks", flattenDisk(getResp.Disks)); err != nil {
+	if err := d.Set("disks", flattenDisk(getResp.Disks, d)); err != nil {
 		log.Printf("[ERROR] error while setting disks : %v", err)
 		return diag.FromErr(err)
 	}
 	if err := d.Set("cd_roms", flattenCdRom(getResp.CdRoms)); err != nil {
 		log.Printf("[ERROR] error while setting cd_roms : %v", err)
+		return diag.FromErr(err)
+	}
+	if err := d.Set("nics", flattenNic(getResp.Nics)); err != nil {
+		log.Printf("[ERROR] error while setting nics : %v", err)
 		return diag.FromErr(err)
 	}
 	if err := d.Set("gpus", flattenGpu(getResp.Gpus)); err != nil {

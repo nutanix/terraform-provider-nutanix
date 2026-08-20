@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -32,6 +33,28 @@ func ExpandListOfString(list []interface{}) []string {
 		stringListStr = append(stringListStr, v.(string))
 	}
 	return stringListStr
+}
+
+// ExpandListOfInt expands a list of interface{} (as produced by Terraform's
+// schema for a TypeList/TypeSet of TypeInt) into a []int.
+//
+// Returns nil for an empty input so that callers writing to optional API
+// request fields with `omitempty` semantics produce "field absent" rather
+// than "field set to empty array". Nil entries are skipped; 0 is treated
+// as a legitimate value and is preserved.
+func ExpandListOfInt(list []interface{}) []int {
+	if len(list) == 0 {
+		return nil
+	}
+	result := make([]int, 0, len(list))
+	for i, v := range list {
+		if v == nil {
+			log.Printf("[DEBUG] Skipping nil value at index %d", i)
+			continue
+		}
+		result = append(result, v.(int))
+	}
+	return result
 }
 
 // DiffStringSets compares two string slices and returns the added and removed items.
@@ -264,7 +287,10 @@ func isConfigListEmptyOrMissingImpl(d *schema.ResourceData, path string, treatUn
 
 func TaskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
+		getTaskByIdRequest := import1.GetTaskByIdRequest{
+			ExtId: utils.StringPtr(taskUUID),
+		}
+		vresp, err := client.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 		if err != nil {
 			return "", "", fmt.Errorf("error while polling prism task: %v", err)
 		}

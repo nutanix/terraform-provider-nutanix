@@ -1,18 +1,53 @@
 package iamv2_test
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/request/directoryservices"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/request/usergroups"
 
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
+
+// Fixed authorization-policy test fixtures. These were previously sourced from
+// the test config (iam.auth_policies); they are constant policy specs, so they
+// live here as shared test data. The variable display_name is generated per
+// test case to avoid collisions across runs.
+var (
+	authPolicyType        = "USER_DEFINED"
+	authPolicyDescription = "auth policies description"
+	authPolicyIdentities  = []string{
+		`{"user":{"uuid":{"anyof":["00000000-0000-0000-0000-000000000000"]}}}`,
+	}
+	authPolicyEntities = []string{
+		`{"images":{"*":{"eq":"*"}}}`,
+		`{"marketplace_item":{"owner_uuid":{"eq":"SELF_OWNED"}}}`,
+	}
+)
+
+// authPolicyIdentitiesEntitiesHCL returns the identities/entities blocks shared
+// by the positive authorization-policy test configs.
+func authPolicyIdentitiesEntitiesHCL() string {
+	return fmt.Sprintf(`
+		identities {
+			reserved = %q
+		}
+		entities {
+			reserved = %q
+		}
+		entities {
+			reserved = %q
+		}`, authPolicyIdentities[0], authPolicyEntities[0], authPolicyEntities[1])
+}
 
 func checkAttributeLength(resourceName, attribute string, minLength int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -66,29 +101,47 @@ func testAccCheckNutanixUserDestroy(s *terraform.State) error {
 
 func testAccCheckNutanixDirectoryServicesV2Destroy(s *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "nutanix_directory_services_v2" {
 			continue
 		}
-		fmt.Printf("Checking directory service : %s", rs.Primary.ID)
-		readResp, errRead := conn.IamAPI.DirectoryServiceAPIInstance.GetDirectoryServiceById(utils.StringPtr(rs.Primary.ID))
+
+		extID := rs.Primary.ID
+		if v, ok := rs.Primary.Attributes["ext_id"]; ok && v != "" {
+			extID = v
+		}
+
+		uuidRegex := regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$`)
+		if !uuidRegex.MatchString(extID) {
+			continue
+		}
+
+		fmt.Printf("Checking directory service : %s\n", extID)
+		getDirectoryServiceByIdRequest := import1.GetDirectoryServiceByIdRequest{
+			ExtId: utils.StringPtr(extID),
+		}
+		readResp, errRead := conn.IamAPI.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
 		if errRead != nil {
-			if strings.Contains(fmt.Sprint(errRead), "Directory service not found") {
-				return nil
+			errStr := fmt.Sprint(errRead)
+			if strings.Contains(errStr, "Directory service not found") || strings.Contains(errStr, "404") {
+				continue
 			}
 			return errRead
 		}
-		// get etag value from read response to pass in update request If-Match header, Required for update request
 		etagValue := conn.IamAPI.DirectoryServiceAPIInstance.ApiClient.GetEtag(readResp)
 		headers := make(map[string]interface{})
 		headers["If-Match"] = utils.StringPtr(etagValue)
 
 		fmt.Println("Deleting directory service")
 
-		if _, err := conn.IamAPI.DirectoryServiceAPIInstance.DeleteDirectoryServiceById(utils.StringPtr(rs.Primary.ID), headers); err != nil {
-			if strings.Contains(fmt.Sprint(err), "Directory service not found") {
-				return nil
+		deleteDirectoryServiceByIdRequest := import1.DeleteDirectoryServiceByIdRequest{
+			ExtId: utils.StringPtr(extID),
+		}
+		if _, err := conn.IamAPI.DirectoryServiceAPIInstance.DeleteDirectoryServiceById(ctx, &deleteDirectoryServiceByIdRequest, headers); err != nil {
+			if strings.Contains(fmt.Sprint(err), "Directory service not found") || strings.Contains(fmt.Sprint(err), "404") {
+				continue
 			}
 			return err
 		}
@@ -98,13 +151,17 @@ func testAccCheckNutanixDirectoryServicesV2Destroy(s *terraform.State) error {
 
 func testAccCheckNutanixUserGroupsV2Destroy(s *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "nutanix_user_groups_v2" {
 			continue
 		}
 
-		readResp, errRead := conn.IamAPI.UserGroupsAPIInstance.GetUserGroupById(utils.StringPtr(rs.Primary.ID))
+		getUserGroupByIdRequest := import2.GetUserGroupByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		readResp, errRead := conn.IamAPI.UserGroupsAPIInstance.GetUserGroupById(ctx, &getUserGroupByIdRequest)
 		if errRead != nil {
 			if strings.Contains(fmt.Sprint(errRead), "the requested user group does not exist") {
 				return nil
@@ -117,7 +174,10 @@ func testAccCheckNutanixUserGroupsV2Destroy(s *terraform.State) error {
 		headers := make(map[string]interface{})
 		headers["If-Match"] = utils.StringPtr(etagValue)
 
-		if _, err := conn.IamAPI.UserGroupsAPIInstance.DeleteUserGroupById(utils.StringPtr(rs.Primary.ID), headers); err != nil {
+		deleteUserGroupByIdRequest := import2.DeleteUserGroupByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		if _, err := conn.IamAPI.UserGroupsAPIInstance.DeleteUserGroupById(ctx, &deleteUserGroupByIdRequest, headers); err != nil {
 			if strings.Contains(fmt.Sprint(err), "the requested user group does not exist") {
 				return nil
 			}

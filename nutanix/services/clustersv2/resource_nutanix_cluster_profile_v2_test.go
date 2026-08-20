@@ -1,6 +1,7 @@
 package clustersv2_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/request/clusterprofiles"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -301,6 +303,76 @@ func TestAccV2NutanixClusterProfileV2_fetchCPWrongExtID(t *testing.T) {
 	})
 }
 
+// TestAccV2NutanixClusterProfileV2_advancedConfigs covers the cluster profile
+// attributes that the _basic test does not exercise: ntp_server_config_list,
+// http_proxy_config, fault_tolerance_config, rebuild_reservation_config and
+// resilient_capacity_warning_threshold_config. It creates a profile with all
+// five blocks and then updates each of them to exercise the create-expand and
+// update paths.
+//
+// Secret/write-only fields (ntp_server_config_list.0.encryption_key and
+// http_proxy_config.0.proxy_list.0.password) are ignored via lifecycle because
+// the API does not echo them back, which would otherwise produce a perpetual
+// diff.
+func TestAccV2NutanixClusterProfileV2_advancedConfigs(t *testing.T) {
+	resourceName := "nutanix_cluster_profile_v2.adv"
+	profileName := fmt.Sprintf("tf-test-cluster-profile-adv-%d", acc.RandIntBetween(1, 10000))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckClusterProfileDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with all advanced config blocks.
+			{
+				Config: testAccClusterProfileAdvancedConfig(profileName, "cluster profile advanced configs", "SHA256", "HTTP", "HTTPS", "example.com", "DOMAIN_NAME_SUFFIX", "CFT_1N_OR_1D", true, 80, 8080),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "ext_id"),
+					resource.TestCheckResourceAttr(resourceName, "name", profileName),
+					resource.TestCheckResourceAttr(resourceName, "description", "cluster profile advanced configs"),
+					// ntp_server_config_list
+					resource.TestCheckResourceAttr(resourceName, "ntp_server_config_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ntp_server_config_list.0.ntp_server_address.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ntp_server_config_list.0.encryption_algorithm", "SHA256"),
+					// http_proxy_config
+					resource.TestCheckResourceAttr(resourceName, "http_proxy_config.0.proxy_list.0.name", "proxy-1"),
+					resource.TestCheckResourceAttr(resourceName, "http_proxy_config.0.proxy_list.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "http_proxy_config.0.proxy_list.0.username", "proxyuser"),
+					resource.TestCheckResourceAttr(resourceName, "http_proxy_config.0.proxy_list.0.ip_address.0.ipv4.0.value", "10.20.30.40"),
+					resource.TestCheckResourceAttr(resourceName, "http_proxy_config.0.proxy_list.0.proxy_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "http_proxy_config.0.proxy_white_list.0.target", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "http_proxy_config.0.proxy_white_list.0.target_type", "DOMAIN_NAME_SUFFIX"),
+					// fault_tolerance_config
+					resource.TestCheckResourceAttr(resourceName, "fault_tolerance_config.0.desired_cluster_fault_tolerance", "CFT_1N_OR_1D"),
+					// rebuild_reservation_config
+					resource.TestCheckResourceAttr(resourceName, "rebuild_reservation_config.0.is_rebuild_reservation_enabled", "true"),
+					// resilient_capacity_warning_threshold_config
+					resource.TestCheckResourceAttr(resourceName, "resilient_capacity_warning_threshold_config.0.resilient_capacity_warning_threshold_percentage", "80"),
+				),
+			},
+			// Step 2: update every block while keeping description unchanged. This
+			// guards the update fix: description is not in the PUT's HasChange set,
+			// so the resource must carry it forward or the full-replace PUT would
+			// clear it and produce a non-empty plan.
+			{
+				Config: testAccClusterProfileAdvancedConfig(profileName, "cluster profile advanced configs", "SHA512", "SOCKS", "SOCKS", "10.0.0.1", "IPV4_ADDRESS", "CFT_2N_OR_2D", false, 90, 3128),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "description", "cluster profile advanced configs"),
+					resource.TestCheckResourceAttr(resourceName, "ntp_server_config_list.0.encryption_algorithm", "SHA512"),
+					resource.TestCheckResourceAttr(resourceName, "http_proxy_config.0.proxy_list.0.port", "3128"),
+					resource.TestCheckResourceAttr(resourceName, "http_proxy_config.0.proxy_list.0.proxy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_proxy_config.0.proxy_list.0.proxy_types.0", "SOCKS"),
+					resource.TestCheckResourceAttr(resourceName, "http_proxy_config.0.proxy_white_list.0.target", "10.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, "http_proxy_config.0.proxy_white_list.0.target_type", "IPV4_ADDRESS"),
+					resource.TestCheckResourceAttr(resourceName, "fault_tolerance_config.0.desired_cluster_fault_tolerance", "CFT_2N_OR_2D"),
+					resource.TestCheckResourceAttr(resourceName, "rebuild_reservation_config.0.is_rebuild_reservation_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "resilient_capacity_warning_threshold_config.0.resilient_capacity_warning_threshold_percentage", "90"),
+				),
+			},
+		},
+	})
+}
+
 func testAccClusterProfilesConfig(profile1, profile2 string) string {
 	return fmt.Sprintf(`
 resource "nutanix_cluster_profile_v2" "tf_first" {
@@ -570,6 +642,69 @@ resource "nutanix_cluster_profile_v2" "tf_second" {
 `, profile1, profile2)
 }
 
+// testAccClusterProfileAdvancedConfig builds a cluster profile that populates
+// ntp_server_config_list, http_proxy_config, fault_tolerance_config,
+// rebuild_reservation_config and resilient_capacity_warning_threshold_config.
+// The parameters let the same builder produce both the create and update
+// variants. proxyType1/proxyType2 are the proxy_types list entries (pass the
+// same value twice for a single-element list).
+func testAccClusterProfileAdvancedConfig(name, desc, encAlgo, proxyType1, proxyType2, whiteListTarget, whiteListTargetType, faultTolerance string, rebuildEnabled bool, resilientPct, proxyPort int) string {
+	proxyTypes := fmt.Sprintf("%q", proxyType1)
+	if proxyType2 != proxyType1 {
+		proxyTypes = fmt.Sprintf("%q, %q", proxyType1, proxyType2)
+	}
+	return fmt.Sprintf(`
+resource "nutanix_cluster_profile_v2" "adv" {
+  name        = "%[1]s"
+  description = "%[10]s"
+
+  ntp_server_config_list {
+    ntp_server_address {
+      fqdn { value = "ntp1.example.com" }
+    }
+    encryption_algorithm = "%[2]s"
+    encryption_key = "0x1234567890abcdef"
+  }
+
+  http_proxy_config {
+    proxy_list {
+      name = "proxy-1"
+      ip_address {
+        ipv4 { value = "10.20.30.40" }
+      }
+      port        = %[9]d
+      username    = "proxyuser"
+      password    = "proxypass"
+      proxy_types = [%[3]s]
+    }
+    proxy_white_list {
+      target      = "%[4]s"
+      target_type = "%[5]s"
+    }
+  }
+
+  fault_tolerance_config {
+    desired_cluster_fault_tolerance = "%[6]s"
+  }
+
+  rebuild_reservation_config {
+    is_rebuild_reservation_enabled = %[7]t
+  }
+
+  resilient_capacity_warning_threshold_config {
+    resilient_capacity_warning_threshold_percentage = %[8]d
+  }
+
+  lifecycle {
+    ignore_changes = [
+      ntp_server_config_list.0.encryption_key,
+      http_proxy_config.0.proxy_list.0.password,
+    ]
+  }
+}
+`, name, encAlgo, proxyTypes, whiteListTarget, whiteListTargetType, faultTolerance, rebuildEnabled, resilientPct, proxyPort, desc)
+}
+
 // isClusterProfileNotFound returns true if the error indicates the cluster profile
 // does not exist (e.g. already deleted). API may return 404 with different messages.
 func isClusterProfileNotFound(err error, id string) bool {
@@ -588,12 +723,16 @@ func isClusterProfileNotFound(err error, id string) bool {
 func testAccCheckClusterProfileDestroy(s *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 
+	ctx := context.Background()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "nutanix_cluster_profile_v2" {
 			continue
 		}
 		// Check API if resource exists
-		_, errRead := conn.ClusterAPI.ClusterProfilesAPI.GetClusterProfileById(utils.StringPtr(rs.Primary.ID))
+		getClusterProfileByIdRequest := import1.GetClusterProfileByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		_, errRead := conn.ClusterAPI.ClusterProfilesAPI.GetClusterProfileById(ctx, &getClusterProfileByIdRequest)
 		if errRead != nil {
 			if isClusterProfileNotFound(errRead, rs.Primary.ID) {
 				continue
@@ -601,7 +740,10 @@ func testAccCheckClusterProfileDestroy(s *terraform.State) error {
 			return errRead
 		}
 		log.Printf("[DEBUG] Cluster Profile %s still exists, destroying...", rs.Primary.ID)
-		_, err := conn.ClusterAPI.ClusterProfilesAPI.DeleteClusterProfileById(utils.StringPtr(rs.Primary.ID))
+		deleteClusterProfileByIdRequest := import1.DeleteClusterProfileByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		_, err := conn.ClusterAPI.ClusterProfilesAPI.DeleteClusterProfileById(ctx, &deleteClusterProfileByIdRequest)
 		if err != nil {
 			return err
 		}

@@ -28,9 +28,9 @@ func TestAccV2NutanixRestoreProtectedResourceResource_RestoreVm(t *testing.T) {
 	vmResourceName := "nutanix_virtual_machine_v2.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		Providers:    acc.TestAccProviders,
-		CheckDestroy: testCheckDestroyProtectedResourceAndCleanup,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
+		CheckDestroy:             testCheckDestroyProtectedResourceAndCleanup,
 		Steps: []resource.TestStep{
 			// create protection policy and protected vm
 			{
@@ -72,9 +72,9 @@ func TestAccV2NutanixRestoreProtectedResourceResource_RestoreVG(t *testing.T) {
 
 	vgResourceName := "nutanix_volume_group_v2.test"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		Providers:    acc.TestAccProviders,
-		CheckDestroy: testCheckDestroyProtectedResourceAndCleanup,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
+		CheckDestroy:             testCheckDestroyProtectedResourceAndCleanup,
 		Steps: []resource.TestStep{
 			// create protection policy and protected vm
 			{
@@ -193,6 +193,11 @@ resource "nutanix_protection_policy_v2" "test" {
   category_ids = [nutanix_category_v2.test.id]
 }
 
+data "nutanix_storage_containers_v2" "ngt-sc" {
+	filter = "clusterExtId eq '${local.clusterExtId}' and startswith(name,'default-container-')"
+	limit = 1
+}
+
 resource "nutanix_virtual_machine_v2" "test"{
 	name= "%[2]s"
 	description =  "%[3]s"
@@ -201,10 +206,31 @@ resource "nutanix_virtual_machine_v2" "test"{
 	cluster {
 		ext_id = local.clusterExtId
 	}
-    categories {
+  categories {
 	  ext_id = nutanix_category_v2.test.id
+  }
+	power_state = "ON"
+
+  disks {
+    disk_address{
+      bus_type = "SCSI"
+      index = 0
     }
-	power_state = "OFF"
+    backing_info{
+      vm_disk{
+        disk_size_bytes = "1073741824" # 10 GB
+        storage_container{
+          ext_id = data.nutanix_storage_containers_v2.ngt-sc.storage_containers[0].ext_id
+        }
+      }
+    }
+  }
+  cd_roms {
+    disk_address {
+      bus_type = "IDE"
+      index    = 0
+    }
+  }
 	depends_on = [nutanix_protection_policy_v2.test]
 }
 

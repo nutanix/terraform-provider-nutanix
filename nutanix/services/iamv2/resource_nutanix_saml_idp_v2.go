@@ -2,13 +2,16 @@ package iamv2
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/request/samlidentityproviders"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -131,12 +134,31 @@ func ResourceNutanixSamlIdpV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"shared_with_projects": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"share_with_all_projects": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
 
 func ResourceNutanixSamlIdpV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
+	var diags diag.Diagnostics
 
 	input := &import1.SamlIdentityProvider{}
 	if idpMetadataurl, ok := d.GetOk("idp_metadata_url"); ok {
@@ -178,8 +200,14 @@ func ResourceNutanixSamlIdpV2Create(ctx context.Context, d *schema.ResourceData,
 	if isSigned, ok := d.GetOk("is_signed_authn_req_enabled"); ok {
 		input.IsSignedAuthnReqEnabled = utils.BoolPtr(isSigned.(bool))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		input.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 
-	resp, err := conn.SamlIdentityAPIInstance.CreateSamlIdentityProvider(input)
+	createSamlIdentityProviderRequest := import2.CreateSamlIdentityProviderRequest{
+		Body: input,
+	}
+	resp, err := conn.SamlIdentityAPIInstance.CreateSamlIdentityProvider(ctx, &createSamlIdentityProviderRequest)
 	if err != nil {
 		return diag.Errorf("error while creating saml identity providers: %v", err)
 	}
@@ -187,13 +215,39 @@ func ResourceNutanixSamlIdpV2Create(ctx context.Context, d *schema.ResourceData,
 	getResp := resp.Data.GetValue().(import1.SamlIdentityProvider)
 
 	d.SetId(utils.StringValue(getResp.ExtId))
-	return ResourceNutanixSamlIdpV2Read(ctx, d, meta)
+
+	// Handle sharing with projects after creation
+	if shareWithAll, ok := d.GetOk("share_with_all_projects"); ok && shareWithAll.(bool) {
+		if err := shareSamlIdpWithAllProjects(ctx, conn, d); err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "SAML IDP created but sharing with all projects failed.",
+				Detail:   fmt.Sprintf("error while sharing SAML IDP with all projects: %v", err),
+			})
+		}
+	} else if sharedProjects, ok := d.GetOk("shared_with_projects"); ok {
+		projectsSet := sharedProjects.(*schema.Set)
+		for _, projectID := range projectsSet.List() {
+			if err := shareSamlIdpWithProject(ctx, conn, d, projectID.(string)); err != nil {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "SAML IDP created but sharing with project failed.",
+					Detail:   fmt.Sprintf("error while sharing SAML IDP with project %s: %v", projectID.(string), err),
+				})
+			}
+		}
+	}
+
+	return append(diags, ResourceNutanixSamlIdpV2Read(ctx, d, meta)...)
 }
 
 func ResourceNutanixSamlIdpV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	resp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(utils.StringPtr(d.Id()))
+	getSamlIdentityProviderByIdRequest := import2.GetSamlIdentityProviderByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(ctx, &getSamlIdentityProviderByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching saml identity providers: %v", err)
 	}
@@ -201,6 +255,9 @@ func ResourceNutanixSamlIdpV2Read(ctx context.Context, d *schema.ResourceData, m
 	getResp := resp.Data.GetValue().(import1.SamlIdentityProvider)
 
 	if err := d.Set("name", getResp.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("idp_metadata_url", getResp.IdpMetadataUrl); err != nil {
@@ -248,81 +305,170 @@ func ResourceNutanixSamlIdpV2Read(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("created_by", getResp.CreatedBy); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("share_with_all_projects", getResp.IsSharedWithAllProjects); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
 func ResourceNutanixSamlIdpV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 	updatedInput := import1.SamlIdentityProvider{}
-	resp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(utils.StringPtr(d.Id()))
-	if err != nil {
-		return diag.Errorf("error while fetching saml identity providers: %v", err)
-	}
+	var diags diag.Diagnostics
 
-	// get etag value from read response to pass in update request If-Match header, Required for update request
-	etagValue := conn.SamlIdentityAPIInstance.ApiClient.GetEtag(resp)
-	headers := make(map[string]interface{})
-	headers["If-Match"] = utils.StringPtr(etagValue)
-
-	updatedInput = resp.Data.GetValue().(import1.SamlIdentityProvider)
-
-	if d.HasChange("name") {
-		updatedInput.Name = utils.StringPtr(d.Get("name").(string))
-	}
-	if d.HasChange("idp_metadata_url") {
-		updatedInput.IdpMetadataUrl = utils.StringPtr(d.Get("idp_metadata_url").(string))
-	}
-	if d.HasChange("idp_metadata_xml") {
-		updatedInput.IdpMetadataXml = utils.StringPtr(d.Get("idp_metadata_xml").(string))
-	}
-	if d.HasChange("idp_metadata") {
-		updatedInput.IdpMetadata = expandIdpMetadata(d.Get("idp_metadata"))
-	}
-	if d.HasChange("username_attribute") {
-		updatedInput.UsernameAttribute = utils.StringPtr(d.Get("username_attribute").(string))
-	}
-	if d.HasChange("email_attribute") {
-		updatedInput.EmailAttribute = utils.StringPtr(d.Get("email_attribute").(string))
-	}
-	if d.HasChange("groups_attribute") {
-		updatedInput.GroupsAttribute = utils.StringPtr(d.Get("groups_attribute").(string))
-	}
-	if d.HasChange("groups_delim") {
-		updatedInput.GroupsDelim = utils.StringPtr(d.Get("groups_delim").(string))
-	}
-	if d.HasChange("custom_attributes") {
-		customAttributes := d.Get("custom_attributes")
-		customAttributesList := customAttributes.([]interface{})
-		customAttributesListStr := make([]string, len(customAttributesList))
-		for i, v := range customAttributesList {
-			customAttributesListStr[i] = v.(string)
+	// Handle share_with_all_projects changes
+	if d.HasChange("share_with_all_projects") {
+		shareWithAll := d.Get("share_with_all_projects").(bool)
+		if shareWithAll {
+			if err := shareSamlIdpWithAllProjects(ctx, conn, d); err != nil {
+				return diag.Errorf("error while sharing SAML IDP with all projects: %v", err)
+			}
+		} else {
+			if err := unshareSamlIdpWithAllProjects(ctx, conn, d); err != nil {
+				return diag.Errorf("error while unsharing SAML IDP with all projects: %v", err)
+			}
 		}
-		updatedInput.CustomAttributes = customAttributesListStr
-	}
-	if d.HasChange("entity_issuer") {
-		updatedInput.EntityIssuer = utils.StringPtr(d.Get("entity_issuer").(string))
-	}
-	if d.HasChange("is_signed_authn_req_enabled") {
-		updatedInput.IsSignedAuthnReqEnabled = utils.BoolPtr(d.Get("is_signed_authn_req_enabled").(bool))
 	}
 
-	updateResp, err := conn.SamlIdentityAPIInstance.UpdateSamlIdentityProviderById(utils.StringPtr(d.Id()), &updatedInput, headers)
-	if err != nil {
-		return diag.Errorf("error while updating saml identity providers: %v", err)
+	// Handle shared_with_projects changes
+	if d.HasChange("shared_with_projects") {
+		if d.Get("share_with_all_projects") == true {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "SAML IDP is shared with all projects, skipping individual project share/unshare operations",
+			})
+		} else {
+			oldProjects, newProjects := d.GetChange("shared_with_projects")
+			oldSet := oldProjects.(*schema.Set)
+			newSet := newProjects.(*schema.Set)
+
+			// Unshare with removed projects
+			removedProjects := oldSet.Difference(newSet)
+			for _, projectID := range removedProjects.List() {
+				if err := unshareSamlIdpWithProject(ctx, conn, d, projectID.(string)); err != nil {
+					return diag.Errorf("error while unsharing SAML IDP with project %s: %v", projectID.(string), err)
+				}
+			}
+
+			// Share with new projects
+			addedProjects := newSet.Difference(oldSet)
+			for _, projectID := range addedProjects.List() {
+				if err := shareSamlIdpWithProject(ctx, conn, d, projectID.(string)); err != nil {
+					return diag.Errorf("error while sharing SAML IDP with project %s: %v", projectID.(string), err)
+				}
+			}
+		}
 	}
 
-	updateTaskResp := updateResp.Data.GetValue().(import1.SamlIdentityProvider)
-
-	if updateTaskResp.ExtId != nil {
-		log.Println("[DEBUG] Saml Identity provider updated successfully")
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
-	return nil
+
+	specFields := []string{"name", "idp_metadata_url", "idp_metadata_xml", "idp_metadata",
+		"username_attribute", "email_attribute", "groups_attribute", "groups_delim",
+		"custom_attributes", "entity_issuer", "is_signed_authn_req_enabled"}
+	hasSpecChanges := false
+	for _, field := range specFields {
+		if d.HasChange(field) {
+			hasSpecChanges = true
+			break
+		}
+	}
+
+	if hasSpecChanges {
+		getSamlIdentityProviderByIdRequest := import2.GetSamlIdentityProviderByIdRequest{
+			ExtId: utils.StringPtr(d.Id()),
+		}
+		resp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(ctx, &getSamlIdentityProviderByIdRequest)
+		if err != nil {
+			return diag.Errorf("error while fetching saml identity providers: %v", err)
+		}
+
+		updatedInput = resp.Data.GetValue().(import1.SamlIdentityProvider)
+
+		if d.HasChange("name") {
+			updatedInput.Name = utils.StringPtr(d.Get("name").(string))
+		}
+		if d.HasChange("idp_metadata_url") {
+			updatedInput.IdpMetadataUrl = utils.StringPtr(d.Get("idp_metadata_url").(string))
+		}
+		if d.HasChange("idp_metadata_xml") {
+			updatedInput.IdpMetadataXml = utils.StringPtr(d.Get("idp_metadata_xml").(string))
+		}
+		if d.HasChange("idp_metadata") {
+			updatedInput.IdpMetadata = expandIdpMetadata(d.Get("idp_metadata"))
+		}
+		if d.HasChange("username_attribute") {
+			updatedInput.UsernameAttribute = utils.StringPtr(d.Get("username_attribute").(string))
+		}
+		if d.HasChange("email_attribute") {
+			updatedInput.EmailAttribute = utils.StringPtr(d.Get("email_attribute").(string))
+		}
+		if d.HasChange("groups_attribute") {
+			updatedInput.GroupsAttribute = utils.StringPtr(d.Get("groups_attribute").(string))
+		}
+		if d.HasChange("groups_delim") {
+			updatedInput.GroupsDelim = utils.StringPtr(d.Get("groups_delim").(string))
+		}
+		if d.HasChange("custom_attributes") {
+			customAttributes := d.Get("custom_attributes")
+			customAttributesList := customAttributes.([]interface{})
+			customAttributesListStr := make([]string, len(customAttributesList))
+			for i, v := range customAttributesList {
+				customAttributesListStr[i] = v.(string)
+			}
+			updatedInput.CustomAttributes = customAttributesListStr
+		}
+		if d.HasChange("entity_issuer") {
+			updatedInput.EntityIssuer = utils.StringPtr(d.Get("entity_issuer").(string))
+		}
+		if d.HasChange("is_signed_authn_req_enabled") {
+			updatedInput.IsSignedAuthnReqEnabled = utils.BoolPtr(d.Get("is_signed_authn_req_enabled").(bool))
+		}
+
+		updateSamlIdentityProviderByIdRequest := import2.UpdateSamlIdentityProviderByIdRequest{
+			ExtId: utils.StringPtr(d.Id()),
+			Body:  &updatedInput,
+		}
+
+		getRespId, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(ctx, &getSamlIdentityProviderByIdRequest)
+		if err != nil {
+			return diag.Errorf("error while fetching saml identity providers: %v", err)
+		}
+
+		etagValue := conn.SamlIdentityAPIInstance.ApiClient.GetEtag(getRespId)
+		headers := make(map[string]interface{})
+		headers["If-Match"] = utils.StringPtr(etagValue)
+
+		updateResp, err := conn.SamlIdentityAPIInstance.UpdateSamlIdentityProviderById(ctx, &updateSamlIdentityProviderByIdRequest, headers)
+		if err != nil {
+			return diag.Errorf("error while updating saml identity providers: %v", err)
+		}
+
+		updateTaskResp := updateResp.Data.GetValue().(import1.SamlIdentityProvider)
+
+		if updateTaskResp.ExtId != nil {
+			log.Println("[DEBUG] Saml Identity provider updated successfully")
+		}
+	}
+
+	readDiags := ResourceNutanixSamlIdpV2Read(ctx, d, meta)
+	return append(diags, readDiags...)
 }
 
 func ResourceNutanixSamlIdpV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	readResp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(utils.StringPtr(d.Id()))
+	getSamlIdentityProviderByIdRequest := import2.GetSamlIdentityProviderByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(ctx, &getSamlIdentityProviderByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching saml identity providers: %v", err)
 	}
@@ -331,7 +477,10 @@ func ResourceNutanixSamlIdpV2Delete(ctx context.Context, d *schema.ResourceData,
 	headers := make(map[string]interface{})
 	headers["If-Match"] = utils.StringPtr(etagValue)
 
-	resp, err := conn.SamlIdentityAPIInstance.DeleteSamlIdentityProviderById(utils.StringPtr(d.Id()), headers)
+	deleteSamlIdentityProviderByIdRequest := import2.DeleteSamlIdentityProviderByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.SamlIdentityAPIInstance.DeleteSamlIdentityProviderById(ctx, &deleteSamlIdentityProviderByIdRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while deleting saml idp : %v", err)
 	}
@@ -389,5 +538,133 @@ func expandIdpMetadata(pr interface{}) *import1.IdpMetadata {
 		log.Printf("idp: %v", idp)
 		return idp
 	}
+	return nil
+}
+
+func shareSamlIdpWithProject(ctx context.Context, conn *iam.Client, d *schema.ResourceData, projectID string) error {
+	if d.Get("share_with_all_projects") == true {
+		log.Printf("[WARN] SAML IDP is shared with all projects, skipping share with specific project %s", projectID)
+		return nil
+	}
+	samlIdpExtID := utils.StringPtr(d.Id())
+	shareSamlIdpRequest := import2.ShareSamlIdentityProviderRequest{
+		ExtId: samlIdpExtID,
+		Body: &import1.SamlIdentityProviderShareRequest{
+			ProjectExtId: utils.StringPtr(projectID),
+		},
+	}
+
+	// get etag value from read response to pass in update request If-Match header, Required for update request
+	getSamlIdentityProviderByIdRequest := import2.GetSamlIdentityProviderByIdRequest{
+		ExtId: samlIdpExtID,
+	}
+	readResp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(ctx, &getSamlIdentityProviderByIdRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching saml identity providers: %v", err)
+	}
+
+	args := make(map[string]interface{})
+	etagValue := conn.SamlIdentityAPIInstance.ApiClient.GetEtag(readResp)
+	args["If-Match"] = utils.StringPtr(etagValue)
+
+	// call share saml identity provider api
+	_, err = conn.SamlIdentityAPIInstance.ShareSamlIdentityProvider(ctx, &shareSamlIdpRequest, args)
+	if err != nil {
+		return fmt.Errorf("error while sharing SAML IDP with project %s: %v", projectID, err)
+	}
+
+	log.Printf("[DEBUG] Sharing SAML IDP %s with project %s is success", utils.StringValue(samlIdpExtID), projectID)
+	return nil
+}
+
+func unshareSamlIdpWithProject(ctx context.Context, conn *iam.Client, d *schema.ResourceData, projectID string) error {
+	if d.Get("share_with_all_projects") == true {
+		log.Printf("[WARN] SAML IDP is shared with all projects, skipping unshare with specific project %s", projectID)
+		return nil
+	}
+	samlIdpExtID := utils.StringPtr(d.Id())
+	unShareSamlIdpRequest := import2.UnshareSamlIdentityProviderRequest{
+		ExtId: samlIdpExtID,
+		Body: &import1.SamlIdentityProviderUnshareRequest{
+			ProjectExtId: utils.StringPtr(projectID),
+		},
+	}
+
+	// get etag value from read response to pass in update request If-Match header, Required for update request
+	getSamlIdentityProviderByIdRequest := import2.GetSamlIdentityProviderByIdRequest{
+		ExtId: samlIdpExtID,
+	}
+	readResp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(ctx, &getSamlIdentityProviderByIdRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching saml identity providers: %v", err)
+	}
+
+	args := make(map[string]interface{})
+	etagValue := conn.SamlIdentityAPIInstance.ApiClient.GetEtag(readResp)
+	args["If-Match"] = utils.StringPtr(etagValue)
+
+	// call unshare saml identity provider api
+	_, err = conn.SamlIdentityAPIInstance.UnshareSamlIdentityProvider(ctx, &unShareSamlIdpRequest, args)
+	if err != nil {
+		return fmt.Errorf("error while unsharing SAML IDP with project %s: %v", projectID, err)
+	}
+
+	log.Printf("[DEBUG] Unsharing SAML IDP %s with project %s is success", utils.StringValue(samlIdpExtID), projectID)
+	return nil
+}
+
+func shareSamlIdpWithAllProjects(ctx context.Context, conn *iam.Client, d *schema.ResourceData) error {
+	samlIdpExtID := utils.StringPtr(d.Id())
+	shareAllSamlIdpRequest := import2.ShareAllSamlIdentityProviderRequest{
+		ExtId: samlIdpExtID,
+	}
+	// get etag value from read response to pass in update request If-Match header, Required for update request
+	getSamlIdentityProviderByIdRequest := import2.GetSamlIdentityProviderByIdRequest{
+		ExtId: samlIdpExtID,
+	}
+	readResp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(ctx, &getSamlIdentityProviderByIdRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching saml identity providers: %v", err)
+	}
+
+	args := make(map[string]interface{})
+	etagValue := conn.SamlIdentityAPIInstance.ApiClient.GetEtag(readResp)
+	args["If-Match"] = utils.StringPtr(etagValue)
+
+	// call share all saml identity provider api
+	_, err = conn.SamlIdentityAPIInstance.ShareAllSamlIdentityProvider(ctx, &shareAllSamlIdpRequest, args)
+	if err != nil {
+		return fmt.Errorf("error while sharing SAML IDP with all projects: %v", err)
+	}
+
+	log.Printf("[DEBUG] Sharing SAML IDP %s with all projects is success", utils.StringValue(samlIdpExtID))
+	return nil
+}
+
+func unshareSamlIdpWithAllProjects(ctx context.Context, conn *iam.Client, d *schema.ResourceData) error {
+	samlIdpExtID := utils.StringPtr(d.Id())
+	unshareAllSamlIdpRequest := import2.UnshareAllSamlIdentityProviderRequest{
+		ExtId: samlIdpExtID,
+	}
+	// get etag value from read response to pass in update request If-Match header, Required for update request
+	getSamlIdentityProviderByIdRequest := import2.GetSamlIdentityProviderByIdRequest{
+		ExtId: samlIdpExtID,
+	}
+	readResp, err := conn.SamlIdentityAPIInstance.GetSamlIdentityProviderById(ctx, &getSamlIdentityProviderByIdRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching saml identity providers: %v", err)
+	}
+
+	args := make(map[string]interface{})
+	etagValue := conn.SamlIdentityAPIInstance.ApiClient.GetEtag(readResp)
+	args["If-Match"] = utils.StringPtr(etagValue)
+
+	// call unshare all saml identity provider api
+	_, err = conn.SamlIdentityAPIInstance.UnshareAllSamlIdentityProvider(ctx, &unshareAllSamlIdpRequest, args)
+	if err != nil {
+		return fmt.Errorf("error while unsharing SAML IDP with all projects: %v", err)
+	}
+
+	log.Printf("[DEBUG] Unsharing SAML IDP %s with all projects is success", utils.StringValue(samlIdpExtID))
 	return nil
 }
