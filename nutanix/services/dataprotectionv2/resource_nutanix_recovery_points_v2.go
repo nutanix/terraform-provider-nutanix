@@ -323,9 +323,10 @@ func ResourceNutanixRecoveryPointsV2Create(ctx context.Context, d *schema.Resour
 		statusMap := map[string]interface{}{
 			"COMPLETE": two,
 		}
-		pVal := statusMap[status.(string)]
-		p := common.RecoveryPointStatus(pVal.(int))
-		body.Status = &p
+		if pVal, ok := statusMap[status.(string)].(int); ok {
+			p := common.RecoveryPointStatus(pVal)
+			body.Status = &p
+		}
 	}
 	if recoveryPointType, ok := d.GetOk("recovery_point_type"); ok {
 		const two, three = 2, 3
@@ -333,9 +334,10 @@ func ResourceNutanixRecoveryPointsV2Create(ctx context.Context, d *schema.Resour
 			"CRASH_CONSISTENT":       two,
 			"APPLICATION_CONSISTENT": three,
 		}
-		pVal := recoveryPointTypeMap[recoveryPointType.(string)]
-		p := common.RecoveryPointType(pVal.(int))
-		body.RecoveryPointType = &p
+		if pVal, ok := recoveryPointTypeMap[recoveryPointType.(string)].(int); ok {
+			p := common.RecoveryPointType(pVal)
+			body.RecoveryPointType = &p
+		}
 	}
 	if vmRecoveryPoints, ok := d.GetOk("vm_recovery_points"); ok {
 		vmRecoveryPointsList, err := expandVMRecoveryPoints(vmRecoveryPoints.([]interface{}))
@@ -701,9 +703,10 @@ func expandApplicationConsistentProperties(appConsistentProp interface{}) (*conf
 			"FULL_BACKUP": two,
 			"COPY_BACKUP": three,
 		}
-		pVal := backupTypeMap[backupType.(string)]
-		p := common.BackupType(pVal.(int))
-		appConsistentPropObj.BackupType = &p
+		if pVal, ok := backupTypeMap[backupType.(string)].(int); ok {
+			p := common.BackupType(pVal)
+			appConsistentPropObj.BackupType = &p
+		}
 	}
 	if shouldIncludeWriters, ok := appConsistentPropVal["should_include_writers"]; ok {
 		appConsistentPropObj.ShouldIncludeWriters = utils.BoolPtr(shouldIncludeWriters.(bool))

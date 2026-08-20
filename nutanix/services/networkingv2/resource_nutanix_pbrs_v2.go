@@ -611,9 +611,10 @@ func expandRoutingPolicyMatchCondition(pr interface{}) *import1.RoutingPolicyMat
 				"PROTOCOL_NUMBER": six,
 			}
 
-			pInt := protoMap[protocolType.(string)]
-			p := import1.ProtocolType(pInt.(int))
-			match.ProtocolType = &p
+			if pInt, ok := protoMap[protocolType.(string)].(int); ok {
+				p := import1.ProtocolType(pInt)
+				match.ProtocolType = &p
+			}
 		}
 		if protocolParameters, ok := val["protocol_parameters"]; ok && len(protocolParameters.([]interface{})) > 0 {
 			match.ProtocolParameters = expandOneOfRoutingPolicyMatchConditionProtocolParameters(protocolParameters)
@@ -636,9 +637,10 @@ func expandAddressTypeObject(pr interface{}) *import1.AddressTypeObject {
 				"EXTERNAL": three,
 				"SUBNET":   four,
 			}
-			pInt := addMap[addressType.(string)]
-			p := import1.AddressType(pInt.(int))
-			address.AddressType = &p
+			if pInt, ok := addMap[addressType.(string)].(int); ok {
+				p := import1.AddressType(pInt)
+				address.AddressType = &p
+			}
 		}
 		if subnetPrefix, ok := val["subnet_prefix"]; ok && len(subnetPrefix.([]interface{})) > 0 {
 			address.SubnetPrefix = expandIPSubnetObject(subnetPrefix)
@@ -746,9 +748,10 @@ func expandRoutingPolicyAction(pr interface{}) *import1.RoutingPolicyAction {
 				"REROUTE": four,
 				"FORWARD": five,
 			}
-			pInt := actMap[actionType.(string)]
-			p := import1.RoutingPolicyActionType(pInt.(int))
-			action.ActionType = &p
+			if pInt, ok := actMap[actionType.(string)].(int); ok {
+				p := import1.RoutingPolicyActionType(pInt)
+				action.ActionType = &p
+			}
 		}
 		if rerouteParams, ok := val["reroute_params"]; ok && len(rerouteParams.([]interface{})) > 0 {
 			action.RerouteParams = expandRerouteParams(rerouteParams.([]interface{}))
@@ -779,9 +782,10 @@ func expandRerouteParams(pr []interface{}) []import1.RerouteParam {
 					"NO_ACTION":   five,
 				}
 
-				pInt := actMap[rerouteFallbackAction.(string)]
-				p := import1.RerouteFallbackAction(pInt.(int))
-				reroute.RerouteFallbackAction = &p
+				if pInt, ok := actMap[rerouteFallbackAction.(string)].(int); ok {
+					p := import1.RerouteFallbackAction(pInt)
+					reroute.RerouteFallbackAction = &p
+				}
 			}
 			if ingressServiceIP, ok := val["ingress_service_ip"]; ok && len(ingressServiceIP.([]interface{})) > 0 {
 				reroute.IngressServiceIp = expandIPAddressObject(ingressServiceIP)

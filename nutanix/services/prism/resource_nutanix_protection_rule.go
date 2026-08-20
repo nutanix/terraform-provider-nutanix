@@ -623,15 +623,15 @@ func expandRetentionPolicy(d interface{}) *v3.SnapshotRetentionPolicy {
 	rrp := &v3.RollupRetentionPolicy{}
 	if d != nil {
 		v := d.(map[string]interface{})
-		log.Printf("[DEGUG] expandRetentionPolicy: %+v", v)
+		log.Printf("[DEBUG] expandRetentionPolicy: %+v", v)
 		flagRollup := false
 		if v1, ok := v["num_snapshots"]; ok && v1.(int) != 0 {
 			srp.NumSnapshots = utils.Int64Ptr(cast.ToInt64(v1))
-			log.Printf("[DEGUG] srp.NumSnapshots: %+v", srp.NumSnapshots)
+			log.Printf("[DEBUG] srp.NumSnapshots: %+v", srp.NumSnapshots)
 		}
 		if v1, ok := v["rollup_retention_policy_multiple"]; ok && v1.(int) != 0 {
 			rrp.Multiple = utils.Int64Ptr(cast.ToInt64(v1))
-			log.Printf("[DEGUG] rrp.Multiple: %+v", rrp.Multiple)
+			log.Printf("[DEBUG] rrp.Multiple: %+v", rrp.Multiple)
 			flagRollup = true
 		}
 		if v1, ok := v["rollup_retention_policy_snapshot_interval_type"]; ok && v1.(string) != "" {

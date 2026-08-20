@@ -137,14 +137,14 @@ func dataSourceNutanixNDBMaintenanceWindowsRead(ctx context.Context, d *schema.R
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if e := d.Set("maintenance_windows", flattenMaintenanceWindowsResponse(resp)); err != nil {
+	if e := d.Set("maintenance_windows", flattenMaintenanceWindowsResponse(resp)); e != nil {
 		return diag.FromErr(e)
 	}
 
 	uuid, er := uuid.GenerateUUID()
 
 	if er != nil {
-		return diag.Errorf("Error generating UUID for era clusters: %+v", err)
+		return diag.Errorf("Error generating UUID for era maintenance windows: %+v", er)
 	}
 	d.SetId(uuid)
 

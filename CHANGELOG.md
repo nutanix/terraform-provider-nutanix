@@ -1,3 +1,33 @@
+## Unreleased
+
+**Security:**
+- **BREAKING — TLS certificate verification is now enforced for all v4 (`*_v2`) resources and data sources.** Every v4 SDK client previously hardcoded `VerifySSL = false`, disabling certificate validation regardless of the provider's `insecure` setting (which defaults to `false`). Any party on the network path could present an arbitrary certificate and capture Prism Central credentials. Verification now follows `insecure`, as documented.
+
+  *Action required:* if your Prism Central uses a self-signed or otherwise untrusted certificate, you will now see `x509: certificate signed by unknown authority`. Either install a trusted certificate or set `insecure = true` (or `NUTANIX_INSECURE=true`) to explicitly opt out.
+- Each API client now owns its HTTP client and transport. Previously all clients shared `http.DefaultClient`, so one client's TLS and proxy settings silently applied to every other client in the process.
+- The `nutanix_password_change_request_v2` resource no longer writes the current and new passwords to the Terraform debug log.
+- `nutanix_volume_group_v2` no longer writes the iSCSI CHAP target secret to the log.
+
+**Fixed Bugs:**
+- Fix segfault in `nutanix_virtual_machine` when a disk has no `disk_address` or `storage_container_reference`. [#1099](https://github.com/nutanix/terraform-provider-nutanix/issues/1099)
+- Fix guaranteed panic in the `nutanix_ovas_v2` data source: the OVA source flattener asserted types that `OneOfOvaSource` can never hold, and read `ext_id` instead of `vm_ext_id`.
+- Fix panic when an optional enum attribute is omitted or holds an unrecognised value. Unmatched enum lookups now leave the field unset instead of asserting `nil` to `int` (74 call sites, including `iscsi_features`, `machine_type` and `protection_type`).
+- Fix panics in the v3 API client on unexpected responses: unchecked `entities` and `status` type assertions, and a discarded JSON unmarshal error.
+- A non-2xx response with an empty body is now an error. It previously returned `nil`, so callers proceeded with a zero-value response and dereferenced it.
+- 404 responses are now distinguishable via `errors.Is(err, client.ErrNotFound)`. `nutanix_karbon_private_registry` no longer drops the resource from state when a read fails for any other reason (for example a transient 500).
+- Fix 19 sites that reported or checked the wrong error variable, which either lost the real API error message or silently ignored a failure.
+- Fix 8 flatteners that pre-sized a slice with `make([]T, len(x))` and then appended, prepending phantom empty entries to lists such as `nutanix_address_group_v2` values.
+- Fix disks with no UUID being silently dropped from `nutanix_virtual_machine` state.
+- Session authentication failures now surface an error instead of returning a cookie-less client.
+- Replace `log.Fatalf`/`log.Fatal` in the OVA resource and `utils.GenUUID`; these called `os.Exit` and killed the plugin process mid-apply with no diagnostic.
+- Invalid provider `port` values are now rejected instead of silently falling back to 9440.
+- IPv6 endpoints are now bracketed correctly when building the API base URL.
+
+**Internal:**
+- `.golangci.yml` migrated to the v2 schema. The previous file failed validation, so `make lint` could not run at all.
+- Resolve unresolved merge conflict markers committed in `.env.example`.
+- Remove `out.txt`, a 1,373-line Terraform debug log from 2019 committed at the repository root.
+
 ## 2.4.2(April 15, 2026) 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.4.0...v2.4.2)
 

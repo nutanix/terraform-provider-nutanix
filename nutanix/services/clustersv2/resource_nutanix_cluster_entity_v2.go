@@ -2009,8 +2009,8 @@ func removeNodeFromCluster(ctx context.Context, d *schema.ResourceData, meta int
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		taskResp, _ := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 		taskDetails := taskResp.Data.GetValue().(import2.Task)
-		aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-		log.Printf("[ERROR] Remove Node Task Details: %s", string(aJSON))
+		taskJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+		log.Printf("[ERROR] Remove Node Task Details: %s", string(taskJSON))
 		return diag.Errorf("error waiting for node (%s) to remove: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	// Get UUID from TASK API

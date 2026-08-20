@@ -483,10 +483,10 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 			"OVERLAY": two,
 			"VLAN":    three,
 		}
-		pVal := subMap[subType.(string)]
-
-		p := import1.SubnetType(pVal.(int))
-		inputSpec.SubnetType = &p
+		if pVal, ok := subMap[subType.(string)].(int); ok {
+			p := import1.SubnetType(pVal)
+			inputSpec.SubnetType = &p
+		}
 	}
 
 	if common.IsExplicitlySet(d, "network_id") {
@@ -727,9 +727,10 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 			"OVERLAY": two,
 			"VLAN":    three,
 		}
-		pInt := subMap[d.Get("subnet_type").(string)]
-		p := import1.SubnetType(pInt.(int))
-		updateSpec.SubnetType = &p
+		if pInt, ok := subMap[d.Get("subnet_type").(string)].(int); ok {
+			p := import1.SubnetType(pInt)
+			updateSpec.SubnetType = &p
+		}
 	}
 	if d.HasChange("dhcp_options") {
 		updateSpec.DhcpOptions = expandDhcpOptions(d.Get("dhcp_options").([]interface{}))
@@ -989,9 +990,10 @@ func expandVirtualSwitch(pr interface{}) *import1.VirtualSwitch {
 				"BALANCE_TCP":   four,
 				"NONE":          five,
 			}
-			pInt := bondMap[bondMode.(string)]
-			p := import1.BondModeType(pInt.(int))
-			vSwitch.BondMode = &p
+			if pInt, ok := bondMap[bondMode.(string)].(int); ok {
+				p := import1.BondModeType(pInt)
+				vSwitch.BondMode = &p
+			}
 		}
 		if cls, ok := val["clusters"]; ok {
 			vSwitch.Clusters = expandCluster(cls.([]interface{}))
@@ -1148,9 +1150,10 @@ func expandVpc(pr interface{}) *import1.Vpc {
 				"REGULAR": two,
 				"TRANSIT": three,
 			}
-			pInt := vpcMap[vpcType.(string)]
-			p := import1.VpcType(pInt.(int))
-			vpc.VpcType = &p
+			if pInt, ok := vpcMap[vpcType.(string)].(int); ok {
+				p := import1.VpcType(pInt)
+				vpc.VpcType = &p
+			}
 		}
 		if desc, ok := val["description"]; ok && len(desc.(string)) > 0 {
 			vpc.Description = utils.StringPtr(desc.(string))

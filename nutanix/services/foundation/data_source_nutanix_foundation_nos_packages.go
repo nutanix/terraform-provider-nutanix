@@ -39,7 +39,7 @@ func dataSourceFoundationNOSPackagesRead(ctx context.Context, d *schema.Resource
 	}
 
 	if setErr := d.Set("entities", resp); setErr != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(setErr)
 	}
 
 	d.SetId(resource.UniqueId())

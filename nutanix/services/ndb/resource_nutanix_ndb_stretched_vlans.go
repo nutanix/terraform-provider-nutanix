@@ -298,7 +298,7 @@ func resourceNutanixNDBStretchedVlanDelete(ctx context.Context, d *schema.Resour
 
 func flattenStretchedVlans(net []*era.NetworkIntentResponse) []interface{} {
 	if len(net) > 0 {
-		netList := make([]interface{}, len(net))
+		netList := make([]interface{}, 0, len(net))
 
 		for _, v := range net {
 			nwt := map[string]interface{}{}

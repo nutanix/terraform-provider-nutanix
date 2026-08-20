@@ -1503,9 +1503,9 @@ func expandOneOfCloneVMBootConfig(pr interface{}) *config.OneOfCloneOverridePara
 						"DISK":    three,
 						"NETWORK": four,
 					}
-					pVal := subMap[v.(string)]
-					p := config.BootDeviceType(pVal.(int))
-					orders[k] = p
+					if pVal, ok := subMap[v.(string)].(int); ok {
+						orders[k] = config.BootDeviceType(pVal)
+					}
 				}
 				legacyBootInput.BootOrder = orders
 			}
@@ -1537,9 +1537,9 @@ func expandOneOfCloneVMBootConfig(pr interface{}) *config.OneOfCloneOverridePara
 						"DISK":    three,
 						"NETWORK": four,
 					}
-					pVal := subMap[v.(string)]
-					p := config.BootDeviceType(pVal.(int))
-					orders[k] = p
+					if pVal, ok := subMap[v.(string)].(int); ok {
+						orders[k] = config.BootDeviceType(pVal)
+					}
 				}
 				uefiBootInput.BootOrder = orders
 			}

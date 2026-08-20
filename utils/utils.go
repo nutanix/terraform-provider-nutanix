@@ -64,14 +64,14 @@ func StringLowerCaseValidateFunc(val interface{}, key string) (warns []string, e
 
 func GenUUID() string {
 	b := make([]byte, 16)
-	_, err := rand.Read(b)
-	if err != nil {
-		log.Fatal(err)
+	if _, err := rand.Read(b); err != nil {
+		// Never call os.Exit (log.Fatal) from a Terraform plugin: it kills the RPC
+		// server, so Terraform reports an opaque "plugin crashed" with no diagnostic
+		// and no state write. A panic at least surfaces through the plugin framework.
+		panic(fmt.Sprintf("nutanix: cannot read random bytes for UUID: %v", err))
 	}
-	uuid := fmt.Sprintf("%x-%x-%x-%x-%x",
+	return fmt.Sprintf("%x-%x-%x-%x-%x",
 		b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
-
-	return uuid
 }
 
 // String hashes a string to a unique hashcode.
@@ -102,15 +102,39 @@ func HashcodeStrings(strings []string) string {
 	return fmt.Sprintf("%d", HashcodeString(buf.String()))
 }
 
-// Extract error from v4 API response
+// ExtractErrorFromV4APIResponse pulls the human-readable message out of a v4 SDK error,
+// whose Error() string is normally a JSON document shaped like
+// {"data": {"error": [{"message": "..."}]}}.
+//
+// Every step is checked: this runs only on the failure path, where the payload is least
+// likely to match expectations. Falling back to the raw error text is always better than
+// panicking inside an error handler and taking the whole provider down.
 func ExtractErrorFromV4APIResponse(err error) string {
-	var errordata map[string]interface{}
-	e := json.Unmarshal([]byte(err.Error()), &errordata)
-	if e != nil {
-		return e.Error()
+	if err == nil {
+		return ""
 	}
-	data := errordata["data"].(map[string]interface{})
-	errorList := data["error"].([]interface{})
-	errorMessage := errorList[0].(map[string]interface{})["message"]
-	return errorMessage.(string)
+	raw := err.Error()
+
+	var errordata map[string]interface{}
+	if e := json.Unmarshal([]byte(raw), &errordata); e != nil {
+		return raw
+	}
+
+	data, ok := errordata["data"].(map[string]interface{})
+	if !ok {
+		return raw
+	}
+	errorList, ok := data["error"].([]interface{})
+	if !ok || len(errorList) == 0 {
+		return raw
+	}
+	first, ok := errorList[0].(map[string]interface{})
+	if !ok {
+		return raw
+	}
+	message, ok := first["message"].(string)
+	if !ok {
+		return raw
+	}
+	return message
 }

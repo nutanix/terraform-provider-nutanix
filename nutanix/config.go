@@ -1,8 +1,6 @@
 package nutanix
 
 import (
-	"fmt"
-
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
 	foundation_central "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/fc"
@@ -50,7 +48,7 @@ type Config struct {
 // Client ...
 func (c *Config) Client() (*Client, error) {
 	configCreds := client.Credentials{
-		URL:                fmt.Sprintf("%s:%s", c.Endpoint, c.Port),
+		URL:                client.JoinHostPort(c.Endpoint, c.Port),
 		Endpoint:           c.Endpoint,
 		Username:           c.Username,
 		Password:           c.Password,

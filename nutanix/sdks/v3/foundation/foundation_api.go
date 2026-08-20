@@ -33,7 +33,7 @@ func NewFoundationAPIClient(credentials client.Credentials) (*Client, error) {
 	var baseClient *client.Client
 	if credentials.FoundationEndpoint != "" {
 		// for foundation client, url should be based on foundation's endpoint and port
-		credentials.URL = fmt.Sprintf("%s:%s", credentials.FoundationEndpoint, credentials.FoundationPort)
+		credentials.URL = client.JoinHostPort(credentials.FoundationEndpoint, credentials.FoundationPort)
 		c, err := client.NewBaseClient(&credentials, absolutePath, true)
 		if err != nil {
 			return nil, err

@@ -212,9 +212,10 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 				"IPV4": two,
 				"IPV6": three,
 			}
-			pVal := subMap[addressType.(string)]
-			p := config.AddressType(pVal.(int))
-			body.AddressType = &p
+			if pVal, ok := subMap[addressType.(string)].(int); ok {
+				p := config.AddressType(pVal)
+				body.AddressType = &p
+			}
 		}
 	}
 	if ipFilterList, ok := d.GetOk("ip_filter_list"); ok {

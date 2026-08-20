@@ -66,6 +66,7 @@ func TestAccV2NutanixPasswordManagerResource_UpdatePasswordForAdminPCUserWrongCu
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPasswordManagerResourceUpdatePasswordForAdminPCUserConfig(systemTypePCFilter, "wrong_current_password", "new_password"),
+				//nolint:misspell // quotes the API's own wording, which uses the British spelling
 				// Error details vary across PC versions/setups (e.g. "Unauthorised (PAM authentication failed)" / "Account locked"),
 				// but the task failure prefix is stable.
 				ExpectError: regexp.MustCompile("Failed to change system user password due to"),

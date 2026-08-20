@@ -242,7 +242,7 @@ func ResourceNutanixVolumeGroupV2() *schema.Resource {
 }
 
 func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[INFO_VG] Creating Volume Group")
+	log.Printf("[DEBUG] Creating Volume Group")
 	conn := meta.(*conns.Client).VolumeAPI
 
 	body := volumesClient.VolumeGroup{}
@@ -263,9 +263,10 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 			"SHARED":     two,
 			"NOT_SHARED": three,
 		}
-		pVal := sharingStatusMap[sharingStatus.(string)]
-		p := volumesClient.SharingStatus(pVal.(int))
-		body.SharingStatus = &p
+		if pVal, ok := sharingStatusMap[sharingStatus.(string)].(int); ok {
+			p := volumesClient.SharingStatus(pVal)
+			body.SharingStatus = &p
+		}
 	}
 	if targetPrefix, ok := d.GetOk("target_prefix"); ok {
 		body.TargetPrefix = utils.StringPtr(targetPrefix.(string))
@@ -308,9 +309,10 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 			"TEMPORARY":     four,
 			"BACKUP_TARGET": five,
 		}
-		pInt := usageTypeMap[usageType.(string)]
-		p := volumesClient.UsageType(pInt.(int))
-		body.UsageType = &p
+		if pInt, ok := usageTypeMap[usageType.(string)].(int); ok {
+			p := volumesClient.UsageType(pInt)
+			body.UsageType = &p
+		}
 	}
 	if attachmentType, ok := d.GetOk("attachment_type"); ok {
 		const NONE, DIRECT, EXTERNAL = 2, 3, 4
@@ -495,8 +497,10 @@ func expandIscsiFeatures(iscsiFeaturesList interface{}) *volumesClient.IscsiFeat
 		}
 		val := iscsiFeaturesI[0].(map[string]interface{})
 
-		if targetSecret, ok := val["target_secret"]; ok {
-			iscsiFeature.TargetSecret = utils.StringPtr(targetSecret.(string))
+		// Nested list elements always carry every schema key, so an omitted optional
+		// field arrives as "" rather than being absent. Treat empty as unset.
+		if targetSecret, ok := val["target_secret"].(string); ok && targetSecret != "" {
+			iscsiFeature.TargetSecret = utils.StringPtr(targetSecret)
 		}
 
 		if enabledAuthentications, ok := val["enabled_authentications"]; ok {
@@ -505,12 +509,11 @@ func expandIscsiFeatures(iscsiFeaturesList interface{}) *volumesClient.IscsiFeat
 				"CHAP": two,
 				"NONE": three,
 			}
-			pVal := enabledAuthenticationsMap[enabledAuthentications.(string)]
-			p := volumesClient.AuthenticationType(pVal.(int))
-			iscsiFeature.EnabledAuthentications = &p
+			if pVal, ok := enabledAuthenticationsMap[enabledAuthentications.(string)].(int); ok {
+				p := volumesClient.AuthenticationType(pVal)
+				iscsiFeature.EnabledAuthentications = &p
+			}
 		}
-		log.Printf("[INFO_VG] iscsiFeature.EnabledAuthentications: %v", *iscsiFeature.EnabledAuthentications)
-		log.Printf("[INFO_VG] iscsiFeature.TargetSecret: %v", *iscsiFeature.TargetSecret)
 		return iscsiFeature
 	}
 	return nil

@@ -138,9 +138,10 @@ func ResourceNutanixImagePlacementV2Create(ctx context.Context, d *schema.Resour
 			"SOFT": two,
 			"HARD": three,
 		}
-		pVal := subMap[placementType.(string)]
-		p := import7.PlacementType(pVal.(int))
-		body.PlacementType = &p
+		if pVal, ok := subMap[placementType.(string)].(int); ok {
+			p := import7.PlacementType(pVal)
+			body.PlacementType = &p
+		}
 	}
 	if imageEntityFilter, ok := d.GetOk("image_entity_filter"); ok {
 		body.ImageEntityFilter = expandEntityFilter(imageEntityFilter)
@@ -154,9 +155,10 @@ func ResourceNutanixImagePlacementV2Create(ctx context.Context, d *schema.Resour
 			"ACTIVE":    two,
 			"SUSPENDED": three,
 		}
-		pVal := subMap[enforcementState.(string)]
-		p := import7.EnforcementState(pVal.(int))
-		body.EnforcementState = &p
+		if pVal, ok := subMap[enforcementState.(string)].(int); ok {
+			p := import7.EnforcementState(pVal)
+			body.EnforcementState = &p
+		}
 	}
 	resp, err := conn.ImagesPlacementAPIInstance.CreatePlacementPolicy(body)
 	if err != nil {
@@ -281,9 +283,10 @@ func ResourceNutanixImagePlacementV2Update(ctx context.Context, d *schema.Resour
 			"SOFT": two,
 			"HARD": three,
 		}
-		pVal := subMap[d.Get("placement_type").(string)]
-		p := import7.PlacementType(pVal.(int))
-		updateSpec.PlacementType = &p
+		if pVal, ok := subMap[d.Get("placement_type").(string)].(int); ok {
+			p := import7.PlacementType(pVal)
+			updateSpec.PlacementType = &p
+		}
 		changed = true
 	}
 	if d.HasChange("image_entity_filter") {
@@ -300,9 +303,10 @@ func ResourceNutanixImagePlacementV2Update(ctx context.Context, d *schema.Resour
 			"ACTIVE":    two,
 			"SUSPENDED": three,
 		}
-		pVal := subMap[d.Get("enforcement_state").(string)]
-		p := import7.EnforcementState(pVal.(int))
-		updateSpec.EnforcementState = &p
+		if pVal, ok := subMap[d.Get("enforcement_state").(string)].(int); ok {
+			p := import7.EnforcementState(pVal)
+			updateSpec.EnforcementState = &p
+		}
 		changed = true
 	}
 
@@ -318,7 +322,7 @@ func ResourceNutanixImagePlacementV2Update(ctx context.Context, d *schema.Resour
 	if changed {
 		updateResp, er := conn.ImagesPlacementAPIInstance.UpdatePlacementPolicyById(utils.StringPtr(d.Id()), &updateSpec)
 		if er != nil {
-			return diag.Errorf("error while updating image placement policy : %v", err)
+			return diag.Errorf("error while updating image placement policy : %v", er)
 		}
 		TaskRef := updateResp.Data.GetValue().(import1.TaskReference)
 		taskUUID := TaskRef.ExtId
@@ -463,9 +467,10 @@ func expandEntityFilter(pr interface{}) *import7.Filter {
 				"CATEGORIES_MATCH_ALL": two,
 				"CATEGORIES_MATCH_ANY": three,
 			}
-			pVal := subMap[ftype.(string)]
-			p := import7.FilterMatchType(pVal.(int))
-			entityFilter.Type = &p
+			if pVal, ok := subMap[ftype.(string)].(int); ok {
+				p := import7.FilterMatchType(pVal)
+				entityFilter.Type = &p
+			}
 		}
 		if categoryExtIds, ok := val["category_ext_ids"]; ok {
 			categoriesList := categoryExtIds.([]interface{})

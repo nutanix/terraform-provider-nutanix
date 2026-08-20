@@ -178,10 +178,10 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 			"ACTIVE_DIRECTORY": two,
 			"OPEN_LDAP":        three,
 		}
-		pInt := subMap[dType.(string)]
-		p := import1.DirectoryType(pInt.(int))
-
-		input.DirectoryType = &p
+		if pInt, ok := subMap[dType.(string)].(int); ok {
+			p := import1.DirectoryType(pInt)
+			input.DirectoryType = &p
+		}
 	}
 	if serviceAcc, ok := d.GetOk("service_account"); ok {
 		input.ServiceAccount = expandDsServiceAccount(serviceAcc)
@@ -195,9 +195,10 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 			"NON_RECURSIVE": two,
 			"RECURSIVE":     three,
 		}
-		pInt := subMap[grpSearchType.(string)]
-		p := import1.GroupSearchType(pInt.(int))
-		input.GroupSearchType = &p
+		if pInt, ok := subMap[grpSearchType.(string)].(int); ok {
+			p := import1.GroupSearchType(pInt)
+			input.GroupSearchType = &p
+		}
 	}
 	if whitelistedGrp, ok := d.GetOk("white_listed_groups"); ok {
 		whitelistedGrpList := whitelistedGrp.([]interface{})
@@ -368,10 +369,10 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 			"ACTIVE_DIRECTORY": two,
 			"OPEN_LDAP":        three,
 		}
-		pInt := subMap[d.Get("directory_type").(string)]
-		p := import1.DirectoryType(pInt.(int))
-
-		updatedSpec.DirectoryType = &p
+		if pInt, ok := subMap[d.Get("directory_type").(string)].(int); ok {
+			p := import1.DirectoryType(pInt)
+			updatedSpec.DirectoryType = &p
+		}
 	}
 	if d.HasChange("open_ldap_configuration") {
 		updatedSpec.OpenLdapConfiguration = expandOpenLdapConfig(d.Get("open_ldap_configuration"))
@@ -382,9 +383,10 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 			"NON_RECURSIVE": two,
 			"RECURSIVE":     three,
 		}
-		pInt := subMap[d.Get("group_search_type").(string)]
-		p := import1.GroupSearchType(pInt.(int))
-		updatedSpec.GroupSearchType = &p
+		if pInt, ok := subMap[d.Get("group_search_type").(string)].(int); ok {
+			p := import1.GroupSearchType(pInt)
+			updatedSpec.GroupSearchType = &p
+		}
 	}
 	if d.HasChange("white_listed_groups") {
 		whitelistedGrp := d.Get("white_listed_groups")

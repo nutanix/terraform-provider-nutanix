@@ -1939,7 +1939,9 @@ func UpdateExpandAcpRM(pr []interface{}, res *v3.ProjectInternalIntentResponse, 
 
 		ck, delacp := checkACPdelete(res, acpList)
 		if ck {
-			acpList = append(acpList, delacp)
+			// acpList is fully index-assigned above; this append deliberately adds the
+			// extra "DELETE" entry returned by checkACPdelete.
+			acpList = append(acpList, delacp) //nolint:makezero
 		}
 		return acpList
 	}

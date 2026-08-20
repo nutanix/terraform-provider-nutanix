@@ -235,9 +235,10 @@ func ResourceNutanixRoutesV2Create(ctx context.Context, d *schema.ResourceData, 
 			"LOCAL":   three,
 			"STATIC":  four,
 		}
-		pVal := routeTypeMap[routeType.(string)]
-		p := config.RouteType(pVal.(int))
-		reqBody.RouteType = &p
+		if pVal, ok := routeTypeMap[routeType.(string)].(int); ok {
+			p := config.RouteType(pVal)
+			reqBody.RouteType = &p
+		}
 	}
 	aJSON, _ := json.Marshal(reqBody)
 	log.Printf("[DEBUG] Route Request Body: %v", string(aJSON))
@@ -339,9 +340,10 @@ func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, 
 			"LOCAL":   three,
 			"STATIC":  four,
 		}
-		pVal := routeTypeMap[d.Get("route_type").(string)]
-		p := config.RouteType(pVal.(int))
-		updateSpec.RouteType = &p
+		if pVal, ok := routeTypeMap[d.Get("route_type").(string)].(int); ok {
+			p := config.RouteType(pVal)
+			updateSpec.RouteType = &p
+		}
 	}
 
 	aJSON, _ := json.Marshal(updateSpec)
@@ -491,9 +493,10 @@ func expandNextHopType(hopType interface{}) *config.NexthopType {
 			"EXTERNAL_SUBNET":    five,
 			"VPN_CONNECTION":     six,
 		}
-		pVal := nextHopTypeMap[hopType.(string)]
-		p := config.NexthopType(pVal.(int))
-		return &p
+		if pVal, ok := nextHopTypeMap[hopType.(string)].(int); ok {
+			p := config.NexthopType(pVal)
+			return &p
+		}
 	}
 	return nil
 }

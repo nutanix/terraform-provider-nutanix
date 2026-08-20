@@ -1587,9 +1587,10 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 			"PSERIES": three,
 			"Q35":     four,
 		}
-		pVal := subMap[d.Get("machine_type").(string)]
-		p := config.MachineType(pVal.(int))
-		updateSpec.MachineType = &p
+		if pVal, ok := subMap[d.Get("machine_type").(string)].(int); ok {
+			p := config.MachineType(pVal)
+			updateSpec.MachineType = &p
+		}
 		checkForUpdateParams = true
 	}
 	if d.HasChange("vtpm_config") {
@@ -1615,9 +1616,10 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 			"PD_PROTECTED":   three,
 			"RULE_PROTECTED": four,
 		}
-		pVal := subMap[d.Get("protection_type").(string)]
-		p := config.ProtectionType(pVal.(int))
-		updateSpec.ProtectionType = &p
+		if pVal, ok := subMap[d.Get("protection_type").(string)].(int); ok {
+			p := config.ProtectionType(pVal)
+			updateSpec.ProtectionType = &p
+		}
 		checkForUpdateParams = true
 	}
 	if d.HasChange("protection_policy_state") {
@@ -2248,9 +2250,10 @@ func expandVMSourceReference(pr interface{}) *config.VmSourceReference {
 				"VM":                two,
 				"VM_RECOVERY_POINT": three,
 			}
-			pVal := subMap[entity.(string)]
-			p := config.VmSourceReferenceEntityType(pVal.(int))
-			srcRef.EntityType = &p
+			if pVal, ok := subMap[entity.(string)].(int); ok {
+				p := config.VmSourceReferenceEntityType(pVal)
+				srcRef.EntityType = &p
+			}
 		}
 		return srcRef
 	}
@@ -2265,9 +2268,9 @@ func expandCPUFeature(pr []interface{}) []config.CpuFeature {
 			subMap := map[string]interface{}{
 				"HARDWARE_VIRTUALIZATION": two,
 			}
-			pVal := subMap[v.(string)]
-			p := config.CpuFeature(pVal.(int))
-			feats[k] = p
+			if pVal, ok := subMap[v.(string)].(int); ok {
+				feats[k] = config.CpuFeature(pVal)
+			}
 		}
 		return feats
 	}
@@ -2371,9 +2374,9 @@ func expandGuestTools(pr interface{}) *config.GuestTools {
 				if subMap[v.(string)] == nil {
 					return nil
 				}
-				pVal := subMap[v.(string)]
-				p := config.NgtCapability(pVal.(int))
-				feats[k] = p
+				if pVal, ok := subMap[v.(string)].(int); ok {
+					feats[k] = config.NgtCapability(pVal)
+				}
 			}
 			tools.Capabilities = feats
 		}
@@ -2409,9 +2412,9 @@ func expandOneOfVMBootConfig(pr interface{}) *config.OneOfVmBootConfig {
 						"DISK":    three,
 						"NETWORK": four,
 					}
-					pVal := subMap[v.(string)]
-					p := config.BootDeviceType(pVal.(int))
-					orders[k] = p
+					if pVal, ok := subMap[v.(string)].(int); ok {
+						orders[k] = config.BootDeviceType(pVal)
+					}
 				}
 				legacyBootInput.BootOrder = orders
 			}
@@ -2443,9 +2446,9 @@ func expandOneOfVMBootConfig(pr interface{}) *config.OneOfVmBootConfig {
 						"DISK":    three,
 						"NETWORK": four,
 					}
-					pVal := subMap[v.(string)]
-					p := config.BootDeviceType(pVal.(int))
-					orders[k] = p
+					if pVal, ok := subMap[v.(string)].(int); ok {
+						orders[k] = config.BootDeviceType(pVal)
+					}
 				}
 				uefiBootInput.BootOrder = orders
 			}
@@ -2479,9 +2482,10 @@ func expandOneOfUefiBootBootDevice(bootDevice interface{}) *config.OneOfUefiBoot
 						"SATA":  five,
 						"SPAPR": six,
 					}
-					pVal := subMap[busType.(string)]
-					p := config.DiskBusType(pVal.(int))
-					diskAddOut.BusType = &p
+					if pVal, ok := subMap[busType.(string)].(int); ok {
+						p := config.DiskBusType(pVal)
+						diskAddOut.BusType = &p
+					}
 				}
 				if index, ok := diskVal["index"]; ok {
 					diskAddOut.Index = utils.IntPtr(index.(int))
@@ -2529,9 +2533,10 @@ func expandOneOfLegacyBootBootDevice(pr interface{}) *config.OneOfLegacyBootBoot
 						"SATA":  five,
 						"SPAPR": six,
 					}
-					pVal := subMap[busType.(string)]
-					p := config.DiskBusType(pVal.(int))
-					diskAddOut.BusType = &p
+					if pVal, ok := subMap[busType.(string)].(int); ok {
+						p := config.DiskBusType(pVal)
+						diskAddOut.BusType = &p
+					}
 				}
 				if index, ok := diskVal["index"]; ok {
 					diskAddOut.Index = utils.IntPtr(index.(int))
@@ -2665,9 +2670,10 @@ func expandOneOfDataSourceReference(pr interface{}) *config.OneOfDataSourceRefer
 						"SATA":  five,
 						"SPAPR": six,
 					}
-					pVal := subMap[busType.(string)]
-					p := config.DiskBusType(pVal.(int))
-					diskAddOut.BusType = &p
+					if pVal, ok := subMap[busType.(string)].(int); ok {
+						p := config.DiskBusType(pVal)
+						diskAddOut.BusType = &p
+					}
 				}
 				if index, ok := diskVal["index"]; ok {
 					diskAddOut.Index = utils.IntPtr(index.(int))
@@ -2926,9 +2932,10 @@ func expandCdRom(cd []interface{}) []config.CdRom {
 					"GUEST_TOOLS":         three,
 					"GUEST_CUSTOMIZATION": four,
 				}
-				pVal := subMap[isoType.(string)]
-				p := config.IsoType(pVal.(int))
-				cds.IsoType = &p
+				if pVal, ok := subMap[isoType.(string)].(int); ok {
+					p := config.IsoType(pVal)
+					cds.IsoType = &p
+				}
 			}
 
 			cdList[k] = cds
@@ -2950,9 +2957,10 @@ func expandCdRomAddress(disk interface{}) *config.CdRomAddress {
 				"IDE":  two,
 				"SATA": three,
 			}
-			pVal := subMap[busType.(string)]
-			p := config.CdRomBusType(pVal.(int))
-			cdRomAdd.BusType = &p
+			if pVal, ok := subMap[busType.(string)].(int); ok {
+				p := config.CdRomBusType(pVal)
+				cdRomAdd.BusType = &p
+			}
 		}
 		if index, ok := adVal["index"]; ok {
 			cdRomAdd.Index = utils.IntPtr(index.(int))
@@ -2980,9 +2988,10 @@ func expandGpu(gpu []interface{}) []config.Gpu {
 					"PASSTHROUGH_COMPUTE":  three,
 					"VIRTUAL":              four,
 				}
-				pVal := subMap[mode.(string)]
-				p := config.GpuMode(pVal.(int))
-				gpus.Mode = &p
+				if pVal, ok := subMap[mode.(string)].(int); ok {
+					p := config.GpuMode(pVal)
+					gpus.Mode = &p
+				}
 			}
 			if deviceID, ok := val["device_id"]; ok {
 				gpus.DeviceId = utils.IntPtr(deviceID.(int))
@@ -2994,9 +3003,10 @@ func expandGpu(gpu []interface{}) []config.Gpu {
 					"INTEL":  three,
 					"AMD":    four,
 				}
-				pVal := subMap[vendor.(string)]
-				p := config.GpuVendor(pVal.(int))
-				gpus.Vendor = &p
+				if pVal, ok := subMap[vendor.(string)].(int); ok {
+					p := config.GpuVendor(pVal)
+					gpus.Vendor = &p
+				}
 			}
 			if pciAddress, ok := val["pci_address"]; ok && len(pciAddress.([]interface{})) > 0 {
 				pciObj := config.SBDF{}
@@ -3459,8 +3469,8 @@ func resourceNutanixVirtualMachineV2StateUpgradeV0(ctx context.Context, rawState
 		}
 
 		// If new field already present, do nothing.
-		if v, ok := nicMap["nic_backing_info"]; ok {
-			if list, ok := v.([]interface{}); ok && len(list) > 0 {
+		if v, hasBacking := nicMap["nic_backing_info"]; hasBacking {
+			if list, isList := v.([]interface{}); isList && len(list) > 0 {
 				continue
 			}
 		}
@@ -3470,8 +3480,8 @@ func resourceNutanixVirtualMachineV2StateUpgradeV0(ctx context.Context, rawState
 		if !ok || backingRaw == nil {
 			// don't return; we may still migrate network_info below
 		} else {
-			backingList, ok := backingRaw.([]interface{})
-			if ok && len(backingList) > 0 {
+			backingList, isList := backingRaw.([]interface{})
+			if isList && len(backingList) > 0 {
 				nicMap["nic_backing_info"] = []interface{}{
 					map[string]interface{}{
 						"virtual_ethernet_nic": backingList,
@@ -3481,8 +3491,8 @@ func resourceNutanixVirtualMachineV2StateUpgradeV0(ctx context.Context, rawState
 		}
 
 		// If new field already present, do nothing.
-		if v, ok := nicMap["nic_network_info"]; ok {
-			if list, ok := v.([]interface{}); ok && len(list) > 0 {
+		if v, hasNetwork := nicMap["nic_network_info"]; hasNetwork {
+			if list, isList := v.([]interface{}); isList && len(list) > 0 {
 				continue
 			}
 		}

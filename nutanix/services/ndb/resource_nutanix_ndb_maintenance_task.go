@@ -133,7 +133,7 @@ func resourceNutanixNDBMaintenanceTaskCreate(ctx context.Context, d *schema.Reso
 	uuid, er := uuid.GenerateUUID()
 
 	if er != nil {
-		return diag.Errorf("error generating UUID for ndb maintenance tasks: %+v", err)
+		return diag.Errorf("error generating UUID for ndb maintenance tasks: %+v", er)
 	}
 	d.SetId(uuid)
 	log.Printf("NDB maintenance task with %s id is performed", d.Id())

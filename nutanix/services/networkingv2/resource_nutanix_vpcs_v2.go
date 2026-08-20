@@ -232,10 +232,10 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 			"REGULAR": two,
 			"TRANSIT": three,
 		}
-		pVal := subMap[vpcType.(string)]
-
-		p := import1.VpcType(pVal.(int))
-		inputSpec.VpcType = &p
+		if pVal, ok := subMap[vpcType.(string)].(int); ok {
+			p := import1.VpcType(pVal)
+			inputSpec.VpcType = &p
+		}
 	}
 
 	if dhcp, ok := d.GetOk("common_dhcp_options"); ok {

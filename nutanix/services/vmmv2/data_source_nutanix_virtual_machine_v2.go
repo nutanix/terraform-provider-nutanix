@@ -1350,7 +1350,7 @@ func flattenVMSourceReferenceEntityType(ent *config.VmSourceReferenceEntityType)
 
 func flattenCPUFeature(cfg []config.CpuFeature) []interface{} {
 	if len(cfg) > 0 {
-		cfgList := make([]interface{}, len(cfg))
+		cfgList := make([]interface{}, 0, len(cfg))
 		const two = 2
 		for _, v := range cfg {
 			if v == config.CpuFeature(two) {

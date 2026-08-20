@@ -77,7 +77,7 @@ func dataSourceNutanixNDBProfileAvailableIPsRead(ctx context.Context, d *schema.
 		return diag.FromErr(err)
 	}
 
-	if e := d.Set("available_ips", flattenAvailableIPsResponse(resp)); err != nil {
+	if e := d.Set("available_ips", flattenAvailableIPsResponse(resp)); e != nil {
 		return diag.FromErr(e)
 	}
 

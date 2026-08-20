@@ -68,7 +68,7 @@ func DatasourceNutanixSSLCertificateV2Read(ctx context.Context, d *schema.Resour
 			log.Printf("[DEBUG] Attempt %d/%d failed to fetch SSL certificate, retrying in %v: %v", attempt+1, maxRetries, retryDelay, err)
 			select {
 			case <-ctx.Done():
-				return diag.Errorf("context cancelled while fetching SSL certificate: %v", ctx.Err())
+				return diag.Errorf("context canceled while fetching SSL certificate: %v", ctx.Err())
 			case <-time.After(retryDelay):
 				retryDelay = time.Duration(float64(retryDelay) * 1.5) // Exponential backoff
 			}

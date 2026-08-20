@@ -183,7 +183,9 @@ func flattenDiskListFilterCloudInit(d *schema.ResourceData, disks []*v3.VMDisk) 
 	}
 	cloudInitCdromUUID = cloudInitHelper.UUID
 	if !cloudInitWasSet {
-		d.Set("cloud_init_cdrom_uuid", cloudInitCdromUUID)
+		if err := d.Set("cloud_init_cdrom_uuid", cloudInitCdromUUID); err != nil {
+			return fDiskList, err
+		}
 	}
 	return fDiskList, nil
 }
@@ -235,7 +237,7 @@ func flattenDiskListFilterCloudInitHelper(
 				}
 				if !match {
 					potentialCloudInitHelpers = append(potentialCloudInitHelpers, CloudInitHelper{
-						UUID:           *eDisk.UUID,
+						UUID:           utils.StringValue(eDisk.UUID),
 						CloudInitCDrom: eDisk,
 						Index:          index,
 					})
@@ -265,8 +267,10 @@ func flattenDiskListHelper(disks []*v3.VMDisk, cloudInitCdromUUID string, remove
 	diskList := make([]map[string]interface{}, 0)
 	for _, v := range disks {
 		flatDisk := flattenDisk(v)
-		diskUUID := flatDisk["uuid"]
-		if cloudInitCdromUUID == diskUUID && removeCloudInit {
+		// The empty UUID is not a match. Without this guard, callers that pass no
+		// cloud-init UUID (flattenDiskList) silently dropped every disk whose own
+		// UUID was absent from the API response.
+		if removeCloudInit && cloudInitCdromUUID != "" && flatDisk["uuid"] == cloudInitCdromUUID {
 			continue
 		}
 		diskList = append(diskList, flatDisk)
@@ -278,31 +282,37 @@ func flattenDisk(v *v3.VMDisk) map[string]interface{} {
 	var deviceProps []map[string]interface{}
 	var storageConfig []map[string]interface{}
 
+	// disk_address and storage_container_reference are optional in the v3 API: CD-ROM
+	// devices and volume-group-backed disks routinely come back without them. Dereferencing
+	// blind here crashed the provider on read (GH #1099).
 	if v.DeviceProperties != nil {
 		deviceProps = make([]map[string]interface{}, 1)
-		index := fmt.Sprintf("%d", utils.Int64Value(v.DeviceProperties.DiskAddress.DeviceIndex))
-		adapter := v.DeviceProperties.DiskAddress.AdapterType
+
+		diskAddress := map[string]interface{}{}
+		if addr := v.DeviceProperties.DiskAddress; addr != nil {
+			diskAddress["device_index"] = fmt.Sprintf("%d", utils.Int64Value(addr.DeviceIndex))
+			diskAddress["adapter_type"] = addr.AdapterType
+		}
 
 		deviceProps[0] = map[string]interface{}{
-			"device_type": v.DeviceProperties.DeviceType,
-			"disk_address": map[string]interface{}{
-				"device_index": index,
-				"adapter_type": adapter,
-			},
+			"device_type":  v.DeviceProperties.DeviceType,
+			"disk_address": diskAddress,
 		}
 	}
 
 	if v.StorageConfig != nil {
+		containerRef := make([]map[string]interface{}, 0, 1)
+		if ref := v.StorageConfig.StorageContainerReference; ref != nil {
+			containerRef = append(containerRef, map[string]interface{}{
+				"url":  cast.ToString(ref.URL),
+				"kind": cast.ToString(ref.Kind),
+				"name": cast.ToString(ref.Name),
+				"uuid": cast.ToString(ref.UUID),
+			})
+		}
 		storageConfig = append(storageConfig, map[string]interface{}{
-			"flash_mode": cast.ToString(v.StorageConfig.FlashMode),
-			"storage_container_reference": []map[string]interface{}{
-				{
-					"url":  cast.ToString(v.StorageConfig.StorageContainerReference.URL),
-					"kind": cast.ToString(v.StorageConfig.StorageContainerReference.Kind),
-					"name": cast.ToString(v.StorageConfig.StorageContainerReference.Name),
-					"uuid": cast.ToString(v.StorageConfig.StorageContainerReference.UUID),
-				},
-			},
+			"flash_mode":                  cast.ToString(v.StorageConfig.FlashMode),
+			"storage_container_reference": containerRef,
 		})
 	}
 
