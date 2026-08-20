@@ -428,7 +428,7 @@ func flattenAvailableVersions(availableVersions []lcmEntityPkg.AvailableVersion)
 			"order":                  availableVersion.Order,
 			"disablement_reason":     availableVersion.DisablementReason,
 			"release_notes":          availableVersion.ReleaseNotes,
-			"release_date":           availableVersion.ReleaseDate,
+			"release_date":           flattenTime(availableVersion.ReleaseDate),
 			"custom_message":         availableVersion.CustomMessage,
 			"child_entities":         availableVersion.ChildEntities,
 			"group_uuid":             availableVersion.GroupUuid,
