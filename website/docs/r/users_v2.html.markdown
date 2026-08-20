@@ -141,4 +141,4 @@ To delete a user, you must remove it manually via the **Prism Central UI**, or a
 
 ## References
 
-See detailed information in [Nutanix Users v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Users/operation/createUser).
+See detailed information in [Nutanix Users v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/Users/operation/createUser).

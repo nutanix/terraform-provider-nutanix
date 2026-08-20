@@ -273,4 +273,4 @@ The ipv6 attribute supports the following:
 
 
 
-See detailed information in [Nutanix List Hosts V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.2#tag/Clusters/operation/listHostsByClusterId).
+See detailed information in [Nutanix List Hosts V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.3#tag/Clusters/operation/listHostsByClusterId).

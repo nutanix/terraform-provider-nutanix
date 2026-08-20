@@ -49,4 +49,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix Get the Requested User Key V4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Users/operation/getUserKeyById)
+See detailed information in [Nutanix Get the Requested User Key V4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/Users/operation/getUserKeyById)
