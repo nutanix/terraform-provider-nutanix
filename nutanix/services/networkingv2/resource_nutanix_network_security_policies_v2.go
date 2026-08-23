@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -29,6 +30,11 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 		ReadContext:   ResourceNutanixNetworkSecurityPolicyV2Read,
 		UpdateContext: ResourceNutanixNetworkSecurityPolicyV2Update,
 		DeleteContext: ResourceNutanixNetworkSecurityPolicyV2Delete,
+		// The backend (MIC-30142) allows only one of secured_group_category_references and
+		// secured_group_entity_group_reference to be present on a rule spec. The SDK's
+		// ExactlyOneOf cannot express this because the fields live under the multi-instance
+		// "rules" TypeList, so enforce mutual exclusivity here at plan time instead.
+		CustomizeDiff: securedGroupReferencesCustomizeDiff,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -125,7 +131,8 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 												},
 												"secured_group_category_references": {
 													Type:     schema.TypeList,
-													Required: true,
+													Optional: true,
+													Computed: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
@@ -1207,4 +1214,113 @@ func indexOf(slice []string, target string) int {
 		}
 	}
 	return -1
+}
+
+// securedGroupReferencesCustomizeDiff enforces, at plan time, that a rule's
+// secured group is referenced either by categories or by an entity group, but
+// never by both. The backend rejects rules that set both with error MIC-30142.
+//
+// This cannot be expressed with the SDK's ExactlyOneOf because those fields are
+// nested under the "rules" TypeList (which allows more than one element), and
+// ExactlyOneOf only supports paths whose intermediate blocks are MaxItems: 1.
+//
+//   - application_rule_spec: exactly one of the two must be set (a secured group
+//     is mandatory for an application rule).
+//   - intra_entity_group_rule_spec: the two are mutually exclusive, but neither
+//     is mandatory, so only reject the case where both are set.
+func securedGroupReferencesCustomizeDiff(_ context.Context, rd *schema.ResourceDiff, _ interface{}) error {
+	rawConfig := rd.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return nil
+	}
+
+	rules := rawConfig.GetAttr("rules")
+	if rules.IsNull() || !rules.IsKnown() {
+		return nil
+	}
+
+	ruleIdx := 0
+	for ruleIt := rules.ElementIterator(); ruleIt.Next(); ruleIdx++ {
+		_, rule := ruleIt.Element()
+		if rule.IsNull() || !rule.IsKnown() {
+			continue
+		}
+
+		specs := rule.GetAttr("spec")
+		if specs.IsNull() || !specs.IsKnown() {
+			continue
+		}
+
+		for specIt := specs.ElementIterator(); specIt.Next(); {
+			_, spec := specIt.Element()
+			if spec.IsNull() || !spec.IsKnown() {
+				continue
+			}
+
+			if err := checkSecuredGroupExclusivity(spec, "application_rule_spec", ruleIdx, true); err != nil {
+				return err
+			}
+			if err := checkSecuredGroupExclusivity(spec, "intra_entity_group_rule_spec", ruleIdx, false); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// checkSecuredGroupExclusivity validates the secured group references of a given
+// rule spec block. When required is true, exactly one reference must be set;
+// otherwise the two references are only checked for not being set together.
+func checkSecuredGroupExclusivity(spec cty.Value, block string, ruleIdx int, required bool) error {
+	blockVal := spec.GetAttr(block)
+	if blockVal.IsNull() || !blockVal.IsKnown() {
+		return nil
+	}
+
+	for it := blockVal.ElementIterator(); it.Next(); {
+		_, cfg := it.Element()
+		if cfg.IsNull() || !cfg.IsKnown() {
+			continue
+		}
+
+		categorySet := ctyAttrIsSet(cfg, "secured_group_category_references")
+		entityGroupSet := ctyAttrIsSet(cfg, "secured_group_entity_group_reference")
+
+		if categorySet && entityGroupSet {
+			return fmt.Errorf(
+				"rules[%d].spec.%s: only one of `secured_group_category_references` and "+
+					"`secured_group_entity_group_reference` can be specified", ruleIdx, block)
+		}
+		if required && !categorySet && !entityGroupSet {
+			return fmt.Errorf(
+				"rules[%d].spec.%s: one of `secured_group_category_references` or "+
+					"`secured_group_entity_group_reference` must be specified", ruleIdx, block)
+		}
+	}
+
+	return nil
+}
+
+// ctyAttrIsSet reports whether the named attribute was provided in the config.
+// An unknown value (e.g. an unresolved reference to another resource) counts as
+// set, while a null value or an empty list/string counts as unset.
+func ctyAttrIsSet(obj cty.Value, name string) bool {
+	v := obj.GetAttr(name)
+	if v.IsNull() {
+		return false
+	}
+	if !v.IsKnown() {
+		return true
+	}
+
+	t := v.Type()
+	switch {
+	case t.IsListType() || t.IsTupleType() || t.IsSetType():
+		return v.LengthInt() > 0
+	case t == cty.String:
+		return v.AsString() != ""
+	default:
+		return true
+	}
 }

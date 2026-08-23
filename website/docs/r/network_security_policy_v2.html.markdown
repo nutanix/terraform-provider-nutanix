@@ -51,6 +51,38 @@ resource "nutanix_network_security_policy_v2" "global-nsp" {
   }
 }
 
+resource "nutanix_entity_group_v2" "secured_group" {
+  name        = "secured-group"
+  description = "Secured group for an application policy"
+  allowed_config {
+    entities {
+      type              = "VM"
+      selected_by       = "CATEGORY_EXT_ID"
+      reference_ext_ids = [nutanix_category_v2.example.id]
+    }
+  }
+}
+
+# Application rules can use an entity group as the secured group instead of categories.
+# Use either secured_group_category_references or secured_group_entity_group_reference, not both.
+resource "nutanix_network_security_policy_v2" "entity-group-nsp" {
+  name        = "my-entity-group-policy"
+  description = "Application policy with secured group entity group reference"
+  state       = "SAVE"
+  type        = "APPLICATION"
+  scope       = "GLOBAL"
+  rules {
+    type = "APPLICATION"
+    spec {
+      application_rule_spec {
+        secured_group_entity_group_reference = nutanix_entity_group_v2.secured_group.id
+        src_allow_spec                      = "ALL"
+        is_all_protocol_allowed             = true
+      }
+    }
+  }
+}
+
 ```
 
 ## Argument Reference
@@ -96,8 +128,8 @@ One of below rules spec.
 ### application_rule_spec
 
 - `secured_group_category_associated_entity_type`: (Optional) Entity type for the secured group category. Acceptable values are "SUBNET", "VM", "VPC". Default is "VM".
-- `secured_group_category_references`: (Required) A set of network endpoints which is protected by a Network Security Policy and defined as a list of categories.
-- `secured_group_entity_group_reference`: (Optional) Reference to the secured group entity group.
+- `secured_group_category_references`: (Optional) A set of network endpoints which is protected by a Network Security Policy and defined as a list of categories. Exactly one of `secured_group_category_references` and `secured_group_entity_group_reference` must be set.
+- `secured_group_entity_group_reference`: (Optional) Reference to the secured group entity group. Exactly one of `secured_group_category_references` and `secured_group_entity_group_reference` must be set.
 - `src_allow_spec`: (Optional) A specification to how allow mode traffic should be applied, either ALL or NONE.
 - `dest_allow_spec`: (Optional) A specification to how allow mode traffic should be applied, either ALL or NONE.
 - `src_category_associated_entity_type`: (Optional) Entity type for the source category. Acceptable values are "SUBNET", "VM", "VPC". Default is "VM".
@@ -121,9 +153,9 @@ One of below rules spec.
 ### intra_entity_group_rule_spec
 
 - `secured_group_category_associated_entity_type`: (Optional) Entity type for the secured group category. Acceptable values are "SUBNET", "VM", "VPC". Default is "VM".
-- `secured_group_entity_group_reference`: (Optional) Reference to the secured group entity group.
+- `secured_group_entity_group_reference`: (Optional) Reference to the secured group entity group. Exactly one of `secured_group_category_references` and `secured_group_entity_group_reference` must be set.
 - `secured_group_action`: (Required) Whether traffic between intra secured group entities should be allowed or denied. Acceptable values are "ALLOW", "DENY".
-- `secured_group_category_references`: (Optional) List of category references for the secured group.
+- `secured_group_category_references`: (Optional) List of category references for the secured group. Exactly one of `secured_group_category_references` and `secured_group_entity_group_reference` must be set.
 - `secured_group_service_references`: (Optional) List of service group references for the secured group.
 - `tcp_services`: (Optional) TCP port ranges for the rule.
 - `udp_services`: (Optional) UDP port ranges for the rule.
@@ -198,6 +230,7 @@ The following attributes are exported:
 ## Import
 
 This helps to manage existing entities which are not created through terraform. Network Security Policy can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+
 ```hcl
 // create its configuration in the root module. For example:
 resource "nutanix_network_security_policy_v2" "import_nsp" {}
