@@ -183,6 +183,49 @@ func ResourceNutanixRecoveryPlan() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"availability_zone_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"availability_zone_url": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"cluster_reference_list": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"kind": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+												"uuid": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+												"name": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"primary_location_index": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
 						"floating_ip_assignment_list": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -391,6 +434,11 @@ func ResourceNutanixRecoveryPlan() *schema.Resource {
 																Optional: true,
 																Computed: true,
 															},
+															"subnet_uuid": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
 														},
 													},
 												},
@@ -480,6 +528,11 @@ func ResourceNutanixRecoveryPlan() *schema.Resource {
 																Computed: true,
 															},
 															"name": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+															"subnet_uuid": {
 																Type:     schema.TypeString,
 																Optional: true,
 																Computed: true,
@@ -942,6 +995,12 @@ func expandParameters(d *schema.ResourceData) *v3.Parameters {
 		v := v.([]interface{})
 		for _, v := range v {
 			v1 := v.(map[string]interface{})
+			if v2, ok1 := v1["availability_zone_list"].([]interface{}); ok1 && len(v2) > 0 {
+				parameter.AvailabilityZoneList = expandRecoveryPlanAvailabilityZoneList(v2)
+			}
+			if v2, ok1 := v1["primary_location_index"]; ok1 {
+				parameter.PrimaryLocationIndex = utils.Int64Ptr(cast.ToInt64(v2))
+			}
 			if v1, ok1 := v1["floating_ip_assignment_list"].([]interface{}); ok1 {
 				parameter.FloatingIPAssignmentList = expandFloatingAssignmentList(v1)
 			}
@@ -965,6 +1024,37 @@ func expandParameters(d *schema.ResourceData) *v3.Parameters {
 		}
 	}
 	return parameter
+}
+
+func expandRecoveryPlanAvailabilityZoneList(d []interface{}) []*v3.RecoveryPlanResourcesAvailabilityZone {
+	azList := make([]*v3.RecoveryPlanResourcesAvailabilityZone, 0)
+	for _, azRaw := range d {
+		az := azRaw.(map[string]interface{})
+		azEntry := &v3.RecoveryPlanResourcesAvailabilityZone{}
+		if v, ok := az["availability_zone_url"]; ok && v.(string) != "" {
+			azEntry.AvailabilityZoneURL = v.(string)
+		}
+		if v, ok := az["cluster_reference_list"].([]interface{}); ok && len(v) > 0 {
+			refs := make([]*v3.Reference, 0)
+			for _, refRaw := range v {
+				ref := refRaw.(map[string]interface{})
+				reference := &v3.Reference{}
+				if val, ok1 := ref["kind"]; ok1 && val.(string) != "" {
+					reference.Kind = utils.StringPtr(val.(string))
+				}
+				if val, ok1 := ref["uuid"]; ok1 && val.(string) != "" {
+					reference.UUID = utils.StringPtr(val.(string))
+				}
+				if val, ok1 := ref["name"]; ok1 && val.(string) != "" {
+					reference.Name = utils.StringPtr(val.(string))
+				}
+				refs = append(refs, reference)
+			}
+			azEntry.ClusterReferenceList = refs
+		}
+		azList = append(azList, azEntry)
+	}
+	return azList
 }
 
 func expandFloatingAssignmentList(d []interface{}) []*v3.FloatingIPAssignmentList {
@@ -1095,6 +1185,9 @@ func expandRecoveryNetwork(d []interface{}) *v3.Network {
 		if v2, ok1 := v["name"]; ok1 && v2.(string) != "" {
 			network.Name = v2.(string)
 		}
+		if v2, ok1 := v["subnet_uuid"]; ok1 && v2.(string) != "" {
+			network.SubnetUUID = v2.(string)
+		}
 		if v2, ok1 := v["subnet_list"].([]interface{}); ok1 {
 			network.SubnetList = expandSubnetList(v2)
 		}
@@ -1218,10 +1311,28 @@ func flattenParameters(par *v3.Parameters) []interface{} {
 		parameter := make(map[string]interface{})
 		parameter["floating_ip_assignment_list"] = flattenFloatingAssignmentList(par.FloatingIPAssignmentList)
 		parameter["network_mapping_list"] = flattenNetworkMappingList(par.NetworkMappingList)
+		parameter["availability_zone_list"] = flattenRecoveryPlanAvailabilityZoneList(par.AvailabilityZoneList)
+		if par.PrimaryLocationIndex != nil {
+			parameter["primary_location_index"] = utils.Int64Value(par.PrimaryLocationIndex)
+		}
 		parameters = append(parameters, parameter)
 	}
 
 	return parameters
+}
+
+func flattenRecoveryPlanAvailabilityZoneList(azList []*v3.RecoveryPlanResourcesAvailabilityZone) []map[string]interface{} {
+	azs := make([]map[string]interface{}, 0)
+	for _, az := range azList {
+		if az == nil {
+			continue
+		}
+		azEntry := make(map[string]interface{})
+		azEntry["availability_zone_url"] = az.AvailabilityZoneURL
+		azEntry["cluster_reference_list"] = flattenArrayReferenceValues(az.ClusterReferenceList)
+		azs = append(azs, azEntry)
+	}
+	return azs
 }
 
 func flattenFloatingAssignmentList(floatingList []*v3.FloatingIPAssignmentList) []map[string]interface{} {
@@ -1241,42 +1352,66 @@ func flattenVMAssignmentList(vmList []*v3.VMIPAssignmentList) []map[string]inter
 	assignments := make([]map[string]interface{}, 0)
 	if len(vmList) > 0 {
 		for _, assignment := range vmList {
+			if assignment == nil {
+				continue
+			}
 			assign := make(map[string]interface{})
 			assign["vm_reference"] = flattenReferenceValues(assignment.VMReference)
-			floatingConfig := make(map[string]interface{})
-			floatingConfig["ip"] = assignment.TestFloatingIPConfig.IP
-			floatingConfig["should_allocate_dynamically"] = utils.BoolValue(assignment.TestFloatingIPConfig.ShouldAllocateDynamically)
-			assign["test_floating_ip_config"] = floatingConfig
-			floatingConfig = make(map[string]interface{})
-			floatingConfig["ip"] = assignment.RecoveryFloatingIPConfig.IP
-			floatingConfig["should_allocate_dynamically"] = utils.BoolValue(assignment.RecoveryFloatingIPConfig.ShouldAllocateDynamically)
-			assign["recovery_floating_ip_config"] = floatingConfig
+			assign["test_floating_ip_config"] = flattenFloatingIPConfig(assignment.TestFloatingIPConfig)
+			assign["recovery_floating_ip_config"] = flattenFloatingIPConfig(assignment.RecoveryFloatingIPConfig)
+			assign["vm_nic_information"] = flattenVMNICInformation(assignment.VMNICInformation)
 			assignments = append(assignments, assign)
 		}
 	}
 	return assignments
 }
 
+func flattenFloatingIPConfig(cfg *v3.FloatingIPConfig) []interface{} {
+	res := make([]interface{}, 0)
+	if cfg != nil {
+		floatingConfig := make(map[string]interface{})
+		floatingConfig["ip"] = cfg.IP
+		floatingConfig["should_allocate_dynamically"] = utils.BoolValue(cfg.ShouldAllocateDynamically)
+		res = append(res, floatingConfig)
+	}
+	return res
+}
+
+func flattenVMNICInformation(nic *v3.VMNICInformation) []interface{} {
+	res := make([]interface{}, 0)
+	if nic != nil {
+		nicInfo := make(map[string]interface{})
+		nicInfo["ip"] = nic.IP
+		nicInfo["uuid"] = nic.UUID
+		res = append(res, nicInfo)
+	}
+	return res
+}
+
 func flattenNetworkMappingList(networksList []*v3.NetworkMappingList) []map[string]interface{} {
 	networks := make([]map[string]interface{}, 0)
 	if len(networksList) > 0 {
 		for _, network := range networksList {
+			if network == nil {
+				continue
+			}
 			availibility := make(map[string]interface{})
 			zones := make([]map[string]interface{}, 0)
-			if len(network.AvailabilityZoneNetworkMappingList) > 0 {
-				for _, zone := range network.AvailabilityZoneNetworkMappingList {
-					zon := make(map[string]interface{})
-					zon["availability_zone_url"] = zone.AvailabilityZoneURL
-					zon["recovery_network"] = flattenRecoveryNetwork(zone.RecoveryNetwork)
-					zon["test_network"] = flattenRecoveryNetwork(zone.TestNetwork)
-					zon["recovery_ip_assignment_list"] = flattenAssignmentList(zone.RecoveryIPAssignmentList)
-					zon["test_ip_assignment_list"] = flattenAssignmentList(zone.TestIPAssignmentList)
-					zon["cluster_reference_list"] = flattenArrayReferenceValues(zone.ClusterReferenceList)
-					zones = append(zones, zon)
+			for _, zone := range network.AvailabilityZoneNetworkMappingList {
+				if zone == nil {
+					continue
 				}
-				availibility["availability_zone_network_mapping_list"] = zones
-				availibility["are_networks_stretched"] = network.AreNetworksStretched
+				zon := make(map[string]interface{})
+				zon["availability_zone_url"] = zone.AvailabilityZoneURL
+				zon["recovery_network"] = flattenRecoveryNetwork(zone.RecoveryNetwork)
+				zon["test_network"] = flattenRecoveryNetwork(zone.TestNetwork)
+				zon["recovery_ip_assignment_list"] = flattenAssignmentList(zone.RecoveryIPAssignmentList)
+				zon["test_ip_assignment_list"] = flattenAssignmentList(zone.TestIPAssignmentList)
+				zon["cluster_reference_list"] = flattenArrayReferenceValues(zone.ClusterReferenceList)
+				zones = append(zones, zon)
 			}
+			availibility["availability_zone_network_mapping_list"] = zones
+			availibility["are_networks_stretched"] = utils.BoolValue(network.AreNetworksStretched)
 			networks = append(networks, availibility)
 		}
 	}
@@ -1285,12 +1420,16 @@ func flattenNetworkMappingList(networksList []*v3.NetworkMappingList) []map[stri
 
 func flattenRecoveryNetwork(d *v3.Network) []interface{} {
 	networks := make([]interface{}, 0)
+	if d == nil {
+		return networks
+	}
 	network := make(map[string]interface{})
 	network["name"] = d.Name
+	network["subnet_uuid"] = d.SubnetUUID
 	network["virtual_network_reference"] = flattenReferenceValuesList(d.VirtualNetworkReference)
 	network["vpc_reference"] = flattenReferenceValuesList(d.VPCReference)
 	network["subnet_list"] = flattenSubnetList(d.SubnetList)
-	network["use_vpc_reference"] = d.UseVPCReference
+	network["use_vpc_reference"] = utils.BoolValue(d.UseVPCReference)
 	networks = append(networks, network)
 	return networks
 }
