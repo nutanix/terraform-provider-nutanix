@@ -211,27 +211,18 @@ func externalNetworkConnConfigResourceElem() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"transit_vpc_ext_id": {
 							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"floating_ip_count": {
+							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"connections": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"floating_ip_count": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Computed: true,
-									},
-									"overlay_subnet_ext_id": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-								},
-							},
+						"overlay_subnet_ext_id": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -244,62 +235,20 @@ func externalNetworkConnConfigResourceElem() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"overlay_subnet_ext_id": {
 							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Required: true,
+							ForceNew: true,
 						},
 						"transit_vpc_ext_id": {
 							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Required: true,
+							ForceNew: true,
 						},
 						"externally_routable_prefixes": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": ipSubnetResourceSchema(),
-									"ipv6": ipSubnetResourceSchema(),
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-// ipSubnetResourceSchema returns the resource-side schema for an IP subnet block.
-func ipSubnetResourceSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		Computed: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"prefix_length": {
-					Type:     schema.TypeInt,
-					Optional: true,
-					Computed: true,
-				},
-				"ip": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Computed: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"value": {
-								Type:     schema.TypeString,
-								Optional: true,
-								Computed: true,
-							},
-							"prefix_length": {
-								Type:     schema.TypeInt,
-								Optional: true,
-								Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 					},

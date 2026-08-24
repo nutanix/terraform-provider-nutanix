@@ -46,20 +46,3 @@ data "nutanix_tenant_v2" "get-tenant" {
 data "nutanix_tenants_v2" "tenants-list" {
   depends_on = [nutanix_tenant_v2.example]
 }
-
-# Suspend a tenant (temporarily blocks all of its users without losing data).
-resource "nutanix_suspend_tenant_v2" "suspend-example" {
-  ext_id = nutanix_tenant_v2.example.ext_id
-}
-
-# Restore a suspended or pending-deletion tenant back to the active state.
-resource "nutanix_restore_tenant_v2" "restore-example" {
-  ext_id     = nutanix_tenant_v2.example.ext_id
-  depends_on = [nutanix_suspend_tenant_v2.suspend-example]
-}
-
-# Schedule deletion of a tenant after a configurable retention period.
-resource "nutanix_scheduled_delete_tenant_v2" "scheduled-delete-example" {
-  ext_id            = "00000000-0000-0000-0000-000000000000"
-  retention_seconds = 3600
-}

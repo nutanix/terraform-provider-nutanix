@@ -54,18 +54,15 @@ The following arguments are supported:
 
 #### nat
 
-- `transit_vpc_ext_id`: (Optional) The external identifier of the transit VPC for NAT configuration. Shared by all NAT overlay subnet connections in this configuration.
-- `connections`: (Optional) NAT overlay subnet connections. Provide unique overlay subnet identifiers and floating IP allocations. At least one connection is required.
-- `connections.floating_ip_count`: (Optional) Total floating IPs for this NAT connection. Existing assignments are preserved, and only additional IPs are created. This value cannot be decreased. Default is 0.
-- `connections.overlay_subnet_ext_id`: (Optional) The external identifier of the overlay subnet for this NAT connection. Must belong to the NAT transit VPC and must not be in use by any other tenant.
+- `transit_vpc_ext_id`: (Required) The external identifier of the transit VPC for NAT configuration.
+- `overlay_subnet_ext_id`: (Required) The external identifier of the overlay subnet for NAT configuration.
+- `floating_ip_count`: (Optional) Total floating IPs to allocate. Existing assignments are preserved, and only additional IPs are created. Default is 0.
 
 #### no_nat
 
 - `overlay_subnet_ext_id`: (Optional) The external identifier of the overlay subnet for no-NAT configuration.
 - `transit_vpc_ext_id`: (Optional) The external identifier of the transit VPC for no-NAT configuration.
 - `externally_routable_prefixes`: (Optional) Externally Routable Prefix (ERP) CIDRs for no-NAT mode. The list replaces existing values on each request, and CIDRs are normalized.
-- `externally_routable_prefixes.ipv4`: (Optional) IPv4 subnet configuration.
-- `externally_routable_prefixes.ipv6`: (Optional) IPv6 subnet configuration.
 
 ### projects
 

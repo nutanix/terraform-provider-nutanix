@@ -79,9 +79,6 @@ func flattenTenantsEntities(tenants []import1.Tenant) []map[string]interface{} {
 		if v.CreatedTime != nil {
 			tenant["created_time"] = v.CreatedTime.String()
 		}
-		if v.RetentionExpiryTime != nil {
-			tenant["retention_expiry_time"] = v.RetentionExpiryTime.String()
-		}
 		tenant["state_info"] = flattenTenantStateInfo(v.StateInfo)
 		tenant["tenant_id"] = utils.StringValue(v.TenantId)
 		tenant["links"] = common.FlattenLinks(v.Links)

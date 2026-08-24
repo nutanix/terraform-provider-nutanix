@@ -43,11 +43,9 @@ resource "nutanix_tenant_external_network_connection_v2" "example" {
 
   config {
     nat {
-      transit_vpc_ext_id = var.transit_vpc_ext_id
-      connections {
-        overlay_subnet_ext_id = var.overlay_subnet_ext_id
-        floating_ip_count     = 2
-      }
+      transit_vpc_ext_id    = var.transit_vpc_ext_id
+      overlay_subnet_ext_id = var.overlay_subnet_ext_id
+      floating_ip_count     = 2
     }
   }
 }

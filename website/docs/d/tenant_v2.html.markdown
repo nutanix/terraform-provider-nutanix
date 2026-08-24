@@ -36,7 +36,6 @@ The following attributes are exported:
 - `admin_info`: The local admin details of the tenant.
 - `aggregated_quota`: The aggregated resource quota for the tenant.
 - `created_time`: The timestamp when the tenant was created.
-- `retention_expiry_time`: The timestamp after which a tenant scheduled for deletion is permanently removed.
 - `state_info`: The state details of the tenant.
 - `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
 - `links`: A HATEOAS style link for the response.

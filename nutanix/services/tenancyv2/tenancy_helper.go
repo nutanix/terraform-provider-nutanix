@@ -1,7 +1,6 @@
 package tenancyv2
 
 import (
-	import6 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17/models/common/v1/config"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17/models/tenancy/v4/config"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -305,8 +304,11 @@ func expandNatConfig(input []interface{}) *import1.NatConfig {
 	if v, ok := m["transit_vpc_ext_id"]; ok && v.(string) != "" {
 		nat.TransitVpcExtId = utils.StringPtr(v.(string))
 	}
-	if v, ok := m["connections"]; ok {
-		nat.Connections = expandNatConnectionConfigs(v.([]interface{}))
+	if v, ok := m["floating_ip_count"]; ok {
+		nat.FloatingIpCount = utils.IntPtr(v.(int))
+	}
+	if v, ok := m["overlay_subnet_ext_id"]; ok && v.(string) != "" {
+		nat.OverlaySubnetExtId = utils.StringPtr(v.(string))
 	}
 	return nat
 }
@@ -318,48 +320,11 @@ func flattenNatConfig(nat *import1.NatConfig) []map[string]interface{} {
 	}
 	return []map[string]interface{}{
 		{
-			"transit_vpc_ext_id": utils.StringValue(nat.TransitVpcExtId),
-			"connections":        flattenNatConnectionConfigs(nat.Connections),
+			"transit_vpc_ext_id":    utils.StringValue(nat.TransitVpcExtId),
+			"floating_ip_count":     utils.IntValue(nat.FloatingIpCount),
+			"overlay_subnet_ext_id": utils.StringValue(nat.OverlaySubnetExtId),
 		},
 	}
-}
-
-// expandNatConnectionConfigs builds a list of NatConnectionConfig specs from a nested block list.
-func expandNatConnectionConfigs(input []interface{}) []import1.NatConnectionConfig {
-	if len(input) == 0 {
-		return nil
-	}
-	connections := make([]import1.NatConnectionConfig, 0, len(input))
-	for _, item := range input {
-		if item == nil {
-			continue
-		}
-		m := item.(map[string]interface{})
-		connection := import1.NatConnectionConfig{}
-		if v, ok := m["floating_ip_count"]; ok {
-			connection.FloatingIpCount = utils.IntPtr(v.(int))
-		}
-		if v, ok := m["overlay_subnet_ext_id"]; ok && v.(string) != "" {
-			connection.OverlaySubnetExtId = utils.StringPtr(v.(string))
-		}
-		connections = append(connections, connection)
-	}
-	return connections
-}
-
-// flattenNatConnectionConfigs maps a list of NatConnectionConfig responses to a nested block list.
-func flattenNatConnectionConfigs(connections []import1.NatConnectionConfig) []map[string]interface{} {
-	if len(connections) == 0 {
-		return nil
-	}
-	result := make([]map[string]interface{}, 0, len(connections))
-	for _, connection := range connections {
-		result = append(result, map[string]interface{}{
-			"floating_ip_count":     utils.IntValue(connection.FloatingIpCount),
-			"overlay_subnet_ext_id": utils.StringValue(connection.OverlaySubnetExtId),
-		})
-	}
-	return result
 }
 
 // expandNoNatConfig builds a NoNatConfig spec from a nested block.
@@ -376,7 +341,7 @@ func expandNoNatConfig(input []interface{}) *import1.NoNatConfig {
 		noNat.TransitVpcExtId = utils.StringPtr(v.(string))
 	}
 	if v, ok := m["externally_routable_prefixes"]; ok {
-		noNat.ExternallyRoutablePrefixes = expandIPSubnets(v.([]interface{}))
+		noNat.ExternallyRoutablePrefixes = common.ExpandListOfString(v.([]interface{}))
 	}
 	return noNat
 }
@@ -390,161 +355,7 @@ func flattenNoNatConfig(noNat *import1.NoNatConfig) []map[string]interface{} {
 		{
 			"overlay_subnet_ext_id":        utils.StringValue(noNat.OverlaySubnetExtId),
 			"transit_vpc_ext_id":           utils.StringValue(noNat.TransitVpcExtId),
-			"externally_routable_prefixes": flattenIPSubnets(noNat.ExternallyRoutablePrefixes),
-		},
-	}
-}
-
-// expandIPSubnets builds a list of IPSubnet specs from a nested block list.
-func expandIPSubnets(input []interface{}) []import1.IPSubnet {
-	if len(input) == 0 {
-		return nil
-	}
-	subnets := make([]import1.IPSubnet, 0, len(input))
-	for _, item := range input {
-		if item == nil {
-			continue
-		}
-		m := item.(map[string]interface{})
-		subnet := import1.IPSubnet{}
-		if v, ok := m["ipv4"]; ok {
-			subnet.Ipv4 = expandIPv4Subnet(v.([]interface{}))
-		}
-		if v, ok := m["ipv6"]; ok {
-			subnet.Ipv6 = expandIPv6Subnet(v.([]interface{}))
-		}
-		subnets = append(subnets, subnet)
-	}
-	return subnets
-}
-
-// flattenIPSubnets maps a list of IPSubnet responses to a nested block list.
-func flattenIPSubnets(subnets []import1.IPSubnet) []map[string]interface{} {
-	if len(subnets) == 0 {
-		return nil
-	}
-	result := make([]map[string]interface{}, 0, len(subnets))
-	for _, subnet := range subnets {
-		result = append(result, map[string]interface{}{
-			"ipv4": flattenIPv4Subnet(subnet.Ipv4),
-			"ipv6": flattenIPv6Subnet(subnet.Ipv6),
-		})
-	}
-	return result
-}
-
-// expandIPv4Subnet builds an IPv4Subnet spec from a nested block.
-func expandIPv4Subnet(input []interface{}) *import1.IPv4Subnet {
-	if len(input) == 0 || input[0] == nil {
-		return nil
-	}
-	m := input[0].(map[string]interface{})
-	subnet := &import1.IPv4Subnet{}
-	if v, ok := m["prefix_length"]; ok {
-		subnet.PrefixLength = utils.IntPtr(v.(int))
-	}
-	if v, ok := m["ip"]; ok {
-		subnet.Ip = expandIPv4Address(v.([]interface{}))
-	}
-	return subnet
-}
-
-// flattenIPv4Subnet maps an IPv4Subnet response to a nested block.
-func flattenIPv4Subnet(subnet *import1.IPv4Subnet) []map[string]interface{} {
-	if subnet == nil {
-		return nil
-	}
-	return []map[string]interface{}{
-		{
-			"prefix_length": utils.IntValue(subnet.PrefixLength),
-			"ip":            flattenIPv4Address(subnet.Ip),
-		},
-	}
-}
-
-// expandIPv6Subnet builds an IPv6Subnet spec from a nested block.
-func expandIPv6Subnet(input []interface{}) *import1.IPv6Subnet {
-	if len(input) == 0 || input[0] == nil {
-		return nil
-	}
-	m := input[0].(map[string]interface{})
-	subnet := &import1.IPv6Subnet{}
-	if v, ok := m["prefix_length"]; ok {
-		subnet.PrefixLength = utils.IntPtr(v.(int))
-	}
-	if v, ok := m["ip"]; ok {
-		subnet.Ip = expandIPv6Address(v.([]interface{}))
-	}
-	return subnet
-}
-
-// flattenIPv6Subnet maps an IPv6Subnet response to a nested block.
-func flattenIPv6Subnet(subnet *import1.IPv6Subnet) []map[string]interface{} {
-	if subnet == nil {
-		return nil
-	}
-	return []map[string]interface{}{
-		{
-			"prefix_length": utils.IntValue(subnet.PrefixLength),
-			"ip":            flattenIPv6Address(subnet.Ip),
-		},
-	}
-}
-
-// expandIPv4Address builds an IPv4Address spec from a nested block.
-func expandIPv4Address(input []interface{}) *import6.IPv4Address {
-	if len(input) == 0 || input[0] == nil {
-		return nil
-	}
-	m := input[0].(map[string]interface{})
-	address := &import6.IPv4Address{}
-	if v, ok := m["value"]; ok && v.(string) != "" {
-		address.Value = utils.StringPtr(v.(string))
-	}
-	if v, ok := m["prefix_length"]; ok {
-		address.PrefixLength = utils.IntPtr(v.(int))
-	}
-	return address
-}
-
-// flattenIPv4Address maps an IPv4Address response to a nested block.
-func flattenIPv4Address(address *import6.IPv4Address) []map[string]interface{} {
-	if address == nil {
-		return nil
-	}
-	return []map[string]interface{}{
-		{
-			"value":         utils.StringValue(address.Value),
-			"prefix_length": utils.IntValue(address.PrefixLength),
-		},
-	}
-}
-
-// expandIPv6Address builds an IPv6Address spec from a nested block.
-func expandIPv6Address(input []interface{}) *import6.IPv6Address {
-	if len(input) == 0 || input[0] == nil {
-		return nil
-	}
-	m := input[0].(map[string]interface{})
-	address := &import6.IPv6Address{}
-	if v, ok := m["value"]; ok && v.(string) != "" {
-		address.Value = utils.StringPtr(v.(string))
-	}
-	if v, ok := m["prefix_length"]; ok {
-		address.PrefixLength = utils.IntPtr(v.(int))
-	}
-	return address
-}
-
-// flattenIPv6Address maps an IPv6Address response to a nested block.
-func flattenIPv6Address(address *import6.IPv6Address) []map[string]interface{} {
-	if address == nil {
-		return nil
-	}
-	return []map[string]interface{}{
-		{
-			"value":         utils.StringValue(address.Value),
-			"prefix_length": utils.IntValue(address.PrefixLength),
+			"externally_routable_prefixes": noNat.ExternallyRoutablePrefixes,
 		},
 	}
 }

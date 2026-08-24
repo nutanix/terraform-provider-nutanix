@@ -23,7 +23,6 @@ func ResourceNutanixTenantV2() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: ResourceNutanixTenantV2Create,
 		ReadContext:   ResourceNutanixTenantV2Read,
-		UpdateContext: ResourceNutanixTenantV2Update,
 		DeleteContext: ResourceNutanixTenantV2Delete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -35,12 +34,13 @@ func ResourceNutanixTenantV2() *schema.Resource {
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
+				ForceNew: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				Computed: true,
 			},
 			"url": {
@@ -63,35 +63,37 @@ func ResourceNutanixTenantV2() *schema.Resource {
 			},
 			"admin_info": {
 				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
+				Required: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"username": {
 							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Required: true,
+							ForceNew: true,
 						},
 						"first_name": {
 							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Required: true,
+							ForceNew: true,
 						},
 						"last_name": {
 							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Required: true,
+							ForceNew: true,
 						},
 						"email": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 							Computed: true,
 						},
 						"password": {
 							Type:      schema.TypeString,
-							Optional:  true,
+							Required:  true,
 							Sensitive: true,
+							ForceNew:  true,
 						},
 					},
 				},
@@ -130,10 +132,6 @@ func ResourceNutanixTenantV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"retention_expiry_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"state_info": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -166,20 +164,8 @@ func ResourceNutanixTenantV2Create(ctx context.Context, d *schema.ResourceData, 
 	if v, ok := d.GetOk("description"); ok {
 		body.Description = utils.StringPtr(v.(string))
 	}
-	if v, ok := d.GetOk("url"); ok {
-		body.Url = utils.StringPtr(v.(string))
-	}
-	if v, ok := d.GetOk("added_by"); ok {
-		body.AddedBy = utils.StringPtr(v.(string))
-	}
-	if v, ok := d.GetOk("domains"); ok {
-		body.Domains = common.ExpandListOfString(v.([]interface{}))
-	}
 	if v, ok := d.GetOk("admin_info"); ok {
 		body.AdminInfo = expandLocalUserInfo(v.([]interface{}))
-	}
-	if v, ok := d.GetOk("aggregated_quota"); ok {
-		body.AggregatedQuota = expandQuota(v.([]interface{}))
 	}
 
 	createTenantRequest := import4.CreateTenantRequest{
@@ -265,11 +251,6 @@ func ResourceNutanixTenantV2Read(ctx context.Context, d *schema.ResourceData, me
 			return diag.FromErr(err)
 		}
 	}
-	if getResp.RetentionExpiryTime != nil {
-		if err := d.Set("retention_expiry_time", getResp.RetentionExpiryTime.String()); err != nil {
-			return diag.FromErr(err)
-		}
-	}
 	if err := d.Set("state_info", flattenTenantStateInfo(getResp.StateInfo)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -298,76 +279,6 @@ func ResourceNutanixTenantV2Read(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return nil
-}
-
-// ResourceNutanixTenantV2Update updates a tenant using a read-modify-write flow.
-func ResourceNutanixTenantV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).ServiceProviderManagementAPI
-
-	getTenantRequest := import4.GetTenantByIdRequest{
-		ExtId: utils.StringPtr(d.Id()),
-	}
-	resp, err := conn.TenantManagementAPIInstance.GetTenantById(ctx, &getTenantRequest)
-	if err != nil {
-		return diag.Errorf("error while fetching tenant: %v", err)
-	}
-
-	updateSpec := resp.Data.GetValue().(import1.Tenant)
-
-	if d.HasChange("name") {
-		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
-	}
-	if d.HasChange("description") {
-		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
-	}
-	if d.HasChange("url") {
-		updateSpec.Url = utils.StringPtr(d.Get("url").(string))
-	}
-	if d.HasChange("added_by") {
-		updateSpec.AddedBy = utils.StringPtr(d.Get("added_by").(string))
-	}
-	if d.HasChange("domains") {
-		updateSpec.Domains = common.ExpandListOfString(d.Get("domains").([]interface{}))
-	}
-	if d.HasChange("admin_info") {
-		updateSpec.AdminInfo = expandLocalUserInfo(d.Get("admin_info").([]interface{}))
-	}
-	if d.HasChange("aggregated_quota") {
-		updateSpec.AggregatedQuota = expandQuota(d.Get("aggregated_quota").([]interface{}))
-	}
-
-	// Extract the E-Tag from the read response for optimistic concurrency.
-	etagValue := conn.TenantManagementAPIInstance.ApiClient.GetEtag(resp)
-	args := make(map[string]interface{})
-	args["If-Match"] = utils.StringPtr(etagValue)
-
-	updateTenantRequest := import4.UpdateTenantByIdRequest{
-		ExtId: utils.StringPtr(d.Id()),
-		Body:  &updateSpec,
-	}
-	aJSON, _ := json.MarshalIndent(updateTenantRequest, "", "  ")
-	log.Printf("[DEBUG] Tenant update payload: %s", string(aJSON))
-
-	updateResp, err := conn.TenantManagementAPIInstance.UpdateTenantById(ctx, &updateTenantRequest, args)
-	if err != nil {
-		return diag.Errorf("error while updating tenant: %v", err)
-	}
-
-	taskRef := updateResp.Data.GetValue().(import3.TaskReference)
-	taskUUID := taskRef.ExtId
-
-	taskconn := meta.(*conns.Client).PrismAPI
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
-	}
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for tenant (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
-	}
-
-	return ResourceNutanixTenantV2Read(ctx, d, meta)
 }
 
 // ResourceNutanixTenantV2Delete deletes a tenant and polls the delete task.

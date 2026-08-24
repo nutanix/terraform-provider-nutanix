@@ -67,7 +67,6 @@ The following attributes are exported:
 
 - `ext_id`: A globally unique identifier of an instance that is suitable for external consumption.
 - `created_time`: The timestamp when the tenant was created.
-- `retention_expiry_time`: The timestamp after which a tenant scheduled for deletion is permanently removed. Populated only when the tenant is in the PENDING_DELETION state.
 - `state_info`: The state details of the tenant.
 - `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
 - `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.

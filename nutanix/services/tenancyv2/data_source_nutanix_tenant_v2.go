@@ -77,10 +77,6 @@ func DatasourceNutanixTenantV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"retention_expiry_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"state_info": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -169,11 +165,6 @@ func DatasourceNutanixTenantV2Read(ctx context.Context, d *schema.ResourceData, 
 	}
 	if getResp.CreatedTime != nil {
 		if err := d.Set("created_time", getResp.CreatedTime.String()); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-	if getResp.RetentionExpiryTime != nil {
-		if err := d.Set("retention_expiry_time", getResp.RetentionExpiryTime.String()); err != nil {
 			return diag.FromErr(err)
 		}
 	}

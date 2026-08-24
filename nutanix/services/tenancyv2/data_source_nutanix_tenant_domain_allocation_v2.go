@@ -150,21 +150,13 @@ func externalNetworkConnConfigDataSourceElem() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"connections": {
-							Type:     schema.TypeList,
+						"floating_ip_count": {
+							Type:     schema.TypeInt,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"floating_ip_count": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"overlay_subnet_ext_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
+						},
+						"overlay_subnet_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -185,43 +177,8 @@ func externalNetworkConnConfigDataSourceElem() *schema.Resource {
 						"externally_routable_prefixes": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ipv4": ipSubnetDataSourceSchema(),
-									"ipv6": ipSubnetDataSourceSchema(),
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-// ipSubnetDataSourceSchema returns the fully-computed datasource schema for an IP subnet block.
-func ipSubnetDataSourceSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Computed: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"prefix_length": {
-					Type:     schema.TypeInt,
-					Computed: true,
-				},
-				"ip": {
-					Type:     schema.TypeList,
-					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"value": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"prefix_length": {
-								Type:     schema.TypeInt,
-								Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 					},

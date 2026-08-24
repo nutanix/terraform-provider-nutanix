@@ -21,11 +21,9 @@ resource "nutanix_tenant_external_network_connection_v2" "example" {
 
   config {
     nat {
-      transit_vpc_ext_id = "22222222-2222-2222-2222-222222222222"
-      connections {
-        overlay_subnet_ext_id = "33333333-3333-3333-3333-333333333333"
-        floating_ip_count     = 2
-      }
+      transit_vpc_ext_id    = "22222222-2222-2222-2222-222222222222"
+      overlay_subnet_ext_id = "33333333-3333-3333-3333-333333333333"
+      floating_ip_count     = 2
     }
   }
 }
@@ -46,10 +44,9 @@ The following arguments are supported:
 
 #### nat
 
-- `transit_vpc_ext_id`: (Optional) The external identifier of the transit VPC for NAT configuration. Shared by all NAT overlay subnet connections in this configuration.
-- `connections`: (Optional) NAT overlay subnet connections. Provide unique overlay subnet identifiers and floating IP allocations. At least one connection is required.
-- `connections.floating_ip_count`: (Optional) Total floating IPs for this NAT connection. Existing assignments are preserved, and only additional IPs are created. This value cannot be decreased. Default is 0.
-- `connections.overlay_subnet_ext_id`: (Optional) The external identifier of the overlay subnet for this NAT connection. Must belong to the NAT transit VPC and must not be in use by any other tenant.
+- `transit_vpc_ext_id`: (Required) The external identifier of the transit VPC for NAT configuration.
+- `overlay_subnet_ext_id`: (Required) The external identifier of the overlay subnet for NAT configuration.
+- `floating_ip_count`: (Optional) Total floating IPs to allocate. Existing assignments are preserved, and only additional IPs are created. Default is 0.
 
 #### no_nat
 

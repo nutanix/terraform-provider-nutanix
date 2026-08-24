@@ -143,20 +143,18 @@ func ResourceNutanixTenantExternalNetworkConnectionV2Update(ctx context.Context,
 		return diag.Errorf("error while fetching tenant external network connection: %v", err)
 	}
 
-	body := import1.ExternalNetworkConnection{}
+	var body *import1.ExternalNetworkConnConfig
 	switch data := readResp.Data.GetValue().(type) {
 	case import1.ExternalNetworkConnectionProjection:
-		body.ExtId = data.ExtId
-		body.TenantId = data.TenantId
-		body.Config = data.Config
+		body = data.Config
 	case import1.ExternalNetworkConnection:
-		body.ExtId = data.ExtId
-		body.TenantId = data.TenantId
-		body.Config = data.Config
+		body = data.Config
+	default:
+		return diag.Errorf("unexpected response type while fetching tenant external network connection")
 	}
 
 	if v, ok := d.GetOk("config"); ok {
-		body.Config = expandExternalNetworkConnConfig(v.([]interface{}))
+		body = expandExternalNetworkConnConfig(v.([]interface{}))
 	}
 
 	etagValue := conn.TenantManagementAPIInstance.ApiClient.GetEtag(readResp)
@@ -166,7 +164,7 @@ func ResourceNutanixTenantExternalNetworkConnectionV2Update(ctx context.Context,
 	updateRequest := import4.UpdateTenantExternalNetworkConnectionRequest{
 		TenantExtId:           utils.StringPtr(tenantExtID),
 		DomainAllocationExtId: utils.StringPtr(domainAllocationExtID),
-		Body:                  &body,
+		Body:                  body,
 	}
 	aJSON, _ := json.MarshalIndent(updateRequest, "", "  ")
 	log.Printf("[DEBUG] Tenant external network connection update payload: %s", string(aJSON))
