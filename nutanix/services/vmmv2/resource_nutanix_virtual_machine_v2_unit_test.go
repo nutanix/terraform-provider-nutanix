@@ -1,3 +1,10 @@
+// Unit tests for the routable-IP wait added for issue #871.
+//
+// These live in package vmmv2 (not vmmv2_test, like the acceptance tests in
+// resource_nutanix_virtual_machine_v2_test.go) because they exercise the unexported
+// isAPIPA/getFirstIPAddress helpers directly, which an external test package cannot reach.
+// The acceptance coverage for the same feature is
+// TestAccV2NutanixVmsResource_WaitForRoutableIP in resource_nutanix_virtual_machine_v2_test.go.
 package vmmv2
 
 import (
@@ -56,5 +63,18 @@ func TestGetFirstIPAddress(t *testing.T) {
 		if got := getFirstIPAddress(tc.nic, tc.routable); got != tc.want {
 			t.Errorf("%s: getFirstIPAddress(routable=%v) = %q, want %q", tc.name, tc.routable, got, tc.want)
 		}
+	}
+}
+
+// TestWaitForIPSchemaDefaults pins the schema defaults of the two new arguments to the
+// package constants, so a future change to either has to be deliberate.
+func TestWaitForIPSchemaDefaults(t *testing.T) {
+	s := ResourceNutanixVirtualMachineV2().Schema
+
+	if got := s["wait_for_ip_timeout"].Default; got != defaultWaitForIPTimeoutMinutes {
+		t.Errorf("wait_for_ip_timeout default = %v, want %v", got, defaultWaitForIPTimeoutMinutes)
+	}
+	if got := s["wait_for_ip_routable"].Default; got != defaultWaitForIPRoutable {
+		t.Errorf("wait_for_ip_routable default = %v, want %v", got, defaultWaitForIPRoutable)
 	}
 }

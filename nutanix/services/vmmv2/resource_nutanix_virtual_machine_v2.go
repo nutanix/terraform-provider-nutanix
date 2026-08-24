@@ -28,6 +28,15 @@ import (
 const (
 	timeout = 5 * time.Minute
 	delay   = 5 * time.Second
+
+	// defaultWaitForIPTimeoutMinutes is the default for the wait_for_ip_timeout argument,
+	// in minutes. It preserves the 5 minute IP wait this resource has always used (see
+	// timeout above), and matches the vSphere provider's wait_for_guest_net_timeout.
+	defaultWaitForIPTimeoutMinutes = 5
+
+	// defaultWaitForIPRoutable is the default for the wait_for_ip_routable argument:
+	// skip APIPA/link-local addresses while waiting for the guest to report an IP.
+	defaultWaitForIPRoutable = true
 )
 
 func ResourceNutanixVirtualMachineV2() *schema.Resource {
@@ -619,13 +628,13 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 			"wait_for_ip_timeout": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     5,
+				Default:     defaultWaitForIPTimeoutMinutes,
 				Description: "Minutes to wait after power-on for the VM to report a usable IPv4 address. A value less than 1 disables the wait. Modeled on the vSphere provider's wait_for_guest_net_timeout.",
 			},
 			"wait_for_ip_routable": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     true,
+				Default:     defaultWaitForIPRoutable,
 				Description: "When waiting for an IP (see wait_for_ip_timeout), require a routable address, ignoring APIPA/link-local (169.254.0.0/16) addresses reported transiently before DHCP completes. Set false to accept the first learned address, including APIPA.",
 			},
 			"vtpm_config": {
@@ -3407,12 +3416,14 @@ func waitForIPRefreshFunc(ctx context.Context, client *vmm.Client, vmUUID string
 					// Check for DHCP learned IPs
 					if nic.NetworkInfo.Ipv4Info != nil {
 						for _, ip := range nic.NetworkInfo.Ipv4Info.LearnedIpAddresses {
-							if ip.Value != nil && (!routable || !isAPIPA(*ip.Value)) {
-								return resp, "AVAILABLE", nil
+							if ip.Value == nil {
+								continue
 							}
-							if ip.Value != nil && routable && isAPIPA(*ip.Value) {
+							if routable && isAPIPA(*ip.Value) {
 								log.Printf("[DEBUG] VM %s: ignoring APIPA/link-local %q; waiting for a routable IP", vmUUID, *ip.Value)
+								continue
 							}
+							return resp, "AVAILABLE", nil
 						}
 					}
 					// Check for statically configured IPs
