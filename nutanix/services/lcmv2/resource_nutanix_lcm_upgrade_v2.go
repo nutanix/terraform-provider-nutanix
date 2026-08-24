@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -25,6 +26,11 @@ func ResourceLcmUpgradeV2() *schema.Resource {
 		ReadContext:   ResourceLcmUpgradeV2Read,
 		UpdateContext: ResourceLcmUpgradeV2Update,
 		DeleteContext: ResourceLcmUpgradeV2Delete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(60 * time.Minute),
+			Update: schema.DefaultTimeout(60 * time.Minute),
+			Delete: schema.DefaultTimeout(60 * time.Minute),
+		},
 		Schema: map[string]*schema.Schema{
 			"x_cluster_id": {
 				Type:     schema.TypeString,

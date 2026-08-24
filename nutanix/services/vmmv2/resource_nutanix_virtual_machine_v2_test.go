@@ -2202,7 +2202,7 @@ resource "nutanix_virtual_machine_v2" "test"{
 			install_type = "PREPARED"
 				sysprep_script {
 					unattend_xml {
-						value = file("%[4]s") # unattend_xml file value, value is encoded in base64
+						value = base64encode(file("%[4]s")) # unattend_xml file value, value is encoded in base64
 					}
 			}
 		}
