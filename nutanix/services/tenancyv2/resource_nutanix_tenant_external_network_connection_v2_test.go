@@ -85,14 +85,7 @@ resource "nutanix_tenant_external_network_connection_v2" "test" {
     no_nat {
       transit_vpc_ext_id    = "%[1]s"
       overlay_subnet_ext_id = "%[2]s"
-      externally_routable_prefixes {
-        ipv4 {
-          ip {
-            value = "10.0.0.0"
-          }
-          prefix_length = 24
-        }
-      }
+      externally_routable_prefixes = ["10.0.0.0/24"]
     }
   }
 }

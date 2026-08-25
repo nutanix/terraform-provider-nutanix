@@ -454,6 +454,7 @@ func Provider() *schema.Provider {
 			// tenancy
 			"nutanix_tenant_v2":                             tenancyv2.DatasourceNutanixTenantV2(),
 			"nutanix_tenants_v2":                            tenancyv2.DatasourceNutanixTenantsV2(),
+			"nutanix_domains_v2":                            tenancyv2.DatasourceNutanixDomainsV2(),
 			"nutanix_tenant_domain_allocation_v2":           tenancyv2.DatasourceNutanixTenantDomainAllocationV2(),
 			"nutanix_tenant_domain_allocations_v2":          tenancyv2.DatasourceNutanixTenantDomainAllocationsV2(),
 			"nutanix_tenant_external_network_connection_v2": tenancyv2.DatasourceNutanixTenantExternalNetworkConnectionV2(),
@@ -609,11 +610,9 @@ func Provider() *schema.Provider {
 			"nutanix_network_security_policy_export_v2":            microsegv2.ResourceNutanixNetworkSecurityPolicyExportV2(),
 			// tenancy
 			"nutanix_tenant_v2":                             tenancyv2.ResourceNutanixTenantV2(),
+			"nutanix_add_domain_v2":                         tenancyv2.ResourceNutanixAddDomainV2(),
 			"nutanix_tenant_domain_allocation_v2":           tenancyv2.ResourceNutanixTenantDomainAllocationV2(),
 			"nutanix_tenant_external_network_connection_v2": tenancyv2.ResourceNutanixTenantExternalNetworkConnectionV2(),
-			"nutanix_suspend_tenant_v2":                     tenancyv2.ResourceNutanixSuspendTenantV2(),
-			"nutanix_restore_tenant_v2":                     tenancyv2.ResourceNutanixRestoreTenantV2(),
-			"nutanix_scheduled_delete_tenant_v2":            tenancyv2.ResourceNutanixScheduledDeleteTenantV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
