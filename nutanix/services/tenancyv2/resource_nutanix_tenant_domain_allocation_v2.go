@@ -40,13 +40,10 @@ func ResourceNutanixTenantDomainAllocationV2() *schema.Resource {
 			},
 			"domain_ext_id": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Required: true,
 			},
 			"external_network_config": {
 				Type:     schema.TypeList,
-				Optional: true,
 				Computed: true,
 				MaxItems: 1,
 				Elem:     externalNetworkConnectionResourceElem(),
@@ -212,7 +209,6 @@ func externalNetworkConnConfigResourceElem() *schema.Resource {
 						"transit_vpc_ext_id": {
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 						"floating_ip_count": {
 							Type:     schema.TypeInt,
@@ -222,7 +218,6 @@ func externalNetworkConnConfigResourceElem() *schema.Resource {
 						"overlay_subnet_ext_id": {
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 					},
 				},
@@ -236,12 +231,10 @@ func externalNetworkConnConfigResourceElem() *schema.Resource {
 						"overlay_subnet_ext_id": {
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 						"transit_vpc_ext_id": {
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 						"externally_routable_prefixes": {
 							Type:     schema.TypeList,
@@ -381,6 +374,9 @@ func ResourceNutanixTenantDomainAllocationV2Update(ctx context.Context, d *schem
 	}
 	if d.HasChange("projects") {
 		updateSpec.Projects = expandProjects(d.Get("projects").([]interface{}))
+	}
+	if d.HasChange("domain_ext_id") {
+		updateSpec.DomainExtId = utils.StringPtr(d.Get("domain_ext_id").(string))
 	}
 
 	etagValue := conn.TenantManagementAPIInstance.ApiClient.GetEtag(resp)

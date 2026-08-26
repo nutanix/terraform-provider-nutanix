@@ -18,6 +18,22 @@ func DatasourceNutanixTenantsV2() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: DatasourceNutanixTenantsV2Read,
 		Schema: map[string]*schema.Schema{
+			"filter": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"page": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"limit": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"order_by": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"tenants": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -32,6 +48,18 @@ func DatasourceNutanixTenantsV2Read(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.Client).ServiceProviderManagementAPI
 
 	listTenantsRequest := import4.ListTenantsRequest{}
+	if v, ok := d.GetOk("filter"); ok {
+		listTenantsRequest.Filter_ = utils.StringPtr(v.(string))
+	}
+	if v, ok := d.GetOk("page"); ok {
+		listTenantsRequest.Page_ = utils.IntPtr(v.(int))
+	}
+	if v, ok := d.GetOk("limit"); ok {
+		listTenantsRequest.Limit_ = utils.IntPtr(v.(int))
+	}
+	if v, ok := d.GetOk("order_by"); ok {
+		listTenantsRequest.Orderby_ = utils.StringPtr(v.(string))
+	}
 
 	resp, err := conn.TenantManagementAPIInstance.ListTenants(ctx, &listTenantsRequest)
 	if err != nil {

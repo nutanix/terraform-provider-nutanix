@@ -22,6 +22,10 @@ func DatasourceNutanixTenantDomainAllocationsV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"expand":{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"domain_allocations": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -36,10 +40,13 @@ func DatasourceNutanixTenantDomainAllocationsV2Read(ctx context.Context, d *sche
 	conn := meta.(*conns.Client).ServiceProviderManagementAPI
 
 	tenantExtID := d.Get("tenant_ext_id").(string)
+
 	listRequest := import4.ListTenantDomainAllocationsRequest{
 		TenantExtId: utils.StringPtr(tenantExtID),
 	}
-
+	if v, ok := d.GetOk("expand"); ok {
+		listRequest.Expand_ = utils.StringPtr(v.(string))
+	}
 	resp, err := conn.TenantManagementAPIInstance.ListTenantDomainAllocations(ctx, &listRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching tenant domain allocations: %v", err)
