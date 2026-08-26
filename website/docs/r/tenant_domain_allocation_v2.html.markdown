@@ -16,9 +16,7 @@ Creates a new domain allocation for a tenant.
 resource "nutanix_tenant_domain_allocation_v2" "example" {
   tenant_ext_id = "00000000-0000-0000-0000-000000000000"
   domain_ext_id = "11111111-1111-1111-1111-111111111111"
-
   projects {
-    name = "example-project"
     quota {
       vcpu    = 4
       memory  = 8589934592

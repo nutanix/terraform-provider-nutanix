@@ -16,20 +16,12 @@ Creates a new tenant.
 resource "nutanix_tenant_v2" "example" {
   name        = "example-tenant"
   description = "Tenant created via Terraform"
-  url         = "https://example.com/example-tenant"
-
   admin_info {
     username   = "tenant-admin"
     first_name = "First"
     last_name  = "Last"
     email      = "tenant-admin@example.com"
     password   = "Nutanix.123"
-  }
-
-  aggregated_quota {
-    vcpu    = 8
-    memory  = 17179869184
-    storage = 107374182400
   }
 }
 ```

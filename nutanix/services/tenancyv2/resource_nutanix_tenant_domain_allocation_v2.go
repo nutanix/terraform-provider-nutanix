@@ -61,7 +61,6 @@ func ResourceNutanixTenantDomainAllocationV2() *schema.Resource {
 						},
 						"name": {
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
 						},
 						"quota": {
@@ -103,7 +102,6 @@ func ResourceNutanixTenantDomainAllocationV2() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"uuid": {
 										Type:     schema.TypeString,
-										Optional: true,
 										Computed: true,
 									},
 									"placement_targets": {
