@@ -88,7 +88,7 @@ func flattenDomains(domains []import1.Domain) []map[string]interface{} {
 	for i, domain := range domains {
 		result[i] = map[string]interface{}{
 			"domain_ext_id": utils.StringValue(domain.DomainExtId),
-			"ext_id":        utils.StringValue(domain.ExtId),
+			"ext_id":        utils.StringValue(domain.DomainExtId), // ext id is return as null, inorder to make it compatible with the existing code, we are using domain_ext_id as ext_id
 			"tenant_id":     utils.StringValue(domain.TenantId),
 			"links":         common.FlattenLinks(domain.Links),
 		}

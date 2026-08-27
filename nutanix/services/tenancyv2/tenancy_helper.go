@@ -54,9 +54,6 @@ func expandQuota(input []interface{}) *import1.Quota {
 	}
 	m := input[0].(map[string]interface{})
 	quota := &import1.Quota{}
-	if v, ok := m["ext_id"]; ok && v.(string) != "" {
-		quota.ExtId = utils.StringPtr(v.(string))
-	}
 	if v, ok := m["memory"]; ok {
 		quota.Memory = utils.Int64Ptr(int64(v.(int)))
 	}
@@ -132,9 +129,6 @@ func expandProjects(input []interface{}) []import1.Project {
 		}
 		m := item.(map[string]interface{})
 		project := import1.Project{}
-		if v, ok := m["ext_id"]; ok && v.(string) != "" {
-			project.ExtId = utils.StringPtr(v.(string))
-		}
 		if v, ok := m["name"]; ok && v.(string) != "" {
 			project.Name = utils.StringPtr(v.(string))
 		}
@@ -177,9 +171,6 @@ func expandResourceGroup(input []interface{}) *import1.ResourceGroup {
 	}
 	m := input[0].(map[string]interface{})
 	resourceGroup := &import1.ResourceGroup{}
-	if v, ok := m["uuid"]; ok && v.(string) != "" {
-		resourceGroup.Uuid = utils.StringPtr(v.(string))
-	}
 	if v, ok := m["placement_targets"]; ok {
 		resourceGroup.PlacementTargets = expandPlacementTargets(v.([]interface{}))
 	}

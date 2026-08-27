@@ -457,7 +457,6 @@ func Provider() *schema.Provider {
 			"nutanix_domains_v2":                            tenancyv2.DatasourceNutanixDomainsV2(),
 			"nutanix_tenant_domain_allocation_v2":           tenancyv2.DatasourceNutanixTenantDomainAllocationV2(),
 			"nutanix_tenant_domain_allocations_v2":          tenancyv2.DatasourceNutanixTenantDomainAllocationsV2(),
-			"nutanix_tenant_external_network_connection_v2": tenancyv2.DatasourceNutanixTenantExternalNetworkConnectionV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                              vmm.ResourceNutanixVirtualMachine(),
@@ -612,7 +611,6 @@ func Provider() *schema.Provider {
 			"nutanix_tenant_v2":                             tenancyv2.ResourceNutanixTenantV2(),
 			"nutanix_add_domain_v2":                         tenancyv2.ResourceNutanixAddDomainV2(),
 			"nutanix_tenant_domain_allocation_v2":           tenancyv2.ResourceNutanixTenantDomainAllocationV2(),
-			"nutanix_tenant_external_network_connection_v2": tenancyv2.ResourceNutanixTenantExternalNetworkConnectionV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

@@ -1,15 +1,15 @@
-variable "nutanix_username" {
+variable "nutanix_central_username" {
   type        = string
   description = "Username for Nutanix Central."
 }
 
-variable "nutanix_password" {
+variable "nutanix_central_password" {
   type        = string
   description = "Password for Nutanix Central."
   sensitive   = true
 }
 
-variable "nutanix_endpoint" {
+variable "nutanix_central_endpoint" {
   type        = string
   description = "Nutanix Central endpoint."
 }

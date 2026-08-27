@@ -3,13 +3,13 @@ package tenancyv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
-	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
 	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17/models/prism/v4/config"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17/models/tenancy/v4/config"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17/models/tenancy/v4/request/tenants"
@@ -44,8 +44,8 @@ func ResourceNutanixTenantDomainAllocationV2() *schema.Resource {
 			},
 			"external_network_config": {
 				Type:     schema.TypeList,
+				Optional: true,
 				Computed: true,
-				MaxItems: 1,
 				Elem:     externalNetworkConnectionResourceElem(),
 			},
 			"projects": {
@@ -253,7 +253,7 @@ func externalNetworkConnConfigResourceElem() *schema.Resource {
 func ResourceNutanixTenantDomainAllocationV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).ServiceProviderManagementAPI
 
-	tenantExtID := d.Get("tenant_ext_id").(string)
+	tenantExtID := utils.StringPtr(d.Get("tenant_ext_id").(string))
 
 	body := import1.DomainAllocation{}
 	if v, ok := d.GetOk("domain_ext_id"); ok {
@@ -267,7 +267,7 @@ func ResourceNutanixTenantDomainAllocationV2Create(ctx context.Context, d *schem
 	}
 
 	createRequest := import4.CreateTenantDomainAllocationRequest{
-		TenantExtId: utils.StringPtr(tenantExtID),
+		TenantExtId: tenantExtID,
 		Body:        &body,
 	}
 	aJSON, _ := json.MarshalIndent(createRequest, "", "  ")
@@ -279,33 +279,15 @@ func ResourceNutanixTenantDomainAllocationV2Create(ctx context.Context, d *schem
 	}
 
 	taskRef := resp.Data.GetValue().(import3.TaskReference)
-	taskUUID := taskRef.ExtId
+	d.SetId(utils.StringValue(taskRef.ExtId))
+	ResourceNutanixTenantDomainAllocationV2Read(ctx, d, meta)
 
-	taskconn := meta.(*conns.Client).PrismAPI
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+	// Update the domain allocation with the external network config
+	if v, ok := d.GetOk("external_network_config"); ok {
+		if err := updateTenantDomainAllocationExternalNetworkConnection(ctx, d, meta, utils.StringValue(tenantExtID), v.([]interface{}), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for tenant domain allocation (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
-	}
-
-	getTaskByIDRequest := import5.GetTaskByIdRequest{
-		ExtId: utils.StringPtr(*taskUUID),
-	}
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIDRequest)
-	if err != nil {
-		return diag.Errorf("error while fetching tenant domain allocation create task: %v", err)
-	}
-	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
-
-	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeTenantDomainAllocation, "TenantDomainAllocation")
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	d.SetId(utils.StringValue(uuid))
 
 	return ResourceNutanixTenantDomainAllocationV2Read(ctx, d, meta)
 }
@@ -366,15 +348,16 @@ func ResourceNutanixTenantDomainAllocationV2Update(ctx context.Context, d *schem
 	}
 
 	updateSpec := resp.Data.GetValue().(import1.DomainAllocation)
-
-	if d.HasChange("external_network_config") {
-		updateSpec.ExternalNetworkConfig = expandExternalNetworkConnection(d.Get("external_network_config").([]interface{}))
-	}
+	body := import1.DomainAllocation{}
 	if d.HasChange("projects") {
-		updateSpec.Projects = expandProjects(d.Get("projects").([]interface{}))
+		body.Projects = expandProjects(d.Get("projects").([]interface{}))
+	} else {
+		body.Projects = updateSpec.Projects
 	}
 	if d.HasChange("domain_ext_id") {
-		updateSpec.DomainExtId = utils.StringPtr(d.Get("domain_ext_id").(string))
+		body.DomainExtId = utils.StringPtr(d.Get("domain_ext_id").(string))
+	} else {
+		body.DomainExtId = updateSpec.DomainExtId
 	}
 
 	etagValue := conn.TenantManagementAPIInstance.ApiClient.GetEtag(resp)
@@ -384,30 +367,23 @@ func ResourceNutanixTenantDomainAllocationV2Update(ctx context.Context, d *schem
 	updateRequest := import4.UpdateTenantDomainAllocationByIdRequest{
 		TenantExtId: utils.StringPtr(tenantExtID),
 		ExtId:       utils.StringPtr(d.Id()),
-		Body:        &updateSpec,
+		Body:        &body,
 	}
 	aJSON, _ := json.MarshalIndent(updateRequest, "", "  ")
 	log.Printf("[DEBUG] Tenant domain allocation update payload: %s", string(aJSON))
 
-	updateResp, err := conn.TenantManagementAPIInstance.UpdateTenantDomainAllocationById(ctx, &updateRequest, args)
+	_, err = conn.TenantManagementAPIInstance.UpdateTenantDomainAllocationById(ctx, &updateRequest, args)
 	if err != nil {
 		return diag.Errorf("error while updating tenant domain allocation: %v", err)
 	}
+	ResourceNutanixTenantDomainAllocationV2Read(ctx, d, meta)
 
-	taskRef := updateResp.Data.GetValue().(import3.TaskReference)
-	taskUUID := taskRef.ExtId
-
-	taskconn := meta.(*conns.Client).PrismAPI
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
+	// Update the domain allocation with the external network config, if it has changed
+	if d.HasChange("external_network_config") {
+		if err := updateTenantDomainAllocationExternalNetworkConnection(ctx, d, meta, tenantExtID, d.Get("external_network_config").([]interface{}), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for tenant domain allocation (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
-	}
-
 	return ResourceNutanixTenantDomainAllocationV2Read(ctx, d, meta)
 }
 
@@ -416,28 +392,129 @@ func ResourceNutanixTenantDomainAllocationV2Delete(ctx context.Context, d *schem
 	conn := meta.(*conns.Client).ServiceProviderManagementAPI
 
 	tenantExtID := d.Get("tenant_ext_id").(string)
+	getRequest := import4.GetTenantDomainAllocationByIdRequest{
+		TenantExtId: utils.StringPtr(tenantExtID),
+		ExtId:       utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.TenantManagementAPIInstance.GetTenantDomainAllocationById(ctx, &getRequest)
+	if err != nil {
+		return diag.Errorf("error while fetching tenant domain allocation: %v", err)
+	}
+	etagValue := conn.TenantManagementAPIInstance.ApiClient.GetEtag(readResp)
+	args := make(map[string]interface{})
+	args["If-Match"] = utils.StringPtr(etagValue)
+
 	deleteRequest := import4.DeleteTenantDomainAllocationByIdRequest{
 		TenantExtId: utils.StringPtr(tenantExtID),
 		ExtId:       utils.StringPtr(d.Id()),
 	}
-	resp, err := conn.TenantManagementAPIInstance.DeleteTenantDomainAllocationById(ctx, &deleteRequest)
+	_, err = conn.TenantManagementAPIInstance.DeleteTenantDomainAllocationById(ctx, &deleteRequest, args)
 	if err != nil {
 		return diag.Errorf("error while deleting tenant domain allocation: %v", err)
 	}
 
-	taskRef := resp.Data.GetValue().(import3.TaskReference)
-	taskUUID := taskRef.ExtId
+	timeout := time.NewTimer(3 * time.Minute)
+	ticker := time.NewTicker(3 * time.Second)
+	defer timeout.Stop()
+	defer ticker.Stop()
 
-	taskconn := meta.(*conns.Client).PrismAPI
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutDelete),
+	for {
+		getRequest := import4.GetTenantDomainAllocationByIdRequest{
+			TenantExtId: utils.StringPtr(tenantExtID),
+			ExtId:       utils.StringPtr(d.Id()),
+		}
+		readResp, err := conn.TenantManagementAPIInstance.GetTenantDomainAllocationById(ctx, &getRequest)
+		if err != nil {
+			return diag.Errorf("error while fetching tenant domain allocation: %v", err)
+		}
+		if readResp == nil || readResp.Data == nil {
+			return diag.Errorf("error while fetching tenant domain allocation deletion state: API returned an empty response")
+		}
+
+		domainAllocation, ok := readResp.Data.GetValue().(import1.DomainAllocation)
+		if !ok {
+			return diag.Errorf("error while fetching tenant domain allocation deletion state: unexpected response type %T", readResp.Data.GetValue())
+		}
+		if domainAllocation.StateInfo != nil &&
+			domainAllocation.StateInfo.State != nil &&
+			domainAllocation.StateInfo.State.GetName() == "DELETED" {
+			d.SetId("")
+			return nil
+		}
+
+		select {
+		case <-ctx.Done():
+			return diag.FromErr(ctx.Err())
+		case <-timeout.C:
+			return diag.Errorf("timed out waiting up to 3 minutes for tenant domain allocation %q to reach DELETED state", d.Id())
+		case <-ticker.C:
+		}
 	}
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for tenant domain allocation (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
+}
+
+func updateTenantDomainAllocationExternalNetworkConnection(
+	ctx context.Context,
+	d *schema.ResourceData,
+	meta interface{},
+	tenantExtID string,
+	externalNetworkConfig []interface{},
+	timeout time.Duration,
+) error {
+	connection := expandExternalNetworkConnection(externalNetworkConfig)
+	if connection == nil || connection.Config == nil {
+		return fmt.Errorf("external_network_config.config must define a NAT or no-NAT configuration")
 	}
 
+	conn := meta.(*conns.Client).ServiceProviderManagementAPI
+	getRequest := import4.GetTenantExternalNetworkConnectionRequest{
+		TenantExtId:           utils.StringPtr(tenantExtID),
+		DomainAllocationExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.TenantManagementAPIInstance.GetTenantExternalNetworkConnection(ctx, &getRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching tenant external network connection: %w", err)
+	}
+
+	etagValue := conn.TenantManagementAPIInstance.ApiClient.GetEtag(readResp)
+	args := map[string]interface{}{
+		"If-Match": utils.StringPtr(etagValue),
+	}
+	updateRequest := import4.UpdateTenantExternalNetworkConnectionRequest{
+		TenantExtId:           utils.StringPtr(tenantExtID),
+		DomainAllocationExtId: utils.StringPtr(d.Id()),
+		Body:                  connection.Config,
+	}
+	aJSON, err := json.MarshalIndent(updateRequest, "", "  ")
+	if err != nil {
+		return fmt.Errorf("error serializing tenant external network connection update: %w", err)
+	}
+	log.Printf("[DEBUG] Tenant domain allocation external network connection update payload: %s", string(aJSON))
+
+	updateResp, err := conn.TenantManagementAPIInstance.UpdateTenantExternalNetworkConnection(ctx, &updateRequest, args)
+	if err != nil {
+		return fmt.Errorf("error while updating tenant external network connection: %w", err)
+	}
+	if updateResp == nil || updateResp.Data == nil {
+		return fmt.Errorf("error while updating tenant external network connection: API returned an empty response")
+	}
+
+	// taskRef, ok := updateResp.Data.GetValue().(import3.TaskReference)
+	// if !ok {
+	// 	return fmt.Errorf("error while updating tenant external network connection: unexpected response type %T", updateResp.Data.GetValue())
+	// }
+	// if taskRef.ExtId == nil || *taskRef.ExtId == "" {
+	// 	return fmt.Errorf("error while updating tenant external network connection: task response did not include an ext_id")
+	// }
+
+	// taskconn := meta.(*conns.Client).PrismAPI
+	// stateConf := &resource.StateChangeConf{
+	// 	Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+	// 	Target:  []string{"SUCCEEDED"},
+	// 	Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskRef.ExtId)),
+	// 	Timeout: timeout,
+	// }
+	// if _, err := stateConf.WaitForStateContext(ctx); err != nil {
+	// 	return fmt.Errorf("error waiting for tenant external network connection task %q: %w", utils.StringValue(taskRef.ExtId), err)
+	// }
 	return nil
 }

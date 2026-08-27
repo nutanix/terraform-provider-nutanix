@@ -31,6 +31,16 @@ variable "domain_ext_id" {
   description = "External identifier of the domain to allocate to the tenant."
 }
 
+variable "transit_vpc_ext_id" {
+  type        = string
+  description = "External identifier of the transit VPC for the allocation's NAT configuration."
+}
+
+variable "overlay_subnet_ext_id" {
+  type        = string
+  description = "External identifier of the overlay subnet for the allocation's NAT configuration."
+}
+
 variable "cluster_uuid" {
   type        = string
   description = "The UUID of the cluster used as a placement target."

@@ -15,7 +15,8 @@ import (
 //   2. Update the projects list and assert the new values.
 //   3. Read the domain allocation back through the singular and list datasources.
 //   4. Verify CheckDestroy removes the allocation.
-// External network connection settings are exercised in a dedicated test.
+// External network connection settings are configured through the domain
+// allocation resource's external_network_config block.
 
 const resourceNameDomainAllocation = "nutanix_tenant_domain_allocation_v2.test"
 const datasourceNameDomainAllocation = "data.nutanix_tenant_domain_allocation_v2.test"

@@ -62,11 +62,8 @@ func ResourceNutanixAddDomainV2Create(ctx context.Context, d *schema.ResourceDat
 	if !ok {
 		return diag.Errorf("error while adding domain: unexpected response type %T", resp.Data.GetValue())
 	}
-	if domain.ExtId == nil || *domain.ExtId == "" {
-		return diag.Errorf("error while adding domain: response did not include an ext_id")
-	}
 
-	d.SetId(utils.StringValue(domain.ExtId))
+	d.SetId(utils.StringValue(domain.DomainExtId))
 	return ResourceNutanixAddDomainV2Read(ctx, d, meta)
 }
 
@@ -87,11 +84,10 @@ func ResourceNutanixAddDomainV2Read(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error while fetching domains: unexpected response type %T", resp.Data.GetValue())
 	}
 	for _, domain := range domains {
-		if utils.StringValue(domain.ExtId) == d.Id() {
+		if utils.StringValue(domain.DomainExtId) == d.Id() {
 			return setDomainResourceData(d, domain)
 		}
 	}
-
 	return diag.Errorf("error while fetching domain %q: domain was not returned by the list API", d.Id())
 }
 
@@ -105,7 +101,9 @@ func setDomainResourceData(d *schema.ResourceData, domain import1.Domain) diag.D
 	if err := d.Set("domain_ext_id", domain.DomainExtId); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("ext_id", domain.ExtId); err != nil {
+
+	// ExtId is always null so inorder to make the entity consistent across all the namespaces. ExtId is set as domain_ext_id.
+	if err := d.Set("ext_id", domain.DomainExtId); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("tenant_id", domain.TenantId); err != nil {

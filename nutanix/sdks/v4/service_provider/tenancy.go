@@ -24,7 +24,7 @@ func NewServiceProviderManagementClient(credentials client.Credentials) (*Servic
 		pcClient.Username = cfg.Username
 		pcClient.Password = cfg.Password
 		pcClient.VerifySSL = cfg.VerifySSL
-		pcClient.AllowVersionNegotiation = cfg.AllowVersionNegotiation
+		pcClient.AllowVersionNegotiation = false
 		baseClient = pcClient
 	}
 

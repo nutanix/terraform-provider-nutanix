@@ -4,15 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/config"
-	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/tasks"
-	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17/models/prism/v4/config"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17/models/tenancy/v4/config"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17/models/tenancy/v4/request/tenants"
+	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -180,33 +178,7 @@ func ResourceNutanixTenantV2Create(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	taskRef := resp.Data.GetValue().(import3.TaskReference)
-	taskUUID := taskRef.ExtId
-
-	taskconn := meta.(*conns.Client).PrismAPI
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for tenant (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
-	}
-
-	getTaskByIDRequest := import5.GetTaskByIdRequest{
-		ExtId: utils.StringPtr(*taskUUID),
-	}
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIDRequest)
-	if err != nil {
-		return diag.Errorf("error while fetching tenant create task: %v", err)
-	}
-	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
-
-	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeTenant, "Tenant")
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	d.SetId(utils.StringValue(uuid))
+	d.SetId(utils.StringValue(taskRef.ExtId))
 
 	return ResourceNutanixTenantV2Read(ctx, d, meta)
 }
@@ -288,24 +260,44 @@ func ResourceNutanixTenantV2Delete(ctx context.Context, d *schema.ResourceData, 
 	deleteTenantRequest := import4.DeleteTenantByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}
-	resp, err := conn.TenantManagementAPIInstance.DeleteTenantById(ctx, &deleteTenantRequest)
+
+	_, err := conn.TenantManagementAPIInstance.DeleteTenantById(ctx, &deleteTenantRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting tenant: %v", err)
 	}
+ 
+	timeout := time.NewTimer(3 * time.Minute)
+	ticker := time.NewTicker(3 * time.Second)
+	defer timeout.Stop()
+	defer ticker.Stop()
 
-	taskRef := resp.Data.GetValue().(import3.TaskReference)
-	taskUUID := taskRef.ExtId
+	for {
+		getTenantRequest := import4.GetTenantByIdRequest{
+			ExtId: utils.StringPtr(d.Id()),
+		}
+		readResp, err := conn.TenantManagementAPIInstance.GetTenantById(ctx, &getTenantRequest)
+		if err != nil {
+			return diag.Errorf("error while fetching tenant deletion state: %v", err)
+		}
+		if readResp == nil || readResp.Data == nil {
+			return diag.Errorf("error while fetching tenant deletion state: API returned an empty response")
+		}
 
-	taskconn := meta.(*conns.Client).PrismAPI
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutDelete),
+		tenant, ok := readResp.Data.GetValue().(import1.Tenant)
+		if !ok {
+			return diag.Errorf("error while fetching tenant deletion state: unexpected response type %T", readResp.Data.GetValue())
+		}
+		if tenant.StateInfo.State.GetName() == "DELETED" {
+			d.SetId("")
+			return nil
+		}
+
+		select {
+		case <-ctx.Done():
+			return diag.FromErr(ctx.Err())
+		case <-timeout.C:
+			return diag.Errorf("timed out waiting up to 3 minutes for tenant %q to reach DELETED state", d.Id())
+		case <-ticker.C:
+		}
 	}
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for tenant (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
-	}
-
-	return nil
 }

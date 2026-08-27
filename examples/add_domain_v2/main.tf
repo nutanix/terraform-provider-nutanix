@@ -2,17 +2,16 @@ terraform {
   required_providers {
     nutanix = {
       source  = "nutanix/nutanix"
-      version = ">= 2.5.0"
+      version = ">= 2.6.0"
     }
   }
 }
 
 provider "nutanix" {
-  username = var.nutanix_username
-  password = var.nutanix_password
-  endpoint = var.nutanix_endpoint
-  port     = 9440
-  insecure = true
+  username = var.nutanix_central_username # User with Service Provider Admin access
+  password = var.nutanix_central_password
+  nutanix_central_endpoint = var.nutanix_central_endpoint
+  port     = 443
 }
 
 # Adds an existing domain to the tenancy allowed-domain list.

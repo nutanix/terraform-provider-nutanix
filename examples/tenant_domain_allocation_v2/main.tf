@@ -35,8 +35,19 @@ resource "nutanix_tenant_domain_allocation_v2" "example" {
   tenant_ext_id = nutanix_tenant_v2.example.ext_id
   domain_ext_id = var.domain_ext_id
 
+  # Configure the allocation's external network connection directly. Only one
+  # of nat or no_nat may be configured.
+  external_network_config {
+    config {
+      nat {
+        transit_vpc_ext_id    = var.transit_vpc_ext_id
+        overlay_subnet_ext_id = var.overlay_subnet_ext_id
+        floating_ip_count     = 2
+      }
+    }
+  }
+
   projects {
-    name = "example-project"
     quota {
       vcpu    = 4
       memory  = 8589934592
