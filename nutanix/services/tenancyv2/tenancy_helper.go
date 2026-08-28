@@ -1,6 +1,7 @@
 package tenancyv2
 
 import (
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17/models/tenancy/v4/config"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -206,7 +207,7 @@ func expandPlacementTargets(input []interface{}) []import1.PlacementTarget {
 			target.ClusterUuid = utils.StringPtr(v.(string))
 		}
 		if v, ok := m["storage_container_uuids"]; ok {
-			target.StorageContainerUuids = common.ExpandListOfString(v.([]interface{}))
+			target.StorageContainerUuids = common.ExpandListOfString(v.(*schema.Set).List())
 		}
 		targets = append(targets, target)
 	}
