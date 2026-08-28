@@ -225,6 +225,9 @@
       ""
     ]
   },
+  "tenancy": {
+    "domain_ext_id": ""
+  },
   "prism": {
     "deploy_pc": {
       "pe_ip": "",

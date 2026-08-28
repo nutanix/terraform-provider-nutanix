@@ -46,6 +46,8 @@ const (
 	RelEntityTypeResourceGroup               = "multidomain:config:nutanix-resource-group"
 	RelEntityTypeImageRateLimitPolicy        = "vmm:images:config:rate-limit-policy"
 	RelEntityTypeVmGuestCustomizationProfile = "vmm:ahv:config:vm-guest-customization-profile"
+	RelEntityTypeTenant                      = "tenancy:config:tenant"
+	RelEntityTypeTenantDomainAllocation      = "tenancy:config:tenant:domain-allocation"
 )
 
 // CompletionDetailsName constants - Completion details name for the task entities affected
