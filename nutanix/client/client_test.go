@@ -116,6 +116,97 @@ func TestNewRequest(t *testing.T) {
 	}
 }
 
+func TestDoWithSensitiveQueryKeepsCallbackURLSanitized(t *testing.T) {
+	mux, c, server := setup()
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/foo", func(w http.ResponseWriter, r *http.Request) {
+		query := r.URL.Query()
+		if query.Get("username") != "pc-user" {
+			t.Fatalf("expected username query to reach server")
+		}
+		if query.Get("password") != "pc-password" {
+			t.Fatalf("expected password query to reach server")
+		}
+		if query.Get("ipaddress") != "10.0.0.1" {
+			t.Fatalf("expected non-sensitive query to reach server")
+		}
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	})
+
+	req, err := c.NewRequest(context.TODO(), http.MethodGet, "/foo?ipaddress=10.0.0.1", nil)
+	if err != nil {
+		t.Fatalf("unexpected request error: %v", err)
+	}
+	if req.URL.Query().Get("username") != "" || req.URL.Query().Get("password") != "" {
+		t.Fatalf("sensitive query values should not be present before transport")
+	}
+
+	var callbackURL string
+	c.OnRequestCompleted(func(req *http.Request, _ *http.Response, _ interface{}) {
+		callbackURL = req.URL.String()
+	})
+
+	sensitiveQuery := url.Values{}
+	sensitiveQuery.Set("username", "pc-user")
+	sensitiveQuery.Set("password", "pc-password")
+	var out map[string]interface{}
+	if err := c.DoWithSensitiveQuery(context.TODO(), req, &out, sensitiveQuery); err != nil {
+		t.Fatalf("unexpected do error: %v", err)
+	}
+	if strings.Contains(callbackURL, "pc-user") || strings.Contains(callbackURL, "pc-password") {
+		t.Fatalf("callback URL exposed sensitive query values: %s", callbackURL)
+	}
+}
+
+func TestDoWithSensitiveBodyKeepsCallbackBodySanitized(t *testing.T) {
+	mux, c, server := setup()
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/foo", func(w http.ResponseWriter, r *http.Request) {
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			t.Fatalf("unexpected body read error: %v", err)
+		}
+		if !strings.Contains(string(body), "real-password") {
+			t.Fatalf("expected real body to reach server, got %s", string(body))
+		}
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	})
+
+	redactedBody := map[string]interface{}{"username": "REDACTED", "password": "REDACTED"}
+	req, err := c.NewRequest(context.TODO(), http.MethodPost, "/foo", redactedBody)
+	if err != nil {
+		t.Fatalf("unexpected request error: %v", err)
+	}
+
+	var callbackBody string
+	c.OnRequestCompleted(func(req *http.Request, _ *http.Response, _ interface{}) {
+		if req.GetBody == nil {
+			t.Fatalf("expected callback request body to be readable")
+		}
+		body, err := req.GetBody()
+		if err != nil {
+			t.Fatalf("unexpected callback body error: %v", err)
+		}
+		defer body.Close()
+		bodyBytes, err := ioutil.ReadAll(body)
+		if err != nil {
+			t.Fatalf("unexpected callback body read error: %v", err)
+		}
+		callbackBody = string(bodyBytes)
+	})
+
+	realBody := map[string]interface{}{"username": "real-user", "password": "real-password"}
+	var out map[string]interface{}
+	if err := c.DoWithSensitiveBody(context.TODO(), req, &out, realBody); err != nil {
+		t.Fatalf("unexpected do error: %v", err)
+	}
+	if strings.Contains(callbackBody, "real-user") || strings.Contains(callbackBody, "real-password") {
+		t.Fatalf("callback body exposed sensitive values: %s", callbackBody)
+	}
+}
+
 func TestNewUploadRequest(t *testing.T) {
 	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", nil}, testUserAgent, testAbsolutePath, true)
 	if err != nil {

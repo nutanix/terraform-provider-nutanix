@@ -127,13 +127,13 @@ tools:
 	@echo "make: Installing tools..."
 # 	GO111MODULE=on go install github.com/YakDriver/tfproviderdocs
 	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell@latest
-	GO111MODULE=on go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+	GO111MODULE=on go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
 	GO111MODULE=on go install github.com/hashicorp/copywrite@latest
 	GO111MODULE=on go install github.com/hashicorp/go-changelog/cmd/changelog-build@latest
 	GO111MODULE=on go install github.com/katbyte/terrafmt@latest
 	GO111MODULE=on go install github.com/pavius/impi/cmd/impi@latest
 	GO111MODULE=on go install github.com/rhysd/actionlint/cmd/actionlint@latest
-	GO111MODULE=on go install github.com/terraform-linters/tflint@latest
+	GO111MODULE=on go install github.com/terraform-linters/tflint@v0.61.0
 	GO111MODULE=on go install golang.org/x/tools/cmd/stringer@latest
 	GO111MODULE=on go install mvdan.cc/gofumpt@latest
 
