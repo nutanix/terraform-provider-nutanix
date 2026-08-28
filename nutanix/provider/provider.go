@@ -452,11 +452,11 @@ func Provider() *schema.Provider {
 			"nutanix_ad_group_category_mapping_v2":  microsegv2.DatasourceNutanixCategoryMappingV2(),
 			"nutanix_ad_group_category_mappings_v2": microsegv2.DatasourceNutanixCategoryMappingsV2(),
 			// tenancy
-			"nutanix_tenant_v2":                             tenancyv2.DatasourceNutanixTenantV2(),
-			"nutanix_tenants_v2":                            tenancyv2.DatasourceNutanixTenantsV2(),
-			"nutanix_domains_v2":                            tenancyv2.DatasourceNutanixDomainsV2(),
-			"nutanix_tenant_domain_allocation_v2":           tenancyv2.DatasourceNutanixTenantDomainAllocationV2(),
-			"nutanix_tenant_domain_allocations_v2":          tenancyv2.DatasourceNutanixTenantDomainAllocationsV2(),
+			"nutanix_tenant_v2":                    tenancyv2.DatasourceNutanixTenantV2(),
+			"nutanix_tenants_v2":                   tenancyv2.DatasourceNutanixTenantsV2(),
+			"nutanix_domains_v2":                   tenancyv2.DatasourceNutanixDomainsV2(),
+			"nutanix_tenant_domain_allocation_v2":  tenancyv2.DatasourceNutanixTenantDomainAllocationV2(),
+			"nutanix_tenant_domain_allocations_v2": tenancyv2.DatasourceNutanixTenantDomainAllocationsV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                              vmm.ResourceNutanixVirtualMachine(),
@@ -608,9 +608,9 @@ func Provider() *schema.Provider {
 			"nutanix_network_security_policy_import_v2":            microsegv2.ResourceNutanixNetworkSecurityPolicyImportV2(),
 			"nutanix_network_security_policy_export_v2":            microsegv2.ResourceNutanixNetworkSecurityPolicyExportV2(),
 			// tenancy
-			"nutanix_tenant_v2":                             tenancyv2.ResourceNutanixTenantV2(),
-			"nutanix_add_domain_v2":                         tenancyv2.ResourceNutanixAddDomainV2(),
-			"nutanix_tenant_domain_allocation_v2":           tenancyv2.ResourceNutanixTenantDomainAllocationV2(),
+			"nutanix_tenant_v2":                   tenancyv2.ResourceNutanixTenantV2(),
+			"nutanix_add_domain_v2":               tenancyv2.ResourceNutanixAddDomainV2(),
+			"nutanix_tenant_domain_allocation_v2": tenancyv2.ResourceNutanixTenantDomainAllocationV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

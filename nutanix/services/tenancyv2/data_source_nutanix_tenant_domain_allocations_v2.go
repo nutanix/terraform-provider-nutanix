@@ -22,7 +22,7 @@ func DatasourceNutanixTenantDomainAllocationsV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"expand":{
+			"expand": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
