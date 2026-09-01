@@ -567,7 +567,11 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 							VmExtId: utils.StringPtr(d.Id()),
 							Body:    &diskInput,
 						}
-						resp, err := conn.VMAPIInstance.CreateDisk(ctx, &createDiskRequest)
+						args, err := vmEtagArgs(ctx, conn, d.Id())
+						if err != nil {
+							return diag.Errorf("error while fetching VM eTag for disk create: %v", err)
+						}
+						resp, err := conn.VMAPIInstance.CreateDisk(ctx, &createDiskRequest, args)
 						if err != nil {
 							return diag.Errorf("error creating disk: %v", err)
 						}
@@ -731,7 +735,11 @@ func ResourceNutanixOvaVMDeploymentDelete(ctx context.Context, d *schema.Resourc
 	deleteVmByIdRequest := import7.DeleteVmByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}
-	resp, err := conn.VMAPIInstance.DeleteVmById(ctx, &deleteVmByIdRequest)
+	args, err := vmEtagArgs(ctx, conn, d.Id())
+	if err != nil {
+		return diag.Errorf("error while fetching VM eTag for delete: %v", err)
+	}
+	resp, err := conn.VMAPIInstance.DeleteVmById(ctx, &deleteVmByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while deleting vm : %v", err)
 	}
@@ -870,24 +878,16 @@ func handlePowerStateChanges(ctx context.Context, d *schema.ResourceData, meta i
 
 		switch newPowerState {
 		case "ON":
-			powerOnVmRequest := import7.PowerOnVmRequest{
-				ExtId: utils.StringPtr(d.Id()),
-			}
-			powerResp, err := vmmConn.VMAPIInstance.PowerOnVm(ctx, &powerOnVmRequest)
+			TaskRef, err := powerOnVMWithEtag(ctx, vmmConn, utils.StringPtr(d.Id()))
 			if err != nil {
 				return diag.Errorf("error powering on VM: %v", err)
 			}
-			TaskRef := powerResp.Data.GetValue().(import3.TaskReference)
 			taskUUID = TaskRef.ExtId
 		case "OFF":
-			powerOffVmRequest := import7.PowerOffVmRequest{
-				ExtId: utils.StringPtr(d.Id()),
-			}
-			powerResp, err := vmmConn.VMAPIInstance.PowerOffVm(ctx, &powerOffVmRequest)
+			TaskRef, err := powerOffVMWithEtag(ctx, vmmConn, utils.StringPtr(d.Id()))
 			if err != nil {
 				return diag.Errorf("error powering off VM: %v", err)
 			}
-			TaskRef := powerResp.Data.GetValue().(import3.TaskReference)
 			taskUUID = TaskRef.ExtId
 		default:
 			return diag.Errorf("unsupported power state: %s", newPowerState)
