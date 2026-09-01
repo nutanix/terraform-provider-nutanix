@@ -327,7 +327,11 @@ func ejectCdromISO(ctx context.Context, d *schema.ResourceData, meta interface{}
 		VmExtId: utils.StringPtr(vmExtID),
 		ExtId:   utils.StringPtr(extID),
 	}
-	resp, err := conn.VMAPIInstance.EjectCdRomById(ctx, &ejectCdRomByIdRequest)
+	args, err := vmEtagArgs(ctx, conn, vmExtID)
+	if err != nil {
+		return diag.Errorf("error while fetching VM eTag for cd-rom eject: %v", err)
+	}
+	resp, err := conn.VMAPIInstance.EjectCdRomById(ctx, &ejectCdRomByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while ejecting cd-rom : %v", err)
 	}

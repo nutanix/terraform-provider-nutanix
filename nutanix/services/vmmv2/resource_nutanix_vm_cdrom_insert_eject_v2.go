@@ -217,7 +217,11 @@ func ResourceNutanixVmsCdRomsInsertEjectV2Create(ctx context.Context, d *schema.
 			ExtId:   utils.StringPtr(extID.(string)),
 			Body:    &body,
 		}
-		resp, err := conn.VMAPIInstance.InsertCdRomById(ctx, &insertCdRomByIdRequest)
+		args, err := vmEtagArgs(ctx, conn, vmExtID.(string))
+		if err != nil {
+			return diag.Errorf("error while fetching VM eTag for cd-rom insert: %v", err)
+		}
+		resp, err := conn.VMAPIInstance.InsertCdRomById(ctx, &insertCdRomByIdRequest, args)
 		if err != nil {
 			return diag.Errorf("error while inserting cd-rom : %v", err)
 		}

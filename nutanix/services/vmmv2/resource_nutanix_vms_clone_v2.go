@@ -1266,7 +1266,11 @@ func ResourceNutanixVMCloneV2Create(ctx context.Context, d *schema.ResourceData,
 		ExtId: utils.StringPtr(vmExtID.(string)),
 		Body:  body,
 	}
-	resp, err := conn.VMAPIInstance.CloneVm(ctx, &cloneVmRequest)
+	args, err := vmEtagArgs(ctx, conn, vmExtID.(string))
+	if err != nil {
+		return diag.Errorf("error while fetching VM eTag for clone: %v", err)
+	}
+	resp, err := conn.VMAPIInstance.CloneVm(ctx, &cloneVmRequest, args)
 	if err != nil {
 		return diag.Errorf("error while Cloning Vm : %v", err)
 	}
