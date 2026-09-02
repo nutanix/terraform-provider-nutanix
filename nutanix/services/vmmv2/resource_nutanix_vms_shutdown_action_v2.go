@@ -87,16 +87,12 @@ func ResourceNutanixVmsShutdownActionV2Create(ctx context.Context, d *schema.Res
 	}
 
 	var TaskRef import1.TaskReference
-	args, err := vmEtagArgs(ctx, conn, vmExtID.(string))
-	if err != nil {
-		return diag.Errorf("error while fetching VM eTag for power action: %v", err)
-	}
 	//nolint:gocritic // Keeping if-else for clarity in this specific case
 	if action == "shutdown" {
 		shutdownVmRequest := import3.ShutdownVmRequest{
 			ExtId: utils.StringPtr(vmExtID.(string)),
 		}
-		resp, err := conn.VMAPIInstance.ShutdownVm(ctx, &shutdownVmRequest, args)
+		resp, err := conn.VMAPIInstance.ShutdownVm(ctx, &shutdownVmRequest)
 		if err != nil {
 			return diag.Errorf("error while Shutdown VM : %v", err)
 		}
@@ -106,7 +102,7 @@ func ResourceNutanixVmsShutdownActionV2Create(ctx context.Context, d *schema.Res
 			ExtId: utils.StringPtr(vmExtID.(string)),
 			Body:  &body,
 		}
-		resp, err := conn.VMAPIInstance.ShutdownGuestVm(ctx, &shutdownGuestVmRequest, args)
+		resp, err := conn.VMAPIInstance.ShutdownGuestVm(ctx, &shutdownGuestVmRequest)
 		if err != nil {
 			return diag.Errorf("error while Shutdown Guest VM : %v", err)
 		}
@@ -115,7 +111,7 @@ func ResourceNutanixVmsShutdownActionV2Create(ctx context.Context, d *schema.Res
 		rebootVmRequest := import3.RebootVmRequest{
 			ExtId: utils.StringPtr(vmExtID.(string)),
 		}
-		resp, err := conn.VMAPIInstance.RebootVm(ctx, &rebootVmRequest, args)
+		resp, err := conn.VMAPIInstance.RebootVm(ctx, &rebootVmRequest)
 		if err != nil {
 			return diag.Errorf("error while performing Reboot VM  : %v", err)
 		}
@@ -125,7 +121,7 @@ func ResourceNutanixVmsShutdownActionV2Create(ctx context.Context, d *schema.Res
 			ExtId: utils.StringPtr(vmExtID.(string)),
 			Body:  &body,
 		}
-		resp, err := conn.VMAPIInstance.RebootGuestVm(ctx, &rebootGuestVmRequest, args)
+		resp, err := conn.VMAPIInstance.RebootGuestVm(ctx, &rebootGuestVmRequest)
 		if err != nil {
 			return diag.Errorf("error while performing Reboot Guest VM : %v", err)
 		}

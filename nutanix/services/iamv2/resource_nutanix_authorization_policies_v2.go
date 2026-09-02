@@ -17,7 +17,6 @@ import (
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/request/authorizationpolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -104,11 +103,6 @@ func ResourceNutanixAuthPoliciesV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"is_global": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
 			"created_time": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -179,22 +173,25 @@ func ResourceNutanixAuthPoliciesV2Create(ctx context.Context, d *schema.Resource
 		input.Role = utils.StringPtr(role.(string))
 	}
 	if authPolicyType, ok := d.GetOk("authorization_policy_type"); ok {
-		input.AuthorizationPolicyType = common.ExpandEnum[import1.AuthorizationPolicyType](authPolicyType.(string))
+		const two, three, four, five, six = 2, 3, 4, 5, 6
+		subMap := map[string]interface{}{
+			"USER_DEFINED":                    two,
+			"SERVICE_DEFINED":                 three,
+			"PREDEFINED_READ_ONLY":            four,
+			"PREDEFINED_UPDATE_IDENTITY_ONLY": five,
+			"SERVICE_DEFINED_READ_ONLY":       six,
+		}
+		pInt := subMap[authPolicyType.(string)]
+		p := import1.AuthorizationPolicyType(pInt.(int))
+		input.AuthorizationPolicyType = &p
 	}
 	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
 		input.ProjectExtId = utils.StringPtr(projectExtID.(string))
-	}
-	if common.IsExplicitlySet(d, "is_global") {
-		input.IsGlobal = utils.BoolPtr(d.Get("is_global").(bool))
 	}
 
 	createAuthorizationPolicyRequest := import2.CreateAuthorizationPolicyRequest{
 		Body: input,
 	}
-
-	aJSON, _ := json.MarshalIndent(createAuthorizationPolicyRequest, "", "  ")
-	log.Printf("[DEBUG] Create Authorization Policy Request Body: %s", string(aJSON))
-
 	resp, err := conn.AuthAPIInstance.CreateAuthorizationPolicy(ctx, &createAuthorizationPolicyRequest)
 	if err != nil {
 		return diag.Errorf("error while creating authorization policies : %v", err)
@@ -316,24 +313,26 @@ func ResourceNutanixAuthPoliciesV2Update(ctx context.Context, d *schema.Resource
 		updatedSpec.Role = utils.StringPtr(d.Get("role").(string))
 	}
 	if d.HasChange("authorization_policy_type") {
-		updatedSpec.AuthorizationPolicyType = common.ExpandEnum[import1.AuthorizationPolicyType](d.Get("authorization_policy_type").(string))
+		const two, three, four, five, six = 2, 3, 4, 5, 6
+		subMap := map[string]interface{}{
+			"USER_DEFINED":                    two,
+			"SERVICE_DEFINED":                 three,
+			"PREDEFINED_READ_ONLY":            four,
+			"PREDEFINED_UPDATE_IDENTITY_ONLY": five,
+			"SERVICE_DEFINED_READ_ONLY":       six,
+		}
+		pInt := subMap[d.Get("authorization_policy_type").(string)]
+		p := import1.AuthorizationPolicyType(pInt.(int))
+		updatedSpec.AuthorizationPolicyType = &p
 	}
 	if d.HasChange("project_ext_id") {
 		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
-	}
-	if d.HasChange("is_global") && common.IsExplicitlySet(d, "is_global") {
-		updatedSpec.IsGlobal = utils.BoolPtr(d.Get("is_global").(bool))
-	} else {
-		updatedSpec.IsGlobal = nil
 	}
 
 	updateAuthorizationPolicyByIdRequest := import2.UpdateAuthorizationPolicyByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 		Body:  &updatedSpec,
 	}
-	aJSON, _ := json.MarshalIndent(updateAuthorizationPolicyByIdRequest, "", "  ")
-	log.Printf("[DEBUG] Update Authorization Policy Request Body: %s", string(aJSON))
-
 	updatedResp, err := conn.AuthAPIInstance.UpdateAuthorizationPolicyById(ctx, &updateAuthorizationPolicyByIdRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while updating  Authorization Policy: %v", err)

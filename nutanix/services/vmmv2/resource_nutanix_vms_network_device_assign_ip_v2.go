@@ -73,11 +73,7 @@ func ResourceNutanixVmsNetworkDeviceAssignIPV2Create(ctx context.Context, d *sch
 		ExtId:   utils.StringPtr(extID.(string)),
 		Body:    &body,
 	}
-	args, err := vmEtagArgs(ctx, conn, vmExtID.(string))
-	if err != nil {
-		return diag.Errorf("error while fetching VM eTag for assign IP: %v", err)
-	}
-	resp, err := conn.VMAPIInstance.AssignIpById(ctx, &assignIpByIdRequest, args)
+	resp, err := conn.VMAPIInstance.AssignIpById(ctx, &assignIpByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while assigning IP : %v", err)
 	}

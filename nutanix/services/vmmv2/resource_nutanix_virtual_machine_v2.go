@@ -1693,11 +1693,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 					VmExtId: utils.StringPtr(d.Id()),
 					ExtId:   nicExtID,
 				}
-				args, err := vmEtagArgs(ctx, conn, d.Id())
-				if err != nil {
-					return diag.Errorf("error while fetching VM eTag for nic delete: %v", err)
-				}
-				resp, err := conn.VMAPIInstance.DeleteNicById(ctx, &deleteNicByIdRequest, args)
+				resp, err := conn.VMAPIInstance.DeleteNicById(ctx, &deleteNicByIdRequest)
 				if err != nil {
 					return diag.Errorf("error while deleting nic : %v", err)
 				}
@@ -1788,11 +1784,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 					VmExtId: utils.StringPtr(d.Id()),
 					Body:    &nicInput,
 				}
-				args, err := vmEtagArgs(ctx, conn, d.Id())
-				if err != nil {
-					return diag.Errorf("error while fetching VM eTag for nic create: %v", err)
-				}
-				resp, err := conn.VMAPIInstance.CreateNic(ctx, &createNicRequest, args)
+				resp, err := conn.VMAPIInstance.CreateNic(ctx, &createNicRequest)
 				if err != nil {
 					return diag.Errorf("error while creating NIC : %v", err)
 				}
@@ -1826,11 +1818,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 					VmExtId: utils.StringPtr(d.Id()),
 					Body:    &cdromInput,
 				}
-				args, err := vmEtagArgs(ctx, conn, d.Id())
-				if err != nil {
-					return diag.Errorf("error while fetching VM eTag for CdRom create: %v", err)
-				}
-				resp, err := conn.VMAPIInstance.CreateCdRom(ctx, &createCdRomRequest, args)
+				resp, err := conn.VMAPIInstance.CreateCdRom(ctx, &createCdRomRequest)
 				if err != nil {
 					return diag.Errorf("error while creating CdRom : %v", err)
 				}
@@ -1862,11 +1850,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 					VmExtId: utils.StringPtr(d.Id()),
 					ExtId:   cdromExtID,
 				}
-				args, err := vmEtagArgs(ctx, conn, d.Id())
-				if err != nil {
-					return diag.Errorf("error while fetching VM eTag for CdRom delete: %v", err)
-				}
-				resp, err := conn.VMAPIInstance.DeleteCdRomById(ctx, &deleteCdRomByIdRequest, args)
+				resp, err := conn.VMAPIInstance.DeleteCdRomById(ctx, &deleteCdRomByIdRequest)
 				if err != nil {
 					return diag.Errorf("error while deleting cdrom : %v", err)
 				}
@@ -1903,11 +1887,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 					VmExtId: utils.StringPtr(d.Id()),
 					ExtId:   serialPortExtID,
 				}
-				args, err := vmEtagArgs(ctx, conn, d.Id())
-				if err != nil {
-					return diag.Errorf("error while fetching VM eTag for serial port delete: %v", err)
-				}
-				resp, err := conn.VMAPIInstance.DeleteSerialPortById(ctx, &deleteSerialPortByIdRequest, args)
+				resp, err := conn.VMAPIInstance.DeleteSerialPortById(ctx, &deleteSerialPortByIdRequest)
 				if err != nil {
 					return diag.Errorf("error while deleting serial port : %v", err)
 				}
@@ -1978,11 +1958,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 					VmExtId: utils.StringPtr(d.Id()),
 					Body:    &serialPortInput,
 				}
-				args, err := vmEtagArgs(ctx, conn, d.Id())
-				if err != nil {
-					return diag.Errorf("error while fetching VM eTag for serial port create: %v", err)
-				}
-				resp, err := conn.VMAPIInstance.CreateSerialPort(ctx, &createSerialPortRequest, args)
+				resp, err := conn.VMAPIInstance.CreateSerialPort(ctx, &createSerialPortRequest)
 				if err != nil {
 					return diag.Errorf("error while creating SerialPort : %v", err)
 				}
@@ -2017,11 +1993,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 					VmExtId: utils.StringPtr(d.Id()),
 					Body:    &gpuInput,
 				}
-				args, err := vmEtagArgs(ctx, conn, d.Id())
-				if err != nil {
-					return diag.Errorf("error while fetching VM eTag for Gpu create: %v", err)
-				}
-				resp, err := conn.VMAPIInstance.CreateGpu(ctx, &createGpuRequest, args)
+				resp, err := conn.VMAPIInstance.CreateGpu(ctx, &createGpuRequest)
 				if err != nil {
 					return diag.Errorf("error while creating Gpu : %v", err)
 				}
@@ -2053,11 +2025,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 					VmExtId: utils.StringPtr(d.Id()),
 					ExtId:   gpuExtID,
 				}
-				args, err := vmEtagArgs(ctx, conn, d.Id())
-				if err != nil {
-					return diag.Errorf("error while fetching VM eTag for Gpu delete: %v", err)
-				}
-				resp, err := conn.VMAPIInstance.DeleteGpuById(ctx, &deleteGpuByIdRequest, args)
+				resp, err := conn.VMAPIInstance.DeleteGpuById(ctx, &deleteGpuByIdRequest)
 				if err != nil {
 					return diag.Errorf("error while deleting gpu : %v", err)
 				}
@@ -2095,11 +2063,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				ExtId: utils.StringPtr(d.Id()),
 				Body:  &body,
 			}
-			args, err := vmEtagArgs(ctx, conn, d.Id())
-			if err != nil {
-				return diag.Errorf("error while fetching VM eTag for categories disassociate: %v", err)
-			}
-			resp, err := conn.VMAPIInstance.DisassociateCategories(ctx, &disassociateCategoriesRequest, args)
+			resp, err := conn.VMAPIInstance.DisassociateCategories(ctx, &disassociateCategoriesRequest)
 			if err != nil {
 				return diag.Errorf("error while diassociate categories : %v", err)
 			}
@@ -2130,11 +2094,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				ExtId: utils.StringPtr(d.Id()),
 				Body:  &body,
 			}
-			args, err := vmEtagArgs(ctx, conn, d.Id())
-			if err != nil {
-				return diag.Errorf("error while fetching VM eTag for categories associate: %v", err)
-			}
-			resp, err := conn.VMAPIInstance.AssociateCategories(ctx, &associateCategoriesRequest, args)
+			resp, err := conn.VMAPIInstance.AssociateCategories(ctx, &associateCategoriesRequest)
 			if err != nil {
 				return diag.Errorf("error while associating categories : %v", err)
 			}
@@ -2194,11 +2154,7 @@ func ResourceNutanixVirtualMachineV2Delete(ctx context.Context, d *schema.Resour
 	deleteVmByIdRequest := import3.DeleteVmByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}
-	args, err := vmEtagArgs(ctx, conn, d.Id())
-	if err != nil {
-		return diag.Errorf("error while fetching VM eTag for delete: %v", err)
-	}
-	resp, err := conn.VMAPIInstance.DeleteVmById(ctx, &deleteVmByIdRequest, args)
+	resp, err := conn.VMAPIInstance.DeleteVmById(ctx, &deleteVmByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting vm : %v", err)
 	}
@@ -3103,18 +3059,40 @@ func extractTaskReferenceFromResponse(resp interface{}) (import1.TaskReference, 
 	return taskRef, nil
 }
 
-// powerOnVM performs a single power-on API call with If-Match eTag.
-// Retries (API + task) are handled in callForPowerOnVM.
-// REMOVE_AFTER: v2.6.0 — drop eTag via powerOnVMWithEtag (see vm_etag_compat.go).
+// powerOnVM performs a single power-on API call. Retries are handled at the task layer in callForPowerOnVM.
 func powerOnVM(ctx context.Context, conn *vmm.Client, vmID *string) (import1.TaskReference, error) {
-	return powerOnVMWithEtag(ctx, conn, vmID)
+	powerOnVmRequest := import3.PowerOnVmRequest{
+		ExtId: vmID,
+	}
+	resp, err := conn.VMAPIInstance.PowerOnVm(ctx, &powerOnVmRequest)
+	if err != nil {
+		return import1.TaskReference{}, fmt.Errorf("error powering on VM: %v", err)
+	}
+
+	taskRef, err := extractTaskReferenceFromResponse(resp)
+	if err != nil {
+		return import1.TaskReference{}, fmt.Errorf("error extracting task reference from power on response: %v", err)
+	}
+	log.Printf("[DEBUG] PowerOn Response: TaskReference ExtId: %s", utils.StringValue(taskRef.ExtId))
+	return taskRef, nil
 }
 
-// powerOffVM performs a single power-off API call with If-Match eTag.
-// Retries (API + task) are handled in callForPowerOffVM.
-// REMOVE_AFTER: v2.6.0 — drop eTag via powerOffVMWithEtag (see vm_etag_compat.go).
+// powerOffVM performs a single power-off API call. Retries are handled at the task layer in callForPowerOffVM.
 func powerOffVM(ctx context.Context, conn *vmm.Client, vmID *string) (import1.TaskReference, error) {
-	return powerOffVMWithEtag(ctx, conn, vmID)
+	powerOffVmRequest := import3.PowerOffVmRequest{
+		ExtId: vmID,
+	}
+	resp, err := conn.VMAPIInstance.PowerOffVm(ctx, &powerOffVmRequest)
+	if err != nil {
+		return import1.TaskReference{}, fmt.Errorf("error powering off VM: %v", err)
+	}
+
+	taskRef, err := extractTaskReferenceFromResponse(resp)
+	if err != nil {
+		return import1.TaskReference{}, fmt.Errorf("error extracting task reference from power off response: %v", err)
+	}
+	log.Printf("[DEBUG] PowerOff Response: TaskReference ExtId: %s", utils.StringValue(taskRef.ExtId))
+	return taskRef, nil
 }
 
 func flattenPowerState(pr *config.PowerState) string {
@@ -3136,167 +3114,51 @@ func flattenPowerState(pr *config.PowerState) string {
 	return "UNKNOWN"
 }
 
-// callForPowerOffVM retries power-off API + task wait, refreshing eTag each attempt.
-// REMOVE_AFTER: v2.6.0 — collapse to single-shot (see vm_etag_compat.go removal recipe).
 func callForPowerOffVM(ctx context.Context, conn *vmm.Client, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	prismConn := meta.(*conns.Client).PrismAPI
-	var lastErr error
-	var taskUUID *string
 
-	for taskAttempt := 0; taskAttempt < maxPowerRetries; taskAttempt++ {
-		getVmByIdRequest := import3.GetVmByIdRequest{
-			ExtId: utils.StringPtr(d.Id()),
-		}
-		readResp, errR := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
-		if errR != nil {
-			return diag.Errorf("error while reading vm : %v", errR)
-		}
-		vmResp := readResp.Data.GetValue().(config.Vm)
-		currentPower := vmResp.PowerState.GetName()
-		log.Printf("[DEBUG] Power-off task attempt %d/%d: VM current power_state=%s", taskAttempt+1, maxPowerRetries, currentPower)
-		if currentPower == "OFF" {
-			log.Printf("[DEBUG] VM is already in OFF state")
-			return nil
-		}
-
-		TaskRef, err := powerOffVM(ctx, conn, utils.StringPtr(d.Id()))
-		if err != nil {
-			lastErr = err
-			if taskAttempt < maxPowerRetries-1 {
-				log.Printf("[DEBUG] Power-off API failed (attempt %d/%d), retrying in %v: %v",
-					taskAttempt+1, maxPowerRetries, powerTaskRetryDelay, err)
-				select {
-				case <-ctx.Done():
-					return diag.FromErr(ctx.Err())
-				case <-time.After(powerTaskRetryDelay):
-					continue
-				}
-			}
-			return diag.Errorf("error while powering off Virtual Machine after %d attempts: %v", maxPowerRetries, err)
-		}
-		taskUUID = TaskRef.ExtId
-
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-			Target:  []string{"SUCCEEDED"},
-			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
-			Timeout: d.Timeout(schema.TimeoutCreate),
-		}
-
-		_, errWaitTask := stateConf.WaitForStateContext(ctx)
-		if errWaitTask == nil {
-			log.Printf("[DEBUG] Power-off task reported SUCCEEDED for task %s; verifying VM power_state", utils.StringValue(taskUUID))
-			verifyReq := import3.GetVmByIdRequest{ExtId: utils.StringPtr(d.Id())}
-			verifyResp, errV := conn.VMAPIInstance.GetVmById(ctx, &verifyReq)
-			if errV != nil {
-				log.Printf("[DEBUG] Could not re-read VM after task success: %v", errV)
-				return nil
-			}
-			verifyVM := verifyResp.Data.GetValue().(config.Vm)
-			actualPower := verifyVM.PowerState.GetName()
-			log.Printf("[DEBUG] VM power_state after task: %s (expected OFF)", actualPower)
-			if actualPower != "OFF" {
-				log.Printf("[DEBUG] WARNING: Task reported SUCCEEDED but VM power_state is %s (expected OFF) - possible backend inconsistency or race", actualPower)
-			}
-			return nil
-		}
-		lastErr = errWaitTask
-		if taskAttempt < maxPowerRetries-1 {
-			log.Printf("[DEBUG] Power-off task failed or timed out (attempt %d/%d), retrying API call and task in %v: %v",
-				taskAttempt+1, maxPowerRetries, powerTaskRetryDelay, errWaitTask)
-			select {
-			case <-ctx.Done():
-				return diag.FromErr(ctx.Err())
-			case <-time.After(powerTaskRetryDelay):
-				// continue to next task retry
-			}
-		}
+	TaskRef, err := powerOffVM(ctx, conn, utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while powering off Virtual Machine: %v", err)
 	}
-	log.Printf("[DEBUG] Power-off failed after %d attempts; last error: %v", maxPowerRetries, lastErr)
-	return diag.Errorf("error waiting for virtual machine (%s) to power off after %d attempts: %s",
-		utils.StringValue(taskUUID), maxPowerRetries, lastErr)
+	taskUUID := TaskRef.ExtId
+
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for virtual machine (%s) to power off: %s",
+			utils.StringValue(taskUUID), errWaitTask)
+	}
+	return nil
 }
 
-// callForPowerOnVM retries power-on API + task wait, refreshing eTag each attempt.
-// REMOVE_AFTER: v2.6.0 — collapse to single-shot (see vm_etag_compat.go removal recipe).
 func callForPowerOnVM(ctx context.Context, conn *vmm.Client, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	prismConn := meta.(*conns.Client).PrismAPI
-	var lastErr error
-	var taskUUID *string
 
-	for taskAttempt := 0; taskAttempt < maxPowerRetries; taskAttempt++ {
-		getVmByIdRequest := import3.GetVmByIdRequest{
-			ExtId: utils.StringPtr(d.Id()),
-		}
-		readResp, errR := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
-		if errR != nil {
-			return diag.Errorf("error while reading vm : %v", errR)
-		}
-		vmResp := readResp.Data.GetValue().(config.Vm)
-		currentPower := vmResp.PowerState.GetName()
-		log.Printf("[DEBUG] Power-on task attempt %d/%d: VM current power_state=%s", taskAttempt+1, maxPowerRetries, currentPower)
-		if currentPower == "ON" {
-			log.Printf("[DEBUG] VM is already in ON state")
-			return nil
-		}
-
-		TaskRef, err := powerOnVM(ctx, conn, utils.StringPtr(d.Id()))
-		if err != nil {
-			lastErr = err
-			if taskAttempt < maxPowerRetries-1 {
-				log.Printf("[DEBUG] Power-on API failed (attempt %d/%d), retrying in %v: %v",
-					taskAttempt+1, maxPowerRetries, powerTaskRetryDelay, err)
-				select {
-				case <-ctx.Done():
-					return diag.FromErr(ctx.Err())
-				case <-time.After(powerTaskRetryDelay):
-					continue
-				}
-			}
-			return diag.Errorf("error while powering on Virtual Machine after %d attempts: %v", maxPowerRetries, err)
-		}
-		taskUUID = TaskRef.ExtId
-		log.Printf("[DEBUG] PowerOn Response: TaskReference ExtId: %s (waiting for task)", utils.StringValue(taskUUID))
-
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-			Target:  []string{"SUCCEEDED"},
-			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
-			Timeout: d.Timeout(schema.TimeoutUpdate),
-		}
-
-		_, errWaitTask := stateConf.WaitForStateContext(ctx)
-		if errWaitTask == nil {
-			log.Printf("[DEBUG] Power-on task reported SUCCEEDED for task %s; verifying VM power_state", utils.StringValue(taskUUID))
-			verifyReq := import3.GetVmByIdRequest{ExtId: utils.StringPtr(d.Id())}
-			verifyResp, errV := conn.VMAPIInstance.GetVmById(ctx, &verifyReq)
-			if errV != nil {
-				log.Printf("[DEBUG] Could not re-read VM after task success: %v", errV)
-				return nil
-			}
-			verifyVM := verifyResp.Data.GetValue().(config.Vm)
-			actualPower := verifyVM.PowerState.GetName()
-			log.Printf("[DEBUG] VM power_state after task: %s (expected ON)", actualPower)
-			if actualPower != "ON" {
-				log.Printf("[DEBUG] WARNING: Task reported SUCCEEDED but VM power_state is %s (expected ON) - possible backend inconsistency or race", actualPower)
-			}
-			return nil
-		}
-		lastErr = errWaitTask
-		if taskAttempt < maxPowerRetries-1 {
-			log.Printf("[DEBUG] Power-on task failed or timed out (attempt %d/%d), retrying API call and task in %v: %v",
-				taskAttempt+1, maxPowerRetries, powerTaskRetryDelay, errWaitTask)
-			select {
-			case <-ctx.Done():
-				return diag.FromErr(ctx.Err())
-			case <-time.After(powerTaskRetryDelay):
-				// continue to next task retry
-			}
-		}
+	TaskRef, err := powerOnVM(ctx, conn, utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while powering on Virtual Machine: %v", err)
 	}
-	log.Printf("[DEBUG] Power-on failed after %d attempts; last error: %v", maxPowerRetries, lastErr)
-	return diag.Errorf("error waiting for virtual machine (%s) to power on after %d attempts: %s",
-		utils.StringValue(taskUUID), maxPowerRetries, lastErr)
+	taskUUID := TaskRef.ExtId
+	log.Printf("[DEBUG] PowerOn Response: TaskReference ExtId: %s (waiting for task)", utils.StringValue(taskUUID))
+
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, prismConn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for virtual machine (%s) to power on: %s",
+			utils.StringValue(taskUUID), errWaitTask)
+	}
+	return nil
 }
 
 func diffConfig(oldValue []interface{}, newValue []interface{}) ([]interface{}, []interface{}, []interface{}) {

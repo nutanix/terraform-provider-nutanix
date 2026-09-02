@@ -193,11 +193,7 @@ func ResourceNutanixVMGCUpdateV2Create(ctx context.Context, d *schema.ResourceDa
 		ExtId: utils.StringPtr(vmExtID.(string)),
 		Body:  body,
 	}
-	args, err := vmEtagArgs(ctx, conn, vmExtID.(string))
-	if err != nil {
-		return diag.Errorf("error while fetching VM eTag for guest customize: %v", err)
-	}
-	resp, err := conn.VMAPIInstance.CustomizeGuestVm(ctx, &customizeGuestVmRequest, args)
+	resp, err := conn.VMAPIInstance.CustomizeGuestVm(ctx, &customizeGuestVmRequest)
 	if err != nil {
 		return diag.Errorf("error while creating Vm's Customize Guest : %v", err)
 	}

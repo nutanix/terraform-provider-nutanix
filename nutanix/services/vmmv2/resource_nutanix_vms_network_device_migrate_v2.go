@@ -102,11 +102,7 @@ func ResourceNutanixVmsNetworkDeviceMigrateV2Create(ctx context.Context, d *sche
 		ExtId:   utils.StringPtr(extID.(string)),
 		Body:    &body,
 	}
-	args, err := vmEtagArgs(ctx, conn, vmExtID.(string))
-	if err != nil {
-		return diag.Errorf("error while fetching VM eTag for nic migrate: %v", err)
-	}
-	resp, err := conn.VMAPIInstance.MigrateNicById(ctx, &migrateNicByIdRequest, args)
+	resp, err := conn.VMAPIInstance.MigrateNicById(ctx, &migrateNicByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while migrate nic : %v", err)
 	}
@@ -175,11 +171,7 @@ func ResourceNutanixVmsNetworkDeviceMigrateV2Update(ctx context.Context, d *sche
 		ExtId:   utils.StringPtr(extID.(string)),
 		Body:    &body,
 	}
-	args, err := vmEtagArgs(ctx, conn, vmExtID.(string))
-	if err != nil {
-		return diag.Errorf("error while fetching VM eTag for nic migrate: %v", err)
-	}
-	resp, err := conn.VMAPIInstance.MigrateNicById(ctx, &migrateNicByIdRequest, args)
+	resp, err := conn.VMAPIInstance.MigrateNicById(ctx, &migrateNicByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while migrate nic : %v", err)
 	}

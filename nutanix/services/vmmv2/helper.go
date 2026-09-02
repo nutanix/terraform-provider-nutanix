@@ -99,11 +99,7 @@ func ApplyDiskDeletions(ctx context.Context, d *schema.ResourceData, meta interf
 			VmExtId: utils.StringPtr(vmID),
 			ExtId:   diskExtID,
 		}
-		args, err := vmEtagArgs(ctx, conn, vmID)
-		if err != nil {
-			return diag.Errorf("error while fetching VM eTag for disk delete: %v", err)
-		}
-		resp, err := conn.VMAPIInstance.DeleteDiskById(ctx, &deleteDiskByIdRequest, args)
+		resp, err := conn.VMAPIInstance.DeleteDiskById(ctx, &deleteDiskByIdRequest)
 		if err != nil {
 			return diag.Errorf("error while deleting Disk : %v", err)
 		}
@@ -173,11 +169,7 @@ func ApplyDiskAdditions(ctx context.Context, d *schema.ResourceData, meta interf
 			VmExtId: utils.StringPtr(vmID),
 			Body:    &diskInput,
 		}
-		args, err := vmEtagArgs(ctx, conn, vmID)
-		if err != nil {
-			return diag.Errorf("error while fetching VM eTag for disk create: %v", err)
-		}
-		resp, err := conn.VMAPIInstance.CreateDisk(ctx, &createDiskRequest, args)
+		resp, err := conn.VMAPIInstance.CreateDisk(ctx, &createDiskRequest)
 		if err != nil {
 			return diag.Errorf("error while creating Disk : %v", err)
 		}
