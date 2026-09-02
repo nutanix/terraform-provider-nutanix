@@ -86,13 +86,24 @@ func ResourceNutanixVmsShutdownActionV2Create(ctx context.Context, d *schema.Res
 		body.GuestPowerStateTransitionConfig = &gstVal
 	}
 
+	getVmByIdRequest := import3.GetVmByIdRequest{
+		ExtId: utils.StringPtr(vmExtID.(string)),
+	}
+	readResp, errR := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
+	if errR != nil {
+		return diag.Errorf("error while reading vm : %v", errR)
+	}
+	// Extract E-Tag Header
+	args := make(map[string]interface{})
+	args["If-Match"] = getEtagHeader(readResp, conn)
+
 	var TaskRef import1.TaskReference
 	//nolint:gocritic // Keeping if-else for clarity in this specific case
 	if action == "shutdown" {
 		shutdownVmRequest := import3.ShutdownVmRequest{
 			ExtId: utils.StringPtr(vmExtID.(string)),
 		}
-		resp, err := conn.VMAPIInstance.ShutdownVm(ctx, &shutdownVmRequest)
+		resp, err := conn.VMAPIInstance.ShutdownVm(ctx, &shutdownVmRequest, args)
 		if err != nil {
 			return diag.Errorf("error while Shutdown VM : %v", err)
 		}
@@ -102,7 +113,7 @@ func ResourceNutanixVmsShutdownActionV2Create(ctx context.Context, d *schema.Res
 			ExtId: utils.StringPtr(vmExtID.(string)),
 			Body:  &body,
 		}
-		resp, err := conn.VMAPIInstance.ShutdownGuestVm(ctx, &shutdownGuestVmRequest)
+		resp, err := conn.VMAPIInstance.ShutdownGuestVm(ctx, &shutdownGuestVmRequest, args)
 		if err != nil {
 			return diag.Errorf("error while Shutdown Guest VM : %v", err)
 		}
@@ -111,7 +122,7 @@ func ResourceNutanixVmsShutdownActionV2Create(ctx context.Context, d *schema.Res
 		rebootVmRequest := import3.RebootVmRequest{
 			ExtId: utils.StringPtr(vmExtID.(string)),
 		}
-		resp, err := conn.VMAPIInstance.RebootVm(ctx, &rebootVmRequest)
+		resp, err := conn.VMAPIInstance.RebootVm(ctx, &rebootVmRequest, args)
 		if err != nil {
 			return diag.Errorf("error while performing Reboot VM  : %v", err)
 		}
@@ -121,7 +132,7 @@ func ResourceNutanixVmsShutdownActionV2Create(ctx context.Context, d *schema.Res
 			ExtId: utils.StringPtr(vmExtID.(string)),
 			Body:  &body,
 		}
-		resp, err := conn.VMAPIInstance.RebootGuestVm(ctx, &rebootGuestVmRequest)
+		resp, err := conn.VMAPIInstance.RebootGuestVm(ctx, &rebootGuestVmRequest, args)
 		if err != nil {
 			return diag.Errorf("error while performing Reboot Guest VM : %v", err)
 		}
