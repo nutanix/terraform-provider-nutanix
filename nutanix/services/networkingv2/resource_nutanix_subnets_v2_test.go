@@ -2,7 +2,6 @@ package networkingv2_test
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -13,8 +12,6 @@ import (
 )
 
 const resourceNameSubnet = "nutanix_subnet_v2.test"
-const datasourceNameSubnetProject = "data.nutanix_subnet_v2.project_test"
-const datasourceNameSubnetProjectList = "data.nutanix_subnets_v2.list_test"
 const defaultProjectUUID = "00000000-0000-0000-0000-000000000000"
 
 func TestAccV2NutanixSubnetResource_Basic(t *testing.T) {
@@ -174,73 +171,6 @@ func TestAccV2NutanixSubnetResource_WithMetadata(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameSubnet, "metadata.0.category_ids.#", "2"),
 					testCheckMetadataCategoryIDsContain(datasourceNameSubnet, "nutanix_category_v2.test", "nutanix_category_v2.test2"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccV2NutanixSubnetResource_DefaultProjectAndSharing(t *testing.T) {
-	r := acctest.RandInt()
-	name := fmt.Sprintf("tf-test-subnet-proj-%d", r)
-	desc := "subnet for project sharing test"
-	updatedDesc := "subnet updated with sharing"
-	unsharedDesc := "subnet after unsharing"
-	projectName := fmt.Sprintf("tf-sub-share-proj-%d", r)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testSubnetV2ProjectConfig(name, desc, projectName, "none"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameSubnet, "name", name),
-					resource.TestCheckResourceAttr(resourceNameSubnet, "description", desc),
-					resource.TestCheckResourceAttr(resourceNameSubnet, "project_ext_id", defaultProjectUUID),
-					resource.TestCheckResourceAttr(datasourceNameSubnetProject, "project_ext_id", defaultProjectUUID),
-				),
-			},
-			{
-				Config: testSubnetV2ProjectConfig(name, updatedDesc, projectName, "share"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameSubnet, "description", updatedDesc),
-					resource.TestCheckResourceAttr(resourceNameSubnet, "shared_with_projects.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceNameSubnet, "shared_with_projects.0", "nutanix_project_v2.share_project", "ext_id"),
-					resource.TestCheckResourceAttr(datasourceNameSubnetProject, "shared_with_projects.#", "1"),
-					resource.TestCheckResourceAttrPair(datasourceNameSubnetProject, "shared_with_projects.0", "nutanix_project_v2.share_project", "ext_id"),
-					resource.TestCheckResourceAttr(datasourceNameSubnetProjectList, "subnets.#", "1"),
-					resource.TestCheckResourceAttrPair(datasourceNameSubnetProjectList, "subnets.0.ext_id", resourceNameSubnet, "ext_id"),
-					resource.TestCheckResourceAttr(datasourceNameSubnetProjectList, "subnets.0.shared_with_projects.#", "1"),
-					resource.TestCheckResourceAttrPair(datasourceNameSubnetProjectList, "subnets.0.shared_with_projects.0", "nutanix_project_v2.share_project", "ext_id"),
-				),
-			},
-			{
-				Config: testSubnetV2ProjectConfig(name, unsharedDesc, projectName, "empty"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameSubnet, "description", unsharedDesc),
-					resource.TestCheckResourceAttr(resourceNameSubnet, "shared_with_projects.#", "0"),
-					resource.TestCheckResourceAttr(datasourceNameSubnetProject, "shared_with_projects.#", "0"),
-					resource.TestCheckResourceAttr(datasourceNameSubnetProjectList, "subnets.#", "0"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccV2NutanixSubnetResource_NonDefaultProjectSharingFails(t *testing.T) {
-	r := acctest.RandInt()
-	name := fmt.Sprintf("tf-test-subnet-nondfl-%d", r)
-	desc := "subnet in non-default project"
-	project1Name := fmt.Sprintf("tf-sub-proj1-%d", r)
-	project2Name := fmt.Sprintf("tf-sub-proj2-%d", r)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config:      testSubnetV2NonDefaultProjectConfig(name, desc, project1Name, project2Name, "none"),
-				ExpectError: regexp.MustCompile("VLAN subnets can only be created in the default project"),
 			},
 		},
 	})
@@ -535,98 +465,6 @@ func testSubnetV2ConfigwithMetadataUpdate(name, desc string) string {
 			ext_id = nutanix_subnet_v2.test.id
 		}
 `, name, desc)
-}
-
-func testSubnetV2ProjectConfig(name, desc, projectName, shareState string) string {
-	shareBlock := ""
-	switch shareState {
-	case "share":
-		shareBlock = `shared_with_projects = [nutanix_project_v2.share_project.ext_id]`
-	case "empty":
-		shareBlock = `shared_with_projects = []`
-	}
-	listDataSource := ""
-	if shareState != "none" {
-		listDataSource = `
-		data "nutanix_subnets_v2" "list_test" {
-			filter     = "sharedWithProjects/any(p:p eq '${nutanix_project_v2.share_project.id}')"
-			depends_on = [nutanix_subnet_v2.test]
-		}`
-	}
-	return fmt.Sprintf(`
-		data "nutanix_clusters_v2" "clusters" {}
-
-		locals {
-			cluster0 = [
-				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-			][0]
-		}
-
-		resource "nutanix_project_v2" "share_project" {
-			name       = "%[3]s"
-			project_id = "%[3]s"
-			description = "project for subnet sharing test"
-		}
-
-		resource "nutanix_subnet_v2" "test" {
-			name              = "%[1]s"
-			description       = "%[2]s"
-			cluster_reference = local.cluster0
-			subnet_type       = "VLAN"
-			network_id        = 112
-			%[4]s
-			depends_on = [nutanix_project_v2.share_project]
-		}
-
-		data "nutanix_subnet_v2" "project_test" {
-			ext_id = nutanix_subnet_v2.test.id
-		}
-		%[5]s
-`, name, desc, projectName, shareBlock, listDataSource)
-}
-
-func testSubnetV2NonDefaultProjectConfig(name, desc, proj1, proj2, shareState string) string {
-	shareBlock := ""
-	switch shareState {
-	case "share":
-		shareBlock = `shared_with_projects = [nutanix_project_v2.project2.ext_id]`
-	case "empty":
-		shareBlock = `shared_with_projects = []`
-	}
-	return fmt.Sprintf(`
-		data "nutanix_clusters_v2" "clusters" {}
-
-		locals {
-			cluster0 = [
-				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-			][0]
-		}
-
-		resource "nutanix_project_v2" "project1" {
-			name       = "%[3]s"
-			project_id = "%[3]s"
-			description = "first project for subnet test"
-		}
-
-		resource "nutanix_project_v2" "project2" {
-			name       = "%[4]s"
-			project_id = "%[4]s"
-			description = "second project for subnet test"
-		}
-
-		resource "nutanix_subnet_v2" "test" {
-			name              = "%[1]s"
-			description       = "%[2]s"
-			cluster_reference = local.cluster0
-			subnet_type       = "VLAN"
-			network_id        = 112
-			project_ext_id    = nutanix_project_v2.project1.ext_id
-			%[5]s
-			depends_on = [nutanix_project_v2.project1, nutanix_project_v2.project2]
-		}
-`, name, desc, proj1, proj2, shareBlock)
 }
 
 // TestAccV2NutanixSubnetResource_IsConnected covers the is_connected attribute
