@@ -47,6 +47,18 @@ func ResourceNutanixRevertVMRecoveryPointV2Create(ctx context.Context, d *schema
 
 	conn := meta.(*conns.Client).VmmAPI
 
+	extID := d.Get("ext_id")
+
+	getVmByIdRequest := import3.GetVmByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
+	if err != nil {
+		return diag.Errorf("error while fetching Vm : %v", err)
+	}
+	args := make(map[string]interface{})
+	args["If-Match"] = getEtagHeader(readResp, conn)
+
 	body := config.RevertParams{}
 	rpExtID := d.Get("ext_id").(string)
 
@@ -58,7 +70,7 @@ func ResourceNutanixRevertVMRecoveryPointV2Create(ctx context.Context, d *schema
 		ExtId: utils.StringPtr(rpExtID),
 		Body:  &body,
 	}
-	resp, err := conn.VMAPIInstance.RevertVm(ctx, &revertVmRequest)
+	resp, err := conn.VMAPIInstance.RevertVm(ctx, &revertVmRequest, args)
 	if err != nil {
 		return diag.Errorf("error while reverting vm : %v", err)
 	}

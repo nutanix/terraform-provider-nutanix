@@ -1232,6 +1232,17 @@ func ResourceNutanixVMCloneV2Create(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.Client).VmmAPI
 	vmExtID := d.Get("vm_ext_id")
 
+	getVmByIdRequest := import3.GetVmByIdRequest{
+		ExtId: utils.StringPtr(vmExtID.(string)),
+	}
+	readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
+	if err != nil {
+		return diag.Errorf("error while reading vm : %v", err)
+	}
+	// Extract E-Tag Header
+	args := make(map[string]interface{})
+	args["If-Match"] = getEtagHeader(readResp, conn)
+
 	body := &config.CloneOverrideParams{}
 
 	if name, ok := d.GetOk("name"); ok {
@@ -1266,7 +1277,7 @@ func ResourceNutanixVMCloneV2Create(ctx context.Context, d *schema.ResourceData,
 		ExtId: utils.StringPtr(vmExtID.(string)),
 		Body:  body,
 	}
-	resp, err := conn.VMAPIInstance.CloneVm(ctx, &cloneVmRequest)
+	resp, err := conn.VMAPIInstance.CloneVm(ctx, &cloneVmRequest, args)
 	if err != nil {
 		return diag.Errorf("error while Cloning Vm : %v", err)
 	}
