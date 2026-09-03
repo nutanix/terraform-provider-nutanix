@@ -334,7 +334,7 @@ func ResourceNutanixAuthPoliciesV2Update(ctx context.Context, d *schema.Resource
 
 	aJSON, _ := json.MarshalIndent(updateAuthorizationPolicyByIdRequest, "", "  ")
 	log.Printf("[DEBUG] Update Authorization Policy Request Body: %s", string(aJSON))
-	
+
 	updatedResp, err := conn.AuthAPIInstance.UpdateAuthorizationPolicyById(ctx, &updateAuthorizationPolicyByIdRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while updating  Authorization Policy: %v", err)
