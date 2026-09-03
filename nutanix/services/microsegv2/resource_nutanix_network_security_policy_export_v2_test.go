@@ -224,4 +224,3 @@ resource "nutanix_network_security_policy_export_v2" "test" {
 
 `, exportAllFilePath, r1, r2, r3)
 }
-

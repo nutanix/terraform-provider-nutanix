@@ -247,7 +247,6 @@ func testVmStartupPolicyV2ConfigUpdated(name, desc string, r int) string {
 `, name, desc)
 }
 
-
 func testVmStartupPolicyV2ConfigWithDatasources(name, desc string, r int) string {
 	return testVmStartupPolicyV2ConfigUpdated(name, desc, r) + `
 		data "nutanix_vm_startup_policy_v2" "test_ds" {

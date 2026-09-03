@@ -61,7 +61,6 @@ func TestAccV2NutanixVMAntiAffinityPolicyResource_WithUpdate(t *testing.T) {
 	})
 }
 
-
 func testVMAntiAffinityPolicyV2Config(name, desc string, count int) string {
 	return fmt.Sprintf(`
 		resource "nutanix_category_v2" "vm_category" {

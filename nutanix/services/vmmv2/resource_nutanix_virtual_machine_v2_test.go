@@ -111,7 +111,6 @@ func TestAccV2NutanixVmsResource_WithDisk(t *testing.T) {
 	})
 }
 
-
 func TestAccV2NutanixVmsResource_DiskWithDatasource(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
