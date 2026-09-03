@@ -274,7 +274,6 @@ func TestAccV2NutanixProtectionPolicyResource_SyncReplicationPausedCreateError(t
 	})
 }
 
-
 // Case 3: Create a synchronous protection policy with is_replication_paused = false, then
 // update it to true. Pausing is only supported for synchronous replication via update.
 func TestAccV2NutanixProtectionPolicyResource_SyncReplicationPausedUpdate(t *testing.T) {
