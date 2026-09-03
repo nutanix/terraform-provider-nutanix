@@ -97,12 +97,23 @@ func ResourceNutanixVmsNetworkDeviceMigrateV2Create(ctx context.Context, d *sche
 		body.IpAddress = expandIPv4Address(ipAddress)
 	}
 
+	getVmByIdRequest := import3.GetVmByIdRequest{
+		ExtId: utils.StringPtr(vmExtID.(string)),
+	}
+	readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
+	if err != nil {
+		return diag.Errorf("error while reading vm : %v", err)
+	}
+	// Extract E-Tag Header
+	args := make(map[string]interface{})
+	args["If-Match"] = getEtagHeader(readResp, conn)
+
 	migrateNicByIdRequest := import3.MigrateNicByIdRequest{
 		VmExtId: utils.StringPtr(vmExtID.(string)),
 		ExtId:   utils.StringPtr(extID.(string)),
 		Body:    &body,
 	}
-	resp, err := conn.VMAPIInstance.MigrateNicById(ctx, &migrateNicByIdRequest)
+	resp, err := conn.VMAPIInstance.MigrateNicById(ctx, &migrateNicByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while migrate nic : %v", err)
 	}
@@ -166,12 +177,23 @@ func ResourceNutanixVmsNetworkDeviceMigrateV2Update(ctx context.Context, d *sche
 		body.MigrateType = &p
 	}
 
+	getVmByIdRequest := import3.GetVmByIdRequest{
+		ExtId: utils.StringPtr(vmExtID.(string)),
+	}
+	readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
+	if err != nil {
+		return diag.Errorf("error while reading vm : %v", err)
+	}
+	// Extract E-Tag Header
+	args := make(map[string]interface{})
+	args["If-Match"] = getEtagHeader(readResp, conn)
+
 	migrateNicByIdRequest := import3.MigrateNicByIdRequest{
 		VmExtId: utils.StringPtr(vmExtID.(string)),
 		ExtId:   utils.StringPtr(extID.(string)),
 		Body:    &body,
 	}
-	resp, err := conn.VMAPIInstance.MigrateNicById(ctx, &migrateNicByIdRequest)
+	resp, err := conn.VMAPIInstance.MigrateNicById(ctx, &migrateNicByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while migrate nic : %v", err)
 	}
