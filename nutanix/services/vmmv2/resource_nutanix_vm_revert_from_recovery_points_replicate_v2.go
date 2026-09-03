@@ -109,6 +109,9 @@ func ResourceNutanixRevertVMRecoveryPointV2Create(ctx context.Context, d *schema
 
 	values := common.ExtractCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameVMRecoveryPointExtID)
 	if len(values) == 0 {
+		values = common.ExtractCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameVmRecoveryPoint)
+	}
+	if len(values) == 0 {
 		return diag.Errorf("VM not found in task completion details")
 	}
 	uuid := values[0]
