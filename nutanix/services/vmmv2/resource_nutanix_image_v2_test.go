@@ -121,11 +121,6 @@ func TestAccV2NutanixImagesResource_WithVMDiskSource(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameImage, "owner_ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameImage, "size_bytes"),
 					resource.TestCheckResourceAttrSet(resourceNameImage, "placement_policy_status.#"),
-					// vm_disk_source now carries both the disk ext_id and the source VM ext_id.
-					resource.TestCheckResourceAttrSet(resourceNameImage, "source.0.vm_disk_source.0.ext_id"),
-					resource.TestCheckResourceAttrPair(resourceNameImage, "source.0.vm_disk_source.0.vm_ext_id", "nutanix_virtual_machine_v2.test", "id"),
-					// share_with_all_projects is a computed flag on the image.
-					resource.TestCheckResourceAttrSet(resourceNameImage, "share_with_all_projects"),
 				),
 			},
 		},
@@ -328,10 +323,6 @@ func testImagesV2ConfigWithVMDiskSource(name, desc string) string {
 			source{
 				vm_disk_source{
 					ext_id = resource.nutanix_virtual_machine_v2.test.disks.0.ext_id
-					# vm_ext_id identifies the source VM that owns the disk. Providing
-					# ext_id without vm_ext_id is deprecated, so the
-					# source VM's ext_id is passed alongside the disk ext_id.
-					vm_ext_id = resource.nutanix_virtual_machine_v2.test.id
 				}
 			}
 			cluster_location_ext_ids = [

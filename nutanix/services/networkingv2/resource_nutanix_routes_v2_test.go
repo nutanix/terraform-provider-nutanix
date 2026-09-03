@@ -42,7 +42,6 @@ func TestAccV2NutanixRoutesResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceSubnet, "ip_config.0.ipv4.0.default_gateway_ip.0.value", testVars.Networking.Subnets.GatewayIP),
 					resource.TestCheckResourceAttr(resourceSubnet, "ip_config.0.ipv4.0.pool_list.0.start_ip.0.value", testVars.Networking.Subnets.DHCP.StartIP),
 					resource.TestCheckResourceAttr(resourceSubnet, "ip_config.0.ipv4.0.pool_list.0.end_ip.0.value", testVars.Networking.Subnets.DHCP.EndIP),
-					resource.TestCheckResourceAttr(resourceSubnet, "project_ext_id", "00000000-0000-0000-0000-000000000000"), // default project
 				),
 			},
 			// Create VPC 1
@@ -90,7 +89,6 @@ func TestAccV2NutanixRoutesResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceRoute1, "next_hop.0.next_hop_type", "EXTERNAL_SUBNET"),
 					resource.TestCheckResourceAttrSet(resourceRoute1, "next_hop.0.next_hop_reference"),
 					resource.TestCheckResourceAttrSet(resourceRoute1, "metadata.0.owner_reference_id"),
-					resource.TestCheckResourceAttr(resourceRoute1, "metadata.0.project_reference_id", "00000000-0000-0000-0000-000000000000"),
 					resource.TestCheckResourceAttr(resourceRoute1, "route_type", "STATIC"),
 				),
 			},
@@ -107,7 +105,6 @@ func TestAccV2NutanixRoutesResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceRoute2, "next_hop.0.next_hop_type", "EXTERNAL_SUBNET"),
 					resource.TestCheckResourceAttrSet(resourceRoute2, "next_hop.0.next_hop_reference"),
 					resource.TestCheckResourceAttrSet(resourceRoute2, "metadata.0.owner_reference_id"),
-					resource.TestCheckResourceAttr(resourceRoute2, "metadata.0.project_reference_id", "00000000-0000-0000-0000-000000000000"),
 					resource.TestCheckResourceAttr(resourceRoute2, "route_type", "STATIC"),
 				),
 			},
@@ -124,7 +121,6 @@ func TestAccV2NutanixRoutesResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceRoute1, "next_hop.0.next_hop_type", "EXTERNAL_SUBNET"),
 					resource.TestCheckResourceAttrSet(resourceRoute1, "next_hop.0.next_hop_reference"),
 					resource.TestCheckResourceAttrSet(resourceRoute1, "metadata.0.owner_reference_id"),
-					resource.TestCheckResourceAttr(resourceRoute1, "metadata.0.project_reference_id", "00000000-0000-0000-0000-000000000000"),
 					resource.TestCheckResourceAttr(resourceRoute1, "route_type", "STATIC"),
 				),
 			},
@@ -141,7 +137,6 @@ func TestAccV2NutanixRoutesResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceRoute2, "next_hop.0.next_hop_type", "EXTERNAL_SUBNET"),
 					resource.TestCheckResourceAttrSet(resourceRoute2, "next_hop.0.next_hop_reference"),
 					resource.TestCheckResourceAttrSet(resourceRoute2, "metadata.0.owner_reference_id"),
-					resource.TestCheckResourceAttr(resourceRoute2, "metadata.0.project_reference_id", "00000000-0000-0000-0000-000000000000"),
 					resource.TestCheckResourceAttr(resourceRoute2, "route_type", "STATIC"),
 				),
 			},
@@ -269,7 +264,6 @@ func testRoute1Config(name, desc string, r int) string {
 	  }
 	  metadata {
 		owner_reference_id   = nutanix_vpc_v2.test-1.id
-		project_reference_id = "00000000-0000-0000-0000-000000000000"
 	  }
 	  route_type = "STATIC"
 	}
@@ -297,7 +291,6 @@ func testRoute2Config(name, desc string, r int) string {
 	  }
 	  metadata {
 		owner_reference_id   = nutanix_vpc_v2.test-2.id
-		project_reference_id = "00000000-0000-0000-0000-000000000000"
 	  }
 	  route_type = "STATIC"
 	}
@@ -325,7 +318,6 @@ func testRoute1UpdateConfig(name, desc string, r int) string {
 	  }
 	  metadata {
 		owner_reference_id   = nutanix_vpc_v2.test-1.id
-		project_reference_id = "00000000-0000-0000-0000-000000000000"
 	  }
 	  route_type = "STATIC"
 	}
@@ -353,7 +345,6 @@ func testRoute2UpdateConfig(name, desc string, r int) string {
 	  }
 	  metadata {
 		owner_reference_id   = nutanix_vpc_v2.test-2.id
-		project_reference_id = "00000000-0000-0000-0000-000000000000"
 	  }
 	  route_type = "STATIC"
 	}

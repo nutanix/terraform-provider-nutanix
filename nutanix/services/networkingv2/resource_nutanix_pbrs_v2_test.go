@@ -222,7 +222,7 @@ func testPbrConfigWithSrcDstn(name, desc string) string {
 								value= "10.10.10.0"
 								prefix_length = 32
 							}
-							prefix_length = 24
+							prefix_length = 0
 						}
 					}
 				}
