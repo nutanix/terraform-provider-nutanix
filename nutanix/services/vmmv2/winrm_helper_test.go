@@ -198,8 +198,10 @@ func ensureVMPoweredOn(vmExtID string) error {
 	}
 
 	log.Printf("[DEBUG] VM %s is not ON (state=%v), powering on...", vmExtID, vm.PowerState)
+	args := make(map[string]interface{})
+	args["If-Match"] = utils.StringPtr(conn.VmmAPI.VMAPIInstance.ApiClient.GetEtag(resp))
 	powerReq := import1.PowerOnVmRequest{ExtId: utils.StringPtr(vmExtID)}
-	powerResp, err := conn.VmmAPI.VMAPIInstance.PowerOnVm(ctx, &powerReq)
+	powerResp, err := conn.VmmAPI.VMAPIInstance.PowerOnVm(ctx, &powerReq, args)
 	if err != nil {
 		return fmt.Errorf("failed to power on VM %s: %w", vmExtID, err)
 	}
