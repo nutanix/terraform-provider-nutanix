@@ -41,6 +41,26 @@ func TestAccV2NutanixRolesResource_Basic(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixRolesResource_IsGlobal(t *testing.T) {
+	roleDisplayName := fmt.Sprintf("tf-test-role-display-name-%d", acctest.RandInt())
+	roleDescription := "tf test role description"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testRoleResourceIsGlobalConfig(roleDisplayName, roleDescription),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameRoles, "client_name"),
+					resource.TestCheckResourceAttr(resourceNameRoles, "display_name", roleDisplayName),
+					resource.TestCheckResourceAttr(resourceNameRoles, "description", roleDescription),
+					resource.TestCheckResourceAttr(resourceNameRoles, "is_global", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccV2NutanixRolesResource_DuplicateRole(t *testing.T) {
 	roleDisplayName := fmt.Sprintf("tf-test-role-display-name-%d", acctest.RandInt())
 	roleDescription := "tf test role description"
@@ -254,5 +274,26 @@ func testRoleResourceWithoutOperationsConfig(displayName, description string) st
 	resource "nutanix_roles_v2" "test" {
 		display_name = "%[1]s"
 		description  = "%[2]s"
+	}`, displayName, description)
+}
+
+func testRoleResourceIsGlobalConfig(displayName, description string) string {
+	return fmt.Sprintf(`
+
+	data "nutanix_operations_v2" "test" {
+	  filter = "startswith(displayName, 'Create_')"
+	}
+
+	resource "nutanix_roles_v2" "test" {
+		display_name = "%[1]s"
+		description  = "%[2]s"
+		is_global = true
+		operations = [
+			data.nutanix_operations_v2.test.operations[0].ext_id,
+			data.nutanix_operations_v2.test.operations[1].ext_id,
+			data.nutanix_operations_v2.test.operations[2].ext_id,
+			data.nutanix_operations_v2.test.operations[3].ext_id
+	  	]
+		depends_on = [data.nutanix_operations_v2.test]
 	}`, displayName, description)
 }

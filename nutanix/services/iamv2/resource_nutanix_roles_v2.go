@@ -11,6 +11,7 @@ import (
 	iamConfig "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/request/roles"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -46,6 +47,11 @@ func ResourceNutanixRolesV2() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
+			},
+			"is_global": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"operations": {
 				Description: "List of Operations for the Role.",
@@ -152,6 +158,9 @@ func ResourceNutanixRolesV4Create(ctx context.Context, d *schema.ResourceData, m
 	}
 	if clientName, ok := d.GetOk("client_name"); ok {
 		body.ClientName = utils.StringPtr(clientName.(string))
+	}
+	if common.IsExplicitlySet(d, "is_global") {
+		body.IsGlobal = utils.BoolPtr(d.Get("is_global").(bool))
 	}
 	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
 		body.ProjectExtId = utils.StringPtr(projectExtID.(string))
@@ -319,6 +328,11 @@ func ResourceNutanixRolesV4Update(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChange("client_name") {
 		updatedSpec.ClientName = utils.StringPtr(d.Get("client_name").(string))
 	}
+	if common.IsExplicitlySet(d, "is_global") && d.HasChange("is_global") {
+		updatedSpec.IsGlobal = utils.BoolPtr(d.Get("is_global").(bool))
+	} else {
+		updatedSpec.IsGlobal = nil
+	}
 	if d.HasChange("operations") {
 		operations := d.Get("operations").([]interface{})
 		operationsListStr := make([]string, len(operations))
@@ -335,6 +349,10 @@ func ResourceNutanixRolesV4Update(ctx context.Context, d *schema.ResourceData, m
 		ExtId: extID,
 		Body:  &updatedSpec,
 	}
+
+	aJSON, _ := json.MarshalIndent(updateRoleByIdRequest, "", "  ")
+	log.Printf("[DEBUG] Update Role Request Body: %s", string(aJSON))
+
 	updateResp, err := conn.RolesAPIInstance.UpdateRoleById(ctx, &updateRoleByIdRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while updating role: %v", err)
