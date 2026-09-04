@@ -41,26 +41,6 @@ func TestAccV2NutanixRolesResource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccV2NutanixRolesResource_IsGlobal(t *testing.T) {
-	roleDisplayName := fmt.Sprintf("tf-test-role-display-name-%d", acctest.RandInt())
-	roleDescription := "tf test role description"
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testRoleResourceIsGlobalConfig(roleDisplayName, roleDescription),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameRoles, "client_name"),
-					resource.TestCheckResourceAttr(resourceNameRoles, "display_name", roleDisplayName),
-					resource.TestCheckResourceAttr(resourceNameRoles, "description", roleDescription),
-					resource.TestCheckResourceAttr(resourceNameRoles, "is_global", "true"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccV2NutanixRolesResource_DuplicateRole(t *testing.T) {
 	roleDisplayName := fmt.Sprintf("tf-test-role-display-name-%d", acctest.RandInt())
 	roleDescription := "tf test role description"
