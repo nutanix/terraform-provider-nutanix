@@ -107,6 +107,10 @@ func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.Resource
 		XClusterId: utils.StringPtr(clusterExtID),
 		Dryrun_:    nil,
 	}
+
+	aJSON, _ := json.MarshalIndent(performPrechecksRequest, "", "  ")
+	log.Printf("[DEBUG] Perform Prechecks Request: %s", string(aJSON))
+
 	resp, err := conn.LcmPreChecksAPIInstance.PerformPrechecks(ctx, &performPrechecksRequest)
 	if err != nil {
 		return diag.Errorf("error while performing the prechecks: %v", err)
@@ -138,7 +142,7 @@ func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.Resource
 		return diag.Errorf("error while fetching LCM prechecks task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
-	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] LCM Prechecks Task Details: %s", string(aJSON))
 
 	// This is an action resource that does not maintain state.

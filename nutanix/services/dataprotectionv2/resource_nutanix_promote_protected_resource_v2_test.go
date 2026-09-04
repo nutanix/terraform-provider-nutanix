@@ -435,7 +435,7 @@ resource "null_resource" "wait_cluster_registered" {
   provisioner "local-exec" {
     command = <<-EOT
       for i in $(seq 1 60); do
-        if curl -ksS -u "$NUTANIX_USERNAME:$NUTANIX_PASSWORD" \
+        if curl -ksS -u "${local.config.pc_username}:${local.config.pc_password}" \
              "https://$NUTANIX_ENDPOINT:$NUTANIX_PORT/api/clustermgmt/v4.0/config/clusters" \
              | grep -q "\"${self.triggers.cluster_name}\""; then
           echo "cluster ${self.triggers.cluster_name} is now listed on PC"
