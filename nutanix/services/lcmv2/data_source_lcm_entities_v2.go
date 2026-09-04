@@ -2,6 +2,8 @@ package lcmv2
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -85,6 +87,10 @@ func DatasourceNutanixLcmEntitiesV2Create(ctx context.Context, d *schema.Resourc
 	}
 
 	entities := resp.Data.GetValue().([]lcmEntityPkg.Entity)
+
+	aJSON, _ := json.MarshalIndent(entities, "", "  ")
+	log.Printf("[DEBUG] LCM Entities: %s", string(aJSON))
+
 	if err := d.Set("entities", flattenLcmEntities(entities)); err != nil {
 		return diag.FromErr(err)
 	}

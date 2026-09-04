@@ -136,6 +136,10 @@ func ResourceLcmUpgradeV2Create(ctx context.Context, d *schema.ResourceData, met
 		XClusterId: clusterID,
 		Dryrun_:    nil,
 	}
+
+	aJSON, _ = json.MarshalIndent(performUpgradeRequest, "", "  ")
+	log.Printf("[DEBUG] Perform Upgrade Request: %s", string(aJSON))
+	
 	resp, err := conn.LcmUpgradeAPIInstance.PerformUpgrade(ctx, &performUpgradeRequest)
 	if err != nil {
 		return diag.Errorf("error while Perform Upgrade the LCM config: %v", err)
