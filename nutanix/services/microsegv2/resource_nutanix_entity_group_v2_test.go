@@ -11,7 +11,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-func TestAccNutanixEntityGroupV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixEntityGroupResource_Basic(t *testing.T) {
 	r := acctest.RandIntRange(1, 100)
 	name := fmt.Sprintf("tf-entity-group-%d", r)
 	description := fmt.Sprintf("tf-entity-group-%d_desc", r)
@@ -49,7 +49,7 @@ func TestAccNutanixEntityGroupV2Resource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixEntityGroupV2Resource_WithoutName(t *testing.T) {
+func TestAccV2NutanixEntityGroupResource_WithoutName(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -62,7 +62,7 @@ func TestAccNutanixEntityGroupV2Resource_WithoutName(t *testing.T) {
 	})
 }
 
-func TestAccNutanixEntityGroupV2Resource_WithWrongReferenceExtIds(t *testing.T) {
+func TestAccV2NutanixEntityGroupResource_WithWrongReferenceExtIds(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-entity-group-wrong-ref-%d", r)
 	description := "entity_group_wrong_ref_ext_ids_desc"
@@ -141,7 +141,7 @@ resource "nutanix_entity_group_v2" "test" {
 `
 }
 
-func TestAccNutanixEntityGroupV2Resource_ProjectAssociation(t *testing.T) {
+func TestAccV2NutanixEntityGroupResource_ProjectAssociation(t *testing.T) {
 	r := acctest.RandIntRange(101, 200)
 	name := fmt.Sprintf("tf-eg-projassoc-%d", r)
 	description := "entity group project association test"
@@ -172,12 +172,12 @@ func TestAccNutanixEntityGroupV2Resource_ProjectAssociation(t *testing.T) {
 	})
 }
 
-// TestAccNutanixEntityGroupV2Resource_FqdnSelection covers the FQDN based
+// TestAccV2NutanixEntityGroupResource_FqdnSelection covers the FQDN based
 // selection added in the Flow Management feature set: an ADDRESS_GROUP entity
 // selected BY FQDN_VALUES, populating the new "fqdns" list. The supported
 // combination per the SDK is "ADDRESS_GROUP BY FQDN_VALUES". The update step
 // changes the FQDN list to exercise the update path.
-func TestAccNutanixEntityGroupV2Resource_FqdnSelection(t *testing.T) {
+func TestAccV2NutanixEntityGroupResource_FqdnSelection(t *testing.T) {
 	r := acctest.RandIntRange(201, 300)
 	name := fmt.Sprintf("tf-eg-fqdn-%d", r)
 	description := "entity group fqdn selection test"
@@ -210,14 +210,14 @@ func TestAccNutanixEntityGroupV2Resource_FqdnSelection(t *testing.T) {
 	})
 }
 
-// TestAccNutanixEntityGroupV2Resource_RegexSelection covers the pattern based
+// TestAccV2NutanixEntityGroupResource_RegexSelection covers the pattern based
 // selection added in the Flow Management feature set: a VM entity selected BY
 // REGEX, populating the new "reference_string" and "match_criteria". The
 // supported combination per the SDK is "VM BY REGEX". Note reference_string is
 // a plain literal, not a raw regex: the backend rejects special characters
 // (" ' * , [ ] ? % $ - MIC-30525) and match_criteria (STARTS_WITH, CONTAINS,
 // ...) supplies the matching semantics. The update step changes both values.
-func TestAccNutanixEntityGroupV2Resource_RegexSelection(t *testing.T) {
+func TestAccV2NutanixEntityGroupResource_RegexSelection(t *testing.T) {
 	// REGEX (kVmNameByRegex) selection is only accepted by the backend when Flow
 	// flex mode is enabled (MIC/NETWORKING: "selection types kVmByUuid,
 	// kVmNameByRegex, and kSubnetByUuid are only allowed when flex mode is
