@@ -113,19 +113,22 @@ func TestAccV2NutanixPromoteProtectedResourceDatasource_GetProtectedVG(t *testin
 
 func testCreateProtectedResourceVMConfig(vmName, ppName, description string, r int) string {
 	return fmt.Sprintf(`
+
+locals {
+  pcFilter            = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')"
+  aosFilter           = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
+}
+
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
 # list Clusters
-data "nutanix_clusters_v2" "clusters" {}
+data "nutanix_clusters_v2" "clusters" {
+  filter = local.aosFilter
+}
 
 locals {
-  clusterExtId = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-  ][
-  0
-  ]
+  clusterExtId = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
   config = jsondecode(file("%[1]s"))
   availability_zone = local.config.availability_zone
 }
@@ -183,11 +186,6 @@ resource "nutanix_protection_policy_v2" "test" {
   category_ids = [nutanix_category_v2.synchronous-pp-category.id]
 }
 
-data "nutanix_storage_containers_v2" "ngt-sc" {
-	filter = "clusterExtId eq '${local.clusterExtId}' and startswith(name,'default-container-')"
-	limit = 1
-}
-
 resource "nutanix_virtual_machine_v2" "test" {
   name                 = "%[2]s"
   description          = "%[3]s"
@@ -200,29 +198,6 @@ resource "nutanix_virtual_machine_v2" "test" {
     ext_id = nutanix_category_v2.synchronous-pp-category.id
   }
   power_state = "ON"
-
-  disks {
-    disk_address{
-			bus_type = "SCSI"
-			index = 0
-		}
-		backing_info{
-			vm_disk{
-				disk_size_bytes = "1073741824" # 10 GB
-				storage_container{
-					ext_id = data.nutanix_storage_containers_v2.ngt-sc.storage_containers[0].ext_id
-				}
-			}
-		}
-  }
-
-  cd_roms {
-    disk_address {
-      bus_type = "IDE"
-      index    = 0
-    }
-  }
-
   depends_on = [nutanix_protection_policy_v2.test]
 }
 
@@ -335,42 +310,25 @@ resource "nutanix_protection_policy_v2" "test" {
   category_ids = [nutanix_category_v2.test.id]
 }
 
-data "nutanix_storage_containers_v2" "vg-sc" {
-  filter = "clusterExtId eq '${local.clusterExtId}' and startswith(name,'default-container-')"
-  limit  = 1
-}
-
 resource "nutanix_volume_group_v2" "test" {
   name                               = "%[2]s"
   description                        = "%[3]s"
   cluster_reference                  = local.clusterExtId
+  depends_on = [
+    nutanix_protection_policy_v2.test
+  ]
 }
 
-# A Volume Group must contain at least one vdisk to be protectable; an empty VG
-# has no storage objects to replicate and is skipped, staying UNPROTECTED.
-resource "nutanix_volume_group_disk_v2" "test" {
-  volume_group_ext_id = nutanix_volume_group_v2.test.id
-  index               = 0
-  description         = "disk for protected vg"
-  disk_size_bytes     = 1073741824
-  disk_data_source_reference {
-    name        = "%[2]s-disk"
-    ext_id      = data.nutanix_storage_containers_v2.vg-sc.storage_containers[0].ext_id
-    entity_type = "STORAGE_CONTAINER"
-  }
-  # The v4 GET does not return disk_data_source_reference (it is a create-time-only
-  # source reference), so it would otherwise show a perpetual add-in-place diff.
-  lifecycle {
-    ignore_changes = [disk_data_source_reference]
-  }
-}
 
 resource "nutanix_associate_category_to_volume_group_v2" "test" {
   ext_id = nutanix_volume_group_v2.test.id
   categories {
     ext_id = nutanix_category_v2.test.id
   }
-  depends_on = [nutanix_volume_group_disk_v2.test]
+  depends_on = [
+    nutanix_protection_policy_v2.test,
+    nutanix_volume_group_v2.test
+  ]
 }
 
 
