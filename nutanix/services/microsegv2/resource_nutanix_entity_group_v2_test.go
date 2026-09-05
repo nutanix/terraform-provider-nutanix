@@ -73,7 +73,7 @@ func TestAccV2NutanixEntityGroupResource_WithWrongReferenceExtIds(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEntityGroupV2ResourceConfigWithWrongReferenceExtIds(name, description),
-				ExpectError: regexp.MustCompile("categories do not exist in project"),
+				ExpectError: regexp.MustCompile("categories do not exist in project|categories were not found in DB"),
 			},
 		},
 	})
