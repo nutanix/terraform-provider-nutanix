@@ -12,8 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import4 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
+	import3 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/request/vm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -98,6 +100,7 @@ func ResourceNutanixVmsCdRomsInsertEjectV2() *schema.Resource {
 						"storage_config": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"is_flash_mode_enabled": {
@@ -209,7 +212,10 @@ func ResourceNutanixVmsCdRomsInsertEjectV2Create(ctx context.Context, d *schema.
 			body.BackingInfo = expandVMDisk(backInfo)
 		}
 
-		readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(vmExtID.(string)))
+		getVmByIdRequest := import3.GetVmByIdRequest{
+			ExtId: utils.StringPtr(vmExtID.(string)),
+		}
+		readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 		if err != nil {
 			return diag.Errorf("error while reading vm : %v", err)
 		}
@@ -217,7 +223,12 @@ func ResourceNutanixVmsCdRomsInsertEjectV2Create(ctx context.Context, d *schema.
 		args := make(map[string]interface{})
 		args["If-Match"] = getEtagHeader(readResp, conn)
 
-		resp, err := conn.VMAPIInstance.InsertCdRomById(utils.StringPtr(vmExtID.(string)), utils.StringPtr(extID.(string)), &body, args)
+		insertCdRomByIdRequest := import3.InsertCdRomByIdRequest{
+			VmExtId: utils.StringPtr(vmExtID.(string)),
+			ExtId:   utils.StringPtr(extID.(string)),
+			Body:    &body,
+		}
+		resp, err := conn.VMAPIInstance.InsertCdRomById(ctx, &insertCdRomByIdRequest, args)
 		if err != nil {
 			return diag.Errorf("error while inserting cd-rom : %v", err)
 		}
@@ -239,7 +250,10 @@ func ResourceNutanixVmsCdRomsInsertEjectV2Create(ctx context.Context, d *schema.
 		}
 
 		// Get UUID from TASK API
-		taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		getTaskByIdRequest := import4.GetTaskByIdRequest{
+			ExtId: utils.StringPtr(*taskUUID),
+		}
+		taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 		if err != nil {
 			return diag.Errorf("error while fetching CD-ROM insert task (%s): %v", utils.StringValue(taskUUID), err)
 		}
@@ -262,7 +276,11 @@ func ResourceNutanixVmsCdRomsInsertEjectV2Read(ctx context.Context, d *schema.Re
 	vmExtID := d.Get("vm_ext_id")
 	extID := d.Get("ext_id")
 
-	readResp, err := conn.VMAPIInstance.GetCdRomById(utils.StringPtr(vmExtID.(string)), utils.StringPtr(extID.(string)))
+	getCdRomByIdRequest := import3.GetCdRomByIdRequest{
+		VmExtId: utils.StringPtr(vmExtID.(string)),
+		ExtId:   utils.StringPtr(extID.(string)),
+	}
+	readResp, err := conn.VMAPIInstance.GetCdRomById(ctx, &getCdRomByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while reading cd-rom : %v", err)
 	}

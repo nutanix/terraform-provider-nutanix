@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import5 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/request/images"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -118,6 +119,10 @@ func DatasourceNutanixImagesV4() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
+												"vm_ext_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
 											},
 										},
 									},
@@ -203,6 +208,14 @@ func DatasourceNutanixImagesV4() *schema.Resource {
 								},
 							},
 						},
+						"project_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"share_with_all_projects": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -213,36 +226,25 @@ func DatasourceNutanixImagesV4() *schema.Resource {
 func DatasourceNutanixImagesV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	// initialize query params
-	var filter, orderBy, selects *string
-	var page, limit *int
+	listImagesRequest := import2.ListImagesRequest{}
 
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
+	if v, ok := d.GetOk("page"); ok {
+		listImagesRequest.Page_ = utils.IntPtr(v.(int))
 	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
+	if v, ok := d.GetOk("limit"); ok {
+		listImagesRequest.Limit_ = utils.IntPtr(v.(int))
 	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
+	if v, ok := d.GetOk("filter"); ok {
+		listImagesRequest.Filter_ = utils.StringPtr(v.(string))
 	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
+	if v, ok := d.GetOk("order_by"); ok {
+		listImagesRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
-	if selectf, ok := d.GetOk("select"); ok {
-		selects = utils.StringPtr(selectf.(string))
-	} else {
-		selects = nil
+	if v, ok := d.GetOk("select"); ok {
+		listImagesRequest.Select_ = utils.StringPtr(v.(string))
 	}
-	resp, err := conn.ImagesAPIInstance.ListImages(page, limit, filter, orderBy, selects)
+
+	resp, err := conn.ImagesAPIInstance.ListImages(ctx, &listImagesRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching images : %v", err)
 	}
@@ -318,6 +320,12 @@ func flattenImagesEntities(pr []import5.Image) []interface{} {
 			}
 			if v.PlacementPolicyStatus != nil {
 				img["placement_policy_status"] = flattenImagePlacementStatus(v.PlacementPolicyStatus)
+			}
+			if v.IsSharedWithAllProjects != nil {
+				img["share_with_all_projects"] = v.IsSharedWithAllProjects
+			}
+			if v.ProjectExtId != nil {
+				img["project_ext_id"] = v.ProjectExtId
 			}
 			imgs[k] = img
 		}

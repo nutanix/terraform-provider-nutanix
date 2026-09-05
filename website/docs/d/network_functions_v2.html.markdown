@@ -48,6 +48,7 @@ The `network_functions` object contains the following attributes:
 - `ext_id`:  globally unique identifier of an instance that is suitable for external consumption.
 - `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 - `metadata`: Metadata associated with this resource.
+- `project_ext_id`: Project external ID associated with the network function.
 - `name`: Name of the network function.
 - `description`: Description of the network function.
 - `failure_handling`: Failure handling behavior when network function is unhealthy. Values:
@@ -122,4 +123,4 @@ The `data_plane_health_check_config` object contains the following attributes:
 - `success_threshold` :  `Default: 3`. The number of successful checks after which the target is considered healthy.
 - `timeout_secs` :  `Default: 1`. The time, in seconds, after which a health check times out.
 
-See detailed information in [List Network Functions v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/NetworkFunctions/operation/listNetworkFunctions).
+See detailed information in [List Network Functions v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/NetworkFunctions/operation/listNetworkFunctions).

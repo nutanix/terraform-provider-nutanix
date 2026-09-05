@@ -75,6 +75,19 @@ The entities attribute element contains the followings attributes:
 * `external_network_list.#.uuid` - The UUID of a network.
 * `external_network_list.#.name` - The name of a network.
 
+### enable_directory_and_identity_provider_shortlist
+* `enable_directory_and_identity_provider_shortlist` - Flag indicating whether the directory services and identity providers associated with the project are shortlisted.
+
+### Directory Reference List
+* `directory_reference_list` - List of directory services associated with the project.
+* `directory_reference_list.#.uuid` - The UUID of a directory service.
+* `directory_reference_list.#.kind` - The kind name. Default value is `directory_service`
+
+### Identity Providers Reference List
+* `identity_providers_reference_list` - List of identity providers associated with the project.
+* `identity_providers_reference_list.#.uuid` - The UUID of an identity provider.
+* `identity_providers_reference_list.#.kind` - The kind name. Default value is `identity_provider`
+
 ### Resource Domain
 * `resource_domain` - (Deprecated) Not supported starting from provider version `2.4.0` and expected to be empty.
 

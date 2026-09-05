@@ -46,6 +46,8 @@ func TestAccV2NutanixPromoteProtectedResourceDatasource_GetProtectedVm(t *testin
 			{
 				PreConfig: func() {
 					fmt.Printf("Step 2: Get protected vm details\n")
+					// Step 2: Add a PreConfig to pause before Terraform runs the refresh/apply for the data source
+					time.Sleep(90 * time.Second)
 				},
 				Config: testGetProtectedResourceVMConfig() +
 					testCreateProtectedResourceVMConfig(vmName, ppName, description, r),
@@ -111,19 +113,22 @@ func TestAccV2NutanixPromoteProtectedResourceDatasource_GetProtectedVG(t *testin
 
 func testCreateProtectedResourceVMConfig(vmName, ppName, description string, r int) string {
 	return fmt.Sprintf(`
+
+locals {
+  pcFilter            = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')"
+  aosFilter           = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
+}
+
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
 # list Clusters
-data "nutanix_clusters_v2" "clusters" {}
+data "nutanix_clusters_v2" "clusters" {
+  filter = local.aosFilter
+}
 
 locals {
-  clusterExtId = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-  ][
-  0
-  ]
+  clusterExtId = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
   config = jsondecode(file("%[1]s"))
   availability_zone = local.config.availability_zone
 }
@@ -187,12 +192,12 @@ resource "nutanix_virtual_machine_v2" "test" {
   num_cores_per_socket = 1
   num_sockets          = 1
   cluster {
-    ext_id = data.nutanix_clusters_v2.clusters.cluster_entities.0.ext_id
+    ext_id = local.clusterExtId
   }
   categories {
     ext_id = nutanix_category_v2.synchronous-pp-category.id
   }
-  power_state = "OFF"
+  power_state = "ON"
   depends_on = [nutanix_protection_policy_v2.test]
 }
 
@@ -285,11 +290,21 @@ resource "nutanix_protection_policy_v2" "test" {
     domain_manager_ext_id = data.nutanix_pcs_v2.pcs-list.pcs[0].ext_id
     label                 = "source"
     is_primary            = true
+    replication_sub_location {
+      cluster_ext_ids {
+        cluster_ext_ids = [local.clusterExtId]
+      }
+    }
   }
   replication_locations {
     domain_manager_ext_id = local.availability_zone.pc_ext_id
     label                 = "target"
     is_primary            = false
+    replication_sub_location {
+      cluster_ext_ids {
+        cluster_ext_ids = [local.availability_zone.cluster_ext_id]
+      }
+    }
   }
 
   category_ids = [nutanix_category_v2.test.id]
@@ -299,13 +314,21 @@ resource "nutanix_volume_group_v2" "test" {
   name                               = "%[2]s"
   description                        = "%[3]s"
   cluster_reference                  = local.clusterExtId
+  depends_on = [
+    nutanix_protection_policy_v2.test
+  ]
 }
+
 
 resource "nutanix_associate_category_to_volume_group_v2" "test" {
   ext_id = nutanix_volume_group_v2.test.id
   categories {
     ext_id = nutanix_category_v2.test.id
   }
+  depends_on = [
+    nutanix_protection_policy_v2.test,
+    nutanix_volume_group_v2.test
+  ]
 }
 
 

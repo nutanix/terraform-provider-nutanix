@@ -13,6 +13,8 @@ import (
 	clustermgmtConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/clustermgmt/v4/config"
 	commonConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/common/v1/config"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import3 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/domainmanager"
+	import4 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	vmmConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/vmm/v4/ahv/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -73,7 +75,10 @@ func ResourceNutanixDeployPcV2Create(ctx context.Context, d *schema.ResourceData
 	aJSON, _ := json.MarshalIndent(deployPcBody, "", "  ")
 	log.Printf("[DEBUG] Payload to deploy PC: %s", string(aJSON))
 
-	resp, err := conn.DomainManagerAPIInstance.CreateDomainManager(deployPcBody)
+	createDomainManagerRequest := import3.CreateDomainManagerRequest{
+		Body: deployPcBody,
+	}
+	resp, err := conn.DomainManagerAPIInstance.CreateDomainManager(ctx, &createDomainManagerRequest)
 	if err != nil {
 		return diag.Errorf("error while deploying PC: %s", err)
 	}
@@ -94,7 +99,10 @@ func ResourceNutanixDeployPcV2Create(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("error waiting for PC (%s) to be deployed: %s", utils.StringValue(taskUUID), err)
 	}
 
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching PC deploy task (%s): %s", utils.StringValue(taskUUID), err)
 	}

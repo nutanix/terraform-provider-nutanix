@@ -216,4 +216,4 @@ resource "nutanix_object_store_v2" "imported" {}
 terraform import nutanix_object_store_v2.imported <UUID>
 ```
 
-See detailed information in [Nutanix Get Object Store V4 ](https://developers.nutanix.com/api-reference?namespace=objects&version=v4.0#tag/ObjectStores/operation/getObjectstoreById).
+See detailed information in [Nutanix Get Object Store V4 ](https://developers.nutanix.com/api-reference?namespace=objects&version=v4.1#tag/ObjectStores/operation/getObjectstoreById).
