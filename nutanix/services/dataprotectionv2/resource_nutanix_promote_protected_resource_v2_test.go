@@ -117,17 +117,22 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVG(t *testing.T) {
 
 func testPromoteProtectedResourceVMAndProtectionPolicyConfig(vmName, ppName, description string, r int) string {
 	return fmt.Sprintf(`
+
+locals {
+  pcFilter            = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')"
+  aosFilter           = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
+}
+
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
 # list Clusters
-data "nutanix_clusters_v2" "clusters" {}
+data "nutanix_clusters_v2" "clusters" {
+  filter = local.aosFilter
+}
 
 locals {
-  clusterExtId = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-  ][0]
+  clusterExtId = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
   config = jsondecode(file("%[1]s"))
   availability_zone = local.config.availability_zone
 }
@@ -185,11 +190,6 @@ resource "nutanix_protection_policy_v2" "test" {
   category_ids = [nutanix_category_v2.test.id]
 }
 
-data "nutanix_storage_containers_v2" "ngt-sc" {
-	filter = "clusterExtId eq '${local.clusterExtId}' and startswith(name,'default-container-')"
-	limit = 1
-}
-
 resource "nutanix_virtual_machine_v2" "test" {
   name                 = "%[2]s"
   description          = "%[3]s"
@@ -201,27 +201,8 @@ resource "nutanix_virtual_machine_v2" "test" {
   categories {
     ext_id = nutanix_category_v2.test.id
   }
-power_state = "ON"
-  disks {
-    disk_address{
-      bus_type = "SCSI"
-      index = 0
-    }
-    backing_info{
-      vm_disk{
-        disk_size_bytes = "1073741824" # 10 GB
-        storage_container{
-          ext_id = data.nutanix_storage_containers_v2.ngt-sc.storage_containers[0].ext_id
-        }
-      }
-    }
-  }
-  cd_roms {
-    disk_address {
-      bus_type = "IDE"
-      index    = 0
-    }
-  }
+  power_state = "ON"
+
   depends_on = [nutanix_protection_policy_v2.test]
 }
 
