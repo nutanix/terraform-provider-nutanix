@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"reflect"
 	"strconv"
 	"time"
@@ -27,6 +28,15 @@ import (
 const (
 	timeout = 5 * time.Minute
 	delay   = 5 * time.Second
+
+	// defaultWaitForIPTimeoutMinutes is the default for the wait_for_ip_timeout argument,
+	// in minutes. It preserves the 5 minute IP wait this resource has always used (see
+	// timeout above), and matches the vSphere provider's wait_for_guest_net_timeout.
+	defaultWaitForIPTimeoutMinutes = 5
+
+	// defaultWaitForIPRoutable is the default for the wait_for_ip_routable argument:
+	// skip APIPA/link-local addresses while waiting for the guest to report an IP.
+	defaultWaitForIPRoutable = true
 )
 
 func ResourceNutanixVirtualMachineV2() *schema.Resource {
@@ -614,6 +624,18 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 				Optional:     true,
 				Default:      "ON",
 				ValidateFunc: validation.StringInSlice([]string{"ON", "OFF", "PAUSED", "UNDETERMINED"}, false),
+			},
+			"wait_for_ip_timeout": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     defaultWaitForIPTimeoutMinutes,
+				Description: "Minutes to wait after power-on for the VM to report a usable IPv4 address. A value less than 1 disables the wait. Modeled on the vSphere provider's wait_for_guest_net_timeout.",
+			},
+			"wait_for_ip_routable": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     defaultWaitForIPRoutable,
+				Description: "When waiting for an IP (see wait_for_ip_timeout), require a routable address, ignoring APIPA/link-local (169.254.0.0/16) addresses reported transiently before DHCP completes. Set false to accept the first learned address, including APIPA.",
 			},
 			"vtpm_config": {
 				Type:     schema.TypeList,
@@ -1409,13 +1431,14 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	nics := d.Get("nics")
 	hasNics := nics != nil && len(common.InterfaceToSlice(nics)) > 0
 
-	if d.Get("power_state") == "ON" && hasNics {
+	waitForIPTimeout := d.Get("wait_for_ip_timeout").(int)
+	if d.Get("power_state") == "ON" && hasNics && waitForIPTimeout >= 1 {
 		// Wait for the VM to be available
 		waitIPConf := &resource.StateChangeConf{
 			Pending:    []string{"WAITING"},
 			Target:     []string{"AVAILABLE"},
-			Refresh:    waitForIPRefreshFunc(ctx, conn, utils.StringValue(uuid)),
-			Timeout:    timeout,
+			Refresh:    waitForIPRefreshFunc(ctx, conn, utils.StringValue(uuid), d.Get("wait_for_ip_routable").(bool)),
+			Timeout:    time.Duration(waitForIPTimeout) * time.Minute,
 			Delay:      delay,
 			MinTimeout: delay,
 		}
@@ -1427,7 +1450,7 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 			vmResp := vm.Data.GetValue().(config.Vm)
 
 			if len(vmResp.Nics) > 0 && vmResp.Nics[0].NetworkInfo != nil {
-				ipAddr := getFirstIPAddress(vmResp.Nics[0])
+				ipAddr := getFirstIPAddress(vmResp.Nics[0], d.Get("wait_for_ip_routable").(bool))
 				if ipAddr != "" {
 					d.SetConnInfo(map[string]string{
 						"type": "ssh",
@@ -3614,16 +3637,26 @@ func resourceNutanixVirtualMachineV2StateUpgradeV0(ctx context.Context, rawState
 	return rawState, nil
 }
 
+// isAPIPA reports whether s is an IPv4 link-local / APIPA address (169.254.0.0/16).
+// Nutanix guest tools report these transiently before DHCP assigns a real lease, so a
+// caller waiting for a usable address must skip them and keep polling (issue #871).
+func isAPIPA(s string) bool {
+	ip := net.ParseIP(s)
+	return ip != nil && ip.To4() != nil && ip.IsLinkLocalUnicast()
+}
+
 // getFirstIPAddress returns the first available IP address from a NIC.
 // It checks both DHCP learned IPs and statically configured IPs.
-func getFirstIPAddress(nic config.Nic) string {
+func getFirstIPAddress(nic config.Nic, routable bool) string {
 	if nic.NetworkInfo == nil {
 		return ""
 	}
 	// Check for DHCP learned IPs first
-	if nic.NetworkInfo.Ipv4Info != nil && len(nic.NetworkInfo.Ipv4Info.LearnedIpAddresses) > 0 {
-		if nic.NetworkInfo.Ipv4Info.LearnedIpAddresses[0].Value != nil {
-			return *nic.NetworkInfo.Ipv4Info.LearnedIpAddresses[0].Value
+	if nic.NetworkInfo.Ipv4Info != nil {
+		for _, ip := range nic.NetworkInfo.Ipv4Info.LearnedIpAddresses {
+			if ip.Value != nil && (!routable || !isAPIPA(*ip.Value)) {
+				return *ip.Value
+			}
 		}
 	}
 	// Check for statically configured IP
@@ -3633,7 +3666,7 @@ func getFirstIPAddress(nic config.Nic) string {
 	return ""
 }
 
-func waitForIPRefreshFunc(ctx context.Context, client *vmm.Client, vmUUID string) resource.StateRefreshFunc {
+func waitForIPRefreshFunc(ctx context.Context, client *vmm.Client, vmUUID string, routable bool) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		getVmByIdRequest := import3.GetVmByIdRequest{
 			ExtId: utils.StringPtr(vmUUID),
@@ -3651,9 +3684,14 @@ func waitForIPRefreshFunc(ctx context.Context, client *vmm.Client, vmUUID string
 					// Check for DHCP learned IPs
 					if nic.NetworkInfo.Ipv4Info != nil {
 						for _, ip := range nic.NetworkInfo.Ipv4Info.LearnedIpAddresses {
-							if ip.Value != nil {
-								return resp, "AVAILABLE", nil
+							if ip.Value == nil {
+								continue
 							}
+							if routable && isAPIPA(*ip.Value) {
+								log.Printf("[DEBUG] VM %s: ignoring APIPA/link-local %q; waiting for a routable IP", vmUUID, *ip.Value)
+								continue
+							}
+							return resp, "AVAILABLE", nil
 						}
 					}
 					// Check for statically configured IPs

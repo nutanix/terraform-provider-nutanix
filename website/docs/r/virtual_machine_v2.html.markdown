@@ -150,6 +150,35 @@ resource "nutanix_virtual_machine_v2" "vm-3" {
   power_state = "ON"
 }
 
+# Wait for the guest to report a routable IPv4 address before the resource completes,
+# so provisioners and downstream resources do not receive the APIPA/link-local
+# (169.254.0.0/16) address guest tools report transiently before DHCP finishes.
+resource "nutanix_virtual_machine_v2" "vm-wait-for-ip" {
+  name                 = "example-vm-wait-for-ip"
+  num_cores_per_socket = 1
+  num_sockets          = 1
+  cluster {
+    ext_id = "1cefd0f5-6d38-4c9b-a07c-bdd2db004224"
+  }
+  nics {
+    nic_network_info {
+      virtual_ethernet_nic_network_info {
+        nic_type = "NORMAL_NIC"
+        subnet {
+          ext_id = "7f66e20f-67f4-473f-96bb-c4fcfd487f16"
+        }
+        vlan_mode = "ACCESS"
+      }
+    }
+  }
+  power_state = "ON"
+
+  # Defaults shown explicitly. Use wait_for_ip_timeout = 0 to disable the wait, or
+  # wait_for_ip_routable = false to accept the first learned address including APIPA.
+  wait_for_ip_timeout  = 5
+  wait_for_ip_routable = true
+}
+
 ```
 
 ## Lifecycle Behavior
@@ -210,6 +239,8 @@ The following arguments are supported:
 * `gpus`: (Optional) GPUs attached to the VM.
 * `serial_ports`: (Optional) Serial ports configured on the VM.
 * `protection_type`: (Optional) The type of protection applied on a VM. Valid values "PD_PROTECTED", "UNPROTECTED", "RULE_PROTECTED".
+* `wait_for_ip_timeout`: (Optional) Minutes to wait after power-on for the VM to report a usable IPv4 address on its first NIC. A value less than 1 disables the wait. Defaults to `5`. Modeled on the vSphere provider's `wait_for_guest_net_timeout`.
+* `wait_for_ip_routable`: (Optional) When waiting for an IP (see `wait_for_ip_timeout`), require a routable address, ignoring APIPA/link-local (`169.254.0.0/16`) addresses that guest tools report transiently before DHCP completes. Set to `false` to accept the first learned address, including APIPA. Defaults to `true`.
 
 
 ### Source
