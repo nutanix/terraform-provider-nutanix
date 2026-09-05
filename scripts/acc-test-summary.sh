@@ -6,7 +6,9 @@ set -e
 
 LOGFILE="${1:?Usage: $0 <test_output.log>}"
 
-if [[ ! -f "$LOGFILE" ]] || ! grep -qE '^--- (PASS|FAIL|SKIP):' "$LOGFILE" 2>/dev/null; then
+# grep -a treats the file as text even if DEBUG HTTP dumps contain binary (e.g. ISO uploads).
+# awk on the raw file can fail with "multibyte conversion failure".
+if [[ ! -f "$LOGFILE" ]] || ! grep -a -qE '^--- (PASS|FAIL|SKIP):' "$LOGFILE" 2>/dev/null; then
   exit 0
 fi
 
@@ -14,8 +16,8 @@ TMP=$(mktemp)
 SUMMARY_TMP=$(mktemp)
 trap 'rm -f "$TMP" "$SUMMARY_TMP"' EXIT
 
-awk '
-  /^--- (PASS|FAIL|SKIP): / {
+grep -aE '^--- (PASS|FAIL|SKIP): ' "$LOGFILE" | LC_ALL=C awk '
+  {
     result = $2; sub(/:$/, "", result);
     name = $3;
     last_result[name] = result;
@@ -26,7 +28,7 @@ awk '
       print last_line[n], last_result[n], n
     }
   }
-' "$LOGFILE" | sort -n > "$TMP"
+' | sort -n > "$TMP"
 
 TOTAL_PASSED=$(awk '$2 == "PASS"' "$TMP" | wc -l | tr -d ' ')
 TOTAL_FAILED=$(awk '$2 == "FAIL"' "$TMP" | wc -l | tr -d ' ')
