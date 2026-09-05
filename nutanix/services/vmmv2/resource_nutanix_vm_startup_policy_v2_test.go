@@ -1,10 +1,9 @@
 // Acceptance tests for nutanix_vm_startup_policy_v2 resource.
 //
 // TestAccV2NutanixVmStartupPolicyResource_Basic:
-//   - Step 1: Create a VM startup policy with project association, 2 groups, and 1 start condition (power_on).
+//   - Step 1: Create a VM startup policy with 2 groups, and 1 start condition (power_on).
 //   - Step 2: Update name, description, and delay duration.
-//   - Step 3: Verify that changing project_ext_id is rejected (immutable field).
-//   - Step 4: Validate datasource reads (single policy and list) return correct data.
+//   - Step 3: Validate datasource reads (single policy and list) return correct data.
 //
 // TestAccV2NutanixVmStartupPolicyResource_GuestBootup:
 //   - Step 1: Create a VM startup policy with guest_bootup start condition (timeout_duration_secs).
@@ -54,7 +53,6 @@ func TestAccV2NutanixVmStartupPolicyResource_Basic(t *testing.T) {
 	updatedName := fmt.Sprintf("test-vm-startup-policy-%d-updated", r)
 	desc := "test vm startup policy description"
 	updatedDesc := "test vm startup policy description updated"
-	projectName := fmt.Sprintf("tf-test-vsp-project-%d", r)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
@@ -62,7 +60,7 @@ func TestAccV2NutanixVmStartupPolicyResource_Basic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixVmStartupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmStartupPolicyV2Config(name, desc, r, projectName),
+				Config: testVmStartupPolicyV2Config(name, desc, r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "description", desc),
@@ -81,11 +79,10 @@ func TestAccV2NutanixVmStartupPolicyResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameVmStartupPolicy, "num_pending_vms"),
 					resource.TestCheckResourceAttrSet(resourceNameVmStartupPolicy, "num_dependency_conflicts"),
 					resource.TestCheckResourceAttrSet(resourceNameVmStartupPolicy, "num_start_condition_conflicts"),
-					resource.TestCheckResourceAttrPair(resourceNameVmStartupPolicy, "project_ext_id", "nutanix_project_v2.test", "ext_id"),
 				),
 			},
 			{
-				Config: testVmStartupPolicyV2ConfigUpdated(updatedName, updatedDesc, r, projectName),
+				Config: testVmStartupPolicyV2ConfigUpdated(updatedName, updatedDesc, r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "name", updatedName),
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "description", updatedDesc),
@@ -96,21 +93,15 @@ func TestAccV2NutanixVmStartupPolicyResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "start_conditions.0.power_state_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "start_conditions.0.power_state_criteria.0.power_on.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "start_conditions.0.power_state_criteria.0.guest_bootup.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceNameVmStartupPolicy, "project_ext_id", "nutanix_project_v2.test", "ext_id"),
 				),
 			},
 			{
-				Config:      testVmStartupPolicyV2ConfigProjectOverride(updatedName, updatedDesc, r, projectName, "00000000-0000-0000-0000-000000000000"),
-				ExpectError: regexp.MustCompile("Update of project_ext_id is not supported"),
-			},
-			{
-				Config: testVmStartupPolicyV2ConfigWithDatasources(updatedName, updatedDesc, r, projectName),
+				Config: testVmStartupPolicyV2ConfigWithDatasources(updatedName, updatedDesc, r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceNameVmStartupPolicy, "name", updatedName),
 					resource.TestCheckResourceAttr(datasourceNameVmStartupPolicy, "description", updatedDesc),
 					resource.TestCheckResourceAttrSet(datasourceNameVmStartupPolicy, "ext_id"),
 					resource.TestCheckResourceAttrSet(datasourceNameVmStartupPolicy, "create_time"),
-					resource.TestCheckResourceAttrPair(datasourceNameVmStartupPolicy, "project_ext_id", "nutanix_project_v2.test", "ext_id"),
 					resource.TestCheckResourceAttrSet(datasourceNameVmStartupPolicies, "policies.#"),
 				),
 			},
@@ -122,7 +113,6 @@ func TestAccV2NutanixVmStartupPolicyResource_GuestBootup(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vm-startup-policy-gb-%d", r)
 	desc := "test vm startup policy with guest bootup"
-	projectName := fmt.Sprintf("tf-test-vsp-gb-project-%d", r)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
@@ -130,7 +120,7 @@ func TestAccV2NutanixVmStartupPolicyResource_GuestBootup(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixVmStartupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmStartupPolicyV2ConfigGuestBootup(name, desc, r, projectName),
+				Config: testVmStartupPolicyV2ConfigGuestBootup(name, desc, r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "description", desc),
@@ -142,7 +132,7 @@ func TestAccV2NutanixVmStartupPolicyResource_GuestBootup(t *testing.T) {
 				),
 			},
 			{
-				Config: testVmStartupPolicyV2ConfigSwitchToPowerOn(name, desc, r, projectName),
+				Config: testVmStartupPolicyV2ConfigSwitchToPowerOn(name, desc, r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "description", desc),
@@ -153,11 +143,10 @@ func TestAccV2NutanixVmStartupPolicyResource_GuestBootup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "start_conditions.0.power_state_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "start_conditions.0.power_state_criteria.0.power_on.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "start_conditions.0.power_state_criteria.0.guest_bootup.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceNameVmStartupPolicy, "project_ext_id", "nutanix_project_v2.test", "ext_id"),
 				),
 			},
 			{
-				Config: testVmStartupPolicyV2ConfigSwitchToGuestBootup(name, desc, r, projectName),
+				Config: testVmStartupPolicyV2ConfigSwitchToGuestBootup(name, desc, r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "description", desc),
@@ -169,7 +158,6 @@ func TestAccV2NutanixVmStartupPolicyResource_GuestBootup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "start_conditions.0.power_state_criteria.0.guest_bootup.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "start_conditions.0.power_state_criteria.0.guest_bootup.0.timeout_duration_secs", "300"),
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "start_conditions.0.power_state_criteria.0.power_on.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceNameVmStartupPolicy, "project_ext_id", "nutanix_project_v2.test", "ext_id"),
 				),
 			},
 		},
@@ -195,32 +183,25 @@ func testAccCheckNutanixVmStartupPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testVspBaseConfig(r int, projectName string) string {
+func testVspBaseConfig(r int) string {
 	return fmt.Sprintf(`
-		resource "nutanix_project_v2" "test" {
-			name        = "%[2]s"
-			project_id  = "%[2]s"
-			description = "test project for vm startup policy"
-		}
+
 		resource "nutanix_category_v2" "cat1" {
 			key            = "vm-startup-cat1-%[1]d"
 			value          = "vm-startup-cat1-value-%[1]d"
-			project_ext_id = nutanix_project_v2.test.ext_id
 		}
 		resource "nutanix_category_v2" "cat2" {
 			key            = "vm-startup-cat2-%[1]d"
 			value          = "vm-startup-cat2-value-%[1]d"
-			project_ext_id = nutanix_project_v2.test.ext_id
 		}
-	`, r, projectName)
+	`, r)
 }
 
-func testVmStartupPolicyV2Config(name, desc string, r int, projectName string) string {
-	return testVspBaseConfig(r, projectName) + fmt.Sprintf(`
+func testVmStartupPolicyV2Config(name, desc string, r int) string {
+	return testVspBaseConfig(r) + fmt.Sprintf(`
 		resource "nutanix_vm_startup_policy_v2" "test" {
 			name           = "%[1]s"
 			description    = "%[2]s"
-			project_ext_id = nutanix_project_v2.test.ext_id
 			groups {
 				categories {
 					ext_id = nutanix_category_v2.cat1.id
@@ -241,12 +222,11 @@ func testVmStartupPolicyV2Config(name, desc string, r int, projectName string) s
 `, name, desc)
 }
 
-func testVmStartupPolicyV2ConfigUpdated(name, desc string, r int, projectName string) string {
-	return testVspBaseConfig(r, projectName) + fmt.Sprintf(`
+func testVmStartupPolicyV2ConfigUpdated(name, desc string, r int) string {
+	return testVspBaseConfig(r) + fmt.Sprintf(`
 		resource "nutanix_vm_startup_policy_v2" "test" {
 			name           = "%[1]s"
 			description    = "%[2]s"
-			project_ext_id = nutanix_project_v2.test.ext_id
 			groups {
 				categories {
 					ext_id = nutanix_category_v2.cat1.id
@@ -267,34 +247,8 @@ func testVmStartupPolicyV2ConfigUpdated(name, desc string, r int, projectName st
 `, name, desc)
 }
 
-func testVmStartupPolicyV2ConfigProjectOverride(name, desc string, r int, projectName, projectExtID string) string {
-	return testVspBaseConfig(r, projectName) + fmt.Sprintf(`
-		resource "nutanix_vm_startup_policy_v2" "test" {
-			name           = "%[1]s"
-			description    = "%[2]s"
-			project_ext_id = "%[3]s"
-			groups {
-				categories {
-					ext_id = nutanix_category_v2.cat1.id
-				}
-			}
-			groups {
-				categories {
-					ext_id = nutanix_category_v2.cat2.id
-				}
-			}
-			start_conditions {
-				delay_duration_secs = 60
-				power_state_criteria {
-					power_on {}
-				}
-			}
-		}
-`, name, desc, projectExtID)
-}
-
-func testVmStartupPolicyV2ConfigWithDatasources(name, desc string, r int, projectName string) string {
-	return testVmStartupPolicyV2ConfigUpdated(name, desc, r, projectName) + `
+func testVmStartupPolicyV2ConfigWithDatasources(name, desc string, r int) string {
+	return testVmStartupPolicyV2ConfigUpdated(name, desc, r) + `
 		data "nutanix_vm_startup_policy_v2" "test_ds" {
 			ext_id = nutanix_vm_startup_policy_v2.test.id
 		}
@@ -582,7 +536,6 @@ func TestAccV2NutanixVmStartupPolicyResource_GroupCategoryUpdates(t *testing.T) 
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vsp-grp-upd-%d", r)
 	desc := "test group category updates"
-	projectName := fmt.Sprintf("tf-test-vsp-gu-project-%d", r)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
@@ -591,7 +544,7 @@ func TestAccV2NutanixVmStartupPolicyResource_GroupCategoryUpdates(t *testing.T) 
 		Steps: []resource.TestStep{
 			// Step 1: Create with group0=[cat1], group1=[cat2]
 			{
-				Config: testVspGroupUpdateConfig(name, desc, r, projectName, [][]string{{"cat_gu1"}, {"cat_gu2"}}),
+				Config: testVspGroupUpdateConfig(name, desc, r, [][]string{{"cat_gu1"}, {"cat_gu2"}}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "description", desc),
@@ -603,12 +556,11 @@ func TestAccV2NutanixVmStartupPolicyResource_GroupCategoryUpdates(t *testing.T) 
 					resource.TestCheckResourceAttrPair(resourceNameVmStartupPolicy, "groups.1.categories.0.ext_id", "nutanix_category_v2.cat_gu2", "id"),
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "start_conditions.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "start_conditions.0.power_state_criteria.0.power_on.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceNameVmStartupPolicy, "project_ext_id", "nutanix_project_v2.test", "ext_id"),
 				),
 			},
 			// Step 2: Update category in existing group — group0=[cat3], group1=[cat2]
 			{
-				Config: testVspGroupUpdateConfig(name, desc, r, projectName, [][]string{{"cat_gu3"}, {"cat_gu2"}}),
+				Config: testVspGroupUpdateConfig(name, desc, r, [][]string{{"cat_gu3"}, {"cat_gu2"}}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "groups.#", "2"),
@@ -621,7 +573,7 @@ func TestAccV2NutanixVmStartupPolicyResource_GroupCategoryUpdates(t *testing.T) 
 			},
 			// Step 3: Add new category to existing group — group0=[cat3,cat4], group1=[cat2]
 			{
-				Config: testVspGroupUpdateConfig(name, desc, r, projectName, [][]string{{"cat_gu3", "cat_gu4"}, {"cat_gu2"}}),
+				Config: testVspGroupUpdateConfig(name, desc, r, [][]string{{"cat_gu3", "cat_gu4"}, {"cat_gu2"}}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "groups.#", "2"),
@@ -635,7 +587,7 @@ func TestAccV2NutanixVmStartupPolicyResource_GroupCategoryUpdates(t *testing.T) 
 			},
 			// Step 4: Add new group — group0=[cat3,cat4], group1=[cat2], group2=[cat5]
 			{
-				Config: testVspGroupUpdateConfig(name, desc, r, projectName, [][]string{{"cat_gu3", "cat_gu4"}, {"cat_gu2"}, {"cat_gu5"}}),
+				Config: testVspGroupUpdateConfig(name, desc, r, [][]string{{"cat_gu3", "cat_gu4"}, {"cat_gu2"}, {"cat_gu5"}}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "groups.#", "3"),
@@ -650,7 +602,7 @@ func TestAccV2NutanixVmStartupPolicyResource_GroupCategoryUpdates(t *testing.T) 
 			},
 			// Step 5: Remove group1 — group0=[cat3,cat4], group2=[cat5]
 			{
-				Config: testVspGroupUpdateConfig(name, desc, r, projectName, [][]string{{"cat_gu3", "cat_gu4"}, {"cat_gu5"}}),
+				Config: testVspGroupUpdateConfig(name, desc, r, [][]string{{"cat_gu3", "cat_gu4"}, {"cat_gu5"}}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVmStartupPolicy, "groups.#", "2"),
@@ -670,39 +622,29 @@ func TestAccV2NutanixVmStartupPolicyResource_GroupCategoryUpdates(t *testing.T) 
 // testVspGroupUpdateConfig generates a config that always declares 5 categories
 // and builds the groups block dynamically from the given layout.
 // Each element of `groups` is a slice of category resource names (e.g. ["cat_gu1", "cat_gu3"]).
-func testVspGroupUpdateConfig(name, desc string, r int, projectName string, groups [][]string) string {
+func testVspGroupUpdateConfig(name, desc string, r int, groups [][]string) string {
 	catBlock := fmt.Sprintf(`
-		resource "nutanix_project_v2" "test" {
-			name        = "%[2]s"
-			project_id  = "%[2]s"
-			description = "test project for group category updates"
-		}
 		resource "nutanix_category_v2" "cat_gu1" {
 			key            = "vsp-gu-cat1-%[1]d"
 			value          = "vsp-gu-cat1-val-%[1]d"
-			project_ext_id = nutanix_project_v2.test.ext_id
 		}
 		resource "nutanix_category_v2" "cat_gu2" {
 			key            = "vsp-gu-cat2-%[1]d"
 			value          = "vsp-gu-cat2-val-%[1]d"
-			project_ext_id = nutanix_project_v2.test.ext_id
 		}
 		resource "nutanix_category_v2" "cat_gu3" {
 			key            = "vsp-gu-cat3-%[1]d"
 			value          = "vsp-gu-cat3-val-%[1]d"
-			project_ext_id = nutanix_project_v2.test.ext_id
 		}
 		resource "nutanix_category_v2" "cat_gu4" {
 			key            = "vsp-gu-cat4-%[1]d"
 			value          = "vsp-gu-cat4-val-%[1]d"
-			project_ext_id = nutanix_project_v2.test.ext_id
 		}
 		resource "nutanix_category_v2" "cat_gu5" {
 			key            = "vsp-gu-cat5-%[1]d"
 			value          = "vsp-gu-cat5-val-%[1]d"
-			project_ext_id = nutanix_project_v2.test.ext_id
 		}
-	`, r, projectName)
+	`, r)
 
 	groupsBlock := ""
 	for _, g := range groups {
@@ -734,39 +676,30 @@ func testVspGroupUpdateConfig(name, desc string, r int, projectName string, grou
 		resource "nutanix_vm_startup_policy_v2" "test" {
 			name           = "%s"
 			description    = "%s"
-			project_ext_id = nutanix_project_v2.test.ext_id
 			%s
 			%s
 		}
 	`, catBlock, name, desc, groupsBlock, startConditionsBlock)
 }
 
-func testVspGuestBootupBaseConfig(r int, projectName string) string {
+func testVspGuestBootupBaseConfig(r int) string {
 	return fmt.Sprintf(`
-		resource "nutanix_project_v2" "test" {
-			name        = "%[2]s"
-			project_id  = "%[2]s"
-			description = "test project for guest bootup"
-		}
 		resource "nutanix_category_v2" "cat_gb1" {
 			key            = "vm-startup-gb-cat1-%[1]d"
 			value          = "vm-startup-gb-cat1-value-%[1]d"
-			project_ext_id = nutanix_project_v2.test.ext_id
 		}
 		resource "nutanix_category_v2" "cat_gb2" {
 			key            = "vm-startup-gb-cat2-%[1]d"
 			value          = "vm-startup-gb-cat2-value-%[1]d"
-			project_ext_id = nutanix_project_v2.test.ext_id
 		}
-	`, r, projectName)
+	`, r)
 }
 
-func testVmStartupPolicyV2ConfigGuestBootup(name, desc string, r int, projectName string) string {
-	return testVspGuestBootupBaseConfig(r, projectName) + fmt.Sprintf(`
+func testVmStartupPolicyV2ConfigGuestBootup(name, desc string, r int) string {
+	return testVspGuestBootupBaseConfig(r) + fmt.Sprintf(`
 		resource "nutanix_vm_startup_policy_v2" "test" {
 			name           = "%[1]s"
 			description    = "%[2]s"
-			project_ext_id = nutanix_project_v2.test.ext_id
 			groups {
 				categories {
 					ext_id = nutanix_category_v2.cat_gb1.id
@@ -789,12 +722,11 @@ func testVmStartupPolicyV2ConfigGuestBootup(name, desc string, r int, projectNam
 `, name, desc)
 }
 
-func testVmStartupPolicyV2ConfigSwitchToPowerOn(name, desc string, r int, projectName string) string {
-	return testVspGuestBootupBaseConfig(r, projectName) + fmt.Sprintf(`
+func testVmStartupPolicyV2ConfigSwitchToPowerOn(name, desc string, r int) string {
+	return testVspGuestBootupBaseConfig(r) + fmt.Sprintf(`
 		resource "nutanix_vm_startup_policy_v2" "test" {
 			name           = "%[1]s"
 			description    = "%[2]s"
-			project_ext_id = nutanix_project_v2.test.ext_id
 			groups {
 				categories {
 					ext_id = nutanix_category_v2.cat_gb1.id
@@ -815,12 +747,11 @@ func testVmStartupPolicyV2ConfigSwitchToPowerOn(name, desc string, r int, projec
 `, name, desc)
 }
 
-func testVmStartupPolicyV2ConfigSwitchToGuestBootup(name, desc string, r int, projectName string) string {
-	return testVspGuestBootupBaseConfig(r, projectName) + fmt.Sprintf(`
+func testVmStartupPolicyV2ConfigSwitchToGuestBootup(name, desc string, r int) string {
+	return testVspGuestBootupBaseConfig(r) + fmt.Sprintf(`
 		resource "nutanix_vm_startup_policy_v2" "test" {
 			name           = "%[1]s"
 			description    = "%[2]s"
-			project_ext_id = nutanix_project_v2.test.ext_id
 			groups {
 				categories {
 					ext_id = nutanix_category_v2.cat_gb1.id

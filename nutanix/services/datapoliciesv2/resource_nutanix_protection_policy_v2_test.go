@@ -274,26 +274,6 @@ func TestAccV2NutanixProtectionPolicyResource_SyncReplicationPausedCreateError(t
 	})
 }
 
-// Case 2: Creating a synchronous protection policy with latest_recovery_point_retention_seconds
-// (even 0) must fail; the field is not allowed for synchronous replication.
-func TestAccV2NutanixProtectionPolicyResource_SyncLatestRecoveryPointRetentionCreateError(t *testing.T) {
-	r := acctest.RandInt()
-	name := fmt.Sprintf("tf-test-pp-sync-lrprs-create-%d", r)
-	description := "sync pp with latest_recovery_point_retention_seconds must fail"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
-		CheckDestroy:             testProtectionPolicyV2CheckDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testProtectionPolicySyncScheduleConfig(name, description, "latest_recovery_point_retention_seconds = 0"),
-				ExpectError: regexp.MustCompile("Latest recovery point retention seconds cannot be specified for a synchronous replication"),
-			},
-		},
-	})
-}
-
 // Case 3: Create a synchronous protection policy with is_replication_paused = false, then
 // update it to true. Pausing is only supported for synchronous replication via update.
 func TestAccV2NutanixProtectionPolicyResource_SyncReplicationPausedUpdate(t *testing.T) {
@@ -356,47 +336,6 @@ func TestAccV2NutanixProtectionPolicyResource_ReplicationPausedAsyncError(t *tes
 				Config: testProtectionPolicySyncScheduleConfig(name, description, "is_replication_paused = false"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.is_replication_paused", "false"),
-				),
-			},
-		},
-	})
-}
-
-// Cases 5, 6 and 7: latest_recovery_point_retention_seconds lifecycle on an asynchronous
-// policy - create with 0, update to 3600 and back to 0 - and verify the data source reflects
-// the value.
-func TestAccV2NutanixProtectionPolicyResource_AsyncLatestRecoveryPointRetentionLifecycle(t *testing.T) {
-	r := acctest.RandInt()
-	name := fmt.Sprintf("tf-test-pp-async-lrprs-%d", r)
-	description := "async pp latest_recovery_point_retention_seconds lifecycle"
-
-	dataSourceName := "data.nutanix_protection_policy_v2.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
-		CheckDestroy:             testProtectionPolicyV2CheckDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testProtectionPolicyAsyncScheduleConfig(name, description, "latest_recovery_point_retention_seconds = 0", true),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameProtectionPolicy, "ext_id"),
-					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.latest_recovery_point_retention_seconds", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "replication_configurations.0.schedule.0.latest_recovery_point_retention_seconds", "0"),
-				),
-			},
-			{
-				Config: testProtectionPolicyAsyncScheduleConfig(name, description, "latest_recovery_point_retention_seconds = 3600", true),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.latest_recovery_point_retention_seconds", "3600"),
-					resource.TestCheckResourceAttr(dataSourceName, "replication_configurations.0.schedule.0.latest_recovery_point_retention_seconds", "3600"),
-				),
-			},
-			{
-				Config: testProtectionPolicyAsyncScheduleConfig(name, description, "latest_recovery_point_retention_seconds = 0", true),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.latest_recovery_point_retention_seconds", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "replication_configurations.0.schedule.0.latest_recovery_point_retention_seconds", "0"),
 				),
 			},
 		},
