@@ -2,7 +2,6 @@ package vmm_test
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -407,7 +406,7 @@ func TestAccNutanixVirtualMachine_cloningVM(t *testing.T) {
 func TestAccNutanixVirtualMachine_withDiskContainer(t *testing.T) {
 	r := acctest.RandInt()
 	resourceName := "nutanix_virtual_machine.vm-disk"
-	containerUUID := os.Getenv("NUTANIX_STORAGE_CONTAINER")
+	containerUUID := testVars.StorageContainerUUID
 	diskSize := 90 * 1024 * 1024
 	diskSizeUpdated := 90 * 1024 * 1024 * 1024
 

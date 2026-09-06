@@ -12,6 +12,9 @@ const resourceNamePbr = "nutanix_pbr.acctest-managed"
 
 func TestAccNutanixPbr_basic(t *testing.T) {
 	r := randIntBetween(221, 230)
+	for r == 225 {
+		r = randIntBetween(221, 230)
+	}
 	pbrName := fmt.Sprintf("acctest-managed-%d", r)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },

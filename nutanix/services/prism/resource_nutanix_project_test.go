@@ -147,12 +147,10 @@ func TestAccNutanixProject_withInternalUpdate(t *testing.T) {
 	})
 }
 
-func TestAccNutanixProject_withInternalWithACP(t *testing.T) {
+func TestAccNutanixProject_withInternalWithACPTest(t *testing.T) {
 	resourceName := "nutanix_project.project_test"
-
-	ad := acc.Config(t).Iam.DirectoryServicesMain.SecondaryAD
-	userName := "ssptest1@qa.nutanix.com"
-	userUUID := ad.DomainUsersUsergroups.Users[userName]
+	principalName := testVars.Users[1].PrincipalName
+	directoryServiceUUID := testVars.Users[1].DirectoryServiceUUID
 
 	subnetName := acctest.RandomWithPrefix("test-subnateName")
 	name := acctest.RandomWithPrefix("test-project-name-dou")
@@ -165,7 +163,7 @@ func TestAccNutanixProject_withInternalWithACP(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal, ad.ExtID, userName, userUUID),
+				Config: testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal, principalName, directoryServiceUUID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -183,8 +181,8 @@ func TestAccNutanixProject_withInternalWithACPUserGroup(t *testing.T) {
 	resourceName := "nutanix_project.project_test"
 
 	ad := acc.Config(t).Iam.DirectoryServicesMain.SecondaryAD
-	groupName := "dnd_approval_group_1"
-	groupUUID := ad.DomainUsersUsergroups.UserGroups[groupName]
+	groupName := testVars.UserGroupWithDistinguishedName[0].DistinguishedName
+	groupUUID := testVars.UserGroupWithDistinguishedName[0].UUID
 
 	subnetName := acctest.RandomWithPrefix("test-subnateName")
 	name := acctest.RandomWithPrefix("test-project-name-dou")
@@ -480,7 +478,7 @@ func testAccNutanixProjectInternalConfigUpdate(subnetName, name, description str
 	`, subnetName, name, description)
 }
 
-func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal, directoryServiceExtID, userName, userUUID string) string {
+func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal, principalName, directoryServiceUUID string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -520,6 +518,15 @@ func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, c
 			}
 		}
 
+		resource "nutanix_user" "user" {
+			directory_service_user {
+				user_principal_name = "%[7]s"
+				directory_service_reference {
+					uuid = "%[8]s"
+				}
+			}
+		}
+
 		resource "nutanix_project" "project_test" {
 			name        = "%[2]s"
 			description = "%[3]s"
@@ -543,12 +550,12 @@ func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, c
 			}
 
 			directory_reference_list {
-				uuid = "%[9]s"
+				uuid = "%[8]s"
 			}
 
 			user_reference_list{
-				uuid = "%[8]s"
-				name = "%[7]s"
+				uuid = nutanix_user.user.id
+				name = nutanix_user.user.name
 			}
 
 			acp{
@@ -560,15 +567,15 @@ func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, c
 				}
 
 				user_reference_list{
-					uuid = "%[8]s"
-					name = "%[7]s"
+					uuid = nutanix_user.user.id
+					name = nutanix_user.user.name
 					kind = "user"
 				}
 
 				description= "untitledAcp-54acc50f-ab94-640a-5f06-5c855cc09539"
 			}
 		}
-	`, subnetName, name, description, categoryName, categoryVal, testVars.Permissions[0].UUID, userName, userUUID, directoryServiceExtID)
+	`, subnetName, name, description, categoryName, categoryVal, testVars.Permissions[0].UUID, principalName, directoryServiceUUID)
 }
 
 func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, description, categoryName, categoryVal, directoryServiceExtID, groupName, groupUUID string) string {
