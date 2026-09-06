@@ -66,9 +66,8 @@ func TestAccPreCheck(t *testing.T) {
 	// Check common required variables
 	if os.Getenv("NUTANIX_INSECURE") == "" ||
 		os.Getenv("NUTANIX_PORT") == "" ||
-		os.Getenv("NUTANIX_ENDPOINT") == "" ||
-		os.Getenv("NUTANIX_STORAGE_CONTAINER") == "" {
-		t.Fatal("`NUTANIX_INSECURE`,`NUTANIX_PORT`,`NUTANIX_ENDPOINT`,`NUTANIX_STORAGE_CONTAINER` must be set for acceptance testing")
+		os.Getenv("NUTANIX_ENDPOINT") == "" {
+		t.Fatal("`NUTANIX_INSECURE`,`NUTANIX_PORT`,`NUTANIX_ENDPOINT`, ` must be set for acceptance testing")
 	}
 
 	// Check authentication - either username/password OR api_key must be set
@@ -80,14 +79,6 @@ func TestAccPreCheck(t *testing.T) {
 	}
 }
 
-// TestAccPreCheckStorageContainer checks for storage container requirement
-// Use this in addition to TestAccPreCheck for tests that create VMs with disks
-func TestAccPreCheckStorageContainer(t *testing.T) {
-	TestAccPreCheck(t)
-	if os.Getenv("NUTANIX_STORAGE_CONTAINER") == "" {
-		t.Fatal("`NUTANIX_STORAGE_CONTAINER` must be set for VM creation tests")
-	}
-}
 
 func TestAccFoundationPreCheck(t *testing.T) {
 	if os.Getenv("FOUNDATION_ENDPOINT") == "" ||
