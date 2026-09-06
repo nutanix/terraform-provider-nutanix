@@ -79,7 +79,6 @@ func TestAccPreCheck(t *testing.T) {
 	}
 }
 
-
 func TestAccFoundationPreCheck(t *testing.T) {
 	if os.Getenv("FOUNDATION_ENDPOINT") == "" ||
 		os.Getenv("FOUNDATION_PORT") == "" {
