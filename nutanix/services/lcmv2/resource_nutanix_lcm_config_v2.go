@@ -95,7 +95,7 @@ func ResourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceDat
 	if common.IsExplicitlySet(d, "url") {
 		v := d.Get("url").(string)
 		body.Url = utils.StringPtr(v)
-	}else {
+	} else {
 		body.Url = nil
 	}
 	if common.IsExplicitlySet(d, "is_auto_inventory_enabled") {
