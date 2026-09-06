@@ -25,6 +25,11 @@ func ResourceNutanixPreChecksV2() *schema.Resource {
 		UpdateContext: ResourceNutanixLcmPreChecksV2Update,
 		DeleteContext: ResourceNutanixLcmPreChecksV2Delete,
 		Schema: map[string]*schema.Schema{
+			"dry_run": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"x_cluster_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -100,12 +105,13 @@ func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.Resource
 	if skippedPrecheckFlags, ok := d.GetOk("skipped_precheck_flags"); ok {
 		body.SkippedPrecheckFlags = expandSystemAutoMgmtFlag(skippedPrecheckFlags.([]interface{}))
 	}
+	dryRun := d.Get("dry_run").(bool)
 
 	// pass nil for the new dyRun flag
 	performPrechecksRequest := import1.PerformPrechecksRequest{
 		Body:       body,
 		XClusterId: utils.StringPtr(clusterExtID),
-		Dryrun_:    nil,
+		Dryrun_:    &dryRun,
 	}
 
 	aJSON, _ := json.MarshalIndent(performPrechecksRequest, "", "  ")

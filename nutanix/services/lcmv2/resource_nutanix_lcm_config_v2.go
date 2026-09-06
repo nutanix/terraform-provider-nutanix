@@ -92,10 +92,13 @@ func ResourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceDat
 		"DARKSITE_DIRECT_UPLOAD": lcmconfigimport1.CONNECTIVITYTYPE_DARKSITE_DIRECT_UPLOAD,
 	}
 
-	if url, ok := d.GetOk("url"); ok {
-		body.Url = utils.StringPtr(url.(string))
+	if common.IsExplicitlySet(d, "url") {
+		v := d.Get("url").(string)
+		body.Url = utils.StringPtr(v)
+	}else {
+		body.Url = nil
 	}
-	if IsExplicitlySet(d, "is_auto_inventory_enabled") {
+	if common.IsExplicitlySet(d, "is_auto_inventory_enabled") {
 		v := d.Get("is_auto_inventory_enabled").(bool)
 		body.IsAutoInventoryEnabled = utils.BoolPtr(v)
 	}
