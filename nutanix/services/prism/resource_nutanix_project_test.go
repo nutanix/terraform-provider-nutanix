@@ -548,7 +548,7 @@ func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, c
 				kind="subnet"
 				uuid=nutanix_subnet.subnet.metadata.uuid
 			}
-
+			enable_directory_and_identity_provider_shortlist = true
 			directory_reference_list {
 				uuid = "%[8]s"
 			}
@@ -639,7 +639,7 @@ func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, descr
 				kind="subnet"
 				uuid=nutanix_subnet.subnet.metadata.uuid
 			}
-
+			enable_directory_and_identity_provider_shortlist = true
 			directory_reference_list {
 				uuid = "%[9]s"
 			}
