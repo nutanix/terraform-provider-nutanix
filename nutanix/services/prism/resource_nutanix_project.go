@@ -1421,11 +1421,16 @@ func expandProjectSpec(d *schema.ResourceData) *v3.ProjectSpec {
 		v := d.Get("enable_directory_and_identity_provider_shortlist")
 		resources.EnableDirectoryAndIdentityProviderShortlist = utils.BoolPtr(v.(bool))
 	}
+	// Always set to avoid null in JSON (API requires array, not null)
 	if v, ok := d.GetOk("directory_reference_list"); ok {
 		resources.DirectoryReferenceList = expandDirectoryReferenceList(v.([]interface{}))
+	} else {
+		resources.DirectoryReferenceList = []*v3.ReferenceValues{}
 	}
 	if v, ok := d.GetOk("identity_providers_reference_list"); ok {
 		resources.IdentityProvidersReferenceList = expandDirectoryReferenceList(v.([]interface{}))
+	} else {
+		resources.IdentityProvidersReferenceList = []*v3.ReferenceValues{}
 	}
 
 	return &v3.ProjectSpec{
@@ -1551,11 +1556,16 @@ func expandProjectDetails(d *schema.ResourceData) *v3.ProjectDetails {
 		v := d.Get("enable_directory_and_identity_provider_shortlist")
 		resources.EnableDirectoryAndIdentityProviderShortlist = utils.BoolPtr(v.(bool))
 	}
+	// Always set to avoid null in JSON (API requires array, not null)
 	if v, ok := d.GetOk("directory_reference_list"); ok {
 		resources.DirectoryReferenceList = expandDirectoryReferenceList(v.([]interface{}))
+	} else {
+		resources.DirectoryReferenceList = []*v3.ReferenceValues{}
 	}
 	if v, ok := d.GetOk("identity_providers_reference_list"); ok {
 		resources.IdentityProvidersReferenceList = expandDirectoryReferenceList(v.([]interface{}))
+	} else {
+		resources.IdentityProvidersReferenceList = []*v3.ReferenceValues{}
 	}
 
 	return &v3.ProjectDetails{

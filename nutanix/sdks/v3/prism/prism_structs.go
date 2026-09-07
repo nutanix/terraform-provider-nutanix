@@ -1974,8 +1974,8 @@ type ProjectResources struct {
 	SubnetReferenceList                         []*ReferenceValues `json:"subnet_reference_list,omitempty"`
 	ExternalNetworkList                         []*ReferenceValues `json:"external_network_list,omitempty"`
 	EnableDirectoryAndIdentityProviderShortlist *bool              `json:"enable_directory_and_identity_provider_shortlist,omitempty"`
-	DirectoryReferenceList                      []*ReferenceValues `json:"directory_reference_list,omitempty"`
-	IdentityProvidersReferenceList              []*ReferenceValues `json:"identity_providers_reference_list,omitempty"`
+	DirectoryReferenceList                      []*ReferenceValues `json:"directory_reference_list"`
+	IdentityProvidersReferenceList              []*ReferenceValues `json:"identity_providers_reference_list"`
 }
 
 // ProjectStatus ...
@@ -2852,8 +2852,8 @@ type ProjectInternalResources struct {
 	DefaultEnvironmentReference                 *Reference         `json:"default_environment_reference,omitempty"`
 	IsDefault                                   bool               `json:"is_default,omitempty"`
 	EnableDirectoryAndIdentityProviderShortlist *bool              `json:"enable_directory_and_identity_provider_shortlist,omitempty"`
-	DirectoryReferenceList                      []*ReferenceValues `json:"directory_reference_list,omitempty"`
-	IdentityProvidersReferenceList              []*ReferenceValues `json:"identity_providers_reference_list,omitempty"`
+	DirectoryReferenceList                      []*ReferenceValues `json:"directory_reference_list"`
+	IdentityProvidersReferenceList              []*ReferenceValues `json:"identity_providers_reference_list"`
 }
 
 type ProjectStatusResources struct {
