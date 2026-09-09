@@ -9,6 +9,7 @@ import (
 
 type Client struct {
 	FoundationCentralConfigAPIInstance *api.FoundationCentralConfigApi
+	InstallerImagesAPIInstance         *api.InstallerImagesApi
 	APIClientInstance                  *lifecycle.ApiClient
 }
 
@@ -28,6 +29,7 @@ func NewLifecycleClient(credentials client.Credentials) (*Client, error) {
 
 	return &Client{
 		FoundationCentralConfigAPIInstance: api.NewFoundationCentralConfigApi(baseClient),
+		InstallerImagesAPIInstance:         api.NewInstallerImagesApi(baseClient),
 		APIClientInstance:                  baseClient,
 	}, nil
 }
