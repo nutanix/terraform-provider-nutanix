@@ -17,6 +17,17 @@ type TestConfig struct {
 			AhvInstallationTimeoutMinutes int `json:"ahv_installation_timeout_minutes"`
 			AosDownloadTimeoutMinutes     int `json:"aos_download_timeout_minutes"`
 		} `json:"foundation_central"`
+		HardwareProviders struct {
+			// HardwareProviderExtId is the external ID of a hardware provider that
+			// already exists on the target cluster. Hardware providers are not
+			// created via Terraform, so connection tests read this value from the
+			// shared test_config_v2.json instead of hardcoding it.
+			HardwareProviderExtID string `json:"hardware_provider_ext_id"`
+			// Endpoint / auth details used to build a realistic connection.
+			ConnectionURL      string `json:"connection_url"`
+			ConnectionUsername string `json:"connection_username"`
+			ConnectionPassword string `json:"connection_password"`
+		} `json:"hardware_providers"`
 	} `json:"lifecycle"`
 }
 
