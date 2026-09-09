@@ -37,6 +37,8 @@ const (
 	RelEntityTypeDomainManagerManagement = "prism:management:domain_manager"
 	RelEntityTypeVMAntiAffinityPolicy    = "vmm:ahv:policies:vm-anti-affinity-policy"
 	RelEntityTypeVMHostAffinityPolicy    = "vmm:ahv:policies:vm-host-affinity-policy"
+	RelEntityTypeClaimToken              = "lifecycle:config:claim-tokens"
+	RelEntityTypePatchedImage            = "lifecycle:config:patched-images"
 )
 
 // CompletionDetailsName constants - Completion details name for the task entities affected
