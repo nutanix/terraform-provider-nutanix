@@ -17,6 +17,17 @@ type TestConfig struct {
 			AhvInstallationTimeoutMinutes int `json:"ahv_installation_timeout_minutes"`
 			AosDownloadTimeoutMinutes     int `json:"aos_download_timeout_minutes"`
 		} `json:"foundation_central"`
+		// InstallerImage carries the parameters used to register an installer
+		// image with Foundation Central during acceptance tests. URL points to a
+		// reachable image (e.g. an AOS/AHV/ESX installer) and Version/UpdatedURL
+		// are used across the create/update test steps.
+		InstallerImage struct {
+			Name       string `json:"name"`
+			Type       string `json:"type"`
+			URL        string `json:"url"`
+			Version    string `json:"version"`
+			UpdatedURL string `json:"updated_url"`
+		} `json:"installer_image"`
 	} `json:"lifecycle"`
 }
 

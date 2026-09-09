@@ -89,7 +89,8 @@
       "entity_issuer": "",
       "is_signed_authn_req_enabled": true,
       "custom_attributes": [
-        "", ""
+        "",
+        ""
       ]
     },
     "directory_services": {
@@ -115,7 +116,8 @@
       },
       "group_search_type": "",
       "white_listed_groups": [
-        "", ""
+        "",
+        ""
       ]
     }
   },
@@ -206,7 +208,9 @@
       }
     ],
     "config": {
-      "cluster_functions": [""],
+      "cluster_functions": [
+        ""
+      ],
       "auth_public_keys": [
         {
           "name": "",
@@ -224,8 +228,16 @@
       "virtual_ip": "",
       "iscsi_ip": "",
       "iscsi_ip1": "",
-      "dns_servers": ["", ""],
-      "ntp_servers": ["", "", "", ""],
+      "dns_servers": [
+        "",
+        ""
+      ],
+      "ntp_servers": [
+        "",
+        "",
+        "",
+        ""
+      ],
       "smtp_server": {
         "ip": "",
         "port": 25,
@@ -279,7 +291,7 @@
       "ssh_user": "",
       "ssh_password": ""
     },
-    "pc_restore":{
+    "pc_restore": {
       "username": "",
       "password": "",
       "skip_pc_restore_test": false
@@ -301,9 +313,18 @@
     "subnet_name": "",
     "bucket_name": "",
     "domain": "",
-    "public_network_ips": ["", ""],
-    "storage_network_dns_ip": ["", ""],
-    "storage_network_vip": ["", ""]
+    "public_network_ips": [
+      "",
+      ""
+    ],
+    "storage_network_dns_ip": [
+      "",
+      ""
+    ],
+    "storage_network_vip": [
+      "",
+      ""
+    ]
   },
   "security": {
     "kms": {
@@ -313,6 +334,19 @@
       "client_id": "",
       "client_secret": "",
       "credential_expiry_date": ""
+    }
+  },
+  "lifecycle": {
+    "foundation_central": {
+      "ahv_installation_timeout_minutes": 60,
+      "aos_download_timeout_minutes": 60
+    },
+    "installer_image": {
+      "name": "tf-test-installer-image",
+      "type": "AOS",
+      "url": "https://example.com/aos/nos.tar.gz",
+      "version": "6.5.1",
+      "updated_url": "https://example.com/aos/nos-6.5.2.tar.gz"
     }
   }
 }
