@@ -17,6 +17,12 @@ type TestConfig struct {
 			AhvInstallationTimeoutMinutes int `json:"ahv_installation_timeout_minutes"`
 			AosDownloadTimeoutMinutes     int `json:"aos_download_timeout_minutes"`
 		} `json:"foundation_central"`
+		// PatchedImage holds the infrastructure ids required by the patched image
+		// cross-resource test. When empty, the integration test is skipped.
+		PatchedImage struct {
+			HostImageExtID string `json:"host_image_ext_id"`
+			NodeExtID      string `json:"node_ext_id"`
+		} `json:"patched_image"`
 	} `json:"lifecycle"`
 }
 
