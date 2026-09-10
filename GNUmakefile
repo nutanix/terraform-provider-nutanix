@@ -18,14 +18,15 @@ testacc: fmtcheck
 
 # Acceptance tests with .env loaded (same as /ok-to-test). Loads .env from repo root before running.
 # Output to ACC_TEST_LOG only; summary + coverage appended at end. Matches workflow logic from acceptance-test.yml.
-# Coverage profile: c.out (statement coverage). Scope follows the run:
+# Coverage profile: c.out (statement coverage). Also writes coverage-report/coverage.html
+# (same HTML green/red view as CI artifact). Scope follows the run:
 #   make acc-test v4              → cover all *v2 service packages (overall v4)
 #   make acc-test v3              → cover non-*v2 service packages (overall v3)
 #   make acc-test networkingv2    → cover that package only
 #   make acc-test p=iamv2 ...     → cover that package only
 # Usage:
 #   make acc-test networkingv2                                         # all tests in package networkingv2 (auto-detected)
-#   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic    # single test in specific package
+#   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic    # coverage scoped to that resource file(s)
 #   make acc-test p=networkingv2                                       # all tests in package (explicit)
 #   make acc-test p=networkingv2 TestAccV2NutanixSubnetResource_Basic  # single test in specific package (explicit)
 #   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic o=test_logs_nf.log
@@ -147,9 +148,10 @@ acc-test:
 		if [ -f "$$logfile" ] && grep -qE "^--- (PASS|FAIL|SKIP):" "$$logfile" 2>/dev/null; then \
 			"$(CURDIR)/scripts/acc-test-summary.sh" "$$logfile"; \
 		fi; \
-		"$(CURDIR)/scripts/report-acc-coverage.sh" "$$cover_profile" "$$logfile" "$$scope_label"; \
+		"$(CURDIR)/scripts/report-acc-coverage.sh" "$$cover_profile" "$$logfile" "$$scope_label" "$${run_flag:-.}" "$$package_path"; \
 		echo "==> Log file: $$logfile"; \
-		echo "==> Coverage profile: $$cover_profile"'
+		echo "==> Coverage profile: $$cover_profile"; \
+		echo "==> Coverage HTML: coverage-report/coverage.html"'
 
 # Format and check targets: defined before the % pattern so "make fmt" runs only fmt, not acc-test.
 fmt:

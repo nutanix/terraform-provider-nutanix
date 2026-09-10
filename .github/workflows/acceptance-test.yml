@@ -274,6 +274,8 @@ jobs:
               echo "Coverpkg = $coverpkg"
               echo "Coverage scope = $scope_label"
               echo "SCOPE_LABEL=$scope_label" >> "$GITHUB_ENV"
+              echo "COVER_RUN_PATTERN=${TESTARGS#-run=}" >> "$GITHUB_ENV"
+              echo "COVER_PACKAGE_PATH=$package_path" >> "$GITHUB_ENV"
 
               rm -f c.out
               TF_LOG="ERROR" TF_ACC=1 GOTRACEBACK=all go test "$package_path" -v ${TESTARGS} -timeout 500m \
@@ -409,8 +411,11 @@ jobs:
           TESTCOV_THRESHOLD: "85"
         run: |
           set -euo pipefail
-          chmod +x scripts/report-acc-coverage.sh
-          ./scripts/report-acc-coverage.sh c.out test_output.log "${SCOPE_LABEL:-acceptance tests}"
+          chmod +x scripts/report-acc-coverage.sh scripts/filter-acc-cover-by-tests.sh
+          ./scripts/report-acc-coverage.sh c.out test_output.log \
+            "${SCOPE_LABEL:-acceptance tests}" \
+            "${COVER_RUN_PATTERN:-.}" \
+            "${COVER_PACKAGE_PATH:-}"
 
       - name: Generate coverage HTML report
         if: ${{ always() && steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
@@ -420,12 +425,14 @@ jobs:
             echo "c.out missing or empty; skipping HTML report"
             exit 0
           fi
-          mkdir -p coverage-report
-          go tool cover -html=c.out -o coverage-report/coverage.html
-          go tool cover -func=c.out > coverage-report/coverage.txt
-          cp c.out coverage-report/c.out
-          echo "Coverage HTML written to coverage-report/coverage.html"
-          echo "Coverage func summary:"
+          # Prefer files already written by report-acc-coverage.sh; regenerate if needed.
+          if [[ ! -f coverage-report/coverage.html ]]; then
+            mkdir -p coverage-report
+            go tool cover -html=c.out -o coverage-report/coverage.html
+            go tool cover -func=c.out > coverage-report/coverage.txt
+            cp c.out coverage-report/c.out
+          fi
+          echo "Coverage HTML: coverage-report/coverage.html"
           tail -5 coverage-report/coverage.txt
 
       - name: Upload coverage report artifact
