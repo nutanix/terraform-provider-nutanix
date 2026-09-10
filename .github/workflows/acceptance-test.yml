@@ -411,7 +411,35 @@ jobs:
           set -euo pipefail
           chmod +x scripts/report-acc-coverage.sh
           ./scripts/report-acc-coverage.sh c.out test_output.log "${SCOPE_LABEL:-acceptance tests}"
-      
+
+      - name: Generate coverage HTML report
+        if: ${{ always() && steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
+        run: |
+          set -euo pipefail
+          if [[ ! -s c.out ]]; then
+            echo "c.out missing or empty; skipping HTML report"
+            exit 0
+          fi
+          mkdir -p coverage-report
+          go tool cover -html=c.out -o coverage-report/coverage.html
+          go tool cover -func=c.out > coverage-report/coverage.txt
+          cp c.out coverage-report/c.out
+          echo "Coverage HTML written to coverage-report/coverage.html"
+          echo "Coverage func summary:"
+          tail -5 coverage-report/coverage.txt
+
+      - name: Upload coverage report artifact
+        if: ${{ always() && steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: acc-coverage-report
+          path: |
+            coverage-report/coverage.html
+            coverage-report/coverage.txt
+            coverage-report/c.out
+          if-no-files-found: warn
+          retention-days: 14
+
       # Post build status along with test summary as a comment only if tests executed successfully
       - name: Post build status and test summary
         if: ${{ always() && steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
@@ -422,6 +450,7 @@ jobs:
             - 🧪 **`Build Status: `** `${{ job.status }}`
             - 📌 **`GitHub Action: `** [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
             - 📊 **`Code Coverage: `** `${{ env.CODE_COVERAGE_OUTPUT }}`
+            - 📂 **`Coverage report:`** download the `acc-coverage-report` artifact from the Actions run (open `coverage.html` locally for green/red line view)
             - 📝 **`Test Summary: `**
             ```txt
             ${{ steps.test-execution.outputs.summary_content }}
