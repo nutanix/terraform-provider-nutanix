@@ -538,8 +538,10 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 		isExt := d.Get("is_external").(bool)
 		inputSpec.IsExternal = utils.BoolPtr(isExt)
 	}
-	isConn := d.Get("is_connected").(bool)
-	inputSpec.IsConnected = utils.BoolPtr(isConn)
+	if common.IsExplicitlySet(d, "is_connected") {
+		isConn := d.Get("is_connected").(bool)
+		inputSpec.IsConnected = utils.BoolPtr(isConn)
+	}
 	if reservedIPAdd, ok := d.GetOk("reserved_ip_addresses"); ok {
 		inputSpec.ReservedIpAddresses = expandIPAddress(reservedIPAdd.([]interface{}))
 	}

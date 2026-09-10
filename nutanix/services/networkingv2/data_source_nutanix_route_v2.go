@@ -174,7 +174,7 @@ func DatasourceNutanixRouteV2Read(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("destination", flattenDestination(getResp.Destination)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("next_hop", flattenNextHops(getResp.Nexthops)); err != nil {
+	if err := d.Set("next_hop", flattenRouteNextHop(&getResp)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("route_table_reference", getResp.RouteTableReference); err != nil {
@@ -246,6 +246,18 @@ func flattenDestination(destination *config.IPSubnet) interface{} {
 		destinationMap["ipv6"] = flattenIPv6Subnet(destination.Ipv6)
 	}
 	return []interface{}{destinationMap}
+}
+
+// flattenRouteNextHop prefers singular nexthop (PC 7.5 / v4.2 responses) and
+// falls back to the first entry of nexthops when present.
+func flattenRouteNextHop(route *config.Route) []map[string]interface{} {
+	if route == nil {
+		return nil
+	}
+	if route.Nexthop != nil {
+		return flattenNextHops([]config.Nexthop{*route.Nexthop})
+	}
+	return flattenNextHops(route.Nexthops)
 }
 
 func flattenNextHops(nexthops []config.Nexthop) []map[string]interface{} {

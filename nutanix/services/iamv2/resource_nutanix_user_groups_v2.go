@@ -164,8 +164,13 @@ func ResourceNutanixUserGroupsV4Read(ctx context.Context, d *schema.ResourceData
 	if err := d.Set("name", getResp.Name); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("distinguished_name", getResp.DistinguishedName); err != nil {
-		return diag.FromErr(err)
+	// SAML GETs often omit distinguishedName even though create accepted/recomputed
+	// it as "<name>#<idpId>". Setting a nil pointer clears state and causes perpetual
+	// non-empty plans when the attribute is set in config.
+	if getResp.DistinguishedName != nil {
+		if err := d.Set("distinguished_name", getResp.DistinguishedName); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if getResp.CreatedTime != nil {
 		t := getResp.CreatedTime

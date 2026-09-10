@@ -104,7 +104,7 @@ func TestAccV2NutanixVmsResource_WithDisk(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.index", "0"),
 					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
 					resource.TestCheckResourceAttrSet(resourceNameVms, "project.#"),
-					resource.TestCheckResourceAttrPair(resourceNameVms, "project.0.ext_id", "nutanix_project_v2.share_project", "ext_id"),
+					resource.TestCheckResourceAttrPair(resourceNameVms, "project.0.ext_id", "nutanix_project.projects", "metadata.uuid"),
 				),
 			},
 		},
@@ -1217,51 +1217,36 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 			filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"		
 		}
 
-		resource "nutanix_subnet_v2" "subnet" {
-		  name                 = "vlan.888"
-		  description          = "Default VLAN 888 Subnet"
-		  subnet_type          = "VLAN"
-		  cluster_reference    = local.cluster0
-		  network_id           = 888
-		  shared_with_projects = [nutanix_project_v2.share_project.ext_id]
-		  # Destroy the subnet before the resource group: a subnet on the RG's
-		  # cluster counts as an entity, so deleting the RG first fails with
-		  # clustermgmt:10018 "resource group is not empty".
-		  depends_on = [nutanix_resource_group_v2.test]
+		data "nutanix_subnets_v2" "subnets" {
+			filter = "name eq '${local.vmm.subnet_name}'"
 		}
 
 		locals {
 			cluster0 = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
-			subnetExtId = nutanix_subnet_v2.subnet.ext_id
+			subnetExtId = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
 			config = jsondecode(file("%[3]s"))
 			vmm = local.config.vmm
 		}
 
-		resource "nutanix_project_v2" "share_project" {
-			name        = "tf-project-%[1]d"
-			project_id = "tf-project-%[1]d"
-			description = "project twice"
+		resource "nutanix_project" "projects" {
+			name          = "tf-project-%[1]d"
+			description   = "project twice"
+			use_project_internal = true
+			api_version = "3.1"
+			cluster_reference_list {
+				uuid = local.cluster0
+			}
+
+			subnet_reference_list {
+				uuid = local.subnetExtId
+			}
+
+			default_subnet_reference {
+				uuid = local.subnetExtId
+			}
+			enable_directory_and_identity_provider_shortlist = false
 		}
 
-		resource "nutanix_resource_group_v2" "test" {
-			name           = "tf-rg-%[1]d"
-			project_ext_id = nutanix_project_v2.share_project.ext_id
-			placement_targets {
-				cluster_ext_id = local.cluster0
-				storage_containers {
-					ext_id = data.nutanix_storage_containers_v2.ngt-sc.storage_containers[0].ext_id
-				}
-			}
-			# The backend auto-associates a default storage container with the
-			# placement target (cluster) and returns it on read, even though we only
-			# set cluster_ext_id. That server-populated value would otherwise surface
-			# as a perpetual "remove storage_containers" diff after apply and fail the
-			# test, so ignore post-create changes to placement_targets here.
-			lifecycle {
-				ignore_changes = [placement_targets]
-			}
-		}
-		
 		data "nutanix_storage_containers_v2" "ngt-sc" {
 		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 		  limit = 1
@@ -1277,8 +1262,8 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 				ext_id = local.cluster0
 			}
 			project {
-				ext_id = nutanix_project_v2.share_project.ext_id
-			}
+				ext_id = nutanix_project.projects.metadata.uuid
+      		}
 			disks{
 				disk_address{
 					bus_type = "SCSI"
@@ -1304,10 +1289,6 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 					}
 				}
 			}
-			# Destroy the VM (whose disk lives on the RG placement-target storage
-			# container) before the resource group, otherwise the RG delete fails
-			# with clustermgmt:10018 "resource group is not empty".
-			depends_on = [nutanix_resource_group_v2.test]
 		}
 `, r, desc, filepath)
 }

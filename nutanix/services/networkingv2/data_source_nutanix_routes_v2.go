@@ -121,7 +121,7 @@ func flattenRoutes(routes []config.Route) []interface{} {
 			"name":                              route.Name,
 			"description":                       route.Description,
 			"destination":                       flattenDestination(route.Destination),
-			"next_hop":                          flattenNextHops(route.Nexthops),
+			"next_hop":                          flattenRouteNextHop(&route),
 			"route_table_reference":             route.RouteTableReference,
 			"vpc_reference":                     route.VpcReference,
 			"external_routing_domain_reference": route.ExternalRoutingDomainReference,

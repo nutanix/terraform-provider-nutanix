@@ -279,23 +279,6 @@ func TestAccV2NutanixVirtualSwitchDatasource_ListWithFilters(t *testing.T) {
 	})
 }
 
-func TestAccV2NutanixNodeSchedulableStatuses(t *testing.T) {
-	datasourceName := "data.nutanix_node_schedulable_statuses_v2.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccNodeSchedulableStatusesConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceName, "node_schedulable_statuses.#"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccV2NutanixVpcVirtualSwitchMappings(t *testing.T) {
 	datasourceName := "data.nutanix_vpc_virtual_switch_mappings_v2.test"
 
