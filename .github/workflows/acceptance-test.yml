@@ -58,14 +58,10 @@ jobs:
           echo "GOPATH=$HOME/go" >> $GITHUB_ENV
           echo "PATH=$HOME/go/bin:$PATH" >> $GITHUB_ENV
 
-      - name: Cache Go Modules
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/go/pkg/mod
-          key: go-mod-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            go-mod-${{ runner.os }}-
+      # Module cache is handled by actions/setup-go (cache: true) above.
+      # A separate actions/cache on ~/go/pkg/mod conflicts on self-hosted runners
+      # when the directory already exists ("tar: Cannot open: File exists") and
+      # actions/cache@v3 also triggers the Node 20 deprecation warning.
 
       - name: Install Dependencies
         run: |
