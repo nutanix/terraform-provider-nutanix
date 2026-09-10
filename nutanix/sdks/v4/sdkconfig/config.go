@@ -1,6 +1,7 @@
 package sdkconfig
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
@@ -25,26 +26,37 @@ type V4ApiClientConfig struct {
 // ConfigureV4Client checks credentials and returns configuration for a v4 SDK client.
 // Returns nil if credentials are insufficient (no endpoint, or neither basic auth nor API key).
 // Applies API key and custom headers to the apiClient via AddDefaultHeader.
-func ConfigureV4Client(credentials client.Credentials, apiClient V4ApiClient) *V4ApiClientConfig {
+//
+// An error is returned only for a malformed port: falling back to the default port would
+// silently talk to a different endpoint than the operator configured.
+func ConfigureV4Client(credentials client.Credentials, apiClient V4ApiClient) (*V4ApiClientConfig, error) {
 	hasBasicAuth := credentials.Username != "" && credentials.Password != ""
 	hasAPIKey := credentials.APIKey != ""
 	hasEndpoint := credentials.Endpoint != ""
 
 	if !hasEndpoint || (!hasBasicAuth && !hasAPIKey) {
-		return nil
+		return nil, nil
 	}
 
 	port := DefaultPort
 	if credentials.Port != "" {
-		if p, err := strconv.Atoi(credentials.Port); err == nil {
-			port = p
+		p, err := strconv.Atoi(credentials.Port)
+		if err != nil {
+			return nil, fmt.Errorf("invalid port %q: must be a number", credentials.Port)
 		}
+		if p < minPort || p > maxPort {
+			return nil, fmt.Errorf("invalid port %d: must be between %d and %d", p, minPort, maxPort)
+		}
+		port = p
 	}
 
 	cfg := &V4ApiClientConfig{
-		Host:                    credentials.Endpoint,
-		Port:                    port,
-		VerifySSL:               false,
+		Host: credentials.Endpoint,
+		Port: port,
+		// VerifySSL is the inverse of the provider's `insecure` flag, which defaults to
+		// false. Disabling verification exposes credentials to man-in-the-middle attacks,
+		// so it must stay an explicit operator opt-in rather than a built-in default.
+		VerifySSL:               !credentials.Insecure,
 		AllowVersionNegotiation: AllowVersionNegotiation,
 	}
 
@@ -61,5 +73,5 @@ func ConfigureV4Client(credentials client.Credentials, apiClient V4ApiClient) *V
 		apiClient.AddDefaultHeader(key, value)
 	}
 
-	return cfg
+	return cfg, nil
 }
