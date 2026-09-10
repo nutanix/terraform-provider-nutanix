@@ -8,8 +8,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	lcmOps "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/operations"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/request/inventory"
 	taskRef "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import4 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -26,6 +30,18 @@ func ResourceNutanixLcmPerformInventoryV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"inventory_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"FULL", "SOFTWARE", "NODE", "RESCAN"}, false),
+			},
+			"node_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -39,9 +55,31 @@ func ResourceNutanixLcmPerformInventoryV2Create(ctx context.Context, d *schema.R
 	} else {
 		clusterID = nil
 	}
-	// pass nil for the body as it is not required and its implemented in hercules Sdk
-	// it will be implemented in the future releases of terraform
-	resp, err := conn.LcmInventoryAPIInstance.PerformInventory(clusterID, nil, nil)
+	_, hasInvType := d.GetOk("inventory_type")
+	_, hasNodeList := d.GetOk("node_list")
+
+	var body *lcmOps.InventorySpec
+	if hasInvType || hasNodeList {
+		body = lcmOps.NewInventorySpec()
+		if v, ok := d.GetOk("inventory_type"); ok {
+			body.InventoryType = common.ExpandEnum[lcmOps.InventoryType](v)
+		}
+		if v, ok := d.GetOk("node_list"); ok {
+			nodeListRaw := v.([]interface{})
+			nodeList := make([]string, 0, len(nodeListRaw))
+			for _, n := range nodeListRaw {
+				nodeList = append(nodeList, n.(string))
+			}
+			body.NodeList = nodeList
+		}
+	}
+
+	performInventoryRequest := import1.PerformInventoryRequest{
+		XClusterId: clusterID,
+		Body:       body,
+		Dryrun_:    nil,
+	}
+	resp, err := conn.LcmInventoryAPIInstance.PerformInventory(ctx, &performInventoryRequest)
 	if err != nil {
 		return diag.Errorf("error while performing the inventory: %v", err)
 	}
@@ -65,7 +103,10 @@ func ResourceNutanixLcmPerformInventoryV2Create(ctx context.Context, d *schema.R
 	}
 
 	// Get task details from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching LCM inventory task: %v", err)
 	}

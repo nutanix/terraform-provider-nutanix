@@ -3,10 +3,11 @@ package prism
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"reflect"
 	"testing"
 
@@ -1002,8 +1003,8 @@ func TestOperations_UploadImage(t *testing.T) {
 	mux.HandleFunc("/api/nutanix/v3/images/cfde831a-4e87-4a75-960f-89b0148aa2cc/file", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPut)
 
-		bodyBytes, _ := ioutil.ReadAll(r.Body)
-		file, _ := ioutil.ReadFile("prism.go")
+		bodyBytes, _ := io.ReadAll(r.Body)
+		file, _ := os.ReadFile("prism.go")
 
 		if !reflect.DeepEqual(bodyBytes, file) {
 			t.Errorf("Operations.UploadImage() error: different uploaded files")

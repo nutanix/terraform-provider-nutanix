@@ -92,4 +92,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix List keys for the user V4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Users/operation/listUserKeys)
+See detailed information in [Nutanix List keys for the user V4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/Users/operation/listUserKeys)

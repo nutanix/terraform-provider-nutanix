@@ -2,11 +2,13 @@ package clustersv2
 
 import (
 	"context"
+	"log"
 	"sort"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
+	import5 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/request/clusters"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -542,7 +544,11 @@ func DatasourceNutanixClusterEntityV2Read(ctx context.Context, d *schema.Resourc
 	} else {
 		expand = nil
 	}
-	resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(extID.(string)), expand)
+	getClusterByIdRequest := import5.GetClusterByIdRequest{
+		ExtId:   utils.StringPtr(extID.(string)),
+		Expand_: expand,
+	}
+	resp, err := conn.ClusterEntityAPI.GetClusterById(ctx, &getClusterByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching cluster entity : %v", err)
 	}
@@ -598,12 +604,25 @@ func flattenNodeReference(pr *import1.NodeReference) []map[string]interface{} {
 		nodeRef := make([]map[string]interface{}, 0)
 		node := make(map[string]interface{})
 
+		// DEBUG: number_of_nodes has been observed to flatten to 0 even when the
+		// node_list is populated (e.g. nodes.0.number_of_nodes == "0" while the
+		// node IP is present). Log the raw pointer state so the next run shows
+		// whether the API returned numberOfNodes as null vs 0, and how many
+		// entries node_list actually has.
+		nodeIPs := make([]string, 0, len(pr.NodeList))
+		for _, n := range pr.NodeList {
+			if n.ControllerVmIp != nil && n.ControllerVmIp.Ipv4 != nil {
+				nodeIPs = append(nodeIPs, utils.StringValue(n.ControllerVmIp.Ipv4.Value))
+			}
+		}
+
 		node["number_of_nodes"] = pr.NumberOfNodes
 		node["node_list"] = flattenNodeListItemReference(pr.NodeList)
 
 		nodeRef = append(nodeRef, node)
 		return nodeRef
 	}
+	log.Printf("[DEBUG] flattenNodeReference: NodeReference is nil")
 	return nil
 }
 

@@ -370,6 +370,8 @@ The `disks` attribute supports the following:
 * `backing_info.adfs_volume_group_reference`: (Required) Volume Group Reference
 * `backing_info.adfs_volume_group_reference.volume_group_ext_id`: (Required) The globally unique identifier of an ADSF volume group. It should be of type UUID.
 
+> **Note (Volume Group disk workflow):** Until now, Volume Group disk attachment could be managed as part of the `nutanix_virtual_machine_v2` `disks` workflow. Starting with the next release, managing Volume Group disk attach/detach through the VM resource is deprecated. Use `nutanix_volume_group_disk_v2` to manage Volume Group disks and `nutanix_volume_group_vm_v2` to attach or detach VMs from a Volume Group. When a Volume Group disk is attached out-of-band, `nutanix_virtual_machine_v2` may not include that externally attached disk in its `disks` state unless the corresponding disk backing is explicitly configured, which reduces drift noise.
+
 ### backing_info.vm_disk
 * `disk_size_bytes`: (Required) Size of the disk in Bytes
 * `storage_container`: (Required) This reference is for disk level storage container preference. This preference specifies the storage container to which this disk belongs.
@@ -546,4 +548,4 @@ resource "nutanix_virtual_machine_v2" "import_virtual_machine"{}
 terraform import nutanix_virtual_machine_v2.import_virtual_machine <virtualMachineUUID>
 ```
 
-See detailed information in [Nutanix Create Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Vm/operation/createVm).
+See detailed information in [Nutanix Create Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/Vm/operation/createVm).

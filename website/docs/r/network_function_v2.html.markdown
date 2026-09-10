@@ -72,6 +72,7 @@ The following arguments are supported:
 
 - `data_plane_health_check_config`: (Optional) Data Plane Health check configuration applied for the network function.
 - `nic_pairs`: (Required) List of all NIC pairs part of this network function. Minimum 1 and maximum 2 NIC pairs are allowed.
+- `project_ext_id`: (Optional) Project external ID to associate with the network function. Note: This field cannot be updated after creation.
 
 ### NIC Pairs
 
@@ -101,6 +102,7 @@ The following attributes are exported:
 - `ext_id`:  globally unique identifier of an instance that is suitable for external consumption.
 - `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 - `metadata`: Metadata associated with this resource.
+- `project_ext_id`: Project external ID associated with the network function.
 - `name`: Name of the network function.
 - `description`: Description of the network function.
 - `failure_handling`: Failure handling behavior when network function is unhealthy. Values:
@@ -189,4 +191,4 @@ resource "nutanix_network_function_v2" "import_network_function"{}
 terraform import nutanix_network_function_v2.import_network_function <networkFunctionUUID>
 ```
 
-See detailed information in [Create Nutanix Network Function v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/NetworkFunctions/operation/createNetworkFunction).
+See detailed information in [Create Nutanix Network Function v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/NetworkFunctions/operation/createNetworkFunction).

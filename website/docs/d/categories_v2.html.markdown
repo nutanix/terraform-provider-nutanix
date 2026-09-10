@@ -76,6 +76,8 @@ The `categories` contains list of categories. Each category has the following at
 There are three types of categories: SYSTEM, INTERNAL, and USER.
 * `description`: A string consisting of the description of the category as defined by the user.
 * `owner_uuid`: This field contains the UUID of a user who owns the category.
+* `project_ext_id`: The external identifier of the project to which the category belongs.
+* `shared_with_projects`: A set of project external identifiers with which the category is shared.
 * `associations`: This field gives basic information about resources that are associated to the category.
 * `detailed_associations`: This field gives detailed information about resources that are associated to the category.
 * `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
@@ -97,4 +99,4 @@ Resources can be organized into either an entity or a policy.
 * `resource_id`: The UUID of the entity or policy associated with the particular category.
 
 
-See detailed information in [Nutanix List Categories v4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.3#tag/Categories/operation/listCategories).
+See detailed information in [Nutanix List Categories v4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.4#tag/Categories/operation/listCategories).

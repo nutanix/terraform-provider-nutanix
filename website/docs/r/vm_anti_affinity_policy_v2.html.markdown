@@ -34,6 +34,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the VM-VM Anti-Affinity policy.
 * `description` - (Optional) A description of the VM-VM Anti-Affinity policy.
 * `categories` - (Required) List of VM category external IDs (`ext_id`) that this policy applies to. VMs with these categories will be spread across different hosts according to the anti-affinity rules.
+* `project_ext_id` - (Optional) The external identifier of the project that this policy is associated with.
 
 ## Attribute Reference
 
@@ -70,4 +71,4 @@ resource "nutanix_vm_anti_affinity_policy_v2" "imported" {}
 
 ```
 
-See detailed information in [Nutanix VM-VM Anti-Affinity Policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/VmAntiAffinityPolicies)
+See detailed information in [Nutanix VM-VM Anti-Affinity Policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/VmAntiAffinityPolicies/operation/createVmAntiAffinityPolicy)

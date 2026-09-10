@@ -29,8 +29,8 @@ resource "nutanix_entity_group_v2" "basic" {
 
   allowed_config {
     entities {
-      type             = "VM"
-      selected_by      = "CATEGORY_EXT_ID"
+      type        = "VM"
+      selected_by = "CATEGORY_EXT_ID"
       reference_ext_ids = [
         nutanix_category_v2.categories[0].id,
         nutanix_category_v2.categories[1].id
@@ -61,6 +61,41 @@ resource "nutanix_entity_group_v2" "with_allowed" {
           end_ip   = "192.168.1.10"
         }
       }
+    }
+  }
+}
+
+# Entity group selecting an ADDRESS_GROUP by FQDN (FQDN_VALUES selection).
+# fqdns is required when selected_by = "FQDN_VALUES". Valid pair: (FQDN_VALUES, ADDRESS_GROUP).
+# Matches TestAccNutanixEntityGroupV2Resource_FqdnSelection.
+resource "nutanix_entity_group_v2" "fqdn" {
+  name        = "entity_group_fqdn"
+  description = "Entity group selecting an address group by FQDN"
+
+  allowed_config {
+    entities {
+      type        = "ADDRESS_GROUP"
+      selected_by = "FQDN_VALUES"
+      fqdns       = ["example.com", "api.example.com"]
+    }
+  }
+}
+
+# Entity group selecting VMs by name pattern (REGEX selection). Valid pair: (REGEX, VM).
+# NOTE: REGEX selection is only accepted when Flow flex mode (SMSP) is enabled on
+# Prism Central. reference_string is a plain literal (special characters are
+# rejected), and match_criteria supplies the semantics: CONTAINS / STARTS_WITH /
+# ENDS_WITH / EQUALS. Matches TestAccNutanixEntityGroupV2Resource_RegexSelection.
+resource "nutanix_entity_group_v2" "regex" {
+  name        = "entity_group_regex"
+  description = "Entity group selecting VMs by name pattern"
+
+  allowed_config {
+    entities {
+      type             = "VM"
+      selected_by      = "REGEX"
+      reference_string = "web-prod"
+      match_criteria   = "STARTS_WITH"
     }
   }
 }

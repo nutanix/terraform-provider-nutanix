@@ -8,9 +8,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/request/config"
 	lcmconfigimport1 "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/resources"
 	taskRef "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import4 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -68,7 +70,10 @@ func ResourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceDat
 	} else {
 		clusterID = nil
 	}
-	readResp, err := conn.LcmConfigAPIInstance.GetConfig(clusterID)
+	getConfigRequest := import1.GetConfigRequest{
+		XClusterId: clusterID,
+	}
+	readResp, err := conn.LcmConfigAPIInstance.GetConfig(ctx, &getConfigRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching the Lcm config : %v", err)
 	}
@@ -87,10 +92,13 @@ func ResourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceDat
 		"DARKSITE_DIRECT_UPLOAD": lcmconfigimport1.CONNECTIVITYTYPE_DARKSITE_DIRECT_UPLOAD,
 	}
 
-	if url, ok := d.GetOk("url"); ok {
-		body.Url = utils.StringPtr(url.(string))
+	if common.IsExplicitlySet(d, "url") {
+		v := d.Get("url").(string)
+		body.Url = utils.StringPtr(v)
+	} else {
+		body.Url = nil
 	}
-	if IsExplicitlySet(d, "is_auto_inventory_enabled") {
+	if common.IsExplicitlySet(d, "is_auto_inventory_enabled") {
 		v := d.Get("is_auto_inventory_enabled").(bool)
 		body.IsAutoInventoryEnabled = utils.BoolPtr(v)
 	}
@@ -115,7 +123,11 @@ func ResourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceDat
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] LCM Update Config Request Spec: %s", string(aJSON))
 
-	resp, err := conn.LcmConfigAPIInstance.UpdateConfig(&body, clusterID, args)
+	updateConfigRequest := import1.UpdateConfigRequest{
+		Body:       &body,
+		XClusterId: clusterID,
+	}
+	resp, err := conn.LcmConfigAPIInstance.UpdateConfig(ctx, &updateConfigRequest, args)
 	if err != nil {
 		return diag.Errorf("error while updating the LCM config: %v", err)
 	}
@@ -139,7 +151,10 @@ func ResourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceDat
 	}
 
 	// Get task details from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching LCM config update task: %v", err)
 	}

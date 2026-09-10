@@ -11,7 +11,7 @@ import (
 const resourceNameDiscoverUnconfiguredNodes = "nutanix_clusters_discover_unconfigured_nodes_v2.test"
 
 func TestAccV2NutanixClusterDiscoverUnconfiguredNodesResource_basic(t *testing.T) {
-	if testVars.Clusters.Nodes[0].CvmIP == "" {
+	if testVars.Clusters.Nodes[0] == "" {
 		t.Skip("Skipping test as No available node to be used for testing")
 	}
 	resource.Test(t, resource.TestCase{
@@ -23,7 +23,7 @@ func TestAccV2NutanixClusterDiscoverUnconfiguredNodesResource_basic(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameDiscoverUnconfiguredNodes, "ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameDiscoverUnconfiguredNodes, "unconfigured_nodes.#"),
-					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredNodes, "unconfigured_nodes.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
+					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredNodes, "unconfigured_nodes.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0]),
 				),
 			},
 		},
@@ -47,7 +47,7 @@ func testAccClustersDataSourceDiscoverUnconfiguredNodesConfig() string {
 	  address_type = "IPV4"
 	  ip_filter_list {
 		ipv4 {
-		  value = local.clusters.nodes[0].cvm_ip
+		  value = local.clusters.nodes[0]
 		}
 	  }
       depends_on = [data.nutanix_clusters_v2.clusters]

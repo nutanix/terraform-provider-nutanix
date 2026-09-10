@@ -3,11 +3,11 @@
 # Must be run from the repository root. Requires NUTANIX_* env vars and test config files.
 #
 # Usage:
-#   ./scripts/run-acceptance-test.sh [-p package] <test_pattern>
+#   ./scripts/run-acceptance-test.sh [-p package] <test_pattern> [test_pattern...]
 #
 # Examples (equivalent to /ok-to-test on GitHub):
 #   ./scripts/run-acceptance-test.sh -p vmmv2 TestAccV2NutanixOvaVmDeployResource_DeployVMFromOva
-#   ./scripts/run-acceptance-test.sh -p vmmv2 TestAccV2NutanixNGTInsertIsoResource_InsertNGTIsoIntoVmHaveNGTTest
+#   ./scripts/run-acceptance-test.sh TestAccFoo TestAccBar                 # spaces, not '|'
 #   ./scripts/run-acceptance-test.sh v4                                    # all TestAccV2Nutanix* (runs from repo root)
 #   ./scripts/run-acceptance-test.sh TestAccV2NutanixOvaVmDeployResource_DeployVMFromOva  # single test (needs -p for vmmv2)
 #
@@ -29,18 +29,40 @@ while getopts "p:" opt; do
   esac
 done
 shift "$((OPTIND - 1))"
-RUN_PATTERN="${1:?Usage: $0 [-p package] <test_pattern>}"
 
-# Map provider names to -run patterns (same as GitHub workflow)
-case "$RUN_PATTERN" in
-  foundation)           RUN_PATTERN="TestAccFoundation*" ;;
-  foundation_central)   RUN_PATTERN="TestAccFC*" ;;
-  karbon)               RUN_PATTERN="TestAccKarbon*" ;;
-  v3)                   RUN_PATTERN="TestAccNutanix*" ;;
-  v4)                   RUN_PATTERN="TestAccV2Nutanix*" ;;
-  lcm)                  RUN_PATTERN="TestAccV2NutanixLcm*" ;;
-  era)                  RUN_PATTERN="TestAccEra*" ;;
-esac
+if [[ $# -lt 1 ]]; then
+  echo "Usage: $0 [-p package] <test_pattern> [test_pattern...]" >&2
+  exit 1
+fi
+
+# Treat '|' the same as space so "TestA| TestB" does not become TestA||TestB.
+# An empty Go -run alternative matches every test.
+normalized=()
+for arg in "$@"; do
+  arg="${arg//|/ }"
+  # shellcheck disable=SC2086
+  for token in $arg; do
+    [[ -z "$token" ]] && continue
+    case "$token" in
+      foundation)         token="TestAccFoundation*" ;;
+      foundation_central) token="TestAccFC*" ;;
+      karbon)             token="TestAccKarbon*" ;;
+      v3)                 token="TestAccNutanix*" ;;
+      v4)                 token="TestAccV2Nutanix*" ;;
+      lcm)                token="TestAccV2NutanixLcm*" ;;
+      era)                token="TestAccEra*" ;;
+    esac
+    normalized+=("$token")
+  done
+done
+
+RUN_PATTERN=$(IFS='|'; echo "${normalized[*]}")
+
+if [[ -z "$RUN_PATTERN" || "$RUN_PATTERN" == *"||"* || "$RUN_PATTERN" == "|"* || "$RUN_PATTERN" == *"|" ]]; then
+  echo "Error: -run pattern '$RUN_PATTERN' is empty or has an empty '|'-alternative (matches ALL tests)." >&2
+  echo "Pass test names separated by spaces: $0 TestAccFoo TestAccBar" >&2
+  exit 1
+fi
 
 export TF_ACC=1
 export TF_LOG="${TF_LOG:-ERROR}"

@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/common/v1/response"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import3 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/categories"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -41,6 +42,21 @@ func DatasourceNutanixCategoryV2() *schema.Resource {
 			},
 			"owner_uuid": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"shared_with_projects": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"shared_with_all_projects": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"associations": {
@@ -125,7 +141,11 @@ func DatasourceNutanixCategoryV2Read(ctx context.Context, d *schema.ResourceData
 	} else {
 		expand = nil
 	}
-	resp, err := conn.CategoriesAPIInstance.GetCategoryById(utils.StringPtr(extID.(string)), expand)
+	getCategoryByIdRequest := import3.GetCategoryByIdRequest{
+		ExtId:   utils.StringPtr(extID.(string)),
+		Expand_: expand,
+	}
+	resp, err := conn.CategoriesAPIInstance.GetCategoryById(ctx, &getCategoryByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching category : %v", err)
 	}
@@ -145,6 +165,15 @@ func DatasourceNutanixCategoryV2Read(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 	if err := d.Set("owner_uuid", getResp.OwnerUuid); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("shared_with_all_projects", getResp.IsSharedWithAllProjects); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("associations", flattenAssociationSummary(getResp.Associations)); err != nil {

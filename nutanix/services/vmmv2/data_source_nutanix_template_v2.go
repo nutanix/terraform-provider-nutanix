@@ -10,6 +10,7 @@ import (
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/iam/v4/authn"
 	import6 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	import5 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
+	import7 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/request/templates"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -75,6 +76,93 @@ func DatasourceNutanixTemplateV2() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
+						"guest_customization_profile": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ext_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"version_source": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"template_vm_reference": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ext_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"guest_customization_profile": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"ext_id": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+														},
+													},
+												},
+												"guest_customization": schemaForTemplateGuestCustomization(),
+											},
+										},
+									},
+									"template_version_reference": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"version_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"override_vm_config": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"name": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+															"num_sockets": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
+															"num_cores_per_socket": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
+															"num_threads_per_core": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
+															"memory_size_bytes": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
+															"nics":                schemaForNics(),
+															"guest_customization": schemaForTemplateGuestCustomization(),
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -113,6 +201,10 @@ func DatasourceNutanixTemplateV2() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -121,8 +213,10 @@ func DatasourceNutanixTemplateV2Read(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.Client).VmmAPI
 
 	extID := d.Get("ext_id")
-
-	resp, err := conn.TemplatesAPIInstance.GetTemplateById(utils.StringPtr(extID.(string)))
+	getTemplateByIdRequest := import7.GetTemplateByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.TemplatesAPIInstance.GetTemplateById(ctx, &getTemplateByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching template : %v", err)
 	}
@@ -169,6 +263,9 @@ func DatasourceNutanixTemplateV2Read(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 	if err := d.Set("category_ext_ids", getResp.CategoryExtIds); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId(utils.StringValue(getResp.ExtId))
@@ -404,14 +501,17 @@ func flattenTemplateVersionSpec(pr *import5.TemplateVersionSpec) []map[string]in
 		if pr.CreatedBy != nil {
 			tmp["created_by"] = flattenTemplateUser(pr.CreatedBy)
 		}
-		// if pr.VersionSource != nil {
-		//	tmp["version_source"] = flattenTemplateVersionSource(pr.VersionSource)
-		//}
+		if pr.VersionSource != nil {
+			tmp["version_source"] = flattenTemplateVersionSource(pr.VersionSource)
+		}
 		if pr.IsActiveVersion != nil {
 			tmp["is_active_version"] = pr.IsActiveVersion
 		}
 		if pr.IsGcOverrideEnabled != nil {
 			tmp["is_gc_override_enabled"] = pr.IsGcOverrideEnabled
+		}
+		if pr.GuestCustomizationProfile != nil {
+			tmp["guest_customization_profile"] = flattenVmGcProfileReference(pr.GuestCustomizationProfile)
 		}
 
 		tmps = append(tmps, tmp)
@@ -432,6 +532,7 @@ func flattenTemplateVersionSource(versionSource *import5.OneOfTemplateVersionSpe
 
 			vmReferenceMap["ext_id"] = vmReference.ExtId
 			vmReferenceMap["guest_customization"] = flattenGuestCustomizationParams(vmReference.GuestCustomization)
+			vmReferenceMap["guest_customization_profile"] = flattenVmGcProfileReference(vmReference.GuestCustomizationProfile)
 
 			tmp["template_vm_reference"] = []map[string]interface{}{vmReferenceMap}
 		}
@@ -687,6 +788,768 @@ func SchemaForCreateByAndUpdateByUser() *schema.Schema {
 				},
 			},
 		},
+	}
+}
+
+func schemaForStringOrDiscardOverride() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"value": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"discard": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+			},
+		},
+	}
+}
+
+func schemaForVmGcProfileConfig() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"profile": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ext_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"config_override_spec": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"sysprep_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"customization": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"answer_file": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"unattend_xml": {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
+															},
+														},
+													},
+													"sysprep_params": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: schemaForSysprepParamsOverrideSpec(),
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schemaForSysprepParamsOverrideSpec() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"first_logon_commands": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"general_settings": {
+			Type:     schema.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"administrator_password": schemaForStringOrDiscardOverride(),
+					"auto_logon_settings": {
+						Type:     schema.TypeList,
+						Optional: true,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"logon_count": {
+									Type:     schema.TypeInt,
+									Optional: true,
+								},
+							},
+						},
+					},
+					"computer_name": {
+						Type:     schema.TypeList,
+						Optional: true,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"value": {
+									Type:     schema.TypeString,
+									Optional: true,
+								},
+								"use_vm_name": {
+									Type:     schema.TypeBool,
+									Optional: true,
+								},
+								"discard": {
+									Type:     schema.TypeBool,
+									Optional: true,
+								},
+							},
+						},
+					},
+					"registered_organization": schemaForStringOrDiscardOverride(),
+					"registered_owner":        schemaForStringOrDiscardOverride(),
+					"timezone":                schemaForStringOrDiscardOverride(),
+					"windows_product_key":     schemaForStringOrDiscardOverride(),
+				},
+			},
+		},
+		"locale_settings": {
+			Type:     schema.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"system_locale": schemaForStringOrDiscardOverride(),
+					"ui_language":   schemaForStringOrDiscardOverride(),
+					"user_locale":   schemaForStringOrDiscardOverride(),
+				},
+			},
+		},
+		"network_settings": {
+			Type:     schema.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"nic_config_list": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"dns_config": {
+									Type:     schema.TypeList,
+									Optional: true,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"preferred_dns_server_address": {
+												Type:     schema.TypeString,
+												Optional: true,
+											},
+											"alternate_dns_server_addresses": {
+												Type:     schema.TypeList,
+												Optional: true,
+												Elem: &schema.Schema{
+													Type: schema.TypeString,
+												},
+											},
+										},
+									},
+								},
+								"ipv4_config": {
+									Type:     schema.TypeList,
+									Optional: true,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"use_dhcp": {
+												Type:     schema.TypeBool,
+												Optional: true,
+											},
+											"ip_address": {
+												Type:     schema.TypeList,
+												Optional: true,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"value": {
+															Type:     schema.TypeString,
+															Optional: true,
+														},
+														"prefix_length": {
+															Type:     schema.TypeInt,
+															Optional: true,
+														},
+													},
+												},
+											},
+											"default_gateways": {
+												Type:     schema.TypeList,
+												Optional: true,
+												Elem: &schema.Schema{
+													Type: schema.TypeString,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"workgroup_or_domain_info": {
+			Type:     schema.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"workgroup": {
+						Type:     schema.TypeList,
+						Optional: true,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"name": {
+									Type:     schema.TypeString,
+									Required: true,
+								},
+							},
+						},
+					},
+					"domain_settings": {
+						Type:     schema.TypeList,
+						Optional: true,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"credentials": {
+									Type:     schema.TypeList,
+									Required: true,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"domain_name": {
+												Type:     schema.TypeString,
+												Optional: true,
+											},
+											"password": {
+												Type:      schema.TypeString,
+												Optional:  true,
+												Sensitive: true,
+											},
+											"username": {
+												Type:     schema.TypeString,
+												Optional: true,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					"discard": {
+						Type:     schema.TypeBool,
+						Optional: true,
+					},
+				},
+			},
+		},
+	}
+}
+
+func expandVmGcProfileConfigOverride(pr interface{}) *import6.VmGcProfileConfig {
+	if pr == nil {
+		return nil
+	}
+	list, ok := pr.([]interface{})
+	if !ok || len(list) == 0 || list[0] == nil {
+		return nil
+	}
+	val := list[0].(map[string]interface{})
+	cfg := import6.NewVmGcProfileConfig()
+	if profile, ok := val["profile"]; ok {
+		cfg.Profile = expandVmGcProfileReference(profile)
+	}
+	if overrideSpec, ok := val["config_override_spec"]; ok {
+		cfg.ConfigOverrideSpec = expandConfigOverrideSpec(overrideSpec)
+	}
+	return cfg
+}
+
+func expandConfigOverrideSpec(pr interface{}) *import6.OneOfVmGcProfileConfigConfigOverrideSpec {
+	if pr == nil {
+		return nil
+	}
+	list, ok := pr.([]interface{})
+	if !ok || len(list) == 0 || list[0] == nil {
+		return nil
+	}
+	val := list[0].(map[string]interface{})
+	oneOf := import6.NewOneOfVmGcProfileConfigConfigOverrideSpec()
+
+	if sysprepConfig, ok := val["sysprep_config"]; ok {
+		sysList, ok := sysprepConfig.([]interface{})
+		if ok && len(sysList) > 0 && sysList[0] != nil {
+			sysVal := sysList[0].(map[string]interface{})
+			spec := import6.NewVmGcProfileSysprepConfigOverrideSpec()
+
+			if custRaw, ok := sysVal["customization"]; ok {
+				custList, ok := custRaw.([]interface{})
+				if ok && len(custList) > 0 && custList[0] != nil {
+					custVal := custList[0].(map[string]interface{})
+					cust := import6.NewOneOfVmGcProfileSysprepConfigOverrideSpecCustomization()
+					valueSet := false
+
+					if answerFile, ok := custVal["answer_file"]; ok {
+						afList, ok := answerFile.([]interface{})
+						if ok && len(afList) > 0 && afList[0] != nil {
+							afVal := afList[0].(map[string]interface{})
+							af := import6.NewVmGcProfileAnswerFileOverrideSpec()
+							if xml, ok := afVal["unattend_xml"].(string); ok && xml != "" {
+								af.UnattendXml = utils.StringPtr(xml)
+							}
+							cust.SetValue(*af)
+							valueSet = true
+						}
+					}
+					if !valueSet {
+						if sysprepParams, ok := custVal["sysprep_params"]; ok {
+							spList, ok := sysprepParams.([]interface{})
+							if ok && len(spList) > 0 && spList[0] != nil {
+								spVal := spList[0].(map[string]interface{})
+								params := expandSysprepParamsOverrideSpec(spVal)
+								cust.SetValue(*params)
+								valueSet = true
+							}
+						}
+					}
+					if valueSet {
+						spec.Customization = cust
+					}
+				}
+			}
+			oneOf.SetValue(*spec)
+		}
+	}
+	return oneOf
+}
+
+func expandSysprepParamsOverrideSpec(spVal map[string]interface{}) *import6.VmGcProfileSysprepParamsOverrideSpec {
+	params := import6.NewVmGcProfileSysprepParamsOverrideSpec()
+
+	if cmds, ok := spVal["first_logon_commands"].([]interface{}); ok && len(cmds) > 0 {
+		commands := make([]string, len(cmds))
+		for i, c := range cmds {
+			commands[i] = c.(string)
+		}
+		params.FirstLogonCommands = commands
+	}
+
+	if gsList, ok := spVal["general_settings"].([]interface{}); ok && len(gsList) > 0 && gsList[0] != nil {
+		gsVal := gsList[0].(map[string]interface{})
+		gs := import6.NewVmGcProfileGeneralSettingsOverrideSpec()
+
+		if adminPwd, ok := gsVal["administrator_password"].([]interface{}); ok && len(adminPwd) > 0 && adminPwd[0] != nil {
+			pwdVal := adminPwd[0].(map[string]interface{})
+			oneOf := import6.NewOneOfVmGcProfileGeneralSettingsOverrideSpecAdministratorPassword()
+			if discard, ok := pwdVal["discard"].(bool); ok && discard {
+				oneOf.SetValue(*import6.NewVmGcProfileDiscardSettings())
+			} else if v, ok := pwdVal["value"].(string); ok && v != "" {
+				pwd := import6.NewVmGcProfileAdministratorPassword()
+				pwd.Value = utils.StringPtr(v)
+				oneOf.SetValue(*pwd)
+			}
+			gs.AdministratorPassword = oneOf
+		}
+
+		if alsList, ok := gsVal["auto_logon_settings"].([]interface{}); ok && len(alsList) > 0 && alsList[0] != nil {
+			alsVal := alsList[0].(map[string]interface{})
+			als := import6.NewVmGcProfileAutoLogonSettingsOverrideSpec()
+			if lc, ok := alsVal["logon_count"].(int); ok {
+				als.LogonCount = utils.IntPtr(lc)
+			}
+			gs.AutoLogonSettings = als
+		}
+
+		if cnList, ok := gsVal["computer_name"].([]interface{}); ok && len(cnList) > 0 && cnList[0] != nil {
+			cnVal := cnList[0].(map[string]interface{})
+			oneOf := import6.NewOneOfVmGcProfileGeneralSettingsOverrideSpecComputerName()
+			if discard, ok := cnVal["discard"].(bool); ok && discard {
+				oneOf.SetValue(*import6.NewVmGcProfileDiscardSettings())
+			} else if useVM, ok := cnVal["use_vm_name"].(bool); ok && useVM {
+				oneOf.SetValue(*import6.NewVmGcProfileUseVmNameOverrideSpec())
+			} else if v, ok := cnVal["value"].(string); ok && v != "" {
+				cn := import6.NewVmGcProfileComputerName()
+				cn.Value = utils.StringPtr(v)
+				oneOf.SetValue(*cn)
+			}
+			gs.ComputerName = oneOf
+		}
+
+		if roList, ok := gsVal["registered_organization"].([]interface{}); ok && len(roList) > 0 && roList[0] != nil {
+			roVal := roList[0].(map[string]interface{})
+			oneOf := import6.NewOneOfVmGcProfileGeneralSettingsOverrideSpecRegisteredOrganization()
+			if discard, ok := roVal["discard"].(bool); ok && discard {
+				oneOf.SetValue(*import6.NewVmGcProfileDiscardSettings())
+			} else if v, ok := roVal["value"].(string); ok && v != "" {
+				ro := import6.NewVmGcProfileRegisteredOrganization()
+				ro.Value = utils.StringPtr(v)
+				oneOf.SetValue(*ro)
+			}
+			gs.RegisteredOrganization = oneOf
+		}
+
+		if roList, ok := gsVal["registered_owner"].([]interface{}); ok && len(roList) > 0 && roList[0] != nil {
+			roVal := roList[0].(map[string]interface{})
+			oneOf := import6.NewOneOfVmGcProfileGeneralSettingsOverrideSpecRegisteredOwner()
+			if discard, ok := roVal["discard"].(bool); ok && discard {
+				oneOf.SetValue(*import6.NewVmGcProfileDiscardSettings())
+			} else if v, ok := roVal["value"].(string); ok && v != "" {
+				ro := import6.NewVmGcProfileRegisteredOwner()
+				ro.Value = utils.StringPtr(v)
+				oneOf.SetValue(*ro)
+			}
+			gs.RegisteredOwner = oneOf
+		}
+
+		if tzList, ok := gsVal["timezone"].([]interface{}); ok && len(tzList) > 0 && tzList[0] != nil {
+			tzVal := tzList[0].(map[string]interface{})
+			oneOf := import6.NewOneOfVmGcProfileGeneralSettingsOverrideSpecTimezone()
+			if discard, ok := tzVal["discard"].(bool); ok && discard {
+				oneOf.SetValue(*import6.NewVmGcProfileDiscardSettings())
+			} else if v, ok := tzVal["value"].(string); ok && v != "" {
+				tz := import6.NewVmGcProfileTimezone()
+				tz.Value = utils.StringPtr(v)
+				oneOf.SetValue(*tz)
+			}
+			gs.Timezone = oneOf
+		}
+
+		if wpkList, ok := gsVal["windows_product_key"].([]interface{}); ok && len(wpkList) > 0 && wpkList[0] != nil {
+			wpkVal := wpkList[0].(map[string]interface{})
+			oneOf := import6.NewOneOfVmGcProfileGeneralSettingsOverrideSpecWindowsProductKey()
+			if discard, ok := wpkVal["discard"].(bool); ok && discard {
+				oneOf.SetValue(*import6.NewVmGcProfileDiscardSettings())
+			} else if v, ok := wpkVal["value"].(string); ok && v != "" {
+				wpk := import6.NewVmGcProfileWindowsProductKey()
+				wpk.Value = utils.StringPtr(v)
+				oneOf.SetValue(*wpk)
+			}
+			gs.WindowsProductKey = oneOf
+		}
+
+		params.GeneralSettings = gs
+	}
+
+	if lsList, ok := spVal["locale_settings"].([]interface{}); ok && len(lsList) > 0 && lsList[0] != nil {
+		lsVal := lsList[0].(map[string]interface{})
+		ls := import6.NewVmGcProfileLocaleSettingsOverrideSpec()
+
+		if slList, ok := lsVal["system_locale"].([]interface{}); ok && len(slList) > 0 && slList[0] != nil {
+			slVal := slList[0].(map[string]interface{})
+			oneOf := import6.NewOneOfVmGcProfileLocaleSettingsOverrideSpecSystemLocale()
+			if discard, ok := slVal["discard"].(bool); ok && discard {
+				oneOf.SetValue(*import6.NewVmGcProfileDiscardSettings())
+			} else if v, ok := slVal["value"].(string); ok && v != "" {
+				loc := import6.NewVmGcProfileLocaleSettingOverride()
+				loc.Value = utils.StringPtr(v)
+				oneOf.SetValue(*loc)
+			}
+			ls.SystemLocale = oneOf
+		}
+
+		if ulList, ok := lsVal["ui_language"].([]interface{}); ok && len(ulList) > 0 && ulList[0] != nil {
+			ulVal := ulList[0].(map[string]interface{})
+			oneOf := import6.NewOneOfVmGcProfileLocaleSettingsOverrideSpecUiLanguage()
+			if discard, ok := ulVal["discard"].(bool); ok && discard {
+				oneOf.SetValue(*import6.NewVmGcProfileDiscardSettings())
+			} else if v, ok := ulVal["value"].(string); ok && v != "" {
+				loc := import6.NewVmGcProfileLocaleSettingOverride()
+				loc.Value = utils.StringPtr(v)
+				oneOf.SetValue(*loc)
+			}
+			ls.UiLanguage = oneOf
+		}
+
+		if ulcList, ok := lsVal["user_locale"].([]interface{}); ok && len(ulcList) > 0 && ulcList[0] != nil {
+			ulcVal := ulcList[0].(map[string]interface{})
+			oneOf := import6.NewOneOfVmGcProfileLocaleSettingsOverrideSpecUserLocale()
+			if discard, ok := ulcVal["discard"].(bool); ok && discard {
+				oneOf.SetValue(*import6.NewVmGcProfileDiscardSettings())
+			} else if v, ok := ulcVal["value"].(string); ok && v != "" {
+				loc := import6.NewVmGcProfileLocaleSettingOverride()
+				loc.Value = utils.StringPtr(v)
+				oneOf.SetValue(*loc)
+			}
+			ls.UserLocale = oneOf
+		}
+
+		params.LocaleSettings = ls
+	}
+
+	if nsList, ok := spVal["network_settings"].([]interface{}); ok && len(nsList) > 0 && nsList[0] != nil {
+		nsVal := nsList[0].(map[string]interface{})
+		ns := import6.NewVmGcProfileNetworkSettingsOverrideSpec()
+		if nicList, ok := nsVal["nic_config_list"].([]interface{}); ok && len(nicList) > 0 {
+			nics := make([]import6.VmGcProfileNicConfigOverrideSpec, len(nicList))
+			for i, nicRaw := range nicList {
+				nicMap := nicRaw.(map[string]interface{})
+				nic := *import6.NewVmGcProfileNicConfigOverrideSpec()
+				if dnsList, ok := nicMap["dns_config"].([]interface{}); ok && len(dnsList) > 0 && dnsList[0] != nil {
+					dnsMap := dnsList[0].(map[string]interface{})
+					dns := import6.NewVmGcProfileDnsConfigOverrideSpec()
+					if v, ok := dnsMap["preferred_dns_server_address"].(string); ok && v != "" {
+						dns.PreferredDnsServerAddress = utils.StringPtr(v)
+					}
+					if altDns, ok := dnsMap["alternate_dns_server_addresses"].([]interface{}); ok && len(altDns) > 0 {
+						addrs := make([]string, len(altDns))
+						for j, a := range altDns {
+							addrs[j] = a.(string)
+						}
+						dns.AlternateDnsServerAddresses = addrs
+					}
+					nic.DnsConfig = dns
+				}
+				if ipv4List, ok := nicMap["ipv4_config"].([]interface{}); ok && len(ipv4List) > 0 && ipv4List[0] != nil {
+					ipv4Map := ipv4List[0].(map[string]interface{})
+					oneOfIPv4 := import6.NewOneOfVmGcProfileNicConfigOverrideSpecIpv4Config()
+					if useDhcp, ok := ipv4Map["use_dhcp"].(bool); ok && useDhcp {
+						oneOfIPv4.SetValue(*import6.NewVmGcProfileUseDhcpOverrideSpec())
+					} else {
+						ipv4Override := import6.NewVmGcProfileNicIpv4ConfigOverrideSpec()
+						if ipAddrList, ok := ipv4Map["ip_address"].([]interface{}); ok && len(ipAddrList) > 0 && ipAddrList[0] != nil {
+							ipAddrMap := ipAddrList[0].(map[string]interface{})
+							ipAddr := &config.IPv4Address{}
+							if v, ok := ipAddrMap["value"].(string); ok && v != "" {
+								ipAddr.Value = utils.StringPtr(v)
+							}
+							if pl, ok := ipAddrMap["prefix_length"].(int); ok {
+								ipAddr.PrefixLength = utils.IntPtr(pl)
+							}
+							ipv4Override.IpAddress = ipAddr
+						}
+						if gws, ok := ipv4Map["default_gateways"].([]interface{}); ok && len(gws) > 0 {
+							gwStrs := make([]string, len(gws))
+							for j, g := range gws {
+								gwStrs[j] = g.(string)
+							}
+							ipv4Override.DefaultGateways = gwStrs
+						}
+						oneOfIPv4.SetValue(*ipv4Override)
+					}
+					nic.Ipv4Config = oneOfIPv4
+				}
+				nics[i] = nic
+			}
+			ns.NicConfigList = nics
+		}
+		params.NetworkSettings = ns
+	}
+
+	if wdList, ok := spVal["workgroup_or_domain_info"].([]interface{}); ok && len(wdList) > 0 && wdList[0] != nil {
+		wdVal := wdList[0].(map[string]interface{})
+		oneOfWD := import6.NewOneOfVmGcProfileSysprepParamsOverrideSpecWorkgroupOrDomainInfo()
+		if discard, ok := wdVal["discard"].(bool); ok && discard {
+			oneOfWD.SetValue(*import6.NewVmGcProfileDiscardSettings())
+		} else if wgList, ok := wdVal["workgroup"].([]interface{}); ok && len(wgList) > 0 && wgList[0] != nil {
+			wgMap := wgList[0].(map[string]interface{})
+			wg := import6.NewVmGcProfileWorkgroupOverrideSpec()
+			if v, ok := wgMap["name"].(string); ok && v != "" {
+				wg.Name = utils.StringPtr(v)
+			}
+			oneOfWD.SetValue(*wg)
+		} else if dsList, ok := wdVal["domain_settings"].([]interface{}); ok && len(dsList) > 0 && dsList[0] != nil {
+			dsMap := dsList[0].(map[string]interface{})
+			ds := import6.NewVmGcProfileDomainSettingsOverrideSpec()
+			if credsList, ok := dsMap["credentials"].([]interface{}); ok && len(credsList) > 0 && credsList[0] != nil {
+				credsMap := credsList[0].(map[string]interface{})
+				creds := import6.NewVmGcProfileDomainCredentialsOverrideSpec()
+				if v, ok := credsMap["domain_name"].(string); ok && v != "" {
+					creds.DomainName = utils.StringPtr(v)
+				}
+				if v, ok := credsMap["password"].(string); ok && v != "" {
+					creds.Password = utils.StringPtr(v)
+				}
+				if v, ok := credsMap["username"].(string); ok && v != "" {
+					creds.Username = utils.StringPtr(v)
+				}
+				ds.Credentials = creds
+			}
+			oneOfWD.SetValue(*ds)
+		}
+		params.WorkgroupOrDomainInfo = oneOfWD
+	}
+
+	return params
+}
+
+func flattenVmGcProfileConfigOverride(pr *import6.VmGcProfileConfig) []map[string]interface{} {
+	if pr == nil {
+		return nil
+	}
+	result := make(map[string]interface{})
+	if pr.Profile != nil {
+		result["profile"] = flattenVmGcProfileReference(pr.Profile)
+	}
+	if pr.ConfigOverrideSpec != nil {
+		result["config_override_spec"] = flattenConfigOverrideSpec(pr.ConfigOverrideSpec)
+	}
+	return []map[string]interface{}{result}
+}
+
+func flattenConfigOverrideSpec(oneOf *import6.OneOfVmGcProfileConfigConfigOverrideSpec) []map[string]interface{} {
+	if oneOf == nil {
+		return nil
+	}
+	val := oneOf.GetValue()
+	if val == nil {
+		return nil
+	}
+	result := make(map[string]interface{})
+	switch v := val.(type) {
+	case import6.VmGcProfileSysprepConfigOverrideSpec:
+		result["sysprep_config"] = flattenSysprepConfigOverrideSpec(&v)
+	}
+	return []map[string]interface{}{result}
+}
+
+func flattenSysprepConfigOverrideSpec(spec *import6.VmGcProfileSysprepConfigOverrideSpec) []map[string]interface{} {
+	if spec == nil {
+		return nil
+	}
+	result := make(map[string]interface{})
+	if spec.Customization != nil {
+		custMap := make(map[string]interface{})
+		custVal := spec.Customization.GetValue()
+		switch v := custVal.(type) {
+		case import6.VmGcProfileAnswerFileOverrideSpec:
+			custMap["answer_file"] = []map[string]interface{}{
+				{"unattend_xml": v.UnattendXml},
+			}
+		case import6.VmGcProfileSysprepParamsOverrideSpec:
+			custMap["sysprep_params"] = flattenSysprepParamsOverrideSpec(&v)
+		}
+		result["customization"] = []map[string]interface{}{custMap}
+	}
+	return []map[string]interface{}{result}
+}
+
+func flattenSysprepParamsOverrideSpec(params *import6.VmGcProfileSysprepParamsOverrideSpec) []map[string]interface{} {
+	if params == nil {
+		return nil
+	}
+	result := make(map[string]interface{})
+	if len(params.FirstLogonCommands) > 0 {
+		result["first_logon_commands"] = params.FirstLogonCommands
+	}
+	if params.GeneralSettings != nil {
+		result["general_settings"] = flattenGeneralSettingsOverrideSpec(params.GeneralSettings)
+	}
+	if params.LocaleSettings != nil {
+		result["locale_settings"] = flattenLocaleSettingsOverrideSpec(params.LocaleSettings)
+	}
+	if params.NetworkSettings != nil {
+		result["network_settings"] = flattenNetworkSettingsOverrideSpec(params.NetworkSettings)
+	}
+	return []map[string]interface{}{result}
+}
+
+func flattenGeneralSettingsOverrideSpec(gs *import6.VmGcProfileGeneralSettingsOverrideSpec) []map[string]interface{} {
+	if gs == nil {
+		return nil
+	}
+	result := make(map[string]interface{})
+	if gs.AutoLogonSettings != nil {
+		result["auto_logon_settings"] = []map[string]interface{}{
+			{"logon_count": gs.AutoLogonSettings.LogonCount},
+		}
+	}
+	return []map[string]interface{}{result}
+}
+
+func flattenLocaleSettingsOverrideSpec(ls *import6.VmGcProfileLocaleSettingsOverrideSpec) []map[string]interface{} {
+	if ls == nil {
+		return nil
+	}
+	return []map[string]interface{}{make(map[string]interface{})}
+}
+
+func flattenNetworkSettingsOverrideSpec(ns *import6.VmGcProfileNetworkSettingsOverrideSpec) []map[string]interface{} {
+	if ns == nil {
+		return nil
+	}
+	result := make(map[string]interface{})
+	if len(ns.NicConfigList) > 0 {
+		nicList := make([]map[string]interface{}, len(ns.NicConfigList))
+		for i, nic := range ns.NicConfigList {
+			nicMap := make(map[string]interface{})
+			if nic.DnsConfig != nil {
+				dnsMap := map[string]interface{}{
+					"preferred_dns_server_address":   nic.DnsConfig.PreferredDnsServerAddress,
+					"alternate_dns_server_addresses": nic.DnsConfig.AlternateDnsServerAddresses,
+				}
+				nicMap["dns_config"] = []map[string]interface{}{dnsMap}
+			}
+			nicList[i] = nicMap
+		}
+		result["nic_config_list"] = nicList
+	}
+	return []map[string]interface{}{result}
+}
+
+func expandVmGcProfileReference(pr interface{}) *import6.VmGcProfileReference {
+	if pr == nil {
+		return nil
+	}
+	list, ok := pr.([]interface{})
+	if !ok || len(list) == 0 || list[0] == nil {
+		return nil
+	}
+	val := list[0].(map[string]interface{})
+	ref := import6.NewVmGcProfileReference()
+	if extID, ok := val["ext_id"]; ok && extID.(string) != "" {
+		ref.ExtId = utils.StringPtr(extID.(string))
+	}
+	return ref
+}
+
+func flattenVmGcProfileReference(pr *import6.VmGcProfileReference) []map[string]interface{} {
+	if pr == nil {
+		return nil
+	}
+	return []map[string]interface{}{
+		{"ext_id": pr.ExtId},
 	}
 }
 

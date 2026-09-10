@@ -104,7 +104,7 @@ func TestAccV2NutanixVmsResource_WithDisk(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.index", "0"),
 					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
 					resource.TestCheckResourceAttrSet(resourceNameVms, "project.#"),
-					resource.TestCheckResourceAttrPair(resourceNameVms, "project.0.ext_id", "nutanix_project.projects", "metadata.uuid"),
+					resource.TestCheckResourceAttrPair(resourceNameVms, "project.0.ext_id", "nutanix_project_v2.share_project", "ext_id"),
 				),
 			},
 		},
@@ -609,6 +609,73 @@ func TestAccV2NutanixVmsResource_WithLegacyBootOrder(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameVms, "boot_config.0.legacy_boot.#"),
 					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_order.0", "DISK"),
 					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_order.1", "CDROM"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_order.2", "NETWORK"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccV2NutanixVmsResource_LegacyBootOrderChangeWithBootDevice(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-vm-%d", r)
+	desc := "test vm description"
+	mac := fmt.Sprintf("50:6b:8d:%02x:%02x:%02x", r&0xff, (r>>8)&0xff, (r>>16)&0xff)
+	bootDeviceNic := fmt.Sprintf(`
+				  boot_device {
+					boot_device_nic {
+					  mac_address = "%s"
+					}
+				  }`, mac)
+	bootDeviceDisk := `
+				  boot_device {
+					boot_device_disk {
+					  disk_address {
+						bus_type = "SATA"
+						index    = 0
+					  }
+					}
+				  }`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testVmsV4ConfigWithLegacyBootOrderChange(name, desc, mac, "", `["CDROM", "DISK", "NETWORK"]`),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", name),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_order.0", "CDROM"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_order.1", "DISK"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_order.2", "NETWORK"),
+				),
+			},
+			{
+				Config: testVmsV4ConfigWithLegacyBootOrderChange(name, desc, mac, bootDeviceNic, `["NETWORK", "DISK", "CDROM"]`),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_device.0.boot_device_nic.0.mac_address", mac),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_order.0", "NETWORK"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_order.1", "DISK"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_order.2", "CDROM"),
+				),
+			},
+			{
+				Config: testVmsV4ConfigWithLegacyBootOrderChange(name, desc, mac, bootDeviceDisk, `["CDROM", "DISK", "NETWORK"]`),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_device.0.boot_device_disk.0.disk_address.0.bus_type", "SATA"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_device.0.boot_device_disk.0.disk_address.0.index", "0"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_device.0.boot_device_nic.#", "0"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_order.0", "CDROM"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_order.1", "DISK"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_order.2", "NETWORK"),
+				),
+			},
+			{
+				Config: testVmsV4ConfigWithLegacyBootOrderChange(name, desc, mac, "", `["CDROM", "DISK", "NETWORK"]`),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_device.#", "0"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_order.0", "CDROM"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_order.1", "DISK"),
 					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.legacy_boot.0.boot_order.2", "NETWORK"),
 				),
 			},
@@ -1150,35 +1217,51 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 			filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"		
 		}
 
-		data "nutanix_subnets_v2" "subnets" {
-			filter = "name eq '${local.vmm.subnet_name}'"
+		resource "nutanix_subnet_v2" "subnet" {
+		  name                 = "vlan.888"
+		  description          = "Default VLAN 888 Subnet"
+		  subnet_type          = "VLAN"
+		  cluster_reference    = local.cluster0
+		  network_id           = 888
+		  shared_with_projects = [nutanix_project_v2.share_project.ext_id]
+		  # Destroy the subnet before the resource group: a subnet on the RG's
+		  # cluster counts as an entity, so deleting the RG first fails with
+		  # clustermgmt:10018 "resource group is not empty".
+		  depends_on = [nutanix_resource_group_v2.test]
 		}
 
 		locals {
 			cluster0 = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
-			subnetExtId = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+			subnetExtId = nutanix_subnet_v2.subnet.ext_id
 			config = jsondecode(file("%[3]s"))
 			vmm = local.config.vmm
 		}
 
-		resource "nutanix_project" "projects" {
-			name          = "tf-project-%[1]d"
-			description   = "project twice"
-			use_project_internal = true
-			api_version = "3.1"
-			cluster_reference_list {
-				uuid = local.cluster0
-			}
-
-			subnet_reference_list {
-				uuid = local.subnetExtId
-			}
-
-			default_subnet_reference {
-				uuid = local.subnetExtId
-			}
+		resource "nutanix_project_v2" "share_project" {
+			name        = "tf-project-%[1]d"
+			project_id = "tf-project-%[1]d"
+			description = "project twice"
 		}
 
+		resource "nutanix_resource_group_v2" "test" {
+			name           = "tf-rg-%[1]d"
+			project_ext_id = nutanix_project_v2.share_project.ext_id
+			placement_targets {
+				cluster_ext_id = local.cluster0
+				storage_containers {
+					ext_id = data.nutanix_storage_containers_v2.ngt-sc.storage_containers[0].ext_id
+				}
+			}
+			# The backend auto-associates a default storage container with the
+			# placement target (cluster) and returns it on read, even though we only
+			# set cluster_ext_id. That server-populated value would otherwise surface
+			# as a perpetual "remove storage_containers" diff after apply and fail the
+			# test, so ignore post-create changes to placement_targets here.
+			lifecycle {
+				ignore_changes = [placement_targets]
+			}
+		}
+		
 		data "nutanix_storage_containers_v2" "ngt-sc" {
 		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
 		  limit = 1
@@ -1194,8 +1277,8 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 				ext_id = local.cluster0
 			}
 			project {
-				ext_id = nutanix_project.projects.metadata.uuid
-      		}
+				ext_id = nutanix_project_v2.share_project.ext_id
+			}
 			disks{
 				disk_address{
 					bus_type = "SCSI"
@@ -1221,6 +1304,10 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 					}
 				}
 			}
+			# Destroy the VM (whose disk lives on the RG placement-target storage
+			# container) before the resource group, otherwise the RG delete fails
+			# with clustermgmt:10018 "resource group is not empty".
+			depends_on = [nutanix_resource_group_v2.test]
 		}
 `, r, desc, filepath)
 }
@@ -1698,6 +1785,64 @@ func testVmsV4ConfigWithLegacyBootWithUpdateOrder(name, desc string) string {
 `, name, desc)
 }
 
+func testVmsV4ConfigWithLegacyBootOrderChange(name, desc, macAddress, bootDeviceBlock, bootOrder string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+			cluster0 = [
+				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
+			config = jsondecode(file("%[6]s"))
+			vmm = local.config.vmm
+		}
+
+		data "nutanix_subnets_v2" "subnets" {
+			filter = "name eq '${local.vmm.subnet_name}'"
+		}
+
+		resource "nutanix_virtual_machine_v2" "test"{
+			name                 = "%[1]s"
+			description          = "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets          = 1
+			power_state          = "OFF"
+			cluster {
+				ext_id = local.cluster0
+			}
+			nics {
+				nic_backing_info {
+					virtual_ethernet_nic {
+						mac_address = "%[3]s"
+					}
+				}
+				nic_network_info {
+					virtual_ethernet_nic_network_info {
+						nic_type = "NORMAL_NIC"
+						subnet {
+							ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+						}
+						vlan_mode = "ACCESS"
+					}
+				}
+			}
+			cd_roms {
+				disk_address {
+					bus_type = "SATA"
+					index    = 0
+				}
+			}
+			boot_config {
+				legacy_boot {
+%[4]s
+					boot_order = %[5]s
+				}
+			}
+		}
+`, name, desc, macAddress, bootDeviceBlock, bootOrder, filepath)
+}
+
 func testVmsV4ConfigWithLegacyBootDevice(name, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
@@ -1714,7 +1859,7 @@ func testVmsV4ConfigWithLegacyBootDevice(name, desc string) string {
 
 
 		data "nutanix_images_v2" "ngt-image" {
-		  filter = "name eq '${local.vmm.image_name}'"
+		  filter = "name eq '${local.config.images.ngt_image}'"
 		}
 
 		resource "nutanix_virtual_machine_v2" "test"{
@@ -2057,7 +2202,7 @@ resource "nutanix_virtual_machine_v2" "test"{
 			install_type = "PREPARED"
 				sysprep_script {
 					unattend_xml {
-						value = file("%[4]s") # unattend_xml file value, value is encoded in base64
+						value = base64encode(file("%[4]s")) # unattend_xml file value, value is encoded in base64
 					}
 			}
 		}
@@ -2612,34 +2757,17 @@ func testVmsV4ConfigWithSingleNicKeepSubnet(name, desc string, r int) string {
 			limit = 1
 		}
 
-		# Keep the subnet resource to avoid deletion while IP might still be assigned
+		# Keep the subnet resource to avoid deletion while IP might still be assigned.
+		# Must match testVmsV4ConfigWithTwoNics exactly (Basic VLAN mirroring the
+		# first NIC's subnet) so it is not recreated between steps.
 		resource "nutanix_subnet_v2" "test_subnet" {
-			name              = "tf-test-subnet-%[3]d"
-			description       = "Subnet for multi-NIC test"
-			cluster_reference = local.cluster0
-			subnet_type       = "VLAN"
-			network_id        = local.vmm.subnet.network_id + %[3]d %% 100
-			ip_config {
-				ipv4 {
-					ip_subnet {
-						ip {
-							value = local.vmm.subnet.ip
-						}
-						prefix_length = local.vmm.subnet.prefix
-					}
-					default_gateway_ip {
-						value = local.vmm.subnet.gateway_ip
-					}
-					pool_list {
-						start_ip {
-							value = local.vmm.subnet.start_ip
-						}
-						end_ip {
-							value = local.vmm.subnet.end_ip
-						}
-					}
-				}
-			}
+			name                   = "tf-test-subnet-%[3]d"
+			description            = "Subnet for multi-NIC test"
+			cluster_reference      = local.cluster0
+			subnet_type            = "VLAN"
+			network_id             = local.vmm.subnet.network_id + %[3]d %% 100
+			is_advanced_networking = data.nutanix_subnets_v2.subnet1.subnets[0].is_advanced_networking
+			bridge_name            = data.nutanix_subnets_v2.subnet1.subnets[0].bridge_name
 		}
 
 		resource "nutanix_virtual_machine_v2" "test" {
@@ -2703,34 +2831,19 @@ func testVmsV4ConfigWithTwoNics(name, desc string, r int) string {
 			limit = 1
 		}
 
-		# Create a second subnet for multi-NIC testing
+		# Create a second subnet for multi-NIC testing. It must be the same network
+		# type as the VM's first NIC subnet (local.vmm.subnet_name): AHV rejects a
+		# VM whose NICs mix "Basic" and "Advanced" networks. That first subnet is a
+		# Basic VLAN (is_advanced_networking=false, on bridge br0), so mirror those
+		# values here rather than letting the subnet default to Advanced networking.
 		resource "nutanix_subnet_v2" "test_subnet" {
-			name              = "tf-test-subnet-%[3]d"
-			description       = "Subnet for multi-NIC test"
-			cluster_reference = local.cluster0
-			subnet_type       = "VLAN"
-			network_id        = local.vmm.subnet.network_id + %[3]d %% 100
-			ip_config {
-				ipv4 {
-					ip_subnet {
-						ip {
-							value = local.vmm.subnet.ip
-						}
-						prefix_length = local.vmm.subnet.prefix
-					}
-					default_gateway_ip {
-						value = local.vmm.subnet.gateway_ip
-					}
-					pool_list {
-						start_ip {
-							value = local.vmm.subnet.start_ip
-						}
-						end_ip {
-							value = local.vmm.subnet.end_ip
-						}
-					}
-				}
-			}
+			name                   = "tf-test-subnet-%[3]d"
+			description            = "Subnet for multi-NIC test"
+			cluster_reference      = local.cluster0
+			subnet_type            = "VLAN"
+			network_id             = local.vmm.subnet.network_id + %[3]d %% 100
+			is_advanced_networking = data.nutanix_subnets_v2.subnet1.subnets[0].is_advanced_networking
+			bridge_name            = data.nutanix_subnets_v2.subnet1.subnets[0].bridge_name
 		}
 
 		resource "nutanix_virtual_machine_v2" "test" {

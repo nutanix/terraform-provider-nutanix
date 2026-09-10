@@ -1,0 +1,134 @@
+package multidomainv2
+
+import (
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/nutanix/ntnx-api-golang-clients/multidomain-go-client/v4/models/multidomain/v4/config"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/multidomain-go-client/v4/models/multidomain/v4/request/projects"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+func DatasourceNutanixProjectsV2() *schema.Resource {
+	return &schema.Resource{
+		ReadContext: DatasourceNutanixProjectsV2Read,
+		Schema: map[string]*schema.Schema{
+			"filter": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"order_by": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"select": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"limit": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"page": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"projects": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     DatasourceNutanixProjectV2(),
+			},
+		},
+	}
+}
+
+func DatasourceNutanixProjectsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).MultidomainAPI
+
+	listProjectsRequest := import1.ListProjectsRequest{}
+
+	if v, ok := d.GetOk("filter"); ok {
+		listProjectsRequest.Filter_ = utils.StringPtr(v.(string))
+	}
+	if v, ok := d.GetOk("order_by"); ok {
+		listProjectsRequest.Orderby_ = utils.StringPtr(v.(string))
+	}
+	if v, ok := d.GetOk("select"); ok {
+		listProjectsRequest.Select_ = utils.StringPtr(v.(string))
+	}
+	if v, ok := d.GetOk("limit"); ok {
+		listProjectsRequest.Limit_ = utils.IntPtr(v.(int))
+	}
+	if v, ok := d.GetOk("page"); ok {
+		listProjectsRequest.Page_ = utils.IntPtr(v.(int))
+	}
+	resp, err := conn.Projects.ListProjects(ctx, &listProjectsRequest)
+	if err != nil {
+		return diag.Errorf("error while listing Projects: %s", err)
+	}
+	var flatProjects []map[string]interface{}
+	switch v := resp.Data.GetValue().(type) {
+	case []config.Project:
+		flatProjects = flattenProjects(v)
+	case []config.ProjectProjection:
+		flatProjects = flattenProjectProjections(v)
+	default:
+		return diag.Errorf("unexpected type %T for List Projects response", resp.Data.GetValue())
+	}
+
+	if len(flatProjects) == 0 {
+		if err := d.Set("projects", []map[string]interface{}{}); err != nil {
+			return diag.FromErr(err)
+		}
+		d.SetId(utils.GenUUID())
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "🫙 No data found.",
+			Detail:   "The API returned an empty list of projects.",
+		}}
+	}
+
+	if err := d.Set("projects", flatProjects); err != nil {
+		return diag.Errorf("error setting projects: %s", err)
+	}
+	d.SetId(utils.GenUUID())
+	return nil
+}
+
+func flattenProjects(projects []config.Project) []map[string]interface{} {
+	if len(projects) == 0 {
+		return []map[string]interface{}{}
+	}
+
+	result := make([]map[string]interface{}, 0, len(projects))
+	for _, p := range projects {
+		m := map[string]interface{}{
+			"ext_id":             utils.StringValue(p.ExtId),
+			"name":               utils.StringValue(p.Name),
+			"description":        utils.StringValue(p.Description),
+			"project_id":         utils.StringValue(p.Id),
+			"tenant_id":          utils.StringValue(p.TenantId),
+			"is_default":         utils.BoolValue(p.IsDefault),
+			"is_system_defined":  utils.BoolValue(p.IsSystemDefined),
+			"created_by":         utils.StringValue(p.CreatedBy),
+			"updated_by":         utils.StringValue(p.UpdatedBy),
+			"created_timestamp":  microsToRFC3339(p.CreatedTimestamp),
+			"modified_timestamp": microsToRFC3339(p.ModifiedTimestamp),
+			"links":              flattenLinks(p.Links),
+		}
+		if p.State != nil {
+			m["state"] = p.State.GetName()
+		}
+		result = append(result, m)
+	}
+	return result
+}
+
+func flattenProjectProjections(projects []config.ProjectProjection) []map[string]interface{} {
+	if len(projects) == 0 {
+		return []map[string]interface{}{}
+	}
+	return []map[string]interface{}{}
+}

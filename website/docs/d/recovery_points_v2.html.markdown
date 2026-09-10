@@ -83,6 +83,7 @@ The `recovery_points` attribute contains list of recovery points. Each recovery 
 * `location_references`: List of location references where the VM or volume group recovery point are a part of the specified recovery point.
 * `vm_recovery_points`: List of VM recovery point that are a part of the specified top-level recovery point. Note that a recovery point can contain a maximum number of 30 entities. These entities can be a combination of VM(s) and volume group(s).
 * `volume_group_recovery_points`: List of volume group recovery point that are a part of the specified top-level recovery point. Note that a recovery point can contain a maximum number of 30 entities. These entities can be a combination of VM(s) and volume group(s).
+* `project_ext_id`: Project external ID associated with the recovery point.
 
 ### Links
 The links attribute supports the following:

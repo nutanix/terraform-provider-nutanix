@@ -8,7 +8,7 @@ import (
 )
 
 type Client struct {
-	ObjectStoresAPIInstance *api.ObjectStoresApi
+	ObjectStoresAPIInstance *api.ObjectStoresServiceApi
 }
 
 func NewObjectStoresClient(credentials client.Credentials) (*Client, error) {
@@ -24,8 +24,9 @@ func NewObjectStoresClient(credentials client.Credentials) (*Client, error) {
 		pcClient.AllowVersionNegotiation = cfg.AllowVersionNegotiation
 		baseClient = pcClient
 	}
+	f := &Client{
+		ObjectStoresAPIInstance: api.NewObjectStoresServiceApi(baseClient),
+	}
 
-	return &Client{
-		ObjectStoresAPIInstance: api.NewObjectStoresApi(baseClient),
-	}, nil
+	return f, nil
 }

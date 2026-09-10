@@ -1,6 +1,7 @@
 package networkingv2_test
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -9,6 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/request/networkfunctions"
+	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/request/subnets"
+	import3 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/request/vm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
@@ -81,7 +85,10 @@ func waitForNetworkFunctionHealth(resourceName, attributeName, desiredValue stri
 		var lastValue string
 
 		for i := 0; i < maxRetries; i++ {
-			resp, err := conn.NetworkFunctionAPI.GetNetworkFunctionById(utils.StringPtr(rs.Primary.ID))
+			getNetworkFunctionByIDRequest := import2.GetNetworkFunctionByIdRequest{
+				ExtId: utils.StringPtr(rs.Primary.ID),
+			}
+			resp, err := conn.NetworkFunctionAPI.GetNetworkFunctionById(context.Background(), &getNetworkFunctionByIDRequest)
 			if err != nil {
 				return fmt.Errorf("error getting network function by id: %v", err)
 			}
@@ -135,28 +142,46 @@ func testAccCheckNetworkFunctionResourcesDestroy(state *terraform.State) error {
 	for _, rs := range state.RootModule().Resources {
 		switch rs.Type {
 		case "nutanix_virtual_machine_v2":
-			readResp, err := vmClient.GetVmById(utils.StringPtr(rs.Primary.ID))
+			getVmByIDRequest := import3.GetVmByIdRequest{
+				ExtId: utils.StringPtr(rs.Primary.ID),
+			}
+			readResp, err := vmClient.GetVmById(context.Background(), &getVmByIDRequest)
 			if err != nil {
 				continue
 			}
 			etag := vmClient.ApiClient.GetEtag(readResp)
 			args := make(map[string]interface{})
 			args["If-Match"] = utils.StringPtr(etag)
-			if _, err = vmClient.DeleteVmById(utils.StringPtr(rs.Primary.ID), args); err != nil {
+			deleteVmByIDRequest := import3.DeleteVmByIdRequest{
+				ExtId: utils.StringPtr(rs.Primary.ID),
+			}
+			if _, err = vmClient.DeleteVmById(context.Background(), &deleteVmByIDRequest, args); err != nil {
 				return fmt.Errorf("error: VM still exists: %v", err)
 			}
 		case "nutanix_subnet_v2":
-			if _, err := netClient.SubnetAPIInstance.GetSubnetById(utils.StringPtr(rs.Primary.ID)); err != nil {
+			getSubnetByIDRequest := import4.GetSubnetByIdRequest{
+				ExtId: utils.StringPtr(rs.Primary.ID),
+			}
+			if _, err := netClient.SubnetAPIInstance.GetSubnetById(context.Background(), &getSubnetByIDRequest); err != nil {
 				continue
 			}
-			if _, err := netClient.SubnetAPIInstance.DeleteSubnetById(utils.StringPtr(rs.Primary.ID)); err != nil {
+			deleteSubnetByIDRequest := import4.DeleteSubnetByIdRequest{
+				ExtId: utils.StringPtr(rs.Primary.ID),
+			}
+			if _, err := netClient.SubnetAPIInstance.DeleteSubnetById(context.Background(), &deleteSubnetByIDRequest); err != nil {
 				return fmt.Errorf("error: Subnet still exists: %v", err)
 			}
 		case "nutanix_network_function_v2":
-			if _, err := netClient.NetworkFunctionAPI.GetNetworkFunctionById(utils.StringPtr(rs.Primary.ID)); err != nil {
+			getNetworkFunctionByIDRequest := import2.GetNetworkFunctionByIdRequest{
+				ExtId: utils.StringPtr(rs.Primary.ID),
+			}
+			if _, err := netClient.NetworkFunctionAPI.GetNetworkFunctionById(context.Background(), &getNetworkFunctionByIDRequest); err != nil {
 				continue
 			}
-			if _, err := netClient.NetworkFunctionAPI.DeleteNetworkFunctionById(utils.StringPtr(rs.Primary.ID)); err != nil {
+			deleteNetworkFunctionByIDRequest := import2.DeleteNetworkFunctionByIdRequest{
+				ExtId: utils.StringPtr(rs.Primary.ID),
+			}
+			if _, err := netClient.NetworkFunctionAPI.DeleteNetworkFunctionById(context.Background(), &deleteNetworkFunctionByIDRequest); err != nil {
 				return fmt.Errorf("error: Network function still exists: %v", err)
 			}
 		}

@@ -30,7 +30,41 @@ resource "nutanix_recovery_plan" "recovery_plan_test" {
         stage_uuid = "ab788130-0820-4d07-a1b5-b0ba4d3a42asd"
         delay_time_secs = 0
     }
-    parameters{}
+    parameters {
+        # Declare the Availability Zones (and clusters) the plan spans.
+        # AZs referenced by network/floating-ip mappings must be listed here.
+        availability_zone_list {
+            availability_zone_url = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+            cluster_reference_list {
+                kind = "cluster"
+                uuid = "00000000-0000-0000-0000-000000000001"
+            }
+        }
+        primary_location_index = 0
+
+        network_mapping_list {
+            are_networks_stretched = false
+            availability_zone_network_mapping_list {
+                availability_zone_url = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+                recovery_network {
+                    name        = "DEV"
+                    subnet_uuid = "11111111-2222-3333-4444-555555555555"
+                    subnet_list {
+                        gateway_ip    = "10.12.63.254"
+                        prefix_length = 24
+                    }
+                }
+                test_network {
+                    name        = "DEV"
+                    subnet_uuid = "11111111-2222-3333-4444-555555555555"
+                    subnet_list {
+                        gateway_ip    = "10.12.63.254"
+                        prefix_length = 24
+                    }
+                }
+            }
+        }
+    }
 }
 ```
 
@@ -55,6 +89,13 @@ The following arguments are supported:
 
 ### Parameters
 * `parameters` - (Required) Parameters for the Recovery Plan.
+* `parameters.0.availability_zone_list` - (Optional/Computed) List of Availability Zones (source and recovery) across which the Recovery Plan is applicable. Any Availability Zone referenced in `network_mapping_list` or `floating_ip_assignment_list` must also be declared here, otherwise Prism Central will not apply the mappings.
+* `parameters.0.availability_zone_list.#.availability_zone_url` - (Optional/Computed) URL of the Availability Zone.
+* `parameters.0.availability_zone_list.#.cluster_reference_list` - (Optional/Computed) List of clusters in the Availability Zone that are part of the Recovery Plan.
+* `parameters.0.availability_zone_list.#.cluster_reference_list.#.kind` - (Optional/Computed) The kind name (Default value: `cluster`).
+* `parameters.0.availability_zone_list.#.cluster_reference_list.#.uuid` - (Optional/Computed) The uuid of the cluster.
+* `parameters.0.availability_zone_list.#.cluster_reference_list.#.name` - (Optional/Computed) The name of the cluster.
+* `parameters.0.primary_location_index` - (Optional/Computed) Index of the primary location in `availability_zone_list`.
 * `parameters.0.floating_ip_assignment_list` - (Optional/Computed) Floating IP assignment for VMs upon recovery in an Availability Zone. This is applicable only for the public cloud Availability Zones.
 * `parameters.0.floating_ip_assignment_list.#.availability_zone_url` - (Required) URL of the Availability Zone.
 * `parameters.0.floating_ip_assignment_list.#.vm_ip_assignment_list` - (Required) IP assignment for VMs upon recovery in the specified Availability Zone.
@@ -89,6 +130,7 @@ The following arguments are supported:
 * `parameters.0.network_mapping_list.#.availability_zone_network_mapping_list.#.recovery_network.0.subnet_list.#.external_connectivity_state` - (Optional/Computed) External connectivity state of the subnet. This is applicable only for the subnet to be created in public cloud Availability Zone.
 * `parameters.0.network_mapping_list.#.availability_zone_network_mapping_list.#.recovery_network.0.subnet_list.#.prefix_length` - (Required) Prefix length for the subnet.
 * `parameters.0.network_mapping_list.#.availability_zone_network_mapping_list.#.recovery_network.0.name` - (Required) Name of the network.
+* `parameters.0.network_mapping_list.#.availability_zone_network_mapping_list.#.recovery_network.0.subnet_uuid` - (Optional/Computed) UUID of the subnet backing the network. Set this to reference a network unambiguously (recommended when multiple networks share a name, or for VPC/overlay networks); otherwise the mapping may not resolve in Prism Central.
 * `parameters.0.network_mapping_list.#.availability_zone_network_mapping_list.#.test_network` - (Optional/Computed) Network configuration to be used for performing network mapping and IP preservation/mapping on Recovery Plan execution.
 * `parameters.0.network_mapping_list.#.availability_zone_network_mapping_list.#.test_network.0.virtual_network_reference` - (Optional/Computed) The reference to a virtual_network.
 * `parameters.0.network_mapping_list.#.availability_zone_network_mapping_list.#.test_network.0.virtual_network_reference.kind` - (Optional/Computed) The kind name.
@@ -99,6 +141,7 @@ The following arguments are supported:
 * `parameters.0.network_mapping_list.#.availability_zone_network_mapping_list.#.test_network.0.subnet_list.#.external_connectivity_state` - (Optional/Computed) External connectivity state of the subnet. This is applicable only for the subnet to be created in public cloud Availability Zone.
 * `parameters.0.network_mapping_list.#.availability_zone_network_mapping_list.#.test_network.0.subnet_list.#.prefix_length` - (Required) Prefix length for the subnet.
 * `parameters.0.network_mapping_list.#.availability_zone_network_mapping_list.#.test_network.0.name` - (Required) Name of the network.
+* `parameters.0.network_mapping_list.#.availability_zone_network_mapping_list.#.test_network.0.subnet_uuid` - (Optional/Computed) UUID of the subnet backing the network. Set this to reference a network unambiguously (recommended when multiple networks share a name, or for VPC/overlay networks); otherwise the mapping may not resolve in Prism Central.
 * `parameters.0.network_mapping_list.#.availability_zone_network_mapping_list.#.recovery_ip_assignment_list` - (Optional/Computed) Static IP configuration for the VMs to be applied post recovery in the recovery network for migrate/ failover action on the Recovery Plan.
 * `parameters.0.network_mapping_list.#.availability_zone_network_mapping_list.#.recovery_ip_assignment_list.0.vm_reference` - (Optional/Computed) The reference to a vm.
 * `parameters.0.network_mapping_list.#.availability_zone_network_mapping_list.#.recovery_ip_assignment_list.0.vm_reference.kind` - (Optional/Computed) The kind name.

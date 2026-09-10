@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/request/networkfunctions"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -110,6 +111,11 @@ func ResourceNutanixNetworkFunctionV2() *schema.Resource {
 				},
 			},
 
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			// Computed attributes
 			"ext_id": {
 				Optional: true,
@@ -163,10 +169,16 @@ func ResourceNutanixNetworkFunctionV2Create(ctx context.Context, d *schema.Resou
 	if v, ok := d.GetOk("data_plane_health_check_config"); ok {
 		inputSpec.DataPlaneHealthCheckConfig = expandDataPlaneHealthCheckConfig(v)
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		inputSpec.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 
 	inputSpec.NicPairs = expandNicPairs(d.Get("nic_pairs"))
 
-	resp, err := conn.NetworkFunctionAPI.CreateNetworkFunction(&inputSpec)
+	createNetworkFunctionRequest := import2.CreateNetworkFunctionRequest{
+		Body: &inputSpec,
+	}
+	resp, err := conn.NetworkFunctionAPI.CreateNetworkFunction(ctx, &createNetworkFunctionRequest)
 	if err != nil {
 		return diag.Errorf("error while creating network function : %v", err)
 	}
@@ -202,7 +214,10 @@ func ResourceNutanixNetworkFunctionV2Create(ctx context.Context, d *schema.Resou
 
 	// Fallback: lookup created entity by name via List API.
 	filter := fmt.Sprintf("name eq '%s'", nfName)
-	listResp, errList := conn.NetworkFunctionAPI.ListNetworkFunctions(nil, nil, &filter, nil)
+	listNetworkFunctionsRequest := import2.ListNetworkFunctionsRequest{
+		Filter_: &filter,
+	}
+	listResp, errList := conn.NetworkFunctionAPI.ListNetworkFunctions(ctx, &listNetworkFunctionsRequest)
 	if errList == nil && listResp != nil && listResp.Data != nil {
 		raw := listResp.Data.GetValue()
 		if items, ok := raw.([]import1.NetworkFunction); ok && len(items) > 0 && items[0].ExtId != nil {
@@ -218,7 +233,10 @@ func ResourceNutanixNetworkFunctionV2Create(ctx context.Context, d *schema.Resou
 func ResourceNutanixNetworkFunctionV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.NetworkFunctionAPI.GetNetworkFunctionById(utils.StringPtr(d.Id()))
+	getNetworkFunctionByIDRequest := import2.GetNetworkFunctionByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.NetworkFunctionAPI.GetNetworkFunctionById(ctx, &getNetworkFunctionByIDRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching network function : %v", err)
 	}
@@ -270,14 +288,23 @@ func ResourceNutanixNetworkFunctionV2Read(ctx context.Context, d *schema.Resourc
 	if err := d.Set("nic_pairs", flattenNicPairs(getResp.NicPairs)); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
 
 func ResourceNutanixNetworkFunctionV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.NetworkFunctionAPI.GetNetworkFunctionById(utils.StringPtr(d.Id()))
+	getNetworkFunctionByIDRequest := import2.GetNetworkFunctionByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.NetworkFunctionAPI.GetNetworkFunctionById(ctx, &getNetworkFunctionByIDRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching network function : %v", err)
 	}
@@ -336,7 +363,11 @@ func ResourceNutanixNetworkFunctionV2Update(ctx context.Context, d *schema.Resou
 		updateSpec.NicPairs = expandNicPairs(d.Get("nic_pairs"))
 	}
 
-	updateResp, err := conn.NetworkFunctionAPI.UpdateNetworkFunctionById(utils.StringPtr(d.Id()), &updateSpec)
+	updateNetworkFunctionByIDRequest := import2.UpdateNetworkFunctionByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updateSpec,
+	}
+	updateResp, err := conn.NetworkFunctionAPI.UpdateNetworkFunctionById(ctx, &updateNetworkFunctionByIDRequest)
 	if err != nil {
 		return diag.Errorf("error while updating network function : %v", err)
 	}
@@ -366,7 +397,10 @@ func ResourceNutanixNetworkFunctionV2Update(ctx context.Context, d *schema.Resou
 func ResourceNutanixNetworkFunctionV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.NetworkFunctionAPI.DeleteNetworkFunctionById(utils.StringPtr(d.Id()))
+	deleteNetworkFunctionByIDRequest := import2.DeleteNetworkFunctionByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.NetworkFunctionAPI.DeleteNetworkFunctionById(ctx, &deleteNetworkFunctionByIDRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting network function : %v", err)
 	}

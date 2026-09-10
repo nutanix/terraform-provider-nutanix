@@ -104,7 +104,10 @@ resource "nutanix_virtual_machine_v2" "vm" {
   power_state = "OFF"
 }
 
-# attach the volume group to a VM
+# Best practice: do not attach or detach Volume Group disks through
+# nutanix_virtual_machine_v2.disks. Manage Volume Group disks with
+# nutanix_volume_group_disk_v2, then attach the VM to the Volume Group with
+# nutanix_volume_group_vm_v2.
 resource "nutanix_volume_group_vm_v2" "vg_vm_example" {
   volume_group_ext_id = nutanix_volume_group_v2.vg-example-1.id
   vm_ext_id           = nutanix_virtual_machine_v2.vm.id

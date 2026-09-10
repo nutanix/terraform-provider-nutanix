@@ -121,6 +121,11 @@ func TestAccV2NutanixImagesResource_WithVMDiskSource(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameImage, "owner_ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameImage, "size_bytes"),
 					resource.TestCheckResourceAttrSet(resourceNameImage, "placement_policy_status.#"),
+					// vm_disk_source now carries both the disk ext_id and the source VM ext_id.
+					resource.TestCheckResourceAttrSet(resourceNameImage, "source.0.vm_disk_source.0.ext_id"),
+					resource.TestCheckResourceAttrPair(resourceNameImage, "source.0.vm_disk_source.0.vm_ext_id", "nutanix_virtual_machine_v2.test", "id"),
+					// share_with_all_projects is a computed flag on the image.
+					resource.TestCheckResourceAttrSet(resourceNameImage, "share_with_all_projects"),
 				),
 			},
 		},
@@ -165,19 +170,84 @@ func TestAccV2NutanixImagesResource_WithMoreThanOneSource(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixImagesResource_WithChecksum(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-image-checksum-%d", r)
+	desc := "test image checksum description"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testImagesV2ConfigWithChecksum(name, desc, testVars.Images.ISOImageSHA1, "sha1"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameImage, "name", name),
+					resource.TestCheckResourceAttr(resourceNameImage, "type", "ISO_IMAGE"),
+					resource.TestCheckResourceAttr(resourceNameImage, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameImage, "checksum.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameImage, "checksum.0.hex_digest", testVars.Images.ISOImageSHA1),
+					resource.TestCheckResourceAttr(resourceNameImage, "checksum.0.object_type", "sha1"),
+				),
+			},
+			{
+				// A checksum is verified/stored at image-create time and cannot be
+				// changed by an in-place update (the platform keeps the create-time
+				// digest). Taint the image so this step destroys and recreates it,
+				// exercising a real sha256 create+verify instead of a no-op update.
+				Taint:  []string{resourceNameImage},
+				Config: testImagesV2ConfigWithChecksum(name, desc, testVars.Images.ISOImageSHA256, "sha256"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameImage, "name", name),
+					resource.TestCheckResourceAttr(resourceNameImage, "type", "ISO_IMAGE"),
+					resource.TestCheckResourceAttr(resourceNameImage, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameImage, "checksum.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameImage, "checksum.0.hex_digest", testVars.Images.ISOImageSHA256),
+					resource.TestCheckResourceAttr(resourceNameImage, "checksum.0.object_type", "sha256"),
+				),
+			},
+		},
+	})
+}
+
 func testImagesV2Config(name, desc string) string {
 	return fmt.Sprintf(`
+		locals {
+			config = jsondecode(file("%[3]s"))
+		}
 		resource "nutanix_images_v2" "test" {
 			name = "%[1]s"
 			description = "%[2]s"
 			type = "ISO_IMAGE"
 			source{
 				url_source{
-					url = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
+					url = local.config.images.iso_image_url
 				}
 			}
 		}
-`, name, desc)
+`, name, desc, filepath)
+}
+
+func testImagesV2ConfigWithChecksum(name, desc, hexDigest, objectType string) string {
+	return fmt.Sprintf(`
+		locals {
+			config = jsondecode(file("%[5]s"))
+		}
+		resource "nutanix_images_v2" "test" {
+			name = "%[1]s"
+			description = "%[2]s"
+			type = "ISO_IMAGE"
+			checksum {
+				hex_digest = "%[3]s"
+				object_type = "%[4]s"
+			}
+			source{
+				url_source{
+					url = local.config.images.iso_image_url
+				}
+			}
+		}
+`, name, desc, hexDigest, objectType, filepath)
 }
 
 func testImagesV2ConfigWithDisk(name, desc string) string {
@@ -185,6 +255,7 @@ func testImagesV2ConfigWithDisk(name, desc string) string {
 		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
+		config = jsondecode(file("%[3]s"))
 		cluster0 = [
 			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
 			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
@@ -197,14 +268,14 @@ func testImagesV2ConfigWithDisk(name, desc string) string {
 			type = "DISK_IMAGE"
 			source{
 				url_source{
-					url = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
+					url = local.config.images.iso_image_url
 				}
 			}
 			cluster_location_ext_ids = [
 				local.cluster0
 			]
 		}
-`, name, desc)
+`, name, desc, filepath)
 }
 
 func testImagesV2ConfigWithVMDiskSource(name, desc string) string {
@@ -257,6 +328,10 @@ func testImagesV2ConfigWithVMDiskSource(name, desc string) string {
 			source{
 				vm_disk_source{
 					ext_id = resource.nutanix_virtual_machine_v2.test.disks.0.ext_id
+					# vm_ext_id identifies the source VM that owns the disk. Providing
+					# ext_id without vm_ext_id is deprecated, so the
+					# source VM's ext_id is passed alongside the disk ext_id.
+					vm_ext_id = resource.nutanix_virtual_machine_v2.test.id
 				}
 			}
 			cluster_location_ext_ids = [
@@ -265,6 +340,95 @@ func testImagesV2ConfigWithVMDiskSource(name, desc string) string {
 			depends_on = [nutanix_virtual_machine_v2.test]
 		}
 `, name, desc, filepath)
+}
+
+func TestAccV2NutanixImagesResource_ProjectAssociation(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-img-projassoc-%d", r)
+	desc := "image project association test"
+	projectName := fmt.Sprintf("tf-img-pa-proj-%d", r)
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testImageProjectAssociationConfig(name, desc, projectName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceNameImage, "project_ext_id", "nutanix_project_v2.test", "ext_id"),
+					resource.TestCheckResourceAttrPair("data.nutanix_image_v2.test", "project_ext_id", "nutanix_project_v2.test", "ext_id"),
+					resource.TestCheckResourceAttr("data.nutanix_images_v2.test", "images.#", "1"),
+					resource.TestCheckResourceAttrPair("data.nutanix_images_v2.test", "images.0.ext_id", resourceNameImage, "ext_id"),
+					resource.TestCheckResourceAttrPair("data.nutanix_images_v2.test", "images.0.project_ext_id", "nutanix_project_v2.test", "ext_id"),
+				),
+			},
+			{
+				Config:      testImageProjectAssociationConfig(name, desc, projectName, "00000000-0000-0000-0000-000000000000"),
+				ExpectError: regexp.MustCompile("Update of project_ext_id is not supported"),
+			},
+		},
+	})
+}
+
+func imgProjectExtIDLine(override string) string {
+	if override == "" {
+		return `project_ext_id = nutanix_project_v2.test.ext_id`
+	}
+	return fmt.Sprintf(`project_ext_id = "%s"`, override)
+}
+
+func testImageProjectAssociationConfig(name, desc, projectName, projectExtIDOverride string) string {
+	return fmt.Sprintf(`
+	data "nutanix_clusters_v2" "clusters" {}
+
+	locals {
+		cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
+	}
+
+	resource "nutanix_project_v2" "test" {
+		name        = "%[3]s"
+		project_id  = "%[3]s"
+		description = "project association test"
+	}
+
+	resource "nutanix_resource_group_v2" "rg" {
+		name           = "tf-img-pa-rg-%[3]s"
+		project_ext_id = nutanix_project_v2.test.ext_id
+		placement_targets {
+			cluster_ext_id = local.cluster0
+		}
+		# Ignore changes to placement_targets to avoid perpetual diffs after apply.
+		lifecycle {
+			ignore_changes = [placement_targets]
+		}
+	}
+
+	resource "nutanix_images_v2" "test" {
+		name        = "%[1]s"
+		description = "%[2]s"
+		type        = "ISO_IMAGE"
+		source {
+			url_source {
+				url = "https://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.img"
+			}
+		}
+		cluster_location_ext_ids = [local.cluster0]
+		%[4]s
+		depends_on = [nutanix_project_v2.test, nutanix_resource_group_v2.rg]
+	}
+
+	data "nutanix_image_v2" "test" {
+		ext_id     = nutanix_images_v2.test.id
+		depends_on = [nutanix_images_v2.test]
+	}
+
+	data "nutanix_images_v2" "test" {
+		filter     = "name eq '%[1]s'"
+		depends_on = [nutanix_images_v2.test]
+	}
+	`, name, desc, projectName, imgProjectExtIDLine(projectExtIDOverride))
 }
 
 func testImagesV2ConfigWithMoreThanOneSource() string {

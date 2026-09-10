@@ -14,6 +14,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4/models/objects/v4/request/objectstores"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -50,7 +51,11 @@ func testAccCheckNutanixObjectStoreDestroy(s *terraform.State) error {
 		}
 
 		// Now check if the object store itself is deleted
-		objStore, err := conn.ObjectStoreAPI.ObjectStoresAPIInstance.GetObjectstoreById(utils.StringPtr(rs.Primary.ID))
+		ctx := context.Background()
+		getObjectstoreByIdRequest := import1.GetObjectstoreByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		objStore, err := conn.ObjectStoreAPI.ObjectStoresAPIInstance.GetObjectstoreById(ctx, &getObjectstoreByIdRequest)
 		if err == nil && objStore != nil {
 			return fmt.Errorf("object store still exists: %s", rs.Primary.ID)
 		}

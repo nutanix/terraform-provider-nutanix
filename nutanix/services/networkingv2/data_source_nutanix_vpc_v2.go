@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/request/vpcs"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -52,6 +53,17 @@ func DataSourceNutanixVPCv2() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"shared_with_projects": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"common_dhcp_options": {
 				Type:     schema.TypeList,
@@ -178,6 +190,100 @@ func DataSourceNutanixVPCv2() *schema.Resource {
 					},
 				},
 			},
+			"should_advertise_connected_subnets": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"supported_multiple_external_subnet_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"scope": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"kubernetes_clusters": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"gateway_nodes_selector": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"match_labels": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"value": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"namespace_selector": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"match_labels": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"value": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"pod_network": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cidr": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ipv4": SchemaForValueRequiredPrefixLengthRequired(),
+												"ipv6": SchemaForValueRequiredPrefixLengthRequired(),
+											},
+										},
+									},
+									"host_slice": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -186,7 +292,10 @@ func dataSourceNutanixVPCv2Read(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	extID := d.Get("ext_id")
-	resp, err := conn.VpcAPIInstance.GetVpcById(utils.StringPtr(extID.(string)))
+	getVpcByIdRequest := import2.GetVpcByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.VpcAPIInstance.GetVpcById(ctx, &getVpcByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching vpc : %v", err)
 	}
@@ -200,6 +309,12 @@ func dataSourceNutanixVPCv2Read(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(err)
 	}
 	if err := d.Set("description", getResp.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("vpc_type", getResp.VpcType.GetName()); err != nil {
@@ -228,6 +343,22 @@ func dataSourceNutanixVPCv2Read(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err := d.Set("externally_routable_prefixes", flattenExternallyRoutablePrefixes(getResp.ExternallyRoutablePrefixes)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("should_advertise_connected_subnets", getResp.ShouldAdvertiseConnectedSubnets); err != nil {
+		return diag.FromErr(err)
+	}
+	if getResp.SupportedMultipleExternalSubnetType != nil {
+		if err := d.Set("supported_multiple_external_subnet_type", flattenSupportedMultipleExternalSubnetType(getResp.SupportedMultipleExternalSubnetType)); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if getResp.Scope != nil {
+		if err := d.Set("scope", flattenVpcScope(getResp.Scope)); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if err := d.Set("kubernetes_clusters", flattenKubernetesClusters(getResp.KubernetesClusters)); err != nil {
 		return diag.FromErr(err)
 	}
 

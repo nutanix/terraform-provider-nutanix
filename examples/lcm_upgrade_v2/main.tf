@@ -36,6 +36,7 @@ data "nutanix_lcm_entity_v2" "entity-before-upgrade" {
 # perform inventory
 resource "nutanix_lcm_perform_inventory_v2" "inventory" {
   x_cluster_id = local.pcExtID
+  inventory_type = "FULL" # or SOFTWARE or NODE or RESCAN, NODELIST should be provided if inventory_type is NODE
   depends_on   = [data.nutanix_lcm_entity_v2.entity-before-upgrade]
 }
 

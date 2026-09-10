@@ -43,16 +43,22 @@ The following attributes are exported:
 * `links` - A HATEOAS style link for the response.
 * `owner_ext_id` - The external identifier of the user who created the Entity Group.
 * `tenant_id` - A globally unique identifier that represents the tenant that owns this entity.
+* `project_ext_id` - Project external ID associated with the entity group.
+* `is_shared_with_all_projects` - Indicates whether the Entity Group is shared with all projects.
+* `is_system_defined` - A flag indicating whether the entity group is system-defined.
 
 ### allowed_config
 
 * `entities` - List of allowed entities. Each entity may contain:
   * `type` - The type of entity (e.g. VM, ADDRESS_GROUP).
-  * `selected_by` - The selection method (e.g. CATEGORY_EXT_ID, IP_VALUES).
+  * `selected_by` - The selection method (e.g. CATEGORY_EXT_ID, IP_VALUES, REGEX, FQDN_VALUES).
   * `addresses` - With `ipv4_addresses` (value, prefix_length).
   * `ip_ranges` - With `ipv4_ranges` (start_ip, end_ip).
   * `kube_entities` - List of kube entities.
   * `reference_ext_ids` - List of reference external identifiers.
+  * `fqdns` - List of FQDNs.
+  * `match_criteria` - Match criteria for regex-based selection (CONTAINS, STARTS_WITH, ENDS_WITH, EQUALS).
+  * `reference_string` - String pattern for matching entities.
 
 ### except_config
 
@@ -61,4 +67,4 @@ The following attributes are exported:
   * `ip_ranges` - With `ipv4_ranges` (start_ip, end_ip).
   * `reference_ext_ids` - List of reference external identifiers.
 
-See detailed information in [Nutanix Get Entity Group V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.2#tag/EntityGroups/operation/getEntityGroupById).
+See detailed information in [Nutanix Get Entity Group V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.3#tag/EntityGroups/operation/getEntityGroupById).
