@@ -48,7 +48,7 @@ export GOTRACEBACK=all
 
 # Pre-check: NUTANIX_* required by TestAccPreCheck
 if [[ -z "${NUTANIX_USERNAME:-}" || -z "${NUTANIX_PASSWORD:-}" || -z "${NUTANIX_ENDPOINT:-}" ]]; then
-  echo "Error: NUTANIX_USERNAME, NUTANIX_PASSWORD, NUTANIX_ENDPOINT (and NUTANIX_INSECURE, NUTANIX_PORT, NUTANIX_STORAGE_CONTAINER) must be set for acceptance tests."
+  echo "Error: NUTANIX_USERNAME, NUTANIX_PASSWORD, NUTANIX_ENDPOINT (and NUTANIX_INSECURE, NUTANIX_PORT) must be set for acceptance tests."
   echo "Copy from your GitHub Actions secrets or set in .env and source it."
   exit 1
 fi
