@@ -126,16 +126,18 @@ jobs:
 
               # Treat '|' the same as space. Comments like:
               #   /ok-to-test TestA| TestB| TestC
-              # must not become -run='TestA||TestB||TestC'. In Go, an empty
-              # regexp alternative matches every test in the repo.
+              # must not become -run='TestA||TestB||TestC'.
               normalized_args="${args//|/ }"
 
               package_path="./..."
               next_is_package=false
+              cover_scope=""
+              scope_label=""
               tokens=()
               for arg in $normalized_args; do
                   if [[ "$next_is_package" == true ]]; then
                       package_path="./nutanix/services/$arg"
+                      cover_scope="package"
                       next_is_package=false
                       echo "📦 Running tests only in package: $package_path"
                       continue
@@ -153,13 +155,34 @@ jobs:
               index=0
               for provider in "${tokens[@]}"; do
                   case "$provider" in
-                      foundation) mapped="TestAccFoundation*" ;;
-                      foundation_central) mapped="TestAccFC*" ;;
-                      karbon) mapped="TestAccKarbon*" ;;
-                      v3) mapped="TestAccNutanix*" ;;
-                      v4) mapped="TestAccV2Nutanix*" ;;
-                      lcm) mapped="TestAccV2NutanixLcm*" ;;
-                      era) mapped="TestAccEra*" ;;
+                      foundation)
+                          mapped="TestAccFoundation*"
+                          [[ -z "$cover_scope" ]] && cover_scope="foundation"
+                          ;;
+                      foundation_central)
+                          mapped="TestAccFC*"
+                          [[ -z "$cover_scope" ]] && cover_scope="foundation_central"
+                          ;;
+                      karbon)
+                          mapped="TestAccKarbon*"
+                          [[ -z "$cover_scope" ]] && cover_scope="karbon"
+                          ;;
+                      v3)
+                          mapped="TestAccNutanix*"
+                          [[ -z "$cover_scope" ]] && cover_scope="v3"
+                          ;;
+                      v4)
+                          mapped="TestAccV2Nutanix*"
+                          [[ -z "$cover_scope" ]] && cover_scope="v4"
+                          ;;
+                      lcm)
+                          mapped="TestAccV2NutanixLcm*"
+                          [[ -z "$cover_scope" ]] && cover_scope="lcm"
+                          ;;
+                      era)
+                          mapped="TestAccEra*"
+                          [[ -z "$cover_scope" ]] && cover_scope="era"
+                          ;;
                       *)
                           echo "running individual testcase/package"
                           mapped="$provider"
@@ -206,14 +229,56 @@ jobs:
                   exit 1
               fi
 
-              echo "TESTARGS = $TESTARGS"
+              # Resolve -coverpkg the same way as `make acc-test`.
+              coverpkg=""
+              if [[ "$package_path" != "./..." ]]; then
+                  coverpkg="$package_path"
+                  scope_label="package $package_path"
+              else
+                  case "$cover_scope" in
+                      v4)
+                          for d in nutanix/services/*v2; do
+                              [[ -d "$d" ]] || continue
+                              coverpkg="${coverpkg:+$coverpkg,}./$d"
+                          done
+                          scope_label="overall v4 v2 service packages"
+                          ;;
+                      v3)
+                          for d in nutanix/services/*; do
+                              [[ -d "$d" ]] || continue
+                              case "$d" in *v2) continue ;; esac
+                              coverpkg="${coverpkg:+$coverpkg,}./$d"
+                          done
+                          scope_label="overall v3 non-v2 service packages"
+                          ;;
+                      lcm) coverpkg="./nutanix/services/lcmv2"; scope_label="package ./nutanix/services/lcmv2" ;;
+                      era) coverpkg="./nutanix/services/ndb"; scope_label="package ./nutanix/services/ndb" ;;
+                      foundation) coverpkg="./nutanix/services/foundation"; scope_label="package ./nutanix/services/foundation" ;;
+                      foundation_central) coverpkg="./nutanix/services/foundationCentral"; scope_label="package ./nutanix/services/foundationCentral" ;;
+                      karbon) coverpkg="./nutanix/services/nke"; scope_label="package ./nutanix/services/nke" ;;
+                      *) coverpkg="./..."; scope_label="all packages" ;;
+                  esac
+              fi
 
-              # atomic is safer with parallel Acc tests; coverpkg matches the tested package set
-              # so the reported % is coverage of that scope (not an accidental single-file subset).
-              coverpkg_flag="$package_path"
+              # Fail closed: empty '|' alternatives match ALL tests.
+              run_pattern="${TESTARGS#-run=}"
+              if [[ "$run_pattern" == *"||"* || "$run_pattern" == "|"* || "$run_pattern" == *"|" ]]; then
+                  echo "Error: -run pattern '$run_pattern' has an empty '|'-alternative."
+                  echo "That regexp matches every test. Use spaces between names, not 'Name| Name'."
+                  echo "  /ok-to-test TestAccFoo TestAccBar"
+                  exit 1
+              fi
+
+              echo "TESTARGS = $TESTARGS"
+              echo "Package path = $package_path"
+              echo "Coverpkg = $coverpkg"
+              echo "Coverage scope = $scope_label"
+              echo "SCOPE_LABEL=$scope_label" >> "$GITHUB_ENV"
+
+              rm -f c.out
               TF_LOG="ERROR" TF_ACC=1 GOTRACEBACK=all go test "$package_path" -v ${TESTARGS} -timeout 500m \
-                -coverprofile c.out -covermode=atomic -coverpkg="$coverpkg_flag" | tee test_output.log
-              
+                -coverprofile c.out -covermode=atomic -coverpkg="$coverpkg" | tee test_output.log
+
               set +e  # Ignore failures
 
               # Ensure log file exists
@@ -337,60 +402,15 @@ jobs:
                   exit 0
               fi
 
-      # Code Coverage Check only if tests executed (profile must be valid; threshold is advisory for now)
+      # Same coverage reporting as `make acc-test` (scripts/report-acc-coverage.sh)
       - name: Code Coverage Check
         if: ${{ always() && steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
         env:
-          TESTCOV_THRESHOLD: "50"
+          TESTCOV_THRESHOLD: "85"
         run: |
           set -euo pipefail
-
-          PROFILE="c.out"
-          THRESHOLD="${TESTCOV_THRESHOLD:-50}"
-
-          if [[ ! -s "$PROFILE" ]]; then
-            echo "ERROR: coverage profile is missing or empty: $PROFILE"
-            echo "CODE_COVERAGE_OUTPUT=Coverage profile missing or empty; could not compute coverage." >> "$GITHUB_ENV"
-            exit 1
-          fi
-
-          total_line=$(
-            go tool cover -func="$PROFILE" |
-            awk '$1 == "total:" { print; exit }'
-          )
-
-          if [[ -z "${total_line}" ]]; then
-            echo "ERROR: could not find total coverage line in: $PROFILE"
-            echo "CODE_COVERAGE_OUTPUT=Could not parse total coverage from profile." >> "$GITHUB_ENV"
-            exit 1
-          fi
-
-          # go tool cover -func reports statement coverage (field 3), e.g. "total: (statements) 12.3%"
-          coverage=$(
-            echo "$total_line" |
-            awk '{ gsub("%", "", $NF); print $NF }'
-          )
-
-          if ! [[ "$coverage" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
-            echo "ERROR: invalid coverage value: ${coverage:-<empty>}"
-            echo "CODE_COVERAGE_OUTPUT=Invalid coverage value parsed from profile." >> "$GITHUB_ENV"
-            exit 1
-          fi
-
-          echo "Coverage result: $total_line"
-          echo "Current statement coverage: ${coverage}%"
-          echo "Threshold (advisory): ${THRESHOLD}%"
-
-          # Soft-fail on threshold: report clearly in the PR comment, but do not fail the job yet.
-          # Hard-fail only on missing/invalid profile (above). Enforce THRESHOLD after Acc coverage is calibrated.
-          if awk -v actual="$coverage" -v threshold="$THRESHOLD" \
-            'BEGIN { exit !(actual+0 >= threshold+0) }'; then
-            echo "Coverage meets advisory threshold"
-            echo "CODE_COVERAGE_OUTPUT=Statement coverage is ${coverage}% (threshold ${THRESHOLD}%, advisory)." >> "$GITHUB_ENV"
-          else
-            echo "Coverage is below advisory threshold (not failing job)"
-            echo "CODE_COVERAGE_OUTPUT=Statement coverage ${coverage}% is below advisory threshold (${THRESHOLD}%). Add more acceptance tests for this run's package scope." >> "$GITHUB_ENV"
-          fi
+          chmod +x scripts/report-acc-coverage.sh
+          ./scripts/report-acc-coverage.sh c.out test_output.log "${SCOPE_LABEL:-acceptance tests}"
       
       # Post build status along with test summary as a comment only if tests executed successfully
       - name: Post build status and test summary
