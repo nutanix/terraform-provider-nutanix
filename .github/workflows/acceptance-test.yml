@@ -37,9 +37,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25.3"
-          check-latest: true # Ensures the latest patch of Go 1.25.3 is installed
-          cache: true # Enables module caching
+          go-version: "1.25.13"
+          check-latest: true
+          cache: false
 
       - name: Verify Go Installation
         run: |
