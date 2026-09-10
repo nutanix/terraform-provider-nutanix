@@ -479,7 +479,7 @@ From the **repository root**:
 
 1. **Set environment variables** (required by `TestAccPreCheck`):
    - `NUTANIX_USERNAME`, `NUTANIX_PASSWORD`, `NUTANIX_ENDPOINT`
-   - `NUTANIX_INSECURE`, `NUTANIX_PORT`, `NUTANIX_STORAGE_CONTAINER`
+   - `NUTANIX_INSECURE`, `NUTANIX_PORT`
 
 2. **Config files** (for V4/vmmv2 tests): ensure `test_config_v2.json` exists at the repo root (same content as the `V4_CONFIG` secret used in CI).
 
