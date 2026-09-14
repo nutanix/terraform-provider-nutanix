@@ -15,7 +15,7 @@ require (
 	github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4 v4.2.2
 	github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4 v4.3.1
 	github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4 v4.1.2-beta.2
-	github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.2.2
+	github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.3.1
 	github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.2.2
 	github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.3.1
 	github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4 v4.0.3
@@ -24,7 +24,7 @@ require (
 	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.2.2
 	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.2.2
 	github.com/spf13/cast v1.8.0
-	github.com/stretchr/testify v1.7.2
+	github.com/stretchr/testify v1.10.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -76,7 +76,7 @@ require (
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.4.1 // indirect
-	github.com/hashicorp/go-retryablehttp v0.7.1 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect
 	github.com/hashicorp/hc-install v0.3.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -113,14 +113,14 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/ryancurrah/gomodguard v1.0.2 // indirect
 	github.com/securego/gosec v0.0.0-20200103095621-79fbf3af8d83 // indirect
-	github.com/sirupsen/logrus v1.9.0 // indirect
+	github.com/sirupsen/logrus v1.9.4 // indirect
 	github.com/sourcegraph/go-diff v0.5.1 // indirect
 	github.com/spf13/afero v1.1.2 // indirect
 	github.com/spf13/cobra v0.0.5 // indirect
 	github.com/spf13/jwalterweatherman v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.6.1 // indirect
-	github.com/stretchr/objx v0.2.0 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/tetafro/godot v0.2.5 // indirect
 	github.com/timakin/bodyclose v0.0.0-20190930140734-f7f2e9bca95e // indirect
