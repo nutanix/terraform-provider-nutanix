@@ -314,5 +314,16 @@
       "client_secret": "",
       "credential_expiry_date": ""
     }
+  },
+  "lifecycle": {
+    "node": {
+      "ext_id": "",
+      "node_serial": "",
+      "manufacturer": "",
+      "provider_ext_id": "",
+      "provider_connection_ext_id": "",
+      "patched_image_ext_id": "",
+      "aos_image_ext_id": ""
+    }
   }
 }

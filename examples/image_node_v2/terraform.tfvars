@@ -1,0 +1,6 @@
+nutanix_username     = "admin"
+nutanix_password     = "password"
+nutanix_endpoint     = "10.xx.xx.xx"
+node_ext_id          = "00000000-0000-0000-0000-000000000000"
+patched_image_ext_id = "33333333-3333-3333-3333-333333333333"
+aos_image_ext_id     = "44444444-4444-4444-4444-444444444444"

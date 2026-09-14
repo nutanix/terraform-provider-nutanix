@@ -21,6 +21,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iamv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/lcmv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/lifecyclev2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/microsegv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/ndb"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networking"
@@ -370,6 +371,8 @@ func Provider() *schema.Provider {
 			"nutanix_stigs_v2":                                securityv2.DatasourceNutanixStigsControlsV2(),
 			"nutanix_entity_group_v2":                         microsegv2.DatasourceNutanixEntityGroupV2(),
 			"nutanix_entity_groups_v2":                        microsegv2.DatasourceNutanixEntityGroupsV2(),
+			"nutanix_node_v2":                                 lifecyclev2.DatasourceNutanixNodeV2(),
+			"nutanix_nodes_v2":                                lifecyclev2.DatasourceNutanixNodesV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
@@ -501,6 +504,10 @@ func Provider() *schema.Provider {
 			"nutanix_object_store_certificate_v2":             objectstoresv2.ResourceNutanixObjectStoreCertificateV2(),
 			"nutanix_key_management_server_v2":                securityv2.ResourceNutanixKeyManagementServerV2(),
 			"nutanix_entity_group_v2":                         microsegv2.ResourceNutanixEntityGroupV2(),
+			"nutanix_node_v2":                                 lifecyclev2.ResourceNutanixNodeV2(),
+			"nutanix_configure_node_v2":                       lifecyclev2.ResourceNutanixConfigureNodeV2(),
+			"nutanix_image_node_v2":                           lifecyclev2.ResourceNutanixImageNodeV2(),
+			"nutanix_refresh_node_v2":                         lifecyclev2.ResourceNutanixRefreshNodeV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
