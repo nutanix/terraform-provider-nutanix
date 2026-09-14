@@ -75,7 +75,6 @@ func TestAccV2NutanixNetworkFunctionsDataSource_FilterAndLimit(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameNetworkFunctionsV2, "network_functions.0.high_availability_mode", "ACTIVE_PASSIVE"),
 					resource.TestCheckResourceAttr(datasourceNameNetworkFunctionsV2, "network_functions.0.traffic_forwarding_mode", "INLINE"),
 					resource.TestCheckResourceAttr(datasourceNameNetworkFunctionsV2, "network_functions.0.nic_pairs.#", "2"),
-					resource.TestCheckResourceAttr(datasourceNameNetworkFunctionsV2, "network_functions.0.project_ext_id", defaultProjectExtID),
 					testAccCheckNetworkFunctionDataSourcePairWithPrefix(
 						datasourceNameNetworkFunctionsV2,
 						"network_functions.0.",

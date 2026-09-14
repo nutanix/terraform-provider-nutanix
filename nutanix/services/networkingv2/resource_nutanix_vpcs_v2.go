@@ -387,11 +387,13 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 	if externallyRoutablePrefixes, ok := d.GetOk("externally_routable_prefixes"); ok {
 		inputSpec.ExternallyRoutablePrefixes = expandIPSubnet(externallyRoutablePrefixes.([]interface{}))
 	}
-	if v, ok := d.GetOk("should_advertise_connected_subnets"); ok {
-		inputSpec.ShouldAdvertiseConnectedSubnets = utils.BoolPtr(v.(bool))
+	if common.IsExplicitlySet(d, "should_advertise_connected_subnets") {
+		shouldAdvertiseConnectedSubnets := d.Get("should_advertise_connected_subnets").(bool)
+		inputSpec.ShouldAdvertiseConnectedSubnets = utils.BoolPtr(shouldAdvertiseConnectedSubnets)
 	}
-	if v, ok := d.GetOk("supported_multiple_external_subnet_type"); ok {
-		inputSpec.SupportedMultipleExternalSubnetType = common.ExpandEnum[import1.SupportedMultipleExternalSubnetType](v.(string))
+	if common.IsExplicitlySet(d, "supported_multiple_external_subnet_type") {
+		supportedMultipleExternalSubnetType := d.Get("supported_multiple_external_subnet_type").(string)
+		inputSpec.SupportedMultipleExternalSubnetType = common.ExpandEnum[import1.SupportedMultipleExternalSubnetType](supportedMultipleExternalSubnetType)
 	}
 	if v, ok := d.GetOk("scope"); ok {
 		inputSpec.Scope = common.ExpandEnum[import1.VpcScope](v.(string))
@@ -407,7 +409,7 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 
 	resp, err := conn.VpcAPIInstance.CreateVpc(ctx, &createVpcRequest)
 	if err != nil {
-		return diag.Errorf("error while creating floating IPs : %v", err)
+		return diag.Errorf("error while creating VPC : %v", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(import4.TaskReference)
@@ -625,7 +627,7 @@ func ResourceNutanixVPCsV2Update(ctx context.Context, d *schema.ResourceData, me
 		updateSpec.ExternallyRoutablePrefixes = expandIPSubnet(d.Get("externally_routable_prefixes").([]interface{}))
 		updateSpecChanged = true
 	}
-	if d.HasChange("should_advertise_connected_subnets") {
+	if d.HasChange("should_advertise_connected_subnets") && common.IsExplicitlySet(d, "should_advertise_connected_subnets") {
 		updateSpec.ShouldAdvertiseConnectedSubnets = utils.BoolPtr(d.Get("should_advertise_connected_subnets").(bool))
 		updateSpecChanged = true
 	}

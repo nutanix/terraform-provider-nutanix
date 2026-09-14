@@ -76,6 +76,7 @@ func ResourceNutanixRoutesV2() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"next_hop_type": {
@@ -226,7 +227,7 @@ func ResourceNutanixRoutesV2Create(ctx context.Context, d *schema.ResourceData, 
 		reqBody.Destination = expandDestination(destination)
 	}
 	if nextHop, ok := d.GetOk("next_hop"); ok {
-		reqBody.Nexthops = expandNextHops(nextHop.([]interface{}))
+		reqBody.Nexthop = expandNextHop(nextHop.([]interface{}))
 	}
 	if routeTableReference, ok := d.GetOk("route_table_reference"); ok {
 		reqBody.RouteTableReference = utils.StringPtr(routeTableReference.(string))
@@ -343,7 +344,8 @@ func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, 
 		updateSpec.Destination = expandDestination(d.Get("destination"))
 	}
 	if d.HasChange("next_hop") {
-		updateSpec.Nexthops = expandNextHops(d.Get("next_hop").([]interface{}))
+		updateSpec.Nexthop = expandNextHop(d.Get("next_hop"))
+		updateSpec.Nexthops = nil
 	}
 	if d.HasChange("route_table_reference") {
 		updateSpec.RouteTableReference = utils.StringPtr(d.Get("route_table_reference").(string))
@@ -473,6 +475,30 @@ func expandDestination(destination interface{}) *config.IPSubnet {
 	aJSON, _ = json.Marshal(destinationObj)
 	log.Printf("[DEBUG] Destination Object: %v", string(aJSON))
 	return destinationObj
+}
+
+func expandNextHop(nextHop interface{}) *config.Nexthop {
+	if len(nextHop.([]interface{})) == 0 {
+		log.Printf("[DEBUG] No next hop found")
+		return nil
+	}
+	nextHopMap := nextHop.([]interface{})[0].(map[string]interface{})
+	nextHopObj := &config.Nexthop{}
+
+	aJSON, _ := json.Marshal(nextHopMap)
+	log.Printf("[DEBUG] Next Hop Map: %v", string(aJSON))
+
+	if nextHopType, ok := nextHopMap["next_hop_type"]; ok {
+		nextHopObj.NexthopType = expandNextHopType(nextHopType)
+	}
+	if nextHopReference, ok := nextHopMap["next_hop_reference"]; ok {
+		nextHopObj.NexthopReference = utils.StringPtr(nextHopReference.(string))
+	}
+	if nextHopIPAddress, ok := nextHopMap["next_hop_ip_address"]; ok && len(nextHopIPAddress.([]interface{})) > 0 {
+		nextHopObj.NexthopIpAddress = expandNextHopIPAddress(nextHopIPAddress)
+	}
+	log.Printf("[DEBUG] Next Hop Object: %v", nextHopObj)
+	return nextHopObj
 }
 
 func expandNextHops(nexthops []interface{}) []config.Nexthop {
@@ -654,7 +680,7 @@ func routeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) di
 	if err := d.Set("destination", flattenDestination(getResp.Destination)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("next_hop", flattenNextHops(getResp.Nexthops)); err != nil {
+	if err := d.Set("next_hop", flattenRouteNextHop(&getResp)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("route_table_reference", getResp.RouteTableReference); err != nil {

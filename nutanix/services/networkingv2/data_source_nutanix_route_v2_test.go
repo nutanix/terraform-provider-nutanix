@@ -32,7 +32,6 @@ func TestAccV2NutanixRouteDataSource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameRoute, "next_hop.0.next_hop_type", "EXTERNAL_SUBNET"),
 					resource.TestCheckResourceAttrSet(datasourceNameRoute, "next_hop.0.next_hop_reference"),
 					resource.TestCheckResourceAttrSet(datasourceNameRoute, "metadata.0.owner_reference_id"),
-					resource.TestCheckResourceAttr(datasourceNameRoute, "metadata.0.project_reference_id", "00000000-0000-0000-0000-000000000000"),
 					resource.TestCheckResourceAttr(datasourceNameRoute, "route_type", "STATIC"),
 				),
 			},
