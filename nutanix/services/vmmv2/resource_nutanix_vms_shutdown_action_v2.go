@@ -86,73 +86,85 @@ func ResourceNutanixVmsShutdownActionV2Create(ctx context.Context, d *schema.Res
 		body.GuestPowerStateTransitionConfig = &gstVal
 	}
 
-	getVmByIdRequest := import3.GetVmByIdRequest{
-		ExtId: utils.StringPtr(vmExtID.(string)),
-	}
-	readResp, errR := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
-	if errR != nil {
-		return diag.Errorf("error while reading vm : %v", errR)
-	}
-	// Extract E-Tag Header
-	args := make(map[string]interface{})
-	args["If-Match"] = getEtagHeader(readResp, conn)
-
-	var TaskRef import1.TaskReference
-	//nolint:gocritic // Keeping if-else for clarity in this specific case
-	if action == "shutdown" {
-		shutdownVmRequest := import3.ShutdownVmRequest{
-			ExtId: utils.StringPtr(vmExtID.(string)),
-		}
-		resp, err := conn.VMAPIInstance.ShutdownVm(ctx, &shutdownVmRequest, args)
-		if err != nil {
-			return diag.Errorf("error while Shutdown VM : %v", err)
-		}
-		TaskRef = resp.Data.GetValue().(import1.TaskReference)
-	} else if action == "guest_shutdown" {
-		shutdownGuestVmRequest := import3.ShutdownGuestVmRequest{
-			ExtId: utils.StringPtr(vmExtID.(string)),
-			Body:  &body,
-		}
-		resp, err := conn.VMAPIInstance.ShutdownGuestVm(ctx, &shutdownGuestVmRequest, args)
-		if err != nil {
-			return diag.Errorf("error while Shutdown Guest VM : %v", err)
-		}
-		TaskRef = resp.Data.GetValue().(import1.TaskReference)
-	} else if action == "reboot" {
-		rebootVmRequest := import3.RebootVmRequest{
-			ExtId: utils.StringPtr(vmExtID.(string)),
-		}
-		resp, err := conn.VMAPIInstance.RebootVm(ctx, &rebootVmRequest, args)
-		if err != nil {
-			return diag.Errorf("error while performing Reboot VM  : %v", err)
-		}
-		TaskRef = resp.Data.GetValue().(import1.TaskReference)
-	} else if action == "guest_reboot" {
-		rebootGuestVmRequest := import3.RebootGuestVmRequest{
-			ExtId: utils.StringPtr(vmExtID.(string)),
-			Body:  &body,
-		}
-		resp, err := conn.VMAPIInstance.RebootGuestVm(ctx, &rebootGuestVmRequest, args)
-		if err != nil {
-			return diag.Errorf("error while performing Reboot Guest VM : %v", err)
-		}
-		TaskRef = resp.Data.GetValue().(import1.TaskReference)
-	}
-
-	// TaskRef := resp.Data.GetValue().(import1.TaskReference)
-	taskUUID := TaskRef.ExtId
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM action to complete
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
 
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for VM action (%s) (%s) to complete: %s", action, utils.StringValue(taskUUID), errWaitTask)
+	const maxAttempts = 5
+	var taskUUID *string
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		getVmByIdRequest := import3.GetVmByIdRequest{
+			ExtId: utils.StringPtr(vmExtID.(string)),
+		}
+		readResp, errR := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
+		if errR != nil {
+			return diag.Errorf("error while reading vm : %v", errR)
+		}
+		// Extract E-Tag Header
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(readResp, conn)
+
+		var TaskRef import1.TaskReference
+		//nolint:gocritic // Keeping if-else for clarity in this specific case
+		if action == "shutdown" {
+			shutdownVmRequest := import3.ShutdownVmRequest{
+				ExtId: utils.StringPtr(vmExtID.(string)),
+			}
+			resp, err := conn.VMAPIInstance.ShutdownVm(ctx, &shutdownVmRequest, args)
+			if err != nil {
+				return diag.Errorf("error while Shutdown VM : %v", err)
+			}
+			TaskRef = resp.Data.GetValue().(import1.TaskReference)
+		} else if action == "guest_shutdown" {
+			shutdownGuestVmRequest := import3.ShutdownGuestVmRequest{
+				ExtId: utils.StringPtr(vmExtID.(string)),
+				Body:  &body,
+			}
+			resp, err := conn.VMAPIInstance.ShutdownGuestVm(ctx, &shutdownGuestVmRequest, args)
+			if err != nil {
+				return diag.Errorf("error while Shutdown Guest VM : %v", err)
+			}
+			TaskRef = resp.Data.GetValue().(import1.TaskReference)
+		} else if action == "reboot" {
+			rebootVmRequest := import3.RebootVmRequest{
+				ExtId: utils.StringPtr(vmExtID.(string)),
+			}
+			resp, err := conn.VMAPIInstance.RebootVm(ctx, &rebootVmRequest, args)
+			if err != nil {
+				return diag.Errorf("error while performing Reboot VM  : %v", err)
+			}
+			TaskRef = resp.Data.GetValue().(import1.TaskReference)
+		} else if action == "guest_reboot" {
+			rebootGuestVmRequest := import3.RebootGuestVmRequest{
+				ExtId: utils.StringPtr(vmExtID.(string)),
+				Body:  &body,
+			}
+			resp, err := conn.VMAPIInstance.RebootGuestVm(ctx, &rebootGuestVmRequest, args)
+			if err != nil {
+				return diag.Errorf("error while performing Reboot Guest VM : %v", err)
+			}
+			TaskRef = resp.Data.GetValue().(import1.TaskReference)
+		}
+
+		taskUUID = TaskRef.ExtId
+
+		// Wait for the VM action to complete
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutCreate),
+		}
+
+		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+			if attempt < maxAttempts && isVmmEtagMismatchErr(errWaitTask) {
+				log.Printf("[DEBUG] VM power action (%s) failed due to VM ETag mismatch (attempt %d/%d). Retrying with refreshed ETag. Task UUID: %s, error: %s",
+					action, attempt, maxAttempts, utils.StringValue(taskUUID), errWaitTask)
+				time.Sleep(2 * time.Second)
+				continue
+			}
+			return diag.Errorf("error waiting for VM action (%s) (%s) to complete: %s", action, utils.StringValue(taskUUID), errWaitTask)
+		}
+		break
 	}
 	log.Printf("[DEBUG] VM power action (%s) task (%s) reported SUCCEEDED", action, utils.StringValue(taskUUID))
 
