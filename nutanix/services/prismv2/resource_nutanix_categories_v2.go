@@ -2,6 +2,7 @@ package prismv2
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -162,6 +163,10 @@ func ResourceNutanixCategoriesV2Create(ctx context.Context, d *schema.ResourceDa
 	createCategoryRequest := import2.CreateCategoryRequest{
 		Body: input,
 	}
+
+	aJSON, err := json.MarshalIndent(createCategoryRequest, "", "  ")
+	log.Printf("[DEBUG] Create Category Request: %s", string(aJSON))
+
 	resp, err := conn.CategoriesAPIInstance.CreateCategory(ctx, &createCategoryRequest)
 	if err != nil {
 		return diag.Errorf("error while creating category: %v", err)
@@ -177,6 +182,7 @@ func ResourceNutanixCategoriesV2Create(ctx context.Context, d *schema.ResourceDa
 		projectsSet := sharedProjects.(*schema.Set)
 		for _, projectID := range projectsSet.List() {
 			if err := shareCategoryWithProject(ctx, meta, conn, d, projectID.(string)); err != nil {
+				log.Printf("[DEBUG] Error while sharing category with project %s: %v", projectID.(string), err)
 				return diag.Diagnostics{
 					diag.Diagnostic{
 						Severity: diag.Warning,

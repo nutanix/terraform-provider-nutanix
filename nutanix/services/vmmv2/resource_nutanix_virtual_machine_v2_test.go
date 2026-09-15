@@ -1307,7 +1307,7 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 			# Destroy the VM (whose disk lives on the RG placement-target storage
 			# container) before the resource group, otherwise the RG delete fails
 			# with clustermgmt:10018 "resource group is not empty".
-			depends_on = [nutanix_resource_group_v2.test]
+			depends_on = [nutanix_resource_group_v2.test, nutanix_subnet_v2.subnet]
 		}
 `, r, desc, filepath)
 }
