@@ -164,7 +164,7 @@ func ResourceNutanixCategoriesV2Create(ctx context.Context, d *schema.ResourceDa
 		Body: input,
 	}
 
-	aJSON, err := json.MarshalIndent(createCategoryRequest, "", "  ")
+	aJSON, _ := json.MarshalIndent(createCategoryRequest, "", "  ")
 	log.Printf("[DEBUG] Create Category Request: %s", string(aJSON))
 
 	resp, err := conn.CategoriesAPIInstance.CreateCategory(ctx, &createCategoryRequest)
