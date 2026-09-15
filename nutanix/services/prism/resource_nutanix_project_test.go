@@ -160,8 +160,9 @@ func TestAccNutanixProject_withInternalWithACPTest(t *testing.T) {
 	categoryVal := "Staging"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal, principalName, directoryServiceUUID),
@@ -192,8 +193,9 @@ func TestAccNutanixProject_withInternalWithACPUserGroup(t *testing.T) {
 	categoryVal := "Staging"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, description, categoryName, categoryVal, ad.ExtID, groupName, groupUUID),
@@ -587,8 +589,11 @@ func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, c
 					name = nutanix_user.user.name
 					kind = "user"
 				}
+			}
 
-				description= "untitledAcp-54acc50f-ab94-640a-5f06-5c855cc09539"
+			# API rewrites ACP name/description after create (e.g. Membership_ACP_<id>).
+			lifecycle {
+				ignore_changes = [acp]
 			}
 		}
 	`, subnetName, name, description, categoryName, categoryVal, testVars.Permissions[0].UUID, principalName, directoryServiceUUID)
@@ -679,8 +684,11 @@ func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, descr
 				kind= "user_group"
 				uuid= "%[8]s"
 				}
+			}
 
-				description= "untitledAcp-54acc50f-ab94-640a-5f06-5c855cc09539"
+			# API rewrites ACP name/description after create (e.g. Membership_ACP_<id>).
+			lifecycle {
+				ignore_changes = [acp]
 			}
 		}
 	`, subnetName, name, description, categoryName, categoryVal, testVars.Permissions[0].UUID, groupName, groupUUID, directoryServiceExtID)
