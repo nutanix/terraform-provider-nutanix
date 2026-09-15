@@ -2,6 +2,7 @@ package vmmv2_test
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"testing"
 
@@ -82,6 +83,10 @@ func TestAccV2NutanixVmsResource_BasicUpdate(t *testing.T) {
 }
 
 func TestAccV2NutanixVmsResource_WithDisk(t *testing.T) {
+	// if the test is running using NUTANIX_API_KEY, skip the test
+	if os.Getenv("NUTANIX_API_KEY") != "" {
+		t.Skip("Skipping test as it not supported using NUTANIX_API_KEY")
+	}
 	r := acctest.RandInt()
 	desc := "test vm description"
 	resource.Test(t, resource.TestCase{

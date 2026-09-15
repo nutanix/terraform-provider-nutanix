@@ -2,6 +2,7 @@ package vmmv2_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -62,6 +63,10 @@ func TestAccV2NutanixVMAntiAffinityPolicyResource_WithUpdate(t *testing.T) {
 }
 
 func TestAccV2NutanixVMAntiAffinityPolicyResource_WithProjectAssociation(t *testing.T) {
+	// if the test is running using NUTANIX_API_KEY, skip the test
+	if os.Getenv("NUTANIX_API_KEY") != "" {
+		t.Skip("Skipping test as it not supported using NUTANIX_API_KEY")
+	}
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vm-anti-affinity-policy-%d", r)
 	desc := "test vm anti affinity policy description"

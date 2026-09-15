@@ -14,7 +14,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func TestAccNutanixRoleMembershipV2Resource_basic(t *testing.T) {
+func TestAccV2NutanixRoleMembershipResource_basic(t *testing.T) {
 	resourceNameProjectAdmin := "nutanix_role_membership_v2.project_admin_role"
 	resourceNameDeveloper := "nutanix_role_membership_v2.developer_role"
 	datasourceRoleMembershipSummary := "data.nutanix_role_membership_summary_v2.get_role_membership_summary"
