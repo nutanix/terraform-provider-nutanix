@@ -22,7 +22,7 @@ func TestAccV2NutanixRoleMembershipResource_basic(t *testing.T) {
 	datasourceRoleMembership := "data.nutanix_role_membership_v2.get_role_membership_by_id"
 
 	secondaryAD := testVars.Iam.DirectoryServicesMain.SecondaryAD
-	userExtID := secondaryAD.DomainUsersUsergroups.Users["ssptest1@qa.nutanix.com"]
+	userExtID := secondaryAD.DomainUsersUsergroups.Users["ssptest1@qa.nucalm.io"]
 	userGroupExtID := secondaryAD.DomainUsersUsergroups.UserGroups["dnd_approval_group_1"]
 
 	resource.Test(t, resource.TestCase{
@@ -217,22 +217,24 @@ func testAccCheckNutanixRoleMembershipV2Destroy(s *terraform.State) error {
 
 func testAccNutanixRoleMembershipV2Config() string {
 	secondaryAD := testVars.Iam.DirectoryServicesMain.SecondaryAD
-	userExtID := secondaryAD.DomainUsersUsergroups.Users["ssptest1@qa.nutanix.com"]
+	userExtID := secondaryAD.DomainUsersUsergroups.Users["ssptest1@qa.nucalm.io"]
 	userGroupExtID := secondaryAD.DomainUsersUsergroups.UserGroups["dnd_approval_group_1"]
 	idpExtID := secondaryAD.ExtID
 
 	return fmt.Sprintf(`
-	data "nutanix_roles_v2" "roles" {}
+	data "nutanix_roles_v2" "project_admin" {
+		filter = "displayName eq 'Project Admin'"
+		limit  = 1
+	}
+
+	data "nutanix_roles_v2" "developer" {
+		filter = "displayName eq 'Developer'"
+		limit  = 1
+	}
 
 	locals {
-	  project_admin_role_ext_id = [
-    for role in data.nutanix_roles_v2.roles.roles :
-    role.ext_id if role.display_name == "Project Admin"
-  ][0]
-	  developer_role_ext_id = [
-    for role in data.nutanix_roles_v2.roles.roles :
-    role.ext_id if role.display_name == "Developer"
-  ][0]
+		project_admin_role_ext_id = data.nutanix_roles_v2.project_admin.roles[0].ext_id
+		developer_role_ext_id     = data.nutanix_roles_v2.developer.roles[0].ext_id
 	}
 
 	resource "nutanix_project_v2" "test" {

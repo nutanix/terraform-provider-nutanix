@@ -93,8 +93,9 @@ func TestAccNutanixProject_withInternal(t *testing.T) {
 	categoryVal := "Staging"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNutanixProjectInternalConfig(subnetName, name, description, categoryName, categoryVal),
@@ -308,6 +309,10 @@ func testAccNutanixProjectConfig(subnetName, name, description, categoryName, ca
 }
 
 func testAccNutanixProjectInternalConfig(subnetName, name, description, categoryName, categoryVal string) string {
+	subnetName2 := acctest.RandomWithPrefix("test-subnet2")
+	externalSubnetName := acctest.RandomWithPrefix("acctest-ext-subnet")
+	vpcName := acctest.RandomWithPrefix("acctest-managed-vpc")
+
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -320,7 +325,7 @@ func testAccNutanixProjectInternalConfig(subnetName, name, description, category
 
 		resource "nutanix_subnet" "subnet" {
 			cluster_uuid       = local.cluster1
-			name               = "%s"
+			name               = "%[1]s"
 			description        = "Description of my unit test VLAN"
 			vlan_id            = 31
 			subnet_type        = "VLAN"
@@ -338,50 +343,61 @@ func testAccNutanixProjectInternalConfig(subnetName, name, description, category
 			dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 		}
 
+		resource "nutanix_subnet" "subnet2" {
+			cluster_uuid       = local.cluster1
+			name               = "%[2]s"
+			description        = "Description of my second unit test VLAN"
+			vlan_id            = 32
+			subnet_type        = "VLAN"
+			subnet_ip          = "10.250.141.0"
+			default_gateway_ip = "10.250.141.1"
+			prefix_length      = 24
+		}
+
 		resource "nutanix_subnet" "overlay-subnet" {
-			cluster_uuid = local.cluster1
-			name        = "acctest-subnet-updated"
-			description = "Description of my unit test VLAN"
-			vlan_id     = 876
-			subnet_type = "VLAN"
-			subnet_ip          = "10.250.144.0"
-		  default_gateway_ip = "10.250.144.1"
-		  prefix_length = 24
-		  is_external = true
-		  ip_config_pool_list_ranges = ["10.250.144.10 10.250.144.20"]
+			cluster_uuid              = local.cluster1
+			name                      = "%[3]s"
+			description               = "Description of my unit test VLAN"
+			vlan_id                   = 876
+			subnet_type               = "VLAN"
+			subnet_ip                 = "10.250.144.0"
+			default_gateway_ip        = "10.250.144.1"
+			prefix_length             = 24
+			is_external               = true
+			ip_config_pool_list_ranges = ["10.250.144.10 10.250.144.20"]
 		}
 
 		resource "nutanix_vpc" "acctest-managed" {
 			depends_on = [
 				resource.nutanix_subnet.overlay-subnet
 			]
-			name = "acctest-managed-vpc"
+			name = "%[4]s"
 
 			external_subnet_reference_name = [
-			  "acctest-subnet-updated"
+				"%[3]s"
 			]
 
 			common_domain_name_server_ip_list{
-					ip = "8.8.8.9"
+				ip = "8.8.8.9"
 			}
 
 			externally_routable_prefix_list{
-			  ip=  "172.30.0.0"
-			  prefix_length= 16
+				ip            = "172.30.0.0"
+				prefix_length = 16
 			}
 			externally_routable_prefix_list{
-				ip=  "172.34.0.0"
-				prefix_length= 16
-			  }
-		  }
+				ip            = "172.34.0.0"
+				prefix_length = 16
+			}
+		}
 
 		resource "nutanix_project" "project_test" {
-			name        = "%s"
-			description = "%s"
+			name        = "%[5]s"
+			description = "%[6]s"
 
 			categories {
-				name  = "%s"
-				value = "%s"
+				name  = "%[7]s"
+				value = "%[8]s"
 			}
 
 			default_subnet_reference {
@@ -393,25 +409,25 @@ func testAccNutanixProjectInternalConfig(subnetName, name, description, category
 			api_version = "3.1"
 
 			subnet_reference_list{
-				kind="subnet"
-				name=nutanix_subnet.subnet.name
-				uuid=nutanix_subnet.subnet.metadata.uuid
+				kind = "subnet"
+				name = nutanix_subnet.subnet.name
+				uuid = nutanix_subnet.subnet.metadata.uuid
 			}
 			subnet_reference_list{
-				kind="subnet"
-				name=nutanix_subnet.overlay-subnet.name
-				uuid=nutanix_subnet.overlay-subnet.id
+				kind = "subnet"
+				name = nutanix_subnet.subnet2.name
+				uuid = nutanix_subnet.subnet2.metadata.uuid
 			}
 			cluster_reference_list{
-				kind="cluster"
-				uuid=local.cluster1
+				kind = "cluster"
+				uuid = local.cluster1
 			}
 			vpc_reference_list{
-				kind="vpc"
-				uuid= nutanix_vpc.acctest-managed.id
+				kind = "vpc"
+				uuid = nutanix_vpc.acctest-managed.id
 			}
 		}
-	`, subnetName, name, description, categoryName, categoryVal)
+	`, subnetName, subnetName2, externalSubnetName, vpcName, name, description, categoryName, categoryVal)
 }
 
 func testAccNutanixProjectInternalConfigUpdate(subnetName, name, description string) string {
