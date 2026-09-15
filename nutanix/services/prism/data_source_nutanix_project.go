@@ -306,6 +306,42 @@ func DataSourceNutanixProject() *schema.Resource {
 					},
 				},
 			},
+			"enable_directory_and_identity_provider_shortlist": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"directory_reference_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"identity_providers_reference_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"acp": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -596,6 +632,18 @@ func dataSourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	if err := d.Set("default_environment_reference", flattenReferenceValuesList(project.Spec.ProjectDetail.Resources.DefaultEnvironmentReference)); err != nil {
 		return diag.Errorf("error setting `default_environment_reference` for Project(%s): %s", d.Id(), err)
+	}
+	if project.Spec.ProjectDetail.Resources.EnableDirectoryAndIdentityProviderShortlist != nil {
+		if err := d.Set("enable_directory_and_identity_provider_shortlist",
+			utils.BoolValue(project.Spec.ProjectDetail.Resources.EnableDirectoryAndIdentityProviderShortlist)); err != nil {
+			return diag.Errorf("error setting `enable_directory_and_identity_provider_shortlist` for Project(%s): %s", d.Id(), err)
+		}
+	}
+	if err := d.Set("directory_reference_list", flattenDirectoryReferenceList(project.Spec.ProjectDetail.Resources.DirectoryReferenceList)); err != nil {
+		return diag.Errorf("error setting `directory_reference_list` for Project(%s): %s", d.Id(), err)
+	}
+	if err := d.Set("identity_providers_reference_list", flattenDirectoryReferenceList(project.Spec.ProjectDetail.Resources.IdentityProvidersReferenceList)); err != nil {
+		return diag.Errorf("error setting `identity_providers_reference_list` for Project(%s): %s", d.Id(), err)
 	}
 	if err := d.Set("acp", flattenProjectAcp(project.Status.AccessControlPolicyListStatus)); err != nil {
 		return diag.Errorf("error setting `acp` for Project(%s): %s", d.Id(), err)

@@ -94,6 +94,8 @@ The following attributes are exported for each Authorization Policy:
   - `PREDEFINED_UPDATE_IDENTITY_ONLY` : System-defined ACP prohibiting any modifications from customer.
   - `SERVICE_DEFINED` : ACP defined by a service.
   - `USER_DEFINED` : ACP defined by an User.
+* `project_ext_id`: - Project reference for the Authorization Policy.
+* `share_with_all_projects`: - Flag indicating whether the Authorization Policy is shared with all projects or not.
 
 ### Links
 
@@ -102,4 +104,4 @@ The links attribute supports the following:
 - `href`: - The URL at which the entity described by the link can be accessed.
 - `rel`: - A name that identifies the relationship of the link to the object that is returned by the URL. The unique value of "self" identifies the URL for the object
 
-See detailed information in [Nutanix List Authorization Policies v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/AuthorizationPolicies/operation/listAuthorizationPolicies).
+See detailed information in [Nutanix List Authorization Policies v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/AuthorizationPolicies/operation/listAuthorizationPolicies).

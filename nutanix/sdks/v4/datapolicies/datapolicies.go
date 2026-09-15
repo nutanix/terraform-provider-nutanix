@@ -8,8 +8,8 @@ import (
 )
 
 type Client struct {
-	ProtectionPolicies *api.ProtectionPoliciesApi
-	StoragePolicies    *api.StoragePoliciesApi
+	ProtectionPolicies *api.ProtectionPoliciesServiceApi
+	StoragePolicies    *api.StoragePoliciesServiceApi
 }
 
 func NewDataPoliciesClient(credentials client.Credentials) (*Client, error) {
@@ -25,9 +25,10 @@ func NewDataPoliciesClient(credentials client.Credentials) (*Client, error) {
 		pcClient.AllowVersionNegotiation = cfg.AllowVersionNegotiation
 		baseClient = pcClient
 	}
+	f := &Client{
+		ProtectionPolicies: api.NewProtectionPoliciesServiceApi(baseClient),
+		StoragePolicies:    api.NewStoragePoliciesServiceApi(baseClient),
+	}
 
-	return &Client{
-		ProtectionPolicies: api.NewProtectionPoliciesApi(baseClient),
-		StoragePolicies:    api.NewStoragePoliciesApi(baseClient),
-	}, nil
+	return f, nil
 }

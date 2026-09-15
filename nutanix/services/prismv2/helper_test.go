@@ -1,6 +1,7 @@
 package prismv2_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -15,7 +16,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/domainmanagerbackups"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	vmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
+	import3 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/request/vm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -69,6 +73,7 @@ func checkClusterLocationBackupTargetExistAndDeleteIfExists() resource.TestCheck
 	return func(s *terraform.State) error {
 		conn := acc.TestAccProvider.Meta().(*conns.Client)
 		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
+		ctx := context.Background()
 
 		outputClusterExtID, ok := s.RootModule().Outputs["clusterExtID"]
 		if !ok {
@@ -100,7 +105,11 @@ func checkClusterLocationBackupTargetExistAndDeleteIfExists() resource.TestCheck
 							if clusterLocationExtID == clusterExtID {
 								log.Printf("[DEBUG] cluster location backup target already exists, ext_id: %s", attributes["backup_targets."+strconv.Itoa(i)+".ext_id"])
 								backupTargetExtID := attributes["backup_targets."+strconv.Itoa(i)+".ext_id"]
-								readResp, err := client.GetBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(backupTargetExtID), nil)
+								getBackupTargetByIdRequest := import1.GetBackupTargetByIdRequest{
+									DomainManagerExtId: utils.StringPtr(domainManagerExtID),
+									ExtId:              utils.StringPtr(backupTargetExtID),
+								}
+								readResp, err := client.GetBackupTargetById(ctx, &getBackupTargetByIdRequest)
 								if err != nil {
 									return fmt.Errorf("error while fetching Backup Target: %s", err)
 								}
@@ -110,7 +119,11 @@ func checkClusterLocationBackupTargetExistAndDeleteIfExists() resource.TestCheck
 								eTag := client.ApiClient.GetEtag(readResp)
 								args["If-Match"] = utils.StringPtr(eTag)
 
-								resp, err := client.DeleteBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(backupTargetExtID), args)
+								deleteBackupTargetByIdRequest := import1.DeleteBackupTargetByIdRequest{
+									DomainManagerExtId: utils.StringPtr(domainManagerExtID),
+									ExtId:              utils.StringPtr(backupTargetExtID),
+								}
+								resp, err := client.DeleteBackupTargetById(ctx, &deleteBackupTargetByIdRequest, args)
 
 								if err != nil {
 									return fmt.Errorf("error while deleting Backup Target: %s", err)
@@ -135,6 +148,7 @@ func checkObjectStoreLocationBackupTargetExistAndDeleteIfExists() resource.TestC
 	return func(s *terraform.State) error {
 		conn := acc.TestAccProvider.Meta().(*conns.Client)
 		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
+		ctx := context.Background()
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type == "nutanix_pc_backup_targets_v2" {
@@ -155,7 +169,11 @@ func checkObjectStoreLocationBackupTargetExistAndDeleteIfExists() resource.TestC
 						if objectStoreLocationCount > 0 {
 							log.Printf("[DEBUG] object store location backup target already exists, ext_id: %s", attributes["backup_targets."+strconv.Itoa(i)+".ext_id"])
 							backupTargetExtID := attributes["backup_targets."+strconv.Itoa(i)+".ext_id"]
-							readResp, err := client.GetBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(backupTargetExtID), nil)
+							getBackupTargetByIdRequest := import1.GetBackupTargetByIdRequest{
+								DomainManagerExtId: utils.StringPtr(domainManagerExtID),
+								ExtId:              utils.StringPtr(backupTargetExtID),
+							}
+							readResp, err := client.GetBackupTargetById(ctx, &getBackupTargetByIdRequest)
 							if err != nil {
 								return fmt.Errorf("error while fetching Backup Target: %s", err)
 							}
@@ -165,7 +183,11 @@ func checkObjectStoreLocationBackupTargetExistAndDeleteIfExists() resource.TestC
 							eTag := client.ApiClient.GetEtag(readResp)
 							args["If-Match"] = utils.StringPtr(eTag)
 
-							resp, err := client.DeleteBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(backupTargetExtID), args)
+							deleteBackupTargetByIdRequest := import1.DeleteBackupTargetByIdRequest{
+								DomainManagerExtId: utils.StringPtr(domainManagerExtID),
+								ExtId:              utils.StringPtr(backupTargetExtID),
+							}
+							resp, err := client.DeleteBackupTargetById(ctx, &deleteBackupTargetByIdRequest, args)
 
 							if err != nil {
 								return fmt.Errorf("error while deleting Backup Target: %s", err)
@@ -247,7 +269,12 @@ func checkClusterLocationBackupTargetExistAndCreateIfNotExists() resource.TestCh
 
 		body.Location = OneOfBackupTargetLocation
 
-		resp, err := client.CreateBackupTarget(utils.StringPtr(domainManagerExtID), &body)
+		ctx := context.Background()
+		createBackupTargetRequest := import1.CreateBackupTargetRequest{
+			DomainManagerExtId: utils.StringPtr(domainManagerExtID),
+			Body:               &body,
+		}
+		resp, err := client.CreateBackupTarget(ctx, &createBackupTargetRequest)
 
 		if err != nil {
 			return fmt.Errorf("error while Creating Backup Target: %s", err)
@@ -269,12 +296,18 @@ func checkClusterLocationBackupTargetExistAndCreateIfNotExists() resource.TestCh
 			return fmt.Errorf("error waiting for Backup Target to be deleted: %s", taskErr)
 		}
 
-		_, err = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		getTaskByIdRequest := import2.GetTaskByIdRequest{
+			ExtId: taskUUID,
+		}
+		_, err = taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 		if err != nil {
 			return fmt.Errorf("error while fetching Backup Target Task Details: %s", err)
 		}
 
-		listResp, err := client.ListBackupTargets(utils.StringPtr(domainManagerExtID), nil, nil, nil, nil, nil)
+		listBackupTargetsRequest := import1.ListBackupTargetsRequest{
+			DomainManagerExtId: utils.StringPtr(domainManagerExtID),
+		}
+		listResp, err := client.ListBackupTargets(ctx, &listBackupTargetsRequest)
 		if err != nil {
 			return fmt.Errorf("error while fetching Backup Target: %s", err)
 		}
@@ -368,8 +401,13 @@ func checkObjectStoreLocationBackupTargetExistAndCreateIfNotExists() resource.Te
 
 		body.Location = OneOfBackupTargetLocation
 
+		ctx := context.Background()
 		log.Printf("[DEBUG] Creating Backup Target")
-		resp, err := client.CreateBackupTarget(utils.StringPtr(domainManagerExtID), &body)
+		createBackupTargetRequest := import1.CreateBackupTargetRequest{
+			DomainManagerExtId: utils.StringPtr(domainManagerExtID),
+			Body:               &body,
+		}
+		resp, err := client.CreateBackupTarget(ctx, &createBackupTargetRequest)
 
 		if err != nil {
 			return fmt.Errorf("error while Creating Backup Target: %s", err)
@@ -391,7 +429,10 @@ func checkObjectStoreLocationBackupTargetExistAndCreateIfNotExists() resource.Te
 			return fmt.Errorf("error waiting for Backup Target to be deleted: %s", taskErr)
 		}
 
-		_, err = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		getTaskByIdRequest := import2.GetTaskByIdRequest{
+			ExtId: taskUUID,
+		}
+		_, err = taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 		if err != nil {
 			return fmt.Errorf("error while fetching Backup Target Task Details: %s", err)
 		}
@@ -408,8 +449,13 @@ func checkLastSyncTimeBackupTarget(domainManagerExtID, backupTargetExtID *string
 		if *backupTargetExtID == "" && *domainManagerExtID == "" {
 			return fmt.Errorf("backup target ext_id and domain manager ext_id not set")
 		}
+		ctx := context.Background()
 		for i := 0; i < retries; i++ {
-			readResp, err := client.GetBackupTargetById(domainManagerExtID, backupTargetExtID, nil)
+			getBackupTargetByIdRequest := import1.GetBackupTargetByIdRequest{
+				DomainManagerExtId: domainManagerExtID,
+				ExtId:              backupTargetExtID,
+			}
+			readResp, err := client.GetBackupTargetById(ctx, &getBackupTargetByIdRequest)
 			if err != nil {
 				return fmt.Errorf("error while fetching Backup Target: %s", err)
 			}
@@ -432,6 +478,7 @@ func checkLastSyncTimeBackupTarget(domainManagerExtID, backupTargetExtID *string
 // helper function to check the delete task
 func waitDeleteTask(resp *management.DeleteBackupTargetApiResponse) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	ctx := context.Background()
 
 	TaskRef := resp.Data.GetValue().(config.TaskReference)
 	taskUUID := TaskRef.ExtId
@@ -449,7 +496,10 @@ func waitDeleteTask(resp *management.DeleteBackupTargetApiResponse) error {
 		return fmt.Errorf("error waiting for Backup Target to be deleted: %s", err)
 	}
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import2.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return fmt.Errorf("error while fetching Backup Target Task Details: %s", err)
 	}
@@ -464,11 +514,15 @@ func waitDeleteTask(resp *management.DeleteBackupTargetApiResponse) error {
 // helper function to check the delete task
 func taskStateRefreshPrismTaskGroupFunc(taskUUID string) resource.StateRefreshFunc {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	ctx := context.Background()
 
 	return func() (interface{}, string, error) {
 		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
 		// encodeUUID := data + ":" + taskUUID
-		vresp, err := conn.PrismAPI.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
+		getTaskByIdRequest := import2.GetTaskByIdRequest{
+			ExtId: utils.StringPtr(taskUUID),
+		}
+		vresp, err := conn.PrismAPI.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 
 		if err != nil {
 			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
@@ -575,7 +629,12 @@ func checkClusterLocationBackupTargetExistAndCreateIfNot(backupTargetExtID, doma
 
 		body.Location = OneOfBackupTargetLocation
 
-		resp, err := client.CreateBackupTarget(domainManagerExtID, &body)
+		ctx := context.Background()
+		createBackupTargetRequest := import1.CreateBackupTargetRequest{
+			DomainManagerExtId: domainManagerExtID,
+			Body:               &body,
+		}
+		resp, err := client.CreateBackupTarget(ctx, &createBackupTargetRequest)
 
 		if err != nil {
 			return fmt.Errorf("error while Creating Backup Target: %s", err)
@@ -597,12 +656,18 @@ func checkClusterLocationBackupTargetExistAndCreateIfNot(backupTargetExtID, doma
 			return fmt.Errorf("error waiting for Backup Target to be deleted: %s", taskErr)
 		}
 
-		_, err = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		getTaskByIdRequest := import2.GetTaskByIdRequest{
+			ExtId: taskUUID,
+		}
+		_, err = taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 		if err != nil {
 			return fmt.Errorf("error while fetching Backup Target Task Details: %s", err)
 		}
 
-		listResp, err := client.ListBackupTargets(domainManagerExtID, nil, nil, nil, nil, nil)
+		listBackupTargetsRequest := import1.ListBackupTargetsRequest{
+			DomainManagerExtId: domainManagerExtID,
+		}
+		listResp, err := client.ListBackupTargets(ctx, &listBackupTargetsRequest)
 		if err != nil {
 			return fmt.Errorf("error while fetching Backup Target: %s", err)
 		}
@@ -699,8 +764,13 @@ func checkObjectRestoreLocationBackupTargetExistAndCreateIfNot(backupTargetExtID
 
 		body.Location = OneOfBackupTargetLocation
 
+		ctx := context.Background()
 		log.Printf("[DEBUG] Creating Backup Target")
-		resp, err := client.CreateBackupTarget(domainManagerExtID, &body)
+		createBackupTargetRequest := import1.CreateBackupTargetRequest{
+			DomainManagerExtId: domainManagerExtID,
+			Body:               &body,
+		}
+		resp, err := client.CreateBackupTarget(ctx, &createBackupTargetRequest)
 
 		if err != nil {
 			return fmt.Errorf("error while Creating Backup Target: %s", err)
@@ -722,12 +792,18 @@ func checkObjectRestoreLocationBackupTargetExistAndCreateIfNot(backupTargetExtID
 			return fmt.Errorf("error waiting for Backup Target to be deleted: %s", taskErr)
 		}
 
-		_, err = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		getTaskByIdRequest := import2.GetTaskByIdRequest{
+			ExtId: taskUUID,
+		}
+		_, err = taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 		if err != nil {
 			return fmt.Errorf("error while fetching Backup Target Task Details: %s", err)
 		}
 
-		listResp, err := client.ListBackupTargets(domainManagerExtID, nil, nil, nil, nil, nil)
+		listBackupTargetsRequest := import1.ListBackupTargetsRequest{
+			DomainManagerExtId: domainManagerExtID,
+		}
+		listResp, err := client.ListBackupTargets(ctx, &listBackupTargetsRequest)
 		if err != nil {
 			return fmt.Errorf("error while fetching Backup Target: %s", err)
 		}
@@ -770,8 +846,13 @@ func checkLastSyncTimeBackupTargetRestorePC(backupTargetExtID *string, retries i
 
 		pcExtID := outputDomainManagerExtID.Value.(string)
 
+		ctx := context.Background()
 		for i := 0; i < retries; i++ {
-			readResp, err := client.GetBackupTargetById(utils.StringPtr(pcExtID), backupTargetExtID, nil)
+			getBackupTargetByIdRequest := import1.GetBackupTargetByIdRequest{
+				DomainManagerExtId: utils.StringPtr(pcExtID),
+				ExtId:              backupTargetExtID,
+			}
+			readResp, err := client.GetBackupTargetById(ctx, &getBackupTargetByIdRequest)
 			if err != nil {
 				return fmt.Errorf("error while fetching Backup Target: %s", err)
 			}
@@ -828,7 +909,11 @@ func createClusterLocationRestoreSource(restoreSourceExtID *string) resource.Tes
 
 		body.Location = oneOfRestoreSourceLocation
 
-		resp, err := client.CreateRestoreSource(&body)
+		ctx := context.Background()
+		createRestoreSourceRequest := import1.CreateRestoreSourceRequest{
+			Body: &body,
+		}
+		resp, err := client.CreateRestoreSource(ctx, &createRestoreSourceRequest)
 
 		if err != nil {
 			return fmt.Errorf("error while Creating Restore Source: %s", err)
@@ -880,7 +965,11 @@ func createObjectStoreLocationLocationRestoreSource(restoreSourceExtID *string) 
 
 		body.Location = oneOfRestoreSourceLocation
 
-		resp, err := client.CreateRestoreSource(&body)
+		ctx := context.Background()
+		createRestoreSourceRequest := import1.CreateRestoreSourceRequest{
+			Body: &body,
+		}
+		resp, err := client.CreateRestoreSource(ctx, &createRestoreSourceRequest)
 
 		if err != nil {
 			return fmt.Errorf("error while creating object store location restore source: %s", err)
@@ -901,9 +990,10 @@ func powerOffPC() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acc.TestAccProvider.Meta().(*conns.Client)
 		vmClient := conn.VmmAPI.VMAPIInstance
+		ctx := context.Background()
 
-		// Cluster filter
-		vmsResp, err := vmClient.ListVms(nil, nil, nil, nil, nil, nil)
+		listVmsRequest := import3.ListVmsRequest{}
+		vmsResp, err := vmClient.ListVms(ctx, &listVmsRequest)
 		if err != nil {
 			return fmt.Errorf("error while fetching VMs: %s", err)
 		}
@@ -926,7 +1016,10 @@ func powerOffPC() resource.TestCheckFunc {
 					for _, learnedIPAddress := range nic.NetworkInfo.Ipv4Info.LearnedIpAddresses {
 						if utils.StringValue(learnedIPAddress.Value) == os.Getenv("NUTANIX_ENDPOINT") {
 							// get etag
-							readResp, err := vmClient.GetVmById(vm.ExtId, nil)
+							getVmByIdRequest := import3.GetVmByIdRequest{
+								ExtId: vm.ExtId,
+							}
+							readResp, err := vmClient.GetVmById(ctx, &getVmByIdRequest)
 							if err != nil {
 								return fmt.Errorf("error while fetching PC: %s", err)
 							}
@@ -935,7 +1028,10 @@ func powerOffPC() resource.TestCheckFunc {
 							args["If-Match"] = utils.StringPtr(eTag)
 
 							// Power off the PC
-							_, err = vmClient.PowerOffVm(vm.ExtId, args)
+							powerOffVmRequest := import3.PowerOffVmRequest{
+								ExtId: vm.ExtId,
+							}
+							_, err = vmClient.PowerOffVm(ctx, &powerOffVmRequest, args)
 							if err != nil {
 								log.Printf("[DEBUG] error while powering off PC: %s", err)
 								// after the PC is powered off, the API returns timeout error

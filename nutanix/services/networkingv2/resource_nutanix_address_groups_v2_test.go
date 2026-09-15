@@ -2,6 +2,7 @@ package networkingv2_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -124,6 +125,71 @@ func testAddressGroupV2ConfigWithUpdate(name, desc string) string {
 		  }
 	  }
 `, name, desc)
+}
+
+func TestAccV2NutanixAddressGroupResource_ProjectAssociation(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-ag-projassoc-%d", r)
+	desc := "address group project association test"
+	projectName := fmt.Sprintf("tf-ag-pa-proj-%d", r)
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAddressGroupProjectAssociationConfig(name, desc, projectName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceNameAddressGroup, "project_ext_id", "nutanix_project_v2.test", "ext_id"),
+					resource.TestCheckResourceAttrPair("data.nutanix_address_group_v2.test", "project_ext_id", "nutanix_project_v2.test", "ext_id"),
+					resource.TestCheckResourceAttr("data.nutanix_address_groups_v2.test", "address_groups.#", "1"),
+					resource.TestCheckResourceAttrPair("data.nutanix_address_groups_v2.test", "address_groups.0.ext_id", resourceNameAddressGroup, "ext_id"),
+					resource.TestCheckResourceAttrPair("data.nutanix_address_groups_v2.test", "address_groups.0.project_ext_id", "nutanix_project_v2.test", "ext_id"),
+				),
+			},
+			{
+				Config:      testAddressGroupProjectAssociationConfig(name, desc, projectName, "00000000-0000-0000-0000-000000000000"),
+				ExpectError: regexp.MustCompile("Update of project_ext_id is not supported"),
+			},
+		},
+	})
+}
+
+func agProjectExtIDLine(override string) string {
+	if override == "" {
+		return `project_ext_id = nutanix_project_v2.test.ext_id`
+	}
+	return fmt.Sprintf(`project_ext_id = "%s"`, override)
+}
+
+func testAddressGroupProjectAssociationConfig(name, desc, projectName, projectExtIDOverride string) string {
+	return fmt.Sprintf(`
+	resource "nutanix_project_v2" "test" {
+		name        = "%[3]s"
+		project_id  = "%[3]s"
+		description = "project association test"
+	}
+
+	resource "nutanix_address_groups_v2" "test" {
+		name        = "%[1]s"
+		description = "%[2]s"
+		ipv4_addresses {
+			value         = "10.0.0.0"
+			prefix_length = 24
+		}
+		%[4]s
+		depends_on = [nutanix_project_v2.test]
+	}
+
+	data "nutanix_address_group_v2" "test" {
+		ext_id     = nutanix_address_groups_v2.test.id
+		depends_on = [nutanix_address_groups_v2.test]
+	}
+
+	data "nutanix_address_groups_v2" "test" {
+		filter     = "name eq '%[1]s'"
+		depends_on = [nutanix_address_groups_v2.test]
+	}
+	`, name, desc, projectName, agProjectExtIDLine(projectExtIDOverride))
 }
 
 func testAddressGroupV2ConfigWithIPRanges(name, desc string) string {

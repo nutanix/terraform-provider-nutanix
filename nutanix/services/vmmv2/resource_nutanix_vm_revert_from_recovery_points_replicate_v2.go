@@ -9,8 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import4 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	vmmPrismConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
+	import3 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/request/vm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -47,7 +49,10 @@ func ResourceNutanixRevertVMRecoveryPointV2Create(ctx context.Context, d *schema
 
 	extID := d.Get("ext_id")
 
-	readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(extID.(string)))
+	getVmByIdRequest := import3.GetVmByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Vm : %v", err)
 	}
@@ -61,7 +66,11 @@ func ResourceNutanixRevertVMRecoveryPointV2Create(ctx context.Context, d *schema
 		body.VmRecoveryPointExtId = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.VMAPIInstance.RevertVm(utils.StringPtr(rpExtID), &body, args)
+	revertVmRequest := import3.RevertVmRequest{
+		ExtId: utils.StringPtr(rpExtID),
+		Body:  &body,
+	}
+	resp, err := conn.VMAPIInstance.RevertVm(ctx, &revertVmRequest, args)
 	if err != nil {
 		return diag.Errorf("error while reverting vm : %v", err)
 	}
@@ -83,7 +92,10 @@ func ResourceNutanixRevertVMRecoveryPointV2Create(ctx context.Context, d *schema
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching VM revert task (%s): %v", utils.StringValue(taskUUID), err)
 	}
@@ -95,7 +107,10 @@ func ResourceNutanixRevertVMRecoveryPointV2Create(ctx context.Context, d *schema
 		return diag.FromErr(err)
 	}
 
-	values := common.ExtractCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameVmRecoveryPoint)
+	values := common.ExtractCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameVMRecoveryPointExtID)
+	if len(values) == 0 {
+		values = common.ExtractCompletionDetailsFromTask(taskDetails, utils.CompletionDetailsNameVmRecoveryPoint)
+	}
 	if len(values) == 0 {
 		return diag.Errorf("VM not found in task completion details")
 	}

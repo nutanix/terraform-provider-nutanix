@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	iamConfig "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/request/entities"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -53,26 +54,24 @@ func DatasourceNutanixEntitiesV2() *schema.Resource {
 func DatasourceNutanixEntitiesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	var page, limit *int
-	var filter, orderBy, selectParam *string
-
+	listEntitiesRequest := import1.ListEntitiesRequest{}
 	if v, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(v.(int))
+		listEntitiesRequest.Page_ = utils.IntPtr(v.(int))
 	}
 	if v, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(v.(int))
+		listEntitiesRequest.Limit_ = utils.IntPtr(v.(int))
 	}
 	if v, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(v.(string))
+		listEntitiesRequest.Filter_ = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(v.(string))
+		listEntitiesRequest.Orderby_ = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("select"); ok {
-		selectParam = utils.StringPtr(v.(string))
+		listEntitiesRequest.Select_ = utils.StringPtr(v.(string))
 	}
 
-	resp, err := conn.EntityAPIInstance.ListEntities(page, limit, filter, orderBy, selectParam)
+	resp, err := conn.EntityAPIInstance.ListEntities(ctx, &listEntitiesRequest)
 	if err != nil {
 		return diag.Errorf("error while listing entities: %v", err)
 	}

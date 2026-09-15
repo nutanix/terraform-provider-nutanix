@@ -34,6 +34,45 @@ resource "nutanix_directory_services_v2" "active-directory" {
   }
 }
 
+# Add Directory Service and share with all projects.
+resource "nutanix_directory_services_v2" "active-directory-share-with-all-projects" {
+  name           = "example_active_directory"
+  url            = "ldap://10.xx.xx.xx:xxxx"
+  directory_type = "ACTIVE_DIRECTORY"
+  domain_name    = "nutanix.com"
+  share_with_all_projects = true
+  service_account {
+    username = "username"
+    password = "password"
+  }
+  white_listed_groups = ["example"]
+  lifecycle {
+    ignore_changes = [
+      service_account.0.password,
+    ]
+  }
+}
+
+# Add Directory Service and share with projects.
+resource "nutanix_directory_services_v2" "active-directory-share-with-all-projects" {
+  name           = "example_active_directory"
+  url            = "ldap://10.xx.xx.xx:xxxx"
+  directory_type = "ACTIVE_DIRECTORY"
+  domain_name    = "nutanix.com"
+  shared_with_projects = ["Project1_UUID", "Project2_UUID"]
+  service_account {
+    username = "username"
+    password = "password"
+  }
+  white_listed_groups = ["example"]
+  lifecycle {
+    ignore_changes = [
+      service_account.0.password,
+    ]
+  }
+}
+
+
 # List all  Directory Services.
 data "nutanix_directory_services_v2" "example" {}
 

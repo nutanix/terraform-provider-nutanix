@@ -1,11 +1,13 @@
 package volumesv2_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
@@ -25,6 +27,13 @@ func TestAccV2NutanixVolumeGroupsDataSource_Basic(t *testing.T) {
 			{
 				Config: testAccVolumeGroupsDataSourceConfig(filepath, name, desc),
 				Check: resource.ComposeTestCheckFunc(
+					func(s *terraform.State) error {
+						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[dataSourceVolumeGroups].Primary.Attributes, "", "  ")
+						fmt.Printf("################### %s #########################\n", dataSourceVolumeGroups)
+						fmt.Printf("Resource Attributes: \n%v\n", string(aJSON))
+						fmt.Printf("\n############################################\n")
+						return nil
+					},
 					resource.TestCheckResourceAttrSet(dataSourceVolumeGroups, "volumes.#"),
 					resource.TestCheckResourceAttrSet(dataSourceVolumeGroups, "volumes.0.name"),
 				),

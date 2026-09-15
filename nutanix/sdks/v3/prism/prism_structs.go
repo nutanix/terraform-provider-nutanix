@@ -1964,15 +1964,18 @@ type ResourceDomain struct {
 
 // ProjectResources ...
 type ProjectResources struct {
-	ResourceDomain                 *ResourceDomain    `json:"resource_domain,omitempty"`
-	AccountReferenceList           []*ReferenceValues `json:"account_reference_list,omitempty"`
-	EnvironmentReferenceList       []*ReferenceValues `json:"environment_reference_list,omitempty"`
-	DefaultSubnetReference         *ReferenceValues   `json:"default_subnet_reference,omitempty"`
-	UserReferenceList              []*ReferenceValues `json:"user_reference_list,omitempty"`
-	IsDefault                      bool               `json:"is_default,omitempty"`
-	ExternalUserGroupReferenceList []*ReferenceValues `json:"external_user_group_reference_list,omitempty"`
-	SubnetReferenceList            []*ReferenceValues `json:"subnet_reference_list,omitempty"`
-	ExternalNetworkList            []*ReferenceValues `json:"external_network_list,omitempty"`
+	ResourceDomain                              *ResourceDomain    `json:"resource_domain,omitempty"`
+	AccountReferenceList                        []*ReferenceValues `json:"account_reference_list,omitempty"`
+	EnvironmentReferenceList                    []*ReferenceValues `json:"environment_reference_list,omitempty"`
+	DefaultSubnetReference                      *ReferenceValues   `json:"default_subnet_reference,omitempty"`
+	UserReferenceList                           []*ReferenceValues `json:"user_reference_list,omitempty"`
+	IsDefault                                   bool               `json:"is_default,omitempty"`
+	ExternalUserGroupReferenceList              []*ReferenceValues `json:"external_user_group_reference_list,omitempty"`
+	SubnetReferenceList                         []*ReferenceValues `json:"subnet_reference_list,omitempty"`
+	ExternalNetworkList                         []*ReferenceValues `json:"external_network_list,omitempty"`
+	EnableDirectoryAndIdentityProviderShortlist *bool              `json:"enable_directory_and_identity_provider_shortlist,omitempty"`
+	DirectoryReferenceList                      []*ReferenceValues `json:"directory_reference_list,omitempty"`
+	IdentityProvidersReferenceList              []*ReferenceValues `json:"identity_providers_reference_list,omitempty"`
 }
 
 // ProjectStatus ...
@@ -2387,8 +2390,18 @@ type RecoveryPlanResources struct {
 
 // Parameters represents a object for resource of recovery plan
 type Parameters struct {
-	FloatingIPAssignmentList []*FloatingIPAssignmentList `json:"floating_ip_assignment_list,omitempty"`
-	NetworkMappingList       []*NetworkMappingList       `json:"network_mapping_list,omitempty"`
+	FloatingIPAssignmentList []*FloatingIPAssignmentList              `json:"floating_ip_assignment_list,omitempty"`
+	NetworkMappingList       []*NetworkMappingList                    `json:"network_mapping_list,omitempty"`
+	AvailabilityZoneList     []*RecoveryPlanResourcesAvailabilityZone `json:"availability_zone_list,omitempty"`
+	PrimaryLocationIndex     *int64                                   `json:"primary_location_index,omitempty"`
+}
+
+// RecoveryPlanResourcesAvailabilityZone represents an availability zone entry
+// in the recovery plan parameters. Declaring the source and recovery AZs here
+// is required for network/floating-ip mappings to be applied by Prism Central.
+type RecoveryPlanResourcesAvailabilityZone struct {
+	AvailabilityZoneURL  string       `json:"availability_zone_url,omitempty"`
+	ClusterReferenceList []*Reference `json:"cluster_reference_list,omitempty"`
 }
 
 // FloatingIPAssignmentList represents a object for resource of recovery plan
@@ -2447,6 +2460,7 @@ type Network struct {
 	VirtualNetworkReference *Reference    `json:"virtual_network_reference,omitempty"`
 	SubnetList              []*SubnetList `json:"subnet_list,omitempty"`
 	Name                    string        `json:"name,omitempty"`
+	SubnetUUID              string        `json:"subnet_uuid,omitempty"`
 	VPCReference            *Reference    `json:"vpc_reference,omitempty"`
 	UseVPCReference         *bool         `json:"use_vpc_reference,omitempty"`
 }
@@ -2824,19 +2838,22 @@ type StaticRouteIntentResponse struct {
 
 // ProjectResources ...
 type ProjectInternalResources struct {
-	ResourceDomain                 *ResourceDomain    `json:"resource_domain,omitempty"`
-	AccountReferenceList           []*ReferenceValues `json:"account_reference_list,omitempty"`
-	EnvironmentReferenceList       []*ReferenceValues `json:"environment_reference_list,omitempty"`
-	DefaultSubnetReference         *ReferenceValues   `json:"default_subnet_reference,omitempty"`
-	UserReferenceList              []*ReferenceValues `json:"user_reference_list,omitempty"`
-	TunnelReferenceList            []*ReferenceValues `json:"tunnel_reference_list,omitempty"`
-	ExternalUserGroupReferenceList []*ReferenceValues `json:"external_user_group_reference_list,omitempty"`
-	ClusterReferenceList           []*ReferenceValues `json:"cluster_reference_list,omitempty"`
-	SubnetReferenceList            []*ReferenceValues `json:"subnet_reference_list,omitempty"`
-	VPCReferenceList               []*ReferenceValues `json:"vpc_reference_list,omitempty"`
-	ExternalNetworkList            []*ReferenceValues `json:"external_network_list,omitempty"`
-	DefaultEnvironmentReference    *Reference         `json:"default_environment_reference,omitempty"`
-	IsDefault                      bool               `json:"is_default,omitempty"`
+	ResourceDomain                              *ResourceDomain    `json:"resource_domain,omitempty"`
+	AccountReferenceList                        []*ReferenceValues `json:"account_reference_list,omitempty"`
+	EnvironmentReferenceList                    []*ReferenceValues `json:"environment_reference_list,omitempty"`
+	DefaultSubnetReference                      *ReferenceValues   `json:"default_subnet_reference,omitempty"`
+	UserReferenceList                           []*ReferenceValues `json:"user_reference_list,omitempty"`
+	TunnelReferenceList                         []*ReferenceValues `json:"tunnel_reference_list,omitempty"`
+	ExternalUserGroupReferenceList              []*ReferenceValues `json:"external_user_group_reference_list,omitempty"`
+	ClusterReferenceList                        []*ReferenceValues `json:"cluster_reference_list,omitempty"`
+	SubnetReferenceList                         []*ReferenceValues `json:"subnet_reference_list,omitempty"`
+	VPCReferenceList                            []*ReferenceValues `json:"vpc_reference_list,omitempty"`
+	ExternalNetworkList                         []*ReferenceValues `json:"external_network_list,omitempty"`
+	DefaultEnvironmentReference                 *Reference         `json:"default_environment_reference,omitempty"`
+	IsDefault                                   bool               `json:"is_default,omitempty"`
+	EnableDirectoryAndIdentityProviderShortlist *bool              `json:"enable_directory_and_identity_provider_shortlist,omitempty"`
+	DirectoryReferenceList                      []*ReferenceValues `json:"directory_reference_list,omitempty"`
+	IdentityProvidersReferenceList              []*ReferenceValues `json:"identity_providers_reference_list,omitempty"`
 }
 
 type ProjectStatusResources struct {

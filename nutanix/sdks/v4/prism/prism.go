@@ -8,10 +8,10 @@ import (
 )
 
 type Client struct {
-	TaskRefAPI                      *api.TasksApi
-	CategoriesAPIInstance           *api.CategoriesApi
-	DomainManagerAPIInstance        *api.DomainManagerApi
-	DomainManagerBackupsAPIInstance *api.DomainManagerBackupsApi
+	TaskRefAPI                      *api.TasksServiceApi
+	CategoriesAPIInstance           *api.CategoriesServiceApi
+	DomainManagerAPIInstance        *api.DomainManagerServiceApi
+	DomainManagerBackupsAPIInstance *api.DomainManagerBackupsServiceApi
 }
 
 func NewPrismClient(credentials client.Credentials) (*Client, error) {
@@ -27,11 +27,12 @@ func NewPrismClient(credentials client.Credentials) (*Client, error) {
 		pcClient.AllowVersionNegotiation = cfg.AllowVersionNegotiation
 		baseClient = pcClient
 	}
+	f := &Client{
+		TaskRefAPI:                      api.NewTasksServiceApi(baseClient),
+		CategoriesAPIInstance:           api.NewCategoriesServiceApi(baseClient),
+		DomainManagerAPIInstance:        api.NewDomainManagerServiceApi(baseClient),
+		DomainManagerBackupsAPIInstance: api.NewDomainManagerBackupsServiceApi(baseClient),
+	}
 
-	return &Client{
-		TaskRefAPI:                      api.NewTasksApi(baseClient),
-		CategoriesAPIInstance:           api.NewCategoriesApi(baseClient),
-		DomainManagerAPIInstance:        api.NewDomainManagerApi(baseClient),
-		DomainManagerBackupsAPIInstance: api.NewDomainManagerBackupsApi(baseClient),
-	}, nil
+	return f, nil
 }

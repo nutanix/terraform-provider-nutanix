@@ -76,6 +76,7 @@ The `address_groups` object contains the following attributes:
 * `created_by`: created by.
 * `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
 * `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
+* `project_ext_id`: Project external ID associated with the address group.
 
 
 #### ipv4_addresses
@@ -90,4 +91,4 @@ The `address_groups` object contains the following attributes:
 
 
 
-See detailed information in [Nutanix List Address Groups v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.2#tag/AddressGroups/operation/listAddressGroups).
+See detailed information in [Nutanix List Address Groups v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.3#tag/AddressGroups/operation/listAddressGroups).

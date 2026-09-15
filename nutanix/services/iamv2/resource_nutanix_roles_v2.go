@@ -2,13 +2,16 @@ package iamv2
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/common/v1/config"
 	iamConfig "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/request/roles"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -44,6 +47,11 @@ func ResourceNutanixRolesV2() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
+			},
+			"is_global": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"operations": {
 				Description: "List of Operations for the Role.",
@@ -122,6 +130,15 @@ func ResourceNutanixRolesV2() *schema.Resource {
 				Type:        schema.TypeBool,
 				Computed:    true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"share_with_all_projects": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -142,6 +159,12 @@ func ResourceNutanixRolesV4Create(ctx context.Context, d *schema.ResourceData, m
 	if clientName, ok := d.GetOk("client_name"); ok {
 		body.ClientName = utils.StringPtr(clientName.(string))
 	}
+	if common.IsExplicitlySet(d, "is_global") {
+		body.IsGlobal = utils.BoolPtr(d.Get("is_global").(bool))
+	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		body.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 	if operations, ok := d.GetOk("operations"); ok {
 		operationsList := operations.([]interface{})
 		operationsListStr := make([]string, len(operationsList))
@@ -151,7 +174,12 @@ func ResourceNutanixRolesV4Create(ctx context.Context, d *schema.ResourceData, m
 		body.Operations = operationsListStr
 	}
 
-	resp, err := conn.RolesAPIInstance.CreateRole(body)
+	createRoleRequest := import2.CreateRoleRequest{
+		Body: body,
+	}
+	aJSON, _ := json.MarshalIndent(createRoleRequest, "", "  ")
+	log.Printf("[DEBUG] Create Role Request Body: %s", string(aJSON))
+	resp, err := conn.RolesAPIInstance.CreateRole(ctx, &createRoleRequest)
 	if err != nil {
 		return diag.Errorf("error while creating role: %v", err)
 	}
@@ -164,7 +192,10 @@ func ResourceNutanixRolesV4Create(ctx context.Context, d *schema.ResourceData, m
 func ResourceNutanixRolesV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	resp, err := conn.RolesAPIInstance.GetRoleById(utils.StringPtr(d.Id()))
+	getRoleByIdRequest := import2.GetRoleByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.RolesAPIInstance.GetRoleById(ctx, &getRoleByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while Reading role: %v", err)
 	}
@@ -256,6 +287,12 @@ func ResourceNutanixRolesV4Read(ctx context.Context, d *schema.ResourceData, met
 	if err := d.Set("is_system_defined", getResp.IsSystemDefined); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("share_with_all_projects", getResp.IsSharedWithAllProjects); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -267,7 +304,10 @@ func ResourceNutanixRolesV4Update(ctx context.Context, d *schema.ResourceData, m
 
 	updatedSpec := iamConfig.Role{}
 
-	readResp, err := conn.RolesAPIInstance.GetRoleById(extID)
+	getRoleByIdRequest := import2.GetRoleByIdRequest{
+		ExtId: extID,
+	}
+	readResp, err := conn.RolesAPIInstance.GetRoleById(ctx, &getRoleByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching role: %v", err)
 	}
@@ -288,6 +328,11 @@ func ResourceNutanixRolesV4Update(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChange("client_name") {
 		updatedSpec.ClientName = utils.StringPtr(d.Get("client_name").(string))
 	}
+	if common.IsExplicitlySet(d, "is_global") && d.HasChange("is_global") {
+		updatedSpec.IsGlobal = utils.BoolPtr(d.Get("is_global").(bool))
+	} else {
+		updatedSpec.IsGlobal = nil
+	}
 	if d.HasChange("operations") {
 		operations := d.Get("operations").([]interface{})
 		operationsListStr := make([]string, len(operations))
@@ -296,8 +341,19 @@ func ResourceNutanixRolesV4Update(ctx context.Context, d *schema.ResourceData, m
 		}
 		updatedSpec.Operations = operationsListStr
 	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 
-	updateResp, err := conn.RolesAPIInstance.UpdateRoleById(extID, &updatedSpec, headers)
+	updateRoleByIdRequest := import2.UpdateRoleByIdRequest{
+		ExtId: extID,
+		Body:  &updatedSpec,
+	}
+
+	aJSON, _ := json.MarshalIndent(updateRoleByIdRequest, "", "  ")
+	log.Printf("[DEBUG] Update Role Request Body: %s", string(aJSON))
+
+	updateResp, err := conn.RolesAPIInstance.UpdateRoleById(ctx, &updateRoleByIdRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while updating role: %v", err)
 	}
@@ -314,7 +370,10 @@ func ResourceNutanixRolesV4Update(ctx context.Context, d *schema.ResourceData, m
 func ResourceNutanixRolesV4Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	readResp, err := conn.RolesAPIInstance.GetRoleById(utils.StringPtr(d.Id()))
+	getRoleByIdRequest := import2.GetRoleByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.RolesAPIInstance.GetRoleById(ctx, &getRoleByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching role: %v", err)
 	}
@@ -323,7 +382,10 @@ func ResourceNutanixRolesV4Delete(ctx context.Context, d *schema.ResourceData, m
 	headers := make(map[string]interface{})
 	headers["If-Match"] = utils.StringPtr(etagValue)
 
-	resp, err := conn.RolesAPIInstance.DeleteRoleById(utils.StringPtr(d.Id()), headers)
+	deleteRoleByIdRequest := import2.DeleteRoleByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.RolesAPIInstance.DeleteRoleById(ctx, &deleteRoleByIdRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while Deleting role: %v", err)
 	}

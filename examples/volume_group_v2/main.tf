@@ -98,6 +98,9 @@ resource "nutanix_volume_group_v2" "vg-example-1" {
 
 
 
+# Best practice: use nutanix_volume_group_disk_v2 to manage Volume Group disks
+# after the Volume Group is created. Do not add or remove Volume Group disks
+# through nutanix_virtual_machine_v2.disks.
 # create a volume group with attachment_type , protocol and disks
 resource "nutanix_volume_group_v2" "vg-example-2" {
   name                               = "volume-group-example-001236"

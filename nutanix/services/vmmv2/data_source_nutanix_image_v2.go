@@ -2,11 +2,14 @@ package vmmv2
 
 import (
 	"context"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import5 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
+	import6 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/request/images"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -89,6 +92,10 @@ func DatasourceNutanixImageV4() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ext_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"vm_ext_id": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -177,6 +184,14 @@ func DatasourceNutanixImageV4() *schema.Resource {
 					},
 				},
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"share_with_all_projects": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -185,8 +200,10 @@ func DatasourceNutanixImageV4Read(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.Client).VmmAPI
 
 	extID := d.Get("ext_id")
-
-	resp, err := conn.ImagesAPIInstance.GetImageById(utils.StringPtr(extID.(string)))
+	getImageByIdRequest := import6.GetImageByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.ImagesAPIInstance.GetImageById(ctx, &getImageByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching images : %v", err)
 	}
@@ -235,6 +252,12 @@ func DatasourceNutanixImageV4Read(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("placement_policy_status", flattenImagePlacementStatus(getResp.PlacementPolicyStatus)); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("share_with_all_projects", getResp.IsSharedWithAllProjects); err != nil {
+		return diag.FromErr(err)
+	}
 
 	d.SetId(utils.StringValue(getResp.ExtId))
 	return nil
@@ -254,26 +277,35 @@ func flattenImageType(pr *import5.ImageType) string {
 }
 
 func flattenOneOfImageChecksum(pr *import5.OneOfImageChecksum) []map[string]interface{} {
-	if pr != nil {
-		resList := make([]map[string]interface{}, 0)
-
-		sha := make(map[string]interface{})
-
-		getVal := pr.ObjectType_
-
-		if utils.StringValue(getVal) == "vmm.v4.content.ImageSha1Checksum" {
-			sha1 := pr.GetValue().(import5.ImageSha1Checksum)
-
-			sha["hex_digest"] = sha1.HexDigest
-		} else {
-			sha256 := pr.GetValue().(import5.ImageSha256Checksum)
-
-			sha["hex_digest"] = sha256.HexDigest
-		}
-		resList = append(resList, sha)
-		return resList
+	if pr == nil {
+		return nil
 	}
-	return nil
+
+	sha := make(map[string]interface{})
+
+	switch utils.StringValue(pr.ObjectType_) {
+	case "vmm.v4.content.ImageSha1Checksum":
+		sha1, ok := pr.GetValue().(import5.ImageSha1Checksum)
+		if !ok {
+			log.Printf("[ERROR] failed to read sha1 checksum: unexpected value type %T", pr.GetValue())
+			return nil
+		}
+		sha["hex_digest"] = utils.StringValue(sha1.HexDigest)
+		sha["object_type"] = "sha1"
+	case "vmm.v4.content.ImageSha256Checksum":
+		sha256, ok := pr.GetValue().(import5.ImageSha256Checksum)
+		if !ok {
+			log.Printf("[ERROR] failed to read sha256 checksum: unexpected value type %T", pr.GetValue())
+			return nil
+		}
+		sha["hex_digest"] = utils.StringValue(sha256.HexDigest)
+		sha["object_type"] = "sha256"
+	default:
+		log.Printf("[WARN] unsupported checksum object_type %q; ignoring checksum", utils.StringValue(pr.ObjectType_))
+		return nil
+	}
+
+	return []map[string]interface{}{sha}
 }
 
 func flattenOneOfImageSource(pr *import5.OneOfImageSource) []map[string]interface{} {
@@ -319,6 +351,9 @@ func flattenOneOfImageSource(pr *import5.OneOfImageSource) []map[string]interfac
 
 			if vmDiskSrc.ExtId != nil {
 				vmDiskObj["ext_id"] = vmDiskSrc.ExtId
+			}
+			if vmDiskSrc.VmExtId != nil {
+				vmDiskObj["vm_ext_id"] = vmDiskSrc.VmExtId
 			}
 
 			vmDiskObjList = append(vmDiskObjList, vmDiskObj)
@@ -374,8 +409,8 @@ func flattenImagePlacementStatus(pr []import5.ImagePlacementStatus) []interface{
 			img := make(map[string]interface{})
 
 			img["placement_policy_ext_id"] = v.PlacementPolicyExtId
-			img["compliance_status"] = v.ComplianceStatus
-			img["enforcement_mode"] = v.EnforcementMode
+			img["compliance_status"] = common.FlattenPtrEnum(v.ComplianceStatus)
+			img["enforcement_mode"] = common.FlattenPtrEnum(v.EnforcementMode)
 			img["policy_cluster_ext_ids"] = v.PolicyClusterExtIds
 			img["enforced_cluster_ext_ids"] = v.EnforcedClusterExtIds
 			img["conflicting_policy_ext_ids"] = v.ConflictingPolicyExtIds

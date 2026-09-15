@@ -64,7 +64,10 @@ func TestAccV2NutanixRouteTablesDataSource_WithInvalidFilter(t *testing.T) {
 }
 
 func testAccRouteTablesDataSourceConfig(r int) string {
-	return testRouteTableInfoVpc1Config(r) + `data "nutanix_route_tables_v2" "test" {}`
+	return testRouteTableInfoVpc1Config(r) + `
+	data "nutanix_route_tables_v2" "test" {
+		depends_on = [nutanix_vpc_v2.test-1]
+	}`
 }
 
 func testAccRouteTablesDataSourceWithFilterConfig(r int) string {

@@ -74,4 +74,4 @@ resource "nutanix_user_groups_v2" "import_ug" {}
 terraform import nutanix_user_groups_v2.import_ug <UUID>
 ```
 
-See detailed information in [Nutanix Create User Group v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/UserGroups/operation/createUserGroup).
+See detailed information in [Nutanix Create User Group v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/UserGroups/operation/createUserGroup).

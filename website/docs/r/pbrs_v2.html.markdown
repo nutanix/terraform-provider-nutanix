@@ -47,6 +47,7 @@ The following arguments are supported:
 * `priority`: (Required) Priority of the routing policy.
 * `policies`: (Required) Routing Policies.
 * `vpc_ext_id`: (Required) ExtId of the VPC extId to which the routing policy belongs.
+* `project_ext_id`: (Optional) External identifier of the project associated with the Routing Policy.
 
 
 ### policies
@@ -70,9 +71,9 @@ The following arguments are supported:
 * `ipv4`: (Optional) IPv4 Object.
 * `ipv6`: (Optional) IPv6 Object.
 
-### subnet_prefix.ipv4. subnet_prefix.ipv6
-* `ip`: (Required) IP of address
-* `prefix_length`: (Optional) The prefix length of the network to which this host IPv4/IPv6 address belongs.
+### subnet_prefix.ipv4, subnet_prefix.ipv6
+* `ip`: (Required) The base IP address of the subnet (see the `ipv4,ipv6 Configuration format` below). The address's own `prefix_length` is canonicalized by the server to `32` for IPv4 (`128` for IPv6), so set it to that value to avoid a perpetual update-in-place diff.
+* `prefix_length`: (Optional) The subnet mask length (for example, `24`). This is the prefix of the subnet itself and is distinct from the address `ip.prefix_length` above.
 
 
 ### protocol_parameters
@@ -124,6 +125,7 @@ The following attributes are exported:
 * `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 * `metadata`: Metadata associated with this resource.
 * `vpc`: VPC name for projections
+* `project_ext_id`: External identifier of the project associated with the Routing Policy.
 
 ## Import
 This helps to manage existing entities which are not created through terraform. Routing Policy can be imported using the `UUID`.  eg,
@@ -132,4 +134,4 @@ This helps to manage existing entities which are not created through terraform. 
 terraform import nutanix_pbr_v2.pbr_import <UUID>
 `
 
-See detailed information in [Nutanix Routing Policy v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/RoutingPolicies/operation/createRoutingPolicy).
+See detailed information in [Nutanix Routing Policy v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/RoutingPolicies/operation/createRoutingPolicy).

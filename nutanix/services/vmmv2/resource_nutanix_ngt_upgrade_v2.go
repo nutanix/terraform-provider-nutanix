@@ -11,8 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	taskPoll "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import4 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	vmmPrism "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	vmmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
+	import3 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/request/vm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -110,13 +112,9 @@ func ResourceNutanixNGTUpgradeV2Create(ctx context.Context, d *schema.ResourceDa
 
 	extID := d.Get("ext_id")
 
-	readResp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID.(string)))
-	if err != nil {
-		return diag.Errorf("error while fetching Vm : %v", err)
-	}
-	args := make(map[string]interface{})
-	args["If-Match"] = getEtagHeader(readResp, conn)
+	taskconn := meta.(*conns.Client).PrismAPI
 
+	// Build the request body once (it does not depend on the ETag).
 	body := &vmmConfig.GuestToolsUpgradeConfig{}
 
 	if rebootPreference, ok := d.GetOk("reboot_preference"); ok {
@@ -146,29 +144,57 @@ func ResourceNutanixNGTUpgradeV2Create(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	resp, err := conn.VMAPIInstance.UpgradeVmGuestTools(utils.StringPtr(extID.(string)), body, args)
-	if err != nil {
-		return diag.Errorf("error while Upgrading gest tools  : %v", err)
-	}
+	const maxAttempts = 5
+	var taskUUID *string
 
-	TaskRef := resp.Data.GetValue().(vmmPrism.TaskReference)
-	taskUUID := TaskRef.ExtId
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		getGuestToolsByIdRequest := import3.GetGuestToolsByIdRequest{
+			ExtId: utils.StringPtr(extID.(string)),
+		}
+		readResp, err := conn.VMAPIInstance.GetGuestToolsById(ctx, &getGuestToolsByIdRequest)
+		if err != nil {
+			return diag.Errorf("error while fetching Vm : %v", err)
+		}
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(readResp, conn)
 
-	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the NGT upgrade to complete
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
+		upgradeVmGuestToolsRequest := import3.UpgradeVmGuestToolsRequest{
+			ExtId: utils.StringPtr(extID.(string)),
+			Body:  body,
+		}
+		resp, err := conn.VMAPIInstance.UpgradeVmGuestTools(ctx, &upgradeVmGuestToolsRequest, args)
+		if err != nil {
+			return diag.Errorf("error while Upgrading gest tools  : %v", err)
+		}
 
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for NGT upgrade (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
+		TaskRef := resp.Data.GetValue().(vmmPrism.TaskReference)
+		taskUUID = TaskRef.ExtId
+
+		// Wait for the NGT upgrade to complete
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutCreate),
+		}
+
+		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+			if attempt < maxAttempts && isVmmEtagMismatchErr(errWaitTask) {
+				log.Printf("[DEBUG] NGT upgrade failed due to VM ETag mismatch (attempt %d/%d). Retrying with refreshed ETag. Task UUID: %s, error: %s",
+					attempt, maxAttempts, utils.StringValue(taskUUID), errWaitTask)
+				time.Sleep(2 * time.Second)
+				continue
+			}
+			return diag.Errorf("error waiting for NGT upgrade (%s) to complete: %s", utils.StringValue(taskUUID), errWaitTask)
+		}
+		break
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching NGT upgrade task (%s): %v", utils.StringValue(taskUUID), err)
 	}
@@ -191,7 +217,10 @@ func ResourceNutanixNGTUpgradeV2Read(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.Client).VmmAPI
 
 	extID := d.Id()
-	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID))
+	getGuestToolsByIdRequest := import3.GetGuestToolsByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
+	resp, err := conn.VMAPIInstance.GetGuestToolsById(ctx, &getGuestToolsByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Gest Tool : %v", err)
 	}
