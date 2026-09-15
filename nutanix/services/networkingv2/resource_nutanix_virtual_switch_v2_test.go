@@ -280,7 +280,7 @@ func TestAccV2NutanixVirtualSwitchDatasource_ListWithFilters(t *testing.T) {
 }
 
 func TestAccV2NutanixNodeSchedulableStatuses(t *testing.T) {
-	t.skip("Skipping TestAccV2NutanixNodeSchedulableStatuses due to internal error.")
+	t.Skip("Skipping TestAccV2NutanixNodeSchedulableStatuses due to internal error.")
 	datasourceName := "data.nutanix_node_schedulable_statuses_v2.test"
 
 	resource.Test(t, resource.TestCase{
