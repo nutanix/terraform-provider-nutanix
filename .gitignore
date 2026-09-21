@@ -46,3 +46,7 @@ __pycache__/
 # generated run artifacts from the testenv tooling
 testenv/logs/
 testenv/results/
+
+
+# AI generated files
+AGENTS.md
