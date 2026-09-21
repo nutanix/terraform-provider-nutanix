@@ -194,6 +194,19 @@ resource "nutanix_virtual_machine_v2" "test" {
   cluster {
     ext_id = local.clusterExtId
   }
+  disks {
+    disk_address {
+      bus_type = "SCSI"
+      index    = 0
+    }
+
+    backing_info {
+      vm_disk {
+        disk_size_bytes = 1073741824 # 1 GiB
+      }
+    }
+  }
+
   categories {
     ext_id = nutanix_category_v2.synchronous-pp-category.id
   }

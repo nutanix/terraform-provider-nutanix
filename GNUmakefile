@@ -17,13 +17,13 @@ testacc: fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=count
 
 # Acceptance tests with .env loaded (same as /ok-to-test). Loads .env from repo root before running.
-# Output to ACC_TEST_LOG only; summary + coverage appended at end. Matches workflow logic from acceptance-test.yml.
-# Coverage profile: c.out (statement coverage). Also writes coverage-report/coverage.html
-# (same HTML green/red view as CI artifact). Scope follows the run:
-#   make acc-test v4              → cover all *v2 service packages (overall v4)
-#   make acc-test v3              → cover non-*v2 service packages (overall v3)
-#   make acc-test networkingv2    → cover that package only
-#   make acc-test p=iamv2 ...     → cover that package only
+# Output to ACC_TEST_LOG only; summary appended at end. Matches workflow logic from acceptance-test.yml.
+# Coverage (c.out + coverage-report/coverage.html) is generated only when --report is passed.
+# Scope follows the run when reporting:
+#   make acc-test v4 -- --report              → cover all *v2 service packages (overall v4)
+#   make acc-test v3 -- --report              → cover non-*v2 service packages (overall v3)
+#   make acc-test networkingv2 -- --report    → cover that package only
+#   make acc-test p=iamv2 ... -- --report     → cover that package only
 # Usage:
 #   make acc-test networkingv2                                         # all tests in package networkingv2 (auto-detected)
 #   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic    # coverage scoped to that resource file(s)
@@ -31,6 +31,7 @@ testacc: fmtcheck
 #   make acc-test p=networkingv2 TestAccV2NutanixSubnetResource_Basic  # single test in specific package (explicit)
 #   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic o=test_logs_nf.log
 #   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic -- -o test_logs_nf.log
+#   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic -- --report
 #   make acc-test v4                                                   # all TestAccV2Nutanix* tests
 #   make acc-test v3                                                   # all TestAccNutanix* tests
 #   make acc-test TestAccV2NutanixSubnetResource_Basic                 # single test (searches all packages)
@@ -40,15 +41,19 @@ _acc_goals := $(filter-out acc-test,$(MAKECMDGOALS))
 _acc_single := $(if $(filter 1,$(words $(_acc_goals))),$(firstword $(_acc_goals)),)
 ACC_TEST_LOG ?= $(if $(o),$(o),$(if $(_acc_single),test_output_$(_acc_single).log,test_output.log))
 ACC_COVER_PROFILE ?= c.out
+# ACC_TEST_LOG sanitization: regex/multi-test -run patterns are unsafe as filenames.
 acc-test:
 	@bash -c '\
 		logfile="$(ACC_TEST_LOG)"; \
+		case "$$logfile" in *[\|\*\?\(\)\[\]\{\}\\]*|*" "*) logfile="test_output.log" ;; esac; \
+		if [ "$${#logfile}" -gt 180 ]; then logfile="test_output.log"; fi; \
 		cover_profile="$(ACC_COVER_PROFILE)"; \
 		args="$(filter-out acc-test,$(MAKECMDGOALS))"; \
 		package_path="./..."; \
 		run_flag=""; \
 		cover_scope=""; \
 		scope_label=""; \
+		want_report=0; \
 		expect_log_arg=0; \
 		[ -f .env ] && set -a && . ./.env && set +a; \
 		export TF_ACC=1 GOTRACEBACK=all GOFLAGS="-mod=mod"; \
@@ -66,6 +71,7 @@ acc-test:
 				--) continue ;; \
 				-o|--output) expect_log_arg=1; continue ;; \
 				-o=*|--output=*) logfile="$${arg#*=}"; continue ;; \
+				--report|-report) want_report=1; continue ;; \
 			esac; \
 			if [ -d "nutanix/services/$$arg" ]; then \
 				package_path="./nutanix/services/$$arg"; \
@@ -94,33 +100,35 @@ acc-test:
 			exit 1; \
 		fi; \
 		coverpkg=""; \
-		if [ "$$package_path" != "./..." ]; then \
-			coverpkg="$$package_path"; \
-			scope_label="package $$package_path"; \
-		else \
-			case "$$cover_scope" in \
-				v4) \
-					for d in nutanix/services/*v2; do \
-						[ -d "$$d" ] || continue; \
-						coverpkg="$${coverpkg:+$$coverpkg,}./$$d"; \
-					done; \
-					scope_label="overall v4 v2 service packages"; \
-					;; \
-				v3) \
-					for d in nutanix/services/*; do \
-						[ -d "$$d" ] || continue; \
-						case "$$d" in *v2) continue ;; esac; \
-						coverpkg="$${coverpkg:+$$coverpkg,}./$$d"; \
-					done; \
-					scope_label="overall v3 non-v2 service packages"; \
-					;; \
-				lcm) coverpkg="./nutanix/services/lcmv2"; scope_label="package ./nutanix/services/lcmv2" ;; \
-				era) coverpkg="./nutanix/services/ndb"; scope_label="package ./nutanix/services/ndb" ;; \
-				foundation) coverpkg="./nutanix/services/foundation"; scope_label="package ./nutanix/services/foundation" ;; \
-				foundation_central) coverpkg="./nutanix/services/foundationCentral"; scope_label="package ./nutanix/services/foundationCentral" ;; \
-				karbon) coverpkg="./nutanix/services/nke"; scope_label="package ./nutanix/services/nke" ;; \
-				*) coverpkg="./..."; scope_label="all packages" ;; \
-			esac; \
+		if [ "$$want_report" = "1" ]; then \
+			if [ "$$package_path" != "./..." ]; then \
+				coverpkg="$$package_path"; \
+				scope_label="package $$package_path"; \
+			else \
+				case "$$cover_scope" in \
+					v4) \
+						for d in nutanix/services/*v2; do \
+							[ -d "$$d" ] || continue; \
+							coverpkg="$${coverpkg:+$$coverpkg,}./$$d"; \
+						done; \
+						scope_label="overall v4 v2 service packages"; \
+						;; \
+					v3) \
+						for d in nutanix/services/*; do \
+							[ -d "$$d" ] || continue; \
+							case "$$d" in *v2) continue ;; esac; \
+							coverpkg="$${coverpkg:+$$coverpkg,}./$$d"; \
+						done; \
+						scope_label="overall v3 non-v2 service packages"; \
+						;; \
+					lcm) coverpkg="./nutanix/services/lcmv2"; scope_label="package ./nutanix/services/lcmv2" ;; \
+					era) coverpkg="./nutanix/services/ndb"; scope_label="package ./nutanix/services/ndb" ;; \
+					foundation) coverpkg="./nutanix/services/foundation"; scope_label="package ./nutanix/services/foundation" ;; \
+					foundation_central) coverpkg="./nutanix/services/foundationCentral"; scope_label="package ./nutanix/services/foundationCentral" ;; \
+					karbon) coverpkg="./nutanix/services/nke"; scope_label="package ./nutanix/services/nke" ;; \
+					*) coverpkg="./..."; scope_label="all packages" ;; \
+				esac; \
+			fi; \
 		fi; \
 		: > "$$logfile"; \
 		echo "==> Loading .env and running acceptance tests (output to $$logfile only; summary at end)..." >> "$$logfile"; \
@@ -138,20 +146,27 @@ acc-test:
 		fi; \
 		echo "==> TESTARGS = $$test_args" >> "$$logfile"; \
 		echo "==> Package path = $$package_path" >> "$$logfile"; \
-		echo "==> Cover profile = $$cover_profile" >> "$$logfile"; \
-		echo "==> Coverpkg = $$coverpkg" >> "$$logfile"; \
-		echo "==> Coverage scope = $$scope_label" >> "$$logfile"; \
-		rm -f "$$cover_profile"; \
-		go test "$$package_path" -v $$test_args -timeout 500m -count=1 -mod=mod \
-			-coverprofile="$$cover_profile" -covermode=atomic -coverpkg="$$coverpkg" \
+		cover_args=""; \
+		if [ "$$want_report" = "1" ]; then \
+			echo "==> Cover profile = $$cover_profile" >> "$$logfile"; \
+			echo "==> Coverpkg = $$coverpkg" >> "$$logfile"; \
+			echo "==> Coverage scope = $$scope_label" >> "$$logfile"; \
+			rm -f "$$cover_profile"; \
+			cover_args="-coverprofile=$$cover_profile -covermode=atomic -coverpkg=$$coverpkg"; \
+		else \
+			echo "==> Coverage report skipped (pass --report to generate)" >> "$$logfile"; \
+		fi; \
+		go test "$$package_path" -v $$test_args -timeout 500m -count=1 -mod=mod $$cover_args \
 			2>&1 | while IFS= read -r line; do echo "$$line" >> "$$logfile"; done; \
 		if [ -f "$$logfile" ] && grep -qE "^--- (PASS|FAIL|SKIP):" "$$logfile" 2>/dev/null; then \
 			"$(CURDIR)/scripts/acc-test-summary.sh" "$$logfile"; \
 		fi; \
-		"$(CURDIR)/scripts/report-acc-coverage.sh" "$$cover_profile" "$$logfile" "$$scope_label" "$${run_flag:-.}" "$$package_path"; \
 		echo "==> Log file: $$logfile"; \
-		echo "==> Coverage profile: $$cover_profile"; \
-		echo "==> Coverage HTML: coverage-report/coverage.html"'
+		if [ "$$want_report" = "1" ]; then \
+			"$(CURDIR)/scripts/report-acc-coverage.sh" "$$cover_profile" "$$logfile" "$$scope_label" "$${run_flag:-.}" "$$package_path"; \
+			echo "==> Coverage profile: $$cover_profile"; \
+			echo "==> Coverage HTML: coverage-report/coverage.html"; \
+		fi'
 
 # Format and check targets: defined before the % pattern so "make fmt" runs only fmt, not acc-test.
 fmt:
