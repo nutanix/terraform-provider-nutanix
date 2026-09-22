@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Cloud Platform.
 
-NOTE: The latest version of the Nutanix provider is [v2.4.2](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.4.2).
+NOTE: The latest version of the Nutanix provider is [v2.5.0](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.5.0).
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 
@@ -19,52 +19,66 @@ Modules based on Terraform Nutanix Provider can be found here : [Modules](https:
 
 ### Requirements
 * [Terraform](https://www.terraform.io/downloads.html) 0.12+
-* [Go](https://golang.org/doc/install) 1.17+ (to build the provider plugin)
+* [Go](https://golang.org/doc/install) 1.25.13 (to build the provider plugin)
 * This provider uses [SDKv2](https://www.terraform.io/plugin/sdkv2/sdkv2-intro) from release 1.3.0
 
-## Introducing Nutanix Terraform Provider Version v2.4.2
+## Introducing Nutanix Terraform Provider Version v2.5.0
 
-We're excited to announce the release of Nutanix Terraform Provider Version 2.4.2!
+We're excited to announce the release of Nutanix Terraform Provider Version 2.5.0!
 
-### What's New in v2.4.2
+### What's New in v2.5.0
 
 - **New Resource Support**
-  - **Network Functions (Networking)**: Create and manage Network Functions for service chaining and traffic forwarding use cases. [#982](https://github.com/nutanix/terraform-provider-nutanix/issues/982)
-  - **Entity Groups (Flow Management)**: Create and manage Entity Groups for microsegmentation use cases. [#1030](https://github.com/nutanix/terraform-provider-nutanix/issues/1030)
-  - **Entities (IAM)**: List and get IAM entities. Use Entities to configure and manage entities representing the resources over which permissions are defined. Users can use these datasource to list and fetch entities [#955](https://github.com/nutanix/terraform-provider-nutanix/issues/955)
-  - **Network Security Policy Rules (Flow Management)**: List all network security policy rules by policy ExtID. [#1031](https://github.com/nutanix/terraform-provider-nutanix/issues/1031)
-  - **VM Affinity Policies (VMM)**: Create, list, and get VM-Host affinity and VM-VM anti-affinity policies. Use VM Affinity Policies to govern where VMs run by specifying whether a VM should run on a selected set of hosts, or by keeping specified VMs apart on different hosts. Users can use these resources and data sources to configure, list, and fetch affinity policies [#997](https://github.com/nutanix/terraform-provider-nutanix/pull/997)
+  - **Cluster Category Associations (Cluster Management)**: Create and manage cluster-category associations to tag clusters for organization and automation. [#1228](https://github.com/nutanix/terraform-provider-nutanix/issues/1228)
+  - **SNMP (Cluster Management)**: Create, update, read, and delete SNMP configurations, SNMP traps, and SNMP users on clusters for monitoring and alerting.
+  - **Role Membership (IAM)**: Manage role membership assignments for users and user groups.
+  - **Directory Server Config (Microsegmentation)**: Create, update, read, and delete directory server configurations for microsegmentation policies.
+  - **AD Group Category Mapping (Microsegmentation)**: Manage Active Directory group to category mappings for microsegmentation.
+  - **Network Security Policy Import/Export (Microsegmentation)**: Import and export network security policies for backup and migration workflows.
+  - **Projects (Multidomain)**: Create, update, read, and delete Projects for resource isolation and multi-tenancy.
+  - **Resource Groups (Multidomain)**: Create, update, read, and delete Resource Groups for organizing resources.
+  - **Virtual Switch (Networking)**: Create, update, read, and delete Virtual Switches for network traffic management.
+  - **VPC Virtual Switch Mapping (Networking)**: Map VPCs to Virtual Switches.
+  - **VM Guest Customization Profile (VMM)**: Create, update, read, and delete guest customization profiles for virtual machines.
+  - **VM Startup Policy (VMM)**: Create, update, read, and delete VM startup policies for controlling VM power-on sequencing.
+  - **Image Rate Limit Policy (VMM)**: Create, update, read, and delete image rate limit policies.
+  - **Template Placement Policy (VMM)**: Create, update, read, and delete template placement policies.
 
 - **Enhancements:**
-  - **Deploy from OVA (VMM)**: Add support to update deployed virtual machines from OVA images. [#985](https://github.com/nutanix/terraform-provider-nutanix/pull/985)
-  - FNS 5.2: Add support for global scope, specific intratier rules, and subnet/VPC-based objects features. [#1032](https://github.com/nutanix/terraform-provider-nutanix/issues/1032)
-  - Support metadata on subnet V2 resource and data source. [#1085](https://github.com/nutanix/terraform-provider-nutanix/issues/1085)
-  - API key and custom headers as an alternative method of authorization. [#1062](https://github.com/nutanix/terraform-provider-nutanix/pull/1062)
+  - Add `is_global` attribute to Roles for global role configuration. [#1234](https://github.com/nutanix/terraform-provider-nutanix/issues/1234)
+  - Add `is_global` attribute to Authorization Policies V2 for global scope support. [#1230](https://github.com/nutanix/terraform-provider-nutanix/issues/1230)
+  - Add categories support to Subnets via Terraform. [#1218](https://github.com/nutanix/terraform-provider-nutanix/issues/1218)
+  - NGT ISO INSERT/Eject is now a no-op if the ISO is already ejected as part of NGT installation or custom eject. [#1220](https://github.com/nutanix/terraform-provider-nutanix/issues/1220)
+  - Fix legacy boot order changes in VMs. [#1217](https://github.com/nutanix/terraform-provider-nutanix/issues/1217)
+  - VM Anti-Affinity Policy now supports Project Association. [#997](https://github.com/nutanix/terraform-provider-nutanix/pull/997)
+  - Enhance VM shutdown and reboot actions with retry logic for ETag mismatch errors.
+  - Add `dry_run` option to LCM prechecks schema for improved flexibility.
+  - Upgrade to Janus SDKs for improved API client reliability.
+  - Set `enable_directory_and_identity_provider_shortlist` explicitly to use Prism Central's default.
+  - Remediate Black Duck vulnerabilities by upgrading `golang.org/x/crypto` and `golang.org/x/net`.
 
 - **Fixed Bugs:**
-   - `subnets_v2` update with `is_external` set to `true` fails. [#1063](https://github.com/nutanix/terraform-provider-nutanix/issues/1063)
-   - `nutanix_vpc_v2`: Unable to add more than one external routable prefix. [#1053](https://github.com/nutanix/terraform-provider-nutanix/issues/1053)
-   - Legacy NIC attributes in VMM v2 are still used across resources and data sources. [#1059](https://github.com/nutanix/terraform-provider-nutanix/issues/1059)
-   - `nutanix_network_security_policy_v2`: Failed to add a rule on an existing security policy. [#1052](https://github.com/nutanix/terraform-provider-nutanix/issues/1052)
-   - Add retries for VM power on/off operations in `nutanix_virtual_machine_v2` to avoid ETag mismatch errors. [#1089](https://github.com/nutanix/terraform-provider-nutanix/issues/1089)
-   - Bug: can not create global Nutanix security policy, defaults to VLAN. [#1087](https://github.com/nutanix/terraform-provider-nutanix/issues/1087)
-   - `nutanix_object_store_v2` update functionality. [#1094](https://github.com/nutanix/terraform-provider-nutanix/issues/1094)
-   - `nutanix_object_store_v2` gives no Terraform error on long name. [#1093](https://github.com/nutanix/terraform-provider-nutanix/issues/1093)
-   - `nutanix_user_key_v2` update tries to recreate the key object. [#1092](https://github.com/nutanix/terraform-provider-nutanix/issues/1092)
-  - Update of Guest Customization leads to delete and recreate of virtual machine resource. [#1108](https://github.com/nutanix/terraform-provider-nutanix/issues/1108)
-   - Memory hot-plug increase causing VM power off when using `nutanix_virtual_machine_v2` resource. [#1105](https://github.com/nutanix/terraform-provider-nutanix/issues/1105)
-   - Mark user key secrets as sensitive and persist `key_details` on create. [#1112](https://github.com/nutanix/terraform-provider-nutanix/issues/1112)
+  - ICMP `is_all_allowed` wildcard rejected by microseg v4.2 API. [#1185](https://github.com/nutanix/terraform-provider-nutanix/issues/1185)
+  - Allow `secured_group_entity_group_reference` on network security policy rules. [#1184](https://github.com/nutanix/terraform-provider-nutanix/issues/1184)
+  - Fix `nutanix_recovery_plan` parameters configuration and multi-stage network mapping. [#941](https://github.com/nutanix/terraform-provider-nutanix/issues/941)
+  - Revert "Remove ETag dependency from VM $action endpoints in AHV V4 APIs" — restore ETag for reliability. [#1233](https://github.com/nutanix/terraform-provider-nutanix/pull/1233)
+  - Fix LCM `release_date` formatting as a string in available versions. [#1213](https://github.com/nutanix/terraform-provider-nutanix/issues/1213)
+  - Fix multidomain SDK client initialization.
+  - Fix project create/update issues with IRIS PC-Latest Provider.
+  - Return empty slice instead of nil in flatten functions for category creation and sharing.
+  - Update dependencies to latest versions in `go.mod` and `go.sum`.
 
 ### Software Requirements
-The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.4.2, ensure your Nutanix environment meets the following software requirements:
+The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.5.0, ensure your Nutanix environment meets the following software requirements:
 - Self Service version: 4.3.1 (Required only for running Self Service based resource and data source)
 - AOS Version: 7.5, 7.5.1
 - Prism Central Version: 7.5, 7.5.1 or later
-- Nutanix Terraform Provider Version: 2.4.2
+- Nutanix Terraform Provider Version: 2.5.0
 
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
+| 2.5.0 | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
 | 2.4.2 | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
 | 2.4.1 (⚠️ Deprecated/Invalid) | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
 | 2.4.0 | 7.5 | pc7.5 or later | Self Service  v4.3.0 | yes |
@@ -305,6 +319,23 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | - | nutanix_ssl_certificate_v2 |
 | - | nutanix_cluster_profile_v2 |
 | - | nutanix_storage_policy_v2 |
+| - | nutanix_cluster_category_associations_v2 |
+| - | nutanix_snmp_config_v2 |
+| - | nutanix_snmp_trap_v2 |
+| - | nutanix_snmp_user_v2 |
+| - | nutanix_role_membership_v2 |
+| - | nutanix_directory_server_config_v2 |
+| - | nutanix_ad_group_category_mapping_v2 |
+| - | nutanix_network_security_policy_export_v2 |
+| - | nutanix_network_security_policy_import_v2 |
+| - | nutanix_project_v2 |
+| - | nutanix_resource_group_v2 |
+| - | nutanix_virtual_switch_v2 |
+| - | nutanix_vpc_virtual_switch_mapping_v2 |
+| - | nutanix_vm_guest_customization_profile_v2 |
+| - | nutanix_vm_startup_policy_v2 |
+| - | nutanix_image_rate_limit_policy_v2 |
+| - | nutanix_template_placement_policy_v2 |
 
 
 
@@ -463,6 +494,43 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | - | nutanix_cluster_profiles_v2 |
 | - | nutanix_storage_policy_v2 |
 | - | nutanix_storage_policies_v2 |
+| - | nutanix_snmp_config_v2 |
+| - | nutanix_snmp_trap_v2 |
+| - | nutanix_snmp_user_v2 |
+| - | nutanix_directory_server_config_v2 |
+| - | nutanix_directory_server_configs_v2 |
+| - | nutanix_directory_service_users_search_v2 |
+| - | nutanix_ad_group_category_mapping_v2 |
+| - | nutanix_ad_group_category_mappings_v2 |
+| - | nutanix_role_membership_v2 |
+| - | nutanix_role_memberships_v2 |
+| - | nutanix_role_membership_summary_v2 |
+| - | nutanix_project_v2 |
+| - | nutanix_projects_v2 |
+| - | nutanix_resource_group_v2 |
+| - | nutanix_resource_groups_v2 |
+| - | nutanix_virtual_switch_v2 |
+| - | nutanix_virtual_switches_v2 |
+| - | nutanix_node_schedulable_statuses_v2 |
+| - | nutanix_vpc_virtual_switch_mappings_v2 |
+| - | nutanix_vm_guest_customization_profile_v2 |
+| - | nutanix_vm_guest_customization_profiles_v2 |
+| - | nutanix_vm_startup_policy_v2 |
+| - | nutanix_vm_startup_policies_v2 |
+| - | nutanix_vm_startup_policy_dependency_conflict_v2 |
+| - | nutanix_vm_startup_policy_dependency_conflicts_v2 |
+| - | nutanix_vm_startup_policy_dependency_conflict_dependee_vms_v2 |
+| - | nutanix_vm_startup_policy_dependency_conflict_dependent_vms_v2 |
+| - | nutanix_vm_startup_policy_start_condition_conflict_v2 |
+| - | nutanix_vm_startup_policy_start_condition_conflicts_v2 |
+| - | nutanix_vm_startup_policy_start_condition_conflict_dependee_vms_v2 |
+| - | nutanix_vm_startup_policy_start_condition_conflict_dependent_vms_v2 |
+| - | nutanix_vm_startup_policy_vm_compliance_states_v2 |
+| - | nutanix_effective_image_rate_limit_policies_v2 |
+| - | nutanix_image_rate_limit_policies_v2 |
+| - | nutanix_image_rate_limit_policy_v2 |
+| - | nutanix_template_placement_policies_v2 |
+| - | nutanix_template_placement_policy_v2 |
 
 
 
