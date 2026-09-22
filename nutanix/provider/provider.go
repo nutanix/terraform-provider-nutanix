@@ -72,6 +72,8 @@ func Provider() *schema.Provider {
 			"individual CVM address, as this would cause calls to fail during\n" +
 			"cluster lifecycle management operations, such as AOS upgrades.",
 
+		"proxy_url": "URL of an HTTP/HTTPS proxy to route all Nutanix API requests through.",
+
 		"foundation_endpoint": "endpoint for foundation VM (eg. Foundation VM IP)",
 
 		"foundation_port": "Port for foundation VM",
