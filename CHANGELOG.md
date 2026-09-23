@@ -1,7 +1,11 @@
+# Changelog
+
 ## 2.5.0
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.4.2...v2.5.0)
 
 **New Features:**
+
 - **Cluster Category Associations (Cluster Management)**: Create and manage cluster-category associations (`nutanix_cluster_category_associations_v2`) to tag clusters for organization and automation. [#1228](https://github.com/nutanix/terraform-provider-nutanix/issues/1228)
 - **SNMP (Cluster Management)**: Create, update, read, and delete SNMP configurations, SNMP traps, and SNMP users on clusters (`nutanix_snmp_config_v2`, `nutanix_snmp_trap_v2`, `nutanix_snmp_user_v2`) for monitoring and alerting. [#1135](https://github.com/nutanix/terraform-provider-nutanix/issues/1135)
 - **Role Membership (IAM)**: Manage role membership assignments for users and user groups (`nutanix_role_membership_v2`).
@@ -18,6 +22,7 @@
 - **Template Placement Policy (VMM)**: Create, update, read, and delete template placement policies (`nutanix_template_placement_policy_v2`).
 
 **Enhancements:**
+
 - Add support for Project Share / Unshare / Association across entities (Projects 2.0 model where each entity owns its project association). [#1114](https://github.com/nutanix/terraform-provider-nutanix/issues/1114)
 - Support Update Context for Volume Groups. [#1129](https://github.com/nutanix/terraform-provider-nutanix/issues/1129)
 - Add `is_global` attribute to Roles for global role configuration. [#1234](https://github.com/nutanix/terraform-provider-nutanix/issues/1234)
@@ -42,17 +47,19 @@
 - Remediate Black Duck vulnerabilities by upgrading `golang.org/x/crypto` and `golang.org/x/net`. [#1245](https://github.com/nutanix/terraform-provider-nutanix/issues/1245)
 
 **Fixed Bugs:**
+
 - Fix `nutanix_images_v2` crash when checksum is defined. [#1143](https://github.com/nutanix/terraform-provider-nutanix/issues/1143)
 - Fix `nutanix_images_v2` timeout during large image download/creation so `wait_timeout` is respected. [#1144](https://github.com/nutanix/terraform-provider-nutanix/issues/1144)
 - Fix `nutanix_images_v2` failure when an image placement policy is defined. [#1175](https://github.com/nutanix/terraform-provider-nutanix/issues/1175)
 - Fix `nutanix_vm_clone_v2` not respecting the NIC configuration block. [#972](https://github.com/nutanix/terraform-provider-nutanix/issues/972)
 - Fix disk size increase not applying on `nutanix_volume_group_v2`. [#840](https://github.com/nutanix/terraform-provider-nutanix/issues/840)
 
-
 ## 2.4.2(April 15, 2026)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.4.0...v2.4.2)
 
 **New Features:**
+
 - **Network Functions (Networking)**: Create and manage Network Functions for service chaining and traffic forwarding use cases. [#982](https://github.com/nutanix/terraform-provider-nutanix/issues/982)
 - **Entity Groups (Flow Management)**: Create and manage Entity Groups for microsegmentation use cases. [#1030](https://github.com/nutanix/terraform-provider-nutanix/issues/1030)
 - **Entities (IAM)**: List and get IAM entities. Use Entities to configure and manage entities representing the resources over which permissions are defined. Users can use these datasource to list and fetch entities [#955](https://github.com/nutanix/terraform-provider-nutanix/issues/955)
@@ -60,12 +67,14 @@
 - **VM Affinity Policies (VMM)**: Create, list, and get VM-Host affinity and VM-VM anti-affinity policies. Use VM Affinity Policies to govern where VMs run by specifying whether a VM should run on a selected set of hosts, or by keeping specified VMs apart on different hosts. Users can use these resources and data sources to configure, list, and fetch affinity policies [#997](https://github.com/nutanix/terraform-provider-nutanix/pull/997)
 
 **Enhancements:**
+
 - **Deploy from OVA (VMM)**: Add support to update deployed virtual machines from OVA images. [#985](https://github.com/nutanix/terraform-provider-nutanix/pull/985)
 - FNS 5.2: Add support for global scope, specific intratier rules, and subnet/VPC-based objects features. [#1032](https://github.com/nutanix/terraform-provider-nutanix/issues/1032)
 - Support metadata on subnet V2 resource and data source. [#1085](https://github.com/nutanix/terraform-provider-nutanix/issues/1085)
 - API key and custom headers as an alternative method of authorization. [#1062](https://github.com/nutanix/terraform-provider-nutanix/pull/1062)
 
 **Fixed Bugs:**
+
 - `subnets_v2` update with `is_external` set to `true` fails. [#1063](https://github.com/nutanix/terraform-provider-nutanix/issues/1063)
 - `nutanix_vpc_v2`: Unable to add more than one external routable prefix. [#1053](https://github.com/nutanix/terraform-provider-nutanix/issues/1053)
 - Legacy NIC attributes in VMM v2 are still used across resources and data sources. [#1059](https://github.com/nutanix/terraform-provider-nutanix/issues/1059)
@@ -79,11 +88,12 @@
 - Memory hot-plug increase causing VM power off when using `nutanix_virtual_machine_v2` resource. [#1105](https://github.com/nutanix/terraform-provider-nutanix/issues/1105)
 - Mark user key secrets as sensitive and persist `key_details` on create. [#1112](https://github.com/nutanix/terraform-provider-nutanix/issues/1112)
 
-
 ## 2.4.1 (April 15, 2026) **Invalid Release**
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.4.0...v2.4.1)
 
 **New Features:**
+
 - **Network Functions (Networking)**: Create and manage Network Functions for service chaining and traffic forwarding use cases. [#982](https://github.com/nutanix/terraform-provider-nutanix/issues/982)
 - **Entity Groups (Flow Management)**: Create and manage Entity Groups for microsegmentation use cases. [#1030](https://github.com/nutanix/terraform-provider-nutanix/issues/1030)
 - **Entities (IAM)**: List and get IAM entities. Use Entities to configure and manage entities representing the resources over which permissions are defined. Users can use these datasource to list and fetch entities [#955](https://github.com/nutanix/terraform-provider-nutanix/issues/955)
@@ -91,12 +101,14 @@
 - **VM Affinity Policies (VMM)**: Create, list, and get VM-Host affinity and VM-VM anti-affinity policies. Use VM Affinity Policies to govern where VMs run by specifying whether a VM should run on a selected set of hosts, or by keeping specified VMs apart on different hosts. Users can use these resources and data sources to configure, list, and fetch affinity policies [#997](https://github.com/nutanix/terraform-provider-nutanix/pull/997)
 
 **Enhancements:**
+
 - **Deploy from OVA (VMM)**: Add support to update deployed virtual machines from OVA images. [#985](https://github.com/nutanix/terraform-provider-nutanix/pull/985)
 - FNS 5.2: Add support for global scope, specific intratier rules, and subnet/VPC-based objects features. [#1032](https://github.com/nutanix/terraform-provider-nutanix/issues/1032)
 - Support metadata on subnet V2 resource and data source. [#1085](https://github.com/nutanix/terraform-provider-nutanix/issues/1085)
 - API key and custom headers as an alternative method of authorization. [#1062](https://github.com/nutanix/terraform-provider-nutanix/pull/1062)
 
 **Fixed Bugs:**
+
 - `subnets_v2` update with `is_external` set to `true` fails. [#1063](https://github.com/nutanix/terraform-provider-nutanix/issues/1063)
 - `nutanix_vpc_v2`: Unable to add more than one external routable prefix. [#1053](https://github.com/nutanix/terraform-provider-nutanix/issues/1053)
 - Legacy NIC attributes in VMM v2 are still used across resources and data sources. [#1059](https://github.com/nutanix/terraform-provider-nutanix/issues/1059)
@@ -111,9 +123,11 @@
 - Mark user key secrets as sensitive and persist `key_details` on create. [#1112](https://github.com/nutanix/terraform-provider-nutanix/issues/1112)
 
 ## 2.4.0 (January 8, 2026)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.4...v2.4.0)
 
 **New Features:**
+
 - **Key Management Server (Security)**: Create, Update, Read and Delete Key Management Servers secure data encryption keys when encryption is enabled.
 - **Security Technical Implementation Guide controls details (Security)**: Fetch the STIG controls details for STIG rules on each cluster.
 - **SSL Certification (Cluster Management)**: Provides the ability to manage SSL certificates for clusters. This includes the ability to retrieve and update SSL certificates for clusters.
@@ -123,45 +137,53 @@
 - **Storage Policies (Data Policies)**: Create, Update, Read and Delete Storage Policy which helps in ease of storage management at scale.
 
 **Enhancements:**
+
 - Add Support for Package-Specific Acceptance Tests via /ok-to-test -p Command [#1014](https://github.com/nutanix/terraform-provider-nutanix/issues/1014)
 - Centralize task entity type and completion detail constants for reliable UUID extraction [#1029](https://github.com/nutanix/terraform-provider-nutanix/issues/1029)
 
 **Fixed Bugs:**
+
 - Unable to list VPC using data "nutanix_vpcs_v2" "list_vpcs" [#1000](https://github.com/nutanix/terraform-provider-nutanix/issues/1000)
 - virtual_machine_v2: VM creation fails with multiple NICs ("invalid input arguments") [#994](https://github.com/nutanix/terraform-provider-nutanix/issues/994)
 - V3: Project: Revisit the Project Module resources [#962](https://github.com/nutanix/terraform-provider-nutanix/issues/962)
-    - Projects: ACP: Order changes in API response lead to data inconsistency in state file. [#1042](https://github.com/nutanix/terraform-provider-nutanix/issues/1042)
-    - Projects: ACP: Removing a ACP causing index shifting issues. [#1044](https://github.com/nutanix/terraform-provider-nutanix/issues/1044)
-    - Project: ACP: Adding a new user or new user group to existing ACP is failed. [#1043](https://github.com/nutanix/terraform-provider-nutanix/issues/1043)
+  - Projects: ACP: Order changes in API response lead to data inconsistency in state file. [#1042](https://github.com/nutanix/terraform-provider-nutanix/issues/1042)
+  - Projects: ACP: Removing a ACP causing index shifting issues. [#1044](https://github.com/nutanix/terraform-provider-nutanix/issues/1044)
+  - Project: ACP: Adding a new user or new user group to existing ACP is failed. [#1043](https://github.com/nutanix/terraform-provider-nutanix/issues/1043)
 - Bug Report: resource "nutanix_user_groups_v2" [#947](https://github.com/nutanix/terraform-provider-nutanix/issues/947)
 
 **Breaking Changes:**
+
 - From PC version 7.5 onwards, the resource domain is not supported by Projects API. As a result, Terraform support for this functionality (resource_domain attribute) has been removed starting with the 2.4.0 release. [#1049](https://github.com/nutanix/terraform-provider-nutanix/issues/1049)
 
 ## 2.3.4 (November 14, 2025)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.3...v2.3.4)
 
 - **Enhancements:**
   - Support for Ejecting ISO from CD-ROM [\#1006](https://github.com/nutanix/terraform-provider-nutanix/issues/1006)
 
 - **Fixed Bugs:**
-   - Subnet entity is not saved in Terraform State due to plugin crash [\#894](https://github.com/nutanix/terraform-provider-nutanix/issues/894)
+  - Subnet entity is not saved in Terraform State due to plugin crash [\#894](https://github.com/nutanix/terraform-provider-nutanix/issues/894)
 
 ## 2.3.3 (November 4, 2025)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.2...v2.3.3)
 
 **Fixed Bugs:**
+
 - Documentation fix to show guides in Terraform provider docs [#1002](https://github.com/nutanix/terraform-provider-nutanix/issues/1002)
 
-
 ## 2.3.2 (November 3, 2025)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.3.1...v2.3.2)
 
 **New Features:**
+
 - Ovas [\#852](https://github.com/nutanix/terraform-provider-nutanix/issues/852)
 - Password Manager [\#873](https://github.com/nutanix/terraform-provider-nutanix/issues/873)
 
 **Enhancements:**
+
 - Support of import for all V2 resources [\#988](https://github.com/nutanix/terraform-provider-nutanix/issues/988)
 - Project Association with VM for V2 resource [\#807](https://github.com/nutanix/terraform-provider-nutanix/issues/807)
 - Cluster Expansion using clusters_v2 resource [\#976](https://github.com/nutanix/terraform-provider-nutanix/issues/976)
@@ -169,6 +191,7 @@
 - Support for object lite source in Images [\#990](https://github.com/nutanix/terraform-provider-nutanix/issues/990)
 
 **Fixed Bugs:**
+
 - Add a clear documentation for cluster delete [\#977](https://github.com/nutanix/terraform-provider-nutanix/issues/977)
 - Show warning if cluster is not registered to the PC [\#974](https://github.com/nutanix/terraform-provider-nutanix/issues/974)
 - Resource: nutanix_users_v2: Password exposed in state file, Show Warning in case of delete, Documentation changes for using users_v2 resource [\#949](https://github.com/nutanix/terraform-provider-nutanix/issues/949)
@@ -180,11 +203,12 @@
 - nutanix_network_security_policy_v2 error: The terraform-provider-nutanix_v2.3.1 plugin crashed! [\#935](https://github.com/nutanix/terraform-provider-nutanix/issues/935)
 - nutanix_volume_group_disk_v2 encounters panic when updating disk_size_bytes [\#866](https://github.com/nutanix/terraform-provider-nutanix/issues/886)
 
-
 ## 2.3.0 (July 17, 2025)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.2.1...v2.3.0)
 
 **New Features:**
+
 - Objects [\#864](https://github.com/nutanix/terraform-provider-nutanix/issues/864)
   - CRUD for objects
   - Resource for SSL Certificate
@@ -198,14 +222,16 @@
   - Resource to revoke User API Key
 
 ## 2.2.1 (June 30, 2025)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.2.0...v2.2.1)
 
 **Implemented enhancements:**
+
 - Add support for import of resource nutanix_pbr_v2 [\#844](https://github.com/nutanix/terraform-provider-nutanix/issues/844)
 - Add support for import of resource nutanix_users_v2 [\#847](https://github.com/nutanix/terraform-provider-nutanix/issues/847)
 
-
 **Fixed bugs:**
+
 - nutanix_virtual_machine_v2 cannot read guest customization config for windows [\#791](https://github.com/nutanix/terraform-provider-nutanix/issues/791)
 - nutanix_self_service_app_provision destroy operation returns before resource is fully destroyed [\#831](https://github.com/nutanix/terraform-provider-nutanix/issues/831)
 - ip_endpoint_list type is mandatory even if documentation says the opposite [\#669](https://github.com/nutanix/terraform-provider-nutanix/issues/669)
@@ -225,78 +251,85 @@
 - data nutanix_virtual_machine doesn't return ip_address attribute [\#306](https://github.com/nutanix/terraform-provider-nutanix/issues/306)
 
 ## 2.2.0 (April 17, 2025)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.1.1...v2.2.0)
 
 **New Feature:**
+
 - Terraform plugin support for Self Service [\#826](https://github.com/nutanix/terraform-provider-nutanix/issues/826)
   - Launch a Blueprint (Provision an application)
-    - Launch without runtime editable
-    - Launch with runtime editable on substrate list (change vcpu, numsocket, memory size while launching)
+  - Launch without runtime editable
+  - Launch with runtime editable on substrate list (change vcpu, numsocket, memory size while launching)
   - System Actions Execution on Application
-    - Start an application
-    - Stop an application
-    - Soft delete an application
-    - Delete an application
+  - Start an application
+  - Stop an application
+  - Soft delete an application
+  - Delete an application
   - Custom actions execution
   - Update an application (via patch configs)
-    - Update vCPUs/num_sockets (with runtime editable support)
-    - Update Memory (with runtime editable support)
-    - Update cores-per-vCPU/num_vcpus_per_socket (with runtime editable support)
-    - Update categories (with runtime editable support)
-    - Add a nic (with runtime editable support using nic UUID)
-    - Disk addition (with runtime editable)
+  - Update vCPUs/num_sockets (with runtime editable support)
+  - Update Memory (with runtime editable support)
+  - Update cores-per-vCPU/num_vcpus_per_socket (with runtime editable support)
+  - Update categories (with runtime editable support)
+  - Add a nic (with runtime editable support using nic UUID)
+  - Disk addition (with runtime editable)
   - Snapshot/Restore actions support
-    - List Snapshot Policies in Blueprints
-    - Create a snapshot by executing snapshot action
-    - List snapshots (recovery points) in application
-    - Restore a snapshot by executing restore action
+  - List Snapshot Policies in Blueprints
+  - Create a snapshot by executing snapshot action
+  - List snapshots (recovery points) in application
+  - Restore a snapshot by executing restore action
 
 ## 2.1.1 (April 08, 2025)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.1.0...v2.1.1)
 
 **Fixed bugs:**
+
 - Error Creating NoNat Overlay External Network [\#820](https://github.com/nutanix/terraform-provider-nutanix/issues/820)
 
 ## 2.1.0 (April 07, 2025)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.0.0...v2.1.0)
 
-All new features are v4 SDKs based. 
+All new features are v4 SDKs based.
 
 **New Feature:**
+
 - Prism [\#815](https://github.com/nutanix/terraform-provider-nutanix/issues/815)
-    - CRUD for Backup Target
-    - CRD for Restore Source
-    - Resource to deploy pc
-    - Resource to restore pc
-    - Restore to unregister pc
-    - Datasource to list pcs
-    - Datasource to fetch pc details
-    - Datasource to list restorable pcs
-    - Datasource to list pc restore points
-    - Datasource to list pc restore points details
-    - Datasource to list backup targets
-    - Datasource to fetch backup target
-    - Datasource to fetch restore source
+  - CRUD for Backup Target
+  - CRD for Restore Source
+  - Resource to deploy pc
+  - Resource to restore pc
+  - Restore to unregister pc
+  - Datasource to list pcs
+  - Datasource to fetch pc details
+  - Datasource to list restorable pcs
+  - Datasource to list pc restore points
+  - Datasource to list pc restore points details
+  - Datasource to list backup targets
+  - Datasource to fetch backup target
+  - Datasource to fetch restore source
 
 - Data Protection [\#816](https://github.com/nutanix/terraform-provider-nutanix/issues/816)
-    - CRUD for protection policies
-    - Resource to promote protected resource
-    - Resource to restore protected resource
-    - Datasource to fetch protected resource
-    - Datasource to list protection policies
-    - Datasource to fetch protection policy
+  - CRUD for protection policies
+  - Resource to promote protected resource
+  - Resource to restore protected resource
+  - Datasource to fetch protected resource
+  - Datasource to list protection policies
+  - Datasource to fetch protection policy
 
 - LCM [\#814](https://github.com/nutanix/terraform-provider-nutanix/issues/814)
-   - Resource for Perform Inventory
-   - Resource for Upgrade PreChecks
-   - Resource for Upgrade of entities
-   - Resource for LCM Config
-   - Datasource to fetch LCM status
-   - Datasource to fetch entities
-   - Datasource to fetch specific entity
-   - Datasource to fetch LCM Config
+  - Resource for Perform Inventory
+  - Resource for Upgrade PreChecks
+  - Resource for Upgrade of entities
+  - Resource for LCM Config
+  - Datasource to fetch LCM status
+  - Datasource to fetch entities
+  - Datasource to fetch specific entity
+  - Datasource to fetch LCM Config
 
 **Fixed bugs:**
+
 - Fix to add additional disk for virtual machine during update [\#750](https://github.com/nutanix/terraform-provider-nutanix/issues/750)
 - Fix to create a virtual machine with UEFI [\#725](https://github.com/nutanix/terraform-provider-nutanix/issues/725)
 - Fix Nutanix image v2 example in documentation [\#738](https://github.com/nutanix/terraform-provider-nutanix/issues/738)
@@ -304,276 +337,307 @@ All new features are v4 SDKs based.
 - Support import in nutanix_virtual_machine_v2 Resource [\#745](https://github.com/nutanix/terraform-provider-nutanix/issues/745)
 - Fix documentation and examples for existing features [\#755](https://github.com/nutanix/terraform-provider-nutanix/pull/755)
 
-
 ## 2.0.0 (January 07, 2025)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.9.5...v2.0.0)
 
-All new features are v4 SDKs based. 
+All new features are v4 SDKs based.
 
 **New Feature:**
+
 - Cluster Management [\#704](https://github.com/nutanix/terraform-provider-nutanix/issues/704)
-    - CRUD for clusters
-    - Resource to discover unconfigured nodes
-    - Resource to fetch network configuration of unconfigured nodes
-    - Resource to add/remove node from cluster
-    - Resource for PC registration
-    - Datasource for Hosts Info
+  - CRUD for clusters
+  - Resource to discover unconfigured nodes
+  - Resource to fetch network configuration of unconfigured nodes
+  - Resource to add/remove node from cluster
+  - Resource for PC registration
+  - Datasource for Hosts Info
 
 - Storage Containers [\#705](https://github.com/nutanix/terraform-provider-nutanix/issues/705)
-    - CRUD for storage containers
-    - datasource for storage stats info
+  - CRUD for storage containers
+  - datasource for storage stats info
 
 - Networks [\#706](https://github.com/nutanix/terraform-provider-nutanix/issues/706)
-    - CRUD for Subnets
-    - CRUD for VPCs
-    - CRUD for PBRs
-    - CRUD for Floating IPs
-    - CRUD for Static Routes
-    - CRUD for Services Groups
-    - CRUD for Address Groups
-    - CRUD for Network Security Rules
+  - CRUD for Subnets
+  - CRUD for VPCs
+  - CRUD for PBRs
+  - CRUD for Floating IPs
+  - CRUD for Static Routes
+  - CRUD for Services Groups
+  - CRUD for Address Groups
+  - CRUD for Network Security Rules
 
 - IAM [\#707](https://github.com/nutanix/terraform-provider-nutanix/issues/707)
-    - CRUD for Roles
-    - Datasource for Operations( permissions )
-    - CRUD for Users
-    - CRUD for User Groups
-    - CRUD for Authorization Policy ( ACPs )
-    - CRUD for SALM Identity Providers
-    - CRUD for Directory Services
+  - CRUD for Roles
+  - Datasource for Operations( permissions )
+  - CRUD for Users
+  - CRUD for User Groups
+  - CRUD for Authorization Policy ( ACPs )
+  - CRUD for SALM Identity Providers
+  - CRUD for Directory Services
 
 - Prism [\#711](https://github.com/nutanix/terraform-provider-nutanix/issues/711)
-    - CRUD for categories
+  - CRUD for categories
 
 - VMM [\#708](https://github.com/nutanix/terraform-provider-nutanix/issues/708)
-    - CRUD for Virtual Machine
-    - CRUD for Images
-    - CRUD for Image Placement Policy
-    - Resource to Clone a VM
-    - Resource for NGT Installation / Uninstallation
-    - Resource for NGT upgrade
-    - Resource for Template deploy
-    - Resource for Template Guest OS Actions
-    - CRUD for Template
-    - Resource for CDROM inject/eject
-    - Resource for VM revert from recovery point
-    - Resource for VM guest customisation update
-    - Resource for VM Network Device Assign/Remove IP
-    - Resource for VM Network Device Migrate
-    - Resource for VM Shutdown Actions
+  - CRUD for Virtual Machine
+  - CRUD for Images
+  - CRUD for Image Placement Policy
+  - Resource to Clone a VM
+  - Resource for NGT Installation / Uninstallation
+  - Resource for NGT upgrade
+  - Resource for Template deploy
+  - Resource for Template Guest OS Actions
+  - CRUD for Template
+  - Resource for CDROM inject/eject
+  - Resource for VM revert from recovery point
+  - Resource for VM guest customisation update
+  - Resource for VM Network Device Assign/Remove IP
+  - Resource for VM Network Device Migrate
+  - Resource for VM Shutdown Actions
 
 - Volumes [\#709](https://github.com/nutanix/terraform-provider-nutanix/issues/709)
-    - CRUD for Volume Groups
-    - Resource to Attach/Deattach VG to VM
-    - Resource to Attach/Deattach VG to ISCSI Client
-    - CRUD for Volume Group vDisks
-    - Resource to attach/deattach categories from VG
+  - CRUD for Volume Groups
+  - Resource to Attach/Deattach VG to VM
+  - Resource to Attach/Deattach VG to ISCSI Client
+  - CRUD for Volume Group vDisks
+  - Resource to attach/deattach categories from VG
 
 - Data Protection [\#710](https://github.com/nutanix/terraform-provider-nutanix/issues/710)
-    - CRUD for Recovery Point
-    - CRUD for Replicate Recovery Point
-    - Resource to Restore VM from Recovery Point
-    - Datasource for VM Recovery Point Info
-
-
+  - CRUD for Recovery Point
+  - CRUD for Replicate Recovery Point
+  - Resource to Restore VM from Recovery Point
+  - Datasource for VM Recovery Point Info
 
 ## 1.9.5 (January 16, 2024)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.4...feat/1.9.5)
 
 **Merged pull request:**
+
 - Fixing the error for NDB datasource for databases if creds are invalid. [\#668](https://github.com/nutanix/terraform-provider-nutanix/pull/668)
 
 **Closed issues:**
+
 - Memory MiB quantity value shows discrepancy in terraform plugin and Prism.. [\#654](https://github.com/nutanix/terraform-provider-nutanix/issues/654)
 
 **Fixed bugs:**
+
 - Datasource nutanix_ndb_databases doesn't return error if creds are invalid. [\#667](https://github.com/nutanix/terraform-provider-nutanix/issues/667)
 
-
 ## 1.9.4 (October 27, 2023)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.3...feat/1.9.4)
 
 - Feat branch. [\#645](https://github.com/nutanix/terraform-provider-nutanix/pull/645)
 
 **Merged pull request:**
+
 - Change VM name should not require VM PowerOFF. [\#626](https://github.com/nutanix/terraform-provider-nutanix/pull/626)
 - Fix: compare bootconfig against previous value. [\#641](https://github.com/nutanix/terraform-provider-nutanix/pull/641)
 
 **Implemented enhancements:**
+
 - Added example to use metadata in nutanix subnets. [\#643](https://github.com/nutanix/terraform-provider-nutanix/pull/643)
 - External subnet name/uuid are Optional args not Required. [\#644](https://github.com/nutanix/terraform-provider-nutanix/pull/644)
 
 **Fixed bugs:**
+
 - VM rebooted at every change because of hotPlugChange set to false. [\#640](https://github.com/nutanix/terraform-provider-nutanix/issues/640)
 - Changing the VM name forces a reboot. [\#625](https://github.com/nutanix/terraform-provider-nutanix/issues/625)
 
 **Closed issues:**
+
 - Modify Terraform documentation for nutanix_vpc resource. [\#636](https://github.com/nutanix/terraform-provider-nutanix/issues/636)
 - Include metadata example for data.nutanix_subnets. [\#590](https://github.com/nutanix/terraform-provider-nutanix/issues/590)
 
-
 ## 1.9.3 (September 7, 2023)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.2...feat/1.9.3)
 
 **Merged pull request:**
+
 - Setting machine type in updating virtual machines. [\#630](https://github.com/nutanix/terraform-provider-nutanix/pull/630)
 - Added examples of role creation using nutanix terraform provider. [\#632](https://github.com/nutanix/terraform-provider-nutanix/pull/632)
 
 **Fixed bugs:**
+
 - Updating gives error: Machine type must be set to Q35 for secure boot. [\#622](https://github.com/nutanix/terraform-provider-nutanix/issues/622)
 - Machine type must be set to Q35 for secure boot. [\#494](https://github.com/nutanix/terraform-provider-nutanix/issues/494)
 
 **Closed issues:**
+
 - Add support documentation in terraform. [\#611](https://github.com/nutanix/terraform-provider-nutanix/issues/611)
 
 **Closed pull request:**
--  Fix Secure boot VMs when doing updates. [\#496](https://github.com/nutanix/terraform-provider-nutanix/pull/496)
 
+- Fix Secure boot VMs when doing updates. [\#496](https://github.com/nutanix/terraform-provider-nutanix/pull/496)
 
 ## 1.9.2 (July 21, 2023)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.1...feat/1.9.2)
 
 **Merged pull request:**
+
 - Fixing terraform doc link for detailed references. [\#618](https://github.com/nutanix/terraform-provider-nutanix/pull/618)
 
 **Closed issues:**
+
 - All "see detailed information" at the bottom of the doc pages are broken. [\#617](https://github.com/nutanix/terraform-provider-nutanix/issues/617)
 - Subnet documentation missing attributes. [\#616](https://github.com/nutanix/terraform-provider-nutanix/issues/616)
 - Unsupported attribute for Volume Groups should be removed from VM resource documentation. [\#613](https://github.com/nutanix/terraform-provider-nutanix/issues/613)
 - Typo in documentation guest_customization_sysrep_custom_key_values. [\#495](https://github.com/nutanix/terraform-provider-nutanix/issues/495)
 
 ## 1.9.1 (June 14, 2023)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.0...feat/1.9.1)
 
 **Implemented enhancements:**
+
 - Handling version in ReadContext for "nutanix_karbon_cluster" resource. [\#606](https://github.com/nutanix/terraform-provider-nutanix/pull/606)
 - Changed Port field in "resource_karbon_private_registry" to Optional. [\#607](https://github.com/nutanix/terraform-provider-nutanix/pull/607)
 - NDB clusters endpoint to have support for Active Directory. [\#608](https://github.com/nutanix/terraform-provider-nutanix/pull/608)
 
 **Closed issues:**
+
 - Add support documentation in terraform. [\#611](https://github.com/nutanix/terraform-provider-nutanix/issues/611)
 
-
 ## 1.9.0 (May 26, 2023)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.8.1...feat/1.9.0)
 
 **New Feature:**
+
 - Add support for new Karbon features. [\#290](https://github.com/nutanix/terraform-provider-nutanix/issues/290)
-    
+
     New Resource :
-    - nutanix_karbon_worker_nodepool
+
+  - nutanix_karbon_worker_nodepool
 
 **Implemented enhancements:**
+
 - Adding timeouts in "nutanix_karbon_cluster" resource. [\#563](https://github.com/nutanix/terraform-provider-nutanix/pull/563)
 - Vlan with 0 vlan_id should be supported in subnet resource. [\#562](https://github.com/nutanix/terraform-provider-nutanix/pull/562)
 - Adding contributing doc and code of conduct in provider. [\#603](https://github.com/nutanix/terraform-provider-nutanix/pull/603)
 - Schema Validation for NDB database provision when profiles are required or optional. [\#591](https://github.com/nutanix/terraform-provider-nutanix/issues/591)
 
 **Fixed bugs:**
+
 - Intermittent "context deadline exceeded" errors on "nutanix_karbon_cluster" resource. [\#544](https://github.com/nutanix/terraform-provider-nutanix/issues/544)
 - Resource "nutanix_subnet" fails when creating a managed IPAM network using a VLAN that overlaps with existing network. [\#543](https://github.com/nutanix/terraform-provider-nutanix/issues/543)
 - In NDB database resource, Required profile values for provisioning a database with registered dbserver or with new dbserver should be properly listed. [#\604](https://github.com/nutanix/terraform-provider-nutanix/issues/604)
 
 **Closed issues:**
+
 - Typo in documentation guest_customization_sysrep_custom_key_values. [\#495](https://github.com/nutanix/terraform-provider-nutanix/issues/495)
 - Documentation about subnet_type for nutanix_subnet is missing. [\#506](https://github.com/nutanix/terraform-provider-nutanix/issues/506)
 - parent_reference misspelled. [\#507](https://github.com/nutanix/terraform-provider-nutanix/issues/507)
 - availability_zone_reference not returning in nutanix_clusters. [\#573](https://github.com/nutanix/terraform-provider-nutanix/issues/573)
 
 **Merged pull requests:**
+
 - Add information about how to import virtual machine to state. [\#500](https://github.com/nutanix/terraform-provider-nutanix/pull/500)
 - Removed UUID field from documentation of nutanix address group. [\#462](https://github.com/nutanix/terraform-provider-nutanix/pull/462)
 
-
 ## 1.8.1 (April 18, 2023)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.8.0-ga...feat/1.8.1)
 
 **New Feature:**
+
 - Added a datasource for NDB network available ips. [\#570](https://github.com/nutanix/terraform-provider-nutanix/pull/570)
 
     New Data Source :
-    -  nutanix_ndb_network_available_ips
+
+  - nutanix_ndb_network_available_ips
 
 **Implemented enhancements:**
+
 - Handling the case if ndb cluster id is given wrong. [\#571](https://github.com/nutanix/terraform-provider-nutanix/pull/571)
 - Support for imports on ndb day-2 actions. [\#561](https://github.com/nutanix/terraform-provider-nutanix/pull/561)
 - Changing the provider version in ndb examples from beta to ga. [\#580](https://github.com/nutanix/terraform-provider-nutanix/pull/580)
 
 **Fixed bugs:**
+
 - Tf ntnx provider crash for wrong ndb cluster id. [\#567](https://github.com/nutanix/terraform-provider-nutanix/issues/567)
 - lcm_config should be Set without plugin crash in clone resource. [\#583](https://github.com/nutanix/terraform-provider-nutanix/issues/583)
 
 **Closed issues:**
-- NDB datasource for network available ips. [\#569](https://github.com/nutanix/terraform-provider-nutanix/issues/569) 
+
+- NDB datasource for network available ips. [\#569](https://github.com/nutanix/terraform-provider-nutanix/issues/569)
 - Support for adding import on ndb day2 actions. [\#582](https://github.com/nutanix/terraform-provider-nutanix/issues/582)
 - How to configure IP address for Nutanix Packer images. [\#576](https://github.com/nutanix/terraform-provider-nutanix/issues/576)
 
-
 ## 1.8.0 (Feb 23, 2023)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/v1.8.0-beta-2...feat/1.8.0-ga)
 
 **New Features:**
+
 - Feat/1.8.0-ga Release with Nutanix Database Service based resource and datasources [\#553](https://github.com/nutanix/terraform-provider-nutanix/pull/553)
 
     New Resources:
-    - nutanix_ndb_maintenance_window
-    - nutanix_ndb_maintenance_task
-    - nutanix_ndb_tms_cluster
-    - nutanix_ndb_tag
-    - nutanix_ndb_network
-    - nutanix_ndb_dbserver_vm
-    - nutanix_ndb_register_dbserver
-    - nutanix_ndb_stretched_vlan
-    - nutanix_ndb_clone_refresh
-    - nutanix_ndb_cluster
+
+  - nutanix_ndb_maintenance_window
+  - nutanix_ndb_maintenance_task
+  - nutanix_ndb_tms_cluster
+  - nutanix_ndb_tag
+  - nutanix_ndb_network
+  - nutanix_ndb_dbserver_vm
+  - nutanix_ndb_register_dbserver
+  - nutanix_ndb_stretched_vlan
+  - nutanix_ndb_clone_refresh
+  - nutanix_ndb_cluster
 
     New Data Sources:
-    - nutanix_ndb_maintenance_window
-    - nutanix_ndb_maintenance_windows
-    - nutanix_ndb_tag
-    - nutanix_ndb_tags
-    - nutanix_ndb_network
-    - nutanix_ndb_networks
-    - nutanix_ndb_dbserver
-    - nutanix_ndb_dbservers
-    
+
+  - nutanix_ndb_maintenance_window
+  - nutanix_ndb_maintenance_windows
+  - nutanix_ndb_tag
+  - nutanix_ndb_tags
+  - nutanix_ndb_network
+  - nutanix_ndb_networks
+  - nutanix_ndb_dbserver
+  - nutanix_ndb_dbservers
 
 ## 1.8.0-beta-2 (Jan 20, 2023)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.8.0-beta.1...v1.8.0-beta.2)
 
 **New Feature:**
 
-- Feat/1.8.0-beta.2 Release with Nutanix Database Service based resource and datasources [\#533] (https://github.com/nutanix/terraform-provider-nutanix/pull/533)
+- Feat/1.8.0-beta.2 Release with Nutanix Database Service based resource and datasources [\#533] ([#533](https://github.com/nutanix/terraform-provider-nutanix/pull/533))
 
     New Resources:
-    - nutanix_ndb_profile
-    - nutanix_ndb_sla
-    - nutanix_ndb_database_scale
-    - nutanix_ndb_database_restore
-    - nutanix_ndb_database_snapshot
-    - nutanix_ndb_register_database
-    - nutanix_ndb_clone
-    - nutanix_ndb_log_catchups
-    - nutanix_ndb_authorize_dbservers
-    - nutanix_ndb_software_version_profile
-    - nutanix_ndb_linked_databases
+
+  - nutanix_ndb_profile
+  - nutanix_ndb_sla
+  - nutanix_ndb_database_scale
+  - nutanix_ndb_database_restore
+  - nutanix_ndb_database_snapshot
+  - nutanix_ndb_register_database
+  - nutanix_ndb_clone
+  - nutanix_ndb_log_catchups
+  - nutanix_ndb_authorize_dbservers
+  - nutanix_ndb_software_version_profile
+  - nutanix_ndb_linked_databases
 
     New Data Sources:
-    - nutanix_ndb_snapshot
-    - nutanix_ndb_snapshots
-    - nutanix_ndb_time_machine
-    - nutanix_ndb_time_machines
-    - nutanix_ndb_tms_capability
-    - nutanix_ndb_clone
-    - nutanix_ndb_clones
 
+  - nutanix_ndb_snapshot
+  - nutanix_ndb_snapshots
+  - nutanix_ndb_time_machine
+  - nutanix_ndb_time_machines
+  - nutanix_ndb_tms_capability
+  - nutanix_ndb_clone
+  - nutanix_ndb_clones
 
 **Implemented enhancements:**
- - Support for HA instance in nutanix_ndb_database resource. [\#518](https://github.com/nutanix/terraform-provider-nutanix/pull/518)
- - Improving the error when server is unreachable. [\#530](https://github.com/nutanix/terraform-provider-nutanix/pull/530)
- - Fetching of database based on database_type filter [\#513](https://github.com/nutanix/terraform-provider-nutanix/pull/513)
- - Support of Tags and Maintainence Window in provisioning [\#528](https://github.com/nutanix/terraform-provider-nutanix/pull/528) 
 
+- Support for HA instance in nutanix_ndb_database resource. [\#518](https://github.com/nutanix/terraform-provider-nutanix/pull/518)
+- Improving the error when server is unreachable. [\#530](https://github.com/nutanix/terraform-provider-nutanix/pull/530)
+- Fetching of database based on database_type filter [\#513](https://github.com/nutanix/terraform-provider-nutanix/pull/513)
+- Support of Tags and Maintainence Window in provisioning [\#528](https://github.com/nutanix/terraform-provider-nutanix/pull/528)
 
 ## 1.8.0-beta.1 (Oct 12, 2022)
 
@@ -581,22 +645,25 @@ All new features are v4 SDKs based.
 
 **New Feature:**
 
-- Feat/1.8.0-beta.1 Release with Nutanix Database Service based resources and datasources  [\#501] (https://github.com/nutanix/terraform-provider-nutanix/pull/501)
+- Feat/1.8.0-beta.1 Release with Nutanix Database Service based resources and datasources  [\#501] ([#501](https://github.com/nutanix/terraform-provider-nutanix/pull/501))
 
     New Data Sources :
-    - nutanix_ndb_cluster
-    - nutanix_ndb_clusters
-    - nutanix_ndb_database
-    - nutanix_ndb_databases
-    - nutanix_ndb_profile
-    - nutanix_ndb_profiles
-    - nutanix_ndb_sla
-    - nutanix_ndb_slas
+
+  - nutanix_ndb_cluster
+  - nutanix_ndb_clusters
+  - nutanix_ndb_database
+  - nutanix_ndb_databases
+  - nutanix_ndb_profile
+  - nutanix_ndb_profiles
+  - nutanix_ndb_sla
+  - nutanix_ndb_slas
 
     New Resources :
-    - nutanix_ndb_database
+
+  - nutanix_ndb_database
 
 ## 1.7.1 (August 31, 2022)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.7.0...v1.7.1)
 
 **Implemented enhancements:**
@@ -604,52 +671,52 @@ All new features are v4 SDKs based.
 - Support for /projects_internal API in nutanix projects [\#487](https://github.com/nutanix/terraform-provider-nutanix/pull/487)
 
 **Closed Issues:**
-- project internal changes [\#488] (https://github.com/nutanix/terraform-provider-nutanix/pull/488)
 
+- project internal changes [\#488] ([#488](https://github.com/nutanix/terraform-provider-nutanix/pull/488))
 
 ## 1.7.0 (August 12, 2022)
 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.6.1...v1.7.0)
 
 **New Feature:**
-- Added a resource for user groups. [\#477] (https://github.com/nutanix/terraform-provider-nutanix/pull/477)
+
+- Added a resource for user groups. [\#477] ([#477](https://github.com/nutanix/terraform-provider-nutanix/pull/477))
 
     New Resource :
-    -  nutanix_user_groups
+
+  - nutanix_user_groups
 
 **Merged pull request:**
 
-- Feature user groups [\#477] (https://github.com/nutanix/terraform-provider-nutanix/pull/477) ([abhimutant](https://github.com/abhimutant))
-- Fix checksum issue in image resource [\#481] (https://github.com/nutanix/terraform-provider-nutanix/pull/481) ([bhatipradeep](https://github.com/bhatipradeep))
-- Fix image resource issues [\#480] (https://github.com/nutanix/terraform-provider-nutanix/pull/480) ([bhatipradeep](https://github.com/bhatipradeep))
-- Add field to set time zone for cluster created using foundation [\#484] (https://github.com/nutanix/terraform-provider-nutanix/pull/484) ([bhatipradeep](https://github.com/bhatipradeep))
-- fixed the issue and added testcase for sysprep custom key values guest customisation [\#478] (https://github.com/nutanix/terraform-provider-nutanix/pull/478) ([abhimutant](https://github.com/abhimutant))
-- Changes in karbon cluster documentation for storage config [\#479] (https://github.com/nutanix/terraform-provider-nutanix/pull/479) ([abhimutant](https://github.com/abhimutant))
-- Enable tests for protection rules based datasources and resources [\#366] (https://github.com/nutanix/terraform-provider-nutanix/pull/366) ([bhatipradeep](https://github.com/bhatipradeep))
-- Add uuid to address_groups data source [\#472] (https://github.com/nutanix/terraform-provider-nutanix/pull/472) ([mcguppy](https://github.com/mcguppy))
-
+- Feature user groups [\#477] ([#477](https://github.com/nutanix/terraform-provider-nutanix/pull/477)) ([abhimutant](https://github.com/abhimutant))
+- Fix checksum issue in image resource [\#481] ([#481](https://github.com/nutanix/terraform-provider-nutanix/pull/481)) ([bhatipradeep](https://github.com/bhatipradeep))
+- Fix image resource issues [\#480] ([#480](https://github.com/nutanix/terraform-provider-nutanix/pull/480)) ([bhatipradeep](https://github.com/bhatipradeep))
+- Add field to set time zone for cluster created using foundation [\#484] ([#484](https://github.com/nutanix/terraform-provider-nutanix/pull/484)) ([bhatipradeep](https://github.com/bhatipradeep))
+- fixed the issue and added testcase for sysprep custom key values guest customisation [\#478] ([#478](https://github.com/nutanix/terraform-provider-nutanix/pull/478)) ([abhimutant](https://github.com/abhimutant))
+- Changes in karbon cluster documentation for storage config [\#479] ([#479](https://github.com/nutanix/terraform-provider-nutanix/pull/479)) ([abhimutant](https://github.com/abhimutant))
+- Enable tests for protection rules based datasources and resources [\#366] ([#366](https://github.com/nutanix/terraform-provider-nutanix/pull/366)) ([bhatipradeep](https://github.com/bhatipradeep))
+- Add uuid to address_groups data source [\#472] ([#472](https://github.com/nutanix/terraform-provider-nutanix/pull/472)) ([mcguppy](https://github.com/mcguppy))
 
 **Fixed bugs:**
 
-- Terraform provider crashes when using guest_customization_sysprep_custom_key_values [\#441] (https://github.com/nutanix/terraform-provider-nutanix/issues/441) 
-- Nutanix terraform- Karbon clusters, the storage_class_config is not been displayed. [\#417] (https://github.com/nutanix/terraform-provider-nutanix/issues/417)
-- Checksum is not considered while uploading image from local using nutanix_image resource. [\#469] (https://github.com/nutanix/terraform-provider-nutanix/issues/469)
-- Not able to update image_type of PC image [\#454] (https://github.com/nutanix/terraform-provider-nutanix/issues/454)
-- Image gets deleted from PC if nutanix_image update errors out [\#453] (https://github.com/nutanix/terraform-provider-nutanix/issues/453)
+- Terraform provider crashes when using guest_customization_sysprep_custom_key_values [\#441] ([#441](https://github.com/nutanix/terraform-provider-nutanix/issues/441))
+- Nutanix terraform- Karbon clusters, the storage_class_config is not been displayed. [\#417] ([#417](https://github.com/nutanix/terraform-provider-nutanix/issues/417))
+- Checksum is not considered while uploading image from local using nutanix_image resource. [\#469] ([#469](https://github.com/nutanix/terraform-provider-nutanix/issues/469))
+- Not able to update image_type of PC image [\#454] ([#454](https://github.com/nutanix/terraform-provider-nutanix/issues/454))
+- Image gets deleted from PC if nutanix_image update errors out [\#453] ([#453](https://github.com/nutanix/terraform-provider-nutanix/issues/453))
 
 **Closed issues:**
 
-- Support for User Groups [\#475] (https://github.com/nutanix/terraform-provider-nutanix/issues/475)
-- Resizing disk identified in plan, but not actually done during apply [\#463] (https://github.com/nutanix/terraform-provider-nutanix/issues/463) 
-- uuid of address_groups are not available [\#461] (https://github.com/nutanix/terraform-provider-nutanix/issues/461)
-- ntx provider have ENTITY_READ_ERROR when try to recreate a VM deleted manually [\#451] (https://github.com/nutanix/terraform-provider-nutanix/issues/451)
-- Allow project definiation by name and not just ID [\#406] (https://github.com/nutanix/terraform-provider-nutanix/issues/406)
-- Upload images to Foundation VM from a remote server using nutanix_foundation_image resource [\#455] (https://github.com/nutanix/terraform-provider-nutanix/issues/455)
-- Change catagories from list to dictionary for more straightforward use [\#407] (https://github.com/nutanix/terraform-provider-nutanix/issues/407)
-- VM creation fails when boot_type = LEGACY [\#304] (https://github.com/nutanix/terraform-provider-nutanix/issues/304)
-- Add attributes to set timezone during cluster creation using image_nodes [\#449] (https://github.com/nutanix/terraform-provider-nutanix/issues/449)
-- Enable multi-pc tests [\#448] (https://github.com/nutanix/terraform-provider-nutanix/issues/448)
-
+- Support for User Groups [\#475] ([#475](https://github.com/nutanix/terraform-provider-nutanix/issues/475))
+- Resizing disk identified in plan, but not actually done during apply [\#463] ([#463](https://github.com/nutanix/terraform-provider-nutanix/issues/463))
+- uuid of address_groups are not available [\#461] ([#461](https://github.com/nutanix/terraform-provider-nutanix/issues/461))
+- ntx provider have ENTITY_READ_ERROR when try to recreate a VM deleted manually [\#451] ([#451](https://github.com/nutanix/terraform-provider-nutanix/issues/451))
+- Allow project definiation by name and not just ID [\#406] ([#406](https://github.com/nutanix/terraform-provider-nutanix/issues/406))
+- Upload images to Foundation VM from a remote server using nutanix_foundation_image resource [\#455] ([#455](https://github.com/nutanix/terraform-provider-nutanix/issues/455))
+- Change catagories from list to dictionary for more straightforward use [\#407] ([#407](https://github.com/nutanix/terraform-provider-nutanix/issues/407))
+- VM creation fails when boot_type = LEGACY [\#304] ([#304](https://github.com/nutanix/terraform-provider-nutanix/issues/304))
+- Add attributes to set timezone during cluster creation using image_nodes [\#449] ([#449](https://github.com/nutanix/terraform-provider-nutanix/issues/449))
+- Enable multi-pc tests [\#448] ([#448](https://github.com/nutanix/terraform-provider-nutanix/issues/448))
 
 ## 1.6.1 (July 7, 2022)
 
@@ -657,35 +724,36 @@ All new features are v4 SDKs based.
 
 **New Feature:**
 
-- Add Datasource and Resource for Flow Networking [\#473] (https://github.com/nutanix/terraform-provider-nutanix/pull/473)
+- Add Datasource and Resource for Flow Networking [\#473] ([#473](https://github.com/nutanix/terraform-provider-nutanix/pull/473))
 
     New Data Sources :
-    - nutanix_floating_ip
-    - nutanix_floating_ips
-    - nutanix_pbr
-    - nutanix_pbrs
-    - nutanix_static_routes
-    - nutanix_vpc
-    - nutanix_vpcs
+
+  - nutanix_floating_ip
+  - nutanix_floating_ips
+  - nutanix_pbr
+  - nutanix_pbrs
+  - nutanix_static_routes
+  - nutanix_vpc
+  - nutanix_vpcs
 
     New Resources :
-    - nutanix_floating_ip
-    - nutanix_pbr
-    - nutanix_static_routes
-    - nutanix_vpc
+
+  - nutanix_floating_ip
+  - nutanix_pbr
+  - nutanix_static_routes
+  - nutanix_vpc
 
 **Merged pull requests:**
 
 - VPC Feature [\#457](https://github.com/nutanix/terraform-provider-nutanix/pull/457) ([abhimutant](https://github.com/abhimutant))
 - Policy Based Routing Feature [\#464](https://github.com/nutanix/terraform-provider-nutanix/pull/464) ([abhimutant](https://github.com/abhimutant))
 - Floating IP Feature [\#466](https://github.com/nutanix/terraform-provider-nutanix/pull/466) ([abhimutant](https://github.com/abhimutant))
-- Static Routes Feature [\#468] (https://github.com/nutanix/terraform-provider-nutanix/pull/468) [abhimutant](https://github.com/abhimutant))
-- Examples and testcases related to Networking Features [\#470] (https://github.com/nutanix/terraform-provider-nutanix/pull/470) ([abhimutant](https://github.com/abhimutant))
+- Static Routes Feature [\#468] ([#468](https://github.com/nutanix/terraform-provider-nutanix/pull/468)) [abhimutant](https://github.com/abhimutant))
+- Examples and testcases related to Networking Features [\#470] ([#470](https://github.com/nutanix/terraform-provider-nutanix/pull/470)) ([abhimutant](https://github.com/abhimutant))
 
 **Implemented enhancements:**
 
 - Support of External and Overlay Subnets [\#460](https://github.com/nutanix/terraform-provider-nutanix/pull/460)
-
 
 ## 1.5.0 (May 7, 2022)
 
@@ -698,17 +766,15 @@ All new features are v4 SDKs based.
 - Foundation Acceptance tests and minor fixes [\#436](https://github.com/nutanix/terraform-provider-nutanix/pull/436) ([bhatipradeep](https://github.com/bhatipradeep))
 - Foundation Central unit tests and acceptance tests [\#439](https://github.com/nutanix/terraform-provider-nutanix/pull/439) ([abhimutant](https://github.com/abhimutant))
 - Optimize Image upload to avoid buffering. Add cluster related fields in image upload resource & data source for PC [\#432](https://github.com/nutanix/terraform-provider-nutanix/pull/432) ([bhatipradeep](https://github.com/bhatipradeep))
-- fixing karbon docs at registry [\#434](https://github.com/nutanix/terraform-provider-nutanix/pull/434)([abhimutant](https://github.com/abhimutant)) 
+- fixing karbon docs at registry [\#434](https://github.com/nutanix/terraform-provider-nutanix/pull/434)([abhimutant](https://github.com/abhimutant))
 - Example for using config downloaded from install.nutanix.com to image nodes[\#444](https://github.com/nutanix/terraform-provider-nutanix/pull/444) ([bhatipradeep](https://github.com/bhatipradeep))
 - Add example to pull secrets from hashicorp vault to use them in node imaging [\#431](https://github.com/nutanix/terraform-provider-nutanix/pull/431) ([bhatipradeep](https://github.com/bhatipradeep))
-
 
 **Fixed Bugs:**
 
 - Image upload failures [\#430](https://github.com/nutanix/terraform-provider-nutanix/issues/430)
 - Not able to upload image to a specific cluster [\#428](https://github.com/nutanix/terraform-provider-nutanix/issues/428)
 - Doc for Nutanix karbon_cluster_kubeConfig pointing to deadlink in registry [\#429](https://github.com/nutanix/terraform-provider-nutanix/issues/429)
-
 
 **Closed Issues:**
 
@@ -717,7 +783,6 @@ All new features are v4 SDKs based.
 - Not able to upload image to a specific cluster [\#428](https://github.com/nutanix/terraform-provider-nutanix/issues/428)
 - Add IPMI validations for verifying successfull IPMI configuration [\#425](https://github.com/nutanix/terraform-provider-nutanix/issues/425)
 - Add examples of vault integration with node imaging using foundation [\#424](https://github.com/nutanix/terraform-provider-nutanix/issues/424)
-
 
 ## 1.5.0-beta.2 (April 12, 2022)
 
@@ -728,22 +793,23 @@ All new features are v4 SDKs based.
 - Add resources and data sources for Nutanix Foundation Central  [\#422](https://github.com/nutanix/terraform-provider-nutanix/pull/422)
 
     New Data Sources :
-    -   nutanix_foundation_central_api_keys
-    -   nutanix_foundation_central_list_api_keys
-    -   nutanix_foundation_central_imaged_nodes_list
-    -   nutanix_foundation_central_imaged_clusters_list
-    -   nutanix_foundation_central_cluster_details
-    -   nutanix_foundation_central_imaged_node_details
 
-    
+  - nutanix_foundation_central_api_keys
+  - nutanix_foundation_central_list_api_keys
+  - nutanix_foundation_central_imaged_nodes_list
+  - nutanix_foundation_central_imaged_clusters_list
+  - nutanix_foundation_central_cluster_details
+  - nutanix_foundation_central_imaged_node_details
+
     New Resources :
-    -   nutanix_foundation_central_image_cluster
-    -   nutanix_foundation_central_api_keys
 
-    New Modules : 
-    -   aos-based-node-imaging/node-serials-filter
-    -   manual-mode-imaging
+  - nutanix_foundation_central_image_cluster
+  - nutanix_foundation_central_api_keys
 
+    New Modules :
+
+  - aos-based-node-imaging/node-serials-filter
+  - manual-mode-imaging
 
 ## 1.5.0-beta (April 1, 2022)
 
@@ -754,20 +820,23 @@ All new features are v4 SDKs based.
 - Add resources and data sources for Nutanix Foundation  [\#413](https://github.com/nutanix/terraform-provider-nutanix/issues/413)
 
     New Data Sources :
-    -   nutanix_foundation_nos_packages
-    -   nutanix_foundation_hypervisor_isos
-    -   nutanix_foundation_discover_nodes
-    -   nutanix_foundation_node_network_details
-    
-    New Resources :
-    -   nutanix_foundation_image_nodes
-    -   nutanix_foundation_ipmi_config
-    -   nutanix_foundation_image
 
-    New Modules : 
-    -   aos-based-node-imaging/node-serials-filter
-    -   discover-nodes-network-details/node-serials-filter
-    -   manual-mode-imaging
+  - nutanix_foundation_nos_packages
+  - nutanix_foundation_hypervisor_isos
+  - nutanix_foundation_discover_nodes
+  - nutanix_foundation_node_network_details
+
+    New Resources :
+
+  - nutanix_foundation_image_nodes
+  - nutanix_foundation_ipmi_config
+  - nutanix_foundation_image
+
+    New Modules :
+
+  - aos-based-node-imaging/node-serials-filter
+  - discover-nodes-network-details/node-serials-filter
+  - manual-mode-imaging
 
 **Merged pull requests:**
 
@@ -779,17 +848,13 @@ All new features are v4 SDKs based.
 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.4.0...v1.4.1)
 
-
-**Fixed Bugs**
+**Fixed Bugs:**
 
 - Network Security Rules: ip subnet is passed as an empty object in the API to create network security which causes API to get failed [\#399](https://github.com/nutanix/terraform-provider-nutanix/issues/399)
-
 
 **Merged pull requests:**
 
 - Network Security Rules: ip subnet is passed as an empty object in the API to create network security which causes API to get failed [\#348](https://github.com/nutanix/terraform-provider-nutanix/pull/397)([siddharth-kulshrestha](https://github.com/siddharth-kulshrestha))
-
-
 
 ## 1.4.0 (March 17, 2022)
 
@@ -802,8 +867,7 @@ All new features are v4 SDKs based.
 - Add num_queues parameter for virtual machine NICs [\#324](https://github.com/nutanix/terraform-provider-nutanix/pull/324)
 - Add support for linking service and address groups to network security rules [\#345](https://github.com/nutanix/terraform-provider-nutanix/pull/345)
 
-
-**Fixed Bugs**
+**Fixed Bugs:**
 
 - Karbon 2.4 Cluster creation failing [\#373](https://github.com/nutanix/terraform-provider-nutanix/issues/373)
 - Use correct API endpoint for category queries [\#348](https://github.com/nutanix/terraform-provider-nutanix/pull/348)
@@ -828,8 +892,6 @@ All new features are v4 SDKs based.
 - Security rules with service group and address groups [\#384](https://github.com/nutanix/terraform-provider-nutanix/pull/384) ([siddharth-kulshrestha](https://github.com/siddharth-kulshrestha))
 - Fix bug where networkmappings are incorrectly referenced in recovery plan [\#392](https://github.com/nutanix/terraform-provider-nutanix/pull/392) ([yannickstruyf3](https://github.com/yannickstruyf3))
 
-
-
 ## 1.3.0 (Feb 16, 2022)
 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.2.2...v1.3.0)
@@ -843,12 +905,10 @@ All new features are v4 SDKs based.
 - Clean up existing tests with dynamic config  [\#315](https://github.com/nutanix/terraform-provider-nutanix/issues/315)
 - Develop integration tests with code coverage. [\#316](https://github.com/nutanix/terraform-provider-nutanix/issues/316)
 
-
-**Fixed Bugs**
+**Fixed Bugs:**
 
 - Provider plugin crashes when nutanix_subnet datasource queried with overlay subnet [\#327](https://github.com/nutanix/terraform-provider-nutanix/issues/327)
 - `nutanix_projects` and `nutanix_project` throws error when there is external network associated to a project [\#337](https://github.com/nutanix/terraform-provider-nutanix/issues/337)
-
 
 **Closed issues:**
 
@@ -860,8 +920,6 @@ All new features are v4 SDKs based.
 - Develop integration tests with code coverage. [\#316](https://github.com/nutanix/terraform-provider-nutanix/issues/316)
 - Provider plugin crashes when nutanix_subnet datasource queried with overlay subnet [\#327](https://github.com/nutanix/terraform-provider-nutanix/issues/327)
 - `nutanix_projects` and `nutanix_project` throws error when there is external network associated to a project [\#337](https://github.com/nutanix/terraform-provider-nutanix/issues/337)
-
-
 
 **Merged pull requests:**
 
@@ -882,8 +940,6 @@ All new features are v4 SDKs based.
 - Fix existing examples. Add new examples [\#346](https://github.com/nutanix/terraform-provider-nutanix/pull/346) ([bhati-pradeep](https://github.com/bhati-pradeep))
 - Automation for manual testcases [\#334](https://github.com/nutanix/terraform-provider-nutanix/issues/334) ([abhimutant](https://github.com/abhimutant))
 
-
-
 ## 1.2.2 (Nov 29, 2021)
 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.2.1...v1.2.2)
@@ -896,8 +952,6 @@ All new features are v4 SDKs based.
 **Merged pull requests:**
 
 - Add support for CPU passthrough [\#288](https://github.com/nutanix/terraform-provider-nutanix/pull/288) ([svalabs](https://github.com/svalabs))
-
-
 
 ## 1.2.1 (Feb 01, 2021)
 
@@ -950,7 +1004,9 @@ All new features are v4 SDKs based.
 - Roles [\#181](https://github.com/nutanix/terraform-provider-nutanix/pull/181) ([coderGo93](https://github.com/coderGo93))
 - User Resource and Data Sources. [\#179](https://github.com/nutanix/terraform-provider-nutanix/pull/179) ([marinsalinas](https://github.com/marinsalinas))
 - Access control policies [\#175](https://github.com/nutanix/terraform-provider-nutanix/pull/175) ([coderGo93](https://github.com/coderGo93))
+
 ## [1.1.1](https://github.com/nutanix/terraform-provider-nutanix/tree/v1.1.1) (2020-11-30)
+
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.1.0...v1.1.1)
 
 **Fixed bugs:**
@@ -989,8 +1045,6 @@ All new features are v4 SDKs based.
 - Updated Readme file and changelog [\#154](https://github.com/nutanix/terraform-provider-nutanix/pull/154) ([PacoDw](https://github.com/PacoDw))
 - provide better error reporting when invalid nutanix credentials are used [\#148](https://github.com/nutanix/terraform-provider-nutanix/pull/148) ([scott-grimes](https://github.com/scott-grimes))
 - Initialize BootConfig struct before the child attributes [\#53](https://github.com/nutanix/terraform-provider-nutanix/pull/53) ([marinsalinas](https://github.com/marinsalinas))
-
-
 
 ## 1.1.0 (July 02, 2020)
 
@@ -1095,7 +1149,6 @@ All new features are v4 SDKs based.
 - Refactor: change update workflow to use spec instead status in virtual machine resource. [\#62](https://github.com/terraform-providers/terraform-provider-nutanix/pull/62) ([marinsalinas](https://github.com/marinsalinas))
 - Added fix for Issue \#57 [\#60](https://github.com/terraform-providers/terraform-provider-nutanix/pull/60) ([chandru-tkc](https://github.com/chandru-tkc))
 - added VMNic.IsConnected to preFillResUpdateRequest [\#59](https://github.com/terraform-providers/terraform-provider-nutanix/pull/59) ([switchboardOp](https://github.com/switchboardOp))
-
 
 ## 1.0.1 (May 01, 2019)
 
