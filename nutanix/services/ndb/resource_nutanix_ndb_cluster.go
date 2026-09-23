@@ -3,6 +3,7 @@ package ndb
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -35,8 +36,9 @@ func ResourceNutanixNDBCluster() *schema.Resource {
 				Required: true,
 			},
 			"username": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
 			},
 			"password": {
 				Type:      schema.TypeString,
@@ -45,7 +47,7 @@ func ResourceNutanixNDBCluster() *schema.Resource {
 			},
 			"storage_container": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"agent_vm_prefix": {
 				Type:     schema.TypeString,
@@ -72,9 +74,45 @@ func ResourceNutanixNDBCluster() *schema.Resource {
 				Optional: true,
 				Default:  "v2",
 			},
+			"prism_central_info": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ip_address": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"port": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  9440,
+						},
+						"username": {
+							Type:      schema.TypeString,
+							Required:  true,
+							Sensitive: true,
+						},
+						"password": {
+							Type:      schema.TypeString,
+							Required:  true,
+							Sensitive: true,
+						},
+					},
+				},
+			},
 			"agent_network_info": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"dns": {
@@ -90,7 +128,7 @@ func ResourceNutanixNDBCluster() *schema.Resource {
 			},
 			"networks_info": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -293,6 +331,9 @@ func resourceNutanixNDBClusterCreate(ctx context.Context, d *schema.ResourceData
 	if version, ok := d.GetOk("version"); ok {
 		req.Version = utils.StringPtr(version.(string))
 	}
+	if pcInfo, ok := d.GetOk("prism_central_info"); ok {
+		req.ManagementServer = expandPrismCentralInfo(pcInfo.([]interface{}))
+	}
 
 	if username, ok := d.GetOk("username"); ok {
 		creds := make([]*era.NameValueParams, 0)
@@ -317,7 +358,15 @@ func resourceNutanixNDBClusterCreate(ctx context.Context, d *schema.ResourceData
 	// api to create cluster
 	resp, err := conn.Service.CreateCluster(ctx, req)
 	if err != nil {
-		return diag.FromErr(err)
+		// Compatibility fallback for /clusters contract variants across NDB builds:
+		// legacy uses clusterIP/clusterType/credentialsInfo; newer uses name/ipAddresses/cloudType + direct credentials.
+		// This is an API schema difference, not the user-provided NDB "version" field.
+		if shouldRetryClusterCreateWithRawFallback(err) {
+			resp, err = conn.Service.CreateClusterRaw(ctx, buildClusterCreateRawFallbackRequest(d))
+		}
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	// Get Operation ID from response of Cluster and poll for the operation to get completed.
@@ -560,6 +609,7 @@ func expandCredentialInfo(pr []interface{}) []*era.NameValueParams {
 	return nil
 }
 
+// expandNetworkInfo converts Terraform network blocks into ERA cluster network payloads.
 func expandNetworkInfo(pr []interface{}) []*era.NetworksInfo {
 	if len(pr) > 0 {
 		networkInfo := make([]*era.NetworksInfo, 0)
@@ -588,6 +638,7 @@ func expandNetworkInfo(pr []interface{}) []*era.NetworksInfo {
 	return nil
 }
 
+// expandClusterNetworkInfo maps Terraform network_info keys to ERA name/value params.
 func expandClusterNetworkInfo(pr []interface{}) []*era.NameValueParams {
 	if len(pr) > 0 {
 		networkInfos := make([]*era.NameValueParams, 0)
@@ -596,34 +647,92 @@ func expandClusterNetworkInfo(pr []interface{}) []*era.NameValueParams {
 			val := v.(map[string]interface{})
 
 			if vlan, ok := val["vlan_name"]; ok {
-				networkInfos = append(networkInfos, &era.NameValueParams{
-					Name:  utils.StringPtr("vlanName"),
-					Value: utils.StringPtr(vlan.(string)),
-				})
+				if v := vlan.(string); v != "" {
+					networkInfos = append(networkInfos, &era.NameValueParams{
+						Name:  utils.StringPtr("vlanName"),
+						Value: utils.StringPtr(v),
+					})
+				}
 			}
 
 			if vlan, ok := val["static_ip"]; ok {
-				networkInfos = append(networkInfos, &era.NameValueParams{
-					Name:  utils.StringPtr("staticIP"),
-					Value: utils.StringPtr(vlan.(string)),
-				})
+				if v := vlan.(string); v != "" {
+					networkInfos = append(networkInfos, &era.NameValueParams{
+						Name:  utils.StringPtr("staticIP"),
+						Value: utils.StringPtr(v),
+					})
+				}
 			}
 
 			if vlan, ok := val["gateway"]; ok {
-				networkInfos = append(networkInfos, &era.NameValueParams{
-					Name:  utils.StringPtr("gateway"),
-					Value: utils.StringPtr(vlan.(string)),
-				})
+				if v := vlan.(string); v != "" {
+					networkInfos = append(networkInfos, &era.NameValueParams{
+						Name:  utils.StringPtr("gateway"),
+						Value: utils.StringPtr(v),
+					})
+				}
 			}
 
 			if vlan, ok := val["subnet_mask"]; ok {
-				networkInfos = append(networkInfos, &era.NameValueParams{
-					Name:  utils.StringPtr("subnetMask"),
-					Value: utils.StringPtr(vlan.(string)),
-				})
+				if v := vlan.(string); v != "" {
+					networkInfos = append(networkInfos, &era.NameValueParams{
+						Name:  utils.StringPtr("subnetMask"),
+						Value: utils.StringPtr(v),
+					})
+				}
 			}
 		}
 		return networkInfos
 	}
 	return nil
+}
+
+// expandPrismCentralInfo builds managementServerInfo payload for cluster registration.
+func expandPrismCentralInfo(pr []interface{}) map[string]interface{} {
+	if len(pr) == 0 {
+		return nil
+	}
+	val := pr[0].(map[string]interface{})
+	pc := map[string]interface{}{
+		"ipAddress": val["ip_address"].(string),
+		"port":      val["port"].(int),
+		"username":  val["username"].(string),
+		"password":  val["password"].(string),
+	}
+	if v, ok := val["name"]; ok && v.(string) != "" {
+		pc["name"] = v.(string)
+	}
+	if v, ok := val["description"]; ok && v.(string) != "" {
+		pc["description"] = v.(string)
+	}
+	return pc
+}
+
+// shouldRetryClusterCreateWithRawFallback identifies /clusters schema mismatch errors
+// that are safe to retry using the compatibility payload shape.
+func shouldRetryClusterCreateWithRawFallback(err error) bool {
+	if err == nil {
+		return false
+	}
+	errText := err.Error()
+	return strings.Contains(errText, "Unrecognized field 'clusterIP'") ||
+		strings.Contains(errText, "Unrecognized field 'clusterType'") ||
+		strings.Contains(errText, "Unrecognized field 'clusterDescription'")
+}
+
+// buildClusterCreateRawFallbackRequest produces the compatibility request body
+// for /clusters variants that expect name/ipAddresses/cloudType fields.
+func buildClusterCreateRawFallbackRequest(d *schema.ResourceData) map[string]interface{} {
+	altReq := map[string]interface{}{
+		"name":        d.Get("name").(string),
+		"ipAddresses": []string{d.Get("cluster_ip").(string)},
+		"cloudType":   d.Get("cluster_type").(string),
+		"version":     d.Get("version").(string),
+		"username":    d.Get("username").(string),
+		"password":    d.Get("password").(string),
+	}
+	if pcInfo, ok := d.GetOk("prism_central_info"); ok {
+		altReq["managementServerInfo"] = expandPrismCentralInfo(pcInfo.([]interface{}))
+	}
+	return altReq
 }

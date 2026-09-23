@@ -185,6 +185,7 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | nutanix_ndb_stretched_vlan | - |
 | nutanix_ndb_clone_refresh | - |
 | nutanix_ndb_cluster | - |
+| nutanix_ndb_onboarding | - |
 | - | nutanix_pc_deploy_v2 |
 | - | nutanix_pc_backup_target_v2 |
 | - | nutanix_pc_restore_source_v2 |

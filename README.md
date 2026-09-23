@@ -279,6 +279,7 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | nutanix_ndb_stretched_vlan | - |
 | nutanix_ndb_clone_refresh | - |
 | nutanix_ndb_cluster | - |
+| nutanix_ndb_onboarding | - |
 | - | nutanix_pc_deploy_v2 |
 | - | nutanix_pc_backup_target_v2 |
 | - | nutanix_pc_restore_source_v2 |
@@ -410,6 +411,7 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | nutanix_ndb_profile | - |
 | nutanix_ndb_profiles | - |
 | nutanix_ndb_cluster | - |
+| nutanix_ndb_onboarding | - |
 | nutanix_ndb_clusters | - |
 | nutanix_ndb_database | - |
 | nutanix_ndb_databases | - |
