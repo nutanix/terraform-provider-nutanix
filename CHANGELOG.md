@@ -8,18 +8,18 @@
 
 - **Cluster Category Associations (Cluster Management)**: Create and manage cluster-category associations (`nutanix_cluster_category_associations_v2`) to tag clusters for organization and automation. [#1228](https://github.com/nutanix/terraform-provider-nutanix/issues/1228)
 - **SNMP (Cluster Management)**: Create, update, read, and delete SNMP configurations, SNMP traps, and SNMP users on clusters (`nutanix_snmp_config_v2`, `nutanix_snmp_trap_v2`, `nutanix_snmp_user_v2`) for monitoring and alerting. [#1135](https://github.com/nutanix/terraform-provider-nutanix/issues/1135)
-- **Role Membership (IAM)**: Manage role membership assignments for users and user groups (`nutanix_role_membership_v2`).
-- **Directory Server Config (Microsegmentation)**: Create, update, read, and delete directory server configurations (`nutanix_directory_server_config_v2`) for microsegmentation policies.
-- **AD Group Category Mapping (Microsegmentation)**: Manage Active Directory group to category mappings (`nutanix_ad_group_category_mapping_v2`) for microsegmentation.
+- **Role Membership (IAM)**: Manage role membership assignments for users and user groups (`nutanix_role_membership_v2`). [#1127](https://github.com/nutanix/terraform-provider-nutanix/issues/1127)
+- **Directory Server Config (Microsegmentation)**: Create, update, read, and delete directory server configurations (`nutanix_directory_server_config_v2`) for microsegmentation policies. [#1178](https://github.com/nutanix/terraform-provider-nutanix/issues/1178)
+- **AD Group Category Mapping (Microsegmentation)**: Manage Active Directory group to category mappings (`nutanix_ad_group_category_mapping_v2`) for microsegmentation. [#1178](https://github.com/nutanix/terraform-provider-nutanix/issues/1178)
 - **Network Security Policy Import/Export (Microsegmentation)**: Import and export network security policies (`nutanix_network_security_policy_import_v2`, `nutanix_network_security_policy_export_v2`) for backup and migration workflows.
-- **Projects (Multidomain)**: Create, update, read, and delete Projects (`nutanix_project_v2`) for resource isolation and multi-tenancy.
-- **Resource Groups (Multidomain)**: Create, update, read, and delete Resource Groups (`nutanix_resource_group_v2`) for organizing resources.
+- **Projects (Multidomain)**: Create, update, read, and delete Projects (`nutanix_project_v2`) for resource isolation and multi-tenancy. [#1115](https://github.com/nutanix/terraform-provider-nutanix/issues/1115)
+- **Resource Groups (Multidomain)**: Create, update, read, and delete Resource Groups (`nutanix_resource_group_v2`) for organizing resources. [#1115](https://github.com/nutanix/terraform-provider-nutanix/issues/1115)
 - **Virtual Switch (Networking)**: Create, update, read, and delete Virtual Switches (`nutanix_virtual_switch_v2`) for network traffic management. [#1134](https://github.com/nutanix/terraform-provider-nutanix/issues/1134)
 - **VPC Virtual Switch Mapping (Networking)**: Map VPCs to Virtual Switches (`nutanix_vpc_virtual_switch_mapping_v2`). [#1159](https://github.com/nutanix/terraform-provider-nutanix/issues/1159)
-- **VM Guest Customization Profile (VMM)**: Create, update, read, and delete guest customization profiles (`nutanix_vm_guest_customization_profile_v2`) for virtual machines.
-- **VM Startup Policy (VMM)**: Create, update, read, and delete VM startup policies (`nutanix_vm_startup_policy_v2`) for controlling VM power-on sequencing.
-- **Image Rate Limit Policy (VMM)**: Create, update, read, and delete image rate limit policies (`nutanix_image_rate_limit_policy_v2`).
-- **Template Placement Policy (VMM)**: Create, update, read, and delete template placement policies (`nutanix_template_placement_policy_v2`).
+- **VM Guest Customization Profile (VMM)**: Create, update, read, and delete guest customization profiles (`nutanix_vm_guest_customization_profile_v2`) for virtual machines. [#1132](https://github.com/nutanix/terraform-provider-nutanix/issues/1132)
+- **VM Startup Policy (VMM)**: Create, update, read, and delete VM startup policies (`nutanix_vm_startup_policy_v2`) for controlling VM power-on sequencing. [#1174](https://github.com/nutanix/terraform-provider-nutanix/issues/1174)
+- **Image Rate Limit Policy (VMM)**: Create, update, read, and delete image rate limit policies (`nutanix_image_rate_limit_policy_v2`). [#1173](https://github.com/nutanix/terraform-provider-nutanix/issues/1173)
+- **Template Placement Policy (VMM)**: Create, update, read, and delete template placement policies (`nutanix_template_placement_policy_v2`). [#1172](https://github.com/nutanix/terraform-provider-nutanix/issues/1172)
 
 **Enhancements:**
 

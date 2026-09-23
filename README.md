@@ -31,18 +31,18 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.5.
 * **New Resource Support**
   * **Cluster Category Associations (Cluster Management)**: Create and manage cluster-category associations to tag clusters for organization and automation. [#1228](https://github.com/nutanix/terraform-provider-nutanix/issues/1228)
   * **SNMP (Cluster Management)**: Create, update, read, and delete SNMP configurations, SNMP traps, and SNMP users on clusters for monitoring and alerting. [#1135](https://github.com/nutanix/terraform-provider-nutanix/issues/1135)
-  * **Role Membership (IAM)**: Manage role membership assignments for users and user groups.
-  * **Directory Server Config (Microsegmentation)**: Create, update, read, and delete directory server configurations for microsegmentation policies.
-  * **AD Group Category Mapping (Microsegmentation)**: Manage Active Directory group to category mappings for microsegmentation.
+  * **Role Membership (IAM)**: Manage role membership assignments for users and user groups. [#1127](https://github.com/nutanix/terraform-provider-nutanix/issues/1127)
+  * **Directory Server Config (Microsegmentation)**: Create, update, read, and delete directory server configurations for microsegmentation policies. [#1178](https://github.com/nutanix/terraform-provider-nutanix/issues/1178)
+  * **AD Group Category Mapping (Microsegmentation)**: Manage Active Directory group to category mappings for microsegmentation. [#1178](https://github.com/nutanix/terraform-provider-nutanix/issues/1178)
   * **Network Security Policy Import/Export (Microsegmentation)**: Import and export network security policies for backup and migration workflows.
-  * **Projects (Multidomain)**: Create, update, read, and delete Projects for resource isolation and multi-tenancy.
-  * **Resource Groups (Multidomain)**: Create, update, read, and delete Resource Groups for organizing resources.
+  * **Projects (Multidomain)**: Create, update, read, and delete Projects for resource isolation and multi-tenancy. [#1115](https://github.com/nutanix/terraform-provider-nutanix/issues/1115)
+  * **Resource Groups (Multidomain)**: Create, update, read, and delete Resource Groups for organizing resources. [#1115](https://github.com/nutanix/terraform-provider-nutanix/issues/1115)
   * **Virtual Switch (Networking)**: Create, update, read, and delete Virtual Switches for network traffic management. [#1134](https://github.com/nutanix/terraform-provider-nutanix/issues/1134)
   * **VPC Virtual Switch Mapping (Networking)**: Map VPCs to Virtual Switches. [#1159](https://github.com/nutanix/terraform-provider-nutanix/issues/1159)
-  * **VM Guest Customization Profile (VMM)**: Create, update, read, and delete guest customization profiles for virtual machines.
-  * **VM Startup Policy (VMM)**: Create, update, read, and delete VM startup policies for controlling VM power-on sequencing.
-  * **Image Rate Limit Policy (VMM)**: Create, update, read, and delete image rate limit policies.
-  * **Template Placement Policy (VMM)**: Create, update, read, and delete template placement policies.
+  * **VM Guest Customization Profile (VMM)**: Create, update, read, and delete guest customization profiles for virtual machines. [#1132](https://github.com/nutanix/terraform-provider-nutanix/issues/1132)
+  * **VM Startup Policy (VMM)**: Create, update, read, and delete VM startup policies for controlling VM power-on sequencing. [#1174](https://github.com/nutanix/terraform-provider-nutanix/issues/1174)
+  * **Image Rate Limit Policy (VMM)**: Create, update, read, and delete image rate limit policies. [#1173](https://github.com/nutanix/terraform-provider-nutanix/issues/1173)
+  * **Template Placement Policy (VMM)**: Create, update, read, and delete template placement policies. [#1172](https://github.com/nutanix/terraform-provider-nutanix/issues/1172)
 
 * **Enhancements:**
   * Add support for Project Share / Unshare / Association across entities (Projects 2.0 model where each entity owns its project association). [#1114](https://github.com/nutanix/terraform-provider-nutanix/issues/1114)
@@ -79,16 +79,16 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.5.
 
 The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.5.0, ensure your Nutanix environment meets the following software requirements:
 
-* Self Service version: 4.3.1 (Required only for running Self Service based resource and data source)
-* AOS Version: 7.5, 7.5.1
-* Prism Central Version: 7.5, 7.5.1 or later
+* Self Service version: 4.4.0, 4.4.0.1 (Required only for running Self Service based resource and data source)
+* AOS Version: 7.5.1, 7.6, 7.6.0.6 or later
+* Prism Central Version: pc7.5, pc7.5.1, pc7.6, pc7.6.0.6 or later
 * Nutanix Terraform Provider Version: 2.5.0
 
 ## Compatibility Matrix
 
 |Terraform Version|AOS Version|PC version|Other software versions|Supported|
 |:---|:---|:---|:---|:---|
-|2.5.0|7.5.1, 7.6, 7.6.0.6 or later|pc7.5, pc7.5.1, pc7.6, pc7.6.0.6 or later|Self Service v4.3.1|yes|
+|2.5.0|7.5.1, 7.6, 7.6.0.6 or later|pc7.5, pc7.5.1, pc7.6, pc7.6.0.6 or later|Self Service v4.4.0, v4.4.0.1|yes|
 |2.4.2|7.5, 7.5.1|pc7.5, pc 7.5.1 or later|Self Service v4.3.1|yes|
 |2.4.1 (⚠️ Deprecated/Invalid)|7.5, 7.5.1|pc7.5, pc 7.5.1 or later|Self Service v4.3.1|yes|
 |2.4.0|7.5|pc7.5 or later|Self Service  v4.3.0|yes|
