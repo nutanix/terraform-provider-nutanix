@@ -3,37 +3,54 @@
 
 **New Features:**
 - **Cluster Category Associations (Cluster Management)**: Create and manage cluster-category associations (`nutanix_cluster_category_associations_v2`) to tag clusters for organization and automation. [#1228](https://github.com/nutanix/terraform-provider-nutanix/issues/1228)
-- **SNMP (Cluster Management)**: Create, update, read, and delete SNMP configurations, SNMP traps, and SNMP users on clusters (`nutanix_snmp_config_v2`, `nutanix_snmp_trap_v2`, `nutanix_snmp_user_v2`) for monitoring and alerting.
+- **SNMP (Cluster Management)**: Create, update, read, and delete SNMP configurations, SNMP traps, and SNMP users on clusters (`nutanix_snmp_config_v2`, `nutanix_snmp_trap_v2`, `nutanix_snmp_user_v2`) for monitoring and alerting. [#1135](https://github.com/nutanix/terraform-provider-nutanix/issues/1135)
 - **Role Membership (IAM)**: Manage role membership assignments for users and user groups (`nutanix_role_membership_v2`).
 - **Directory Server Config (Microsegmentation)**: Create, update, read, and delete directory server configurations (`nutanix_directory_server_config_v2`) for microsegmentation policies.
 - **AD Group Category Mapping (Microsegmentation)**: Manage Active Directory group to category mappings (`nutanix_ad_group_category_mapping_v2`) for microsegmentation.
 - **Network Security Policy Import/Export (Microsegmentation)**: Import and export network security policies (`nutanix_network_security_policy_import_v2`, `nutanix_network_security_policy_export_v2`) for backup and migration workflows.
 - **Projects (Multidomain)**: Create, update, read, and delete Projects (`nutanix_project_v2`) for resource isolation and multi-tenancy.
 - **Resource Groups (Multidomain)**: Create, update, read, and delete Resource Groups (`nutanix_resource_group_v2`) for organizing resources.
-- **Virtual Switch (Networking)**: Create, update, read, and delete Virtual Switches (`nutanix_virtual_switch_v2`) for network traffic management.
-- **VPC Virtual Switch Mapping (Networking)**: Map VPCs to Virtual Switches (`nutanix_vpc_virtual_switch_mapping_v2`).
+- **Virtual Switch (Networking)**: Create, update, read, and delete Virtual Switches (`nutanix_virtual_switch_v2`) for network traffic management. [#1134](https://github.com/nutanix/terraform-provider-nutanix/issues/1134)
+- **VPC Virtual Switch Mapping (Networking)**: Map VPCs to Virtual Switches (`nutanix_vpc_virtual_switch_mapping_v2`). [#1159](https://github.com/nutanix/terraform-provider-nutanix/issues/1159)
 - **VM Guest Customization Profile (VMM)**: Create, update, read, and delete guest customization profiles (`nutanix_vm_guest_customization_profile_v2`) for virtual machines.
 - **VM Startup Policy (VMM)**: Create, update, read, and delete VM startup policies (`nutanix_vm_startup_policy_v2`) for controlling VM power-on sequencing.
 - **Image Rate Limit Policy (VMM)**: Create, update, read, and delete image rate limit policies (`nutanix_image_rate_limit_policy_v2`).
 - **Template Placement Policy (VMM)**: Create, update, read, and delete template placement policies (`nutanix_template_placement_policy_v2`).
 
 **Enhancements:**
+- Add support for Project Share / Unshare / Association across entities (Projects 2.0 model where each entity owns its project association). [#1114](https://github.com/nutanix/terraform-provider-nutanix/issues/1114)
+- Support Update Context for Volume Groups. [#1129](https://github.com/nutanix/terraform-provider-nutanix/issues/1129)
 - Add `is_global` attribute to Roles for global role configuration. [#1234](https://github.com/nutanix/terraform-provider-nutanix/issues/1234)
 - Add `is_global` attribute to Authorization Policies V2 for global scope support. [#1230](https://github.com/nutanix/terraform-provider-nutanix/issues/1230)
 - Add categories support to Subnets via Terraform. [#1218](https://github.com/nutanix/terraform-provider-nutanix/issues/1218)
-- NGT ISO INSERT/Eject is now a no-op if the ISO is already ejected as part of NGT installation or custom eject. [#1220](https://github.com/nutanix/terraform-provider-nutanix/issues/1220)
+- NGT ISO INSERT/Eject is now a no-op if the ISO is already ejected as part of NGT installation or custom eject. [#1220](https://github.com/nutanix/terraform-provider-nutanix/issues/1220) [#1176](https://github.com/nutanix/terraform-provider-nutanix/issues/1176)
 - Fix legacy boot order changes in VMs. [#1217](https://github.com/nutanix/terraform-provider-nutanix/issues/1217)
 - VM Anti-Affinity Policy now supports Project Association. [#997](https://github.com/nutanix/terraform-provider-nutanix/pull/997)
 - Enhance VM shutdown and reboot actions with retry logic for ETag mismatch errors.
 - Add `dry_run` option to LCM prechecks schema for improved flexibility.
-- Upgrade to Janus SDKs for improved API client reliability.
-- Set `enable_directory_and_identity_provider_shortlist` explicitly to use Prism Central's default.
+- Upgrade to 7.6 SDKs and update all modules for the latest SDK changes. [#1116](https://github.com/nutanix/terraform-provider-nutanix/issues/1116)
+- Set `enable_directory_and_identity_provider_shortlist` explicitly to use Prism Central's default. [#1179](https://github.com/nutanix/terraform-provider-nutanix/issues/1179)
+- Add `is_connected` attribute to Subnets. [#1195](https://github.com/nutanix/terraform-provider-nutanix/issues/1195)
+- Add `latest_recovery_point_retention_seconds` to Protection Policies. [#1196](https://github.com/nutanix/terraform-provider-nutanix/issues/1196)
+- Add advanced configuration blocks to Cluster Profiles. [#1197](https://github.com/nutanix/terraform-provider-nutanix/issues/1197)
+- Support multiple next hops in Routes. [#1198](https://github.com/nutanix/terraform-provider-nutanix/issues/1198)
+- Enhance VPCs with `scope`, advertise connected subnets, and Kubernetes namespaces support. [#1201](https://github.com/nutanix/terraform-provider-nutanix/issues/1201)
+- Support new Network Security Policy types and FLEX rules. [#1202](https://github.com/nutanix/terraform-provider-nutanix/issues/1202)
+- Enhance Entity Groups with FQDN and Regex selection. [#1203](https://github.com/nutanix/terraform-provider-nutanix/issues/1203)
+- Add `inventory_type` and `node_list` to LCM perform inventory. [#1204](https://github.com/nutanix/terraform-provider-nutanix/issues/1204)
+- Add `has_previous_inventory_failed` to LCM entity data sources. [#1205](https://github.com/nutanix/terraform-provider-nutanix/issues/1205)
+- Enhance Images with `vm_disk_source` and `share_with_all_projects`. [#1206](https://github.com/nutanix/terraform-provider-nutanix/issues/1206)
 - Remediate Black Duck vulnerabilities by upgrading `golang.org/x/crypto` and `golang.org/x/net`.
 
 **Fixed Bugs:**
+- Fix `nutanix_images_v2` crash when checksum is defined. [#1143](https://github.com/nutanix/terraform-provider-nutanix/issues/1143)
+- Fix `nutanix_images_v2` timeout during large image download/creation so `wait_timeout` is respected. [#1144](https://github.com/nutanix/terraform-provider-nutanix/issues/1144)
+- Fix `nutanix_images_v2` failure when an image placement policy is defined. [#1175](https://github.com/nutanix/terraform-provider-nutanix/issues/1175)
+- Fix `nutanix_vm_clone_v2` not respecting the NIC configuration block. [#972](https://github.com/nutanix/terraform-provider-nutanix/issues/972)
+- Fix disk size increase not applying on `nutanix_volume_group_v2`. [#840](https://github.com/nutanix/terraform-provider-nutanix/issues/840)
 - ICMP `is_all_allowed` wildcard rejected by microseg v4.2 API. [#1185](https://github.com/nutanix/terraform-provider-nutanix/issues/1185)
 - Allow `secured_group_entity_group_reference` on network security policy rules. [#1184](https://github.com/nutanix/terraform-provider-nutanix/issues/1184)
-- Fix `nutanix_recovery_plan` parameters configuration and multi-stage network mapping. [#941](https://github.com/nutanix/terraform-provider-nutanix/issues/941)
+- Fix `nutanix_recovery_plan` parameters configuration and multi-stage network mapping. [#941](https://github.com/nutanix/terraform-provider-nutanix/issues/941) [#411](https://github.com/nutanix/terraform-provider-nutanix/issues/411)
 - Revert "Remove ETag dependency from VM $action endpoints in AHV V4 APIs" — restore ETag for reliability. [#1233](https://github.com/nutanix/terraform-provider-nutanix/pull/1233)
 - Fix LCM `release_date` formatting as a string in available versions. [#1213](https://github.com/nutanix/terraform-provider-nutanix/issues/1213)
 - Fix multidomain SDK client initialization.
