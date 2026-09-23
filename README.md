@@ -53,8 +53,7 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.5.
   * NGT ISO INSERT/Eject is now a no-op if the ISO is already ejected as part of NGT installation or custom eject. [#1220](https://github.com/nutanix/terraform-provider-nutanix/issues/1220) [#1176](https://github.com/nutanix/terraform-provider-nutanix/issues/1176)
   * Fix legacy boot order changes in VMs. [#1217](https://github.com/nutanix/terraform-provider-nutanix/issues/1217)
   * VM Anti-Affinity Policy now supports Project Association. [#997](https://github.com/nutanix/terraform-provider-nutanix/pull/997)
-  * Enhance VM shutdown and reboot actions with retry logic for ETag mismatch errors.
-  * Add `dry_run` option to LCM prechecks schema for improved flexibility.
+  * Enhance VM shutdown and reboot actions with retry logic for ETag mismatch errors. [#1089](https://github.com/nutanix/terraform-provider-nutanix/issues/1089)
   * Upgrade to 7.6 SDKs and update all modules for the latest SDK changes. [#1116](https://github.com/nutanix/terraform-provider-nutanix/issues/1116)
   * Set `enable_directory_and_identity_provider_shortlist` explicitly to use Prism Central's default. [#1179](https://github.com/nutanix/terraform-provider-nutanix/issues/1179)
   * Add `is_connected` attribute to Subnets. [#1195](https://github.com/nutanix/terraform-provider-nutanix/issues/1195)
@@ -67,7 +66,7 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.5.
   * Add `inventory_type` and `node_list` to LCM perform inventory. [#1204](https://github.com/nutanix/terraform-provider-nutanix/issues/1204)
   * Add `has_previous_inventory_failed` to LCM entity data sources. [#1205](https://github.com/nutanix/terraform-provider-nutanix/issues/1205)
   * Enhance Images with `vm_disk_source` and `share_with_all_projects`. [#1206](https://github.com/nutanix/terraform-provider-nutanix/issues/1206)
-  * Remediate Black Duck vulnerabilities by upgrading `golang.org/x/crypto` and `golang.org/x/net`.
+  * Remediate Black Duck vulnerabilities by upgrading `golang.org/x/crypto` and `golang.org/x/net`. [#1245](https://github.com/nutanix/terraform-provider-nutanix/issues/1245)
 
 * **Fixed Bugs:**
   * Fix `nutanix_images_v2` crash when checksum is defined. [#1143](https://github.com/nutanix/terraform-provider-nutanix/issues/1143)
@@ -75,15 +74,6 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.5.
   * Fix `nutanix_images_v2` failure when an image placement policy is defined. [#1175](https://github.com/nutanix/terraform-provider-nutanix/issues/1175)
   * Fix `nutanix_vm_clone_v2` not respecting the NIC configuration block. [#972](https://github.com/nutanix/terraform-provider-nutanix/issues/972)
   * Fix disk size increase not applying on `nutanix_volume_group_v2`. [#840](https://github.com/nutanix/terraform-provider-nutanix/issues/840)
-  * ICMP `is_all_allowed` wildcard rejected by microseg v4.2 API. [#1185](https://github.com/nutanix/terraform-provider-nutanix/issues/1185)
-  * Allow `secured_group_entity_group_reference` on network security policy rules. [#1184](https://github.com/nutanix/terraform-provider-nutanix/issues/1184)
-  * Fix `nutanix_recovery_plan` parameters configuration and multi-stage network mapping. [#941](https://github.com/nutanix/terraform-provider-nutanix/issues/941) [#411](https://github.com/nutanix/terraform-provider-nutanix/issues/411)
-  * Revert "Remove ETag dependency from VM $action endpoints in AHV V4 APIs" — restore ETag for reliability. [#1233](https://github.com/nutanix/terraform-provider-nutanix/pull/1233)
-  * Fix LCM `release_date` formatting as a string in available versions. [#1213](https://github.com/nutanix/terraform-provider-nutanix/issues/1213)
-  * Fix multidomain SDK client initialization.
-  * Fix project create/update issues with IRIS PC-Latest Provider.
-  * Return empty slice instead of nil in flatten functions for category creation and sharing.
-  * Update dependencies to latest versions in `go.mod` and `go.sum`.
 
 ### Software Requirements
 
