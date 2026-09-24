@@ -63,6 +63,7 @@ The following arguments are supported:
   |---|---|
   | VMDK | The VMDK disk format of an OVA. |
   | QCOW2 | The QCOW2 disk format of an OVA. |
+- `project_ext_id`: -(Optional) External identifier of the project associated with the OVA.
 
 ### checksum
 
@@ -421,6 +422,7 @@ The `nics` attribute supports the following:
 - `policy`: (Optional) Reference to the policy object in use.
 - `policy.ext_id`: (Optional) Reference to the policy object in use.
 
+
 ## Import
 
 This helps to manage existing entities which are not created through terraform. OVAs can be imported using the `UUID`. (ext_id in v4 API context).  eg,
@@ -432,4 +434,4 @@ resource "nutanix_ova_v2" "import_ova" {}
 terraform import nutanix_ova_v2.import_ova <UUID>
 ```
 
-See detailed information in [Nutanix Get Ova Details V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.3#tag/DomainManager/operation/getDomainManagerById).
+See detailed information in [Nutanix Get Ova Details V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.4#tag/DomainManager/operation/getDomainManagerById).

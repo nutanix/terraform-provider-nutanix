@@ -16,12 +16,15 @@ import (
 const resourceNameDeployPC = "nutanix_pc_deploy_v2.test"
 
 func TestAccV2NutanixDeployPcResource_Basic(t *testing.T) {
+	if testVars.Prism.DeployPC.PeIP == "" {
+		t.Skip("Skipping test due to missing AOS Node for testing")
+	}
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-deploy-pc-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeployPCConfig(name),
@@ -34,10 +37,10 @@ func TestAccV2NutanixDeployPcResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameDeployPC, "network.0.external_networks.0.ip_ranges.0.begin.0.ipv4.0.value", testVars.Prism.DeployPC.IPRange.Begin),
 					resource.TestCheckResourceAttr(resourceNameDeployPC, "network.0.external_networks.0.default_gateway.0.ipv4.0.value", testVars.Prism.DeployPC.DefaultGateway),
 					resource.TestCheckResourceAttr(resourceNameDeployPC, "network.0.external_networks.0.subnet_mask.0.ipv4.0.value", testVars.Prism.DeployPC.SubnetMask),
-					resource.TestCheckResourceAttr(resourceNameDeployPC, "network.0.name_servers.0.ipv4.0.value", testVars.Prism.DeployPC.NameServers[0]),
-					resource.TestCheckResourceAttr(resourceNameDeployPC, "network.0.name_servers.1.ipv4.0.value", testVars.Prism.DeployPC.NameServers[1]),
-					resource.TestCheckResourceAttr(resourceNameDeployPC, "network.0.ntp_servers.0.fqdn.0.value", testVars.Prism.DeployPC.NtpServers[0]),
-					resource.TestCheckResourceAttr(resourceNameDeployPC, "network.0.ntp_servers.1.fqdn.0.value", testVars.Prism.DeployPC.NtpServers[1]),
+					resource.TestCheckResourceAttr(resourceNameDeployPC, "network.0.name_servers.0.ipv4.0.value", testVars.DNSServers[0]),
+					resource.TestCheckResourceAttr(resourceNameDeployPC, "network.0.name_servers.1.ipv4.0.value", testVars.DNSServers[1]),
+					resource.TestCheckResourceAttr(resourceNameDeployPC, "network.0.ntp_servers.0.fqdn.0.value", testVars.NTPServers[0]),
+					resource.TestCheckResourceAttr(resourceNameDeployPC, "network.0.ntp_servers.1.fqdn.0.value", testVars.NTPServers[1]),
 				),
 			},
 		},
@@ -71,6 +74,17 @@ locals {
   deploy_pc = local.config.prism.deploy_pc
 }
 
+# Look up the external subnet that testenv/terraform pre-created on the deploy PE
+# (networking.tf: nutanix_subnet_v2.deploy-pc-external-subnet) and feed its
+# ext_id into network_ext_id. The subnet is intentionally NOT managed by this
+# test: a deployed PC can never be undeployed, so it permanently holds an IP on
+# the subnet, and a test-managed subnet would fail to delete at teardown ("has
+# address assignments").
+data "nutanix_subnets_v2" "deploy_net" {
+  provider = nutanix-2
+  filter   = "name eq '${local.deploy_pc.subnet_name}'"
+}
+
 resource "nutanix_pc_deploy_v2" "test" {
   provider = nutanix-2
   timeouts {
@@ -85,7 +99,7 @@ resource "nutanix_pc_deploy_v2" "test" {
   }
   network {
     external_networks {
-      network_ext_id = local.deploy_pc.network_id
+      network_ext_id = data.nutanix_subnets_v2.deploy_net.subnets[0].ext_id
       default_gateway {
         ipv4 {
           value = local.deploy_pc.default_gateway
@@ -111,32 +125,32 @@ resource "nutanix_pc_deploy_v2" "test" {
     }
     name_servers {
       ipv4 {
-        value = local.deploy_pc.name_servers[0]
+        value = local.config.dns_servers[0]
       }
     }
     name_servers {
       ipv4 {
-        value = local.deploy_pc.name_servers[1]
+        value = local.config.dns_servers[1]
       }
     }
     ntp_servers {
       fqdn {
-        value = local.deploy_pc.ntp_servers[0]
+        value = local.config.ntp_servers[0]
       }
     }
     ntp_servers {
       fqdn {
-        value = local.deploy_pc.ntp_servers[1]
+        value = local.config.ntp_servers[1]
       }
     }
     ntp_servers {
       fqdn {
-        value = local.deploy_pc.ntp_servers[2]
+        value = local.config.ntp_servers[2]
       }
     }
     ntp_servers {
       fqdn {
-        value = local.deploy_pc.ntp_servers[3]
+        value = local.config.ntp_servers[3]
       }
     }
   }

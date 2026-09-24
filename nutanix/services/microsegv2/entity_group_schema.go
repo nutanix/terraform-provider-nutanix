@@ -13,6 +13,8 @@ var (
 		import2.ALLOWEDSELECTBY_CATEGORY_EXT_ID.GetName(),
 		import2.ALLOWEDSELECTBY_LABELS.GetName(),
 		import2.ALLOWEDSELECTBY_NAME.GetName(),
+		import2.ALLOWEDSELECTBY_REGEX.GetName(),
+		import2.ALLOWEDSELECTBY_FQDN_VALUES.GetName(),
 	}
 	AllowedTypeEnums = []string{
 		import2.ALLOWEDTYPE_KUBE_NAMESPACE.GetName(),
@@ -30,6 +32,12 @@ var (
 	}
 	ExceptTypeEnums = []string{
 		import2.EXCEPTTYPE_ADDRESS_GROUP.GetName(),
+	}
+	MatchCriteriaEnums = []string{
+		import2.MATCHCRITERIA_CONTAINS.GetName(),
+		import2.MATCHCRITERIA_STARTS_WITH.GetName(),
+		import2.MATCHCRITERIA_ENDS_WITH.GetName(),
+		import2.MATCHCRITERIA_EQUALS.GetName(),
 	}
 )
 
@@ -118,6 +126,28 @@ func resourceSchemaForAllowedEntity() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+			},
+			"fqdns": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Computed:    true,
+				Description: "List of FQDNs in an allowed entity. Required when selection type is FQDN_VALUES.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"match_criteria": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(MatchCriteriaEnums, false),
+				Description:  "Match criteria for regex-based entity selection.",
+			},
+			"reference_string": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "String pattern for matching entities. Required when selection type is REGEX.",
 			},
 		},
 	}
@@ -332,6 +362,21 @@ func schemaForAllowedEntity() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"fqdns": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"match_criteria": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"reference_string": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -484,6 +529,21 @@ func resourceEntityGroupSchema() map[string]*schema.Schema {
 		"tenant_id": {
 			Type:     schema.TypeString,
 			Computed: true,
+		},
+		"project_ext_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"is_shared_with_all_projects": {
+			Type:        schema.TypeBool,
+			Computed:    true,
+			Description: "Indicates whether the Entity Group is shared with all projects.",
+		},
+		"is_system_defined": {
+			Type:        schema.TypeBool,
+			Computed:    true,
+			Description: "A flag indicating whether the entity group is system-defined.",
 		},
 	}
 }

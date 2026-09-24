@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/common/v1/config"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/common/v1/response"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
+	import8 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/request/vm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -1152,8 +1154,10 @@ func DatasourceNutanixVirtualMachineV4() *schema.Resource {
 func DatasourceNutanixVirtualMachineV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 	extID := d.Get("ext_id")
-
-	resp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(extID.(string)))
+	getVmByIdRequest := import8.GetVmByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -2108,35 +2112,213 @@ func flattenQosConfig(pr *config.QosConfig) []map[string]interface{} {
 	return nil
 }
 
-func flattenDisk(pr []config.Disk) []interface{} {
-	if len(pr) > 0 {
-		diskList := make([]interface{}, len(pr))
+func flattenDisk(pr []config.Disk, resourceData ...*schema.ResourceData) []interface{} {
+	if len(pr) == 0 {
+		return nil
+	}
 
-		for k, v := range pr {
-			disk := make(map[string]interface{})
-			if v.TenantId != nil {
-				disk["tenant_id"] = v.TenantId
-			}
-			if v.Links != nil {
-				disk["links"] = flattenAPILink(v.Links)
-			}
-			if v.ExtId != nil {
-				disk["ext_id"] = v.ExtId
-			}
-			if v.DiskAddress != nil {
-				disk["disk_address"] = flattenDiskAddress(v.DiskAddress)
-			}
-			if v.BackingInfo != nil {
-				disk["backing_info"] = flattenOneOfDiskBackingInfo(v.BackingInfo)
-			}
+	configuredVGDisks := map[string]struct{}(nil)
+	if len(resourceData) > 0 && resourceData[0] != nil {
+		configuredVGDisks = configuredVolumeGroupDisks(resourceData[0])
+	}
 
-			log.Printf("[DEBUG] disk: %v", disk)
-			diskList[k] = disk
+	var diskList []interface{}
+
+	for _, v := range pr {
+		disk := make(map[string]interface{})
+
+		if v.TenantId != nil {
+			disk["tenant_id"] = v.TenantId
 		}
+		if v.Links != nil {
+			disk["links"] = flattenAPILink(v.Links)
+		}
+		if v.ExtId != nil {
+			disk["ext_id"] = v.ExtId
+		}
+		if v.DiskAddress != nil {
+			disk["disk_address"] = flattenDiskAddress(v.DiskAddress)
+		}
+
+		var vgExtID string
+		if v.BackingInfo != nil {
+			flattenedBackingInfo := flattenOneOfDiskBackingInfo(v.BackingInfo)
+			disk["backing_info"] = flattenedBackingInfo
+			vgExtID = volumeGroupExtIDFromBackingInfo(flattenedBackingInfo)
+		}
+
+		if vgExtID != "" && configuredVGDisks != nil {
+			if _, configured := configuredVGDisks[vgExtID]; !configured {
+				log.Printf("[DEBUG] Skipping externally attached VG disk from VM state flattening: volume_group_ext_id=%s", vgExtID)
+				continue
+			}
+		}
+
+		log.Printf("[DEBUG] disk: %v", disk)
+		diskList = append(diskList, disk)
+	}
+
+	if len(diskList) > 0 {
 		log.Printf("[DEBUG] diskList: %v", diskList)
 		return diskList
 	}
+
 	return nil
+}
+
+func configuredVolumeGroupDisks(d *schema.ResourceData) map[string]struct{} {
+	configured := make(map[string]struct{})
+	if rawConfigAvailable := configuredVolumeGroupDisksFromRawConfig(d, configured); rawConfigAvailable {
+		return configured
+	}
+
+	raw, ok := d.GetOk("disks")
+	if !ok {
+		return configured
+	}
+
+	for _, disk := range raw.([]interface{}) {
+		diskMap, ok := disk.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		backingInfo, ok := diskMap["backing_info"].([]interface{})
+		if !ok {
+			continue
+		}
+		if vgExtID := volumeGroupExtIDFromBackingInfo(backingInfo); vgExtID != "" {
+			configured[vgExtID] = struct{}{}
+		}
+	}
+	return configured
+}
+
+func configuredVolumeGroupDisksFromRawConfig(d *schema.ResourceData, configured map[string]struct{}) bool {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() || rawConfig.Type() == cty.NilType {
+		return false
+	}
+
+	disks, ok := rawConfigAttribute(rawConfig, "disks")
+	if !ok {
+		return true
+	}
+
+	for _, disk := range rawConfigCollection(disks) {
+		backingInfo, ok := rawConfigAttribute(disk, "backing_info")
+		if !ok {
+			continue
+		}
+		for _, backingInfoItem := range rawConfigCollection(backingInfo) {
+			vgRefs, ok := rawConfigAttribute(backingInfoItem, "adfs_volume_group_reference")
+			if !ok {
+				continue
+			}
+			for _, vgRef := range rawConfigCollection(vgRefs) {
+				extID, ok := rawConfigAttribute(vgRef, "volume_group_ext_id")
+				if !ok || extID.Type() != cty.String {
+					continue
+				}
+				configured[extID.AsString()] = struct{}{}
+			}
+		}
+	}
+
+	return true
+}
+
+func rawConfigAttribute(value cty.Value, name string) (cty.Value, bool) {
+	if value.IsNull() || !value.IsKnown() {
+		return cty.NilVal, false
+	}
+
+	valueType := value.Type()
+	switch {
+	case valueType.IsObjectType():
+		if !valueType.HasAttribute(name) {
+			return cty.NilVal, false
+		}
+		attr := value.GetAttr(name)
+		if attr.IsNull() || !attr.IsKnown() {
+			return cty.NilVal, false
+		}
+		return attr, true
+	case valueType.IsMapType():
+		values := value.AsValueMap()
+		attr, ok := values[name]
+		if !ok || attr.IsNull() || !attr.IsKnown() {
+			return cty.NilVal, false
+		}
+		return attr, true
+	default:
+		return cty.NilVal, false
+	}
+}
+
+func rawConfigCollection(value cty.Value) []cty.Value {
+	if value.IsNull() || !value.IsKnown() {
+		return nil
+	}
+
+	valueType := value.Type()
+	if !valueType.IsListType() && !valueType.IsTupleType() && !valueType.IsSetType() {
+		return nil
+	}
+
+	values := make([]cty.Value, 0)
+	iter := value.ElementIterator()
+	for iter.Next() {
+		_, item := iter.Element()
+		if item.IsNull() || !item.IsKnown() {
+			continue
+		}
+		values = append(values, item)
+	}
+	return values
+}
+
+func volumeGroupExtIDFromBackingInfo(backingInfo interface{}) string {
+	backingInfoSlice, ok := backingInfo.([]interface{})
+	if !ok {
+		if backingInfoMaps, ok := backingInfo.([]map[string]interface{}); ok {
+			backingInfoSlice = make([]interface{}, 0, len(backingInfoMaps))
+			for _, backingInfoMap := range backingInfoMaps {
+				backingInfoSlice = append(backingInfoSlice, backingInfoMap)
+			}
+		}
+	}
+	if len(backingInfoSlice) == 0 {
+		return ""
+	}
+
+	backingInfoMap, ok := backingInfoSlice[0].(map[string]interface{})
+	if !ok {
+		return ""
+	}
+	vgRef, ok := backingInfoMap["adfs_volume_group_reference"].([]interface{})
+	if !ok || len(vgRef) == 0 {
+		if vgRefMaps, ok := backingInfoMap["adfs_volume_group_reference"].([]map[string]interface{}); ok {
+			vgRef = make([]interface{}, 0, len(vgRefMaps))
+			for _, vgRefMap := range vgRefMaps {
+				vgRef = append(vgRef, vgRefMap)
+			}
+		}
+	}
+	if len(vgRef) == 0 {
+		return ""
+	}
+
+	vgMap, ok := vgRef[0].(map[string]interface{})
+	if !ok {
+		return ""
+	}
+	if extID, ok := vgMap["volume_group_ext_id"].(string); ok {
+		return extID
+	}
+	if extID, ok := vgMap["volume_group_ext_id"].(*string); ok {
+		return utils.StringValue(extID)
+	}
+	return ""
 }
 
 func flattenOneOfDiskBackingInfo(pr *config.OneOfDiskBackingInfo) []map[string]interface{} {

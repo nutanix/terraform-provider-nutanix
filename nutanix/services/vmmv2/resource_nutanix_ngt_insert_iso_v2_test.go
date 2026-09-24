@@ -290,6 +290,15 @@ func runNGTInsertIsoAccTestWithRetry(t *testing.T, testName string, fn func(t *t
 		return
 	}
 
+	// Acceptance-only guard: skip before spawning the child `go test` subprocess
+	// when TF_ACC is unset (e.g. the `make test` unit run with its short timeout).
+	// resource.Test performs this skip itself, but that check lives inside fn and
+	// would never run here, so the subprocess spawn/compile could otherwise blow
+	// past the unit-test timeout and panic.
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("Acceptance tests skipped unless env 'TF_ACC' set")
+	}
+
 	pkgDir := ngtInsertIsoTestPackageDir(t)
 	testRe := fmt.Sprintf("^%s$", testName)
 

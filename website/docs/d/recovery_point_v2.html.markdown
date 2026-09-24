@@ -47,6 +47,7 @@ The following attributes are exported:
 * `location_references`: List of location references where the VM or volume group recovery point are a part of the specified recovery point.
 * `vm_recovery_points`: List of VM recovery point that are a part of the specified top-level recovery point. Note that a recovery point can contain a maximum number of 30 entities. These entities can be a combination of VM(s) and volume group(s).
 * `volume_group_recovery_points`: List of volume group recovery point that are a part of the specified top-level recovery point. Note that a recovery point can contain a maximum number of 30 entities. These entities can be a combination of VM(s) and volume group(s).
+* `project_ext_id`: Project external ID associated with the recovery point.
 
 ### Links
 The links attribute supports the following:
@@ -104,4 +105,4 @@ The links attribute supports the following:
 * `object_type`: value: `dataprotection.v4.common.VssProperties`
 
 
-See detailed information in [Nutanix Get Recovery Point V4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.3#tag/RecoveryPoints/operation/getRecoveryPointById).
+See detailed information in [Nutanix Get Recovery Point V4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.4#tag/RecoveryPoints/operation/getRecoveryPointById).

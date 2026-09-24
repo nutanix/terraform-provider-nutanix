@@ -108,4 +108,4 @@ data "nutanix_user_keys_v2" "fetch_uks"{
 terraform import nutanix_user_key_v2.import_uk userUUID/keyUUID
 ```
 
-See detailed information in [Nutanix Create User Key V4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Users/operation/createUserKey)
+See detailed information in [Nutanix Create User Key V4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/Users/operation/createUserKey)

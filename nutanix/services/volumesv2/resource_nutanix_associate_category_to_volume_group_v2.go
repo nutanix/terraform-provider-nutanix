@@ -10,9 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	taskPoll "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	"github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/common/v1/config"
 	volumesPrism "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/prism/v4/config"
 	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/request/volumegroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -75,10 +77,13 @@ func ResourceNutanixAssociateCategoryToVolumeGroupV2Create(ctx context.Context, 
 		body.Categories = expandCategoryEntityReference(categories.([]interface{}))
 	}
 
-	aJSON, _ := json.MarshalIndent(body, "", "  ")
+	associateCategoryRequest := import1.AssociateCategoryRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+		Body:  body,
+	}
+	aJSON, _ := json.MarshalIndent(associateCategoryRequest, "", "  ")
 	log.Printf("[DEBUG] Payload to associate categories to Volume Group Body: %s", string(aJSON))
-
-	resp, err := conn.VolumeAPIInstance.AssociateCategory(utils.StringPtr(extID.(string)), body)
+	resp, err := conn.VolumeAPIInstance.AssociateCategory(ctx, &associateCategoryRequest)
 	if err != nil {
 		return diag.Errorf("error while associating categories to Volume Group : %v", err)
 	}
@@ -100,7 +105,10 @@ func ResourceNutanixAssociateCategoryToVolumeGroupV2Create(ctx context.Context, 
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import2.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Associate Category to Volume Group Task : %v", err)
 	}
@@ -136,10 +144,13 @@ func ResourceNutanixAssociateCategoryToVolumeGroupV2Delete(ctx context.Context, 
 		body.Categories = expandCategoryEntityReference(categories.([]interface{}))
 	}
 
-	aJSON, _ := json.MarshalIndent(body, "", "  ")
+	disassociateCategoryRequest := import1.DisassociateCategoryRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+		Body:  body,
+	}
+	aJSON, _ := json.MarshalIndent(disassociateCategoryRequest, "", "  ")
 	log.Printf("[DEBUG] Payload for disassociating category from Volume Group: %s", string(aJSON))
-
-	resp, err := conn.VolumeAPIInstance.DisassociateCategory(utils.StringPtr(extID.(string)), body)
+	resp, err := conn.VolumeAPIInstance.DisassociateCategory(ctx, &disassociateCategoryRequest)
 	if err != nil {
 		return diag.Errorf("error while Dissociating Category from Volume Group : %v", err)
 	}
@@ -161,7 +172,10 @@ func ResourceNutanixAssociateCategoryToVolumeGroupV2Delete(ctx context.Context, 
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import2.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching disassociate category from Volume Group task (%s): %v", utils.StringValue(taskUUID), err)
 	}

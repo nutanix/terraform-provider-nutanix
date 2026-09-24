@@ -1,0 +1,10 @@
+# Internal-only acceptance-test environment tooling. Kept in the internal repo
+# but excluded from `git archive` output (release tarballs / export-based
+# publishing) so it does not ship to the public provider repo.
+#
+# NOTE: `export-ignore` ONLY affects `git archive`. It does NOT prevent a plain
+# `git merge`/push from carrying this directory into another repository. If the
+# internal -> public sync is a git merge, additionally keep testenv/ off the
+# branch that is merged to public (or strip it on the public side).
+testenv/ export-ignore
+testenv/** export-ignore

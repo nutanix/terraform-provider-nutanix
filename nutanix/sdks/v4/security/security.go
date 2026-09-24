@@ -8,8 +8,8 @@ import (
 )
 
 type Client struct {
-	KeyManagementServersAPIInstance *api.KeyManagementServersApi
-	STIGsAPI                        *api.STIGsApi
+	KeyManagementServersAPIInstance *api.KeyManagementServersServiceApi
+	STIGsAPI                        *api.STIGsServiceApi
 }
 
 func NewSecurityClient(credentials client.Credentials) (*Client, error) {
@@ -25,9 +25,10 @@ func NewSecurityClient(credentials client.Credentials) (*Client, error) {
 		pcClient.AllowVersionNegotiation = cfg.AllowVersionNegotiation
 		baseClient = pcClient
 	}
+	f := &Client{
+		KeyManagementServersAPIInstance: api.NewKeyManagementServersServiceApi(baseClient),
+		STIGsAPI:                        api.NewSTIGsServiceApi(baseClient),
+	}
 
-	return &Client{
-		KeyManagementServersAPIInstance: api.NewKeyManagementServersApi(baseClient),
-		STIGsAPI:                        api.NewSTIGsApi(baseClient),
-	}, nil
+	return f, nil
 }

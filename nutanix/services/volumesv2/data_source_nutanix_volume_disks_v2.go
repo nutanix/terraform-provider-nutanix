@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/common/v1/config"
 	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/request/volumegroups"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -52,114 +53,7 @@ func DatasourceNutanixVolumeDisksV2() *schema.Resource {
 				Description: "List of disks corresponding to a Volume Group identified by {volumeGroupExtId}.",
 				Type:        schema.TypeList,
 				Computed:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"tenant_id": {
-							Description: "A globally unique identifier that represents the tenant that owns this entity. The system automatically assigns it, and it and is immutable from an API consumer perspective (some use cases may cause this Id to change - For instance, a use case may require the transfer of ownership of the entity, but these cases are handled automatically on the server).",
-							Type:        schema.TypeString,
-							Computed:    true,
-						},
-						"ext_id": {
-							Description: "A globally unique identifier of an instance that is suitable for external consumption.",
-							Type:        schema.TypeString,
-							Computed:    true,
-						},
-						"links": {
-							Description: "A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.",
-							Type:        schema.TypeList,
-							Computed:    true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"href": {
-										Description: "The URL at which the entity described by the link can be accessed.",
-										Type:        schema.TypeString,
-										Computed:    true,
-									},
-									"rel": {
-										Description: "A name that identifies the relationship of the link to the object that is returned by the URL. The unique value of \"self\" identifies the URL for the object.",
-										Type:        schema.TypeString,
-										Computed:    true,
-									},
-								},
-							},
-						},
-						"index": {
-							Description: "Index of the disk in a Volume Group. This field is optional and immutable.",
-							Type:        schema.TypeInt,
-							Computed:    true,
-						},
-						"disk_size_bytes": {
-							Description: "Size of the disk in bytes. This field is mandatory during Volume Group creation if a new disk is being created on the storage container.",
-							Type:        schema.TypeInt,
-							Computed:    true,
-						},
-						"storage_container_id": {
-							Description: "Storage container on which the disk must be created. This is a read-only field.",
-							Type:        schema.TypeString,
-							Computed:    true,
-						},
-						"description": {
-							Description: "Volume Disk description. This is an optional field.",
-							Type:        schema.TypeString,
-							Computed:    true,
-						},
-						"disk_data_source_reference": {
-							Description: "Disk Data Source Reference.",
-							Type:        schema.TypeList,
-							Computed:    true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ext_id": {
-										Description: "The external identifier of the Data Source Reference.",
-										Type:        schema.TypeString,
-										Computed:    true,
-									},
-									"name": {
-										Description: "The name of the Data Source Reference.",
-										Type:        schema.TypeString,
-										Computed:    true,
-									},
-									"uris": {
-										Description: "The uri list of the Data Source Reference.",
-										Type:        schema.TypeList,
-										Computed:    true,
-										Elem: &schema.Schema{
-											Type: schema.TypeList,
-										},
-									},
-									"entity_type": {
-										Description: "The Entity Type of the Data Source Reference.",
-										Type:        schema.TypeString,
-										Computed:    true,
-									},
-								},
-							},
-						},
-						"disk_storage_features": {
-							Description: "Storage optimization features which must be enabled on the Volume Disks. This is an optional field. If omitted, the disks will honor the Volume Group specific storage features setting.",
-							Type:        schema.TypeList,
-							Computed:    true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"flash_mode": {
-										Description: "The flash mode of the disk.",
-										Type:        schema.TypeList,
-										Computed:    true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"is_enabled": {
-													Description: "The flash mode is enabled or not.",
-													Type:        schema.TypeBool,
-													Computed:    true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
+				Elem:        DatasourceNutanixVolumeDiskV2(),
 			},
 		},
 	}
@@ -168,40 +62,29 @@ func DatasourceNutanixVolumeDisksV2() *schema.Resource {
 func DatasourceNutanixVolumeDisksV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
-	var filter, orderBy, selects *string
-	var page, limit *int
+	volumeGroupExtID := d.Get("volume_group_ext_id").(string)
 
-	volumeGroupExtID := d.Get("volume_group_ext_id")
-
-	// initialize the query parameters
-	if pagef, ok := d.GetOk("page"); ok {
-		page = utils.IntPtr(pagef.(int))
-	} else {
-		page = nil
-	}
-	if limitf, ok := d.GetOk("limit"); ok {
-		limit = utils.IntPtr(limitf.(int))
-	} else {
-		limit = nil
-	}
-	if filterf, ok := d.GetOk("filter"); ok {
-		filter = utils.StringPtr(filterf.(string))
-	} else {
-		filter = nil
-	}
-	if order, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order.(string))
-	} else {
-		orderBy = nil
-	}
-	if selectf, ok := d.GetOk("select"); ok {
-		selects = utils.StringPtr(selectf.(string))
-	} else {
-		selects = nil
+	listVolumeDisksRequest := import1.ListVolumeDisksByVolumeGroupIdRequest{
+		VolumeGroupExtId: utils.StringPtr(volumeGroupExtID),
 	}
 
-	// get the volume disks response
-	resp, err := conn.VolumeAPIInstance.ListVolumeDisksByVolumeGroupId(utils.StringPtr(volumeGroupExtID.(string)), page, limit, filter, orderBy, selects)
+	if v, ok := d.GetOk("page"); ok {
+		listVolumeDisksRequest.Page_ = utils.IntPtr(v.(int))
+	}
+	if v, ok := d.GetOk("limit"); ok {
+		listVolumeDisksRequest.Limit_ = utils.IntPtr(v.(int))
+	}
+	if v, ok := d.GetOk("filter"); ok {
+		listVolumeDisksRequest.Filter_ = utils.StringPtr(v.(string))
+	}
+	if v, ok := d.GetOk("orderby"); ok {
+		listVolumeDisksRequest.Orderby_ = utils.StringPtr(v.(string))
+	}
+	if v, ok := d.GetOk("select"); ok {
+		listVolumeDisksRequest.Select_ = utils.StringPtr(v.(string))
+	}
+
+	resp, err := conn.VolumeAPIInstance.ListVolumeDisksByVolumeGroupId(ctx, &listVolumeDisksRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Disks attached to the volume group : %v", err)
 	}

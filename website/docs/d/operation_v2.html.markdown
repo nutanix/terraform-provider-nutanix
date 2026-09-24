@@ -45,4 +45,4 @@ The following arguments are supported:
 - `endpoint_url`: Endpoint URL.
 - `http_method`: HTTP method for the provided associated endpoint.
 
-See detailed information in [Nutanix Get Operation](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Operations/operation/getOperationById).
+See detailed information in [Nutanix Get Operation](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/Operations/operation/getOperationById).

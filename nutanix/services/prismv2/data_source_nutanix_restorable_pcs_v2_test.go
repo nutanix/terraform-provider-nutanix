@@ -14,8 +14,8 @@ const datasourceNameListRestorablePCs = "data.nutanix_restorable_pcs_v2.test"
 
 func TestAccV2NutanixRestorablePcsDatasource_ClusterLocation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// List backup targets and Create if backup target not exists
 			{
@@ -50,8 +50,8 @@ func TestAccV2NutanixRestorablePcsDatasource_ClusterLocation(t *testing.T) {
 
 func TestAccV2NutanixRestorablePcsDatasource_ObjectStoreLocation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// List backup targets and Create if object store location backup target not exists
 			{

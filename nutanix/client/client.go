@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -567,19 +566,19 @@ func CheckResponse(r *http.Response) error {
 	}
 
 	if c == http.StatusBadRequest {
-		bodyBytes, err := ioutil.ReadAll(r.Body)
+		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
 			return fmt.Errorf("bad Request: failed to read body: %w", err)
 		}
 		return fmt.Errorf("bad Request: %s", string(bodyBytes))
 	}
 
-	buf, err := ioutil.ReadAll(r.Body)
+	buf, err := io.ReadAll(r.Body)
 	if err != nil {
 		return err
 	}
 
-	rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
+	rdr2 := io.NopCloser(bytes.NewBuffer(buf))
 
 	r.Body = rdr2
 	// if has entities -> return nil

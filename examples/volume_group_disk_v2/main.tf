@@ -96,7 +96,8 @@ data "nutanix_storage_containers_v2" "sg" {
   limit  = 1
 }
 
-# create a volume group disk, and attach it to the volume group
+# Best practice: manage Volume Group disks with nutanix_volume_group_disk_v2.
+# Do not add or remove Volume Group disks through nutanix_virtual_machine_v2.disks.
 resource "nutanix_volume_group_disk_v2" "disk_example" {
   volume_group_ext_id = resource.nutanix_volume_group_v2.volume_group_example.id
   # This Attribute is used to specify the index of the disk in the volume group.

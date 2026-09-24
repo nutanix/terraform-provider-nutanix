@@ -6,13 +6,16 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import4 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	import5 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
+	import3 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/request/images"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -120,8 +123,15 @@ func ResourceNutanixImageV4() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ext_id": {
-										Type:     schema.TypeString,
-										Required: true,
+										Description: "The external identifier of the source disk. Providing 'ext_id' without the corresponding 'vm_ext_id' is a deprecated practice and will not be supported in a future release.",
+										Type:        schema.TypeString,
+										Required:    true,
+									},
+									"vm_ext_id": {
+										Description: "The external identifier of the source VM for the specified disk.",
+										Type:        schema.TypeString,
+										Optional:    true,
+										Computed:    true,
 									},
 								},
 							},
@@ -224,6 +234,15 @@ func ResourceNutanixImageV4() *schema.Resource {
 					},
 				},
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"share_with_all_projects": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -261,8 +280,14 @@ func ResourceNutanixImageV4Create(ctx context.Context, d *schema.ResourceData, m
 	if clsExts, ok := d.GetOk("cluster_location_ext_ids"); ok {
 		body.ClusterLocationExtIds = flattenStringValue(clsExts.([]interface{}))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		body.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 
-	resp, err := conn.ImagesAPIInstance.CreateImage(body)
+	createImageRequest := import3.CreateImageRequest{
+		Body: body,
+	}
+	resp, err := conn.ImagesAPIInstance.CreateImage(ctx, &createImageRequest)
 	if err != nil {
 		return diag.Errorf("error while creating Image : %v", err)
 	}
@@ -276,7 +301,7 @@ func ResourceNutanixImageV4Create(ctx context.Context, d *schema.ResourceData, m
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: utils.ResolveWaitTimeout(meta, d.Timeout(schema.TimeoutCreate)),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -284,7 +309,10 @@ func ResourceNutanixImageV4Create(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching image create task (%s): %v", utils.StringValue(taskUUID), err)
 	}
@@ -298,13 +326,18 @@ func ResourceNutanixImageV4Create(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 	d.SetId(utils.StringValue(uuid))
-	return ResourceNutanixImageV4Read(ctx, d, meta)
+
+	diags := vmDiskSourceDeprecationWarnings(d)
+	return append(diags, ResourceNutanixImageV4Read(ctx, d, meta)...)
 }
 
 func ResourceNutanixImageV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	resp, err := conn.ImagesAPIInstance.GetImageById(utils.StringPtr(d.Id()))
+	getImageByIdRequest := import3.GetImageByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ImagesAPIInstance.GetImageById(ctx, &getImageByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching images : %v", err)
 	}
@@ -362,6 +395,12 @@ func ResourceNutanixImageV4Read(ctx context.Context, d *schema.ResourceData, met
 	if err := d.Set("placement_policy_status", flattenImagePlacementStatus(getResp.PlacementPolicyStatus)); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("share_with_all_projects", getResp.IsSharedWithAllProjects); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -369,7 +408,14 @@ func ResourceNutanixImageV4Read(ctx context.Context, d *schema.ResourceData, met
 func ResourceNutanixImageV4Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	resp, err := conn.ImagesAPIInstance.GetImageById(utils.StringPtr(d.Id()))
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
+
+	getImageByIdRequest := import3.GetImageByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ImagesAPIInstance.GetImageById(ctx, &getImageByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching images : %v", err)
 	}
@@ -406,7 +452,11 @@ func ResourceNutanixImageV4Update(ctx context.Context, d *schema.ResourceData, m
 		updateSpec.ClusterLocationExtIds = flattenStringValue(d.Get("cluster_location_ext_ids").([]interface{}))
 	}
 
-	updateResp, er := conn.ImagesAPIInstance.UpdateImageById(utils.StringPtr(d.Id()), &updateSpec)
+	updateImageByIdRequest := import3.UpdateImageByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updateSpec,
+	}
+	updateResp, er := conn.ImagesAPIInstance.UpdateImageById(ctx, &updateImageByIdRequest)
 	if er != nil {
 		return diag.Errorf("error while updating images : %v", err)
 	}
@@ -419,20 +469,24 @@ func ResourceNutanixImageV4Update(ctx context.Context, d *schema.ResourceData, m
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
+		Timeout: utils.ResolveWaitTimeout(meta, d.Timeout(schema.TimeoutUpdate)),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for image (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
-	return ResourceNutanixImageV4Read(ctx, d, meta)
+	diags := vmDiskSourceDeprecationWarnings(d)
+	return append(diags, ResourceNutanixImageV4Read(ctx, d, meta)...)
 }
 
 func ResourceNutanixImageV4Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	resp, err := conn.ImagesAPIInstance.DeleteImageById(utils.StringPtr(d.Id()))
+	deleteImageByIdRequest := import3.DeleteImageByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ImagesAPIInstance.DeleteImageById(ctx, &deleteImageByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting images : %v", err)
 	}
@@ -445,7 +499,7 @@ func ResourceNutanixImageV4Delete(ctx context.Context, d *schema.ResourceData, m
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutDelete),
+		Timeout: utils.ResolveWaitTimeout(meta, d.Timeout(schema.TimeoutDelete)),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -455,25 +509,101 @@ func ResourceNutanixImageV4Delete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func expandOneOfImageChecksum(pr interface{}) *import5.OneOfImageChecksum {
-	if pr != nil {
-		prI := pr.([]interface{})
-		val := prI[0].(map[string]interface{})
-
-		chksum := &import5.OneOfImageChecksum{}
-
-		if val["object_type"] == "sha1" {
-			sha1 := chksum.GetValue().(import5.ImageSha1Checksum)
-
-			sha1.HexDigest = utils.StringPtr(val["hex_digest"].(string))
-			chksum.SetValue(sha1)
-		} else {
-			sha256 := chksum.GetValue().(import5.ImageSha256Checksum)
-			sha256.HexDigest = utils.StringPtr(val["hex_digest"].(string))
-			chksum.SetValue(sha256)
-		}
-		return chksum
+	if pr == nil {
+		return nil
 	}
-	return nil
+	prI, ok := pr.([]interface{})
+	if !ok || len(prI) == 0 || prI[0] == nil {
+		return nil
+	}
+	val, ok := prI[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	hexDigest, _ := val["hex_digest"].(string)
+	objectType, _ := val["object_type"].(string)
+
+	chksum := import5.NewOneOfImageChecksum()
+
+	switch objectType {
+	case "sha1":
+		sha1 := import5.NewImageSha1Checksum()
+		sha1.HexDigest = utils.StringPtr(hexDigest)
+		if err := chksum.SetValue(*sha1); err != nil {
+			log.Printf("[ERROR] failed to set sha1 checksum: %s", err)
+			return nil
+		}
+	case "sha256":
+		sha256 := import5.NewImageSha256Checksum()
+		sha256.HexDigest = utils.StringPtr(hexDigest)
+		if err := chksum.SetValue(*sha256); err != nil {
+			log.Printf("[ERROR] failed to set sha256 checksum: %s", err)
+			return nil
+		}
+	default:
+		log.Printf("[WARN] unsupported checksum object_type %q; ignoring checksum", objectType)
+		return nil
+	}
+	return chksum
+}
+
+// vmDiskSourceDeprecationWarnings returns a deprecation warning when a
+// vm_disk_source provides ext_id without the corresponding vm_ext_id.
+//
+// It inspects the raw config (what the user actually wrote) rather than the
+// merged resource data, because vm_ext_id is Computed: once the API populates
+// it, the merged value is no longer empty and would mask the deprecated usage.
+func vmDiskSourceDeprecationWarnings(d *schema.ResourceData) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return diags
+	}
+
+	sourceVal := rawConfig.GetAttr("source")
+	if sourceVal.IsNull() || !sourceVal.IsKnown() || sourceVal.LengthInt() == 0 {
+		return diags
+	}
+	srcElem := firstElement(sourceVal)
+	if srcElem.IsNull() {
+		return diags
+	}
+
+	vmDiskVal := srcElem.GetAttr("vm_disk_source")
+	if vmDiskVal.IsNull() || !vmDiskVal.IsKnown() || vmDiskVal.LengthInt() == 0 {
+		return diags
+	}
+	vmDiskElem := firstElement(vmDiskVal)
+	if vmDiskElem.IsNull() {
+		return diags
+	}
+
+	if isCtyStringSet(vmDiskElem.GetAttr("ext_id")) && !isCtyStringSet(vmDiskElem.GetAttr("vm_ext_id")) {
+		diags = append(diags, diag.Diagnostic{
+			Severity:      diag.Warning,
+			Summary:       "Deprecated: 'ext_id' without 'vm_ext_id'",
+			Detail:        "Providing 'ext_id' in vm_disk_source without the corresponding 'vm_ext_id' is a deprecated practice and will not be supported in a future release.",
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "source"}, cty.IndexStep{Key: cty.NumberIntVal(0)}, cty.GetAttrStep{Name: "vm_disk_source"}, cty.IndexStep{Key: cty.NumberIntVal(0)}, cty.GetAttrStep{Name: "ext_id"}},
+		})
+	}
+	return diags
+}
+
+// firstElement returns the first element of a cty list/set value, or a null
+// value if it cannot be read.
+func firstElement(v cty.Value) cty.Value {
+	for it := v.ElementIterator(); it.Next(); {
+		_, elem := it.Element()
+		return elem
+	}
+	return cty.NullVal(cty.DynamicPseudoType)
+}
+
+// isCtyStringSet reports whether a cty string value is known, non-null and non-empty.
+func isCtyStringSet(v cty.Value) bool {
+	return !v.IsNull() && v.IsKnown() && v.AsString() != ""
 }
 
 func expandOneOfImageSource(pr interface{}) *import5.OneOfImageSource {
@@ -508,6 +638,9 @@ func expandOneOfImageSource(pr interface{}) *import5.OneOfImageSource {
 			vmDiskMap := vmDiskIn[0].(map[string]interface{})
 
 			vmDiskSrc.ExtId = utils.StringPtr(vmDiskMap["ext_id"].(string))
+			if vmExtId, ok := vmDiskMap["vm_ext_id"].(string); ok && vmExtId != "" {
+				vmDiskSrc.VmExtId = utils.StringPtr(vmExtId)
+			}
 			imgSrc.SetValue(*vmDiskSrc)
 		}
 

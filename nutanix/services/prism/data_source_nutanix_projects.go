@@ -198,6 +198,42 @@ func DataSourceNutanixProjects() *schema.Resource {
 								},
 							},
 						},
+						"enable_directory_and_identity_provider_shortlist": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"directory_reference_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"identity_providers_reference_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 						"metadata": {
 							Type:     schema.TypeMap,
 							Computed: true,
@@ -264,7 +300,7 @@ func flattenProjectEntities(projects []*v3.Project) []map[string]interface{} {
 	for i, project := range projects {
 		metadata, categories := setRSEntityMetadata(project.Metadata)
 
-		entities[i] = map[string]interface{}{
+		entity := map[string]interface{}{
 			"name":                               project.Status.Name,
 			"description":                        project.Status.Descripion,
 			"state":                              project.Status.State,
@@ -277,12 +313,18 @@ func flattenProjectEntities(projects []*v3.Project) []map[string]interface{} {
 			"external_user_group_reference_list": flattenReferenceList(project.Spec.Resources.ExternalUserGroupReferenceList),
 			"subnet_reference_list":              flattenReferenceList(project.Spec.Resources.SubnetReferenceList),
 			"external_network_list":              flattenExternalNetworkListReferenceList(project.Spec.Resources.ExternalNetworkList),
+			"directory_reference_list":           flattenDirectoryReferenceList(project.Spec.Resources.DirectoryReferenceList),
+			"identity_providers_reference_list":  flattenDirectoryReferenceList(project.Spec.Resources.IdentityProvidersReferenceList),
 			"metadata":                           metadata,
 			"categories":                         categories,
 			"project_reference":                  flattenReferenceValues(project.Metadata.ProjectReference),
 			"owner_reference":                    flattenReferenceValues(project.Metadata.OwnerReference),
 			"api_version":                        project.APIVersion,
 		}
+		if project.Spec.Resources.EnableDirectoryAndIdentityProviderShortlist != nil {
+			entity["enable_directory_and_identity_provider_shortlist"] = utils.BoolValue(project.Spec.Resources.EnableDirectoryAndIdentityProviderShortlist)
+		}
+		entities[i] = entity
 	}
 	return entities
 }

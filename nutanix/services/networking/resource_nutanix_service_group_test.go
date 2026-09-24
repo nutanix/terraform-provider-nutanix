@@ -22,6 +22,7 @@ func TestAccNutanixServiceGroup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
+		ErrorCheck:   acc.SkipIfV3FlowNextGen(t),
 		CheckDestroy: testAccCheckNutanixServiceGroupDestroy,
 		Steps: []resource.TestStep{
 			{

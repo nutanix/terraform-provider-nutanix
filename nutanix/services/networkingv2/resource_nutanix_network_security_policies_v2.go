@@ -3,16 +3,20 @@ package networkingv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	config "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
+	import3 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/request/networksecuritypolicies"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import5 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -26,6 +30,11 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 		ReadContext:   ResourceNutanixNetworkSecurityPolicyV2Read,
 		UpdateContext: ResourceNutanixNetworkSecurityPolicyV2Update,
 		DeleteContext: ResourceNutanixNetworkSecurityPolicyV2Delete,
+		// The backend (MIC-30142) allows only one of secured_group_category_references and
+		// secured_group_entity_group_reference to be present on a rule spec. The SDK's
+		// ExactlyOneOf cannot express this because the fields live under the multi-instance
+		// "rules" TypeList, so enforce mutual exclusivity here at plan time instead.
+		CustomizeDiff: securedGroupReferencesCustomizeDiff,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -37,7 +46,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"QUARANTINE", "ISOLATION", "APPLICATION", "SHAREDSERVICE"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"QUARANTINE", "ISOLATION", "APPLICATION", "SHAREDSERVICE", "CRITICAL", "COREINFRASTRUCTURE", "ZONE", "WORKLOAD"}, false),
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -47,6 +56,11 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"SAVE", "MONITOR", "ENFORCE"}, false),
+			},
+			"priority": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
 			},
 			"rules": {
 				Type:     schema.TypeList,
@@ -65,7 +79,17 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"QUARANTINE", "TWO_ENV_ISOLATION", "APPLICATION", "INTRA_GROUP", "MULTI_ENV_ISOLATION", "SHARED_SERVICE"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"QUARANTINE", "TWO_ENV_ISOLATION", "APPLICATION", "INTRA_GROUP", "MULTI_ENV_ISOLATION", "SHARED_SERVICE", "FLEX"}, false),
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"is_logging_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
 						},
 						"spec": {
 							Type:     schema.TypeList,
@@ -107,7 +131,8 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 												},
 												"secured_group_category_references": {
 													Type:     schema.TypeList,
-													Required: true,
+													Optional: true,
+													Computed: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
@@ -454,6 +479,13 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 											},
 										},
 									},
+									"flex_rule_spec": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: flexRuleSpecSchema(false),
+										},
+									},
 								},
 							},
 						},
@@ -544,6 +576,15 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 					},
 				},
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"is_shared_with_all_projects": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -565,8 +606,11 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 	if state, ok := d.GetOk("state"); ok {
 		spec.State = common.ExpandEnum[import1.SecurityPolicyState](state.(string))
 	}
+	if priority, ok := d.GetOk("priority"); ok {
+		spec.Priority = utils.IntPtr(priority.(int))
+	}
 	if rules, ok := d.GetOk("rules"); ok {
-		spec.Rules = expandNetworkSecurityPolicyRule(rules.([]interface{}))
+		spec.Rules = expandNetworkSecurityPolicyRule(d, rules.([]interface{}))
 	}
 	if isipv6, ok := d.GetOk("is_ipv6_traffic_allowed"); ok {
 		spec.IsIpv6TrafficAllowed = utils.BoolPtr(isipv6.(bool))
@@ -580,11 +624,17 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 	if vpcRef, ok := d.GetOk("vpc_reference"); ok {
 		spec.VpcReferences = common.ExpandListOfString(vpcRef.([]interface{}))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		spec.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 
 	aJSON, _ := json.MarshalIndent(spec, "", "  ")
 	log.Printf("[DEBUG] Create Network Security Policy Payload: %s", string(aJSON))
 
-	resp, err := conn.NetworkingSecurityInstance.CreateNetworkSecurityPolicy(&spec)
+	createNetworkSecurityPolicyRequest := import3.CreateNetworkSecurityPolicyRequest{
+		Body: &spec,
+	}
+	resp, err := conn.NetworkingSecurityInstance.CreateNetworkSecurityPolicy(ctx, &createNetworkSecurityPolicyRequest)
 	if err != nil {
 		return diag.Errorf("error while creating network security policy: %v", err)
 	}
@@ -604,11 +654,20 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		// Fetch and log the task details to aid debugging of the failed create.
+		if taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &import5.GetTaskByIdRequest{ExtId: taskUUID}); err == nil {
+			taskDetails := taskResp.Data.GetValue().(import2.Task)
+			aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+			log.Printf("[DEBUG] Create Network Security Policy Failed Task Details: %s", string(aJSON))
+		}
 		return diag.Errorf("error waiting for network security policy (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import5.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching network security policy task: %v", err)
 	}
@@ -628,7 +687,10 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	resp, err := conn.NetworkingSecurityInstance.GetNetworkSecurityPolicyById(utils.StringPtr((d.Id())))
+	getNetworkSecurityPolicyByIdRequest := import3.GetNetworkSecurityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.NetworkingSecurityInstance.GetNetworkSecurityPolicyById(ctx, &getNetworkSecurityPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching network security policy: %v", err)
 	}
@@ -646,12 +708,15 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 	if err := d.Set("state", common.FlattenPtrEnum(getResp.State)); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("priority", utils.IntValue(getResp.Priority)); err != nil {
+		return diag.FromErr(err)
+	}
 
 	// after creating role, operations saved in remote in different order than local
 	if len(getResp.Rules) > 0 {
 		// read the remote operations and local operations list
 		remoteOperations := flattenNetworkSecurityPolicyRule(getResp.Rules)
-		localOperations := expandNetworkSecurityPolicyRule(d.Get("rules").([]interface{}))
+		localOperations := expandNetworkSecurityPolicyRule(d, d.Get("rules").([]interface{}))
 
 		// final result for checking if operations are different
 		diff := false
@@ -730,15 +795,27 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 	if err := d.Set("links", flattenLinksMicroSeg(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("is_shared_with_all_projects", utils.BoolValue(getResp.IsSharedWithAllProjects)); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
 func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 	conn := meta.(*conns.Client).MicroSegAPI
 
 	updatedSpec := import1.NetworkSecurityPolicy{}
 
-	resp, err := conn.NetworkingSecurityInstance.GetNetworkSecurityPolicyById(utils.StringPtr((d.Id())))
+	getNetworkSecurityPolicyByIdRequest := import3.GetNetworkSecurityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.NetworkingSecurityInstance.GetNetworkSecurityPolicyById(ctx, &getNetworkSecurityPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching network security : %v", err)
 	}
@@ -755,10 +832,13 @@ func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema
 		updatedSpec.Description = utils.StringPtr(d.Get("description").(string))
 	}
 	if d.HasChange("rules") {
-		updatedSpec.Rules = expandNetworkSecurityPolicyRule(d.Get("rules").([]interface{}))
+		updatedSpec.Rules = expandNetworkSecurityPolicyRule(d, d.Get("rules").([]interface{}))
 	}
 	if d.HasChange("state") {
 		updatedSpec.State = common.ExpandEnum[import1.SecurityPolicyState](d.Get("state").(string))
+	}
+	if d.HasChange("priority") {
+		updatedSpec.Priority = utils.IntPtr(d.Get("priority").(int))
 	}
 	if d.HasChange("is_ipv6_traffic_allowed") {
 		updatedSpec.IsIpv6TrafficAllowed = utils.BoolPtr(d.Get("is_ipv6_traffic_allowed").(bool))
@@ -772,11 +852,14 @@ func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema
 	if d.HasChange("vpc_reference") {
 		updatedSpec.VpcReferences = common.ExpandListOfString(d.Get("vpc_reference").([]interface{}))
 	}
-
 	aJSON, _ := json.MarshalIndent(updatedSpec, "", "  ")
 	log.Printf("[DEBUG] Update Network Security Policy Payload: %s", string(aJSON))
 
-	updatedResp, err := conn.NetworkingSecurityInstance.UpdateNetworkSecurityPolicyById(utils.StringPtr(d.Id()), &updatedSpec)
+	updateNetworkSecurityPolicyByIdRequest := import3.UpdateNetworkSecurityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updatedSpec,
+	}
+	updatedResp, err := conn.NetworkingSecurityInstance.UpdateNetworkSecurityPolicyById(ctx, &updateNetworkSecurityPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while updating network security: %v", err)
 	}
@@ -804,7 +887,10 @@ func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema
 func ResourceNutanixNetworkSecurityPolicyV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	resp, err := conn.NetworkingSecurityInstance.DeleteNetworkSecurityPolicyById(utils.StringPtr(d.Id()))
+	deleteNetworkSecurityPolicyByIdRequest := import3.DeleteNetworkSecurityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.NetworkingSecurityInstance.DeleteNetworkSecurityPolicyById(ctx, &deleteNetworkSecurityPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting network security: %v", err)
 	}
@@ -829,7 +915,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Delete(ctx context.Context, d *schema
 	return nil
 }
 
-func expandNetworkSecurityPolicyRule(pr []interface{}) []import1.NetworkSecurityPolicyRule {
+func expandNetworkSecurityPolicyRule(d *schema.ResourceData, pr []interface{}) []import1.NetworkSecurityPolicyRule {
 	if len(pr) > 0 {
 		nets := make([]import1.NetworkSecurityPolicyRule, len(pr))
 
@@ -843,8 +929,14 @@ func expandNetworkSecurityPolicyRule(pr []interface{}) []import1.NetworkSecurity
 			if ty, ok := val["type"]; ok {
 				net.Type = common.ExpandEnum[import1.RuleType](ty.(string))
 			}
+			if name, ok := val["name"]; ok && len(name.(string)) > 0 {
+				net.Name = utils.StringPtr(name.(string))
+			}
+			if isLogging, ok := val["is_logging_enabled"]; ok {
+				net.IsLoggingEnabled = utils.BoolPtr(isLogging.(bool))
+			}
 			if spec, ok := val["spec"]; ok {
-				net.Spec = expandOneOfNetworkSecurityPolicyRuleSpec(spec)
+				net.Spec = expandOneOfNetworkSecurityPolicyRuleSpec(d, fmt.Sprintf("rules.%d.spec", k), spec)
 			}
 			nets[k] = net
 		}
@@ -853,7 +945,7 @@ func expandNetworkSecurityPolicyRule(pr []interface{}) []import1.NetworkSecurity
 	return nil
 }
 
-func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetworkSecurityPolicyRuleSpec {
+func expandOneOfNetworkSecurityPolicyRuleSpec(d *schema.ResourceData, basePath string, pr interface{}) *import1.OneOfNetworkSecurityPolicyRuleSpec {
 	if pr != nil {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -939,7 +1031,7 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 				app.UdpServices = expandUDPPortRangeSpec(udp.([]interface{}))
 			}
 			if icmp, ok := appVal["icmp_services"]; ok && len(icmp.([]interface{})) > 0 {
-				app.IcmpServices = expandIcmpTypeCodeSpec(icmp.([]interface{}))
+				app.IcmpServices = expandIcmpTypeCodeSpec(d, basePath+".0.application_rule_spec.0.icmp_services", icmp.([]interface{}))
 			}
 			if netFuncChain, ok := appVal["network_function_chain_reference"]; ok && len(netFuncChain.(string)) > 0 {
 				app.NetworkFunctionChainReference = utils.StringPtr(netFuncChain.(string))
@@ -978,7 +1070,7 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 				intra.UdpServices = expandUDPPortRangeSpec(udp.([]interface{}))
 			}
 			if icmp, ok := intraVal["icmp_services"]; ok && len(icmp.([]interface{})) > 0 {
-				intra.IcmpServices = expandIcmpTypeCodeSpec(icmp.([]interface{}))
+				intra.IcmpServices = expandIcmpTypeCodeSpec(d, basePath+".0.intra_entity_group_rule_spec.0.icmp_services", icmp.([]interface{}))
 			}
 			policyRules.SetValue(*intra)
 		}
@@ -1005,6 +1097,16 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 			if err != nil {
 				log.Printf("[ERROR] Error while setting value for multi env isolation rule: %v", err)
 				return nil
+			}
+		}
+
+		if flexRule, ok := val["flex_rule_spec"]; ok && len(flexRule.([]interface{})) > 0 {
+			flex := expandFlexRuleSpec(d, basePath, flexRule.([]interface{}))
+			if flex != nil {
+				if err := policyRules.SetValue(*flex); err != nil {
+					log.Printf("[ERROR] Error while setting value for flex rule: %v", err)
+					return nil
+				}
 			}
 		}
 		aJSON, _ := json.Marshal(policyRules)
@@ -1112,4 +1214,113 @@ func indexOf(slice []string, target string) int {
 		}
 	}
 	return -1
+}
+
+// securedGroupReferencesCustomizeDiff enforces, at plan time, that a rule's
+// secured group is referenced either by categories or by an entity group, but
+// never by both. The backend rejects rules that set both with error MIC-30142.
+//
+// This cannot be expressed with the SDK's ExactlyOneOf because those fields are
+// nested under the "rules" TypeList (which allows more than one element), and
+// ExactlyOneOf only supports paths whose intermediate blocks are MaxItems: 1.
+//
+//   - application_rule_spec: exactly one of the two must be set (a secured group
+//     is mandatory for an application rule).
+//   - intra_entity_group_rule_spec: the two are mutually exclusive, but neither
+//     is mandatory, so only reject the case where both are set.
+func securedGroupReferencesCustomizeDiff(_ context.Context, rd *schema.ResourceDiff, _ interface{}) error {
+	rawConfig := rd.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return nil
+	}
+
+	rules := rawConfig.GetAttr("rules")
+	if rules.IsNull() || !rules.IsKnown() {
+		return nil
+	}
+
+	ruleIdx := 0
+	for ruleIt := rules.ElementIterator(); ruleIt.Next(); ruleIdx++ {
+		_, rule := ruleIt.Element()
+		if rule.IsNull() || !rule.IsKnown() {
+			continue
+		}
+
+		specs := rule.GetAttr("spec")
+		if specs.IsNull() || !specs.IsKnown() {
+			continue
+		}
+
+		for specIt := specs.ElementIterator(); specIt.Next(); {
+			_, spec := specIt.Element()
+			if spec.IsNull() || !spec.IsKnown() {
+				continue
+			}
+
+			if err := checkSecuredGroupExclusivity(spec, "application_rule_spec", ruleIdx, true); err != nil {
+				return err
+			}
+			if err := checkSecuredGroupExclusivity(spec, "intra_entity_group_rule_spec", ruleIdx, false); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// checkSecuredGroupExclusivity validates the secured group references of a given
+// rule spec block. When required is true, exactly one reference must be set;
+// otherwise the two references are only checked for not being set together.
+func checkSecuredGroupExclusivity(spec cty.Value, block string, ruleIdx int, required bool) error {
+	blockVal := spec.GetAttr(block)
+	if blockVal.IsNull() || !blockVal.IsKnown() {
+		return nil
+	}
+
+	for it := blockVal.ElementIterator(); it.Next(); {
+		_, cfg := it.Element()
+		if cfg.IsNull() || !cfg.IsKnown() {
+			continue
+		}
+
+		categorySet := ctyAttrIsSet(cfg, "secured_group_category_references")
+		entityGroupSet := ctyAttrIsSet(cfg, "secured_group_entity_group_reference")
+
+		if categorySet && entityGroupSet {
+			return fmt.Errorf(
+				"rules[%d].spec.%s: only one of `secured_group_category_references` and "+
+					"`secured_group_entity_group_reference` can be specified", ruleIdx, block)
+		}
+		if required && !categorySet && !entityGroupSet {
+			return fmt.Errorf(
+				"rules[%d].spec.%s: one of `secured_group_category_references` or "+
+					"`secured_group_entity_group_reference` must be specified", ruleIdx, block)
+		}
+	}
+
+	return nil
+}
+
+// ctyAttrIsSet reports whether the named attribute was provided in the config.
+// An unknown value (e.g. an unresolved reference to another resource) counts as
+// set, while a null value or an empty list/string counts as unset.
+func ctyAttrIsSet(obj cty.Value, name string) bool {
+	v := obj.GetAttr(name)
+	if v.IsNull() {
+		return false
+	}
+	if !v.IsKnown() {
+		return true
+	}
+
+	t := v.Type()
+	switch {
+	case t.IsListType() || t.IsTupleType() || t.IsSetType():
+		return v.LengthInt() > 0
+	case t == cty.String:
+		return v.AsString() != ""
+	default:
+		return true
+	}
 }
