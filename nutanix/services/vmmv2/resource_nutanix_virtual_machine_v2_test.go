@@ -2,12 +2,16 @@ package vmmv2_test
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -1191,6 +1195,264 @@ func TestAccV2NutanixVmsResource_ClusterAutomaticSelection(t *testing.T) {
 			},
 		},
 	})
+}
+
+// TestAccV2NutanixVmsResource_WaitForRoutableIP covers issue #871: on create the resource
+// must wait past the APIPA/link-local address (169.254.0.0/16) that AHV reports
+// transiently before DHCP completes.
+//
+// It boots the NGT test image with wait_for_ip_routable = true and a 10 minute wait, and
+// asserts that create returns with a routable learned IPv4 address, and in less than the
+// wait timeout, so the wait ended on the address rather than by timing out.
+//
+// The guest is not made to report an APIPA address first, so this covers the wait on a
+// real DHCP lease; skipping APIPA addresses is covered by the unit tests.
+//
+// It runs only when vmm.dhcp_subnet_name names a subnet on which the guest gets its
+// address from DHCP after boot. On an IPAM-managed subnet the address is assigned at
+// create, so the wait ends at once and the test would prove nothing.
+func TestAccV2NutanixVmsResource_WaitForRoutableIP(t *testing.T) {
+	subnet := dhcpSubnetOrSkip(t)
+	r := acctest.RandInt()
+	desc := "test vm waiting for a routable ip"
+	var start time.Time
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() { start = time.Now() },
+				Config:    testVmsV2ConfigWaitForIPImage(r, desc, subnet),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", fmt.Sprintf("tf-test-vm-%d", r)),
+					resource.TestCheckResourceAttr(resourceNameVms, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceNameVms, "wait_for_ip_timeout", "10"),
+					resource.TestCheckResourceAttr(resourceNameVms, "wait_for_ip_routable", "true"),
+					testCheckLearnedRoutableIP(resourceNameVms),
+					func(*terraform.State) error {
+						if elapsed := time.Since(start); elapsed >= 10*time.Minute {
+							return fmt.Errorf("create took %s; the IP wait timed out instead of ending on a routable address", elapsed)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+// TestAccV2NutanixVmsResource_WaitForIPDisabled creates a VM whose only NIC is disconnected,
+// on the DHCP subnet, so it can never get an address, with wait_for_ip_timeout = 0. With
+// the wait disabled the create must finish well inside the 5 minute default; if the wait
+// still ran it would take at least 5 minutes. Like WaitForRoutableIP it needs
+// vmm.dhcp_subnet_name: on an IPAM-managed subnet the NIC has an address from create and
+// the wait would end at once either way.
+func TestAccV2NutanixVmsResource_WaitForIPDisabled(t *testing.T) {
+	subnet := dhcpSubnetOrSkip(t)
+	r := acctest.RandInt()
+	desc := "test vm with the ip wait disabled"
+	var start time.Time
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() { start = time.Now() },
+				Config:    testVmsV2ConfigWaitForIPDisconnected(r, desc, subnet, 0),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "wait_for_ip_timeout", "0"),
+					resource.TestCheckResourceAttr(resourceNameVms, "power_state", "ON"),
+					func(*terraform.State) error {
+						if elapsed := time.Since(start); elapsed >= 4*time.Minute {
+							return fmt.Errorf("create took %s with wait_for_ip_timeout = 0; the IP wait was not disabled", elapsed)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+// dhcpSubnetOrSkip returns vmm.dhcp_subnet_name from the test config, skipping the test
+// when it is not set.
+func dhcpSubnetOrSkip(t *testing.T) string {
+	t.Helper()
+	if testVars.VMM.DHCPSubnetName == "" {
+		t.Skip("Skipping test as vmm.dhcp_subnet_name is not set in the test config")
+	}
+	return testVars.VMM.DHCPSubnetName
+}
+
+// testCheckLearnedRoutableIP fails unless the VM's NICs report at least one learned IPv4
+// address that is not APIPA/link-local. Issue #871 reported create returning with only
+// the APIPA address learned.
+func testCheckLearnedRoutableIP(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource %s not found in state", resourceName)
+		}
+		var learned []string
+		for key, value := range rs.Primary.Attributes {
+			if !strings.HasPrefix(key, "nics.") || !strings.HasSuffix(key, ".value") ||
+				!strings.Contains(key, ".ipv4_info.") || !strings.Contains(key, ".learned_ip_addresses.") {
+				continue
+			}
+			learned = append(learned, value)
+			if ip := net.ParseIP(value); ip != nil && ip.To4() != nil && !ip.IsLinkLocalUnicast() {
+				return nil
+			}
+		}
+		return fmt.Errorf("no routable learned IPv4 address on %s (learned: %v); expected create to wait for one (issue #871)", resourceName, learned)
+	}
+}
+
+// testVmsV2ConfigWaitForIPImage boots the NGT test image on a DHCP subnet, so the guest
+// obtains a lease and reports its address.
+func testVmsV2ConfigWaitForIPImage(r int, desc, subnet string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+			cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
+			config = jsondecode(file("%[3]s"))
+		}
+
+		data "nutanix_subnets_v2" "subnets" {
+			filter = "name eq '%[4]s'"
+		}
+
+		data "nutanix_images_v2" "ngt-image" {
+		  filter = "name eq '${local.config.images.ngt_image}'"
+		}
+
+		resource "nutanix_virtual_machine_v2" "test"{
+			name= "tf-test-vm-%[1]d"
+			description =  "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets = 1
+			cluster {
+				ext_id = local.cluster0
+			}
+			disks{
+				disk_address{
+					bus_type = "SCSI"
+					index = 0
+				}
+				backing_info{
+					vm_disk{
+						data_source {
+							reference {
+								image_reference{
+									image_ext_id = data.nutanix_images_v2.ngt-image.images[0].ext_id
+								}
+							}
+						}
+					}
+				}
+			}
+			boot_config{
+				legacy_boot{
+					boot_device{
+						boot_device_disk {
+							disk_address {
+								bus_type = "SCSI"
+								index = 0
+							}
+						}
+				  	}
+				}
+			}
+			nics{
+				nic_network_info{
+					virtual_ethernet_nic_network_info{
+						nic_type = "NORMAL_NIC"
+						subnet{
+							ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+						}
+						vlan_mode = "ACCESS"
+					}
+				}
+			}
+			power_state = "ON"
+
+			wait_for_ip_timeout  = 10
+			wait_for_ip_routable = true
+			depends_on = [data.nutanix_clusters_v2.clusters, data.nutanix_images_v2.ngt-image]
+		}
+`, r, desc, filepath, subnet)
+}
+
+// testVmsV2ConfigWaitForIPDisconnected creates a VM with no OS whose only NIC is
+// disconnected, so it never gets an address.
+func testVmsV2ConfigWaitForIPDisconnected(r int, desc, subnet string, waitTimeout int) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+			cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
+		}
+
+		data "nutanix_subnets_v2" "subnets" {
+			filter = "name eq '%[3]s'"
+		}
+
+		data "nutanix_storage_containers_v2" "sc" {
+		  filter = "clusterExtId eq '${local.cluster0}' and startswith(name,'default-container-')"
+		  limit = 1
+		}
+
+		resource "nutanix_virtual_machine_v2" "test"{
+			name= "tf-test-vm-%[1]d"
+			description =  "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets = 1
+			cluster {
+				ext_id = local.cluster0
+			}
+			disks{
+				disk_address{
+					bus_type = "SCSI"
+					index = 0
+				}
+				backing_info{
+					vm_disk{
+						disk_size_bytes = "1073741824"
+						storage_container{
+							ext_id = data.nutanix_storage_containers_v2.sc.storage_containers[0].ext_id
+						}
+					}
+				}
+			}
+			nics{
+				nic_network_info{
+					virtual_ethernet_nic_network_info{
+						nic_type = "NORMAL_NIC"
+						subnet{
+							ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+						}
+						vlan_mode = "ACCESS"
+					}
+				}
+				nic_backing_info{
+					virtual_ethernet_nic{
+						is_connected = false
+						model = "VIRTIO"
+					}
+				}
+			}
+			power_state = "ON"
+
+			wait_for_ip_timeout = %[4]d
+		}
+`, r, desc, subnet, waitTimeout)
 }
 
 func testVmsV4Config(name, desc string) string {
