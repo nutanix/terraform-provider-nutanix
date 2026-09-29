@@ -171,7 +171,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 										Elem:     common.SchemaForIPList(false),
 									},
 									"type": {
-										Type:     schema.TypeBool,
+										Type:     schema.TypeString,
 										Computed: true,
 									},
 									"is_drs_enabled": {
@@ -816,7 +816,7 @@ func flattenManagementServerRef(pr *import1.ManagementServerRef) []map[string]in
 		mgm := make(map[string]interface{})
 
 		mgm["ip"] = flattenIPAddress(pr.Ip)
-		mgm["type"] = pr.Type
+		mgm["type"] = common.FlattenPtrEnum(pr.Type)
 		mgm["is_drs_enabled"] = pr.IsDrsEnabled
 		mgm["is_registered"] = pr.IsRegistered
 		mgm["is_in_use"] = pr.IsInUse
