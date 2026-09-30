@@ -108,6 +108,81 @@ resource "nutanix_vpc_v2" "transit-vpc" {
   vpc_type = "TRANSIT"
 }
 
+// External subnet for the Kubernetes-cluster VPC. Its CIDR (172.30.0.0/24) must
+// NOT overlap the cluster pod CIDR (default 192.168.0.0/16) or the VPC
+// pod_network (172.20.0.0/16), or VPC create fails with
+// "Pod CIDR ... overlaps with external subnet ...".
+resource "nutanix_subnet_v2" "vlan-k8s" {
+  name              = "vlan-k8s"
+  description       = "external subnet for the kubernetes-cluster VPC"
+  cluster_reference = local.clusterExtId
+  subnet_type       = "VLAN"
+  network_id        = 133
+  is_external       = true
+  ip_config {
+    ipv4 {
+      ip_subnet {
+        ip {
+          value = "172.30.0.0"
+        }
+        prefix_length = 24
+      }
+      default_gateway_ip {
+        value = "172.30.0.1"
+      }
+      pool_list {
+        start_ip {
+          value = "172.30.0.20"
+        }
+        end_ip {
+          value = "172.30.0.30"
+        }
+      }
+    }
+  }
+}
+
+// creating a VPC associated with a Flow-enabled Kubernetes cluster.
+// The cluster must already run Flow CNI and be Flow-activated in Prism Central
+// (its extId then becomes a valid kubernetes_clusters reference), and `scope`
+// must include CONTAINERS.
+resource "nutanix_vpc_v2" "k8s-vpc" {
+  name        = "vpc-k8s"
+  description = "VPC associated with a Kubernetes cluster"
+  external_subnets {
+    subnet_reference = nutanix_subnet_v2.vlan-k8s.id
+  }
+  scope = "VMS_AND_CONTAINERS"
+  kubernetes_clusters {
+    # Replace with the extId of a Flow-activated Kubernetes cluster.
+    ext_id = "0005b7c1-1111-2222-3333-0123456789ab"
+    gateway_nodes_selector {
+      match_labels {
+        name  = "env"
+        value = "prod"
+      }
+    }
+    namespace_selector {
+      match_labels {
+        name  = "nutanix.com/vpc-namespace"
+        value = "ns1"
+      }
+    }
+    pod_network {
+      cidr {
+        ipv4 {
+          ip {
+            value = "172.20.0.0"
+          }
+          prefix_length = 16
+        }
+      }
+      # host_slice and the pod CIDR are immutable after association.
+      host_slice = 24
+    }
+  }
+}
+
 
 //dataSource to get details for an entity with vpc uuid
 data "nutanix_vpc_v2" "get-vpc" {

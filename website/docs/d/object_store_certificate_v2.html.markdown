@@ -73,4 +73,4 @@ The `ipv4` and `ipv6` argument exports the following:
 - `value`: - The IPv4/IPv6 address of the host.
 - `prefix_length`: - The prefix length of the network to which this host IPv4 address belongs. Default for IPv4 is 32 and for IPv6 is 128.
 
-See detailed information in [Nutanix Get the details of an Object store certificate V4 ](https://developers.nutanix.com/api-reference?namespace=objects&version=v4.0#tag/ObjectStores/operation/getCertificateById).
+See detailed information in [Nutanix Get the details of an Object store certificate V4 ](https://developers.nutanix.com/api-reference?namespace=objects&version=v4.1#tag/ObjectStores/operation/getCertificateById).

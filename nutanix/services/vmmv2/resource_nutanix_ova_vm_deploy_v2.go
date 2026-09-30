@@ -11,10 +11,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	import4 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import5 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import6 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	import3 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
+	import4 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/request/ovas"
+	import7 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/request/vm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -490,8 +493,12 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 		}
 	}
 
+	deployOvaRequest := import4.DeployOvaRequest{
+		ExtId: &extID,
+		Body:  vmDeploymentSpec,
+	}
 	log.Printf("[DEBUG] Calling DeployOva API with OVA ext_id: %s", extID)
-	resp, err := conn.OvasAPIInstance.DeployOva(&extID, vmDeploymentSpec)
+	resp, err := conn.OvasAPIInstance.DeployOva(ctx, &deployOvaRequest)
 	if err != nil {
 		log.Printf("[ERROR] Failed to deploy OVA: %v", err)
 		return diag.FromErr(err)
@@ -515,7 +522,10 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 
 	log.Printf("[DEBUG] OVA deployment task completed successfully with UUID: %s", utils.StringValue(taskUUID))
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import6.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -524,7 +534,7 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 		}
 		return diag.Errorf("error while fetching vm UUID : %v", err)
 	}
-	taskResult := resourceUUID.Data.GetValue().(import4.Task)
+	taskResult := resourceUUID.Data.GetValue().(import5.Task)
 
 	if len(taskResult.EntitiesAffected) == 0 {
 		return diag.Errorf("no entities affected in OVA deployment task")
@@ -552,7 +562,10 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 					for _, diskInput := range diskInputs {
 						aJSON, _ := json.MarshalIndent(diskInput, "", "  ")
 						log.Printf("[DEBUG] disk input: %s", string(aJSON))
-						readVMResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+						getVmByIdRequest := import7.GetVmByIdRequest{
+							ExtId: utils.StringPtr(d.Id()),
+						}
+						readVMResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 						if err != nil {
 							return diag.Errorf("error reading VM for disk creation: %v", err)
 						}
@@ -560,7 +573,11 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 						args := make(map[string]interface{})
 						args["If-Match"] = getEtagHeader(readVMResp, conn)
 
-						resp, err := conn.VMAPIInstance.CreateDisk(utils.StringPtr(d.Id()), &diskInput, args)
+						createDiskRequest := import7.CreateDiskRequest{
+							VmExtId: utils.StringPtr(d.Id()),
+							Body:    &diskInput,
+						}
+						resp, err := conn.VMAPIInstance.CreateDisk(ctx, &createDiskRequest, args)
 						if err != nil {
 							return diag.Errorf("error creating disk: %v", err)
 						}
@@ -599,7 +616,10 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 func ResourceNutanixOvaVMDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	resp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+	getVmByIdRequest := import7.GetVmByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching vm : %v", err)
 	}
@@ -639,7 +659,7 @@ func ResourceNutanixOvaVMDeploymentUpdate(ctx context.Context, d *schema.Resourc
 		}
 
 		// Power off VM if hot-plug changes are required
-		if hotPlugRequired && !isVMPowerOff(d, conn) {
+		if hotPlugRequired && !isVMPowerOff(ctx, d, conn) {
 			log.Printf("[DEBUG] VM needs to be powered off for hot-plug changes")
 			if err := callForPowerOffVM(ctx, conn, d, meta); err != nil {
 				return err
@@ -718,7 +738,10 @@ func ResourceNutanixOvaVMDeploymentUpdate(ctx context.Context, d *schema.Resourc
 func ResourceNutanixOvaVMDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+	getVmByIdRequest := import7.GetVmByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while reading vm : %v", err)
 	}
@@ -726,7 +749,10 @@ func ResourceNutanixOvaVMDeploymentDelete(ctx context.Context, d *schema.Resourc
 	args := make(map[string]interface{})
 	args["If-Match"] = getEtagHeader(readResp, conn)
 
-	resp, err := conn.VMAPIInstance.DeleteVmById(utils.StringPtr(d.Id()), args)
+	deleteVmByIdRequest := import7.DeleteVmByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.VMAPIInstance.DeleteVmById(ctx, &deleteVmByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while deleting vm : %v", err)
 	}
@@ -860,7 +886,10 @@ func handlePowerStateChanges(ctx context.Context, d *schema.ResourceData, meta i
 		log.Printf("[DEBUG] Handling power state change from '%s' to '%s'", oldPowerState, newPowerState)
 
 		vmmConn := conn.(*conns.Client).VmmAPI
-		readResp, err := vmmConn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+		getVmByIdRequest := import7.GetVmByIdRequest{
+			ExtId: utils.StringPtr(d.Id()),
+		}
+		readResp, err := vmmConn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 		if err != nil {
 			return diag.Errorf("error reading VM for power state change: %v", err)
 		}
@@ -872,14 +901,20 @@ func handlePowerStateChanges(ctx context.Context, d *schema.ResourceData, meta i
 
 		switch newPowerState {
 		case "ON":
-			powerResp, err := vmmConn.VMAPIInstance.PowerOnVm(utils.StringPtr(d.Id()), args)
+			powerOnVmRequest := import7.PowerOnVmRequest{
+				ExtId: utils.StringPtr(d.Id()),
+			}
+			powerResp, err := vmmConn.VMAPIInstance.PowerOnVm(ctx, &powerOnVmRequest, args)
 			if err != nil {
 				return diag.Errorf("error powering on VM: %v", err)
 			}
 			TaskRef := powerResp.Data.GetValue().(import3.TaskReference)
 			taskUUID = TaskRef.ExtId
 		case "OFF":
-			powerResp, err := vmmConn.VMAPIInstance.PowerOffVm(utils.StringPtr(d.Id()), args)
+			powerOffVmRequest := import7.PowerOffVmRequest{
+				ExtId: utils.StringPtr(d.Id()),
+			}
+			powerResp, err := vmmConn.VMAPIInstance.PowerOffVm(ctx, &powerOffVmRequest, args)
 			if err != nil {
 				return diag.Errorf("error powering off VM: %v", err)
 			}
@@ -904,7 +939,10 @@ func handleVMConfigurationUpdates(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	vmmConn := conn.(*conns.Client).VmmAPI
-	updatedVMResp, err := vmmConn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
+	getVmByIdRequest := import7.GetVmByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	updatedVMResp, err := vmmConn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 	if err != nil {
 		return diag.Errorf("error reading VM for update: %v", err)
 	}
@@ -982,7 +1020,11 @@ func handleVMConfigurationUpdates(ctx context.Context, d *schema.ResourceData, m
 		args := make(map[string]interface{})
 		args["If-Match"] = getEtagHeader(updatedVMResp, vmmConn)
 
-		updateResp, err := vmmConn.VMAPIInstance.UpdateVmById(utils.StringPtr(d.Id()), &updateSpec, args)
+		updateVmByIdRequest := import7.UpdateVmByIdRequest{
+			ExtId: utils.StringPtr(d.Id()),
+			Body:  &updateSpec,
+		}
+		updateResp, err := vmmConn.VMAPIInstance.UpdateVmById(ctx, &updateVmByIdRequest, args)
 		if err != nil {
 			return diag.Errorf("error updating VM: %v", err)
 		}

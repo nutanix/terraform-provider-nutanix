@@ -94,6 +94,72 @@ func TestAccV2NutanixVmsCloneResource_WithUefiBootConfig(t *testing.T) {
 	})
 }
 
+// Regression coverage for issue #972: nutanix_vm_clone_v2 must forward the
+// user-supplied nics{} block to the CloneVm API, and its Read must refresh
+// nics from the API. The test clones a NIC-less source with an explicit
+// nics block and asserts the clone ends up with exactly one NIC on the
+// requested subnet, both in resource state (Read) and via an independent
+// datasource read (Create).
+func TestAccV2NutanixVmsCloneResource_WithNicOverride(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-vm-%d", r)
+	desc := "test vm description"
+
+	datasourceNameSubnet := "data.nutanix_subnets_v2.subnet"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testVmsCloneV2WithNicOverrideConfig(name, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVMClone, "name", fmt.Sprintf(`%[1]s-clone`, name)),
+					// Read fix: resource state must contain the NIC populated by Read from the API.
+					resource.TestCheckResourceAttr(resourceNameVMClone, "nics.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameVMClone, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameVMClone, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.vlan_mode", "ACCESS"),
+					resource.TestCheckResourceAttrPair(
+						resourceNameVMClone, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.subnet.0.ext_id",
+						datasourceNameSubnet, "subnets.0.ext_id",
+					),
+				),
+			},
+		},
+	})
+}
+
+// Regression coverage for issue #972 (backwards-compat): when the user omits
+// the nics{} block on the clone resource, the provider must NOT send an empty
+// nics field to the API. The API's historical behavior is to inherit the
+// source VM's NICs in that case, so the clone should end up with the same
+// NIC count and subnet as the source.
+func TestAccV2NutanixVmsCloneResource_InheritsNicsWhenOmitted(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-vm-%d", r)
+	desc := "test vm description"
+
+	datasourceNameSubnet := "data.nutanix_subnets_v2.subnet"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testVmsCloneV2InheritsNicsWhenOmittedConfig(name, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVMClone, "name", fmt.Sprintf(`%[1]s-clone`, name)),
+					resource.TestCheckResourceAttr(resourceNameVMClone, "nics.#", "1"),
+					resource.TestCheckResourceAttrPair(
+						resourceNameVMClone, "nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.subnet.0.ext_id",
+						datasourceNameSubnet, "subnets.0.ext_id",
+					),
+				),
+			},
+		},
+	})
+}
+
 func testVmsCloneV2Config(name, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
@@ -373,4 +439,132 @@ data "nutanix_virtual_machine_v2" "test" {
 }
 
 `, name, desc)
+}
+
+// Source VM has NO nics{} block. Clone declares an explicit nics{} block
+// pointing at the test subnet. The fix must forward that block to the
+// CloneVm API and refresh it in Read.
+func testVmsCloneV2WithNicOverrideConfig(name, desc string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+			cluster0 = [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
+			config = (jsondecode(file("%[3]s")))
+			vmm    = local.config.vmm
+		}
+
+		data "nutanix_subnets_v2" "subnet" {
+		  filter = "name eq '${local.vmm.subnet_name}'"
+		}
+
+		# NIC-less source VM. Any nics on the clone must come from the clone's
+		# own configuration, not inherited from this source.
+		resource "nutanix_virtual_machine_v2" "rtest" {
+			name                 = "%[1]s"
+			description          = "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets          = 1
+			memory_size_bytes    = 2 * 1024 * 1024 * 1024
+			cluster {
+				ext_id = local.cluster0
+			}
+			power_state = "OFF"
+			lifecycle {
+				ignore_changes = [
+					guest_customization,
+					guest_tools
+				]
+			}
+		}
+
+		resource "nutanix_vm_clone_v2" "test" {
+			vm_ext_id = resource.nutanix_virtual_machine_v2.rtest.id
+			name      = "%[1]s-clone"
+
+			nics {
+				nic_network_info {
+					virtual_ethernet_nic_network_info {
+						nic_type  = "NORMAL_NIC"
+						vlan_mode = "ACCESS"
+						subnet {
+							ext_id = data.nutanix_subnets_v2.subnet.subnets[0].ext_id
+						}
+					}
+				}
+			}
+		}
+
+		# Independent datasource read to verify the API-side state of the clone,
+		# which cannot be masked by any Read-side quirks on the clone resource.
+		data "nutanix_virtual_machine_v2" "test" {
+			ext_id = nutanix_vm_clone_v2.test.id
+		}
+
+`, name, desc, filepath)
+}
+
+// Source VM has one NIC on the test subnet. Clone omits nics{}. The clone
+// must inherit the source's NIC (i.e. the provider must not send an empty
+// or explicit nics field when the user didn't set one).
+func testVmsCloneV2InheritsNicsWhenOmittedConfig(name, desc string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+			cluster0 = [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
+			config = (jsondecode(file("%[3]s")))
+			vmm    = local.config.vmm
+		}
+
+		data "nutanix_subnets_v2" "subnet" {
+		  filter = "name eq '${local.vmm.subnet_name}'"
+		}
+
+		resource "nutanix_virtual_machine_v2" "rtest" {
+			name                 = "%[1]s"
+			description          = "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets          = 1
+			memory_size_bytes    = 2 * 1024 * 1024 * 1024
+			cluster {
+				ext_id = local.cluster0
+			}
+			nics {
+				nic_network_info {
+					virtual_ethernet_nic_network_info {
+						nic_type  = "NORMAL_NIC"
+						vlan_mode = "ACCESS"
+						subnet {
+							ext_id = data.nutanix_subnets_v2.subnet.subnets[0].ext_id
+						}
+					}
+				}
+			}
+			power_state = "OFF"
+			lifecycle {
+				ignore_changes = [
+					guest_customization,
+					guest_tools
+				]
+			}
+		}
+
+		# No nics{} block on the clone: it must inherit the source's NIC.
+		resource "nutanix_vm_clone_v2" "test" {
+			vm_ext_id = resource.nutanix_virtual_machine_v2.rtest.id
+			name      = "%[1]s-clone"
+		}
+
+		data "nutanix_virtual_machine_v2" "test" {
+			ext_id = nutanix_vm_clone_v2.test.id
+		}
+
+`, name, desc, filepath)
 }

@@ -2,6 +2,7 @@ package networkingv2_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -149,15 +150,16 @@ func testFloatingIPv2ConfigWithVMNic(name, desc string) string {
 				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			  ][0]
 			config = jsondecode(file("%[3]s"))
-			preEnv            = local.config.pre_env
+			networking = local.config.networking
+			vmm = local.config.vmm
 		}
 
 		data "nutanix_subnets_v2" "test" {
-			filter = "name eq '${local.preEnv.external_nat_subnet.name}'"
+			filter = "name eq '${local.networking.external_nat_subnet}'"
 		}
 
 		data "nutanix_virtual_machines_v2" "test" {
-			filter = "name eq '${local.preEnv.integration_vm.name}'"
+			filter = "name eq '${local.vmm.integration_vm}'"
 		}
 
 		resource "nutanix_floating_ip_v2" "test" {
@@ -260,4 +262,98 @@ func testFloatingIPv2ConfigWithPrivateIP(name, desc string) string {
 			depends_on = [nutanix_vpc_v2.test]
 		  }
 `, name, desc)
+}
+
+func TestAccV2NutanixFloatingIPResource_ProjectAssociation(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-fip-projassoc-%d", r)
+	desc := "floating ip project association test"
+	projectName := fmt.Sprintf("tf-fip-pa-proj-%d", r)
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testFloatingIPProjectAssociationConfig(name, desc, projectName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceNameFIP, "project_ext_id", "nutanix_project_v2.test", "ext_id"),
+					resource.TestCheckResourceAttrPair("data.nutanix_floating_ip_v2.test", "project_ext_id", "nutanix_project_v2.test", "ext_id"),
+					resource.TestCheckResourceAttr("data.nutanix_floating_ips_v2.test", "floating_ips.#", "1"),
+					resource.TestCheckResourceAttrPair("data.nutanix_floating_ips_v2.test", "floating_ips.0.ext_id", resourceNameFIP, "ext_id"),
+					resource.TestCheckResourceAttrPair("data.nutanix_floating_ips_v2.test", "floating_ips.0.project_ext_id", "nutanix_project_v2.test", "ext_id"),
+				),
+			},
+			{
+				Config:      testFloatingIPProjectAssociationConfig(name, desc, projectName, "00000000-0000-0000-0000-000000000000"),
+				ExpectError: regexp.MustCompile("Update of project_ext_id is not supported"),
+			},
+		},
+	})
+}
+
+func fipProjectExtIDLine(override string) string {
+	if override == "" {
+		return `project_ext_id = nutanix_project_v2.test.ext_id`
+	}
+	return fmt.Sprintf(`project_ext_id = "%s"`, override)
+}
+
+func testFloatingIPProjectAssociationConfig(name, desc, projectName, projectExtIDOverride string) string {
+	return fmt.Sprintf(`
+	data "nutanix_clusters_v2" "clusters" {}
+
+	locals {
+		cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
+	}
+
+	resource "nutanix_project_v2" "test" {
+		name        = "%[3]s"
+		project_id  = "%[3]s"
+		description = "project association test"
+	}
+
+	resource "nutanix_subnet_v2" "test" {
+		name              = "tf-fip-pa-subnet-%[3]s"
+		description       = "subnet for fip project association"
+		cluster_reference = local.cluster0
+		subnet_type       = "VLAN"
+		network_id        = 112
+		is_external       = true
+		shared_with_projects = [nutanix_project_v2.test.ext_id]
+		ip_config {
+			ipv4 {
+				ip_subnet {
+					ip { value = "192.168.0.0" }
+					prefix_length = 24
+				}
+				default_gateway_ip { value = "192.168.0.1" }
+				pool_list {
+					start_ip { value = "192.168.0.20" }
+					end_ip   { value = "192.168.0.30" }
+				}
+			}
+		}
+	}
+
+	resource "nutanix_floating_ip_v2" "test" {
+		name                      = "%[1]s"
+		description               = "%[2]s"
+		external_subnet_reference = nutanix_subnet_v2.test.id
+		%[4]s
+		depends_on = [nutanix_project_v2.test]
+	}
+
+	data "nutanix_floating_ip_v2" "test" {
+		ext_id     = nutanix_floating_ip_v2.test.id
+		depends_on = [nutanix_floating_ip_v2.test]
+	}
+
+	data "nutanix_floating_ips_v2" "test" {
+		filter     = "name eq '%[1]s'"
+		depends_on = [nutanix_floating_ip_v2.test]
+	}
+	`, name, desc, projectName, fipProjectExtIDLine(projectExtIDOverride))
 }

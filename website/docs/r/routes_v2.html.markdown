@@ -50,11 +50,12 @@ The following arguments are supported:
 - `name`: (Optional) Route name.
 - `description`: (Optional) BGP session description.
 - `destination`: (Optional) Destination IP Subnet Configuration.
-- `next_hop` : (Optional) Route nexthop.
+- `next_hop` : (Optional) Route nexthop. Supports multiple entries.
 - `route_table_reference`: (Optional) Route table reference.
 - `vpc_reference`: (Optional) VPC reference.
 - `external_routing_domain_reference`: (Optional) External routing domain associated with this route table.
 - `route_type`: (Optional) Route type. Acceptable values are "STATIC", "LOCAL", "DYNAMIC"
+- `project_ext_id`: (Optional) External identifier of the project associated with the Route.
 
 ### metadata
 
@@ -78,12 +79,16 @@ The following arguments are supported:
 - `ipv6.ip.prefix_length`: (Optional) The prefix length of the network to which this host IPv6 address belongs.
 - `ipv6.prefix_length`: (Required) The prefix length of the network to which this host IPv6 address belongs.
 
+### next_hop
+
+Each `next_hop` block supports:
+
+- `next_hop_type`: (Required) Nexthop type. Supported values: `LOCAL_SUBNET`, `DIRECT_CONNECT_VIF`, `VPN_CONNECTION`, `IP_ADDRESS`, `EXTERNAL_SUBNET`.
+- `next_hop_reference`: (Optional) The reference to a link, such as a VPN connection or a subnet.
+- `next_hop_ip_address`: (Optional) IP address of the nexthop. See `next_hop_ip_address` below.
+- `next_hop_name`: (Computed) Name of the nexthop.
+
 ### next_hop_ip_address
-
-- `ipv4`: (Optional) IPv4 Address
-- `ipv6`: (Optional) IPv6 Address
-
-### IPv4/IPv6 Address
 
 - `value`: (Optional) value of IP address
 - `prefix_length`: (Optional) The prefix length of the network to which this host IPv4/IPv6 address belongs.
@@ -99,13 +104,14 @@ The following attributes are exported:
 - `name`: Route name.
 - `description`: BGP session description.
 - `destination`: Destination IP Subnet Configuration.
-- `next_hop` : Route nexthop.
+- `next_hop` : Route nexthop(s).
 - `route_table_reference`: Route table reference.
 - `vpc_reference`: VPC reference.
 - `external_routing_domain_reference`: External routing domain associated with this route table.
 - `route_type`: Route type. Acceptable values are "STATIC", "LOCAL", "DYNAMIC"
 - `is_active`: Indicates whether the route is active in the forwarding plane.
 - `priority`: Route priority. A higher value implies greater preference is assigned to the route.
+- `project_ext_id`: External identifier of the project associated with the Route.
 
 ### Links
 
@@ -132,4 +138,4 @@ data "nutanix_routes_v2" "fetch_templates"{
 terraform import nutanix_routes_v2.import_route <routeTableUUID>/<routeUUID>
 ```
 
-See detailed information in [Nutanix Routes v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/Routes/operation/createRouteForRouteTable).
+See detailed information in [Nutanix Routes v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/Routes/operation/createRouteForRouteTable).

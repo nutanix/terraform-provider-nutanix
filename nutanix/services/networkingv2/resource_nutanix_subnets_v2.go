@@ -3,6 +3,7 @@ package networkingv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -11,10 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
+	import5 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/request/subnets"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import6 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -48,6 +52,19 @@ func ResourceNutanixSubnetV2() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"shared_with_projects": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"subnet_type": {
 				Type:         schema.TypeString,
@@ -292,6 +309,11 @@ func ResourceNutanixSubnetV2() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"is_connected": {
+				Type:     schema.TypeBool,
+				Default:  true,
+				Optional: true,
+			},
 			"reserved_ip_addresses": SchemaForValuePrefixLength(),
 			"dynamic_ip_addresses": {
 				Type:     schema.TypeList,
@@ -466,7 +488,6 @@ func ResourceNutanixSubnetV2() *schema.Resource {
 
 func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
-
 	inputSpec := import1.Subnet{}
 	if name, nok := d.GetOk("name"); nok {
 		inputSpec.Name = utils.StringPtr(name.(string))
@@ -476,6 +497,9 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	}
 	if desc, ok := d.GetOk("description"); ok {
 		inputSpec.Description = utils.StringPtr(desc.(string))
+	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		inputSpec.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
 	if subType, ok := d.GetOk("subnet_type"); ok {
 		const two, three = 2, 3
@@ -514,6 +538,8 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 		isExt := d.Get("is_external").(bool)
 		inputSpec.IsExternal = utils.BoolPtr(isExt)
 	}
+	isConn := d.Get("is_connected").(bool)
+	inputSpec.IsConnected = utils.BoolPtr(isConn)
 	if reservedIPAdd, ok := d.GetOk("reserved_ip_addresses"); ok {
 		inputSpec.ReservedIpAddresses = expandIPAddress(reservedIPAdd.([]interface{}))
 	}
@@ -551,11 +577,12 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	if ipConfig, ok := d.GetOk("ip_config"); ok {
 		inputSpec.IpConfig = expandIPConfig(ipConfig.([]interface{}))
 	}
-
-	aJSON, _ := json.MarshalIndent(inputSpec, "", " ")
+	createSubnetRequest := import5.CreateSubnetRequest{
+		Body: &inputSpec,
+	}
+	aJSON, _ := json.MarshalIndent(createSubnetRequest, "", " ")
 	log.Printf("[DEBUG] Subnet create payload : %s", string(aJSON))
-
-	resp, err := conn.SubnetAPIInstance.CreateSubnet(&inputSpec)
+	resp, err := conn.SubnetAPIInstance.CreateSubnet(ctx, &createSubnetRequest)
 	if err != nil {
 		return diag.Errorf("error while creating subnets : %v", err)
 	}
@@ -579,7 +606,10 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import6.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching subnet task: %v", err)
 	}
@@ -599,13 +629,33 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	} else {
 		return diag.Errorf("error while fetching subnet ExtId: subnet entity not found in EntitiesAffected")
 	}
+
+	// Handle sharing with projects after creation
+	if sharedProjects, ok := d.GetOk("shared_with_projects"); ok {
+		// Share with specific projects
+		projectsSet := sharedProjects.(*schema.Set)
+		for _, projectID := range projectsSet.List() {
+			if err := shareSubnetWithProject(ctx, meta, conn, d, projectID.(string)); err != nil {
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  "Subnet created but sharing with project failed.",
+						Detail:   fmt.Sprintf("error while sharing subnet with project %s: %v", projectID.(string), err),
+					},
+				}
+			}
+		}
+	}
 	return ResourceNutanixSubnetV2Read(ctx, d, meta)
 }
 
 func ResourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.SubnetAPIInstance.GetSubnetById(utils.StringPtr(d.Id()))
+	getSubnetRequest := import5.GetSubnetByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.SubnetAPIInstance.GetSubnetById(ctx, &getSubnetRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching subnets : %v", err)
 	}
@@ -625,6 +675,12 @@ func ResourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 	if err := d.Set("description", getResp.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("subnet_type", flattenSubnetType(getResp.SubnetType)); err != nil {
@@ -652,6 +708,9 @@ func ResourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 	if err := d.Set("is_external", getResp.IsExternal); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("is_connected", getResp.IsConnected); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("reserved_ip_addresses", flattenReservedIPAddresses(getResp.ReservedIpAddresses)); err != nil {
@@ -699,28 +758,57 @@ func ResourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, me
 func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 	updateSpec := import1.Subnet{}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
+	// Handle shared_with_projects changes
+	if d.HasChange("shared_with_projects") {
+		oldProjects, newProjects := d.GetChange("shared_with_projects")
+		oldSet := oldProjects.(*schema.Set)
+		newSet := newProjects.(*schema.Set)
 
-	readResp, err := conn.SubnetAPIInstance.GetSubnetById(utils.StringPtr(d.Id()))
+		// Unshare with removed projects
+		removedProjects := oldSet.Difference(newSet)
+		for _, projectID := range removedProjects.List() {
+			if err := unshareSubnetWithProject(ctx, meta, conn, d, projectID.(string)); err != nil {
+				return diag.Errorf("error while unsharing subnet with project %s: %v", projectID.(string), err)
+			}
+		}
+
+		// Share with new projects
+		addedProjects := newSet.Difference(oldSet)
+		for _, projectID := range addedProjects.List() {
+			if err := shareSubnetWithProject(ctx, meta, conn, d, projectID.(string)); err != nil {
+				return diag.Errorf("error while sharing subnet with project %s: %v", projectID.(string), err)
+			}
+		}
+	}
+
+	getSubnetRequest := import5.GetSubnetByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.SubnetAPIInstance.GetSubnetById(ctx, &getSubnetRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching subnets : %v", err)
 	}
 
 	updateSpec = readResp.Data.GetValue().(import1.Subnet)
-	// Extract E-Tag Header
-	etagValue := conn.SubnetAPIInstance.ApiClient.GetEtag(readResp)
-
-	args := make(map[string]interface{})
-	args["If-Match"] = utils.StringPtr(etagValue)
+	updateSpecChanged := false
 
 	if d.HasChange("metadata") {
 		updateSpec.Metadata = expandMetadata(d.Get("metadata").([]interface{}))
+		updateSpecChanged = true
 	}
+
 	if d.HasChange("name") {
 		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("description") {
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
+		updateSpecChanged = true
 	}
+
 	if d.HasChange("subnet_type") {
 		const two, three = 2, 3
 		subMap := map[string]interface{}{
@@ -730,87 +818,127 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 		pInt := subMap[d.Get("subnet_type").(string)]
 		p := import1.SubnetType(pInt.(int))
 		updateSpec.SubnetType = &p
+		updateSpecChanged = true
 	}
 	if d.HasChange("dhcp_options") {
 		updateSpec.DhcpOptions = expandDhcpOptions(d.Get("dhcp_options").([]interface{}))
+		updateSpecChanged = true
 	}
 	if d.HasChange("cluster_reference") {
 		updateSpec.ClusterReference = utils.StringPtr(d.Get("cluster_reference").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("virtual_switch_reference") {
 		updateSpec.VirtualSwitchReference = utils.StringPtr(d.Get("virtual_switch_reference").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("vpc_reference") {
 		updateSpec.VpcReference = utils.StringPtr(d.Get("vpc_reference").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("is_nat_enabled") {
 		updateSpec.IsNatEnabled = utils.BoolPtr(d.Get("is_nat_enabled").(bool))
+		updateSpecChanged = true
 	}
 	if d.HasChange("is_external") {
 		updateSpec.IsExternal = utils.BoolPtr(d.Get("is_external").(bool))
+		updateSpecChanged = true
+	}
+	if d.HasChange("is_connected") {
+		updateSpec.IsConnected = utils.BoolPtr(d.Get("is_connected").(bool))
+		updateSpecChanged = true
 	}
 	if d.HasChange("reserved_ip_addresses") {
 		updateSpec.ReservedIpAddresses = expandIPAddress(d.Get("reserved_ip_addresses").([]interface{}))
+		updateSpecChanged = true
 	}
 	if d.HasChange("dynamic_ip_addresses") {
 		updateSpec.DynamicIpAddresses = expandIPAddress(d.Get("dynamic_ip_addresses").([]interface{}))
+		updateSpecChanged = true
 	}
 
 	if d.HasChange("network_function_chain_reference") {
 		updateSpec.NetworkFunctionChainReference = utils.StringPtr(d.Get("network_function_chain_reference").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("bridge_name") {
 		updateSpec.BridgeName = utils.StringPtr(d.Get("bridge_name").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("is_advanced_networking") {
 		updateSpec.IsAdvancedNetworking = utils.BoolPtr(d.Get("is_advanced_networking").(bool))
+		updateSpecChanged = true
 	}
 	if d.HasChange("cluster_name") {
 		updateSpec.ClusterName = utils.StringPtr(d.Get("cluster_name").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("hypervisor_type") {
 		updateSpec.HypervisorType = utils.StringPtr(d.Get("hypervisor_type").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("virtual_switch") {
 		updateSpec.VirtualSwitch = expandVirtualSwitch(d.Get("virtual_switch"))
+		updateSpecChanged = true
 	}
 	if d.HasChange("vpc") {
 		updateSpec.Vpc = expandVpc(d.Get("vpc"))
+		updateSpecChanged = true
 	}
 	if d.HasChange("ip_prefix") {
 		updateSpec.IpPrefix = utils.StringPtr(d.Get("ip_prefix").(string))
+		updateSpecChanged = true
 	}
 	if d.HasChange("ip_usage") {
 		updateSpec.IpUsage = expandIPUsage(d.Get("ip_usage"))
+		updateSpecChanged = true
 	}
 	if d.HasChange("ip_config") {
 		updateSpec.IpConfig = expandIPConfig(d.Get("ip_config").([]interface{}))
+		updateSpecChanged = true
 	}
+	if updateSpecChanged {
+		aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
+		log.Printf("[DEBUG] Update Subnet Request: %s", string(aJSON))
 
-	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
-	log.Printf("[DEBUG] Update Subnet Request: %s", string(aJSON))
+		updateSubnetRequest := import5.UpdateSubnetByIdRequest{
+			ExtId: utils.StringPtr(d.Id()),
+			Body:  &updateSpec,
+		}
 
-	updateResp, err := conn.SubnetAPIInstance.UpdateSubnetById(utils.StringPtr(d.Id()), &updateSpec, args)
-	if err != nil {
-		return diag.Errorf("error while updating subnets : %v", err)
-	}
+		readRespSubnetById, err := conn.SubnetAPIInstance.GetSubnetById(ctx, &getSubnetRequest)
+		if err != nil {
+			return diag.Errorf("error while fetching subnets : %v", err)
+		}
 
-	TaskRef := updateResp.Data.GetValue().(import4.TaskReference)
-	taskUUID := TaskRef.ExtId
+		// Extract E-Tag Header
+		etagValue := conn.SubnetAPIInstance.ApiClient.GetEtag(readRespSubnetById)
 
-	// calling group API to poll for completion of task
+		args := make(map[string]interface{})
+		args["If-Match"] = utils.StringPtr(etagValue)
 
-	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the subnet to be updated
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
-	}
+		updateResp, err := conn.SubnetAPIInstance.UpdateSubnetById(ctx, &updateSubnetRequest, args)
+		if err != nil {
+			return diag.Errorf("error while updating subnets : %v", err)
+		}
 
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for subnet (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
+		TaskRef := updateResp.Data.GetValue().(import4.TaskReference)
+		taskUUID := TaskRef.ExtId
+
+		// calling group API to poll for completion of task
+
+		taskconn := meta.(*conns.Client).PrismAPI
+		// Wait for the subnet to be updated
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutUpdate),
+		}
+
+		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+			return diag.Errorf("error waiting for subnet (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
+		}
 	}
 	return ResourceNutanixSubnetV2Read(ctx, d, meta)
 }
@@ -818,7 +946,10 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 func ResourceNutanixSubnetV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.SubnetAPIInstance.DeleteSubnetById(utils.StringPtr(d.Id()))
+	deleteSubnetRequest := import5.DeleteSubnetByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.SubnetAPIInstance.DeleteSubnetById(ctx, &deleteSubnetRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting subnet : %v", err)
 	}
@@ -1482,5 +1613,104 @@ func expandIPv6Pool(pr []interface{}) []import1.IPv6Pool {
 		}
 		return pools
 	}
+	return nil
+}
+
+// Helper functions for sharing/unsharing subnet with projects
+func shareSubnetWithProject(ctx context.Context, meta interface{}, conn *networking.Client, d *schema.ResourceData, projectID string) error {
+
+	subnetExtID := utils.StringPtr(d.Id())
+	shareSubnetRequest := import5.ShareSubnetByIdRequest{
+		SubnetExtId: subnetExtID,
+		Body: &import1.ProjectReference{
+			ProjectExtId: utils.StringPtr(projectID),
+		},
+	}
+	getSubnetRequest := import5.GetSubnetByIdRequest{
+		ExtId: subnetExtID,
+	}
+	readResp, err := conn.SubnetAPIInstance.GetSubnetById(ctx, &getSubnetRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching subnets for etag value: %v", err)
+	}
+
+	// Extract E-Tag Header
+	etagValue := conn.SubnetAPIInstance.ApiClient.GetEtag(readResp)
+
+	args := make(map[string]interface{})
+	args["If-Match"] = utils.StringPtr(etagValue)
+	resp, err := conn.SubnetAPIInstance.ShareSubnetById(ctx, &shareSubnetRequest, args)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	TaskRef := resp.Data.GetValue().(import4.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	// calling group API to poll for completion of task
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the subnet to be updated
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return fmt.Errorf("%w", errWaitTask)
+	}
+
+	log.Printf("[DEBUG] Sharing subnet %s with project %s success", d.Id(), projectID)
+	return nil
+}
+
+func unshareSubnetWithProject(ctx context.Context, meta interface{}, conn *networking.Client, d *schema.ResourceData, projectID string) error {
+	subnetExtID := utils.StringPtr(d.Id())
+	unshareSubnetRequest := import5.UnshareSubnetByIdRequest{
+		SubnetExtId: subnetExtID,
+		Body: &import1.ProjectReference{
+			ProjectExtId: utils.StringPtr(projectID),
+		},
+	}
+
+	getSubnetRequest := import5.GetSubnetByIdRequest{
+		ExtId: subnetExtID,
+	}
+	readResp, err := conn.SubnetAPIInstance.GetSubnetById(ctx, &getSubnetRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching subnets for etag value: %v", err)
+	}
+
+	// Extract E-Tag Header
+	etagValue := conn.SubnetAPIInstance.ApiClient.GetEtag(readResp)
+
+	args := make(map[string]interface{})
+	args["If-Match"] = utils.StringPtr(etagValue)
+
+	resp, err := conn.SubnetAPIInstance.UnshareSubnetById(ctx, &unshareSubnetRequest, args)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+
+	TaskRef := resp.Data.GetValue().(import4.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	// calling group API to poll for completion of task
+	taskconn := meta.(*conns.Client).PrismAPI
+
+	// Wait for the subnet to be updated
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return fmt.Errorf("%w", errWaitTask)
+	}
+
+	log.Printf("[DEBUG] Unsharing subnet %s with project %s success", d.Id(), projectID)
 	return nil
 }

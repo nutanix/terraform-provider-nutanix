@@ -8,8 +8,8 @@ import (
 )
 
 type Client struct {
-	RecoveryPoint     *api.RecoveryPointsApi
-	ProtectedResource *api.ProtectedResourcesApi
+	RecoveryPoint     *api.RecoveryPointsServiceApi
+	ProtectedResource *api.ProtectedResourcesServiceApi
 }
 
 func NewDataProtectionClient(credentials client.Credentials) (*Client, error) {
@@ -25,9 +25,10 @@ func NewDataProtectionClient(credentials client.Credentials) (*Client, error) {
 		pcClient.AllowVersionNegotiation = cfg.AllowVersionNegotiation
 		baseClient = pcClient
 	}
+	f := &Client{
+		RecoveryPoint:     api.NewRecoveryPointsServiceApi(baseClient),
+		ProtectedResource: api.NewProtectedResourcesServiceApi(baseClient),
+	}
 
-	return &Client{
-		RecoveryPoint:     api.NewRecoveryPointsApi(baseClient),
-		ProtectedResource: api.NewProtectedResourcesApi(baseClient),
-	}, nil
+	return f, nil
 }

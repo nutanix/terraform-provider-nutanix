@@ -107,6 +107,7 @@ The following attributes are exported:
   | QCOW2 | The QCOW2 disk format of an OVA. |
 - `create_time`: - Time when the OVA was created time.
 - `last_update_time`: - Time when the OVA was last updated time.
+- `project_ext_id`: - External identifier of the project associated with the OVA.
 
 ### Links
 
@@ -129,4 +130,4 @@ The `ova_sha1_checksum` and `ova_sha256_checksum` arguments support the followin
 - `hex_digest`: - The hexadecimal representation of the checksum.
 
 
-See detailed information in [Nutanix List Ovas V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Ovas/operation/listOvas).
+See detailed information in [Nutanix List Ovas V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/Ovas/operation/listOvas).

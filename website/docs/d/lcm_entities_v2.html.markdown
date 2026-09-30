@@ -40,6 +40,7 @@ The following arguments are supported:
         * `entityType`
         * `entityVersion`
         * `hardwareVendor`
+        * `hasPreviousInventoryFailed`
 * `orderby` : A URL query parameter that allows clients to specify the sort criteria for the returned list of objects. Resources can be sorted in ascending order using asc or descending order using desc. If asc or desc are not specified, the resources will be sorted in ascending order by default. For example, '\$orderby=templateName desc' would get all templates sorted by templateName in descending order. The orderby can be applied to the following fields: createdTime, distinguishedName, displayName, extId, lastUpdatedTime.
     * The orderby can be applied to the following fields:
         * `entityClass`
@@ -54,6 +55,7 @@ The following arguments are supported:
         * `entityType`
         * `entityVersion`
         * `hardwareVendor`
+        * `hasPreviousInventoryFailed`
 
 ## Attributes Reference
 The following attributes are exported:
@@ -85,6 +87,7 @@ The `entities` attribute supports the following:
 * `sub_entities`: A list of sub-entities applicable to the entity.
 * `cluster_ext_id`: Cluster uuid on which the resource is present or operation is being performed.
 * `hardware_vendor`: Hardware vendor information.
+* `has_previous_inventory_failed`: (default `false`) Indicates whether the most recent inventory operation failed for this entity. When true, the entity's version or available-version data may be stale.
 
 ### Location Info
 The `location` attribute supports the following
@@ -159,4 +162,4 @@ The `sub_entities` attribute supports the following
 * `entity_version`: Current version of an LCM entity.
 * `hardware_family`: A hardware family for a LCM entity.
 
-See detailed information in [Nutanix LCM Entities V4](https://developers.nutanix.com/api-reference?namespace=lifecycle&version=v4.2#tag/Entities/operation/listEntities).
+See detailed information in [Nutanix LCM Entities V4](https://developers.nutanix.com/api-reference?namespace=lifecycle&version=v4.3#tag/Entities/operation/listEntities).

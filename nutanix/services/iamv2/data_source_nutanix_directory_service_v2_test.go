@@ -19,13 +19,13 @@ func TestAccV2NutanixDirectoryServiceDatasource_Basic(t *testing.T) {
 				Config: testDirectoryServiceDatasourceConfig(filepath),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameDirectoryService, "ext_id"),
-					resource.TestCheckResourceAttr(datasourceNameDirectoryService, "name", testVars.Iam.DirectoryServices.Name),
-					resource.TestCheckResourceAttr(datasourceNameDirectoryService, "domain_name", testVars.Iam.DirectoryServices.DomainName),
+					resource.TestCheckResourceAttr(datasourceNameDirectoryService, "name", testVars.Iam.DirectoryServicesMain.PrimaryAD.DirectoryServiceName),
+					resource.TestCheckResourceAttr(datasourceNameDirectoryService, "domain_name", testVars.Iam.DirectoryServicesMain.PrimaryAD.Name),
 					resource.TestCheckResourceAttr(datasourceNameDirectoryService, "directory_type", "ACTIVE_DIRECTORY"),
-					resource.TestCheckResourceAttr(datasourceNameDirectoryService, "url", testVars.Iam.DirectoryServices.URL),
-					resource.TestCheckResourceAttr(datasourceNameDirectoryService, "service_account.0.username", testVars.Iam.DirectoryServices.ServiceAccount.Username),
+					resource.TestCheckResourceAttr(datasourceNameDirectoryService, "url", testVars.Iam.DirectoryServicesMain.PrimaryAD.URL),
+					resource.TestCheckResourceAttr(datasourceNameDirectoryService, "service_account.0.username", testVars.Iam.DirectoryServicesMain.PrimaryAD.Username),
 					resource.TestCheckResourceAttrSet(datasourceNameDirectoryService, "service_account.0.password"),
-					resource.TestCheckResourceAttr(datasourceNameDirectoryService, "white_listed_groups.0", testVars.Iam.DirectoryServices.WhiteListedGroups[0]),
+					resource.TestCheckResourceAttr(datasourceNameDirectoryService, "white_listed_groups.0", "test"),
 				),
 			},
 		},
@@ -37,7 +37,16 @@ func testDirectoryServiceDatasourceConfig(filepath string) string {
 
 	locals{
 		config = (jsondecode(file("%s")))
-		directory_services = local.config.iam.directory_services
+		directory_services = {
+			name            = local.config.iam.directory_services_main.primary_ad.directory_service_name
+			domain_name     = local.config.iam.directory_services_main.primary_ad.name
+			url             = local.config.iam.directory_services_main.primary_ad.url
+			directory_type  = "ACTIVE_DIRECTORY"
+			service_account = {
+				username = local.config.iam.directory_services_main.primary_ad.username
+				password = local.config.iam.directory_services_main.primary_ad.password
+			}
+		}
 	}
 
 	resource "nutanix_directory_services_v2" "test" {
@@ -49,7 +58,7 @@ func testDirectoryServiceDatasourceConfig(filepath string) string {
 			username = local.directory_services.service_account.username
 			password = local.directory_services.service_account.password
 		}
-		white_listed_groups = [ local.directory_services.white_listed_groups[0]]
+		white_listed_groups = [ "test"]
 		lifecycle {
 			ignore_changes = [
 			  service_account.0.password,

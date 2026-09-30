@@ -48,6 +48,7 @@ The following attributes are exported:
   | QCOW2 | The QCOW2 disk format of an OVA. |
 - `create_time`: - Time when the OVA was created time.
 - `last_update_time`: - Time when the OVA was last updated time.
+- `project_ext_id`: - External identifier of the project associated with the OVA.
 
 ### Links
 
@@ -433,4 +434,4 @@ The `nics` attribute supports the following:
 #### protection_policy_state
 * `policy`: Reference to the policy object in use.
 
-See detailed information in [Nutanix Get Ova Details V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.3#tag/DomainManager/operation/getDomainManagerById).
+See detailed information in [Nutanix Get Ova Details V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.4#tag/DomainManager/operation/getDomainManagerById).

@@ -23,3 +23,19 @@ variable "source_az_url" {
 variable "target_az_url" {
   type = string
 }
+
+variable "source_recovery_subnet_uuid" {
+  type = string
+}
+
+variable "source_test_subnet_uuid" {
+  type = string
+}
+
+variable "target_recovery_subnet_uuid" {
+  type = string
+}
+
+variable "target_test_subnet_uuid" {
+  type = string
+}

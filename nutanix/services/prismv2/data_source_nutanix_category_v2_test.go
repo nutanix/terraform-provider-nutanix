@@ -23,6 +23,7 @@ func TestAccV2NutanixCategoryDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(datasourceNameCategory, "type"),
 					resource.TestCheckResourceAttrSet(datasourceNameCategory, "associations.#"),
 					resource.TestCheckResourceAttrSet(datasourceNameCategory, "detailed_associations.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategory, "shared_with_all_projects"),
 				),
 			},
 		},

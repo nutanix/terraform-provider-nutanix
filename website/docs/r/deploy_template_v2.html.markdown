@@ -99,4 +99,4 @@ The following arguments are supported:
 
 
 
-See detailed information in [Nutanix Deploy Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Templates/operation/deployTemplate).
+See detailed information in [Nutanix Deploy Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/Templates/operation/deployTemplate).

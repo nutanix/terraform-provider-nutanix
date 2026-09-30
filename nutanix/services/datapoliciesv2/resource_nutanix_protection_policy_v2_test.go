@@ -2,6 +2,7 @@ package datapoliciesv2_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -20,9 +21,9 @@ func TestAccV2NutanixProtectionPolicyResource_Synchronous(t *testing.T) {
 	updateDescription := "terraform test protection policy CRUD update"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		Providers:    acc.TestAccProviders,
-		CheckDestroy: testProtectionPolicyV2CheckDestroy,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
+		CheckDestroy:             testProtectionPolicyV2CheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testProtectionPolicyResourceConfig(name, description),
@@ -100,9 +101,9 @@ func TestAccV2NutanixProtectionPolicyResource_LinearRetention(t *testing.T) {
 	descriptionUpdated := "terraform test protection policy CRUD update"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		Providers:    acc.TestAccProviders,
-		CheckDestroy: testProtectionPolicyV2CheckDestroy,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
+		CheckDestroy:             testProtectionPolicyV2CheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testProtectionPolicyResourceConfigLinearRetentionConfig(name, description),
@@ -174,9 +175,9 @@ func TestAccV2NutanixProtectionPolicyResource_AutoRollupRetention(t *testing.T) 
 	descriptionUpdated := "terraform test protection policy CRUD update auto rollup retention"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		Providers:    acc.TestAccProviders,
-		CheckDestroy: testProtectionPolicyV2CheckDestroy,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
+		CheckDestroy:             testProtectionPolicyV2CheckDestroy,
 		Steps: []resource.TestStep{
 
 			{
@@ -253,8 +254,157 @@ func TestAccV2NutanixProtectionPolicyResource_AutoRollupRetention(t *testing.T) 
 	})
 }
 
+// Case 1: Creating a synchronous protection policy with is_replication_paused = true
+// must fail; replication paused can only be set through an update request.
+func TestAccV2NutanixProtectionPolicyResource_SyncReplicationPausedCreateError(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-pp-sync-paused-create-%d", r)
+	description := "sync pp with is_replication_paused=true on create must fail"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
+		CheckDestroy:             testProtectionPolicyV2CheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testProtectionPolicySyncScheduleConfig(name, description, "is_replication_paused = true"),
+				ExpectError: regexp.MustCompile("replication paused is not supported"),
+			},
+		},
+	})
+}
+
+// Case 2: Creating a synchronous protection policy with latest_recovery_point_retention_seconds
+// (even 0) must fail; the field is not allowed for synchronous replication.
+func TestAccV2NutanixProtectionPolicyResource_SyncLatestRecoveryPointRetentionCreateError(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-pp-sync-lrprs-create-%d", r)
+	description := "sync pp with latest_recovery_point_retention_seconds must fail"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
+		CheckDestroy:             testProtectionPolicyV2CheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testProtectionPolicySyncScheduleConfig(name, description, "latest_recovery_point_retention_seconds = 0"),
+				ExpectError: regexp.MustCompile("Latest recovery point retention seconds cannot be specified for a synchronous replication"),
+			},
+		},
+	})
+}
+
+// Case 3: Create a synchronous protection policy with is_replication_paused = false, then
+// update it to true. Pausing is only supported for synchronous replication via update.
+func TestAccV2NutanixProtectionPolicyResource_SyncReplicationPausedUpdate(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-pp-sync-paused-update-%d", r)
+	description := "sync pp is_replication_paused create false then update true"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
+		CheckDestroy:             testProtectionPolicyV2CheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testProtectionPolicySyncScheduleConfig(name, description, "is_replication_paused = false"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameProtectionPolicy, "ext_id"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.is_replication_paused", "false"),
+				),
+			},
+			{
+				Config: testProtectionPolicySyncScheduleConfig(name, description, "is_replication_paused = true"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.is_replication_paused", "true"),
+				),
+			},
+		},
+	})
+}
+
+// Case 4: is_replication_paused is not supported for asynchronous replication. Create a
+// synchronous policy, pause it via update, then attempt to convert it to asynchronous while
+// still paused (which must fail), and finally recover by unpausing.
+func TestAccV2NutanixProtectionPolicyResource_ReplicationPausedAsyncError(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-pp-paused-async-%d", r)
+	description := "is_replication_paused not supported for async replication"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
+		CheckDestroy:             testProtectionPolicyV2CheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testProtectionPolicySyncScheduleConfig(name, description, "is_replication_paused = false"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.is_replication_paused", "false"),
+				),
+			},
+			{
+				Config: testProtectionPolicySyncScheduleConfig(name, description, "is_replication_paused = true"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.is_replication_paused", "true"),
+				),
+			},
+			{
+				Config:      testProtectionPolicyAsyncScheduleConfig(name, description, "is_replication_paused = true", false),
+				ExpectError: regexp.MustCompile("Pause replication is not supported for asynchronous or near synchronous replications"),
+			},
+			{
+				Config: testProtectionPolicySyncScheduleConfig(name, description, "is_replication_paused = false"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.is_replication_paused", "false"),
+				),
+			},
+		},
+	})
+}
+
+// Cases 5, 6 and 7: latest_recovery_point_retention_seconds lifecycle on an asynchronous
+// policy - create with 0, update to 3600 and back to 0 - and verify the data source reflects
+// the value.
+func TestAccV2NutanixProtectionPolicyResource_AsyncLatestRecoveryPointRetentionLifecycle(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-pp-async-lrprs-%d", r)
+	description := "async pp latest_recovery_point_retention_seconds lifecycle"
+
+	dataSourceName := "data.nutanix_protection_policy_v2.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
+		CheckDestroy:             testProtectionPolicyV2CheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testProtectionPolicyAsyncScheduleConfig(name, description, "latest_recovery_point_retention_seconds = 0", true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameProtectionPolicy, "ext_id"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.latest_recovery_point_retention_seconds", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "replication_configurations.0.schedule.0.latest_recovery_point_retention_seconds", "0"),
+				),
+			},
+			{
+				Config: testProtectionPolicyAsyncScheduleConfig(name, description, "latest_recovery_point_retention_seconds = 3600", true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.latest_recovery_point_retention_seconds", "3600"),
+					resource.TestCheckResourceAttr(dataSourceName, "replication_configurations.0.schedule.0.latest_recovery_point_retention_seconds", "3600"),
+				),
+			},
+			{
+				Config: testProtectionPolicyAsyncScheduleConfig(name, description, "latest_recovery_point_retention_seconds = 0", true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.latest_recovery_point_retention_seconds", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "replication_configurations.0.schedule.0.latest_recovery_point_retention_seconds", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testProtectionPolicyResourceConfig(name, description string) string {
-	return getProviderConfigForAPINonSupportedTests() + fmt.Sprintf(`
+	return fmt.Sprintf(`
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
@@ -312,7 +462,7 @@ resource "nutanix_protection_policy_v2" "test" {
 }
 
 func testProtectionPolicyResourceUpdateConfig(name, description string) string {
-	return getProviderConfigForAPINonSupportedTests() + fmt.Sprintf(`
+	return fmt.Sprintf(`
 
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
@@ -395,7 +545,7 @@ resource "nutanix_protection_policy_v2" "test" {
 }
 
 func testProtectionPolicyResourceConfigLinearRetentionConfig(name, description string) string {
-	return getProviderConfigForAPINonSupportedTests() + fmt.Sprintf(`
+	return fmt.Sprintf(`
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
@@ -474,7 +624,7 @@ resource "nutanix_protection_policy_v2" "test" {
 }
 
 func testProtectionPolicyResourceConfigLinearRetentionUpdateConfig(name, description string) string {
-	return getProviderConfigForAPINonSupportedTests() + fmt.Sprintf(`
+	return fmt.Sprintf(`
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
@@ -553,7 +703,7 @@ resource "nutanix_protection_policy_v2" "test" {
 }
 
 func testProtectionPolicyResourceConfigAutoRollupRetentionConfig(name, description string) string {
-	return getProviderConfigForAPINonSupportedTests() + fmt.Sprintf(`
+	return fmt.Sprintf(`
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
@@ -635,7 +785,7 @@ resource "nutanix_protection_policy_v2" "test" {
 }
 
 func testProtectionPolicyResourceConfigAutoRollupRetentionUpdateConfig(name, description string) string {
-	return getProviderConfigForAPINonSupportedTests() + fmt.Sprintf(`
+	return fmt.Sprintf(`
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
@@ -714,4 +864,158 @@ resource "nutanix_protection_policy_v2" "test" {
   category_ids = [ nutanix_category_v2.test.id ]
 }
 `, name, description, filepath)
+}
+
+// testProtectionPolicySyncScheduleConfig builds a two-way synchronous protection policy where
+// scheduleExtra is injected into each schedule block (e.g. is_replication_paused or
+// latest_recovery_point_retention_seconds), used by the paused/retention scenarios.
+func testProtectionPolicySyncScheduleConfig(name, description, scheduleExtra string) string {
+	return fmt.Sprintf(`
+data "nutanix_pcs_v2" "pcs-list" {}
+
+locals {
+  config            = jsondecode(file("%[3]s"))
+  availability_zone = local.config.availability_zone
+}
+
+resource "nutanix_category_v2" "test" {
+  key         = "tf-test-cat-pp-sched"
+  value       = "category_pp_sched"
+  description = "category for protection policy schedule tests"
+}
+
+resource "nutanix_protection_policy_v2" "test" {
+  name        = "%[1]s"
+  description = "%[2]s"
+
+  replication_configurations {
+    source_location_label = "source"
+    remote_location_label = "target"
+    schedule {
+      recovery_point_objective_time_seconds         = 0
+      recovery_point_type                           = "CRASH_CONSISTENT"
+      sync_replication_auto_suspend_timeout_seconds = 10
+      start_time                                    = "23h:54m"
+      %[4]s
+    }
+  }
+  replication_configurations {
+    source_location_label = "target"
+    remote_location_label = "source"
+    schedule {
+      recovery_point_objective_time_seconds         = 0
+      recovery_point_type                           = "CRASH_CONSISTENT"
+      sync_replication_auto_suspend_timeout_seconds = 10
+      start_time                                    = "23h:54m"
+      %[4]s
+    }
+  }
+
+  replication_locations {
+    domain_manager_ext_id = data.nutanix_pcs_v2.pcs-list.pcs[0].ext_id
+    label                 = "source"
+    is_primary            = true
+  }
+  replication_locations {
+    domain_manager_ext_id = local.availability_zone.pc_ext_id
+    label                 = "target"
+    is_primary            = false
+  }
+
+  category_ids = [nutanix_category_v2.test.id]
+}
+`, name, description, filepath, scheduleExtra)
+}
+
+// testProtectionPolicyAsyncScheduleConfig builds a two-way asynchronous protection policy
+// (RPO = 3600 with auto rollup retention) where scheduleExtra is injected into each schedule
+// block. When withDataSource is true, a single protection policy data source is included.
+func testProtectionPolicyAsyncScheduleConfig(name, description, scheduleExtra string, withDataSource bool) string {
+	dataSource := ""
+	if withDataSource {
+		dataSource = `
+data "nutanix_protection_policy_v2" "test" {
+  ext_id     = nutanix_protection_policy_v2.test.ext_id
+  depends_on = [nutanix_protection_policy_v2.test]
+}
+`
+	}
+	return fmt.Sprintf(`
+data "nutanix_pcs_v2" "pcs-list" {}
+
+locals {
+  config            = jsondecode(file("%[3]s"))
+  availability_zone = local.config.availability_zone
+}
+
+resource "nutanix_category_v2" "test" {
+  key         = "tf-test-cat-pp-sched"
+  value       = "category_pp_sched"
+  description = "category for protection policy schedule tests"
+}
+
+resource "nutanix_protection_policy_v2" "test" {
+  name        = "%[1]s"
+  description = "%[2]s"
+
+  replication_configurations {
+    source_location_label = "source"
+    remote_location_label = "target"
+    schedule {
+      recovery_point_objective_time_seconds = 3600
+      recovery_point_type                   = "CRASH_CONSISTENT"
+      start_time                            = "23h:54m"
+      retention {
+        auto_rollup_retention {
+          local {
+            snapshot_interval_type = "DAILY"
+            frequency              = 1
+          }
+          remote {
+            snapshot_interval_type = "DAILY"
+            frequency              = 1
+          }
+        }
+      }
+      %[4]s
+    }
+  }
+  replication_configurations {
+    source_location_label = "target"
+    remote_location_label = "source"
+    schedule {
+      recovery_point_objective_time_seconds = 3600
+      recovery_point_type                   = "CRASH_CONSISTENT"
+      start_time                            = "23h:54m"
+      retention {
+        auto_rollup_retention {
+          local {
+            snapshot_interval_type = "DAILY"
+            frequency              = 1
+          }
+          remote {
+            snapshot_interval_type = "DAILY"
+            frequency              = 1
+          }
+        }
+      }
+      %[4]s
+    }
+  }
+
+  replication_locations {
+    domain_manager_ext_id = data.nutanix_pcs_v2.pcs-list.pcs[0].ext_id
+    label                 = "source"
+    is_primary            = true
+  }
+  replication_locations {
+    domain_manager_ext_id = local.availability_zone.pc_ext_id
+    label                 = "target"
+    is_primary            = false
+  }
+
+  category_ids = [nutanix_category_v2.test.id]
+}
+%[5]s
+`, name, description, filepath, scheduleExtra, dataSource)
 }

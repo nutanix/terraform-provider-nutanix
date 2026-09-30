@@ -8,8 +8,8 @@ import (
 )
 
 type Client struct {
-	VolumeAPIInstance      *api.VolumeGroupsApi
-	IscsiClientAPIInstance *api.IscsiClientsApi
+	VolumeAPIInstance      *api.VolumeGroupsServiceApi
+	IscsiClientAPIInstance *api.IscsiClientsServiceApi
 }
 
 func NewVolumeClient(credentials client.Credentials) (*Client, error) {
@@ -25,9 +25,10 @@ func NewVolumeClient(credentials client.Credentials) (*Client, error) {
 		pcClient.AllowVersionNegotiation = cfg.AllowVersionNegotiation
 		baseClient = pcClient
 	}
+	f := &Client{
+		VolumeAPIInstance:      api.NewVolumeGroupsServiceApi(baseClient),
+		IscsiClientAPIInstance: api.NewIscsiClientsServiceApi(baseClient),
+	}
 
-	return &Client{
-		VolumeAPIInstance:      api.NewVolumeGroupsApi(baseClient),
-		IscsiClientAPIInstance: api.NewIscsiClientsApi(baseClient),
-	}, nil
+	return f, nil
 }

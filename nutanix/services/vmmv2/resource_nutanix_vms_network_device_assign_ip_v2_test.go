@@ -128,7 +128,12 @@ func testVMWithNicAndDiskConfig(vmName string) string {
           nics {
 			nic_network_info {
 			  virtual_ethernet_nic_network_info {
-				nic_type = "DIRECT_NIC"
+				# NORMAL_NIC (not DIRECT_NIC): the subnet above is a managed/IPAM
+				# ("Atlas") VLAN, and Acropolis rejects DIRECT_NIC on managed subnets
+				# ("NIC type:kDirectNic is not supported with Atlas network"), which
+				# surfaces as a generic "invalid argument" VM-create failure. Static
+				# IP assignment requires NORMAL_NIC on a managed subnet anyway.
+				nic_type = "NORMAL_NIC"
 				subnet {
 				  ext_id = nutanix_subnet_v2.subnet.ext_id
 				}

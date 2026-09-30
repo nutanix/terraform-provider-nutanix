@@ -45,6 +45,15 @@ func expandAllowedEntities(l []interface{}) []import2.AllowedEntity {
 		if v, ok := m["reference_ext_ids"].([]interface{}); ok {
 			ent.ReferenceExtIds = common.ExpandListOfString(v)
 		}
+		if v, ok := m["fqdns"].([]interface{}); ok {
+			ent.Fqdns = common.ExpandListOfString(v)
+		}
+		if v, ok := m["match_criteria"].(string); ok && v != "" {
+			ent.MatchCriteria = common.ExpandEnum[import2.MatchCriteria](v)
+		}
+		if v, ok := m["reference_string"].(string); ok && v != "" {
+			ent.ReferenceString = utils.StringPtr(v)
+		}
 		out = append(out, ent)
 	}
 	return out
@@ -183,6 +192,11 @@ func flattenAllowedEntities(entities []import2.AllowedEntity) []map[string]inter
 			"ip_ranges":         flattenIpRanges(e.IpRanges),
 			"kube_entities":     e.KubeEntities,
 			"reference_ext_ids": e.ReferenceExtIds,
+			"fqdns":             e.Fqdns,
+			"reference_string":  utils.StringValue(e.ReferenceString),
+		}
+		if e.MatchCriteria != nil {
+			m["match_criteria"] = e.MatchCriteria.GetName()
 		}
 		result = append(result, m)
 	}

@@ -2,7 +2,7 @@ terraform {
   required_providers {
     nutanix = {
       source  = "nutanix/nutanix"
-      version = "1.9.5"
+      version = ">=2.5.0"
     }
   }
 }
@@ -87,11 +87,30 @@ resource "nutanix_recovery_plan" "recovery_plan_with_network" {
     delay_time_secs = 0
   }
   parameters {
+    # Declare every Availability Zone referenced by the network mapping.
+    availability_zone_list {
+      availability_zone_url = var.source_az_url
+      cluster_reference_list {
+        kind = "cluster"
+        uuid = var.source_cluster_uuid
+      }
+    }
+    availability_zone_list {
+      availability_zone_url = var.target_az_url
+      cluster_reference_list {
+        kind = "cluster"
+        uuid = var.target_cluster_uuid
+      }
+    }
+    primary_location_index = 0
+
     network_mapping_list {
+      are_networks_stretched = false
       availability_zone_network_mapping_list {
         availability_zone_url = var.source_az_url
         recovery_network {
-          name = "vlan.800"
+          name        = "vlan.800"
+          subnet_uuid = var.source_recovery_subnet_uuid
           subnet_list {
             gateway_ip                  = "10.38.2.129"
             prefix_length               = 24
@@ -99,7 +118,8 @@ resource "nutanix_recovery_plan" "recovery_plan_with_network" {
           }
         }
         test_network {
-          name = "vlan.800"
+          name        = "vlan.800"
+          subnet_uuid = var.source_test_subnet_uuid
           subnet_list {
             gateway_ip                  = "192.168.0.1"
             prefix_length               = 24
@@ -114,7 +134,8 @@ resource "nutanix_recovery_plan" "recovery_plan_with_network" {
       availability_zone_network_mapping_list {
         availability_zone_url = var.target_az_url
         recovery_network {
-          name = "vlan.800"
+          name        = "vlan.800"
+          subnet_uuid = var.target_recovery_subnet_uuid
           subnet_list {
             gateway_ip                  = "10.38.4.65"
             prefix_length               = 24
@@ -122,7 +143,8 @@ resource "nutanix_recovery_plan" "recovery_plan_with_network" {
           }
         }
         test_network {
-          name = "vlan.800"
+          name        = "vlan.800"
+          subnet_uuid = var.target_test_subnet_uuid
           subnet_list {
             gateway_ip                  = "192.168.0.1"
             prefix_length               = 24
