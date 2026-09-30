@@ -323,7 +323,11 @@ func ResourceNutanixOvaV2Create(ctx context.Context, d *schema.ResourceData, met
 		body.Checksum = expandOneOfOvaChecksum(checksum)
 	}
 	if source, ok := d.GetOk("source"); ok {
-		body.Source = expandOneOfOvaSource(source)
+		ovaSource, err := expandOneOfOvaSource(source)
+		if err != nil {
+			return diag.Errorf("error while building OVA source: %v", err)
+		}
+		body.Source = ovaSource
 	}
 	if clsExts, ok := d.GetOk("cluster_location_ext_ids"); ok {
 		body.ClusterLocationExtIds = flattenStringValue(clsExts.([]interface{}))
@@ -617,7 +621,7 @@ func flattenOneOfOvaChecksum(checksum *import1.OneOfOvaChecksum) []map[string]in
 	return nil
 }
 
-func expandOneOfOvaSource(pr interface{}) *import1.OneOfOvaSource {
+func expandOneOfOvaSource(pr interface{}) (*import1.OneOfOvaSource, error) {
 	if pr != nil && len(pr.([]interface{})) > 0 {
 		imgSrc := &import1.OneOfOvaSource{}
 		prI := pr.([]interface{})
@@ -635,9 +639,8 @@ func expandOneOfOvaSource(pr interface{}) *import1.OneOfOvaSource {
 				urlSrcInput.BasicAuth = expandOvaURLBasicAuth(basicAuth)
 			}
 			urlSrcInput.ObjectType_ = utils.StringPtr("vmm.v4.content.OvaUrlSource")
-			err := imgSrc.SetValue(urlSrcInput)
-			if err != nil {
-				log.Fatalf("SetValue failed: %v", err)
+			if err := imgSrc.SetValue(urlSrcInput); err != nil {
+				return nil, fmt.Errorf("setting ova_url_source: %w", err)
 			}
 		}
 
@@ -660,9 +663,8 @@ func expandOneOfOvaSource(pr interface{}) *import1.OneOfOvaSource {
 					OvavmDiskSrc.DiskFileFormat = &enumValue
 				}
 			}
-			err := imgSrc.SetValue(OvavmDiskSrc)
-			if err != nil {
-				log.Fatalf("SetValue failed: %v", err)
+			if err := imgSrc.SetValue(OvavmDiskSrc); err != nil {
+				return nil, fmt.Errorf("setting ova_vm_source: %w", err)
 			}
 		}
 
@@ -672,14 +674,13 @@ func expandOneOfOvaSource(pr interface{}) *import1.OneOfOvaSource {
 			objLiteSrc := import1.ObjectsLiteSource{}
 			objLiteSrc.ObjectType_ = utils.StringPtr("vmm.v4.content.ObjectsLiteSource")
 			objLiteSrc.Key = utils.StringPtr(objLiteMap["key"].(string))
-			err := imgSrc.SetValue(objLiteSrc)
-			if err != nil {
-				log.Fatalf("SetValue failed: %v", err)
+			if err := imgSrc.SetValue(objLiteSrc); err != nil {
+				return nil, fmt.Errorf("setting object_lite_source: %w", err)
 			}
 		}
-		return imgSrc
+		return imgSrc, nil
 	}
-	return nil
+	return nil, nil
 }
 
 func flattenOneOfOvaSource(source *import1.OneOfOvaSource) []map[string]interface{} {
@@ -695,9 +696,10 @@ func flattenOneOfOvaSource(source *import1.OneOfOvaSource) []map[string]interfac
 		objLiteSrc := make(map[string]interface{})
 		objLiteSrcList := make([]map[string]interface{}, 0)
 
-		if utils.StringValue(source.ObjectType_) == "vmm.v4.content.OvaUrlSource" {
-			urlSrc := source.GetValue().(import1.UrlSource)
-
+		// OneOfOvaSource only ever holds OvaUrlSource, OvaVmSource or ObjectsLiteSource.
+		// Asserting to the similarly-named UrlSource/VmDiskSource types compiles but
+		// always panics at runtime, so the comma-ok form is used throughout.
+		if urlSrc, ok := source.GetValue().(import1.OvaUrlSource); ok {
 			urlSrcObj := make(map[string]interface{})
 			urlSrcObjList := make([]map[string]interface{}, 0)
 
@@ -716,14 +718,15 @@ func flattenOneOfOvaSource(source *import1.OneOfOvaSource) []map[string]interfac
 			return urlSrcList
 		}
 
-		if utils.StringValue(source.ObjectType_) == "vmm.v4.content.OvaVmSource" {
-			vmDiskSrc := source.GetValue().(import1.VmDiskSource)
-
+		if vmDiskSrc, ok := source.GetValue().(import1.OvaVmSource); ok {
 			vmDiskObj := make(map[string]interface{})
 			vmDiskObjList := make([]map[string]interface{}, 0)
 
-			if vmDiskSrc.ExtId != nil {
-				vmDiskObj["ext_id"] = vmDiskSrc.ExtId
+			if vmDiskSrc.VmExtId != nil {
+				vmDiskObj["vm_ext_id"] = vmDiskSrc.VmExtId
+			}
+			if vmDiskSrc.DiskFileFormat != nil {
+				vmDiskObj["disk_file_format"] = vmDiskSrc.DiskFileFormat.GetName()
 			}
 
 			vmDiskObjList = append(vmDiskObjList, vmDiskObj)
@@ -734,9 +737,7 @@ func flattenOneOfOvaSource(source *import1.OneOfOvaSource) []map[string]interfac
 			return vmDiskSrcList
 		}
 
-		if utils.StringValue(source.ObjectType_) == "vmm.v4.content.ObjectsLiteSource" {
-			objLite := source.GetValue().(import1.ObjectsLiteSource)
-
+		if objLite, ok := source.GetValue().(import1.ObjectsLiteSource); ok {
 			objLiteMap := make(map[string]interface{})
 			objLiteMapList := make([]map[string]interface{}, 0)
 			if objLite.Key != nil {
