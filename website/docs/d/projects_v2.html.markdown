@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_projects_v2"
+page_title: "NUTANIX: nutanix_projects_v2 (Beta)"
 sidebar_current: "docs-nutanix-datasource-projects-v2"
 description: |-
   List the projects defined on the system.
 ---
 
-# nutanix_projects_v2
+# nutanix_projects_v2 (Beta)
+
+-> **Note:** This data source is currently in Beta.
 
 List the projects defined on the system.
 

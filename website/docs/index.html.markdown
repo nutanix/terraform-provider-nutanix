@@ -114,8 +114,8 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | nutanix_user_groups | nutanix_user_groups_v2 |
 | nutanix_access_control_policy | nutanix_authorization_policy_v2 |
 | - | nutanix_entity_group_v2 |
-| - | nutanix_saml_identity_providers_v2 |
-| - | nutanix_directory_services_v2 |
+| - | nutanix_saml_identity_providers_v2 (Beta) |
+| - | nutanix_directory_services_v2 (Beta) |
 | nutanix_category_key | nutanix_category_v2 |
 | nutanix_category_value | - |
 | nutanix_image |nutanix_images_v2 |
@@ -252,9 +252,9 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_entity_group_v2 |
 | - | nutanix_entity_groups_v2 |
 | - | nutanix_saml_identity_provider_v2 |
-| - | nutanix_saml_identity_providers_v2 |
+| - | nutanix_saml_identity_providers_v2 (Beta) |
 | - | nutanix_directory_service_v2 |
-| - | nutanix_directory_services_v2 |
+| - | nutanix_directory_services_v2 (Beta) |
 | nutanix_category_key | nutanix_category_v2 |
 | - | nutanix_categories_v2 |
 | nutanix_image | nutanix_image_v2 |

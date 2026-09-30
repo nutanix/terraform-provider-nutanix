@@ -31,12 +31,12 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.5.
 * **New Resource Support**
   * **Cluster Category Associations (Cluster Management)**: Create and manage cluster-category associations to tag clusters for organization and automation. [#1228](https://github.com/nutanix/terraform-provider-nutanix/issues/1228)
   * **SNMP (Cluster Management)**: Create, update, read, and delete SNMP configurations, SNMP traps, and SNMP users on clusters for monitoring and alerting. [#1135](https://github.com/nutanix/terraform-provider-nutanix/issues/1135)
-  * **Role Membership (IAM)**: Manage role membership assignments for users and user groups. [#1127](https://github.com/nutanix/terraform-provider-nutanix/issues/1127)
+  * **Role Membership (IAM) (Beta)**: Manage role membership assignments for users and user groups. [#1127](https://github.com/nutanix/terraform-provider-nutanix/issues/1127)
   * **Directory Server Config (Microsegmentation)**: Create, update, read, and delete directory server configurations for microsegmentation policies. [#1178](https://github.com/nutanix/terraform-provider-nutanix/issues/1178)
   * **AD Group Category Mapping (Microsegmentation)**: Manage Active Directory group to category mappings for microsegmentation. [#1178](https://github.com/nutanix/terraform-provider-nutanix/issues/1178)
   * **Network Security Policy Import/Export (Microsegmentation)**: Import and export network security policies for backup and migration workflows.
-  * **Projects (Multidomain)**: Create, update, read, and delete Projects for resource isolation and multi-tenancy. [#1115](https://github.com/nutanix/terraform-provider-nutanix/issues/1115)
-  * **Resource Groups (Multidomain)**: Create, update, read, and delete Resource Groups for organizing resources. [#1115](https://github.com/nutanix/terraform-provider-nutanix/issues/1115)
+  * **Projects (Multidomain) (Beta)**: Create, update, read, and delete Projects for resource isolation and multi-tenancy. [#1115](https://github.com/nutanix/terraform-provider-nutanix/issues/1115)
+  * **Resource Groups (Multidomain) (Beta)**: Create, update, read, and delete Resource Groups for organizing resources. [#1115](https://github.com/nutanix/terraform-provider-nutanix/issues/1115)
   * **Virtual Switch (Networking)**: Create, update, read, and delete Virtual Switches for network traffic management. [#1134](https://github.com/nutanix/terraform-provider-nutanix/issues/1134)
   * **VPC Virtual Switch Mapping (Networking)**: Map VPCs to Virtual Switches. [#1159](https://github.com/nutanix/terraform-provider-nutanix/issues/1159)
   * **VM Guest Customization Profile (VMM)**: Create, update, read, and delete guest customization profiles for virtual machines. [#1132](https://github.com/nutanix/terraform-provider-nutanix/issues/1132)
@@ -232,8 +232,8 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 |nutanix_user_groups|nutanix_user_groups_v2|
 |nutanix_access_control_policy|nutanix_authorization_policy_v2|
 |-|nutanix_entity_group_v2|
-|-|nutanix_saml_identity_providers_v2|
-|-|nutanix_directory_services_v2|
+|-|nutanix_saml_identity_providers_v2 (Beta)|
+|-|nutanix_directory_services_v2 (Beta)|
 |nutanix_category_key|nutanix_category_v2|
 |nutanix_category_value|-|
 |nutanix_image|nutanix_images_v2|
@@ -333,13 +333,13 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 |-|nutanix_snmp_config_v2|
 |-|nutanix_snmp_trap_v2|
 |-|nutanix_snmp_user_v2|
-|-|nutanix_role_membership_v2|
+|-|nutanix_role_membership_v2 (Beta)|
 |-|nutanix_directory_server_config_v2|
 |-|nutanix_ad_group_category_mapping_v2|
 |-|nutanix_network_security_policy_export_v2|
 |-|nutanix_network_security_policy_import_v2|
-|-|nutanix_project_v2|
-|-|nutanix_resource_group_v2|
+|-|nutanix_project_v2 (Beta)|
+|-|nutanix_resource_group_v2 (Beta)|
 |-|nutanix_virtual_switch_v2|
 |-|nutanix_vpc_virtual_switch_mapping_v2|
 |-|nutanix_vm_guest_customization_profile_v2|
@@ -387,9 +387,9 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 |-|nutanix_entity_group_v2|
 |-|nutanix_entity_groups_v2|
 |-|nutanix_saml_identity_provider_v2|
-|-|nutanix_saml_identity_providers_v2|
+|-|nutanix_saml_identity_providers_v2 (Beta)|
 |-|nutanix_directory_service_v2|
-|-|nutanix_directory_services_v2|
+|-|nutanix_directory_services_v2 (Beta)|
 |nutanix_category_key|nutanix_category_v2|
 |-|nutanix_categories_v2|
 |nutanix_image|nutanix_image_v2|
@@ -510,13 +510,13 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 |-|nutanix_directory_service_users_search_v2|
 |-|nutanix_ad_group_category_mapping_v2|
 |-|nutanix_ad_group_category_mappings_v2|
-|-|nutanix_role_membership_v2|
-|-|nutanix_role_memberships_v2|
-|-|nutanix_role_membership_summary_v2|
-|-|nutanix_project_v2|
-|-|nutanix_projects_v2|
-|-|nutanix_resource_group_v2|
-|-|nutanix_resource_groups_v2|
+|-|nutanix_role_membership_v2 (Beta)|
+|-|nutanix_role_memberships_v2 (Beta)|
+|-|nutanix_role_membership_summary_v2 (Beta)|
+|-|nutanix_project_v2 (Beta)|
+|-|nutanix_projects_v2 (Beta)|
+|-|nutanix_resource_group_v2 (Beta)|
+|-|nutanix_resource_groups_v2 (Beta)|
 |-|nutanix_virtual_switch_v2|
 |-|nutanix_virtual_switches_v2|
 |-|nutanix_node_schedulable_statuses_v2|

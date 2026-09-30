@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_project_v2"
+page_title: "NUTANIX: nutanix_project_v2 (Beta)"
 sidebar_current: "docs-nutanix-datasource-project-v2"
 description: |-
   Fetches the project identified by an external identifier.
 ---
 
-# nutanix_project_v2
+# nutanix_project_v2 (Beta)
+
+-> **Note:** This data source is currently in Beta.
 
 Fetches the project identified by an external identifier.
 

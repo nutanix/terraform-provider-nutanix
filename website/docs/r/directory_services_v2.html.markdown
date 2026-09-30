@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_directory_services_v2"
+page_title: "NUTANIX: nutanix_directory_services_v2 (Beta)"
 sidebar_current: "docs-nutanix-resource-directory-services-v2"
 description: |-
   This operation submits a request to Create a Directory Service.
 ---
 
-# nutanix_directory_services_v2
+# nutanix_directory_services_v2 (Beta)
+
+-> **Note:** This resource is currently in Beta.
 
 Provides a resource to Create a Directory Service.
 

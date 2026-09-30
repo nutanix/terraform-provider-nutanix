@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_project_v2"
+page_title: "NUTANIX: nutanix_project_v2 (Beta)"
 sidebar_current: "docs-nutanix-resource-project-v2"
 description: |-
   Creates and manages a project.
 ---
 
-# nutanix_project_v2
+# nutanix_project_v2 (Beta)
+
+-> **Note:** This resource is currently in Beta.
 
 Creates and manages a project.
 

@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_resource_group_v2"
+page_title: "NUTANIX: nutanix_resource_group_v2 (Beta)"
 sidebar_current: "docs-nutanix-datasource-resource-group-v2"
 description: |-
   Fetches the resource group identified by an external identifier.
 ---
 
-# nutanix_resource_group_v2
+# nutanix_resource_group_v2 (Beta)
+
+-> **Note:** This data source is currently in Beta.
 
 Fetches the resource group identified by an external identifier.
 

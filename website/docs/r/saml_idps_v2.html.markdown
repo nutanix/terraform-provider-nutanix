@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_saml_identity_providers_v2"
+page_title: "NUTANIX: nutanix_saml_identity_providers_v2 (Beta)"
 sidebar_current: "docs-nutanix-resource-saml-identity-providers-v2"
 description: |-
   Create a SAML Identity Provider.
 ---
 
-# nutanix_saml_identity_providers_v2
+# nutanix_saml_identity_providers_v2 (Beta)
+
+-> **Note:** This resource is currently in Beta.
 
 Provides a resource to Create a SAML Identity Provider.
 
