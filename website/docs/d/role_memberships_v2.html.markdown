@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_role_memberships_v2"
+page_title: "NUTANIX: nutanix_role_memberships_v2 (Beta)"
 sidebar_current: "docs-nutanix-datasource-role-memberships-v2"
 description: |-
   Lists role memberships in Nutanix.
 ---
 
-# nutanix_role_memberships_v2
+# nutanix_role_memberships_v2 (Beta)
+
+-> **Note:** This data source is currently in Beta.
 
 Lists role memberships in Nutanix.
 

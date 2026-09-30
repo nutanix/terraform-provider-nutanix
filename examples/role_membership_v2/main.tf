@@ -1,3 +1,5 @@
+# Beta: nutanix_role_membership_v2, nutanix_role_memberships_v2, and nutanix_role_membership_summary_v2 are currently in Beta.
+
 terraform {
   required_providers {
     nutanix = {

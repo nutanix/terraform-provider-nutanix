@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_saml_identity_providers_v2"
+page_title: "NUTANIX: nutanix_saml_identity_providers_v2 (Beta)"
 sidebar_current: "docs-nutanix-datasource-saml-identity-providers-v2"
 description: |-
   Provides a datasource to retrieve all the  all SAML Identity Provider(s).
 ---
 
-# nutanix_saml_identity_providers_v2
+# nutanix_saml_identity_providers_v2 (Beta)
+
+-> **Note:** This data source is currently in Beta.
 
 Provides a datasource to retrieve all the SAML Identity Provider(s).
 

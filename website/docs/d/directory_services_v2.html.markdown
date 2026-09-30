@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_directory_services_v2"
+page_title: "NUTANIX: nutanix_directory_services_v2 (Beta)"
 sidebar_current: "docs-nutanix-datasource-nutanix-directory-services-v2"
 description: |-
     This operation retrieves a list of all Directory Service(s).
 ---
 
-# nutanix_pbr
+# nutanix_directory_services_v2 (Beta)
+
+-> **Note:** This data source is currently in Beta.
 
 Provides a datasource to retrieve all Directory Service(s).
 

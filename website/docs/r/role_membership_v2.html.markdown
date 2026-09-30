@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_role_membership_v2"
+page_title: "NUTANIX: nutanix_role_membership_v2 (Beta)"
 sidebar_current: "docs-nutanix-resource-role-membership-v2"
 description: |-
   Creates a role membership.
 ---
 
-# nutanix_role_membership_v2
+# nutanix_role_membership_v2 (Beta)
+
+-> **Note:** This resource is currently in Beta.
 
 Provides a resource to create a role membership.
 
