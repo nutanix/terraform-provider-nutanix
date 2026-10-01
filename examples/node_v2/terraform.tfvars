@@ -1,0 +1,6 @@
+nutanix_username  = "admin"
+nutanix_password  = "password"
+nutanix_endpoint  = "10.xx.xx.xx"
+node_manufacturer = "Nutanix"
+node_model        = "NX-3060-G8"
+node_serial       = "ZM00000000000000"

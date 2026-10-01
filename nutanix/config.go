@@ -15,6 +15,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/dataprotection"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/lcm"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/lifecycle"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/microseg"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/objectstores"
@@ -140,6 +141,10 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	lifecycleClient, err := lifecycle.NewLifecycleClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Client{
 		WaitTimeout:         c.WaitTimeout,
@@ -161,6 +166,7 @@ func (c *Config) Client() (*Client, error) {
 		CalmAPI:             calmClient,
 		ObjectStoreAPI:      ObjectStoreClient,
 		SecurityAPI:         SecurityClient,
+		LifecycleAPI:        lifecycleClient,
 	}, nil
 }
 
@@ -185,4 +191,5 @@ type Client struct {
 	CalmAPI             *selfservice.Client
 	ObjectStoreAPI      *objectstores.Client
 	SecurityAPI         *security.Client
+	LifecycleAPI        *lifecycle.Client
 }

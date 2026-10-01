@@ -1,0 +1,7 @@
+nutanix_username            = "admin"
+nutanix_password            = "password"
+nutanix_endpoint            = "10.xx.xx.xx"
+node_ext_id                 = "00000000-0000-0000-0000-000000000000"
+group_id                    = ""
+server_identity_pool_ext_id = "11111111-1111-1111-1111-111111111111"
+cluster_ext_id              = "22222222-2222-2222-2222-222222222222"
