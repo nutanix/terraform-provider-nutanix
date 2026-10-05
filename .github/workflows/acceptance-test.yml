@@ -58,8 +58,8 @@ jobs:
           echo "GOPATH=$HOME/go" >> $GITHUB_ENV
           echo "PATH=$HOME/go/bin:$PATH" >> $GITHUB_ENV
 
-      # Module cache is handled by actions/setup-go (cache: true) above.
-      # A separate actions/cache on ~/go/pkg/mod conflicts on self-hosted runners
+      # Module cache is off (setup-go cache: false). A separate actions/cache
+      # on ~/go/pkg/mod conflicts on self-hosted runners
       # when the directory already exists ("tar: Cannot open: File exists") and
       # actions/cache@v3 also triggers the Node 20 deprecation warning.
 
@@ -70,7 +70,7 @@ jobs:
 
       - name: Install unzip and sshpass
         run: |
-          sudo apt-get update && sudo apt-get install -y unzip sshpass jq
+          sudo apt-get update && sudo apt-get install -y unzip sshpass
 
       - name: Setup Terraform v1.10.5
         run: |
@@ -98,6 +98,7 @@ jobs:
             echo "NUTANIX_INSECURE=${{ secrets.NUTANIX_INSECURE }}" >> $GITHUB_ENV
             echo "NUTANIX_PORT=${{ secrets.NUTANIX_PORT }}" >> $GITHUB_ENV
             echo "NUTANIX_ENDPOINT=${{ secrets.NUTANIX_ENDPOINT }}" >> $GITHUB_ENV
+            echo "NUTANIX_STORAGE_CONTAINER=${{ secrets.NUTANIX_STORAGE_CONTAINER }}" >> $GITHUB_ENV
             echo "FOUNDATION_ENDPOINT=${{ secrets.FOUNDATION_ENDPOINT }}" >> $GITHUB_ENV
             echo "FOUNDATION_PORT=${{ secrets.FOUNDATION_PORT }}" >> $GITHUB_ENV
             echo "NOS_IMAGE_TEST_URL=${{ secrets.NOS_IMAGE_TEST_URL }}" >> $GITHUB_ENV
@@ -235,53 +236,17 @@ jobs:
                   exit 1
               fi
 
-              # Resolve -coverpkg the same way as `make acc-test`.
-              coverpkg=""
-              if [[ "$package_path" != "./..." ]]; then
-                  coverpkg="$package_path"
-                  scope_label="package $package_path"
-              else
-                  case "$cover_scope" in
-                      v4)
-                          for d in nutanix/services/*v2; do
-                              [[ -d "$d" ]] || continue
-                              coverpkg="${coverpkg:+$coverpkg,}./$d"
-                          done
-                          scope_label="overall v4 v2 service packages"
-                          ;;
-                      v3)
-                          for d in nutanix/services/*; do
-                              [[ -d "$d" ]] || continue
-                              case "$d" in *v2) continue ;; esac
-                              coverpkg="${coverpkg:+$coverpkg,}./$d"
-                          done
-                          scope_label="overall v3 non-v2 service packages"
-                          ;;
-                      lcm) coverpkg="./nutanix/services/lcmv2"; scope_label="package ./nutanix/services/lcmv2" ;;
-                      era) coverpkg="./nutanix/services/ndb"; scope_label="package ./nutanix/services/ndb" ;;
-                      foundation) coverpkg="./nutanix/services/foundation"; scope_label="package ./nutanix/services/foundation" ;;
-                      foundation_central) coverpkg="./nutanix/services/foundationCentral"; scope_label="package ./nutanix/services/foundationCentral" ;;
-                      karbon) coverpkg="./nutanix/services/nke"; scope_label="package ./nutanix/services/nke" ;;
-                      *) coverpkg="./..."; scope_label="all packages" ;;
-                  esac
-              fi
-
-              # Fail closed: empty '|' alternatives match ALL tests.
-              run_pattern="${TESTARGS#-run=}"
-              if [[ "$run_pattern" == *"||"* || "$run_pattern" == "|"* || "$run_pattern" == *"|" ]]; then
-                  echo "Error: -run pattern '$run_pattern' has an empty '|'-alternative."
-                  echo "That regexp matches every test. Use spaces between names, not 'Name| Name'."
-                  echo "  /ok-to-test TestAccFoo TestAccBar"
-                  exit 1
-              fi
+              # Same denominator as `make acc-test -- --report`.
+              chmod +x scripts/resolve-acc-coverpkg.sh
+              resolved="$(./scripts/resolve-acc-coverpkg.sh "$package_path" "$cover_scope" "$run_pattern")"
+              coverpkg="$(printf '%s\n' "$resolved" | sed -n '1p')"
+              scope_label="$(printf '%s\n' "$resolved" | sed -n '2p')"
 
               echo "TESTARGS = $TESTARGS"
               echo "Package path = $package_path"
               echo "Coverpkg = $coverpkg"
               echo "Coverage scope = $scope_label"
               echo "SCOPE_LABEL=$scope_label" >> "$GITHUB_ENV"
-              echo "COVER_RUN_PATTERN=${TESTARGS#-run=}" >> "$GITHUB_ENV"
-              echo "COVER_PACKAGE_PATH=$package_path" >> "$GITHUB_ENV"
 
               rm -f c.out
               TF_LOG="ERROR" TF_ACC=1 GOTRACEBACK=all go test "$package_path" -v ${TESTARGS} -timeout 500m \
@@ -337,40 +302,6 @@ jobs:
                   [ "$TOTAL_SKIPPED" -gt 0 ] && SKIP_PERCENT=$((TOTAL_SKIPPED * 100 / UNIQUE_TESTS))
               fi
 
-              # Fetch PC / AOS versions via ncli (same approach as nutanix.ansible ok-to-test-command)
-              CONFIG_FILE="test_config_v2.json"
-              NCLI="/home/nutanix/prism/cli/ncli"
-              VERSION_CMD="$NCLI cluster info | grep -i Version | grep -vi NCC"
-              SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10"
-
-              PC_VERSION_INFO="Failed to fetch PC version"
-              AOS_VERSION_INFO="Failed to fetch AOS version"
-
-              if [ -f "$CONFIG_FILE" ]; then
-                  PC_SSH_USER=$(jq -r '.ssh_pc_username // "nutanix"' "$CONFIG_FILE")
-                  PC_SSH_PASS=$(jq -r '.ssh_pc_password // empty' "$CONFIG_FILE")
-                  PE_SSH_USER=$(jq -r '.ssh_pe_username // "nutanix"' "$CONFIG_FILE")
-                  PE_SSH_PASS=$(jq -r '.ssh_pe_password // empty' "$CONFIG_FILE")
-                  PE_IP=$(jq -r '.data_protection.local_cluster_pe // empty' "$CONFIG_FILE")
-
-                  if [ -n "$NUTANIX_ENDPOINT" ] && [ -n "$PC_SSH_PASS" ]; then
-                      PC_VERSION_INFO=$(sshpass -p "$PC_SSH_PASS" \
-                        ssh $SSH_OPTS "$PC_SSH_USER@$NUTANIX_ENDPOINT" \
-                        "$VERSION_CMD" 2>/dev/null || echo "Failed to fetch PC version")
-                  fi
-
-                  if [ -n "$PE_IP" ] && [ -n "$PE_SSH_PASS" ]; then
-                      AOS_VERSION_INFO=$(sshpass -p "$PE_SSH_PASS" \
-                        ssh $SSH_OPTS "$PE_SSH_USER@$PE_IP" \
-                        "$VERSION_CMD" 2>/dev/null || echo "Failed to fetch AOS version")
-                  else
-                      AOS_VERSION_INFO="PE IP not configured"
-                  fi
-              else
-                  PC_VERSION_INFO="test_config_v2.json not found"
-                  AOS_VERSION_INFO="test_config_v2.json not found"
-              fi
-
               # Write summary to a file (each test appears only once, under its last result)
               {
                 echo "==================================================🧪 TEST SUMMARY 🧪================================================================================="
@@ -406,12 +337,6 @@ jobs:
                     echo "🎉💃 No tests skipped 🕺🎉"
                 fi
                 echo "==================================================================================================================================================="
-                echo ""
-                echo "PC Version:"
-                echo "$PC_VERSION_INFO"
-                echo ""
-                echo "AOS Version:"
-                echo "$AOS_VERSION_INFO"
                 echo ""
 
               } > test_summary.txt
@@ -457,11 +382,9 @@ jobs:
           TESTCOV_THRESHOLD: "85"
         run: |
           set -euo pipefail
-          chmod +x scripts/report-acc-coverage.sh scripts/filter-acc-cover-by-tests.sh
+          chmod +x scripts/report-acc-coverage.sh
           ./scripts/report-acc-coverage.sh c.out test_output.log \
-            "${SCOPE_LABEL:-acceptance tests}" \
-            "${COVER_RUN_PATTERN:-.}" \
-            "${COVER_PACKAGE_PATH:-}"
+            "${SCOPE_LABEL:-acceptance tests}"
 
       - name: Generate coverage HTML report
         if: ${{ always() && steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
