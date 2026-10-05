@@ -3,12 +3,18 @@ on:
   pull_request:
   repository_dispatch:
     types: [ok-to-test-command]
+  workflow_dispatch:
+    inputs:
+      test_args:
+        description: "Same args as /ok-to-test (e.g. v4, TestAccFoo TestAccBar, -p networkingv2)"
+        required: true
+        type: string
 jobs:
   Acceptance-Tests:
     runs-on: self-hosted
     # Default job limit is 6h. Self-hosted runners allow up to 5 days.
     timeout-minutes: 1440
-    if: github.event_name == 'repository_dispatch'
+    if: github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Trigger Event
         run: |
@@ -25,16 +31,23 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             curl ca-certificates git unzip sshpass build-essential sudo nmap
 
-      - name: Pull Request Info
+      - name: Run Info
         run: |
           echo "your repository is ${{ github.repository }}."
-          echo "PR Number: ${{ github.event.client_payload.pull_request.number }}"
-          echo "Branch Name: ${{ github.event.client_payload.pull_request.head.ref }}"
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "PR Number: ${{ github.event.client_payload.pull_request.number }}"
+            echo "Branch Name: ${{ github.event.client_payload.pull_request.head.ref }}"
+          else
+            echo "Branch / ref: ${{ github.ref }}"
+            echo "SHA: ${{ github.sha }}"
+            echo "test_args: ${{ inputs.test_args }}"
+          fi
 
+      # repository_dispatch: PR merge ref. workflow_dispatch: selected branch (GITHUB_REF).
       - name: Check out repository code
         uses: actions/checkout@v4
         with:
-          ref: "refs/pull/${{ github.event.client_payload.pull_request.number }}/merge"
+          ref: ${{ github.event_name == 'repository_dispatch' && format('refs/pull/{0}/merge', github.event.client_payload.pull_request.number) || github.ref }}
 
       - name: Remove Cached Go Versions
         run: |
@@ -131,7 +144,11 @@ jobs:
         id: test-execution
         run: |
               echo "tests_executed=tests_execution_not_successful" >> $GITHUB_OUTPUT
-              args="${{ github.event.client_payload.slash_command.args }}"
+              if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+                  args="${{ inputs.test_args }}"
+              else
+                  args="${{ github.event.client_payload.slash_command.args }}"
+              fi
 
               # Treat '|' the same as space. Comments like:
               #   /ok-to-test TestA| TestB| TestC
@@ -224,6 +241,7 @@ jobs:
                       echo "Separate test names with spaces (the workflow joins them with '|'):"
                       echo "  /ok-to-test TestAccFoo TestAccBar"
                       echo "  /ok-to-test v4"
+                      echo "  workflow_dispatch input test_args: TestAccFoo TestAccBar"
                       exit 1
                   fi
                   TESTARGS="-run=${runFlag}"
@@ -235,6 +253,7 @@ jobs:
                   echo "Error: -run pattern '$run_pattern' has an empty '|'-alternative."
                   echo "That regexp matches every test. Use spaces between names, not 'Name| Name'."
                   echo "  /ok-to-test TestAccFoo TestAccBar"
+                  echo "  workflow_dispatch input test_args: TestAccFoo TestAccBar"
                   exit 1
               fi
 
@@ -418,9 +437,9 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      # Post build status along with test summary as a comment only if tests executed successfully
+      # Post build status along with test summary as a comment only for /ok-to-test runs
       - name: Post build status and test summary
-        if: ${{ always() && steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
+        if: ${{ always() && github.event_name == 'repository_dispatch' && steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
         uses: peter-evans/create-or-update-comment@v4
         with:
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
@@ -437,7 +456,7 @@ jobs:
       
       # Post only Build Status and workflow info as Comment if tests execution is not successful
       - name: Post build status and workflow info
-        if: ${{ always() && (steps.test-execution.outputs.tests_executed == 'tests_execution_not_successful' || !steps.test-execution.outputs.tests_executed) }}
+        if: ${{ always() && github.event_name == 'repository_dispatch' && (steps.test-execution.outputs.tests_executed == 'tests_execution_not_successful' || !steps.test-execution.outputs.tests_executed) }}
         uses: peter-evans/create-or-update-comment@v4
         with:
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
