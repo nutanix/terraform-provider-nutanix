@@ -18,6 +18,13 @@ jobs:
         run: |
           echo "🐧 This job is now running on runner: $RUNNER_NAME (OS: ${{ runner.os }})"
 
+      - name: Install base tooling
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            curl ca-certificates git unzip sshpass build-essential sudo nmap
+
       - name: Pull Request Info
         run: |
           echo "your repository is ${{ github.repository }}."
