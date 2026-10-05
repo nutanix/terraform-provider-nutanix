@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Filter an Acc cover profile to only resource/datasource files relevant to the
-# -run test pattern (not the whole package). Used for single/few Acc test runs.
+# Optional file view of an Acc cover profile. Not used by the qualification
+# report: dropping files changes the denominator and inflates the percentage.
+# scripts/report-acc-coverage.sh reports the profile as written.
 #
 # Usage:
 #   scripts/filter-acc-cover-by-tests.sh <in.out> <out.out> <run_pattern> [package_path]

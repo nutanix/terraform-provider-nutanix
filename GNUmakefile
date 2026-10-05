@@ -13,8 +13,8 @@ test: fmtcheck
 
 testacc: fmtcheck
 	@echo "==> Running testcases..."
-	@echo "TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=count"
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=count
+	@echo "TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=atomic"
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=atomic
 
 # Acceptance tests with .env loaded (same as /ok-to-test). Loads .env from repo root before running.
 # Output to ACC_TEST_LOG only; summary + coverage appended at end. Matches workflow logic from acceptance-test.yml.
@@ -26,7 +26,7 @@ testacc: fmtcheck
 #   make acc-test p=iamv2 ...     → cover that package only
 # Usage:
 #   make acc-test networkingv2                                         # all tests in package networkingv2 (auto-detected)
-#   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic    # coverage scoped to that resource file(s)
+#   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic    # coverage is the whole package, not one file
 #   make acc-test p=networkingv2                                       # all tests in package (explicit)
 #   make acc-test p=networkingv2 TestAccV2NutanixSubnetResource_Basic  # single test in specific package (explicit)
 #   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic o=test_logs_nf.log
@@ -94,34 +94,9 @@ acc-test:
 			exit 1; \
 		fi; \
 		coverpkg=""; \
-		if [ "$$package_path" != "./..." ]; then \
-			coverpkg="$$package_path"; \
-			scope_label="package $$package_path"; \
-		else \
-			case "$$cover_scope" in \
-				v4) \
-					for d in nutanix/services/*v2; do \
-						[ -d "$$d" ] || continue; \
-						coverpkg="$${coverpkg:+$$coverpkg,}./$$d"; \
-					done; \
-					scope_label="overall v4 v2 service packages"; \
-					;; \
-				v3) \
-					for d in nutanix/services/*; do \
-						[ -d "$$d" ] || continue; \
-						case "$$d" in *v2) continue ;; esac; \
-						coverpkg="$${coverpkg:+$$coverpkg,}./$$d"; \
-					done; \
-					scope_label="overall v3 non-v2 service packages"; \
-					;; \
-				lcm) coverpkg="./nutanix/services/lcmv2"; scope_label="package ./nutanix/services/lcmv2" ;; \
-				era) coverpkg="./nutanix/services/ndb"; scope_label="package ./nutanix/services/ndb" ;; \
-				foundation) coverpkg="./nutanix/services/foundation"; scope_label="package ./nutanix/services/foundation" ;; \
-				foundation_central) coverpkg="./nutanix/services/foundationCentral"; scope_label="package ./nutanix/services/foundationCentral" ;; \
-				karbon) coverpkg="./nutanix/services/nke"; scope_label="package ./nutanix/services/nke" ;; \
-				*) coverpkg="./..."; scope_label="all packages" ;; \
-			esac; \
-		fi; \
+		resolved="$$("$(CURDIR)/scripts/resolve-acc-coverpkg.sh" "$$package_path" "$$cover_scope" "$$run_flag")"; \
+		coverpkg="$$(printf '%s\n' "$$resolved" | sed -n '1p')"; \
+		scope_label="$$(printf '%s\n' "$$resolved" | sed -n '2p')"; \
 		: > "$$logfile"; \
 		echo "==> Loading .env and running acceptance tests (output to $$logfile only; summary at end)..." >> "$$logfile"; \
 		if [ -n "$(p)" ]; then \
@@ -148,7 +123,7 @@ acc-test:
 		if [ -f "$$logfile" ] && grep -qE "^--- (PASS|FAIL|SKIP):" "$$logfile" 2>/dev/null; then \
 			"$(CURDIR)/scripts/acc-test-summary.sh" "$$logfile"; \
 		fi; \
-		"$(CURDIR)/scripts/report-acc-coverage.sh" "$$cover_profile" "$$logfile" "$$scope_label" "$${run_flag:-.}" "$$package_path"; \
+		"$(CURDIR)/scripts/report-acc-coverage.sh" "$$cover_profile" "$$logfile" "$$scope_label"; \
 		echo "==> Log file: $$logfile"; \
 		echo "==> Coverage profile: $$cover_profile"; \
 		echo "==> Coverage HTML: coverage-report/coverage.html"'
