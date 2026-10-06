@@ -8,7 +8,7 @@ description: |-
 
 # nutanix_role_membership_summary_v2 (Beta)
 
--> **Note:** This data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
+-> **Note:** This data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The data source and its behavior may change in future releases as the SDK API evolves.
 
 Lists role membership summaries. Each record represents a project and returns the count of identities (users and groups) and roles for that project. Use the $filter query parameter to filter by extId to get the summary for a specific project.
 

@@ -8,7 +8,7 @@ description: |-
 
 # nutanix_projects_v2 (Beta)
 
--> **Note:** This data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
+-> **Note:** This data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The data source and its behavior may change in future releases as the SDK API evolves.
 
 List the projects defined on the system.
 

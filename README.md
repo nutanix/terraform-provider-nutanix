@@ -218,7 +218,7 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 
 ## Resources
 
--> **Note:** Items marked **(Beta)** follow this disclaimer: This resource/data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
+-> **Note:** This resource is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
 
 |v1 Resources|v2 Resources|
 |:---|:---|
@@ -353,7 +353,7 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 
 ## Data Sources
 
--> **Note:** Items marked **(Beta)** follow this disclaimer: This resource/data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
+-> **Note:** This data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The data source and its behavior may change in future releases as the SDK API evolves.
 
 |v1 datasources|v2 datasources|
 |:---|:---|
