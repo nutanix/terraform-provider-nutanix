@@ -6,6 +6,8 @@ on:
 jobs:
   Acceptance-Tests:
     runs-on: self-hosted
+    # Default job limit is 6h. Self-hosted runners allow up to 5 days.
+    timeout-minutes: 1440
     if: github.event_name == 'repository_dispatch'
     steps:
       - name: Trigger Event
@@ -19,8 +21,8 @@ jobs:
       - name: Install base tooling
         run: |
           export DEBIAN_FRONTEND=noninteractive
-          apt-get update
-          apt-get install -y --no-install-recommends \
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
             curl ca-certificates git unzip sshpass build-essential sudo nmap
 
       - name: Pull Request Info
@@ -249,7 +251,7 @@ jobs:
               echo "SCOPE_LABEL=$scope_label" >> "$GITHUB_ENV"
 
               rm -f c.out
-              TF_LOG="ERROR" TF_ACC=1 GOTRACEBACK=all go test "$package_path" -v ${TESTARGS} -timeout 500m \
+              TF_LOG="ERROR" TF_ACC=1 GOTRACEBACK=all go test "$package_path" -v ${TESTARGS} -timeout 23h \
                 -coverprofile c.out -covermode=atomic -coverpkg="$coverpkg" | tee test_output.log
 
               set +e  # Ignore failures
