@@ -19,9 +19,9 @@ jobs:
       - name: Install base tooling
         run: |
           export DEBIAN_FRONTEND=noninteractive
-          apt-get update
-          apt-get install -y --no-install-recommends \
-            curl ca-certificates git unzip sshpass build-essential sudo nmap
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            curl ca-certificates git unzip sshpass jq build-essential sudo nmap
 
       - name: Pull Request Info
         run: |
