@@ -44,6 +44,8 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.5.
   * **Image Rate Limit Policy (VMM)**: Create, update, read, and delete image rate limit policies. [#1173](https://github.com/nutanix/terraform-provider-nutanix/issues/1173)
   * **Template Placement Policy (VMM)**: Create, update, read, and delete template placement policies. [#1172](https://github.com/nutanix/terraform-provider-nutanix/issues/1172)
 
+  -> **Note:** Items marked **(Beta)** follow this disclaimer: This resource/data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
+
 * **Enhancements:**
   * Add support for Project Share / Unshare / Association across entities (Projects 2.0 model where each entity owns its project association). [#1114](https://github.com/nutanix/terraform-provider-nutanix/issues/1114)
   * Support Update Context for Volume Groups. [#1129](https://github.com/nutanix/terraform-provider-nutanix/issues/1129)
@@ -216,6 +218,8 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 
 ## Resources
 
+-> **Note:** Items marked **(Beta)** follow this disclaimer: This resource/data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
+
 |v1 Resources|v2 Resources|
 |:---|:---|
 |nutanix_subnet|nutanix_subnet_v2|
@@ -348,6 +352,8 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 |-|nutanix_template_placement_policy_v2|
 
 ## Data Sources
+
+-> **Note:** Items marked **(Beta)** follow this disclaimer: This resource/data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
 
 |v1 datasources|v2 datasources|
 |:---|:---|

@@ -8,7 +8,7 @@ description: |-
 
 # nutanix_saml_identity_providers_v2 (Beta)
 
--> **Note:** This data source is currently in Beta.
+-> **Note:** This data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
 
 Provides a datasource to retrieve all the SAML Identity Provider(s).
 

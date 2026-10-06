@@ -8,7 +8,7 @@ description: |-
 
 # nutanix_role_membership_v2 (Beta)
 
--> **Note:** This data source is currently in Beta.
+-> **Note:** This data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
 
 Displays a role membership based on the provided external identifier.
 

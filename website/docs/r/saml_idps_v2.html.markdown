@@ -8,7 +8,7 @@ description: |-
 
 # nutanix_saml_identity_providers_v2 (Beta)
 
--> **Note:** This resource is currently in Beta.
+-> **Note:** This resource is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
 
 Provides a resource to Create a SAML Identity Provider.
 
