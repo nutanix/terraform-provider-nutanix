@@ -1,56 +1,13 @@
 package networkingv2_test
 
 import (
-	"encoding/json"
-	"log"
-	"os"
-	"testing"
+	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-type TestConfig struct {
-	UbuntuImage string `json:"ubuntu_image"`
-	Networking  struct {
-		FloatingIP struct {
-			VMNicReference string `json:"vm_nic_reference"`
-		} `json:"floating_ip"`
-		Subnets struct {
-			ProjectID     string `json:"project_id"`
-			VlanID        int    `json:"vlan_id"`
-			NetworkIP     string `json:"network_ip"`
-			NetworkPrefix int    `json:"network_prefix"`
-			GatewayIP     string `json:"gateway_ip"`
-			DHCP          struct {
-				StartIP string `json:"start_ip"`
-				EndIP   string `json:"end_ip"`
-			}
-		}
-	} `json:"networking"`
-}
-
-var testVars TestConfig
-
+// testVars holds the shared test fixtures loaded from test_config_v2.json.
+// filepath is the absolute path to that file, injected into Terraform configs
+// that read the fixtures directly via jsondecode(file(...)).
 var (
-	path, _  = os.Getwd()
-	filepath = path + "/../../../test_config_v2.json"
+	testVars = acc.MustConfig()
+	filepath = acc.ConfigPath()
 )
-
-func loadVars(filepath string, varStuct interface{}) {
-	// Read config.json from home current path
-	configData, err := os.ReadFile(filepath)
-	if err != nil {
-		log.Printf("Got this error while reading config.json: %s", err.Error())
-		os.Exit(1)
-	}
-
-	err = json.Unmarshal(configData, varStuct)
-	if err != nil {
-		log.Printf("Got this error while unmarshalling config.json: %s", err.Error())
-		os.Exit(1)
-	}
-}
-
-func TestMain(m *testing.M) {
-	log.Println("Do some crazy stuff before tests!")
-	loadVars("../../../test_config_v2.json", &testVars)
-	os.Exit(m.Run())
-}

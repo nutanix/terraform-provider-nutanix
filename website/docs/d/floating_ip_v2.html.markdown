@@ -44,6 +44,7 @@ The following attributes are exported:
 - `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 - `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
 - `metadata`: Metadata associated with this resource.
+- `project_ext_id`: External identifier of the project associated with the Floating IP.
 
 ### association
 
@@ -83,4 +84,4 @@ The `links` attribute supports the following:
 - `rel`: - A name that identifies the relationship of the link to the object that is returned by the URL. The unique value of "self" identifies the URL for the object.
 
 
-See detailed information in [Nutanix Get Floating IP v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/FloatingIps/operation/getFloatingIpById).
+See detailed information in [Nutanix Get Floating IP v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/FloatingIps/operation/getFloatingIpById).

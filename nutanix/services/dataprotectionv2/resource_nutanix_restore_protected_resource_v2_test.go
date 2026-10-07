@@ -28,9 +28,9 @@ func TestAccV2NutanixRestoreProtectedResourceResource_RestoreVm(t *testing.T) {
 	vmResourceName := "nutanix_virtual_machine_v2.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		Providers:    acc.TestAccProviders,
-		CheckDestroy: testCheckDestroyProtectedResourceAndCleanup,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
+		CheckDestroy:             testCheckDestroyProtectedResourceAndCleanup,
 		Steps: []resource.TestStep{
 			// create protection policy and protected vm
 			{
@@ -72,9 +72,9 @@ func TestAccV2NutanixRestoreProtectedResourceResource_RestoreVG(t *testing.T) {
 
 	vgResourceName := "nutanix_volume_group_v2.test"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		Providers:    acc.TestAccProviders,
-		CheckDestroy: testCheckDestroyProtectedResourceAndCleanup,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
+		CheckDestroy:             testCheckDestroyProtectedResourceAndCleanup,
 		Steps: []resource.TestStep{
 			// create protection policy and protected vm
 			{
@@ -201,10 +201,11 @@ resource "nutanix_virtual_machine_v2" "test"{
 	cluster {
 		ext_id = local.clusterExtId
 	}
-    categories {
+  categories {
 	  ext_id = nutanix_category_v2.test.id
-    }
-	power_state = "OFF"
+  }
+	power_state = "ON"
+
 	depends_on = [nutanix_protection_policy_v2.test]
 }
 

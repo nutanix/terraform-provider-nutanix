@@ -74,6 +74,7 @@ The `floating_ips` object contains the following attributes:
 - `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 - `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
 - `metadata`: Metadata associated with this resource.
+- `project_ext_id`: External identifier of the project associated with the Floating IP.
 
 ### association
 
@@ -115,4 +116,4 @@ The `links` attribute supports the following:
 
 
 
-See detailed information in [Nutanix List Floating IPs v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/FloatingIps/operation/listFloatingIps).
+See detailed information in [Nutanix List Floating IPs v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/FloatingIps/operation/listFloatingIps).

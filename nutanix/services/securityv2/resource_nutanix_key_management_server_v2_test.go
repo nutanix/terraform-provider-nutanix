@@ -145,7 +145,7 @@ resource "nutanix_key_management_server_v2" "test" {
     azure_key_vault {
       endpoint_url           = "https://invalid-keyvault-001.vault.azure.net/"
       key_id                 = "invalid_key_id"
-      tenant_id              = "ab414ed6-7d97-4f7a-b98f-fcba7cac3b8c"
+      tenant_id              = "REDACTED"
       client_id              = "ae1a2b3c-5d6e-7f80-9a1b-2c3d4e5f6789"
       client_secret          = "98765432-10fe-dcba-9876-543210fedcba"
       credential_expiry_date = "%[2]s"

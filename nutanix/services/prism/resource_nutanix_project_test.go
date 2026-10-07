@@ -93,8 +93,9 @@ func TestAccNutanixProject_withInternal(t *testing.T) {
 	categoryVal := "Staging"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNutanixProjectInternalConfig(subnetName, name, description, categoryName, categoryVal),
@@ -147,8 +148,10 @@ func TestAccNutanixProject_withInternalUpdate(t *testing.T) {
 	})
 }
 
-func TestAccNutanixProject_withInternalWithACP(t *testing.T) {
+func TestAccNutanixProject_withInternalWithACPTest(t *testing.T) {
 	resourceName := "nutanix_project.project_test"
+	principalName := testVars.Users[1].PrincipalName
+	directoryServiceUUID := testVars.Users[1].DirectoryServiceUUID
 
 	subnetName := acctest.RandomWithPrefix("test-subnateName")
 	name := acctest.RandomWithPrefix("test-project-name-dou")
@@ -157,11 +160,12 @@ func TestAccNutanixProject_withInternalWithACP(t *testing.T) {
 	categoryVal := "Staging"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal),
+				Config: testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal, principalName, directoryServiceUUID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -178,6 +182,10 @@ func TestAccNutanixProject_withInternalWithACP(t *testing.T) {
 func TestAccNutanixProject_withInternalWithACPUserGroup(t *testing.T) {
 	resourceName := "nutanix_project.project_test"
 
+	ad := acc.Config(t).Iam.DirectoryServicesMain.SecondaryAD
+	groupName := testVars.UserGroupWithDistinguishedName[0].DistinguishedName
+	groupUUID := testVars.UserGroupWithDistinguishedName[0].UUID
+
 	subnetName := acctest.RandomWithPrefix("test-subnateName")
 	name := acctest.RandomWithPrefix("test-project-name-dou")
 	description := acctest.RandomWithPrefix("test-project-desc-dou")
@@ -185,11 +193,12 @@ func TestAccNutanixProject_withInternalWithACPUserGroup(t *testing.T) {
 	categoryVal := "Staging"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, description, categoryName, categoryVal),
+				Config: testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, description, categoryName, categoryVal, ad.ExtID, groupName, groupUUID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -302,6 +311,10 @@ func testAccNutanixProjectConfig(subnetName, name, description, categoryName, ca
 }
 
 func testAccNutanixProjectInternalConfig(subnetName, name, description, categoryName, categoryVal string) string {
+	subnetName2 := acctest.RandomWithPrefix("test-subnet2")
+	externalSubnetName := acctest.RandomWithPrefix("acctest-ext-subnet")
+	vpcName := acctest.RandomWithPrefix("acctest-managed-vpc")
+
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -314,7 +327,7 @@ func testAccNutanixProjectInternalConfig(subnetName, name, description, category
 
 		resource "nutanix_subnet" "subnet" {
 			cluster_uuid       = local.cluster1
-			name               = "%s"
+			name               = "%[1]s"
 			description        = "Description of my unit test VLAN"
 			vlan_id            = 31
 			subnet_type        = "VLAN"
@@ -332,50 +345,61 @@ func testAccNutanixProjectInternalConfig(subnetName, name, description, category
 			dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 		}
 
+		resource "nutanix_subnet" "subnet2" {
+			cluster_uuid       = local.cluster1
+			name               = "%[2]s"
+			description        = "Description of my second unit test VLAN"
+			vlan_id            = 32
+			subnet_type        = "VLAN"
+			subnet_ip          = "10.250.141.0"
+			default_gateway_ip = "10.250.141.1"
+			prefix_length      = 24
+		}
+
 		resource "nutanix_subnet" "overlay-subnet" {
-			cluster_uuid = local.cluster1
-			name        = "acctest-subnet-updated"
-			description = "Description of my unit test VLAN"
-			vlan_id     = 876
-			subnet_type = "VLAN"
-			subnet_ip          = "10.250.144.0"
-		  default_gateway_ip = "10.250.144.1"
-		  prefix_length = 24
-		  is_external = true
-		  ip_config_pool_list_ranges = ["10.250.144.10 10.250.144.20"]
+			cluster_uuid              = local.cluster1
+			name                      = "%[3]s"
+			description               = "Description of my unit test VLAN"
+			vlan_id                   = 876
+			subnet_type               = "VLAN"
+			subnet_ip                 = "10.250.144.0"
+			default_gateway_ip        = "10.250.144.1"
+			prefix_length             = 24
+			is_external               = true
+			ip_config_pool_list_ranges = ["10.250.144.10 10.250.144.20"]
 		}
 
 		resource "nutanix_vpc" "acctest-managed" {
 			depends_on = [
 				resource.nutanix_subnet.overlay-subnet
 			]
-			name = "acctest-managed-vpc"
+			name = "%[4]s"
 
 			external_subnet_reference_name = [
-			  "acctest-subnet-updated"
+				"%[3]s"
 			]
 
 			common_domain_name_server_ip_list{
-					ip = "8.8.8.9"
+				ip = "8.8.8.9"
 			}
 
 			externally_routable_prefix_list{
-			  ip=  "172.30.0.0"
-			  prefix_length= 16
+				ip            = "172.30.0.0"
+				prefix_length = 16
 			}
 			externally_routable_prefix_list{
-				ip=  "172.34.0.0"
-				prefix_length= 16
-			  }
-		  }
+				ip            = "172.34.0.0"
+				prefix_length = 16
+			}
+		}
 
 		resource "nutanix_project" "project_test" {
-			name        = "%s"
-			description = "%s"
+			name        = "%[5]s"
+			description = "%[6]s"
 
 			categories {
-				name  = "%s"
-				value = "%s"
+				name  = "%[7]s"
+				value = "%[8]s"
 			}
 
 			default_subnet_reference {
@@ -387,25 +411,25 @@ func testAccNutanixProjectInternalConfig(subnetName, name, description, category
 			api_version = "3.1"
 
 			subnet_reference_list{
-				kind="subnet"
-				name=nutanix_subnet.subnet.name
-				uuid=nutanix_subnet.subnet.metadata.uuid
+				kind = "subnet"
+				name = nutanix_subnet.subnet.name
+				uuid = nutanix_subnet.subnet.metadata.uuid
 			}
 			subnet_reference_list{
-				kind="subnet"
-				name=nutanix_subnet.overlay-subnet.name
-				uuid=nutanix_subnet.overlay-subnet.id
+				kind = "subnet"
+				name = nutanix_subnet.subnet2.name
+				uuid = nutanix_subnet.subnet2.metadata.uuid
 			}
 			cluster_reference_list{
-				kind="cluster"
-				uuid=local.cluster1
+				kind = "cluster"
+				uuid = local.cluster1
 			}
 			vpc_reference_list{
-				kind="vpc"
-				uuid= nutanix_vpc.acctest-managed.id
+				kind = "vpc"
+				uuid = nutanix_vpc.acctest-managed.id
 			}
 		}
-	`, subnetName, name, description, categoryName, categoryVal)
+	`, subnetName, subnetName2, externalSubnetName, vpcName, name, description, categoryName, categoryVal)
 }
 
 func testAccNutanixProjectInternalConfigUpdate(subnetName, name, description string) string {
@@ -472,7 +496,7 @@ func testAccNutanixProjectInternalConfigUpdate(subnetName, name, description str
 	`, subnetName, name, description)
 }
 
-func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal string) string {
+func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal, principalName, directoryServiceUUID string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -512,6 +536,15 @@ func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, c
 			}
 		}
 
+		resource "nutanix_user" "user" {
+			directory_service_user {
+				user_principal_name = "%[7]s"
+				directory_service_reference {
+					uuid = "%[8]s"
+				}
+			}
+		}
+
 		resource "nutanix_project" "project_test" {
 			name        = "%[2]s"
 			description = "%[3]s"
@@ -533,10 +566,14 @@ func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, c
 				kind="subnet"
 				uuid=nutanix_subnet.subnet.metadata.uuid
 			}
+			enable_directory_and_identity_provider_shortlist = true
+			directory_reference_list {
+				uuid = "%[8]s"
+			}
 
 			user_reference_list{
-			uuid = "00000000-0000-0000-0000-000000000000"
-			name = "admin"
+				uuid = nutanix_user.user.id
+				name = nutanix_user.user.name
 			}
 
 			acp{
@@ -548,18 +585,21 @@ func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, c
 				}
 
 				user_reference_list{
-					uuid = "00000000-0000-0000-0000-000000000000"
-					name = "admin"
+					uuid = nutanix_user.user.id
+					name = nutanix_user.user.name
 					kind = "user"
 				}
+			}
 
-				description= "untitledAcp-54acc50f-ab94-640a-5f06-5c855cc09539"
+			# API rewrites ACP name/description after create (e.g. Membership_ACP_<id>).
+			lifecycle {
+				ignore_changes = [acp]
 			}
 		}
-	`, subnetName, name, description, categoryName, categoryVal, testVars.Permissions[0].UUID)
+	`, subnetName, name, description, categoryName, categoryVal, testVars.Permissions[0].UUID, principalName, directoryServiceUUID)
 }
 
-func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, description, categoryName, categoryVal string) string {
+func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, description, categoryName, categoryVal, directoryServiceExtID, groupName, groupUUID string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -599,12 +639,6 @@ func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, descr
 			}
 		}
 
-		resource "nutanix_user_groups" "acctest-managed" {
-			directory_service_user_group {
-				distinguished_name = "%[7]s"
-			}
-		}
-
 		resource "nutanix_project" "project_test" {
 			name        = "%[2]s"
 			description = "%[3]s"
@@ -626,11 +660,15 @@ func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, descr
 				kind="subnet"
 				uuid=nutanix_subnet.subnet.metadata.uuid
 			}
+			enable_directory_and_identity_provider_shortlist = true
+			directory_reference_list {
+				uuid = "%[9]s"
+			}
 
 			external_user_group_reference_list {
 				name= "%[7]s"
-			   	kind= "user_group"
-			   	uuid= nutanix_user_groups.acctest-managed.id
+				kind= "user_group"
+				uuid= "%[8]s"
 			}
 
 			acp{
@@ -643,12 +681,15 @@ func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, descr
 
 				user_group_reference_list {
 					name= "%[7]s"
-					kind= "user_group"
-					uuid= nutanix_user_groups.acctest-managed.id
+				kind= "user_group"
+				uuid= "%[8]s"
 				}
+			}
 
-				description= "untitledAcp-54acc50f-ab94-640a-5f06-5c855cc09539"
+			# API rewrites ACP name/description after create (e.g. Membership_ACP_<id>).
+			lifecycle {
+				ignore_changes = [acp]
 			}
 		}
-	`, subnetName, name, description, categoryName, categoryVal, testVars.Permissions[0].UUID, testVars.UserGroupWithDistinguishedName[3].DistinguishedName)
+	`, subnetName, name, description, categoryName, categoryVal, testVars.Permissions[0].UUID, groupName, groupUUID, directoryServiceExtID)
 }

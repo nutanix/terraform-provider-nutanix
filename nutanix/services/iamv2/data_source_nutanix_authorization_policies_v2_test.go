@@ -4,20 +4,22 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 const datasourceNameAuthorizationPolicies = "data.nutanix_authorization_policies_v2.test"
 
-const authPolicy = `
+func authPolicyConfig(acpDisplayName, roleDisplayName, roleDescription string) string {
+	return fmt.Sprintf(`
 data "nutanix_operations_v2" "test" {
 	filter = "startswith(displayName, 'Create_')"
 }
 
 resource "nutanix_roles_v2" "test" {
-	display_name = local.roles.display_name
-	description  = local.roles.description
+	display_name = "%[1]s"
+	description  = "%[2]s"
 	operations = [
 		data.nutanix_operations_v2.test.operations[0].ext_id,
 		data.nutanix_operations_v2.test.operations[1].ext_id,
@@ -28,21 +30,14 @@ resource "nutanix_roles_v2" "test" {
 }
 resource "nutanix_authorization_policy_v2" "auth_policy_test" {
 	role         = nutanix_roles_v2.test.id
-	display_name = local.auth_policies.display_name
-	description  = local.auth_policies.description
-	authorization_policy_type = local.auth_policies.authorization_policy_type
-	identities {
-		reserved = local.auth_policies.identities[0]
-	}
-	entities {
-		reserved = local.auth_policies.entities[0]
-	}
-	entities {
-		reserved = local.auth_policies.entities[1]
-	}
+	display_name = "%[3]s"
+	description  = "%[4]s"
+	authorization_policy_type = "%[5]s"
+	%[6]s
 	depends_on = [nutanix_roles_v2.test]
 }
-  `
+  `, roleDisplayName, roleDescription, acpDisplayName, authPolicyDescription, authPolicyType, authPolicyIdentitiesEntitiesHCL())
+}
 
 func TestAccV2NutanixAuthorizationPoliciesDatasource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -60,15 +55,18 @@ func TestAccV2NutanixAuthorizationPoliciesDatasource_Basic(t *testing.T) {
 }
 
 func TestAccV2NutanixAuthorizationPoliciesDatasource_WithFilter(t *testing.T) {
+	acpDisplayName := fmt.Sprintf("tf-test-acp-%d", acctest.RandInt())
+	roleDisplayName := fmt.Sprintf("tf-test-role-display-name-%d", acctest.RandInt())
+	roleDescription := "tf test role description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAuthorizationPoliciesDatasourceV4WithFilterConfig(filepath),
+				Config: testAuthorizationPoliciesDatasourceV4WithFilterConfig(acpDisplayName, roleDisplayName, roleDescription),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameAuthorizationPolicies, "auth_policies.#"),
-					resource.TestCheckResourceAttr(datasourceNameAuthorizationPolicies, "auth_policies.0.display_name", testVars.Iam.AuthPolicies.DisplayName),
+					resource.TestCheckResourceAttr(datasourceNameAuthorizationPolicies, "auth_policies.0.display_name", acpDisplayName),
 				),
 			},
 		},
@@ -76,12 +74,15 @@ func TestAccV2NutanixAuthorizationPoliciesDatasource_WithFilter(t *testing.T) {
 }
 
 func TestAccV2NutanixAuthorizationPoliciesDatasource_WithLimit(t *testing.T) {
+	acpDisplayName := fmt.Sprintf("tf-test-acp-%d", acctest.RandInt())
+	roleDisplayName := fmt.Sprintf("tf-test-role-display-name-%d", acctest.RandInt())
+	roleDescription := "tf test role description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAuthorizationPoliciesDatasourceV4WithLimitConfig(filepath),
+				Config: testAuthorizationPoliciesDatasourceV4WithLimitConfig(acpDisplayName, roleDisplayName, roleDescription),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameAuthorizationPolicies, "auth_policies.#"),
 					resource.TestCheckResourceAttr(datasourceNameAuthorizationPolicies, "auth_policies.#", "1"),
@@ -112,41 +113,26 @@ func testAuthorizationPoliciesDatasourceV4Config() string {
 	`
 }
 
-func testAuthorizationPoliciesDatasourceV4WithFilterConfig(filepath string) string {
+func testAuthorizationPoliciesDatasourceV4WithFilterConfig(acpDisplayName, roleDisplayName, roleDescription string) string {
 	return fmt.Sprintf(`
-
-	locals{
-		config = (jsondecode(file("%s")))
-		auth_policies = local.config.iam.auth_policies
-		roles = local.config.iam.roles
-	}
-
-	%s
+	%[1]s
 
 	data "nutanix_authorization_policies_v2" "test" {
-		filter = "displayName eq '${local.auth_policies.display_name}'"
+		filter = "displayName eq '%[2]s'"
 		depends_on = [resource.nutanix_authorization_policy_v2.auth_policy_test]
 	}
-
-
-	`, filepath, authPolicy)
+	`, authPolicyConfig(acpDisplayName, roleDisplayName, roleDescription), acpDisplayName)
 }
 
-func testAuthorizationPoliciesDatasourceV4WithLimitConfig(filepath string) string {
+func testAuthorizationPoliciesDatasourceV4WithLimitConfig(acpDisplayName, roleDisplayName, roleDescription string) string {
 	return fmt.Sprintf(`
-		locals{
-			config = (jsondecode(file("%s")))
-			auth_policies = local.config.iam.auth_policies
-			roles = local.config.iam.roles
-		}
-
 		%s
 
 		data "nutanix_authorization_policies_v2" "test" {
 			limit     = 1
 			depends_on = [resource.nutanix_authorization_policy_v2.auth_policy_test]
 		}
-	`, filepath, authPolicy)
+	`, authPolicyConfig(acpDisplayName, roleDisplayName, roleDescription))
 }
 
 func testAuthorizationPoliciesDatasourceV4WithInvalidFilterConfig() string {

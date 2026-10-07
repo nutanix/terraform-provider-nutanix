@@ -15,7 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/request/authorizationpolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -102,6 +104,11 @@ func ResourceNutanixAuthPoliciesV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"is_global": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"created_time": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -126,6 +133,15 @@ func ResourceNutanixAuthPoliciesV2() *schema.Resource {
 					"PREDEFINED_READ_ONLY", "SERVICE_DEFINED_READ_ONLY",
 					"PREDEFINED_UPDATE_IDENTITY_ONLY", "SERVICE_DEFINED", "USER_DEFINED",
 				}, false),
+			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"share_with_all_projects": {
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 		},
 	}
@@ -163,20 +179,23 @@ func ResourceNutanixAuthPoliciesV2Create(ctx context.Context, d *schema.Resource
 		input.Role = utils.StringPtr(role.(string))
 	}
 	if authPolicyType, ok := d.GetOk("authorization_policy_type"); ok {
-		const two, three, four, five, six = 2, 3, 4, 5, 6
-		subMap := map[string]interface{}{
-			"USER_DEFINED":                    two,
-			"SERVICE_DEFINED":                 three,
-			"PREDEFINED_READ_ONLY":            four,
-			"PREDEFINED_UPDATE_IDENTITY_ONLY": five,
-			"SERVICE_DEFINED_READ_ONLY":       six,
-		}
-		pInt := subMap[authPolicyType.(string)]
-		p := import1.AuthorizationPolicyType(pInt.(int))
-		input.AuthorizationPolicyType = &p
+		input.AuthorizationPolicyType = common.ExpandEnum[import1.AuthorizationPolicyType](authPolicyType.(string))
+	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		input.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
+	if common.IsExplicitlySet(d, "is_global") {
+		input.IsGlobal = utils.BoolPtr(d.Get("is_global").(bool))
 	}
 
-	resp, err := conn.AuthAPIInstance.CreateAuthorizationPolicy(input)
+	createAuthorizationPolicyRequest := import2.CreateAuthorizationPolicyRequest{
+		Body: input,
+	}
+
+	aJSON, _ := json.MarshalIndent(createAuthorizationPolicyRequest, "", "  ")
+	log.Printf("[DEBUG] Create Authorization Policy Request Body: %s", string(aJSON))
+
+	resp, err := conn.AuthAPIInstance.CreateAuthorizationPolicy(ctx, &createAuthorizationPolicyRequest)
 	if err != nil {
 		return diag.Errorf("error while creating authorization policies : %v", err)
 	}
@@ -194,7 +213,10 @@ func ResourceNutanixAuthPoliciesV2Read(ctx context.Context, d *schema.ResourceDa
 	log.Printf("[DEBUG] Reading Authorization Policy")
 	conn := meta.(*conns.Client).IamAPI
 
-	resp, err := conn.AuthAPIInstance.GetAuthorizationPolicyById(utils.StringPtr(d.Id()))
+	getAuthorizationPolicyByIdRequest := import2.GetAuthorizationPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.AuthAPIInstance.GetAuthorizationPolicyById(ctx, &getAuthorizationPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching authorization polices: %v", err)
 	}
@@ -242,6 +264,12 @@ func ResourceNutanixAuthPoliciesV2Read(ctx context.Context, d *schema.ResourceDa
 	if err := d.Set("authorization_policy_type", flattenAuthorizationPolicyType(getResp.AuthorizationPolicyType)); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("share_with_all_projects", getResp.IsSharedWithAllProjects); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
@@ -250,7 +278,10 @@ func ResourceNutanixAuthPoliciesV2Update(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.Client).IamAPI
 	updatedSpec := import1.AuthorizationPolicy{}
 
-	resp, err := conn.AuthAPIInstance.GetAuthorizationPolicyById(utils.StringPtr(d.Id()))
+	getAuthorizationPolicyByIdRequest := import2.GetAuthorizationPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.AuthAPIInstance.GetAuthorizationPolicyById(ctx, &getAuthorizationPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching  Authorization Policy: %v", err)
 	}
@@ -285,20 +316,26 @@ func ResourceNutanixAuthPoliciesV2Update(ctx context.Context, d *schema.Resource
 		updatedSpec.Role = utils.StringPtr(d.Get("role").(string))
 	}
 	if d.HasChange("authorization_policy_type") {
-		const two, three, four, five, six = 2, 3, 4, 5, 6
-		subMap := map[string]interface{}{
-			"USER_DEFINED":                    two,
-			"SERVICE_DEFINED":                 three,
-			"PREDEFINED_READ_ONLY":            four,
-			"PREDEFINED_UPDATE_IDENTITY_ONLY": five,
-			"SERVICE_DEFINED_READ_ONLY":       six,
-		}
-		pInt := subMap[d.Get("authorization_policy_type").(string)]
-		p := import1.AuthorizationPolicyType(pInt.(int))
-		updatedSpec.AuthorizationPolicyType = &p
+		updatedSpec.AuthorizationPolicyType = common.ExpandEnum[import1.AuthorizationPolicyType](d.Get("authorization_policy_type").(string))
+	}
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
+	if d.HasChange("is_global") && common.IsExplicitlySet(d, "is_global") {
+		updatedSpec.IsGlobal = utils.BoolPtr(d.Get("is_global").(bool))
+	} else {
+		updatedSpec.IsGlobal = nil
 	}
 
-	updatedResp, err := conn.AuthAPIInstance.UpdateAuthorizationPolicyById(utils.StringPtr(d.Id()), &updatedSpec, headers)
+	updateAuthorizationPolicyByIdRequest := import2.UpdateAuthorizationPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updatedSpec,
+	}
+
+	aJSON, _ := json.MarshalIndent(updateAuthorizationPolicyByIdRequest, "", "  ")
+	log.Printf("[DEBUG] Update Authorization Policy Request Body: %s", string(aJSON))
+
+	updatedResp, err := conn.AuthAPIInstance.UpdateAuthorizationPolicyById(ctx, &updateAuthorizationPolicyByIdRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while updating  Authorization Policy: %v", err)
 	}
@@ -316,7 +353,10 @@ func ResourceNutanixAuthPoliciesV2Delete(ctx context.Context, d *schema.Resource
 	log.Printf("[DEBUG] Deleting Authorization Policy")
 	conn := meta.(*conns.Client).IamAPI
 
-	readResp, err := conn.AuthAPIInstance.GetAuthorizationPolicyById(utils.StringPtr(d.Id()))
+	getAuthorizationPolicyByIdRequest := import2.GetAuthorizationPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.AuthAPIInstance.GetAuthorizationPolicyById(ctx, &getAuthorizationPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching auth policy: %v", err)
 	}
@@ -324,7 +364,10 @@ func ResourceNutanixAuthPoliciesV2Delete(ctx context.Context, d *schema.Resource
 	etagValue := conn.AuthAPIInstance.ApiClient.GetEtag(readResp)
 	headers := make(map[string]interface{})
 	headers["If-Match"] = utils.StringPtr(etagValue)
-	resp, err := conn.AuthAPIInstance.DeleteAuthorizationPolicyById(utils.StringPtr(d.Id()), headers)
+	deleteAuthorizationPolicyByIdRequest := import2.DeleteAuthorizationPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.AuthAPIInstance.DeleteAuthorizationPolicyById(ctx, &deleteAuthorizationPolicyByIdRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while deleting auth policy : %v", err)
 	}

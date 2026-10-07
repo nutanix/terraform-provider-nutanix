@@ -57,7 +57,7 @@ func TestAccV2NutanixKeyManagementServerDatasource_Basic(t *testing.T) {
 // TestAccV2NutanixKeyManagementServerDatasource_InvalidExtID tests the error handling when
 // a non-existent KMS ext_id is provided to the datasource.
 func TestAccV2NutanixKeyManagementServerDatasource_InvalidExtID(t *testing.T) {
-	invalidExtID := "ab414ed6-7d97-4f7a-b98f-fcba7cac3b8c"
+	invalidExtID := "deadbeef-0000-4000-8000-000000000000"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },

@@ -2,7 +2,7 @@ terraform {
   required_providers {
     nutanix = {
       source  = "nutanix/nutanix"
-      version = "2.0.0"
+      version = ">=2.5.0"
     }
   }
 }
@@ -33,6 +33,21 @@ locals {
 #list all categories
 data "nutanix_categories_v2" "category-list" {}
 
+
+# Entity group that can be used as the secured group for an APPLICATION rule.
+# Use either secured_group_category_references or secured_group_entity_group_reference
+# in a rule spec, not both.
+resource "nutanix_entity_group_v2" "secured_group" {
+  name        = "tf-secured-group"
+  description = "secured group for the application policy"
+  allowed_config {
+    entities {
+      type              = "VM"
+      selected_by       = "CATEGORY_EXT_ID"
+      reference_ext_ids = [data.nutanix_categories_v2.category-list.categories.0.ext_id]
+    }
+  }
+}
 
 #creating subnet without IP pool
 resource "nutanix_subnet_v2" "vlan-112" {
@@ -132,6 +147,28 @@ resource "nutanix_network_security_policy_v2" "global-application-nsp" {
   is_hitlog_enabled = false
 }
 
+# Network Security Policy APPLICATION Rule using an entity group as the secured group.
+resource "nutanix_network_security_policy_v2" "entity-group-application-nsp" {
+  name        = "entity_group_application_policy"
+  description = "Application policy with secured group entity group reference"
+  type        = "APPLICATION"
+  state       = "SAVE"
+  scope       = "GLOBAL"
+  rules {
+    description = "entity group secured group rule"
+    type        = "APPLICATION"
+    spec {
+      application_rule_spec {
+        secured_group_entity_group_reference = nutanix_entity_group_v2.secured_group.id
+        src_allow_spec                       = "ALL"
+        is_all_protocol_allowed              = true
+      }
+    }
+  }
+  is_hitlog_enabled = false
+  depends_on        = [nutanix_entity_group_v2.secured_group]
+}
+
 # Network Security Policy APPLICATION Rule and INTRA_GROUP Rule (VPC_LIST scope)
 resource "nutanix_network_security_policy_v2" "application-nsp" {
   name        = "application_policy"
@@ -225,9 +262,83 @@ resource "nutanix_network_security_policy_v2" "multi-env-isolation-nsp" {
     nutanix_vpc_v2.vpc.id
   ]
   is_hitlog_enabled = false
-  depends_on        = [ nutanix_vpc_v2.vpc]
+  depends_on        = [nutanix_vpc_v2.vpc]
 }
 
+
+# Network Security Policy FLEX rule (rule-centric / SMSP "flex" mode).
+# Requires Flow flex mode (SMSP) enabled on Prism Central. Flex rules reference
+# entity groups (not raw categories) and are only allowed in WORKLOAD/CRITICAL/
+# COREINFRASTRUCTURE/ZONE policies, which require a policy `priority`.
+
+# Entity groups the flex rule applies to / matches as source / destination.
+resource "nutanix_entity_group_v2" "flex_applied" {
+  name        = "tf-flex-applied"
+  description = "applied-to entity group for the flex policy"
+  allowed_config {
+    entities {
+      type              = "VM"
+      selected_by       = "CATEGORY_EXT_ID"
+      reference_ext_ids = [data.nutanix_categories_v2.category-list.categories.0.ext_id]
+    }
+  }
+}
+
+resource "nutanix_entity_group_v2" "flex_src" {
+  name        = "tf-flex-src"
+  description = "source entity group for the flex policy"
+  allowed_config {
+    entities {
+      type              = "VM"
+      selected_by       = "CATEGORY_EXT_ID"
+      reference_ext_ids = [data.nutanix_categories_v2.category-list.categories.1.ext_id]
+    }
+  }
+}
+
+resource "nutanix_entity_group_v2" "flex_dst" {
+  name        = "tf-flex-dst"
+  description = "destination entity group for the flex policy"
+  allowed_config {
+    entities {
+      type              = "VM"
+      selected_by       = "CATEGORY_EXT_ID"
+      reference_ext_ids = [data.nutanix_categories_v2.category-list.categories.2.ext_id]
+    }
+  }
+}
+
+resource "nutanix_network_security_policy_v2" "flex-nsp" {
+  name        = "flex_policy"
+  description = "flex policy example"
+  type        = "WORKLOAD"
+  state       = "SAVE"
+  # Mandatory for flex policy types; 1-349 for user-defined WORKLOAD policies
+  # (350 is reserved for the system catch-all). Lower value = higher precedence.
+  priority = 300
+  rules {
+    name               = "allow-app-to-db"
+    description        = "flex rule example"
+    type               = "FLEX"
+    is_logging_enabled = true
+    spec {
+      flex_rule_spec {
+        action                             = "ALLOW"
+        direction                          = "IN_OUT"
+        priority                           = 1000
+        applied_to_entity_group_references = [nutanix_entity_group_v2.flex_applied.id]
+        src_entity_group_references        = [nutanix_entity_group_v2.flex_src.id]
+        dest_entity_group_references       = [nutanix_entity_group_v2.flex_dst.id]
+        is_all_protocol_allowed            = true
+      }
+    }
+  }
+  depends_on = [
+    nutanix_entity_group_v2.flex_applied,
+    nutanix_entity_group_v2.flex_src,
+    nutanix_entity_group_v2.flex_dst,
+  ]
+}
 
 # get network security policies
 data "nutanix_network_security_policies_v2" "list-nsps" {
@@ -236,6 +347,7 @@ data "nutanix_network_security_policies_v2" "list-nsps" {
     nutanix_network_security_policy_v2.isolation-nsp,
     nutanix_network_security_policy_v2.multi-env-isolation-nsp,
     nutanix_network_security_policy_v2.global-application-nsp,
+    nutanix_network_security_policy_v2.entity-group-application-nsp,
   ]
 }
 

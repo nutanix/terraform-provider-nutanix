@@ -58,11 +58,11 @@ func testNGTConfigurationDatasource() string {
 	return fmt.Sprintf(`
 	locals {
 	  config            = jsondecode(file("%[1]s"))
-	  preEnv            = local.config.pre_env
+	  vmm               = local.config.vmm
 	}
 
 	data "nutanix_virtual_machines_v2" "test" {
-		filter = "name eq '${local.preEnv.ngt_vm.name}'"
+		filter = "name eq '${local.vmm.ngt_vm.name}'"
 	}
 	data "nutanix_ngt_configuration_v2" "test" {
 		ext_id = data.nutanix_virtual_machines_v2.test.vms[0].ext_id
@@ -74,11 +74,11 @@ func testNGTConfigurationNotInstalledDatasource() string {
 	return fmt.Sprintf(`
 	locals {
 	  config            = jsondecode(file("%[1]s"))
-	  preEnv            = local.config.pre_env
+	  vmm               = local.config.vmm
 	}
 
 	data "nutanix_virtual_machines_v2" "test" {
-		filter = "name eq '${local.preEnv.integration_vm.name}'"
+		filter = "name eq '${local.vmm.integration_vm}'"
 	}
 	data "nutanix_ngt_configuration_v2" "test" {
 		ext_id = data.nutanix_virtual_machines_v2.test.vms[0].ext_id

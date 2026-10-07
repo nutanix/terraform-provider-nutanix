@@ -49,6 +49,7 @@ The following arguments are supported:
 - `external_subnet_reference`: (Optional) External subnet reference for the Floating IP to be allocated in on-prem only.
 - `vpc_reference`: (Optional) VPC reference UUID
 - `vm_nic_reference`: (Optional) VM NIC reference.
+- `project_ext_id`: (Optional) External identifier of the project associated with the Floating IP.
 
 ### association
 
@@ -81,6 +82,7 @@ The following attributes are exported:
 - `external_subnet`: Networking common base object
 - `vpc`: Networking common base object
 - `vm_nic`: Virtual NIC for projections
+- `project_ext_id`: External identifier of the project associated with the Floating IP.
 
 ## Import
 
@@ -93,4 +95,4 @@ resource "nutanix_floating_ip_v2" "floating_ip"{}
 terraform import nutanix_floating_ip_v2.floating_ip <UUID>
 ```
 
-See detailed information in [Nutanix Floating IP v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/FloatingIps/operation/createFloatingIp).
+See detailed information in [Nutanix Floating IP v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/FloatingIps/operation/createFloatingIp).

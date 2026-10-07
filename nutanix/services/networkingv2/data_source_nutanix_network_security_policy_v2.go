@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	config "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/request/networksecuritypolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -53,6 +54,14 @@ func DataSourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 						},
 						"type": {
 							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"is_logging_enabled": {
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 						"spec": {
@@ -393,6 +402,13 @@ func DataSourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 											},
 										},
 									},
+									"flex_rule_spec": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: flexRuleSpecSchema(true),
+										},
+									},
 								},
 							},
 						},
@@ -477,6 +493,14 @@ func DataSourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 					},
 				},
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"is_shared_with_all_projects": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -485,8 +509,10 @@ func DataSourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema
 	conn := meta.(*conns.Client).MicroSegAPI
 
 	extID := d.Get("ext_id")
-
-	resp, err := conn.NetworkingSecurityInstance.GetNetworkSecurityPolicyById(utils.StringPtr((extID.(string))))
+	getNetworkSecurityPolicyByIdRequest := import2.GetNetworkSecurityPolicyByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.NetworkingSecurityInstance.GetNetworkSecurityPolicyById(ctx, &getNetworkSecurityPolicyByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching network security policy: %v", err)
 	}
@@ -552,6 +578,12 @@ func DataSourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema
 	if err := d.Set("links", flattenLinksMicroSeg(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("is_shared_with_all_projects", utils.BoolValue(getResp.IsSharedWithAllProjects)); err != nil {
+		return diag.FromErr(err)
+	}
 
 	d.SetId(utils.StringValue(getResp.ExtId))
 	return nil
@@ -572,6 +604,12 @@ func flattenNetworkSecurityPolicyRule(pr []import1.NetworkSecurityPolicyRule) []
 			}
 			if v.Type != nil {
 				net["type"] = common.FlattenPtrEnum(v.Type)
+			}
+			if v.Name != nil {
+				net["name"] = utils.StringValue(v.Name)
+			}
+			if v.IsLoggingEnabled != nil {
+				net["is_logging_enabled"] = utils.BoolValue(v.IsLoggingEnabled)
 			}
 			if v.Spec != nil {
 				net["spec"] = flattenOneOfNetworkSecurityPolicyRuleSpec(v.Spec)
@@ -731,6 +769,12 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 			intraRuleSpecList = append(intraRuleSpecList, intraRuleSpec)
 
 			return intraRuleSpecList
+		}
+		if *pr.ObjectType_ == "microseg.v4.config.FlexRuleSpec" {
+			flexValue := pr.GetValue().(import1.FlexRuleSpec)
+			flexSpec := make(map[string]interface{})
+			flexSpec["flex_rule_spec"] = flattenFlexRuleSpec(flexValue)
+			return []map[string]interface{}{flexSpec}
 		}
 		if *pr.ObjectType_ == "microseg.v4.config.MultiEnvIsolationRuleSpec" {
 			// Extract input value

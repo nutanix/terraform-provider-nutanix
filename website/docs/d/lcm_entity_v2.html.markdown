@@ -49,6 +49,7 @@ The fooling attributes are exported:
 * `sub_entities`: A list of sub-entities applicable to the entity.
 * `cluster_ext_id`: Cluster uuid on which the resource is present or operation is being performed.
 * `hardware_vendor`: Hardware vendor information.
+* `has_previous_inventory_failed`: (default `false`) Indicates whether the most recent inventory operation failed for this entity. When true, the entity's version or available-version data may be stale.
 
 ### Location Info
 The `location` attribute supports the following
@@ -123,4 +124,4 @@ The `sub_entities` attribute supports the following
 * `entity_version`: Current version of an LCM entity.
 * `hardware_family`: A hardware family for a LCM entity.
 
-See detailed information in [Nutanix LCM Entity V4](https://developers.nutanix.com/api-reference?namespace=lifecycle&version=v4.2#tag/Entities/operation/getEntityById).
+See detailed information in [Nutanix LCM Entity V4](https://developers.nutanix.com/api-reference?namespace=lifecycle&version=v4.3#tag/Entities/operation/getEntityById).

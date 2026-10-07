@@ -51,6 +51,38 @@ resource "nutanix_network_security_policy_v2" "global-nsp" {
   }
 }
 
+resource "nutanix_entity_group_v2" "secured_group" {
+  name        = "secured-group"
+  description = "Secured group for an application policy"
+  allowed_config {
+    entities {
+      type              = "VM"
+      selected_by       = "CATEGORY_EXT_ID"
+      reference_ext_ids = [nutanix_category_v2.example.id]
+    }
+  }
+}
+
+# Application rules can use an entity group as the secured group instead of categories.
+# Use either secured_group_category_references or secured_group_entity_group_reference, not both.
+resource "nutanix_network_security_policy_v2" "entity-group-nsp" {
+  name        = "my-entity-group-policy"
+  description = "Application policy with secured group entity group reference"
+  state       = "SAVE"
+  type        = "APPLICATION"
+  scope       = "GLOBAL"
+  rules {
+    type = "APPLICATION"
+    spec {
+      application_rule_spec {
+        secured_group_entity_group_reference = nutanix_entity_group_v2.secured_group.id
+        src_allow_spec                      = "ALL"
+        is_all_protocol_allowed             = true
+      }
+    }
+  }
+}
+
 ```
 
 ## Argument Reference
@@ -58,19 +90,24 @@ resource "nutanix_network_security_policy_v2" "global-nsp" {
 The following arguments are supported:
 
 - `name`: (Required) Name of the Flow Network Security Policy.
-- `type`: (Required) Defines the type of rules that can be used in a policy. Acceptable values are "QUARANTINE", "ISOLATION", "APPLICATION", "SHAREDSERVICE".
+- `type`: (Required) Defines the type of rules that can be used in a policy. Acceptable values are "QUARANTINE", "ISOLATION", "APPLICATION", "SHAREDSERVICE", "CRITICAL", "COREINFRASTRUCTURE", "ZONE", "WORKLOAD". The "WORKLOAD", "CRITICAL", "COREINFRASTRUCTURE" and "ZONE" types are used with Flex rules (rule-centric / SMSP mode) and require `priority` to be set.
 - `description`: (Optional) A user defined annotation for a policy.
 - `state`: (Optional) Whether the policy is applied or monitored; can be omitted or set null to save the policy without applying or monitoring it. Acceptable values are "SAVE", "MONITOR", "ENFORCE".
-- `rules`: (Optional) A list of rules that form a policy. For isolation policies, use isolation rules; for application or quarantine policies, use application rules.
+- `priority`: (Optional) Policy priority. Mandatory for the Flex policy types (WORKLOAD/CRITICAL/COREINFRASTRUCTURE/ZONE); a lower value means higher precedence. For user-defined WORKLOAD policies use 1-349 (350 is reserved for the system catch-all).
+- `rules`: (Optional) A list of rules that form a policy. For isolation policies, use isolation rules; for application or quarantine policies, use application rules; for Flex policies, use flex rules only.
 - `is_ipv6_traffic_allowed`: (Optional) If Ipv6 Traffic is allowed.
 - `is_hitlog_enabled`: (Optional) If Hitlog is enabled.
-- `scope`: (Optional) Defines the scope of the policy. Acceptable values are "ALL_VLAN", "ALL_VPC", "VPC_LIST", and "GLOBAL".
+- `scope`: (Optional) Defines the scope of the policy. Acceptable values are "ALL_VLAN", "ALL_VPC", "VPC_LIST", "GLOBAL", and "VPC_AS_CATEGORY".
 - `vpc_reference`: (Optional) A list of external ids for VPCs, used only when the scope of policy is a list of VPCs.
+- `project_ext_id`: (Optional) Project external ID to associate with the network security policy. Note: This field cannot be updated after creation.
+- `is_shared_with_all_projects`: (Optional) Indicates whether the network security policy is shared with all projects.
 
 ### rules
 
 - `description`: (Optional) A user defined annotation for a rule.
-- `type`: (Required) The type for a rule—the value chosen here restricts which specification can be chosen. Acceptable values are "QUARANTINE", "TWO_ENV_ISOLATION", "APPLICATION", "INTRA_GROUP", "MULTI_ENV_ISOLATION", "SHARED_SERVICE".
+- `type`: (Required) The type for a rule—the value chosen here restricts which specification can be chosen. Acceptable values are "QUARANTINE", "TWO_ENV_ISOLATION", "APPLICATION", "INTRA_GROUP", "MULTI_ENV_ISOLATION", "SHARED_SERVICE", "FLEX".
+- `name`: (Optional) A user-defined name for the rule. Primarily used for Flex policy rules.
+- `is_logging_enabled`: (Optional) Specifies whether hit log is enabled for the rule.
 - `spec`: (Required) Spec for rules.
 
 ### spec
@@ -81,6 +118,7 @@ One of below rules spec.
 - `application_rule_spec`: (Optional) Application Rule Spec.
 - `intra_entity_group_rule_spec`: (Optional) Intra entity group Rule Spec
 - `multi_env_isolation_rule_spec`: (Optional) Multi Environment Isolation Rule Spec.
+- `flex_rule_spec`: (Optional) Flex Rule Spec.
 
 ### two_env_isolation_rule_spec
 
@@ -90,8 +128,8 @@ One of below rules spec.
 ### application_rule_spec
 
 - `secured_group_category_associated_entity_type`: (Optional) Entity type for the secured group category. Acceptable values are "SUBNET", "VM", "VPC". Default is "VM".
-- `secured_group_category_references`: (Required) A set of network endpoints which is protected by a Network Security Policy and defined as a list of categories.
-- `secured_group_entity_group_reference`: (Optional) Reference to the secured group entity group.
+- `secured_group_category_references`: (Optional) A set of network endpoints which is protected by a Network Security Policy and defined as a list of categories. Exactly one of `secured_group_category_references` and `secured_group_entity_group_reference` must be set.
+- `secured_group_entity_group_reference`: (Optional) Reference to the secured group entity group. Exactly one of `secured_group_category_references` and `secured_group_entity_group_reference` must be set.
 - `src_allow_spec`: (Optional) A specification to how allow mode traffic should be applied, either ALL or NONE.
 - `dest_allow_spec`: (Optional) A specification to how allow mode traffic should be applied, either ALL or NONE.
 - `src_category_associated_entity_type`: (Optional) Entity type for the source category. Acceptable values are "SUBNET", "VM", "VPC". Default is "VM".
@@ -115,9 +153,9 @@ One of below rules spec.
 ### intra_entity_group_rule_spec
 
 - `secured_group_category_associated_entity_type`: (Optional) Entity type for the secured group category. Acceptable values are "SUBNET", "VM", "VPC". Default is "VM".
-- `secured_group_entity_group_reference`: (Optional) Reference to the secured group entity group.
+- `secured_group_entity_group_reference`: (Optional) Reference to the secured group entity group. Exactly one of `secured_group_category_references` and `secured_group_entity_group_reference` must be set.
 - `secured_group_action`: (Required) Whether traffic between intra secured group entities should be allowed or denied. Acceptable values are "ALLOW", "DENY".
-- `secured_group_category_references`: (Optional) List of category references for the secured group.
+- `secured_group_category_references`: (Optional) List of category references for the secured group. Exactly one of `secured_group_category_references` and `secured_group_entity_group_reference` must be set.
 - `secured_group_service_references`: (Optional) List of service group references for the secured group.
 - `tcp_services`: (Optional) TCP port ranges for the rule.
 - `udp_services`: (Optional) UDP port ranges for the rule.
@@ -141,12 +179,34 @@ One of below rules spec.
 - `group_category_references`: (Required) External identifiers of categories belonging to the isolation group.
 - `group_entity_group_reference`: (Optional) Reference to the entity group for the isolation group.
 
+### flex_rule_spec
+
+- `action`: (Required) Action for the flex rule. Acceptable values are "ALLOW", "DENY", "REJECT".
+- `direction`: (Required) Direction of traffic. Acceptable values are "IN", "OUT", "IN_OUT".
+- `applied_to_entity_group_references`: (Optional) Entity group references to which the flex rule is applied.
+- `src_entity_group_references`: (Optional) Source entity group references.
+- `dest_entity_group_references`: (Optional) Destination entity group references.
+- `src_subnet`: (Optional) Source subnet (value, prefix_length).
+- `dest_subnet`: (Optional) Destination subnet (value, prefix_length).
+- `should_allow_any_src`: (Optional) Whether the rule should allow all sources.
+- `should_allow_any_dst`: (Optional) Whether the rule should allow all destinations.
+- `is_all_protocol_allowed`: (Optional) Whether traffic is allowed for all protocols.
+- `service_group_references`: (Optional) A list of service group references.
+- `tcp_services`: (Optional) TCP port ranges (start_port, end_port).
+- `udp_services`: (Optional) UDP port ranges (start_port, end_port).
+- `icmp_services`: (Optional) ICMP type/code specs.
+- `icmpv6_services`: (Optional) ICMPv6 type/code specs.
+- `network_function_reference`: (Optional) A reference to the network function.
+- `priority`: (Optional) Priority for the flex rule. Lower numbers indicate higher priority.
+- `ip_version`: (Optional) IP version scope. Acceptable values are "IPV4", "IPV6", "IPV4_IPV6".
+- `is_system_rule`: (Computed) Whether the flex rule is system-defined.
+
 ### tcp_services, udp_services
 
 - `start_port`: (Required) start port
 - `end_port`: (Required) end port
 
-### icmp_services
+### icmp_services, icmpv6_services
 
 - `is_all_allowed`: (Optional) Set this field to true if both Type and Code is ANY.
 - `type`: (Optional) Icmp service Type. Ignore this field if Type has to be ANY.
@@ -164,10 +224,13 @@ The following attributes are exported:
 - `tenant_id`: A globally unique identifier that represents the tenant that owns this entity
 - `last_update_time`: last updated time
 - `creation_time`: creation time of NSP
+- `project_ext_id`: Project external ID associated with the network security policy.
+- `is_shared_with_all_projects`: Whether the network security policy is shared with all projects.
 
 ## Import
 
 This helps to manage existing entities which are not created through terraform. Network Security Policy can be imported using the `UUID`. (ext_id in v4 API context).  eg,
+
 ```hcl
 // create its configuration in the root module. For example:
 resource "nutanix_network_security_policy_v2" "import_nsp" {}
@@ -176,4 +239,4 @@ resource "nutanix_network_security_policy_v2" "import_nsp" {}
 terraform import nutanix_network_security_policy_v2.import_nsp <UUID>
 ```
 
-See detailed information in [Nutanix Security Policy v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.2#tag/NetworkSecurityPolicies/operation/createNetworkSecurityPolicy).
+See detailed information in [Nutanix Security Policy v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.3#tag/NetworkSecurityPolicies/operation/createNetworkSecurityPolicy).

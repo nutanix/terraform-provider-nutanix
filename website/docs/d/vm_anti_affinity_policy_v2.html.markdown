@@ -35,6 +35,7 @@ The following attributes are exported:
 * `name` - The name of the VM-VM Anti-Affinity policy.
 * `description` - A description of the VM-VM Anti-Affinity policy.
 * `categories` - List of VM category external IDs that this policy applies to.
+* `project_ext_id` - The external identifier of the project that this policy is associated with.
 * `create_time` - The timestamp when the policy was created.
 * `update_time` - The timestamp when the policy was last updated.
 * `created_by` - Information about the entity that created the policy.
@@ -43,4 +44,4 @@ The following attributes are exported:
 * `num_non_compliant_vms` - Number of non-compliant VMs which are part of the VM-VM anti-affinity policy.
 * `num_pending_vms` - Number of VMs with compliance state as pending, which are part of the VM-VM anti-affinity policy.
 
-See detailed information in [Nutanix Get VM Anti-Affinity Policy V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/VmAntiAffinityPolicies/operation/getVmAntiAffinityPolicyById)
+See detailed information in [Nutanix Get VM Anti-Affinity Policy V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/VmAntiAffinityPolicies/operation/getVmAntiAffinityPolicyById)

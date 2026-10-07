@@ -3,6 +3,7 @@ package dataprotectionv2_test
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"testing"
 	"time"
 
@@ -360,6 +361,109 @@ func testRecoveryPointsResourceConfigWithVolumeGroupRecoveryPointsWithMultipleVM
 			volume_group_ext_id = nutanix_volume_group_v2.test-2.id
 		}
 	}`, name, expirationTime)
+}
+
+func TestAccV2NutanixRecoveryPointsResource_ProjectAssociation(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-rp-projassoc-%d", r)
+	projectName := fmt.Sprintf("tf-rp-pa-proj-%d", r)
+	expirationTime := time.Now().Add(24 * time.Hour).UTC().Format(time.RFC3339)
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testRecoveryPointProjectAssociationConfig(name, expirationTime, r, projectName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceNameRecoveryPoints, "project_ext_id", "nutanix_project_v2.test", "ext_id"),
+					resource.TestCheckResourceAttrPair("data.nutanix_recovery_point_v2.test", "project_ext_id", "nutanix_project_v2.test", "ext_id"),
+					resource.TestCheckResourceAttr("data.nutanix_recovery_points_v2.test", "recovery_points.#", "1"),
+					resource.TestCheckResourceAttrPair("data.nutanix_recovery_points_v2.test", "recovery_points.0.ext_id", resourceNameRecoveryPoints, "ext_id"),
+					resource.TestCheckResourceAttrPair("data.nutanix_recovery_points_v2.test", "recovery_points.0.project_ext_id", "nutanix_project_v2.test", "ext_id"),
+				),
+			},
+			{
+				Config:      testRecoveryPointProjectAssociationConfig(name, expirationTime, r, projectName, "00000000-0000-0000-0000-000000000000"),
+				ExpectError: regexp.MustCompile("Update of project_ext_id is not supported"),
+			},
+		},
+	})
+}
+
+func rpProjectExtIDLine(override string) string {
+	if override == "" {
+		return `project_ext_id = nutanix_project_v2.test.ext_id`
+	}
+	return fmt.Sprintf(`project_ext_id = "%s"`, override)
+}
+
+func testRecoveryPointProjectAssociationConfig(name, expirationTime string, r int, projectName, projectExtIDOverride string) string {
+	return fmt.Sprintf(`
+	data "nutanix_clusters_v2" "clusters" {}
+
+	locals {
+		cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
+	}
+
+	resource "nutanix_project_v2" "test" {
+		name        = "%[4]s"
+		project_id  = "%[4]s"
+		description = "project association test"
+	}
+
+	resource "nutanix_resource_group_v2" "rg" {
+		name           = "tf-rp-pa-rg-%[4]s"
+		project_ext_id = nutanix_project_v2.test.ext_id
+		placement_targets {
+			cluster_ext_id = local.cluster0
+		}
+		lifecycle {
+			ignore_changes = [
+				placement_targets[0].storage_containers
+			]
+		}
+	}
+
+	resource "nutanix_virtual_machine_v2" "rp_pa_vm" {
+		name        = "tf-rp-pa-vm-%[3]d"
+		description = "vm for recovery point project association"
+		cluster {
+			ext_id = local.cluster0
+		}
+		project {
+			ext_id = nutanix_project_v2.test.ext_id
+		}
+		num_cores_per_socket = 1
+		num_sockets          = 1
+		memory_size_bytes    = 4 * 1024 * 1024 * 1024
+		depends_on = [nutanix_resource_group_v2.rg]
+	}
+
+	resource "nutanix_recovery_points_v2" "test" {
+		name            = "%[1]s"
+		expiration_time = "%[2]s"
+		status          = "COMPLETE"
+		recovery_point_type = "APPLICATION_CONSISTENT"
+		vm_recovery_points {
+			vm_ext_id = nutanix_virtual_machine_v2.rp_pa_vm.id
+		}
+		%[5]s
+		depends_on = [nutanix_project_v2.test, nutanix_virtual_machine_v2.rp_pa_vm]
+	}
+
+	data "nutanix_recovery_point_v2" "test" {
+		ext_id     = nutanix_recovery_points_v2.test.id
+		depends_on = [nutanix_recovery_points_v2.test]
+	}
+
+	data "nutanix_recovery_points_v2" "test" {
+		filter     = "name eq '${nutanix_recovery_points_v2.test.name}'"
+		depends_on = [nutanix_recovery_points_v2.test]
+	}
+	`, name, expirationTime, r, projectName, rpProjectExtIDLine(projectExtIDOverride))
 }
 
 func testAccVolumeGroup1ResourceConfig(name, desc string) string {

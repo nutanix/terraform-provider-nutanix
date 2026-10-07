@@ -76,4 +76,4 @@ The `policies` object is a list of VM-Host Affinity policies. Each VM-Host Affin
 * `num_compliant_vms` - Number of VMs which are compliant with the VM-host affinity policy.
 * `num_non_compliant_vms` - Number of VMs which are not compliant with the VM-host affinity policy.
 
-See detailed information in [Nutanix List VM Host Affinity Policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/VmHostAffinityPolicies/operation/listVmHostAffinityPolicies)
+See detailed information in [Nutanix List VM Host Affinity Policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/VmHostAffinityPolicies/operation/listVmHostAffinityPolicies)
