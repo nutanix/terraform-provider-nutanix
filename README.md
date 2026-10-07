@@ -589,7 +589,7 @@ From the **repository root**:
 
 -> **Note:** We now have a brand new developer-centric Support Program designed for organizations that require a deeper level of developer support to manage their Nutanix environment and build applications quickly and efficiently. As part of this new Advanced API/SDK Support Program, you will get access to trusted technical advisors who specialize in developer tools including Nutanix Terraform Provider and receive support for your unique development needs and custom integration queries. Visit our Support Portal - [Premium Add-On Support Programs](https://www.nutanix.com/support-services/product-support/premium-support-programs) to learn more about this program.
 
-Customers not taking advantage of the  Advanced API/SDK Support Program will continue to receive the support through our standard, community-supported model. This community model also provides support for contributions to the open-sourceNutanix Terraform Provider repository .Visit [https://portal.nutanix.com/kb/13424](https://portal.nutanix.com/kb/13424) for more details.
+Customers not taking advantage of the  Advanced API/SDK Support Program will continue to receive the support through our standard, community-supported model. This community model also provides support for contributions to the open-source Nutanix Terraform Provider repository .Visit [https://portal.nutanix.com/kb/13424](https://portal.nutanix.com/kb/13424) for more details.
 
 ## Community
 
