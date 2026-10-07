@@ -23,7 +23,7 @@ jobs:
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            curl ca-certificates git unzip sshpass build-essential sudo nmap
+            curl ca-certificates git unzip sshpass jq build-essential sudo nmap
 
       - name: Pull Request Info
         run: |
