@@ -1,6 +1,4 @@
-# Changelog
-
-## 2.5.0
+## 2.5.0 (October 7, 2026)
 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.4.2...v2.5.0)
 
