@@ -111,7 +111,7 @@ func (c *Config) Client() (*Client, error) {
 	}
 
 	configCreds := client.Credentials{
-		URL:                fmt.Sprintf("%s:%s", c.Endpoint, c.Port),
+		URL:                client.JoinHostPort(c.Endpoint, c.Port),
 		Endpoint:           c.Endpoint,
 		Username:           c.Username,
 		Password:           c.Password,
