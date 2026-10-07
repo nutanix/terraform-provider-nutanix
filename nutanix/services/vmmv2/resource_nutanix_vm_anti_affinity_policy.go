@@ -9,8 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import3 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	vmmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/policies"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/policies"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/request/vmantiaffinitypolicies"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -26,10 +28,6 @@ func ResourceNutanixVMAntiAffinityPolicyV2() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"ext_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -37,6 +35,22 @@ func ResourceNutanixVMAntiAffinityPolicyV2() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
+			},
+			"categories": {
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"ext_id": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"create_time": {
@@ -61,13 +75,6 @@ func ResourceNutanixVMAntiAffinityPolicyV2() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"categories": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
 			"num_compliant_vms": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -86,7 +93,7 @@ func ResourceNutanixVMAntiAffinityPolicyV2() *schema.Resource {
 
 func ResourceNutanixVMAntiAffinityPolicyV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
-	body := policies.VmAntiAffinityPolicy{}
+	body := import1.VmAntiAffinityPolicy{}
 
 	if name, ok := d.GetOk("name"); ok {
 		body.Name = utils.StringPtr(name.(string))
@@ -98,11 +105,18 @@ func ResourceNutanixVMAntiAffinityPolicyV2Create(ctx context.Context, d *schema.
 		catStrings := common.ExpandListOfString(common.InterfaceToSlice(cats))
 		body.Categories = expandPolicyCategoryReference(catStrings)
 	}
+	if projectExtId, ok := d.GetOk("project_ext_id"); ok {
+		body.ProjectExtId = utils.StringPtr(projectExtId.(string))
+	}
 
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] VM-VM Anti-affinity Policy Request Body: %s", string(aJSON))
 
-	resp, err := conn.VMAntiAffinityPolicyAPIInstance.CreateVmAntiAffinityPolicy(&body)
+	createRequest := import2.CreateVmAntiAffinityPolicyRequest{
+		Body: &body,
+	}
+
+	resp, err := conn.VMAntiAffinityPolicyAPIInstance.CreateVmAntiAffinityPolicy(ctx, &createRequest)
 
 	if err != nil {
 		return diag.Errorf("error while creating VM-VM Anti-Affinity policy : %v", err)
@@ -125,8 +139,11 @@ func ResourceNutanixVMAntiAffinityPolicyV2Create(ctx context.Context, d *schema.
 	}
 
 	// Get UUID from TASK API
+	getTaskRequest := import3.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
 
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching VM-VM Anti-Affinity policy task: %v", err)
 	}
@@ -147,12 +164,16 @@ func ResourceNutanixVMAntiAffinityPolicyV2Create(ctx context.Context, d *schema.
 func ResourceNutanixVMAntiAffinityPolicyV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	resp, err := conn.VMAntiAffinityPolicyAPIInstance.GetVmAntiAffinityPolicyById(utils.StringPtr(d.Id()))
+	getRequest := import2.GetVmAntiAffinityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+
+	resp, err := conn.VMAntiAffinityPolicyAPIInstance.GetVmAntiAffinityPolicyById(ctx, &getRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching VM-VM Anti-Affinity policy : %v", err)
 	}
 
-	getResp := resp.Data.GetValue().(policies.VmAntiAffinityPolicy)
+	getResp := resp.Data.GetValue().(import1.VmAntiAffinityPolicy)
 
 	flattenedPolicy := flattenVMAntiAffinityPolicyEntity(getResp)
 
@@ -168,12 +189,16 @@ func ResourceNutanixVMAntiAffinityPolicyV2Read(ctx context.Context, d *schema.Re
 func ResourceNutanixVMAntiAffinityPolicyV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	resp, err := conn.VMAntiAffinityPolicyAPIInstance.GetVmAntiAffinityPolicyById(utils.StringPtr(d.Id()))
+	getRequest := import2.GetVmAntiAffinityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+
+	resp, err := conn.VMAntiAffinityPolicyAPIInstance.GetVmAntiAffinityPolicyById(ctx, &getRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching VM-VM Anti-Affinity policy : %v", err)
 	}
 
-	respPolicy := resp.Data.GetValue().(policies.VmAntiAffinityPolicy)
+	respPolicy := resp.Data.GetValue().(import1.VmAntiAffinityPolicy)
 	updateSpec := respPolicy
 
 	if d.HasChange("name") {
@@ -188,11 +213,20 @@ func ResourceNutanixVMAntiAffinityPolicyV2Update(ctx context.Context, d *schema.
 			updateSpec.Categories = expandPolicyCategoryReference(catStrings)
 		}
 	}
-
+	if d.HasChange("project_ext_id") {
+		if projectExtId, ok := d.GetOk("project_ext_id"); ok {
+			updateSpec.ProjectExtId = utils.StringPtr(projectExtId.(string))
+		}
+	}
 	aJSON, _ := json.MarshalIndent(updateSpec, "", " ")
 	log.Printf("[DEBUG] VM Anti Affinity Policy Update Request Body: %s", string(aJSON))
 
-	updateResp, err := conn.VMAntiAffinityPolicyAPIInstance.UpdateVmAntiAffinityPolicyById(utils.StringPtr(d.Id()), &updateSpec)
+	updateRequest := import2.UpdateVmAntiAffinityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updateSpec,
+	}
+
+	updateResp, err := conn.VMAntiAffinityPolicyAPIInstance.UpdateVmAntiAffinityPolicyById(ctx, &updateRequest)
 	if err != nil {
 		return diag.Errorf("error while updating VM-VM Anti-Affinity policy : %v", err)
 	}
@@ -216,7 +250,11 @@ func ResourceNutanixVMAntiAffinityPolicyV2Update(ctx context.Context, d *schema.
 func ResourceNutanixVMAntiAffinityPolicyV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	readResp, err := conn.VMAntiAffinityPolicyAPIInstance.GetVmAntiAffinityPolicyById(utils.StringPtr(d.Id()))
+	getRequest := import2.GetVmAntiAffinityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+
+	readResp, err := conn.VMAntiAffinityPolicyAPIInstance.GetVmAntiAffinityPolicyById(ctx, &getRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching VM-VM Anti-Affinity policy : %v", err)
 	}
@@ -224,7 +262,11 @@ func ResourceNutanixVMAntiAffinityPolicyV2Delete(ctx context.Context, d *schema.
 	args := make(map[string]interface{})
 	args["If-Match"] = getEtagHeader(readResp, conn)
 
-	resp, err := conn.VMAntiAffinityPolicyAPIInstance.DeleteVmAntiAffinityPolicyById(utils.StringPtr(d.Id()), args)
+	deleteRequest := import2.DeleteVmAntiAffinityPolicyByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+
+	resp, err := conn.VMAntiAffinityPolicyAPIInstance.DeleteVmAntiAffinityPolicyById(ctx, &deleteRequest, args)
 	if err != nil {
 		return diag.Errorf("error while deleting VM-VM Anti-Affinity policy : %v", err)
 	}
@@ -245,22 +287,22 @@ func ResourceNutanixVMAntiAffinityPolicyV2Delete(ctx context.Context, d *schema.
 	return nil
 }
 
-func expandPolicyCategoryReference(cats []string) []policies.CategoryReference {
+func expandPolicyCategoryReference(cats []string) []import1.CategoryReference {
 	if len(cats) == 0 {
 		return nil
 	}
-	catRefs := make([]policies.CategoryReference, len(cats))
+	catRefs := make([]import1.CategoryReference, len(cats))
 
 	for i, cat := range cats {
 		if cat != "" {
-			catRefs[i] = policies.CategoryReference{ExtId: utils.StringPtr(cat)}
+			catRefs[i] = import1.CategoryReference{ExtId: utils.StringPtr(cat)}
 		}
 	}
 	return catRefs
 
 }
 
-func flattenPolicyCategoryReference(cats []policies.CategoryReference) []interface{} {
+func flattenPolicyCategoryReference(cats []import1.CategoryReference) []interface{} {
 	if len(cats) == 0 {
 		return nil
 	}

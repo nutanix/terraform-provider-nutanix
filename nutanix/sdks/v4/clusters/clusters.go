@@ -8,11 +8,11 @@ import (
 )
 
 type Client struct {
-	ClusterEntityAPI     *api.ClustersApi
-	StorageContainersAPI *api.StorageContainersApi
-	PasswordManagerAPI   *api.PasswordManagerApi
-	ClusterProfilesAPI   *api.ClusterProfilesApi
-	SSLCertificateAPI    *api.SSLCertificateApi
+	ClusterEntityAPI     *api.ClustersServiceApi
+	StorageContainersAPI *api.StorageContainersServiceApi
+	PasswordManagerAPI   *api.PasswordManagerServiceApi
+	ClusterProfilesAPI   *api.ClusterProfilesServiceApi
+	SSLCertificateAPI    *api.SSLCertificateServiceApi
 }
 
 func NewClustersClient(credentials client.Credentials) (*Client, error) {
@@ -28,12 +28,13 @@ func NewClustersClient(credentials client.Credentials) (*Client, error) {
 		pcClient.AllowVersionNegotiation = cfg.AllowVersionNegotiation
 		baseClient = pcClient
 	}
+	f := &Client{
+		ClusterEntityAPI:     api.NewClustersServiceApi(baseClient),
+		StorageContainersAPI: api.NewStorageContainersServiceApi(baseClient),
+		PasswordManagerAPI:   api.NewPasswordManagerServiceApi(baseClient),
+		ClusterProfilesAPI:   api.NewClusterProfilesServiceApi(baseClient),
+		SSLCertificateAPI:    api.NewSSLCertificateServiceApi(baseClient),
+	}
 
-	return &Client{
-		ClusterEntityAPI:     api.NewClustersApi(baseClient),
-		StorageContainersAPI: api.NewStorageContainersApi(baseClient),
-		PasswordManagerAPI:   api.NewPasswordManagerApi(baseClient),
-		ClusterProfilesAPI:   api.NewClusterProfilesApi(baseClient),
-		SSLCertificateAPI:    api.NewSSLCertificateApi(baseClient),
-	}, nil
+	return f, nil
 }

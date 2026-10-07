@@ -82,6 +82,8 @@ The `roles` attribute contains list of Role objects. Each Role object contains t
 * `description`: - Description of the Role.
 * `client_name`: - Client that created the entity.
 * `operations`: - List of operations for the role.
+* `project_ext_id`: - Project reference for the role.
+* `share_with_all_projects`: - Flag indicating whether the role is shared with all projects or not.
 * `accessible_clients`: - List of Accessible Clients for the Role.
 * `accessible_entity_types`: - List of Accessible Entity Types for the Role.
 * `assigned_users_count`: - Number of Users assigned to given Role.
@@ -98,4 +100,4 @@ The links attribute supports the following:
 * `href`: - The URL at which the entity described by the link can be accessed.
 * `rel`: - A name that identifies the relationship of the link to the object that is returned by the URL. The unique value of "self" identifies the URL for the object.
 
-See detailed information in [Nutanix List Roles v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Roles/operation/listRoles).
+See detailed information in [Nutanix List Roles v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/Roles/operation/listRoles).

@@ -8,6 +8,7 @@ import (
 	config "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/response"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
+	import3 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/request/subnets"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -27,6 +28,17 @@ func DataSourceNutanixSubnetV2() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"shared_with_projects": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"subnet_type": {
 				Type:     schema.TypeString,
@@ -237,6 +249,10 @@ func DataSourceNutanixSubnetV2() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"is_connected": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"reserved_ip_addresses": SchemaForValuePrefixLength(),
 			"dynamic_ip_addresses": {
 				Type:     schema.TypeList,
@@ -397,7 +413,10 @@ func dataSourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	extID := d.Get("ext_id")
-	resp, err := conn.SubnetAPIInstance.GetSubnetById(utils.StringPtr(extID.(string)))
+	getSubnetByIdRequest := import3.GetSubnetByIdRequest{
+		ExtId: utils.StringPtr(extID.(string)),
+	}
+	resp, err := conn.SubnetAPIInstance.GetSubnetById(ctx, &getSubnetByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching subnets : %v", err)
 	}
@@ -411,6 +430,12 @@ func dataSourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 	if err := d.Set("description", getResp.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("subnet_type", flattenSubnetType(getResp.SubnetType)); err != nil {
@@ -441,6 +466,9 @@ func dataSourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err := d.Set("is_external", getResp.IsExternal); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("is_connected", getResp.IsConnected); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("reserved_ip_addresses", flattenReservedIPAddresses(getResp.ReservedIpAddresses)); err != nil {

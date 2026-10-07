@@ -322,7 +322,7 @@ func testPreEnvConfig(vmName string, r int) string {
 		}
 
 		data "nutanix_images_v2" "ngt-image" {
-		  filter = "name eq '${local.vmm.image_name}'"
+		  filter = "name eq '${local.config.images.ngt_image}'"
 		}
 
 		data "nutanix_storage_containers_v2" "ngt-sc" {

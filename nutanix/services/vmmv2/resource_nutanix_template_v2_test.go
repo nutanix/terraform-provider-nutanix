@@ -1,6 +1,7 @@
 package vmmv2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -8,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/request/templates"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -224,15 +226,60 @@ func TestAccV2NutanixTemplateResource_GuestCustomizationCloudInit(t *testing.T) 
 	})
 }
 
+// TestAccV2NutanixTemplateResource_GuestCustomizationProfile covers the
+// guest_customization_profile block on template_vm_reference (added alongside
+// the nutanix_vm_guest_customization_profile_v2 resource). The template's VM
+// reference points at a standalone GC profile by ext_id, exercising the
+// expandVmGcProfileReference create path, and the profile ext_id is asserted
+// back on the template state.
+//
+// Creating a template that carries a GC profile has a hard backend prerequisite:
+// the source VM must have a compatible Nutanix Guest Tools version installed
+// (TAR/VMM error "the required NGT version is not installed on the source VM").
+// A freshly-created bare VM -- or one where NGT is installed via the API against
+// the shared gold image -- does not clear the templates API version bar, so this
+// test reuses the pre-provisioned Windows VM (vmm.gc_profile.vm_name) that the
+// template-deploy tests rely on, looked up by name.
+func TestAccV2NutanixTemplateResource_GuestCustomizationProfile(t *testing.T) {
+	r := acctest.RandInt()
+	templateName := fmt.Sprintf("tf-test-temp-gcp-%d", r)
+	templateDesc := "template with guest customization profile"
+	gcpName := fmt.Sprintf("tf-test-tmpl-gcp-%d", r)
+	gcpDesc := "gc profile for template test"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testTemplateV2CheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testTemplateV2GuestCustomProfileConfig(templateName, templateDesc, gcpName, gcpDesc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameTemplate, "template_name", templateName),
+					resource.TestCheckResourceAttr(resourceNameTemplate, "template_description", templateDesc),
+					resource.TestCheckResourceAttrSet(resourceNameTemplate, "create_time"),
+					resource.TestCheckResourceAttrSet("nutanix_vm_guest_customization_profile_v2.test", "ext_id"),
+					resource.TestCheckResourceAttrPair(resourceNameTemplate,
+						"template_version_spec.0.version_source.0.template_vm_reference.0.guest_customization_profile.0.ext_id",
+						"nutanix_vm_guest_customization_profile_v2.test", "id"),
+				),
+			},
+		},
+	})
+}
+
 func testTemplateV2CheckDestroy(state *terraform.State) error {
 	fmt.Println("testTemplateV2CheckDestroy")
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 	client := conn.VmmAPI.TemplatesAPIInstance
+	ctx := context.Background()
 	for _, rs := range state.RootModule().Resources {
 		if rs.Type != resourceNameTemplate {
 			continue
 		}
-		_, err := client.GetTemplateById(utils.StringPtr(rs.Primary.ID))
+		getTemplateByIdRequest := import1.GetTemplateByIdRequest{
+			ExtId: utils.StringPtr(rs.Primary.ID),
+		}
+		_, err := client.GetTemplateById(ctx, &getTemplateByIdRequest)
 		if err == nil {
 			return fmt.Errorf("template still exists")
 		}
@@ -274,6 +321,83 @@ func testTemplateV2Config(name, desc, tempName, tempDesc string) string {
 			depends_on = [nutanix_virtual_machine_v2.test]
 		}
 `, name, desc, tempName, tempDesc)
+}
+
+func testTemplateV2GuestCustomProfileConfig(tempName, tempDesc, gcpName, gcpDesc string) string {
+	return fmt.Sprintf(`
+		locals {
+			config     = jsondecode(file("%[5]s"))
+			gc_profile = local.config.vmm.gc_profile
+		}
+
+		# Source VM for the template. Creating a template *version* with a guest-
+		# customization profile requires a compatible NGT version installed on the
+		# source VM, so use the pre-provisioned Windows VM (vmm.gc_profile.vm_name)
+		# looked up by name. A bare VM (or one where NGT is installed via the API
+		# against the shared gold image) fails with "the required NGT version is
+		# not installed on the source VM".
+		data "nutanix_virtual_machines_v2" "gc_base" {
+			filter = "name eq '${local.gc_profile.vm_name}'"
+		}
+
+		# Standalone guest customization profile referenced by the template VM.
+		resource "nutanix_vm_guest_customization_profile_v2" "test" {
+			name        = "%[3]s"
+			description = "%[4]s"
+			config {
+				sysprep_config {
+					customization {
+						sysprep_params {
+							general_settings {
+								registered_organization = "TestOrg"
+								registered_owner        = "TestOwner"
+								computer_name {
+									use_vm_name = true
+								}
+								timezone = "Indian Standard Time"
+							}
+							locale_settings {
+								ui_language   = "fr-FR"
+								system_locale = "fr-FR"
+								user_locale   = "fr-FR"
+							}
+							workgroup_or_domain_info {
+								workgroup {
+									name = "WORKGROUP"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		resource "nutanix_template_v2" "test" {
+			template_name        = "%[1]s"
+			template_description = "%[2]s"
+			template_version_spec {
+				version_source {
+					template_vm_reference {
+						ext_id = data.nutanix_virtual_machines_v2.gc_base.vms[0].ext_id
+						guest_customization_profile {
+							ext_id = nutanix_vm_guest_customization_profile_v2.test.id
+						}
+					}
+				}
+				guest_customization_profile {
+					ext_id = nutanix_vm_guest_customization_profile_v2.test.id
+				}
+			}
+			lifecycle {
+				ignore_changes = [
+					template_version_spec.0.version_name,
+					template_version_spec.0.version_description,
+					template_version_spec.0.version_source
+				]
+			}
+			depends_on = [nutanix_vm_guest_customization_profile_v2.test]
+		}
+`, tempName, tempDesc, gcpName, gcpDesc, filepath)
 }
 
 func testTemplateV2UpdateWithTempVersionRefConfig(name, desc, tempName, tempDesc string) string {
@@ -515,6 +639,121 @@ func testTemplateV2GuestCustomSysprepConfig(name, desc, tempName, tempDesc strin
 			depends_on = [nutanix_virtual_machine_v2.test]
 		}
 `, name, desc, tempName, tempDesc)
+}
+
+func TestAccV2NutanixTemplateResource_ProjectAssociation(t *testing.T) {
+	r := acctest.RandInt()
+	vmName := fmt.Sprintf("tf-tpl-pa-vm-%d", r)
+	vmDesc := "template project association vm"
+	tempName := fmt.Sprintf("tf-tpl-projassoc-%d", r)
+	tempDesc := "template project association test"
+	projectName := fmt.Sprintf("tf-tpl-pa-proj-%d", r)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testTemplateV2CheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testTemplateProjectAssociationConfig(vmName, vmDesc, tempName, tempDesc, projectName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair("nutanix_template_v2.test", "project_ext_id", "nutanix_project_v2.test", "ext_id"),
+					resource.TestCheckResourceAttrPair("data.nutanix_template_v2.test", "project_ext_id", "nutanix_project_v2.test", "ext_id"),
+					resource.TestCheckResourceAttr("data.nutanix_templates_v2.test", "templates.#", "1"),
+					resource.TestCheckResourceAttrPair("data.nutanix_templates_v2.test", "templates.0.ext_id", "nutanix_template_v2.test", "ext_id"),
+					resource.TestCheckResourceAttrPair("data.nutanix_templates_v2.test", "templates.0.project_ext_id", "nutanix_project_v2.test", "ext_id"),
+				),
+			},
+			{
+				Config:      testTemplateProjectAssociationConfig(vmName, vmDesc, tempName, tempDesc, projectName, "00000000-0000-0000-0000-000000000000"),
+				ExpectError: regexp.MustCompile("Update of project_ext_id is not supported"),
+			},
+		},
+	})
+}
+
+func tplProjectExtIDLine(override string) string {
+	if override == "" {
+		return `project_ext_id = nutanix_project_v2.test.ext_id`
+	}
+	return fmt.Sprintf(`project_ext_id = "%s"`, override)
+}
+
+func testTemplateProjectAssociationConfig(vmName, vmDesc, tempName, tempDesc, projectName, projectExtIDOverride string) string {
+	return fmt.Sprintf(`
+	data "nutanix_clusters_v2" "clusters" {}
+
+	locals {
+		cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
+	}
+
+	resource "nutanix_project_v2" "test" {
+		name        = "%[5]s"
+		project_id  = "%[5]s"
+		description = "project association test"
+	}
+
+	resource "nutanix_resource_group_v2" "rg" {
+		name           = "tf-tpl-pa-rg-%[5]s"
+		project_ext_id = nutanix_project_v2.test.ext_id
+		placement_targets {
+			cluster_ext_id = local.cluster0
+		}
+		# The backend auto-associates a default storage container with the
+		# placement target (cluster) and returns it on read, even though we only
+		# set cluster_ext_id. That server-populated value would otherwise surface
+		# as a perpetual "remove storage_containers" diff after apply and fail the
+		# test, so ignore post-create changes to placement_targets here.
+		lifecycle {
+			ignore_changes = [placement_targets]
+		}
+	}
+
+	resource "nutanix_virtual_machine_v2" "test" {
+		name        = "%[1]s"
+		description = "%[2]s"
+		cluster {
+			ext_id = local.cluster0
+		}
+		project {
+			ext_id = nutanix_project_v2.test.ext_id
+		}
+		num_cores_per_socket = 1
+		num_sockets          = 1
+		memory_size_bytes    = 4 * 1024 * 1024 * 1024
+		depends_on = [nutanix_resource_group_v2.rg]
+	}
+
+	resource "nutanix_template_v2" "test" {
+		template_name        = "%[3]s"
+		template_description = "%[4]s"
+		template_version_spec {
+			version_source {
+				template_vm_reference {
+					ext_id = nutanix_virtual_machine_v2.test.id
+				}
+			}
+			version_name = "Initial Version"
+		}
+		%[6]s
+		depends_on = [nutanix_project_v2.test, nutanix_virtual_machine_v2.test]
+		lifecycle {
+			ignore_changes = [template_version_spec[0].version_description]
+		}
+	}
+
+	data "nutanix_template_v2" "test" {
+		ext_id     = nutanix_template_v2.test.ext_id
+		depends_on = [nutanix_template_v2.test]
+	}
+
+	data "nutanix_templates_v2" "test" {
+		filter     = "templateName eq '${nutanix_template_v2.test.template_name}'"
+		depends_on = [nutanix_template_v2.test]
+	}
+	`, vmName, vmDesc, tempName, tempDesc, projectName, tplProjectExtIDLine(projectExtIDOverride))
 }
 
 func testTemplateV2GuestCustomCloudInitConfig(name, desc, tempName, tempDesc string) string {

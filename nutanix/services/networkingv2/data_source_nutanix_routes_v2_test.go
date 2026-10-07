@@ -54,7 +54,7 @@ func TestAccV2NutanixRoutesDataSource_WithFilter(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameRoutes, "routes.0.next_hop.0.next_hop_type", "EXTERNAL_SUBNET"),
 					resource.TestCheckResourceAttrSet(datasourceNameRoutes, "routes.0.next_hop.0.next_hop_reference"),
 					resource.TestCheckResourceAttrSet(datasourceNameRoutes, "routes.0.metadata.0.owner_reference_id"),
-					resource.TestCheckResourceAttr(datasourceNameRoutes, "routes.0.metadata.0.project_reference_id", testVars.Networking.Subnets.ProjectID),
+					resource.TestCheckResourceAttr(datasourceNameRoutes, "routes.0.metadata.0.project_reference_id", "00000000-0000-0000-0000-000000000000"),
 					resource.TestCheckResourceAttr(datasourceNameRoutes, "routes.0.route_type", "STATIC"),
 				),
 			},

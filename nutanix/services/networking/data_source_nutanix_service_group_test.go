@@ -13,8 +13,9 @@ func TestAccNutanixServiceGroupDataSource_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix("nutanix_service_gr")
 	description := "this is nutanix service group"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:   func() { acc.TestAccPreCheck(t) },
+		Providers:  acc.TestAccProviders,
+		ErrorCheck: acc.SkipIfV3FlowNextGen(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceGroupDataSourceConfig(name, description),

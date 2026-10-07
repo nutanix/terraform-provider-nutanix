@@ -13,45 +13,67 @@ The provider is used to interact with the many resources and data sources suppor
 Use the navigation on the left to read about the available resources and data sources this provider can use.
 
 
-## Introducing Nutanix Terraform Provider Version v2.4.2
+## Introducing Nutanix Terraform Provider Version v2.5.0
 
-We're excited to announce the release of Nutanix Terraform Provider Version 2.4.2!
+We're excited to announce the release of Nutanix Terraform Provider Version 2.5.0!
 
-### What's New in v2.4.2
+### What's New in v2.5.0
 
 - **New Resource Support**
-  - **Network Functions**: Create and manage Network Functions for service chaining and traffic forwarding use cases. [#982](https://github.com/nutanix/terraform-provider-nutanix/issues/982)
-  - **Entity Groups**: Create and manage Entity Groups for microsegmentation use cases. [#1030](https://github.com/nutanix/terraform-provider-nutanix/issues/1030)
-  - **Entities**: List and get IAM entities. Use Entities to configure and manage entities representing the resources over which permissions are defined. Users can use these datasource to list and fetch entities [#955](https://github.com/nutanix/terraform-provider-nutanix/issues/955)
-  - **Network Security Policy Rules**: List all network security policy rules by policy ExtID. [#1031](https://github.com/nutanix/terraform-provider-nutanix/issues/1031)
-  - **VM Affinity Policies**: Create, list, and get VM-Host affinity and VM-VM anti-affinity policies. Use VM Affinity Policies to govern where VMs run by specifying whether a VM should run on a selected set of hosts, or by keeping specified VMs apart on different hosts. Users can use these resources and data sources to configure, list, and fetch affinity policies [#997](https://github.com/nutanix/terraform-provider-nutanix/pull/997)
+  - **Cluster Category Associations (Cluster Management)**: Create and manage cluster-category associations to tag clusters for organization and automation. [#1228](https://github.com/nutanix/terraform-provider-nutanix/issues/1228)
+  - **SNMP (Cluster Management)**: Create, update, read, and delete SNMP configurations, SNMP traps, and SNMP users on clusters for monitoring and alerting. [#1135](https://github.com/nutanix/terraform-provider-nutanix/issues/1135)
+  - **Role Membership (IAM) (Beta)**: Manage role membership assignments for users and user groups. [#1127](https://github.com/nutanix/terraform-provider-nutanix/issues/1127)
+  - **Directory Server Config (Microsegmentation)**: Create, update, read, and delete directory server configurations for microsegmentation policies. [#1178](https://github.com/nutanix/terraform-provider-nutanix/issues/1178)
+  - **AD Group Category Mapping (Microsegmentation)**: Manage Active Directory group to category mappings for microsegmentation. [#1178](https://github.com/nutanix/terraform-provider-nutanix/issues/1178)
+  - **Network Security Policy Import/Export (Microsegmentation)**: Import and export network security policies for backup and migration workflows.
+  - **Projects (Multidomain) (Beta)**: Create, update, read, and delete Projects for resource isolation and multi-tenancy. [#1115](https://github.com/nutanix/terraform-provider-nutanix/issues/1115)
+  - **Resource Groups (Multidomain) (Beta)**: Create, update, read, and delete Resource Groups for organizing resources. [#1115](https://github.com/nutanix/terraform-provider-nutanix/issues/1115)
+  - **Virtual Switch (Networking)**: Create, update, read, and delete Virtual Switches for network traffic management. [#1134](https://github.com/nutanix/terraform-provider-nutanix/issues/1134)
+  - **VPC Virtual Switch Mapping (Networking)**: Map VPCs to Virtual Switches. [#1159](https://github.com/nutanix/terraform-provider-nutanix/issues/1159)
+  - **VM Guest Customization Profile (VMM)**: Create, update, read, and delete guest customization profiles for virtual machines. [#1132](https://github.com/nutanix/terraform-provider-nutanix/issues/1132)
+  - **VM Startup Policy (VMM)**: Create, update, read, and delete VM startup policies for controlling VM power-on sequencing. [#1174](https://github.com/nutanix/terraform-provider-nutanix/issues/1174)
+  - **Image Rate Limit Policy (VMM)**: Create, update, read, and delete image rate limit policies. [#1173](https://github.com/nutanix/terraform-provider-nutanix/issues/1173)
+  - **Template Placement Policy (VMM)**: Create, update, read, and delete template placement policies. [#1172](https://github.com/nutanix/terraform-provider-nutanix/issues/1172)
+
+  -> **Note:** Items marked **(Beta)** follow this disclaimer: This resource/data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
 
 - **Enhancements:**
-  - **Deploy from OVA**: Add support to update deployed virtual machines from OVA images. [#985](https://github.com/nutanix/terraform-provider-nutanix/pull/985)
-  - FNS 5.2: Add support for global scope, specific intratier rules, and subnet/VPC-based objects features. [#1032](https://github.com/nutanix/terraform-provider-nutanix/issues/1032)
-  - Support metadata on subnet V2 resource and data source. [#1085](https://github.com/nutanix/terraform-provider-nutanix/issues/1085)
-  - API key and custom headers as an alternative method of authorization. [#1062](https://github.com/nutanix/terraform-provider-nutanix/pull/1062)
+  - Add support for Project Share / Unshare / Association across entities (Projects 2.0 model where each entity owns its project association). [#1114](https://github.com/nutanix/terraform-provider-nutanix/issues/1114)
+  - Support Update Context for Volume Groups. [#1129](https://github.com/nutanix/terraform-provider-nutanix/issues/1129)
+  - Add `is_global` attribute to Roles for global role configuration. [#1234](https://github.com/nutanix/terraform-provider-nutanix/issues/1234)
+  - Add `is_global` attribute to Authorization Policies V2 for global scope support. [#1230](https://github.com/nutanix/terraform-provider-nutanix/issues/1230)
+  - Add categories support to Subnets via Terraform. [#1218](https://github.com/nutanix/terraform-provider-nutanix/issues/1218)
+  - NGT ISO INSERT/Eject is now a no-op if the ISO is already ejected as part of NGT installation or custom eject. [#1220](https://github.com/nutanix/terraform-provider-nutanix/issues/1220) [#1176](https://github.com/nutanix/terraform-provider-nutanix/issues/1176)
+  - Fix legacy boot order changes in VMs. [#1217](https://github.com/nutanix/terraform-provider-nutanix/issues/1217)
+  - VM Anti-Affinity Policy now supports Project Association. [#997](https://github.com/nutanix/terraform-provider-nutanix/pull/997)
+  - Enhance VM shutdown and reboot actions with retry logic for ETag mismatch errors. [#1089](https://github.com/nutanix/terraform-provider-nutanix/issues/1089)
+  - Upgrade to 7.6 SDKs and update all modules for the latest SDK changes. [#1116](https://github.com/nutanix/terraform-provider-nutanix/issues/1116)
+  - Set `enable_directory_and_identity_provider_shortlist` explicitly to use Prism Central's default. [#1179](https://github.com/nutanix/terraform-provider-nutanix/issues/1179)
+  - Add `is_connected` attribute to Subnets. [#1195](https://github.com/nutanix/terraform-provider-nutanix/issues/1195)
+  - Add `latest_recovery_point_retention_seconds` to Protection Policies. [#1196](https://github.com/nutanix/terraform-provider-nutanix/issues/1196)
+  - Add advanced configuration blocks to Cluster Profiles. [#1197](https://github.com/nutanix/terraform-provider-nutanix/issues/1197)
+  - Support multiple next hops in Routes. [#1198](https://github.com/nutanix/terraform-provider-nutanix/issues/1198)
+  - Enhance VPCs with `scope`, advertise connected subnets, and Kubernetes namespaces support. [#1201](https://github.com/nutanix/terraform-provider-nutanix/issues/1201)
+  - Support new Network Security Policy types and FLEX rules. [#1202](https://github.com/nutanix/terraform-provider-nutanix/issues/1202)
+  - Enhance Entity Groups with FQDN and Regex selection. [#1203](https://github.com/nutanix/terraform-provider-nutanix/issues/1203)
+  - Add `inventory_type` and `node_list` to LCM perform inventory. [#1204](https://github.com/nutanix/terraform-provider-nutanix/issues/1204)
+  - Add `has_previous_inventory_failed` to LCM entity data sources. [#1205](https://github.com/nutanix/terraform-provider-nutanix/issues/1205)
+  - Enhance Images with `vm_disk_source` and `share_with_all_projects`. [#1206](https://github.com/nutanix/terraform-provider-nutanix/issues/1206)
+  - Remediate Black Duck vulnerabilities by upgrading `golang.org/x/crypto` and `golang.org/x/net`. [#1245](https://github.com/nutanix/terraform-provider-nutanix/issues/1245)
 
 - **Fixed Bugs:**
-   - `subnets_v2` update with `is_external` set to `true` fails. [#1063](https://github.com/nutanix/terraform-provider-nutanix/issues/1063)
-   - `nutanix_vpc_v2`: Unable to add more than one external routable prefix. [#1053](https://github.com/nutanix/terraform-provider-nutanix/issues/1053)
-   - Legacy NIC attributes in VMM v2 are still used across resources and data sources. [#1059](https://github.com/nutanix/terraform-provider-nutanix/issues/1059)
-   - `nutanix_network_security_policy_v2`: Failed to add a rule on an existing security policy. [#1052](https://github.com/nutanix/terraform-provider-nutanix/issues/1052)
-   - Add retries for VM power on/off operations in `nutanix_virtual_machine_v2` to avoid ETag mismatch errors. [#1089](https://github.com/nutanix/terraform-provider-nutanix/issues/1089)
-   - Bug: can not create global Nutanix security policy, defaults to VLAN. [#1087](https://github.com/nutanix/terraform-provider-nutanix/issues/1087)
-   - `nutanix_object_store_v2` update functionality. [#1094](https://github.com/nutanix/terraform-provider-nutanix/issues/1094)
-   - `nutanix_object_store_v2` gives no Terraform error on long name. [#1093](https://github.com/nutanix/terraform-provider-nutanix/issues/1093)
-   - `nutanix_user_key_v2` update tries to recreate the key object. [#1092](https://github.com/nutanix/terraform-provider-nutanix/issues/1092)
-   - Update of Guest Customization leads to delete and recreate of virtual machine resource. [#1108](https://github.com/nutanix/terraform-provider-nutanix/issues/1108)
-   - Memory hot-plug increase causing VM power off when using `nutanix_virtual_machine_v2` resource. [#1105](https://github.com/nutanix/terraform-provider-nutanix/issues/1105)
-   - Mark user key secrets as sensitive and persist `key_details` on create. [#1112](https://github.com/nutanix/terraform-provider-nutanix/issues/1112)
+  - Fix `nutanix_images_v2` crash when checksum is defined. [#1143](https://github.com/nutanix/terraform-provider-nutanix/issues/1143)
+  - Fix `nutanix_images_v2` timeout during large image download/creation so `wait_timeout` is respected. [#1144](https://github.com/nutanix/terraform-provider-nutanix/issues/1144)
+  - Fix `nutanix_images_v2` failure when an image placement policy is defined. [#1175](https://github.com/nutanix/terraform-provider-nutanix/issues/1175)
+  - Fix `nutanix_vm_clone_v2` not respecting the NIC configuration block. [#972](https://github.com/nutanix/terraform-provider-nutanix/issues/972)
+  - Fix disk size increase not applying on `nutanix_volume_group_v2`. [#840](https://github.com/nutanix/terraform-provider-nutanix/issues/840)
 
 ### Software Requirements
-The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.4.2, ensure your Nutanix environment meets the following software requirements:
-- Self Service version: 4.3.1 (Required only for running Self Service based resource and data source)
-- AOS Version: 7.5, 7.5.1
-- Prism Central Version: 7.5, 7.5.1 or later
-- Nutanix Terraform Provider Version: 2.4.2
+The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.5.0, ensure your Nutanix environment meets the following software requirements:
+- Self Service version: 4.4.0, 4.4.0.1 (Required only for running Self Service based resource and data source)
+- AOS Version: 7.5.1, 7.6, 7.6.0.6 or later
+- Prism Central Version: pc7.5, pc7.5.1, pc7.6, pc7.6.0.6 or later
+- Nutanix Terraform Provider Version: 2.5.0
 
 
 ~> **Important Notice:** Upcoming Deprecation of Legacy Nutanix Terraform Provider Resources. Starting with the Nutanix Terraform Provider release planned for Q4-CY2026, legacy resources which are based on v0.8,v1,v2 and v3 APIs will be deprecated and no longer supported. For more information, visit [Legacy API Deprecation Announcement](https://portal.nutanix.com/page/documents/eol/list?type=announcement) [Legacy API Deprecation - FAQs](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA0VO0000005rgP0AQ). Nutanix strongly encourages you to migrate your scripts and applications to the latest v2 version of the Nutanix Terraform Provider resources, which are built on our v4 APIs/SDKs. By adopting the latest v2 version based on v4 APIs and SDKs, our users can leverage the enhanced capabilities and latest innovations from Nutanix. We understand that this transition may require some effort, and we are committed to supporting you throughout the process. Please refer to our documentation and support channels for guidance and assistance.
@@ -63,8 +85,9 @@ The provider is used to interact with the many resources and data sources suppor
 Customers not taking advantage of the  Advanced API/SDK Support Program will continue to receive the support through our standard, community-supported model. This community model also provides support for contributions to the open-sourceNutanix Terraform Provider repository .Visit https://portal.nutanix.com/kb/13424   for more details. 
 
 ## Compatibility Matrix
-| Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
-|  :--- |  :--- | :--- | :--- | :--- |
+| Terraform Version | AOS Version | PC version | Other software versions | Supported |
+| :--- | :--- | :--- | :--- | :--- |
+| 2.5.0 | 7.5.1, 7.6, 7.6.0.6 or later | pc7.5, pc7.5.1, pc7.6, pc7.6.0.6 or later | Self Service v4.4.0, v4.4.0.1 | yes |
 | 2.4.2 | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
 | 2.4.1 (⚠️ Deprecated/Invalid) | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
 | 2.4.0 | 7.5 | pc7.5 or later | Self Service  v4.3.0 | yes |
@@ -73,33 +96,35 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | 2.3.2 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.1 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
 | 2.3.0 | 7.3 | pc7.3 or later | Self Service  v4.2.0, v4.1.0 | yes |
-| 2.2.3 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
-| 2.2.2 (⚠️ Deprecated/Invalid) | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
-| 2.2.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
-| 2.2.0 | | | Self Service  v4.1.0 | yes | 
-| 2.1.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
-| 2.1.0 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | | yes |
-| 2.0.0   |  7.0  | pc2024.3 or later  | ndb v2.7, nke v2.8, foundation v5.7 | Yes |
-| 1.9.5 | | pc2023.1.0.2 | ndb v2.5.1.1, v2.5.1,  v2.5 |  Yes |
-| 1.9.4 | | pc2023, pc2023.1.0.2, pc2023.1.0.1 |  | Yes |
-| 1.9.3 | | pc2023.1.0.1 | | No |
-| 1.9.2 | | pc2023.1.0.1 | | No |
-| 1.9.1 | | pc2023.1.0.1 | ndb v2.5.1,  v2.5 | No |
-| 1.9.0 | | pc2023.1.0.1, pc2022.9 | ndb v2.5.1, v2.5 | No |
-| 1.8.0 | | pc2022.6 | ndb v2.5.1.1, v2.5.1 and v2.5 | No |
-| 1.8.1 | | pc2022.6 | ndb v2.5.1.1, v2.5.1 and v2.5 | No |
-| 1.7.0 | | pc2022.6, pc2022.4 and pc2022.1.0.2 | | No |
-| 1.7.1 | | pc2022.6, pc2022.4.0.1 and pc2022.1.0.2 | | No |
-| 1.6.1 | | pc2022.4 pc2022.1.0.2 and pc2021.9.0.4| | No |
-| 1.5.0 | | pc2022.1.0.2 pc.2021.9.0.4 and pc.2021.8.0.1 | foundation v5.2, v5.1.1 , foundation central v1.3, v1.2 | No |
-| 1.4.0 | | pc2022.1 pc.2021.9.0.4 and pc.2021.8.0.1 | | No |
-| 1.3.0 | | pc.2021.9.0.4, pc.2021.8.0.1 and pc.2021.7 | | No |
-| 1.2.0 | 5.18, 5.19 | pc2020.9 and pc2020.11| | No |
+| 2.2.3 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later |  | yes |
+| 2.2.2 (⚠️ Deprecated/Invalid) | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later |  | yes |
+| 2.2.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later |  | yes |
+| 2.2.0 |  |  | Self Service  v4.1.0 | yes |
+| 2.1.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later |  | yes |
+| 2.1.0 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later |  | yes |
+| 2.0.0 | 7.0 | pc2024.3 or later | ndb v2.7, nke v2.8, foundation v5.7 | Yes |
+| 1.9.5 |  | pc2023.1.0.2 | ndb v2.5.1.1, v2.5.1,  v2.5 | Yes |
+| 1.9.4 |  | pc2023, pc2023.1.0.2, pc2023.1.0.1 |  | Yes |
+| 1.9.3 |  | pc2023.1.0.1 |  | No |
+| 1.9.2 |  | pc2023.1.0.1 |  | No |
+| 1.9.1 |  | pc2023.1.0.1 | ndb v2.5.1,  v2.5 | No |
+| 1.9.0 |  | pc2023.1.0.1, pc2022.9 | ndb v2.5.1, v2.5 | No |
+| 1.8.0 |  | pc2022.6 | ndb v2.5.1.1, v2.5.1 and v2.5 | No |
+| 1.8.1 |  | pc2022.6 | ndb v2.5.1.1, v2.5.1 and v2.5 | No |
+| 1.7.0 |  | pc2022.6, pc2022.4 and pc2022.1.0.2 |  | No |
+| 1.7.1 |  | pc2022.6, pc2022.4.0.1 and pc2022.1.0.2 |  | No |
+| 1.6.1 |  | pc2022.4 pc2022.1.0.2 and pc2021.9.0.4 |  | No |
+| 1.5.0 |  | pc2022.1.0.2 pc.2021.9.0.4 and pc.2021.8.0.1 | foundation v5.2, v5.1.1 , foundation central v1.3, v1.2 | No |
+| 1.4.0 |  | pc2022.1 pc.2021.9.0.4 and pc.2021.8.0.1 |  | No |
+| 1.3.0 |  | pc.2021.9.0.4, pc.2021.8.0.1 and pc.2021.7 |  | No |
+| 1.2.0 | 5.18, 5.19 | pc2020.9 and pc2020.11 |  | No |
 
 ## Resources
 
-| v1 Resources| v2 Resources |
-|  :--- |  :--- |
+-> **Note:** This resource is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
+
+| v1 Resources | v2 Resources |
+| :--- | :--- |
 | nutanix_subnet | nutanix_subnet_v2 |
 | nutanix_vpc | nutanix_vpc_v2 |
 | nutanix_floating_ip | nutanix_floating_ip_v2 |
@@ -114,11 +139,11 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | nutanix_user_groups | nutanix_user_groups_v2 |
 | nutanix_access_control_policy | nutanix_authorization_policy_v2 |
 | - | nutanix_entity_group_v2 |
-| - | nutanix_saml_identity_providers_v2 |
-| - | nutanix_directory_services_v2 |
+| - | nutanix_saml_identity_providers_v2 (Beta) |
+| - | nutanix_directory_services_v2 (Beta) |
 | nutanix_category_key | nutanix_category_v2 |
 | nutanix_category_value | - |
-| nutanix_image |nutanix_images_v2 |
+| nutanix_image | nutanix_images_v2 |
 | - | nutanix_image_placement_policy_v2 |
 | nutanix_virtual_machine | nutanix_virtual_machine_v2 |
 | - | nutanix_ova_v2 |
@@ -211,11 +236,30 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_ssl_certificate_v2 |
 | - | nutanix_cluster_profile_v2 |
 | - | nutanix_storage_policy_v2 |
+| - | nutanix_cluster_category_associations_v2 |
+| - | nutanix_snmp_config_v2 |
+| - | nutanix_snmp_trap_v2 |
+| - | nutanix_snmp_user_v2 |
+| - | nutanix_role_membership_v2 (Beta) |
+| - | nutanix_directory_server_config_v2 |
+| - | nutanix_ad_group_category_mapping_v2 |
+| - | nutanix_network_security_policy_export_v2 |
+| - | nutanix_network_security_policy_import_v2 |
+| - | nutanix_project_v2 (Beta) |
+| - | nutanix_resource_group_v2 (Beta) |
+| - | nutanix_virtual_switch_v2 |
+| - | nutanix_vpc_virtual_switch_mapping_v2 |
+| - | nutanix_vm_guest_customization_profile_v2 |
+| - | nutanix_vm_startup_policy_v2 |
+| - | nutanix_image_rate_limit_policy_v2 |
+| - | nutanix_template_placement_policy_v2 |
 
 ## Data Sources
 
+-> **Note:** This data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The data source and its behavior may change in future releases as the SDK API evolves.
+
 | v1 datasources | v2 datasources |
-|  :--- |  :--- |
+| :--- | :--- |
 | nutanix_cluster | nutanix_cluster_v2 |
 | nutanix_clusters | nutanix_clusters_v2 |
 | nutanix_host | nutanix_host_v2 |
@@ -252,7 +296,7 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_entity_group_v2 |
 | - | nutanix_entity_groups_v2 |
 | - | nutanix_saml_identity_provider_v2 |
-| - | nutanix_saml_identity_providers_v2 |
+| - | nutanix_saml_identity_providers_v2 (Beta) |
 | - | nutanix_directory_service_v2 |
 | - | nutanix_directory_services_v2 |
 | nutanix_category_key | nutanix_category_v2 |
@@ -301,7 +345,7 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | nutanix_recovery_plans | - |
 | nutanix_foundation_hypervisor_isos | - |
 | nutanix_foundation_discover_nodes | - |
-|nutanix_foundation_nos_packages | - |
+| nutanix_foundation_nos_packages | - |
 | nutanix_foundation_node_network_details | - |
 | nutanix_foundation_central_api_keys | - |
 | nutanix_foundation_central_list_api_keys | - |
@@ -340,7 +384,7 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_pc_restore_point_v2 |
 | - | nutanix_pc_backup_target_v2 |
 | - | nutanix_pc_backup_targets_v2 |
-| - | nutanix_pc_restore_source_v2
+| - | nutanix_pc_restore_source_v2 |
 | - | nutanix_protected_resource_v2 |
 | - | nutanix_protection_policy_v2 |
 | - | nutanix_protection_policies_v2 |
@@ -367,6 +411,43 @@ Customers not taking advantage of the  Advanced API/SDK Support Program will con
 | - | nutanix_cluster_profiles_v2 |
 | - | nutanix_storage_policy_v2 |
 | - | nutanix_storage_policies_v2 |
+| - | nutanix_snmp_config_v2 |
+| - | nutanix_snmp_trap_v2 |
+| - | nutanix_snmp_user_v2 |
+| - | nutanix_directory_server_config_v2 |
+| - | nutanix_directory_server_configs_v2 |
+| - | nutanix_directory_service_users_search_v2 |
+| - | nutanix_ad_group_category_mapping_v2 |
+| - | nutanix_ad_group_category_mappings_v2 |
+| - | nutanix_role_membership_v2 (Beta) |
+| - | nutanix_role_memberships_v2 (Beta) |
+| - | nutanix_role_membership_summary_v2 (Beta) |
+| - | nutanix_project_v2 (Beta) |
+| - | nutanix_projects_v2 (Beta) |
+| - | nutanix_resource_group_v2 (Beta) |
+| - | nutanix_resource_groups_v2 (Beta) |
+| - | nutanix_virtual_switch_v2 |
+| - | nutanix_virtual_switches_v2 |
+| - | nutanix_node_schedulable_statuses_v2 |
+| - | nutanix_vpc_virtual_switch_mappings_v2 |
+| - | nutanix_vm_guest_customization_profile_v2 |
+| - | nutanix_vm_guest_customization_profiles_v2 |
+| - | nutanix_vm_startup_policy_v2 |
+| - | nutanix_vm_startup_policies_v2 |
+| - | nutanix_vm_startup_policy_dependency_conflict_v2 |
+| - | nutanix_vm_startup_policy_dependency_conflicts_v2 |
+| - | nutanix_vm_startup_policy_dependency_conflict_dependee_vms_v2 |
+| - | nutanix_vm_startup_policy_dependency_conflict_dependent_vms_v2 |
+| - | nutanix_vm_startup_policy_start_condition_conflict_v2 |
+| - | nutanix_vm_startup_policy_start_condition_conflicts_v2 |
+| - | nutanix_vm_startup_policy_start_condition_conflict_dependee_vms_v2 |
+| - | nutanix_vm_startup_policy_start_condition_conflict_dependent_vms_v2 |
+| - | nutanix_vm_startup_policy_vm_compliance_states_v2 |
+| - | nutanix_effective_image_rate_limit_policies_v2 |
+| - | nutanix_image_rate_limit_policies_v2 |
+| - | nutanix_image_rate_limit_policy_v2 |
+| - | nutanix_template_placement_policies_v2 |
+| - | nutanix_template_placement_policy_v2 |
 
 ## Example Usage
 

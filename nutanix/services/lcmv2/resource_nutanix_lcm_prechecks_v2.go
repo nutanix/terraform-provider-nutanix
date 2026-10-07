@@ -9,8 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	preCheckConfig "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/common"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/request/prechecks"
 	taskRef "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import4 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -23,6 +25,11 @@ func ResourceNutanixPreChecksV2() *schema.Resource {
 		UpdateContext: ResourceNutanixLcmPreChecksV2Update,
 		DeleteContext: ResourceNutanixLcmPreChecksV2Delete,
 		Schema: map[string]*schema.Schema{
+			"dry_run": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"x_cluster_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -98,9 +105,19 @@ func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.Resource
 	if skippedPrecheckFlags, ok := d.GetOk("skipped_precheck_flags"); ok {
 		body.SkippedPrecheckFlags = expandSystemAutoMgmtFlag(skippedPrecheckFlags.([]interface{}))
 	}
+	dryRun := d.Get("dry_run").(bool)
 
 	// pass nil for the new dyRun flag
-	resp, err := conn.LcmPreChecksAPIInstance.PerformPrechecks(body, utils.StringPtr(clusterExtID), nil)
+	performPrechecksRequest := import1.PerformPrechecksRequest{
+		Body:       body,
+		XClusterId: utils.StringPtr(clusterExtID),
+		Dryrun_:    &dryRun,
+	}
+
+	aJSON, _ := json.MarshalIndent(performPrechecksRequest, "", "  ")
+	log.Printf("[DEBUG] Perform Prechecks Request: %s", string(aJSON))
+
+	resp, err := conn.LcmPreChecksAPIInstance.PerformPrechecks(ctx, &performPrechecksRequest)
 	if err != nil {
 		return diag.Errorf("error while performing the prechecks: %v", err)
 	}
@@ -123,12 +140,15 @@ func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.Resource
 	}
 
 	// Get task details from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching LCM prechecks task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
-	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] LCM Prechecks Task Details: %s", string(aJSON))
 
 	// This is an action resource that does not maintain state.

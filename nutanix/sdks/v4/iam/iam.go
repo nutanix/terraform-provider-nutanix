@@ -9,14 +9,15 @@ import (
 
 type Client struct {
 	APIClientInstance           *iam.ApiClient
-	DirectoryServiceAPIInstance *api.DirectoryServicesApi
-	SamlIdentityAPIInstance     *api.SAMLIdentityProvidersApi
-	UsersAPIInstance            *api.UsersApi
-	UserGroupsAPIInstance       *api.UserGroupsApi
-	RolesAPIInstance            *api.RolesApi
-	OperationsAPIInstance       *api.OperationsApi
-	AuthAPIInstance             *api.AuthorizationPoliciesApi
-	EntityAPIInstance           *api.EntitiesApi
+	DirectoryServiceAPIInstance *api.DirectoryServicesServiceApi
+	SamlIdentityAPIInstance     *api.SAMLIdentityProvidersServiceApi
+	UsersAPIInstance            *api.UsersServiceApi
+	UserGroupsAPIInstance       *api.UserGroupsServiceApi
+	RolesAPIInstance            *api.RolesServiceApi
+	OperationsAPIInstance       *api.OperationsServiceApi
+	AuthAPIInstance             *api.AuthorizationPoliciesServiceApi
+	RoleMembershipAPIInstance   *api.RoleMembershipServiceApi
+	EntityAPIInstance           *api.EntitiesServiceApi
 }
 
 func NewIamClient(credentials client.Credentials) (*Client, error) {
@@ -32,18 +33,16 @@ func NewIamClient(credentials client.Credentials) (*Client, error) {
 		pcClient.AllowVersionNegotiation = cfg.AllowVersionNegotiation
 		baseClient = pcClient
 	}
-
-	f := &Client{
-		DirectoryServiceAPIInstance: api.NewDirectoryServicesApi(baseClient),
-		SamlIdentityAPIInstance:     api.NewSAMLIdentityProvidersApi(baseClient),
-		UserGroupsAPIInstance:       api.NewUserGroupsApi(baseClient),
-		RolesAPIInstance:            api.NewRolesApi(baseClient),
-		OperationsAPIInstance:       api.NewOperationsApi(baseClient),
-		UsersAPIInstance:            api.NewUsersApi(baseClient),
-		AuthAPIInstance:             api.NewAuthorizationPoliciesApi(baseClient),
-		EntityAPIInstance:           api.NewEntitiesApi(baseClient),
+	return &Client{
+		DirectoryServiceAPIInstance: api.NewDirectoryServicesServiceApi(baseClient),
+		SamlIdentityAPIInstance:     api.NewSAMLIdentityProvidersServiceApi(baseClient),
+		UserGroupsAPIInstance:       api.NewUserGroupsServiceApi(baseClient),
+		RolesAPIInstance:            api.NewRolesServiceApi(baseClient),
+		OperationsAPIInstance:       api.NewOperationsServiceApi(baseClient),
+		UsersAPIInstance:            api.NewUsersServiceApi(baseClient),
+		AuthAPIInstance:             api.NewAuthorizationPoliciesServiceApi(baseClient),
+		RoleMembershipAPIInstance:   api.NewRoleMembershipServiceApi(baseClient),
+		EntityAPIInstance:           api.NewEntitiesServiceApi(baseClient),
 		APIClientInstance:           baseClient,
-	}
-
-	return f, nil
+	}, nil
 }

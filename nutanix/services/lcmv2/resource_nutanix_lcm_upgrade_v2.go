@@ -4,14 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/common"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/request/upgrades"
 	taskRef "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import4 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	commonUtils "github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -23,6 +26,11 @@ func ResourceLcmUpgradeV2() *schema.Resource {
 		ReadContext:   ResourceLcmUpgradeV2Read,
 		UpdateContext: ResourceLcmUpgradeV2Update,
 		DeleteContext: ResourceLcmUpgradeV2Delete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(60 * time.Minute),
+			Update: schema.DefaultTimeout(60 * time.Minute),
+			Delete: schema.DefaultTimeout(60 * time.Minute),
+		},
 		Schema: map[string]*schema.Schema{
 			"x_cluster_id": {
 				Type:     schema.TypeString,
@@ -123,7 +131,16 @@ func ResourceLcmUpgradeV2Create(ctx context.Context, d *schema.ResourceData, met
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] LCM Upgrade Request Spec: %s", string(aJSON))
 	// pass nil for the new dyRun flag
-	resp, err := conn.LcmUpgradeAPIInstance.PerformUpgrade(body, clusterID, nil)
+	performUpgradeRequest := import1.PerformUpgradeRequest{
+		Body:       body,
+		XClusterId: clusterID,
+		Dryrun_:    nil,
+	}
+
+	aJSON, _ = json.MarshalIndent(performUpgradeRequest, "", "  ")
+	log.Printf("[DEBUG] Perform Upgrade Request: %s", string(aJSON))
+
+	resp, err := conn.LcmUpgradeAPIInstance.PerformUpgrade(ctx, &performUpgradeRequest)
 	if err != nil {
 		return diag.Errorf("error while Perform Upgrade the LCM config: %v", err)
 	}
@@ -147,7 +164,10 @@ func ResourceLcmUpgradeV2Create(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// Get task details from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import4.GetTaskByIdRequest{
+		ExtId: taskUUID,
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching LCM upgrade task: %v", err)
 	}

@@ -13,8 +13,8 @@ const datasourceNameRestorePoint = "data.nutanix_pc_restore_point_v2.test"
 func TestAccV2NutanixRestorePointDatasource_FetchRestorePointClusterLocation(t *testing.T) {
 	var backupTargetExtID, domainManagerExtID = new(string), new(string)
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// List backup targets and create if backup target not exists
 			// Check last sync time of backup target to ensure that the restore points are available
@@ -85,8 +85,8 @@ func TestAccV2NutanixRestorePointDatasource_FetchRestorePointObjectStoreLocation
 
 	var backupTargetExtID, domainManagerExtID = new(string), new(string)
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// List backup targets and create if backup target not exists
 			// Check last sync time of backup target to ensure that the restore points are available

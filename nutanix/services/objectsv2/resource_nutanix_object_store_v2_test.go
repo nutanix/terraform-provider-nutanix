@@ -277,6 +277,7 @@ func testAccObjectStoreWithOneWorkerNodeConfig(objectStoreName, objectStoreName2
 locals {
   config = jsondecode(file("%[1]s"))
   objectStore      = local.config.object_store
+  images = local.config.images
   clusterExtId = [
     for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
     cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
@@ -862,11 +863,13 @@ resource "terraform_data" "config_aws_secret_key" {
   depends_on = [terraform_data.config_aws_access_key]
 }
 
-# Configure AWS Endpoint URL
+# Path-style addressing is required for Nutanix Objects. Ubuntu's awscli 1.x
+# (pipeline runner) ignores "endpoint_url" in ~/.aws/config and defaults to
+# virtual-hosted Amazon S3 (vmm-images.s3.amazonaws.com).
 resource "terraform_data" "config_aws_endpoint_url" {
   provisioner "local-exec" {
     when       = create
-    command    = "aws configure set endpoint_url ${local.objects_API}"
+    command    = "aws configure set default.s3.addressing_style path"
     on_failure = fail
   }
   depends_on = [terraform_data.config_aws_secret_key]
@@ -876,7 +879,7 @@ resource "terraform_data" "config_aws_endpoint_url" {
 resource "terraform_data" "download_disk_image" {
   provisioner "local-exec" {
     when       = create
-    command    = "curl -o ${local.disk_image_dest} ${local.objectStore.img_url}"
+    command    = "curl -o ${local.disk_image_dest} ${local.config.images.centos_image_url}"
     on_failure = fail
   }
   depends_on = [terraform_data.config_aws_endpoint_url]
@@ -886,7 +889,7 @@ resource "terraform_data" "download_disk_image" {
 resource "terraform_data" "upload_image_to_object_store" {
   provisioner "local-exec" {
     when       = create
-    command    = "aws s3api put-object --bucket vmm-images --body ${local.disk_image_dest} --key ${nutanix_object_store_v2.test.name} --no-verify-ssl"
+    command    = "aws s3api put-object --endpoint-url ${local.objects_API} --bucket vmm-images --body ${local.disk_image_dest} --key ${nutanix_object_store_v2.test.name} --no-verify-ssl"
     on_failure = fail
   }
   depends_on = [terraform_data.download_disk_image]
@@ -945,7 +948,7 @@ resource "nutanix_ova_download_v2" "test" {
 resource "terraform_data" "upload_ova_to_object_store" {
   provisioner "local-exec" {
     when       = create
-    command    = "aws s3api put-object --bucket vmm-ovas --body ${nutanix_ova_download_v2.test.ova_file_path} --key ${nutanix_object_store_v2.test.name} --no-verify-ssl"
+    command    = "aws s3api put-object --endpoint-url ${local.objects_API} --bucket vmm-ovas --body ${nutanix_ova_download_v2.test.ova_file_path} --key ${nutanix_object_store_v2.test.name} --no-verify-ssl"
     on_failure = fail
   }
 }

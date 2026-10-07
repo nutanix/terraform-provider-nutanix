@@ -75,11 +75,15 @@ The `images` object is a list of all images. Each image has the following attrib
 * `create_time`: Create time of an image.
 * `last_update_time`: Last update time of an image.
 * `owner_ext_id`: External identifier of the owner of the image
+* `project_ext_id`: External identifier of the project associated with the image.
+* `share_with_all_projects`: Indicates whether the image is shared with all projects.
 * `placement_policy_status`: Status of an image placement policy.
 
 
 ### source
 * `ext_id`: The external identifier of VM Disk.
+  > **Deprecation Notice:** Providing `ext_id` without `vm_ext_id` is deprecated and will not be supported in a future release.
+* `vm_ext_id`: The external identifier of the source VM for the specified disk.
 * `url`: The URL for creating an image.
 * `basic_auth`: Basic authentication credentials for image source HTTP/S URL.
 * `basic_auth.username`: Username for basic authentication.
@@ -94,4 +98,4 @@ The `images` object is a list of all images. Each image has the following attrib
 * `enforced_cluster_ext_ids`: List of cluster external identifiers for the enforced placement policy.
 * `conflicting_policy_ext_ids`: List of image placement policy external identifier that conflict with the current one.
 
-See detailed information in [Nutanix List Images V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Images)
+See detailed information in [Nutanix List Images V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/Images/operation/listImages)

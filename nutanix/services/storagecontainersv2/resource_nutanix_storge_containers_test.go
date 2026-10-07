@@ -2,9 +2,7 @@ package storagecontainersv2_test
 
 import (
 	"fmt"
-	"os"
 	"regexp"
-	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -14,39 +12,49 @@ import (
 
 const resourceNameStorageContainers = "nutanix_storage_containers_v2.test"
 
+// Hardcoded storage-container fixtures. Shared across the
+// storagecontainersv2 resource/data-source tests.
+const (
+	storageContainerName                     = "terraform_storage_container_test"
+	storageContainerAdvertisedCapacityBytes  = "1073741824000"
+	storageContainerReservedCapacityBytes    = "20"
+	storageContainerReplicationFactor        = "1"
+	storageContainerNfsWhitelistIPv4         = "192.168.14.0"
+	storageContainerNfsWhitelistIPv4Updated  = "192.168.15.0"
+	storageContainerNfsWhitelistPrefixLength = "32"
+)
+
 func TestAccV2NutanixStorageContainersResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-storage-container-%d", r)
-	path, _ := os.Getwd()
-	filepath := path + "/../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testStorageContainersResourceConfig(filepath, name),
+				Config: testStorageContainersResourceConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameStorageContainers, "container_ext_id"),
 					resource.TestCheckResourceAttr(resourceNameStorageContainers, "name", name),
-					resource.TestCheckResourceAttr(resourceNameStorageContainers, "logical_advertised_capacity_bytes", strconv.Itoa(testVars.StorageContainer.LogicalAdvertisedCapacityBytes)),
-					resource.TestCheckResourceAttr(resourceNameStorageContainers, "logical_explicit_reserved_capacity_bytes", strconv.Itoa(testVars.StorageContainer.LogicalExplicitReservedCapacityBytes)),
-					resource.TestCheckResourceAttr(resourceNameStorageContainers, "replication_factor", strconv.Itoa(testVars.StorageContainer.ReplicationFactor)),
-					resource.TestCheckResourceAttr(resourceNameStorageContainers, "nfs_whitelist_addresses.0.ipv4.0.value", testVars.StorageContainer.NfsWhitelistAddresses.Ipv4.Value),
-					resource.TestCheckResourceAttr(resourceNameStorageContainers, "nfs_whitelist_addresses.0.ipv4.0.prefix_length", strconv.Itoa(testVars.StorageContainer.NfsWhitelistAddresses.Ipv4.PrefixLength)),
+					resource.TestCheckResourceAttr(resourceNameStorageContainers, "logical_advertised_capacity_bytes", storageContainerAdvertisedCapacityBytes),
+					resource.TestCheckResourceAttr(resourceNameStorageContainers, "logical_explicit_reserved_capacity_bytes", storageContainerReservedCapacityBytes),
+					resource.TestCheckResourceAttr(resourceNameStorageContainers, "replication_factor", storageContainerReplicationFactor),
+					resource.TestCheckResourceAttr(resourceNameStorageContainers, "nfs_whitelist_addresses.0.ipv4.0.value", storageContainerNfsWhitelistIPv4),
+					resource.TestCheckResourceAttr(resourceNameStorageContainers, "nfs_whitelist_addresses.0.ipv4.0.prefix_length", storageContainerNfsWhitelistPrefixLength),
 				),
 			},
 			// test update
 			{
-				Config: testStorageContainersResourceUpdateConfig(filepath, name),
+				Config: testStorageContainersResourceUpdateConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameStorageContainers, "container_ext_id"),
 					resource.TestCheckResourceAttr(resourceNameStorageContainers, "name", fmt.Sprintf("%s_updated", name)),
-					resource.TestCheckResourceAttr(resourceNameStorageContainers, "logical_advertised_capacity_bytes", strconv.Itoa(testVars.StorageContainer.LogicalAdvertisedCapacityBytes)),
-					resource.TestCheckResourceAttr(resourceNameStorageContainers, "logical_explicit_reserved_capacity_bytes", strconv.Itoa(testVars.StorageContainer.LogicalExplicitReservedCapacityBytes)),
-					resource.TestCheckResourceAttr(resourceNameStorageContainers, "replication_factor", strconv.Itoa(testVars.StorageContainer.ReplicationFactor)),
-					resource.TestCheckResourceAttr(resourceNameStorageContainers, "nfs_whitelist_addresses.0.ipv4.0.value", "192.168.15.0"),
-					resource.TestCheckResourceAttr(resourceNameStorageContainers, "nfs_whitelist_addresses.0.ipv4.0.prefix_length", strconv.Itoa(testVars.StorageContainer.NfsWhitelistAddresses.Ipv4.PrefixLength)),
+					resource.TestCheckResourceAttr(resourceNameStorageContainers, "logical_advertised_capacity_bytes", storageContainerAdvertisedCapacityBytes),
+					resource.TestCheckResourceAttr(resourceNameStorageContainers, "logical_explicit_reserved_capacity_bytes", storageContainerReservedCapacityBytes),
+					resource.TestCheckResourceAttr(resourceNameStorageContainers, "replication_factor", storageContainerReplicationFactor),
+					resource.TestCheckResourceAttr(resourceNameStorageContainers, "nfs_whitelist_addresses.0.ipv4.0.value", storageContainerNfsWhitelistIPv4Updated),
+					resource.TestCheckResourceAttr(resourceNameStorageContainers, "nfs_whitelist_addresses.0.ipv4.0.prefix_length", storageContainerNfsWhitelistPrefixLength),
 				),
 			},
 		},
@@ -54,14 +62,12 @@ func TestAccV2NutanixStorageContainersResource_Basic(t *testing.T) {
 }
 
 func TestAccV2NutanixStorageContainersResource_WithNoClusterExtId(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testStorageContainersResourceWithoutClusterExtIDConfig(filepath),
+				Config:      testStorageContainersResourceWithoutClusterExtIDConfig(),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
@@ -69,21 +75,19 @@ func TestAccV2NutanixStorageContainersResource_WithNoClusterExtId(t *testing.T) 
 }
 
 func TestAccV2NutanixStorageContainersResource_WithNoName(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testStorageContainersResourceWithoutNameConfig(filepath),
+				Config:      testStorageContainersResourceWithoutNameConfig(),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
 	})
 }
 
-func testStorageContainersResourceConfig(filepath, name string) string {
+func testStorageContainersResourceConfig(name string) string {
 	return fmt.Sprintf(`
 
 		data "nutanix_clusters_v2" "clusters" {}
@@ -93,20 +97,18 @@ func testStorageContainersResourceConfig(filepath, name string) string {
 				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
 				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
-			config = (jsondecode(file("%[1]s")))
-			storage_container = local.config.storage_container
 		}
 
 		resource "nutanix_storage_containers_v2" "test" {
-			name = "%[2]s"
+			name = "%[1]s"
 			cluster_ext_id = local.cluster
-			logical_advertised_capacity_bytes = local.storage_container.logical_advertised_capacity_bytes
-			logical_explicit_reserved_capacity_bytes = local.storage_container.logical_explicit_reserved_capacity_bytes
-			replication_factor = local.storage_container.replication_factor
+			logical_advertised_capacity_bytes = 1073741824000
+			logical_explicit_reserved_capacity_bytes = 20
+			replication_factor = 1
 			nfs_whitelist_addresses {
 				ipv4  {
-					value = local.storage_container.nfs_whitelist_addresses.ipv4.value
-					prefix_length = local.storage_container.nfs_whitelist_addresses.ipv4.prefix_length
+					value = "192.168.14.0"
+					prefix_length = 32
 				}
 			}
 			erasure_code = "OFF"
@@ -117,10 +119,10 @@ func testStorageContainersResourceConfig(filepath, name string) string {
 			is_compression_enabled = true
 			is_internal = false
 			is_software_encryption_enabled = false
-		}`, filepath, name)
+		}`, name)
 }
 
-func testStorageContainersResourceUpdateConfig(filepath, name string) string {
+func testStorageContainersResourceUpdateConfig(name string) string {
 	return fmt.Sprintf(`
 
 		data "nutanix_clusters_v2" "clusters" {}
@@ -130,20 +132,18 @@ func testStorageContainersResourceUpdateConfig(filepath, name string) string {
 				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
 				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
-			config = (jsondecode(file("%[1]s")))
-			storage_container = local.config.storage_container
 		}
 
 		resource "nutanix_storage_containers_v2" "test" {
-			name = "%[2]s_updated"
+			name = "%[1]s_updated"
 			cluster_ext_id = local.cluster
-			logical_advertised_capacity_bytes = local.storage_container.logical_advertised_capacity_bytes
-			logical_explicit_reserved_capacity_bytes = local.storage_container.logical_explicit_reserved_capacity_bytes
-			replication_factor = local.storage_container.replication_factor
+			logical_advertised_capacity_bytes = 1073741824000
+			logical_explicit_reserved_capacity_bytes = 20
+			replication_factor = 1
 			nfs_whitelist_addresses {
 				ipv4  {
 					value = "192.168.15.0"
-					prefix_length = local.storage_container.nfs_whitelist_addresses.ipv4.prefix_length
+					prefix_length = 32
 				}
 			}
 			erasure_code = "OFF"
@@ -154,11 +154,11 @@ func testStorageContainersResourceUpdateConfig(filepath, name string) string {
 			is_compression_enabled = true
 			is_internal = false
 			is_software_encryption_enabled = false
-		}`, filepath, name)
+		}`, name)
 }
 
-func testStorageContainersResourceWithoutNameConfig(filepath string) string {
-	return fmt.Sprintf(`
+func testStorageContainersResourceWithoutNameConfig() string {
+	return `
 
 		data "nutanix_clusters_v2" "clusters" {}
 
@@ -167,19 +167,17 @@ func testStorageContainersResourceWithoutNameConfig(filepath string) string {
 				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
 				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
-			config = (jsondecode(file("%s")))
-			storage_container = local.config.storage_container
 		}
 
 		resource "nutanix_storage_containers_v2" "test" {
 			cluster_ext_id = local.cluster
-			logical_advertised_capacity_bytes = local.storage_container.logical_advertised_capacity_bytes
-			logical_explicit_reserved_capacity_bytes = local.storage_container.logical_explicit_reserved_capacity_bytes
-			replication_factor = local.storage_container.replication_factor
+			logical_advertised_capacity_bytes = 1073741824000
+			logical_explicit_reserved_capacity_bytes = 20
+			replication_factor = 1
 			nfs_whitelist_addresses {
 				ipv4  {
-					value = local.storage_container.nfs_whitelist_addresses.ipv4.value
-					prefix_length = local.storage_container.nfs_whitelist_addresses.ipv4.prefix_length
+					value = "192.168.14.0"
+					prefix_length = 32
 				}
 			}
 			erasure_code = "OFF"
@@ -190,10 +188,10 @@ func testStorageContainersResourceWithoutNameConfig(filepath string) string {
 			is_compression_enabled = true
 			is_internal = false
 			is_software_encryption_enabled = false
-		}`, filepath)
+		}`
 }
 
-func testStorageContainersResourceWithoutClusterExtIDConfig(filepath string) string {
+func testStorageContainersResourceWithoutClusterExtIDConfig() string {
 	return fmt.Sprintf(`
 
 		data "nutanix_clusters_v2" "clusters" {}
@@ -203,19 +201,17 @@ func testStorageContainersResourceWithoutClusterExtIDConfig(filepath string) str
 				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
 				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
-			config = (jsondecode(file("%s")))
-			storage_container = local.config.storage_container
 		}
 
 		resource "nutanix_storage_containers_v2" "test" {
-			name = local.storage_container.name
-			logical_advertised_capacity_bytes = local.storage_container.logical_advertised_capacity_bytes
-			logical_explicit_reserved_capacity_bytes = local.storage_container.logical_explicit_reserved_capacity_bytes
-			replication_factor = local.storage_container.replication_factor
+			name = "%[1]s"
+			logical_advertised_capacity_bytes = 1073741824000
+			logical_explicit_reserved_capacity_bytes = 20
+			replication_factor = 1
 			nfs_whitelist_addresses {
 				ipv4  {
-					value = local.storage_container.nfs_whitelist_addresses.ipv4.value
-					prefix_length = local.storage_container.nfs_whitelist_addresses.ipv4.prefix_length
+					value = "192.168.14.0"
+					prefix_length = 32
 				}
 			}
 			erasure_code = "OFF"
@@ -226,5 +222,5 @@ func testStorageContainersResourceWithoutClusterExtIDConfig(filepath string) str
 			is_compression_enabled = true
 			is_internal = false
 			is_software_encryption_enabled = false
-		}`, filepath)
+		}`, storageContainerName)
 }
