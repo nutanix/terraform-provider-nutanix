@@ -8,7 +8,7 @@ description: |-
 
 # Terraform: Projects 2.0
 
-This guide describes Projects 2.0 in the Nutanix Terraform provider and how to migrate existing configurations after Prism Central is upgraded to 7.6.
+This guide describes Projects 2.0 in the Nutanix Terraform provider and how to migrate existing configurations after Prism Central is upgraded to 7.6 or later.
 
 ## Introduction to Projects 2.0
 
