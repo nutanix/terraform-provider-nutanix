@@ -1,3 +1,4 @@
+# Beta: nutanix_saml_identity_providers_v2 is currently in Beta.
 #the variable "" present in terraform.tfvars file.
 #Note - Replace appropriate values of variables in terraform.tfvars file as per setup
 
