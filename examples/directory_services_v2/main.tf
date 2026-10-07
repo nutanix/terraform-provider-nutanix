@@ -1,5 +1,3 @@
-# Beta: nutanix_directory_services_v2 is currently in Beta.
-
 terraform {
   required_providers {
     nutanix = {

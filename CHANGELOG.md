@@ -148,9 +148,9 @@
 - Unable to list VPC using data "nutanix_vpcs_v2" "list_vpcs" [#1000](https://github.com/nutanix/terraform-provider-nutanix/issues/1000)
 - virtual_machine_v2: VM creation fails with multiple NICs ("invalid input arguments") [#994](https://github.com/nutanix/terraform-provider-nutanix/issues/994)
 - V3: Project: Revisit the Project Module resources [#962](https://github.com/nutanix/terraform-provider-nutanix/issues/962)
-  - Projects: ACP: Order changes in API response lead to data inconsistency in state file. [#1042](https://github.com/nutanix/terraform-provider-nutanix/issues/1042)
-  - Projects: ACP: Removing a ACP causing index shifting issues. [#1044](https://github.com/nutanix/terraform-provider-nutanix/issues/1044)
-  - Project: ACP: Adding a new user or new user group to existing ACP is failed. [#1043](https://github.com/nutanix/terraform-provider-nutanix/issues/1043)
+    - Projects: ACP: Order changes in API response lead to data inconsistency in state file. [#1042](https://github.com/nutanix/terraform-provider-nutanix/issues/1042)
+    - Projects: ACP: Removing a ACP causing index shifting issues. [#1044](https://github.com/nutanix/terraform-provider-nutanix/issues/1044)
+    - Project: ACP: Adding a new user or new user group to existing ACP is failed. [#1043](https://github.com/nutanix/terraform-provider-nutanix/issues/1043)
 - Bug Report: resource "nutanix_user_groups_v2" [#947](https://github.com/nutanix/terraform-provider-nutanix/issues/947)
 
 **Breaking Changes:**
@@ -165,7 +165,7 @@
   - Support for Ejecting ISO from CD-ROM [\#1006](https://github.com/nutanix/terraform-provider-nutanix/issues/1006)
 
 - **Fixed Bugs:**
-  - Subnet entity is not saved in Terraform State due to plugin crash [\#894](https://github.com/nutanix/terraform-provider-nutanix/issues/894)
+   - Subnet entity is not saved in Terraform State due to plugin crash [\#894](https://github.com/nutanix/terraform-provider-nutanix/issues/894)
 
 ## 2.3.3 (November 4, 2025)
 
@@ -260,26 +260,26 @@
 
 - Terraform plugin support for Self Service [\#826](https://github.com/nutanix/terraform-provider-nutanix/issues/826)
   - Launch a Blueprint (Provision an application)
-  - Launch without runtime editable
-  - Launch with runtime editable on substrate list (change vcpu, numsocket, memory size while launching)
+    - Launch without runtime editable
+    - Launch with runtime editable on substrate list (change vcpu, numsocket, memory size while launching)
   - System Actions Execution on Application
-  - Start an application
-  - Stop an application
-  - Soft delete an application
-  - Delete an application
+    - Start an application
+    - Stop an application
+    - Soft delete an application
+    - Delete an application
   - Custom actions execution
   - Update an application (via patch configs)
-  - Update vCPUs/num_sockets (with runtime editable support)
-  - Update Memory (with runtime editable support)
-  - Update cores-per-vCPU/num_vcpus_per_socket (with runtime editable support)
-  - Update categories (with runtime editable support)
-  - Add a nic (with runtime editable support using nic UUID)
-  - Disk addition (with runtime editable)
+    - Update vCPUs/num_sockets (with runtime editable support)
+    - Update Memory (with runtime editable support)
+    - Update cores-per-vCPU/num_vcpus_per_socket (with runtime editable support)
+    - Update categories (with runtime editable support)
+    - Add a nic (with runtime editable support using nic UUID)
+    - Disk addition (with runtime editable)
   - Snapshot/Restore actions support
-  - List Snapshot Policies in Blueprints
-  - Create a snapshot by executing snapshot action
-  - List snapshots (recovery points) in application
-  - Restore a snapshot by executing restore action
+    - List Snapshot Policies in Blueprints
+    - Create a snapshot by executing snapshot action
+    - List snapshots (recovery points) in application
+    - Restore a snapshot by executing restore action
 
 ## 2.1.1 (April 08, 2025)
 
@@ -298,37 +298,37 @@ All new features are v4 SDKs based.
 **New Feature:**
 
 - Prism [\#815](https://github.com/nutanix/terraform-provider-nutanix/issues/815)
-  - CRUD for Backup Target
-  - CRD for Restore Source
-  - Resource to deploy pc
-  - Resource to restore pc
-  - Restore to unregister pc
-  - Datasource to list pcs
-  - Datasource to fetch pc details
-  - Datasource to list restorable pcs
-  - Datasource to list pc restore points
-  - Datasource to list pc restore points details
-  - Datasource to list backup targets
-  - Datasource to fetch backup target
-  - Datasource to fetch restore source
+    - CRUD for Backup Target
+    - CRD for Restore Source
+    - Resource to deploy pc
+    - Resource to restore pc
+    - Restore to unregister pc
+    - Datasource to list pcs
+    - Datasource to fetch pc details
+    - Datasource to list restorable pcs
+    - Datasource to list pc restore points
+    - Datasource to list pc restore points details
+    - Datasource to list backup targets
+    - Datasource to fetch backup target
+    - Datasource to fetch restore source
 
 - Data Protection [\#816](https://github.com/nutanix/terraform-provider-nutanix/issues/816)
-  - CRUD for protection policies
-  - Resource to promote protected resource
-  - Resource to restore protected resource
-  - Datasource to fetch protected resource
-  - Datasource to list protection policies
-  - Datasource to fetch protection policy
+    - CRUD for protection policies
+    - Resource to promote protected resource
+    - Resource to restore protected resource
+    - Datasource to fetch protected resource
+    - Datasource to list protection policies
+    - Datasource to fetch protection policy
 
 - LCM [\#814](https://github.com/nutanix/terraform-provider-nutanix/issues/814)
-  - Resource for Perform Inventory
-  - Resource for Upgrade PreChecks
-  - Resource for Upgrade of entities
-  - Resource for LCM Config
-  - Datasource to fetch LCM status
-  - Datasource to fetch entities
-  - Datasource to fetch specific entity
-  - Datasource to fetch LCM Config
+   - Resource for Perform Inventory
+   - Resource for Upgrade PreChecks
+   - Resource for Upgrade of entities
+   - Resource for LCM Config
+   - Datasource to fetch LCM status
+   - Datasource to fetch entities
+   - Datasource to fetch specific entity
+   - Datasource to fetch LCM Config
 
 **Fixed bugs:**
 
@@ -348,68 +348,68 @@ All new features are v4 SDKs based.
 **New Feature:**
 
 - Cluster Management [\#704](https://github.com/nutanix/terraform-provider-nutanix/issues/704)
-  - CRUD for clusters
-  - Resource to discover unconfigured nodes
-  - Resource to fetch network configuration of unconfigured nodes
-  - Resource to add/remove node from cluster
-  - Resource for PC registration
-  - Datasource for Hosts Info
+    - CRUD for clusters
+    - Resource to discover unconfigured nodes
+    - Resource to fetch network configuration of unconfigured nodes
+    - Resource to add/remove node from cluster
+    - Resource for PC registration
+    - Datasource for Hosts Info
 
 - Storage Containers [\#705](https://github.com/nutanix/terraform-provider-nutanix/issues/705)
-  - CRUD for storage containers
-  - datasource for storage stats info
+    - CRUD for storage containers
+    - datasource for storage stats info
 
 - Networks [\#706](https://github.com/nutanix/terraform-provider-nutanix/issues/706)
-  - CRUD for Subnets
-  - CRUD for VPCs
-  - CRUD for PBRs
-  - CRUD for Floating IPs
-  - CRUD for Static Routes
-  - CRUD for Services Groups
-  - CRUD for Address Groups
-  - CRUD for Network Security Rules
+    - CRUD for Subnets
+    - CRUD for VPCs
+    - CRUD for PBRs
+    - CRUD for Floating IPs
+    - CRUD for Static Routes
+    - CRUD for Services Groups
+    - CRUD for Address Groups
+    - CRUD for Network Security Rules
 
 - IAM [\#707](https://github.com/nutanix/terraform-provider-nutanix/issues/707)
-  - CRUD for Roles
-  - Datasource for Operations( permissions )
-  - CRUD for Users
-  - CRUD for User Groups
-  - CRUD for Authorization Policy ( ACPs )
-  - CRUD for SALM Identity Providers
-  - CRUD for Directory Services
+    - CRUD for Roles
+    - Datasource for Operations( permissions )
+    - CRUD for Users
+    - CRUD for User Groups
+    - CRUD for Authorization Policy ( ACPs )
+    - CRUD for SALM Identity Providers
+    - CRUD for Directory Services
 
 - Prism [\#711](https://github.com/nutanix/terraform-provider-nutanix/issues/711)
-  - CRUD for categories
+    - CRUD for categories
 
 - VMM [\#708](https://github.com/nutanix/terraform-provider-nutanix/issues/708)
-  - CRUD for Virtual Machine
-  - CRUD for Images
-  - CRUD for Image Placement Policy
-  - Resource to Clone a VM
-  - Resource for NGT Installation / Uninstallation
-  - Resource for NGT upgrade
-  - Resource for Template deploy
-  - Resource for Template Guest OS Actions
-  - CRUD for Template
-  - Resource for CDROM inject/eject
-  - Resource for VM revert from recovery point
-  - Resource for VM guest customisation update
-  - Resource for VM Network Device Assign/Remove IP
-  - Resource for VM Network Device Migrate
-  - Resource for VM Shutdown Actions
+    - CRUD for Virtual Machine
+    - CRUD for Images
+    - CRUD for Image Placement Policy
+    - Resource to Clone a VM
+    - Resource for NGT Installation / Uninstallation
+    - Resource for NGT upgrade
+    - Resource for Template deploy
+    - Resource for Template Guest OS Actions
+    - CRUD for Template
+    - Resource for CDROM inject/eject
+    - Resource for VM revert from recovery point
+    - Resource for VM guest customisation update
+    - Resource for VM Network Device Assign/Remove IP
+    - Resource for VM Network Device Migrate
+    - Resource for VM Shutdown Actions
 
 - Volumes [\#709](https://github.com/nutanix/terraform-provider-nutanix/issues/709)
-  - CRUD for Volume Groups
-  - Resource to Attach/Deattach VG to VM
-  - Resource to Attach/Deattach VG to ISCSI Client
-  - CRUD for Volume Group vDisks
-  - Resource to attach/deattach categories from VG
+    - CRUD for Volume Groups
+    - Resource to Attach/Deattach VG to VM
+    - Resource to Attach/Deattach VG to ISCSI Client
+    - CRUD for Volume Group vDisks
+    - Resource to attach/deattach categories from VG
 
 - Data Protection [\#710](https://github.com/nutanix/terraform-provider-nutanix/issues/710)
-  - CRUD for Recovery Point
-  - CRUD for Replicate Recovery Point
-  - Resource to Restore VM from Recovery Point
-  - Datasource for VM Recovery Point Info
+    - CRUD for Recovery Point
+    - CRUD for Replicate Recovery Point
+    - Resource to Restore VM from Recovery Point
+    - Datasource for VM Recovery Point Info
 
 ## 1.9.5 (January 16, 2024)
 
@@ -514,7 +514,7 @@ All new features are v4 SDKs based.
 
     New Resource :
 
-  - nutanix_karbon_worker_nodepool
+    - nutanix_karbon_worker_nodepool
 
 **Implemented enhancements:**
 
@@ -551,7 +551,7 @@ All new features are v4 SDKs based.
 
     New Data Source :
 
-  - nutanix_ndb_network_available_ips
+    - nutanix_ndb_network_available_ips
 
 **Implemented enhancements:**
 
@@ -580,27 +580,27 @@ All new features are v4 SDKs based.
 
     New Resources:
 
-  - nutanix_ndb_maintenance_window
-  - nutanix_ndb_maintenance_task
-  - nutanix_ndb_tms_cluster
-  - nutanix_ndb_tag
-  - nutanix_ndb_network
-  - nutanix_ndb_dbserver_vm
-  - nutanix_ndb_register_dbserver
-  - nutanix_ndb_stretched_vlan
-  - nutanix_ndb_clone_refresh
-  - nutanix_ndb_cluster
+    - nutanix_ndb_maintenance_window
+    - nutanix_ndb_maintenance_task
+    - nutanix_ndb_tms_cluster
+    - nutanix_ndb_tag
+    - nutanix_ndb_network
+    - nutanix_ndb_dbserver_vm
+    - nutanix_ndb_register_dbserver
+    - nutanix_ndb_stretched_vlan
+    - nutanix_ndb_clone_refresh
+    - nutanix_ndb_cluster
 
     New Data Sources:
 
-  - nutanix_ndb_maintenance_window
-  - nutanix_ndb_maintenance_windows
-  - nutanix_ndb_tag
-  - nutanix_ndb_tags
-  - nutanix_ndb_network
-  - nutanix_ndb_networks
-  - nutanix_ndb_dbserver
-  - nutanix_ndb_dbservers
+    - nutanix_ndb_maintenance_window
+    - nutanix_ndb_maintenance_windows
+    - nutanix_ndb_tag
+    - nutanix_ndb_tags
+    - nutanix_ndb_network
+    - nutanix_ndb_networks
+    - nutanix_ndb_dbserver
+    - nutanix_ndb_dbservers
 
 ## 1.8.0-beta-2 (Jan 20, 2023)
 
@@ -612,33 +612,33 @@ All new features are v4 SDKs based.
 
     New Resources:
 
-  - nutanix_ndb_profile
-  - nutanix_ndb_sla
-  - nutanix_ndb_database_scale
-  - nutanix_ndb_database_restore
-  - nutanix_ndb_database_snapshot
-  - nutanix_ndb_register_database
-  - nutanix_ndb_clone
-  - nutanix_ndb_log_catchups
-  - nutanix_ndb_authorize_dbservers
-  - nutanix_ndb_software_version_profile
-  - nutanix_ndb_linked_databases
+    - nutanix_ndb_profile
+    - nutanix_ndb_sla
+    - nutanix_ndb_database_scale
+    - nutanix_ndb_database_restore
+    - nutanix_ndb_database_snapshot
+    - nutanix_ndb_register_database
+    - nutanix_ndb_clone
+    - nutanix_ndb_log_catchups
+    - nutanix_ndb_authorize_dbservers
+    - nutanix_ndb_software_version_profile
+    - nutanix_ndb_linked_databases
 
     New Data Sources:
 
-  - nutanix_ndb_snapshot
-  - nutanix_ndb_snapshots
-  - nutanix_ndb_time_machine
-  - nutanix_ndb_time_machines
-  - nutanix_ndb_tms_capability
-  - nutanix_ndb_clone
-  - nutanix_ndb_clones
+    - nutanix_ndb_snapshot
+    - nutanix_ndb_snapshots
+    - nutanix_ndb_time_machine
+    - nutanix_ndb_time_machines
+    - nutanix_ndb_tms_capability
+    - nutanix_ndb_clone
+    - nutanix_ndb_clones
 
 **Implemented enhancements:**
 
-- Support for HA instance in nutanix_ndb_database resource. [\#518](https://github.com/nutanix/terraform-provider-nutanix/pull/518)
-- Improving the error when server is unreachable. [\#530](https://github.com/nutanix/terraform-provider-nutanix/pull/530)
-- Fetching of database based on database_type filter [\#513](https://github.com/nutanix/terraform-provider-nutanix/pull/513)
+ - Support for HA instance in nutanix_ndb_database resource. [\#518](https://github.com/nutanix/terraform-provider-nutanix/pull/518)
+ - Improving the error when server is unreachable. [\#530](https://github.com/nutanix/terraform-provider-nutanix/pull/530)
+ - Fetching of database based on database_type filter [\#513](https://github.com/nutanix/terraform-provider-nutanix/pull/513)
 - Support of Tags and Maintainence Window in provisioning [\#528](https://github.com/nutanix/terraform-provider-nutanix/pull/528)
 
 ## 1.8.0-beta.1 (Oct 12, 2022)
@@ -651,18 +651,18 @@ All new features are v4 SDKs based.
 
     New Data Sources :
 
-  - nutanix_ndb_cluster
-  - nutanix_ndb_clusters
-  - nutanix_ndb_database
-  - nutanix_ndb_databases
-  - nutanix_ndb_profile
-  - nutanix_ndb_profiles
-  - nutanix_ndb_sla
-  - nutanix_ndb_slas
+    - nutanix_ndb_cluster
+    - nutanix_ndb_clusters
+    - nutanix_ndb_database
+    - nutanix_ndb_databases
+    - nutanix_ndb_profile
+    - nutanix_ndb_profiles
+    - nutanix_ndb_sla
+    - nutanix_ndb_slas
 
     New Resources :
 
-  - nutanix_ndb_database
+    - nutanix_ndb_database
 
 ## 1.7.1 (August 31, 2022)
 
@@ -686,7 +686,7 @@ All new features are v4 SDKs based.
 
     New Resource :
 
-  - nutanix_user_groups
+    - nutanix_user_groups
 
 **Merged pull request:**
 
@@ -730,20 +730,20 @@ All new features are v4 SDKs based.
 
     New Data Sources :
 
-  - nutanix_floating_ip
-  - nutanix_floating_ips
-  - nutanix_pbr
-  - nutanix_pbrs
-  - nutanix_static_routes
-  - nutanix_vpc
-  - nutanix_vpcs
+    - nutanix_floating_ip
+    - nutanix_floating_ips
+    - nutanix_pbr
+    - nutanix_pbrs
+    - nutanix_static_routes
+    - nutanix_vpc
+    - nutanix_vpcs
 
     New Resources :
 
-  - nutanix_floating_ip
-  - nutanix_pbr
-  - nutanix_static_routes
-  - nutanix_vpc
+    - nutanix_floating_ip
+    - nutanix_pbr
+    - nutanix_static_routes
+    - nutanix_vpc
 
 **Merged pull requests:**
 
@@ -796,22 +796,22 @@ All new features are v4 SDKs based.
 
     New Data Sources :
 
-  - nutanix_foundation_central_api_keys
-  - nutanix_foundation_central_list_api_keys
-  - nutanix_foundation_central_imaged_nodes_list
-  - nutanix_foundation_central_imaged_clusters_list
-  - nutanix_foundation_central_cluster_details
-  - nutanix_foundation_central_imaged_node_details
+    - nutanix_foundation_central_api_keys
+    - nutanix_foundation_central_list_api_keys
+    - nutanix_foundation_central_imaged_nodes_list
+    - nutanix_foundation_central_imaged_clusters_list
+    - nutanix_foundation_central_cluster_details
+    - nutanix_foundation_central_imaged_node_details
 
     New Resources :
 
-  - nutanix_foundation_central_image_cluster
-  - nutanix_foundation_central_api_keys
+    - nutanix_foundation_central_image_cluster
+    - nutanix_foundation_central_api_keys
 
     New Modules :
 
-  - aos-based-node-imaging/node-serials-filter
-  - manual-mode-imaging
+    - aos-based-node-imaging/node-serials-filter
+    - manual-mode-imaging
 
 ## 1.5.0-beta (April 1, 2022)
 
@@ -823,22 +823,22 @@ All new features are v4 SDKs based.
 
     New Data Sources :
 
-  - nutanix_foundation_nos_packages
-  - nutanix_foundation_hypervisor_isos
-  - nutanix_foundation_discover_nodes
-  - nutanix_foundation_node_network_details
+    - nutanix_foundation_nos_packages
+    - nutanix_foundation_hypervisor_isos
+    - nutanix_foundation_discover_nodes
+    - nutanix_foundation_node_network_details
 
     New Resources :
 
-  - nutanix_foundation_image_nodes
-  - nutanix_foundation_ipmi_config
-  - nutanix_foundation_image
+    - nutanix_foundation_image_nodes
+    - nutanix_foundation_ipmi_config
+    - nutanix_foundation_image
 
     New Modules :
 
-  - aos-based-node-imaging/node-serials-filter
-  - discover-nodes-network-details/node-serials-filter
-  - manual-mode-imaging
+    - aos-based-node-imaging/node-serials-filter
+    - discover-nodes-network-details/node-serials-filter
+    - manual-mode-imaging
 
 **Merged pull requests:**
 
