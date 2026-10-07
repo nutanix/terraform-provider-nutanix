@@ -3,7 +3,7 @@ layout: "nutanix"
 page_title: "Terraform: Projects 2.0"
 sidebar_current: "docs-nutanix-guides-projects-2-0"
 description: |-
-  Introduction to Projects 2.0, entity sharing, and how to migrate existing Terraform configurations after a Prism Central upgrade to 7.6.
+  Introduction to Projects 2.0, entity sharing, and how to migrate existing Terraform configurations after a Prism Central upgrade to 7.6 or later.
 ---
 
 # Terraform: Projects 2.0
