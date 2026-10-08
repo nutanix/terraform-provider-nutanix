@@ -37,4 +37,4 @@ data "nutanix_ad_group_category_mapping_v2" "get-mapping" {
 * `links` - A HATEOAS style link for the response.
 * `tenant_id` - A globally unique identifier that represents the tenant that owns this entity.
 
-See detailed information in [Nutanix Directory Server Configs V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.3).
+See detailed information in [Nutanix Directory Server Configs V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.3#tag/DirectoryServerConfigs/operation/getDirectoryServerConfigById).

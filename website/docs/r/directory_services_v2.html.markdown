@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_directory_services_v2"
+page_title: "NUTANIX: nutanix_directory_services_v2 (Beta)"
 sidebar_current: "docs-nutanix-resource-directory-services-v2"
 description: |-
   This operation submits a request to Create a Directory Service.
 ---
 
-# nutanix_directory_services_v2
+# nutanix_directory_services_v2 (Beta)
+
+-> **Note:** This resource is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
 
 Provides a resource to Create a Directory Service.
 
@@ -208,4 +210,4 @@ resource "nutanix_directory_services_v2" "import_dir_service" {}
 // execute the below command. UUID can be fetched using datasource. Example: data "nutanix_directory_services_v2" "fetch_dirs"{}
 terraform import nutanix_directory_services_v2.import_dir_service <UUID>
 ```
-See detailed information in [Nutanix Directory Services v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/DirectoryServices/operation/createDirectoryService).
+See detailed information in [Nutanix Directory Services v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/DirectoryServices/operation/createDirectoryService).

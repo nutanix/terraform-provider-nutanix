@@ -77,4 +77,4 @@ In addition to all arguments above, the following attributes are exported:
 * **Update** — not applicable; all inputs are `ForceNew`.
 * **Delete** — no-op on the cluster; only removes the snapshot from Terraform state.
 
-See detailed information in [Nutanix Network Security Policy Export V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.4#tag/NetworkSecurityPolicies/operation/exportNetworkSecurityPolicy).
+See detailed information in [Nutanix Network Security Policy Export V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.3#tag/NetworkSecurityPolicies/operation/exportNetworkSecurityPolicy).

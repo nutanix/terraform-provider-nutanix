@@ -110,4 +110,4 @@ The following attributes are exported:
 - `value`: value of address
 - `prefix_length`: The prefix length of the network to which this host IPv4/IPv6 address belongs.
 
-See detailed information in [Nutanix Get Subnet v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/Subnets/operation/getSubnetById).
+See detailed information in [Nutanix Get Subnet v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/Subnets/operation/getSubnetById).

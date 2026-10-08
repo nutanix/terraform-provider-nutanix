@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_saml_identity_providers_v2"
+page_title: "NUTANIX: nutanix_saml_identity_providers_v2 (Beta)"
 sidebar_current: "docs-nutanix-datasource-saml-identity-providers-v2"
 description: |-
   Provides a datasource to retrieve all the  all SAML Identity Provider(s).
 ---
 
-# nutanix_saml_identity_providers_v2
+# nutanix_saml_identity_providers_v2 (Beta)
+
+-> **Note:** This data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The data source and its behavior may change in future releases as the SDK API evolves.
 
 Provides a datasource to retrieve all the SAML Identity Provider(s).
 
@@ -114,4 +116,4 @@ The idp_metadata attribute supports the following:
     * `persistent`: -  Uses persistent name identifier as NameID format.
     * `entity`: -  Uses identifier of an entity as NameID format.
 
-See detailed information in [Nutanix List SAML identity providers v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/SAMLIdentityProviders/operation/listSamlIdentityProviders).
+See detailed information in [Nutanix List SAML identity providers v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/SAMLIdentityProviders/operation/listSamlIdentityProviders).

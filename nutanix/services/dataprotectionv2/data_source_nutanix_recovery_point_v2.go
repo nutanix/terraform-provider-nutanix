@@ -472,7 +472,7 @@ func flattenDiskRecoveryPoints(diskRecoveryPoints []common.DiskRecoveryPoint) []
 	return nil
 }
 
-func flattenLocationReferences(references []config.LocationReference) []map[string]interface{} {
+func flattenLocationReferences(references []common.LocationReference) []map[string]interface{} {
 	if len(references) > 0 {
 		locationReferences := make([]map[string]interface{}, len(references))
 

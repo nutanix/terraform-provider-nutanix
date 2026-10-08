@@ -8,7 +8,7 @@ description: |-
 
 # nutanix_virtual_switch_v2
 
-The `nutanix_virtual_switch_v2` data source allows you to retrieve comprehensive configuration and status details of a specific Virtual Switch within your Nutanix environment, given its Universally Unique Identifier (UUID). 
+The `nutanix_virtual_switch_v2` data source allows you to retrieve comprehensive configuration and status details of a specific Virtual Switch within your Nutanix environment, given its Universally Unique Identifier (UUID).
 
 This data source is extremely useful when you need to reference an existing Virtual Switch's configuration—such as its bonding mode, physical host NIC mappings, or VLAN identifiers—to provision dependencies like Virtual Machines or VPC Mappings.
 
@@ -91,3 +91,5 @@ The `querier_spec` block contains settings for the IGMP querier, which actively 
 
 * `is_querier_enabled` - A boolean indicating if the Virtual Switch acts as an IGMP querier.
 * `vlan_id_list` - A list of VLAN IDs on which the Virtual Switch actively sends IGMP queries.
+
+See detailed information in [Nutanix Get Virtual Switch V2](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/VirtualSwitches/operation/getVirtualSwitchById).

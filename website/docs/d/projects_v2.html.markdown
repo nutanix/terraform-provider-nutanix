@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_projects_v2"
+page_title: "NUTANIX: nutanix_projects_v2 (Beta)"
 sidebar_current: "docs-nutanix-datasource-projects-v2"
 description: |-
   List the projects defined on the system.
 ---
 
-# nutanix_projects_v2
+# nutanix_projects_v2 (Beta)
+
+-> **Note:** This data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The data source and its behavior may change in future releases as the SDK API evolves.
 
 List the projects defined on the system.
 
@@ -86,3 +88,5 @@ The `links` attribute supports the following:
 
 * `href`:- The URL at which the entity described by the link can be accessed.
 * `rel`:- A name that identifies the relationship of the link to the object.
+
+See detailed information in [Nutanix List Projects V4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/Projects/operation/listProjects).

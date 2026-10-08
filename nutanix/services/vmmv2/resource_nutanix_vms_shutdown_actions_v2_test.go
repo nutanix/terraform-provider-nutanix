@@ -17,7 +17,11 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameVMShutdown = "data.nutanix_virtual_machine_v2.test"
+const (
+	resourceNameVMShutdown = "data.nutanix_virtual_machine_v2.test"
+	resourceNameNGT        = "nutanix_ngt_installation_v2.test"
+	datasourceNameNGTReady = "data.nutanix_ngt_configuration_v2.ready"
+)
 
 func TestAccV2NutanixVmsShutdownResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
@@ -33,10 +37,15 @@ func TestAccV2NutanixVmsShutdownResource_Basic(t *testing.T) {
 	//     immediate read. Instead the action resource blocks until the VM reaches its
 	//     terminal power state, and each step asserts the live power state via the
 	//     nutanix_virtual_machine_v2 data source (which depends_on the action) rather
-	//     than relying on time.Sleep.
+	//     than relying on time.Sleep for the power-state assertion itself.
 	//   * The shutdown/guest_shutdown steps ignore_changes on the VM's power_state so
 	//     the async transition to OFF does not race the SDK idempotency plan; the OFF
 	//     result is proven by the data source instead of via plan drift.
+	//   * guest_* actions require NGT/guest tools to be reachable. Match the Ansible
+	//     ntnx_vms_ngt_v2 readiness pattern: wait for the guest to boot before install,
+	//     assert is_reachable after install, and settle after each reboot before the
+	//     next guest ACPI action (otherwise guest_shutdown can report SUCCEEDED, flick
+	//     to OFF, then bounce back to ON while the guest is still mid-boot).
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
@@ -50,20 +59,26 @@ func TestAccV2NutanixVmsShutdownResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr("nutanix_virtual_machine_v2.rtest", "power_state", "ON"),
 				),
 			},
-			// 2. install ngt on the vm (needs the guest booted, hence the settle window)
+			// 2. install ngt once the guest has had time to boot (IP/guest OS ready)
 			{
 				PreConfig: func() {
-					time.Sleep(1 * time.Minute)
+					t.Log("Waiting 2 minutes for guest OS to boot before NGT install")
+					time.Sleep(timeSleep)
 				},
 				Config: testVMV2Config(name, desc) + testNGTConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("nutanix_virtual_machine_v2.rtest", "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceNameNGT, "is_installed", "true"),
+					resource.TestCheckResourceAttr(resourceNameNGT, "is_reachable", "true"),
+					resource.TestCheckResourceAttr(resourceNameNGT, "is_enabled", "true"),
 				),
 			},
-			// 3. shutdown: action blocks until the VM reaches OFF. power_state is ignored on
-			// the VM resource so the async OFF does not race the idempotency plan; the OFF
-			// state is verified via the data source.
+			// 3. allow IMMEDIATE NGT reboot to finish, then hard shutdown
 			{
+				PreConfig: func() {
+					t.Log("Waiting 2 minutes for NGT install reboot to settle")
+					time.Sleep(timeSleep)
+				},
 				Config: testVMV2ConfigIgnorePower(name, desc) + testNGTConfig() + testVmsShutdownV2Config("shutdown") + vmDataSource,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVMShutdown, "power_state", "OFF"),
@@ -78,22 +93,34 @@ func TestAccV2NutanixVmsShutdownResource_Basic(t *testing.T) {
 			},
 			// 5. reboot: VM ends ON, so no drift and no ExpectNonEmptyPlan
 			{
+				PreConfig: func() {
+					t.Log("Waiting 2 minutes for guest OS after power-on before reboot")
+					time.Sleep(timeSleep)
+				},
 				Config: testVMV2Config(name, desc) + testNGTConfig() + testVmsShutdownV2Config("reboot") + vmDataSource,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVMShutdown, "power_state", "ON"),
 				),
 			},
-			// 6. guest_reboot: VM ends ON
+			// 6. guest_reboot: needs guest tools reachable after the hard reboot
 			{
-				Config: testVMV2Config(name, desc) + testNGTConfig() + testVmsShutdownV2Config("guest_reboot") + vmDataSource,
+				PreConfig: func() {
+					t.Log("Waiting 2 minutes for guest tools after hard reboot before guest_reboot")
+					time.Sleep(timeSleep)
+				},
+				Config: testVMV2Config(name, desc) + testNGTConfig() + testVmsShutdownV2Config("guest_reboot") + vmDataSource + ngtReadyDataSource,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVMShutdown, "power_state", "ON"),
+					resource.TestCheckResourceAttr(datasourceNameNGTReady, "is_reachable", "true"),
+					resource.TestCheckResourceAttr(datasourceNameNGTReady, "is_installed", "true"),
 				),
 			},
-			// 7. guest_shutdown: action blocks until the VM reaches OFF. power_state is ignored
-			// on the VM resource so the async OFF does not race the idempotency plan; the OFF
-			// state is verified via the data source.
+			// 7. guest_shutdown: settle after guest_reboot so ACPI shutdown is not issued mid-boot
 			{
+				PreConfig: func() {
+					t.Log("Waiting 2 minutes for guest tools after guest_reboot before guest_shutdown")
+					time.Sleep(timeSleep)
+				},
 				Config: testVMV2ConfigIgnorePower(name, desc) + testNGTConfig() + testVmsShutdownV2Config("guest_shutdown") + vmDataSource,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVMShutdown, "power_state", "OFF"),
@@ -366,5 +393,13 @@ const vmDataSource = `
 			depends_on = [
 				resource.nutanix_vm_shutdown_action_v2.vmShuts
 			]
+		}
+`
+
+// Live NGT readiness probe (resource state can be stale after reboot actions).
+const ngtReadyDataSource = `
+		data "nutanix_ngt_configuration_v2" "ready" {
+			ext_id = nutanix_virtual_machine_v2.rtest.id
+			depends_on = [nutanix_ngt_installation_v2.test]
 		}
 `

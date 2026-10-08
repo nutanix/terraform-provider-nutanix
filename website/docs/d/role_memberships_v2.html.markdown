@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_role_memberships_v2"
+page_title: "NUTANIX: nutanix_role_memberships_v2 (Beta)"
 sidebar_current: "docs-nutanix-datasource-role-memberships-v2"
 description: |-
   Lists role memberships in Nutanix.
 ---
 
-# nutanix_role_memberships_v2
+# nutanix_role_memberships_v2 (Beta)
+
+-> **Note:** This data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The data source and its behavior may change in future releases as the SDK API evolves.
 
 Lists role memberships in Nutanix.
 
@@ -93,3 +95,5 @@ Each role membership in `role_memberships` exports the following:
   * `name` - The name of the variable.
   * `value` - The value to substitute.
 * `project_ext_id` - External identifier of the project associated with the role membership.
+
+See detailed information in [Nutanix List Role Memberships V2](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/RoleMembership/operation/listRoleMemberships).

@@ -134,4 +134,4 @@ This helps to manage existing entities which are not created through terraform. 
 terraform import nutanix_pbr_v2.pbr_import <UUID>
 `
 
-See detailed information in [Nutanix Routing Policy v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/RoutingPolicies/operation/createRoutingPolicy).
+See detailed information in [Nutanix Routing Policy v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/RoutingPolicies/operation/createRoutingPolicy).

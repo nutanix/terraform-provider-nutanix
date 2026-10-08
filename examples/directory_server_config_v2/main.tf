@@ -23,7 +23,7 @@ resource "nutanix_directory_server_config_v2" "example" {
   # is_default_category_enabled = true - Allowed only for CONTAINS match type
 
   should_keep_default_category_on_login = false
-  # should_keep_default_category_on_login = true 
+  # should_keep_default_category_on_login = true
   # Allowed only for CONTAINS match type
   # Allowed only when is_default_category_enabled = true
 

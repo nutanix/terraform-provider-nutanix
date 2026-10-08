@@ -107,4 +107,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix Get VPC v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/Vpcs/operation/getVpcById).
+See detailed information in [Nutanix Get VPC v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/Vpcs/operation/getVpcById).

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -298,7 +299,9 @@ func ResourceNutanixNGTInsertIsoV2Update(ctx context.Context, d *schema.Resource
 // ResourceNutanixNGTInsertIsoV2Delete eject the ngt iso from the cd-rom of the vm
 func ResourceNutanixNGTInsertIsoV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] ResourceNutanixNGTInsertIsoV2Delete : Ejecting NGT ISO from the CD-ROM %s of the VM %s", d.Get("cdrom_ext_id").(string), d.Get("vm_ext_id").(string))
-	if action, ok := d.GetOk("action"); ok && action.(string) == "eject" {
+
+	cdromExtID, cdromExists := d.GetOk("cdrom_ext_id")
+	if action, ok := d.GetOk("action"); ok && action.(string) == "eject" || !cdromExists || cdromExtID.(string) == "" {
 		return diag.Diagnostics{{
 			Severity: diag.Warning,
 			Summary:  "NGT ISO is not inserted on the CD-ROM of the VM or ejected earlier using an action, Ignoring the request to eject the NGT ISO",
@@ -308,34 +311,71 @@ func ResourceNutanixNGTInsertIsoV2Delete(ctx context.Context, d *schema.Resource
 }
 
 func ejectCdromISO(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[DEBUG] Ejecting ISO from the CD-ROM %s of the VM %s", d.Get("cdrom_ext_id").(string), d.Get("vm_ext_id").(string))
 	conn := meta.(*conns.Client).VmmAPI
 	vmExtID := d.Get("vm_ext_id").(string)
-	extID := d.Get("cdrom_ext_id").(string)
-
-	ejectCdRomByIdRequest := import3.EjectCdRomByIdRequest{
-		VmExtId: utils.StringPtr(vmExtID),
-		ExtId:   utils.StringPtr(extID),
+	cdromVal, cdromExists := d.GetOk("cdrom_ext_id")
+	if !cdromExists || cdromVal == nil || cdromVal.(string) == "" {
+		log.Printf("[DEBUG] ejectCdromISO: cdrom_ext_id is empty or not set, ISO was already ejected. Skipping.")
+		return diag.Diagnostics{{
+			Severity: diag.Warning,
+			Summary:  "NGT ISO was already ejected (cdrom_ext_id is empty), skipping eject operation",
+		}}
 	}
-	resp, err := conn.VMAPIInstance.EjectCdRomById(ctx, &ejectCdRomByIdRequest)
-	if err != nil {
-		return diag.Errorf("error while ejecting cd-rom : %v", err)
+	extID := cdromVal.(string)
+	log.Printf("[DEBUG] Ejecting ISO from the CD-ROM %s of the VM %s", extID, vmExtID)
+
+	// This operation is async. Under cluster load, the task may sit in QUEUED state for a
+	// long time, and the VM ETag can change before the task actually starts, leading to a
+	// VM_ETAG_MISMATCH failure. In that case, re-fetch the latest ETag and retry.
+	const maxAttempts = 5
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		getVmByIdRequest := import3.GetVmByIdRequest{
+			ExtId: utils.StringPtr(vmExtID),
+		}
+		readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
+		if err != nil {
+			return diag.Errorf("error while reading vm : %v", err)
+		}
+		// Extract E-Tag Header
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(readResp, conn)
+
+		// Eject the ISO from the CD-ROM of the VM
+		ejectCdRomByIdRequest := import3.EjectCdRomByIdRequest{
+			VmExtId: utils.StringPtr(vmExtID),
+			ExtId:   utils.StringPtr(extID),
+		}
+		resp, err := conn.VMAPIInstance.EjectCdRomById(ctx, &ejectCdRomByIdRequest, args)
+		if err != nil {
+			return diag.Errorf("error while ejecting cd-rom : %v", err)
+		}
+
+		TaskRef := resp.Data.GetValue().(vmmPrism.TaskReference)
+		taskUUID := TaskRef.ExtId
+
+		taskconn := meta.(*conns.Client).PrismAPI
+
+		// Wait for the CD-ROM to be ejected
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutDelete),
+		}
+
+		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+			// Retry only for the known ETag mismatch failure mode.
+			if attempt < maxAttempts && isVmmEtagMismatchErr(errWaitTask) {
+				log.Printf("[DEBUG] ISO EJECTION failed due to VM ETag mismatch (attempt %d/%d). Retrying with refreshed ETag. Task UUID: %s, error: %s",
+					attempt, maxAttempts, utils.StringValue(taskUUID), errWaitTask)
+				time.Sleep(2 * time.Second)
+				continue
+			}
+			return diag.Errorf("ISO EJECTION FAILED: REASON: %s : Task UUID: %s", errWaitTask, utils.StringValue(taskUUID))
+		}
+		return nil
 	}
 
-	TaskRef := resp.Data.GetValue().(vmmPrism.TaskReference)
-	taskUUID := TaskRef.ExtId
-
-	taskconn := meta.(*conns.Client).PrismAPI
-
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutDelete),
-	}
-
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("ISO EJECTION FAILED: REASON: %s : Task UUID: %s", errWaitTask, utils.StringValue(taskUUID))
-	}
+	// Unreachable because the loop always returns on success or failure.
 	return nil
 }

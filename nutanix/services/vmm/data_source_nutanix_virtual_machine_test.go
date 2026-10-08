@@ -2,7 +2,6 @@ package vmm_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -51,7 +50,7 @@ func TestAccNutanixVirtualMachineDataSource_WithDisk(t *testing.T) {
 func TestAccNutanixVirtualMachineDataSource_withDiskContainer(t *testing.T) {
 	datasourceName := "data.nutanix_virtual_machine.nutanix_virtual_machine"
 	vmName := acctest.RandomWithPrefix("test-dou-vm")
-	containerUUID := os.Getenv("NUTANIX_STORAGE_CONTAINER")
+	containerUUID := testVars.StorageContainerUUID
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -85,7 +84,6 @@ func testAccVMDataSourceWithDiskContainer(vmName, containerUUID string) string {
 				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 			][0]
 		}
-
 		resource "nutanix_virtual_machine" "vm-disk" {
 			name                 = "%s"
 			cluster_uuid         = local.cluster1

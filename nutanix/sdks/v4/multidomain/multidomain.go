@@ -28,13 +28,11 @@ func NewMultidomainClient(credentials client.Credentials) (*Client, error) {
 		pcClient.AllowVersionNegotiation = cfg.AllowVersionNegotiation
 		baseClient = pcClient
 	}
-
-	f := &Client{
+	return &Client{
 		Projects:          api.NewProjectsServiceApi(baseClient),
 		ResourceGroups:    api.NewResourceGroupsServiceApi(baseClient),
 		LocalDomain:       api.NewLocalDomainServiceApi(baseClient),
 		APIClientInstance: baseClient,
-	}
+	}, nil
 
-	return f, nil
 }

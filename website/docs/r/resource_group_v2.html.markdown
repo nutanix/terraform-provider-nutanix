@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_resource_group_v2"
+page_title: "NUTANIX: nutanix_resource_group_v2 (Beta)"
 sidebar_current: "docs-nutanix-resource-resource-group-v2"
 description: |-
   Creates and manages a resource group.
 ---
 
-# nutanix_resource_group_v2
+# nutanix_resource_group_v2 (Beta)
+
+-> **Note:** This resource is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
 
 Creates and manages a resource group.
 
@@ -52,7 +54,7 @@ The `storage_containers` attribute supports the following:
 ## Attributes Reference
 
 The following attributes are exported:
-* `name`:- Resource Group name 
+* `name`:- Resource Group name
 * `project_ext_id`:- External identifier of the project this resource group belongs to.
 * `placement_targets`:- List of placement targets.
 * `ext_id`:- A globally unique identifier of the resource group.
@@ -68,3 +70,5 @@ The `links` attribute supports the following:
 
 * `href` - The URL at which the entity described by the link can be accessed.
 * `rel` - A name that identifies the relationship of the link to the object.
+
+See detailed information in [Nutanix Resource Group V4](https://developers.nutanix.com/api-reference?namespace=multidomain&version=v4.4.b1#tag/ResourceGroups/operation/createResourceGroup).

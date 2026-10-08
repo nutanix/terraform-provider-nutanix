@@ -39,4 +39,4 @@ The following attributes are exported:
 
 * `profiles` - List of VM Guest Customization Profiles. Each profile has the same attributes as the `nutanix_vm_guest_customization_profile_v2` data source.
 
-See detailed information in [Nutanix VM Guest Customization Profiles V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/VmGuestCustomizationProfiles/operation/listVmGuestCustomizationProfiles)
+See detailed information in [Nutanix VM Guest Customization Profiles V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/VmGuestCustomizationProfiles/operation/listVmGuestCustomizationProfiles)

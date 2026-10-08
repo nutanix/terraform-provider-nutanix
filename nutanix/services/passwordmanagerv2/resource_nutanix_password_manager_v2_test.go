@@ -3,7 +3,6 @@ package passwordmanagerv2_test
 import (
 	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"testing"
 
@@ -17,7 +16,7 @@ func TestAccV2NutanixPasswordManagerResource_UpdatePasswordForAdminAOSUser(t *te
 	systemTypeAOSFilter := "username eq 'admin' and systemType eq Clustermgmt.Config.SystemType'AOS'"
 
 	passwords := []string{
-		os.Getenv("NUTANIX_PASSWORD"), // Initial password
+		testVars.PasswordForTest, // Initial password
 	}
 
 	// Generate 5 new passwords:

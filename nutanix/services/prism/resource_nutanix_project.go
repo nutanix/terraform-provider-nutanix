@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/spf13/cast"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -759,8 +760,8 @@ func ResourceNutanixProject() *schema.Resource {
 			},
 			"enable_directory_and_identity_provider_shortlist": {
 				Type:     schema.TypeBool,
-				Default:  true,
 				Optional: true,
+				Computed: true,
 			},
 			"directory_reference_list": {
 				Type:     schema.TypeList,
@@ -1216,7 +1217,7 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 		if d.HasChange("default_environment_reference") {
 			projDetails.Resources.DefaultEnvironmentReference = expandOptionalReference(d, "default_environment_reference", "environment")
 		}
-		if d.HasChange("enable_directory_and_identity_provider_shortlist") {
+		if common.IsExplicitlySet(d, "enable_directory_and_identity_provider_shortlist") && d.HasChange("enable_directory_and_identity_provider_shortlist") {
 			v := d.Get("enable_directory_and_identity_provider_shortlist").(bool)
 			projDetails.Resources.EnableDirectoryAndIdentityProviderShortlist = utils.BoolPtr(v)
 		}
@@ -1416,15 +1417,20 @@ func expandProjectSpec(d *schema.ResourceData) *v3.ProjectSpec {
 		ExternalNetworkList:            expandReferenceList(d, "external_network_list"),
 	}
 
-	//nolint:staticcheck
-	if v, ok := d.GetOkExists("enable_directory_and_identity_provider_shortlist"); ok {
+	if common.IsExplicitlySet(d, "enable_directory_and_identity_provider_shortlist") {
+		v := d.Get("enable_directory_and_identity_provider_shortlist")
 		resources.EnableDirectoryAndIdentityProviderShortlist = utils.BoolPtr(v.(bool))
 	}
+	// Always set to avoid null in JSON (API requires array, not null)
 	if v, ok := d.GetOk("directory_reference_list"); ok {
 		resources.DirectoryReferenceList = expandDirectoryReferenceList(v.([]interface{}))
+	} else {
+		resources.DirectoryReferenceList = []*v3.ReferenceValues{}
 	}
 	if v, ok := d.GetOk("identity_providers_reference_list"); ok {
 		resources.IdentityProvidersReferenceList = expandDirectoryReferenceList(v.([]interface{}))
+	} else {
+		resources.IdentityProvidersReferenceList = []*v3.ReferenceValues{}
 	}
 
 	return &v3.ProjectSpec{
@@ -1546,15 +1552,20 @@ func expandProjectDetails(d *schema.ResourceData) *v3.ProjectDetails {
 		DefaultEnvironmentReference:    expandOptionalReference(d, "default_environment_reference", "environment"),
 	}
 
-	//nolint:staticcheck
-	if v, ok := d.GetOkExists("enable_directory_and_identity_provider_shortlist"); ok {
+	if common.IsExplicitlySet(d, "enable_directory_and_identity_provider_shortlist") {
+		v := d.Get("enable_directory_and_identity_provider_shortlist")
 		resources.EnableDirectoryAndIdentityProviderShortlist = utils.BoolPtr(v.(bool))
 	}
+	// Always set to avoid null in JSON (API requires array, not null)
 	if v, ok := d.GetOk("directory_reference_list"); ok {
 		resources.DirectoryReferenceList = expandDirectoryReferenceList(v.([]interface{}))
+	} else {
+		resources.DirectoryReferenceList = []*v3.ReferenceValues{}
 	}
 	if v, ok := d.GetOk("identity_providers_reference_list"); ok {
 		resources.IdentityProvidersReferenceList = expandDirectoryReferenceList(v.([]interface{}))
+	} else {
+		resources.IdentityProvidersReferenceList = []*v3.ReferenceValues{}
 	}
 
 	return &v3.ProjectDetails{

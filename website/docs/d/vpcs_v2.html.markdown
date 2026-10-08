@@ -134,4 +134,4 @@ The `vpcs` object contains the following attributes:
 - `value`: value of address
 - `prefix_length`: The prefix length of the network to which this host IPv4/IPv6 address belongs.
 
-See detailed information in [Nutanix List VPC v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/Vpcs/operation/listVpcs).
+See detailed information in [Nutanix List VPC v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/Vpcs/operation/listVpcs).

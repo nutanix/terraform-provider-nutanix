@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_saml_identity_providers_v2"
+page_title: "NUTANIX: nutanix_saml_identity_providers_v2 (Beta)"
 sidebar_current: "docs-nutanix-resource-saml-identity-providers-v2"
 description: |-
   Create a SAML Identity Provider.
 ---
 
-# nutanix_saml_identity_providers_v2
+# nutanix_saml_identity_providers_v2 (Beta)
+
+-> **Note:** This resource is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
 
 Provides a resource to Create a SAML Identity Provider.
 
@@ -204,4 +206,4 @@ terraform import nutanix_saml_identity_providers_v2.import_saml_idp <UUID>
 ```
 
 
-See detailed information in [Nutanix SAML Identity Providers v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0).
+See detailed information in [Nutanix SAML Identity Providers v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/SAMLIdentityProviders/operation/createSamlIdentityProvider).

@@ -183,6 +183,17 @@ func ResourceNutanixVMGCUpdateV2Create(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.Client).VmmAPI
 	vmExtID := d.Get("ext_id")
 
+	getVmByIdRequest := import3.GetVmByIdRequest{
+		ExtId: utils.StringPtr(vmExtID.(string)),
+	}
+	readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
+	if err != nil {
+		return diag.Errorf("error while reading vm : %v", err)
+	}
+	// Extract E-Tag Header
+	args := make(map[string]interface{})
+	args["If-Match"] = getEtagHeader(readResp, conn)
+
 	body := &config.GuestCustomizationParams{}
 
 	if configData, ok := d.GetOk("config"); ok {
@@ -193,7 +204,7 @@ func ResourceNutanixVMGCUpdateV2Create(ctx context.Context, d *schema.ResourceDa
 		ExtId: utils.StringPtr(vmExtID.(string)),
 		Body:  body,
 	}
-	resp, err := conn.VMAPIInstance.CustomizeGuestVm(ctx, &customizeGuestVmRequest)
+	resp, err := conn.VMAPIInstance.CustomizeGuestVm(ctx, &customizeGuestVmRequest, args)
 	if err != nil {
 		return diag.Errorf("error while creating Vm's Customize Guest : %v", err)
 	}

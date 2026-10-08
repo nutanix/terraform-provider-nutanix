@@ -101,6 +101,35 @@ func TestAccV2NutanixServiceGroupResource_WithICMP(t *testing.T) {
 	})
 }
 
+// TestAccV2NutanixServiceGroupResource_WithICMPAllAllowed covers the ICMP
+// wildcard case: is_all_allowed = true with no type/code. The provider must
+// omit type/code from the payload, otherwise the microseg v4.2 API rejects it
+// with MIC-30302 ("ICMP is set to allow all but also contains specific type/code").
+func TestAccV2NutanixServiceGroupResource_WithICMPAllAllowed(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-Service-group-%d", r)
+	desc := "test Service group ICMP wildcard"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testServiceGroupV2ConfigWithICMPAllAllowed(name, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameServiceGroup, "name", name),
+					resource.TestCheckResourceAttr(resourceNameServiceGroup, "description", desc),
+					resource.TestCheckResourceAttrSet(resourceNameServiceGroup, "links.#"),
+					resource.TestCheckResourceAttr(resourceNameServiceGroup, "icmp_services.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameServiceGroup, "icmp_services.0.is_all_allowed", "true"),
+					resource.TestCheckResourceAttr(resourceNameServiceGroup, "icmp_services.0.type", "0"),
+					resource.TestCheckResourceAttr(resourceNameServiceGroup, "icmp_services.0.code", "0"),
+					resource.TestCheckResourceAttrSet(resourceNameServiceGroup, "ext_id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccV2NutanixServiceGroupResource_WithAll(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-Service-group-%d", r)
@@ -198,6 +227,19 @@ func testServiceGroupV2ConfigWithICMP(name, desc string) string {
 		icmp_services {
 			type = 8
 			code = 0
+	 	}
+	}
+`, name, desc)
+}
+
+func testServiceGroupV2ConfigWithICMPAllAllowed(name, desc string) string {
+	return fmt.Sprintf(`
+		
+	resource "nutanix_service_groups_v2" "test" {
+		name  = "%[1]s"
+		description = "%[2]s"  
+		icmp_services {
+			is_all_allowed = true
 	 	}
 	}
 `, name, desc)

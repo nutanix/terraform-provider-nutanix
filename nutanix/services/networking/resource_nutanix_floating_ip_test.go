@@ -86,6 +86,9 @@ func TestAccNutanixFloatingIP_WithVPCUUID(t *testing.T) {
 
 func TestAccNutanixFloatingIP_WithVPCName(t *testing.T) {
 	r := randIntBetween(201, 210)
+	for r == 208 {
+		r = randIntBetween(201, 210)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,

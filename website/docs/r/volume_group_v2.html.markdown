@@ -78,7 +78,7 @@ The following arguments are supported:
 `name`, `description`, `should_load_balance_vm_attachments`, `sharing_status`,
 `target_prefix`, `target_name`, `enabled_authentications`, `iscsi_features`,
 `created_by`, `storage_features`, `usage_type`, and `is_hidden`.
-- `disks` can be updated in place. 
+- `disks` can be updated in place.
 - Updating `project_ext_id` is not supported.
 
 ### Iscsi Features
@@ -142,4 +142,4 @@ resource "nutanix_volume_group_v2" "import_vg" {}
 terraform import nutanix_volume_group_v2.import_vg <UUID>
 ```
 
-See detailed information in [Nutanix Create Volume Group V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.2#tag/VolumeGroups/operation/createVolumeGroup).
+See detailed information in [Nutanix Create Volume Group V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.3#tag/VolumeGroups/operation/createVolumeGroup).

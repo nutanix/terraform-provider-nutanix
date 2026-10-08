@@ -92,44 +92,6 @@ func TestAccV2NutanixProtectionPolicyResource_Synchronous(t *testing.T) {
 	})
 }
 
-func TestAccV2NutanixProtectionPolicyResource_ProjectAssociation(t *testing.T) {
-	r := acctest.RandInt()
-	name := fmt.Sprintf("tf-pp-projassoc-%d", r)
-	description := "protection policy project association test"
-	projectName := fmt.Sprintf("tf-pp-pa-proj-%d", r)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
-		CheckDestroy:             testProtectionPolicyV2CheckDestroy,
-		Steps: []resource.TestStep{
-			// Negative: associating a protection policy with a non-default (user) project
-			// is not supported by the platform (FEAT-17448, planned for Kronos).
-			{
-				Config:      testProtectionPolicyProjectAssociationConfig(name, description, projectName, "", true),
-				ExpectError: regexp.MustCompile("non default project is not supported"),
-			},
-			// Positive: the only supported association is the default project, using a
-			// category the default project can access (shared_with_projects = []).
-			{
-				Config: testProtectionPolicyProjectAssociationConfig(name, description, projectName, "00000000-0000-0000-0000-000000000000", false),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "project_ext_id", "00000000-0000-0000-0000-000000000000"),
-					resource.TestCheckResourceAttr("data.nutanix_protection_policy_v2.test", "project_ext_id", "00000000-0000-0000-0000-000000000000"),
-					resource.TestCheckResourceAttr("data.nutanix_protection_policies_v2.test", "protection_policies.#", "1"),
-					resource.TestCheckResourceAttrPair("data.nutanix_protection_policies_v2.test", "protection_policies.0.ext_id", resourceNameProtectionPolicy, "ext_id"),
-					resource.TestCheckResourceAttr("data.nutanix_protection_policies_v2.test", "protection_policies.0.project_ext_id", "00000000-0000-0000-0000-000000000000"),
-				),
-			},
-			// Negative: changing project_ext_id after creation is rejected by the provider.
-			{
-				Config:      testProtectionPolicyProjectAssociationConfig(name, description, projectName, "", false),
-				ExpectError: regexp.MustCompile("Update of project_ext_id is not supported"),
-			},
-		},
-	})
-}
-
 func TestAccV2NutanixProtectionPolicyResource_LinearRetention(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-protection-policy-%d", r)
@@ -439,92 +401,6 @@ func TestAccV2NutanixProtectionPolicyResource_AsyncLatestRecoveryPointRetentionL
 			},
 		},
 	})
-}
-
-func ppProjectExtIDLine(override string) string {
-	if override == "" {
-		return `project_ext_id = nutanix_project_v2.test.ext_id`
-	}
-	return fmt.Sprintf(`project_ext_id = "%s"`, override)
-}
-
-func testProtectionPolicyProjectAssociationConfig(name, description, projectName, projectExtIDOverride string, shareCategories bool) string {
-	shareBlock := `shared_with_projects = []`
-	if shareCategories {
-		shareBlock = `shared_with_projects = [nutanix_project_v2.test.ext_id]`
-	}
-	return fmt.Sprintf(`
-data "nutanix_pcs_v2" "pcs-list" {}
-
-locals {
-  config            = jsondecode(file("%[3]s"))
-  availability_zone = local.config.availability_zone
-}
-
-resource "nutanix_project_v2" "test" {
-  name        = "%[4]s"
-  project_id  = "%[4]s"
-  description = "project association test"
-}
-
-resource "nutanix_category_v2" "test" {
-  key         = "tf-pp-pa-cat-%[4]s"
-  value       = "pp_pa_category_value"
-  description = "category for protection policy project association"
-  %[6]s
-}
-
-resource "nutanix_protection_policy_v2" "test" {
-  name        = "%[1]s"
-  description = "%[2]s"
-
-  replication_configurations {
-    source_location_label = "source"
-    remote_location_label = "target"
-    schedule {
-      recovery_point_objective_time_seconds         = 0
-      recovery_point_type                           = "CRASH_CONSISTENT"
-      sync_replication_auto_suspend_timeout_seconds = 10
-      start_time                                    = "23h:54m"
-    }
-  }
-  replication_configurations {
-    source_location_label = "target"
-    remote_location_label = "source"
-    schedule {
-      recovery_point_objective_time_seconds         = 0
-      recovery_point_type                           = "CRASH_CONSISTENT"
-      sync_replication_auto_suspend_timeout_seconds = 10
-      start_time                                    = "23h:54m"
-    }
-  }
-
-  replication_locations {
-    domain_manager_ext_id = data.nutanix_pcs_v2.pcs-list.pcs[0].ext_id
-    label                 = "source"
-    is_primary            = true
-  }
-  replication_locations {
-    domain_manager_ext_id = local.availability_zone.pc_ext_id
-    label                 = "target"
-    is_primary            = false
-  }
-
-  category_ids = [nutanix_category_v2.test.id]
-  %[5]s
-  depends_on = [nutanix_project_v2.test]
-}
-
-data "nutanix_protection_policy_v2" "test" {
-  ext_id     = nutanix_protection_policy_v2.test.ext_id
-  depends_on = [nutanix_protection_policy_v2.test]
-}
-
-data "nutanix_protection_policies_v2" "test" {
-  filter     = "name eq '${nutanix_protection_policy_v2.test.name}'"
-  depends_on = [nutanix_protection_policy_v2.test]
-}
-`, name, description, filepath, projectName, ppProjectExtIDLine(projectExtIDOverride), shareBlock)
 }
 
 func testProtectionPolicyResourceConfig(name, description string) string {

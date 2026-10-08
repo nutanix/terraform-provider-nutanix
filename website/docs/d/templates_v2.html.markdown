@@ -402,4 +402,4 @@ The `nics` attribute supports the following:
 
 
 
-See detailed information in [Nutanix List Templates V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Templates/operation/listTemplates).
+See detailed information in [Nutanix List Templates V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/Templates/operation/listTemplates).

@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_project_v2"
+page_title: "NUTANIX: nutanix_project_v2 (Beta)"
 sidebar_current: "docs-nutanix-datasource-project-v2"
 description: |-
   Fetches the project identified by an external identifier.
 ---
 
-# nutanix_project_v2
+# nutanix_project_v2 (Beta)
+
+-> **Note:** This data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The data source and its behavior may change in future releases as the SDK API evolves.
 
 Fetches the project identified by an external identifier.
 
@@ -47,3 +49,5 @@ The `links` attribute supports the following:
 
 * `href`:- The URL at which the entity described by the link can be accessed.
 * `rel`:- A name that identifies the relationship of the link to the object.
+
+See detailed information in [Nutanix Get Project V4](https://developers.nutanix.com/api-reference?namespace=multidomain&version=v4.4.b1#tag/Projects/operation/getProjectById).
