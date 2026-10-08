@@ -562,12 +562,22 @@ func ResourceNutanixOvaVMDeploymentCreate(ctx context.Context, d *schema.Resourc
 					for _, diskInput := range diskInputs {
 						aJSON, _ := json.MarshalIndent(diskInput, "", "  ")
 						log.Printf("[DEBUG] disk input: %s", string(aJSON))
+						getVmByIdRequest := import7.GetVmByIdRequest{
+							ExtId: utils.StringPtr(d.Id()),
+						}
+						readVMResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
+						if err != nil {
+							return diag.Errorf("error reading VM for disk creation: %v", err)
+						}
+
+						args := make(map[string]interface{})
+						args["If-Match"] = getEtagHeader(readVMResp, conn)
 
 						createDiskRequest := import7.CreateDiskRequest{
 							VmExtId: utils.StringPtr(d.Id()),
 							Body:    &diskInput,
 						}
-						resp, err := conn.VMAPIInstance.CreateDisk(ctx, &createDiskRequest)
+						resp, err := conn.VMAPIInstance.CreateDisk(ctx, &createDiskRequest, args)
 						if err != nil {
 							return diag.Errorf("error creating disk: %v", err)
 						}
@@ -728,10 +738,21 @@ func ResourceNutanixOvaVMDeploymentUpdate(ctx context.Context, d *schema.Resourc
 func ResourceNutanixOvaVMDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
+	getVmByIdRequest := import7.GetVmByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
+	if err != nil {
+		return diag.Errorf("error while reading vm : %v", err)
+	}
+	// Extract E-Tag Header
+	args := make(map[string]interface{})
+	args["If-Match"] = getEtagHeader(readResp, conn)
+
 	deleteVmByIdRequest := import7.DeleteVmByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
 	}
-	resp, err := conn.VMAPIInstance.DeleteVmById(ctx, &deleteVmByIdRequest)
+	resp, err := conn.VMAPIInstance.DeleteVmById(ctx, &deleteVmByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while deleting vm : %v", err)
 	}
@@ -865,6 +886,16 @@ func handlePowerStateChanges(ctx context.Context, d *schema.ResourceData, meta i
 		log.Printf("[DEBUG] Handling power state change from '%s' to '%s'", oldPowerState, newPowerState)
 
 		vmmConn := conn.(*conns.Client).VmmAPI
+		getVmByIdRequest := import7.GetVmByIdRequest{
+			ExtId: utils.StringPtr(d.Id()),
+		}
+		readResp, err := vmmConn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
+		if err != nil {
+			return diag.Errorf("error reading VM for power state change: %v", err)
+		}
+
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(readResp, vmmConn)
 
 		var taskUUID *string
 
@@ -873,7 +904,7 @@ func handlePowerStateChanges(ctx context.Context, d *schema.ResourceData, meta i
 			powerOnVmRequest := import7.PowerOnVmRequest{
 				ExtId: utils.StringPtr(d.Id()),
 			}
-			powerResp, err := vmmConn.VMAPIInstance.PowerOnVm(ctx, &powerOnVmRequest)
+			powerResp, err := vmmConn.VMAPIInstance.PowerOnVm(ctx, &powerOnVmRequest, args)
 			if err != nil {
 				return diag.Errorf("error powering on VM: %v", err)
 			}
@@ -883,7 +914,7 @@ func handlePowerStateChanges(ctx context.Context, d *schema.ResourceData, meta i
 			powerOffVmRequest := import7.PowerOffVmRequest{
 				ExtId: utils.StringPtr(d.Id()),
 			}
-			powerResp, err := vmmConn.VMAPIInstance.PowerOffVm(ctx, &powerOffVmRequest)
+			powerResp, err := vmmConn.VMAPIInstance.PowerOffVm(ctx, &powerOffVmRequest, args)
 			if err != nil {
 				return diag.Errorf("error powering off VM: %v", err)
 			}

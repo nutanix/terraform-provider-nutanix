@@ -225,7 +225,7 @@ func flattenAssociationSummary(pr []import1.AssociationSummary) []interface{} {
 		}
 		return associationList
 	}
-	return nil
+	return []interface{}{}
 }
 
 func flattenAssociationDetail(pr []import1.AssociationDetail) []interface{} {
@@ -244,7 +244,7 @@ func flattenAssociationDetail(pr []import1.AssociationDetail) []interface{} {
 		}
 		return detailList
 	}
-	return nil
+	return []interface{}{}
 }
 
 func flattenResourceGroup(pr *import1.ResourceGroup) string {

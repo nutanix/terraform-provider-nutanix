@@ -121,8 +121,8 @@ The following attributes are exported:
 ### application_rule_spec
 
 - `secured_group_category_associated_entity_type`: (Computed) Entity type for the secured group category (SUBNET, VM, VPC).
-- `secured_group_category_references`: A set of network endpoints which is protected by a Network Security Policy and defined as a list of categories.
-- `secured_group_entity_group_reference`: (Computed) Reference to the secured group entity group.
+- `secured_group_category_references`: A set of network endpoints which is protected by a Network Security Policy and defined as a list of categories. The rule contains either this field or `secured_group_entity_group_reference`, not both.
+- `secured_group_entity_group_reference`: (Computed) Reference to the secured group entity group. The rule contains either this field or `secured_group_category_references`, not both.
 - `src_allow_spec`: A specification to how allow mode traffic should be applied, either ALL or NONE.
 - `dest_allow_spec`: A specification to how allow mode traffic should be applied, either ALL or NONE.
 - `src_category_associated_entity_type`: (Computed) Entity type for the source category (SUBNET, VM, VPC).
@@ -146,9 +146,9 @@ The following attributes are exported:
 ### intra_entity_group_rule_spec
 
 - `secured_group_category_associated_entity_type`: (Computed) Entity type for the secured group category (SUBNET, VM, VPC).
-- `secured_group_entity_group_reference`: (Computed) Reference to the secured group entity group.
+- `secured_group_entity_group_reference`: (Computed) Reference to the secured group entity group. The rule contains either this field or `secured_group_category_references`, not both.
 - `secured_group_action`: Whether traffic between intra secured group entities should be allowed or denied.
-- `secured_group_category_references`: A specification to whether traffic between intra secured group entities should be allowed or denied.
+- `secured_group_category_references`: List of category references for the secured group. The rule contains either this field or `secured_group_entity_group_reference`, not both.
 - `secured_group_service_references`: (Computed) List of service group references for the secured group.
 - `tcp_services`: (Computed) TCP port ranges for the rule.
 - `udp_services`: (Computed) UDP port ranges for the rule.

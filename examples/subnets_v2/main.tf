@@ -28,6 +28,12 @@ locals {
   ][0]
 }
 
+# create category
+resource "nutanix_category_v2" "category" {
+  key = "environment"
+  value = "production"
+}
+
 #creating subnet with IP pool
 resource "nutanix_subnet_v2" "vlan-112" {
   name              = "vlan-112"
@@ -36,6 +42,9 @@ resource "nutanix_subnet_v2" "vlan-112" {
   subnet_type       = "VLAN"
   network_id        = 122
   is_external       = true
+  metadata {
+    category_ids         = [nutanix_category_v2.category.id]
+  }
   ip_config {
 
     ipv4 {

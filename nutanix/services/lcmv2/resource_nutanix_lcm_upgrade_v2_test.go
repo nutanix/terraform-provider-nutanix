@@ -114,6 +114,9 @@ data "nutanix_lcm_status_v2" "status-before-upgrade" {
 
 # upgrade the entity
 resource "nutanix_lcm_upgrade_v2" "upgrade" {
+  timeouts {
+    create = "60m"
+  }
   entity_update_specs {
     entity_uuid = data.nutanix_lcm_entity_v2.entity-before-upgrade.ext_id
     to_version  = local.lcm.entity_model_version

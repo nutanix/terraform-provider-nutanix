@@ -59,4 +59,3 @@ Import example:
 
 terraform import nutanix_cluster_category_associations_v2.cluster_categories <cluster_ext_id>
 */
-

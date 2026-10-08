@@ -8,7 +8,7 @@ description: |-
 
 # nutanix_vpc_virtual_switch_mapping_v2
 
-The `nutanix_vpc_virtual_switch_mapping_v2` resource allows you to configure and manage the mapping between a Virtual Private Cloud (VPC) and a Virtual Switch within the Nutanix infrastructure. 
+The `nutanix_vpc_virtual_switch_mapping_v2` resource allows you to configure and manage the mapping between a Virtual Private Cloud (VPC) and a Virtual Switch within the Nutanix infrastructure.
 
 This resource is primarily used to control East-West traffic configurations at the Virtual Switch level. It allows administrators to dictate whether all network traffic is permitted through the switch or if the flow should be restricted, alongside assigning appropriate cluster boundaries and metadata (such as project ownership and categories).
 

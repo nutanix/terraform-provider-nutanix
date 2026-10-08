@@ -25,12 +25,15 @@ func testAccCheckNutanixVmsResourceDestroy(s *terraform.State) error {
 		getVmByIdRequest := import1.GetVmByIdRequest{
 			ExtId: utils.StringPtr(rs.Primary.ID),
 		}
-		_, err := vmClient.GetVmById(ctx, &getVmByIdRequest)
+		vmResponse, err := vmClient.GetVmById(ctx, &getVmByIdRequest)
 		if err == nil {
+			etag := vmClient.ApiClient.GetEtag(vmResponse)
+			args := make(map[string]interface{})
+			args["If-Match"] = utils.StringPtr(etag)
 			deleteVmByIdRequest := import1.DeleteVmByIdRequest{
 				ExtId: utils.StringPtr(rs.Primary.ID),
 			}
-			_, err = vmClient.DeleteVmById(ctx, &deleteVmByIdRequest)
+			_, err = vmClient.DeleteVmById(ctx, &deleteVmByIdRequest, args)
 			if err != nil {
 				return fmt.Errorf("error: VM still exists: %v", err)
 			}

@@ -615,8 +615,6 @@ func flattenNodeReference(pr *import1.NodeReference) []map[string]interface{} {
 				nodeIPs = append(nodeIPs, utils.StringValue(n.ControllerVmIp.Ipv4.Value))
 			}
 		}
-		log.Printf("[DEBUG] flattenNodeReference: numberOfNodes_isNil=%t numberOfNodes=%d nodeListLen=%d nodeIPs=%v",
-			pr.NumberOfNodes == nil, utils.IntValue(pr.NumberOfNodes), len(pr.NodeList), nodeIPs)
 
 		node["number_of_nodes"] = pr.NumberOfNodes
 		node["node_list"] = flattenNodeListItemReference(pr.NodeList)

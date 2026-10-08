@@ -14,4 +14,3 @@ variable "nutanix_port" {
   type    = string
   default = "9440"
 }
-

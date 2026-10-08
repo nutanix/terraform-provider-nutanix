@@ -193,11 +193,6 @@ resource "nutanix_protection_policy_v2" "test" {
   category_ids = [nutanix_category_v2.test.id]
 }
 
-data "nutanix_storage_containers_v2" "ngt-sc" {
-	filter = "clusterExtId eq '${local.clusterExtId}' and startswith(name,'default-container-')"
-	limit = 1
-}
-
 resource "nutanix_virtual_machine_v2" "test"{
 	name= "%[2]s"
 	description =  "%[3]s"
@@ -211,26 +206,6 @@ resource "nutanix_virtual_machine_v2" "test"{
   }
 	power_state = "ON"
 
-  disks {
-    disk_address{
-      bus_type = "SCSI"
-      index = 0
-    }
-    backing_info{
-      vm_disk{
-        disk_size_bytes = "1073741824" # 10 GB
-        storage_container{
-          ext_id = data.nutanix_storage_containers_v2.ngt-sc.storage_containers[0].ext_id
-        }
-      }
-    }
-  }
-  cd_roms {
-    disk_address {
-      bus_type = "IDE"
-      index    = 0
-    }
-  }
 	depends_on = [nutanix_protection_policy_v2.test]
 }
 
