@@ -764,6 +764,78 @@ func deleteDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.Errorf("error waiting for db Instance (%s) to delete: %s", res.Entityid, errWaitTask)
 	}
 	log.Printf("NDB database with %s id is deleted successfully", d.Id())
+
+	// Handle cleanup for orphaned VMs/DPCs (Workaround for NDB API limitation)
+	// See CFD ERA-70198 and ERA-70197
+	if createdbserver, ok := d.GetOkExists("createdbserver"); !ok || createdbserver.(bool) {
+		// Only delete if the flag isn't explicitly set to false
+		if delLogCls, ok := d.GetOkExists("delete_logical_cluster"); !ok || delLogCls.(bool) {
+			dbServerLogicalClusterID := d.Get("dbserver_logical_cluster_id").(string)
+
+			var dbServerID string
+			if nodes, ok := d.GetOk("database_nodes"); ok {
+				if nodeList, ok := nodes.([]interface{}); ok && len(nodeList) > 0 {
+					if nodeMap, ok := nodeList[0].(map[string]interface{}); ok {
+						if val, ok := nodeMap["dbserver_id"]; ok && val != nil {
+							dbServerID = val.(string)
+						}
+					}
+				}
+			}
+
+			if dbServerLogicalClusterID != "" {
+				log.Printf("Cleaning up HA DB Server Cluster (DPC): %s", dbServerLogicalClusterID)
+				dpcReq := &era.DeleteDPCRequest{
+					Delete: true,
+					DBServers: era.DPCDBServersOptions{
+						Delete:            true,
+						DeleteVgs:         true,
+						DeleteVmSnapshots: true,
+					},
+				}
+				dpcRes, err := conn.Service.DeleteDBServerCluster(ctx, dpcReq, dbServerLogicalClusterID)
+				if err != nil {
+					log.Printf("Warning: Failed to delete DB Server Cluster (DPC) %s: %s", dbServerLogicalClusterID, err.Error())
+				} else if dpcRes != nil && dpcRes.Operationid != "" {
+					opReqDpc := era.GetOperationRequest{OperationID: dpcRes.Operationid}
+					stateConfDpc := &resource.StateChangeConf{
+						Pending: []string{"PENDING"},
+						Target:  []string{"COMPLETED", "FAILED"},
+						Refresh: eraRefresh(ctx, conn, opReqDpc),
+						Timeout: d.Timeout(schema.TimeoutDelete),
+						Delay:   eraDelay,
+					}
+					if _, errWaitTask := stateConfDpc.WaitForStateContext(ctx); errWaitTask != nil {
+						log.Printf("Warning: error waiting for DB Server Cluster %s to delete: %s", dbServerLogicalClusterID, errWaitTask.Error())
+					}
+				}
+			} else if dbServerID != "" {
+				log.Printf("Cleaning up Standalone DB Server VM: %s", dbServerID)
+				vmReq := &era.DeleteDBServerVMRequest{
+					Delete:            true,
+					DeleteVgs:         true,
+					DeleteVMSnapshots: true,
+				}
+				vmRes, err := conn.Service.DeleteDBServerVM(ctx, vmReq, dbServerID)
+				if err != nil {
+					log.Printf("Warning: Failed to delete DB Server VM %s: %s", dbServerID, err.Error())
+				} else if vmRes != nil && vmRes.Operationid != "" {
+					opReqVm := era.GetOperationRequest{OperationID: vmRes.Operationid}
+					stateConfVm := &resource.StateChangeConf{
+						Pending: []string{"PENDING"},
+						Target:  []string{"COMPLETED", "FAILED"},
+						Refresh: eraRefresh(ctx, conn, opReqVm),
+						Timeout: d.Timeout(schema.TimeoutDelete),
+						Delay:   eraDelay,
+					}
+					if _, errWaitTask := stateConfVm.WaitForStateContext(ctx); errWaitTask != nil {
+						log.Printf("Warning: error waiting for DB Server VM %s to delete: %s", dbServerID, errWaitTask.Error())
+					}
+				}
+			}
+		}
+	}
+
 	return nil
 }
 

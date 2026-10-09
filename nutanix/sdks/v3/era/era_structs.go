@@ -1659,6 +1659,20 @@ type DBServerInputRequest struct {
 	MaintenanceTasks         *MaintenanceTasks  `json:"maintenanceTasks,omitempty"`
 }
 
+type DeleteDPCRequest struct {
+	Delete     bool                `json:"delete,omitempty"`
+	Remove     bool                `json:"remove,omitempty"`
+	SoftRemove bool                `json:"softRemove,omitempty"`
+	Forced     bool                `json:"forced,omitempty"`
+	DBServers  DPCDBServersOptions `json:"dbservers,omitempty"`
+}
+
+type DPCDBServersOptions struct {
+	Delete            bool `json:"delete,omitempty"`
+	DeleteVgs         bool `json:"deleteVgs,omitempty"`
+	DeleteVmSnapshots bool `json:"deleteVmSnapshots,omitempty"`
+}
+
 type DeleteDBServerVMRequest struct {
 	SoftRemove        bool `json:"softRemove,omitempty"`
 	Remove            bool `json:"remove,omitempty"`
