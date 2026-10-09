@@ -1947,7 +1947,7 @@ type NetworksInfo struct {
 }
 
 type ClusterIntentInput struct {
-	ClusterName        *string            `json:"clusterName,omitempty"`
+	ClusterName        *string            `json:"name,omitempty"`
 	ClusterDescription *string            `json:"clusterDescription,omitempty"`
 	ClusterIP          *string            `json:"clusterIP,omitempty"`
 	StorageContainer   *string            `json:"storageContainer,omitempty"`
@@ -1956,6 +1956,8 @@ type ClusterIntentInput struct {
 	Protocol           *string            `json:"protocol,omitempty"`
 	ClusterType        *string            `json:"clusterType,omitempty"`
 	Version            *string            `json:"version,omitempty"`
+	CloudInfo          interface{}        `json:"cloudInfo,omitempty"`
+	ManagementServer   interface{}        `json:"managementServerInfo,omitempty"`
 	CredentialsInfo    []*NameValueParams `json:"credentialsInfo,omitempty"`
 	AgentNetworkInfo   []*NameValueParams `json:"agentNetworkInfo,omitempty"`
 	NetworksInfo       []*NetworksInfo    `json:"networksInfo,omitempty"`
@@ -1971,6 +1973,60 @@ type ClusterUpdateInput struct {
 	Name        *string   `json:"name,omitempty"`
 	Description *string   `json:"description,omitempty"`
 	IPAddresses []*string `json:"ipAddresses,omitempty"`
+}
+
+type OnboardingPrismCentralInfo struct {
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+	IPAddress   *string `json:"ipAddress,omitempty"`
+	Port        *int    `json:"port,omitempty"`
+	Username    *string `json:"username,omitempty"`
+	Password    *string `json:"password,omitempty"`
+}
+
+type OnboardingPrismElementInfo struct {
+	Name        *string  `json:"name,omitempty"`
+	Description *string  `json:"description,omitempty"`
+	IPAddresses []string `json:"ipAddresses,omitempty"`
+	CloudType   *string  `json:"cloudType,omitempty"`
+	Version     *string  `json:"version,omitempty"`
+	Username    *string  `json:"username,omitempty"`
+	Password    *string  `json:"password,omitempty"`
+}
+
+type OnboardingEraServerConfig struct {
+	DNSServers []string                 `json:"dnsServers,omitempty"`
+	NTPServers []string                 `json:"ntpServers,omitempty"`
+	Timezone   *string                  `json:"timezone,omitempty"`
+	SMTPConfig *OnboardingEraSMTPConfig `json:"smtpConfig,omitempty"`
+}
+
+type OnboardingEraSMTPConfig struct {
+	SMTPServerIPPort *string `json:"smtpServerIPPort,omitempty"`
+	SMTPUsername     *string `json:"smtpUsername,omitempty"`
+	SMTPPassword     *string `json:"smtpPassword,omitempty"`
+	EmailFromAddress *string `json:"emailFromAddress,omitempty"`
+	TLSEnabled       *bool   `json:"tlsEnabled,omitempty"`
+	Unsecured        *bool   `json:"unsecured,omitempty"`
+}
+
+type OnboardingStorageSelection struct {
+	StorageContainer *string `json:"storageContainer,omitempty"`
+}
+
+type OperationsShortInfoResponse struct {
+	Summary         interface{}                  `json:"summary"`
+	Operations      []OperationsShortInfoElement `json:"operations"`
+	OperationsCount int                          `json:"operationsCount"`
+}
+
+type OperationsShortInfoElement struct {
+	ID                 *string `json:"id"`
+	Type               *string `json:"type"`
+	Status             *string `json:"status"`
+	NxClusterID        *string `json:"nxClusterId"`
+	DateSubmitted      *string `json:"dateSubmitted"`
+	PercentageComplete *string `json:"percentageComplete"`
 }
 
 type GetNetworkAvailableIPs []struct {

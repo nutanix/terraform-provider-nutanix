@@ -45,11 +45,12 @@ linters-settings:
 
   # depguard controls allowed/forbidden imports
   depguard:
-    list-type: blacklist
-    packages:
-      # logging is allowed only by logutils.Log, logrus
-      # is allowed to use only in logutils package
-      - github.com/sirupsen/logrus
+    rules:
+      main:
+        deny:
+          # logging is allowed only by logutils.Log, logrus
+          # is allowed to use only in logutils package
+          - pkg: github.com/sirupsen/logrus
 
   # spelling linter
   misspell:
@@ -99,6 +100,8 @@ linters:
     - unparam
     - unused
     - staticcheck
+    - wrapcheck
+    - govet
 
 # =========================
 # Issues exclusions
