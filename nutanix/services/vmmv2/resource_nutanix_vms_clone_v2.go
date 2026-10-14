@@ -287,6 +287,10 @@ func ResourceNutanixVMCloneV2() *schema.Resource {
 																Type:     schema.TypeBool,
 																Computed: true,
 															},
+															"serial_id": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
 														},
 													},
 												},
@@ -947,6 +951,10 @@ func ResourceNutanixVMCloneV2() *schema.Resource {
 													Type:     schema.TypeBool,
 													Computed: true,
 												},
+												"serial_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
 											},
 										},
 									},
@@ -1100,6 +1108,10 @@ func ResourceNutanixVMCloneV2() *schema.Resource {
 									},
 									"is_migration_in_progress": {
 										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"serial_id": {
+										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
