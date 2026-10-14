@@ -416,6 +416,10 @@ func ResourceNutanixOvaVMDeploymentV2() *schema.Resource {
 																Type:     schema.TypeBool,
 																Computed: true,
 															},
+															"serial_id": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
 														},
 													},
 												},
