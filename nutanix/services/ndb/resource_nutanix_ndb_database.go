@@ -774,22 +774,14 @@ func deleteDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 			dbServerLogicalClusterID := d.Get("dbserver_logical_cluster_id").(string)
 			log.Printf("[DEBUG] ERA-70198/ERA-70197: dbserver_logical_cluster_id from state: %s", dbServerLogicalClusterID)
 
-			var dbServerID string
-			if nodes, ok := d.GetOk("database_nodes"); ok {
-				if nodeList, ok := nodes.([]interface{}); ok && len(nodeList) > 0 {
-					if nodeMap, ok := nodeList[0].(map[string]interface{}); ok {
-						if val, ok := nodeMap["dbserver_id"]; ok && val != nil {
-							dbServerID = val.(string)
-							log.Printf("[DEBUG] ERA-70198/ERA-70197: dbserver_id from state nodes: %s", dbServerID)
-						}
-					}
-				}
-			}
-
+			// 1. HA DB Server Cluster (DPC) cleanup
 			if dbServerLogicalClusterID != "" {
 				log.Printf("[INFO] ERA-70198/ERA-70197: Cleaning up HA DB Server Cluster (DPC): %s", dbServerLogicalClusterID)
 				dpcReq := &era.DeleteDPCRequest{
-					Delete: true,
+					Delete:     true,
+					Remove:     false,
+					SoftRemove: false,
+					Forced:     false,
 					DBServers: era.DPCDBServersOptions{
 						Delete:            true,
 						DeleteVgs:         true,
@@ -813,28 +805,37 @@ func deleteDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 						log.Printf("[ERROR] ERA-70198/ERA-70197: error waiting for DB Server Cluster %s to delete: %s", dbServerLogicalClusterID, errWaitTask.Error())
 					}
 				}
-			} else if dbServerID != "" {
-				log.Printf("[INFO] ERA-70198/ERA-70197: Cleaning up Standalone DB Server VM: %s", dbServerID)
-				vmReq := &era.DeleteDBServerVMRequest{
-					Delete:            true,
-					DeleteVgs:         true,
-					DeleteVMSnapshots: true,
-				}
-				vmRes, err := conn.Service.DeleteDBServerVM(ctx, vmReq, dbServerID)
-				if err != nil {
-					log.Printf("[ERROR] ERA-70198/ERA-70197: Failed to delete DB Server VM %s: %s", dbServerID, err.Error())
-				} else if vmRes != nil && vmRes.Operationid != "" {
-					log.Printf("[INFO] ERA-70198/ERA-70197: VM cleanup triggered. Operation ID: %s", vmRes.Operationid)
-					opReqVm := era.GetOperationRequest{OperationID: vmRes.Operationid}
-					stateConfVm := &resource.StateChangeConf{
-						Pending: []string{"PENDING"},
-						Target:  []string{"COMPLETED", "FAILED"},
-						Refresh: eraRefresh(ctx, conn, opReqVm),
-						Timeout: d.Timeout(schema.TimeoutDelete),
-						Delay:   eraDelay,
-					}
-					if _, errWaitTask := stateConfVm.WaitForStateContext(ctx); errWaitTask != nil {
-						log.Printf("[ERROR] ERA-70198/ERA-70197: error waiting for DB Server VM %s to delete: %s", dbServerID, errWaitTask.Error())
+			}
+
+			// 2. Individual DB Server VM cleanup for all nodes
+			// Following NDB Operator logic: always target the DB Server VMs explicitly
+			if nodes, ok := d.GetOk("database_nodes"); ok {
+				if nodeList, ok := nodes.([]interface{}); ok {
+					for i, node := range nodeList {
+						if nodeMap, ok := node.(map[string]interface{}); ok {
+							if val, ok := nodeMap["dbserver_id"]; ok && val != nil {
+								vmID := val.(string)
+								if vmID == "" {
+									continue
+								}
+								log.Printf("[INFO] ERA-70198/ERA-70197: Cleaning up DB Server VM [%d]: %s", i, vmID)
+								vmReq := &era.DeleteDBServerVMRequest{
+									Delete:            true,
+									Remove:            false,
+									SoftRemove:        false,
+									DeleteVgs:         true,
+									DeleteVMSnapshots: true,
+								}
+								vmRes, err := conn.Service.DeleteDBServerVM(ctx, vmReq, vmID)
+								if err != nil {
+									log.Printf("[ERROR] ERA-70198/ERA-70197: Failed to delete DB Server VM %s: %s", vmID, err.Error())
+								} else if vmRes != nil && vmRes.Operationid != "" {
+									log.Printf("[INFO] ERA-70198/ERA-70197: VM cleanup triggered for %s. Operation ID: %s", vmID, vmRes.Operationid)
+									// We fire and forget the individual VM deletion to avoid long destroy times
+									// and potential conflicts with the DPC deletion operation.
+								}
+							}
+						}
 					}
 				}
 			}
