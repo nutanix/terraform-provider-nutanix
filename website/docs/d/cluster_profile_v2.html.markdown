@@ -77,7 +77,7 @@ The clusters attribute supports the following:
 * `ext_id`: - A globally unique identifier of an instance that is suitable for external consumption.
 * `is_compliant`: - Indicates if a cluster is compliant with the cluster profile.
 * `last_synced_time`: - The last synced time of a cluster.
-* `config_drifts`: - The configuration drifts of a cluster.
+* `config_drifts`: - List of configuration types that have drifted from the cluster profile. Empty when no configuration drift is reported.
   
     | Enum                      | Description                                |
     |---------------------------|--------------------------------------------|
