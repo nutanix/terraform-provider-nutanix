@@ -99,12 +99,12 @@
         "url": ""
       },
       "tenant_membership_ad": {
-        "name": "jpmorgan.lab.local",
-        "directory_service_name": "jpmorgan.lab.local",
-        "username": "Administrator@jpmorgan.lab.local",
-        "password": "nutanix/4u",
-        "dns": "10.99.5.81",
-        "url": "ldaps://10.99.5.81:10642",
+        "name": "",
+        "directory_service_name": "",
+        "username": "Adminis",
+        "password": "",
+        "dns": "",
+        "url": "",
         "user_groups": {
           "users": {
             "jpmorgan_user_001": ""
@@ -269,7 +269,7 @@
       "pe_ip": ""
     },
     "pc_restore": {
-      "skip_pc_restore_test": false
+      "skip_pc_restore_test": true
     }
   },
   "security": {
