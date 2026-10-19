@@ -76,8 +76,9 @@ func DatasourceNutanixBackupTargetV2() *schema.Resource {
 													Computed: true,
 												},
 												"credentials": {
-													Type:     schema.TypeList,
-													Computed: true,
+													Type:      schema.TypeList,
+													Computed:  true,
+													Sensitive: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"access_key_id": {
@@ -85,8 +86,9 @@ func DatasourceNutanixBackupTargetV2() *schema.Resource {
 																Computed: true,
 															},
 															"secret_access_key": {
-																Type:     schema.TypeString,
-																Computed: true,
+																Type:      schema.TypeString,
+																Computed:  true,
+																Sensitive: true,
 															},
 														},
 													},

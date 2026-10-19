@@ -10,6 +10,8 @@ description: |-
 
 Registers the domain with Nutanix Central, establishing a connection between Prism Central and their corresponding Nutanix Central components. The local domain is a singleton entity: there is exactly one local domain per Prism Central. Creating this resource registers the domain and destroying it unregisters the domain from Nutanix Central.
 
+> **WriteOnly credentials:** `credentials.api_key`, `credentials.key_id` are write-only. They are never stored in Terraform state. Re-supply them in configuration on every apply. Do not use `lifecycle.ignore_changes` on these attributes. See the [WriteOnly Credentials](/docs/providers/nutanix/guides/writeonly_credentials.html) guide for upgrade caveats.
+
 ## Example Usage
 
 ```hcl
@@ -39,8 +41,8 @@ The following arguments are supported:
 
 The `credentials` attribute supports the following:
 
-* `api_key`:- (Required, Sensitive) API key which is used by Prism Central as authentication for Nutanix Central communication.
-* `key_id`:- (Required, Sensitive) This is used by Prism Central to form authentication token for Nutanix Central communication.
+* `api_key`:- (Required, WriteOnly) API key which is used by Prism Central as authentication for Nutanix Central communication.
+* `key_id`:- (Required, WriteOnly) This is used by Prism Central to form authentication token for Nutanix Central communication.
 
 ## Attributes Reference
 

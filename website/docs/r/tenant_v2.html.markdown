@@ -10,6 +10,8 @@ description: |-
 
 Creates a new tenant.
 
+> **WriteOnly credentials:** `admin_info.password` is write-only. It is never stored in Terraform state. Re-supply it in configuration on every apply. Do not use `lifecycle.ignore_changes` on this attribute. See the [WriteOnly Credentials](/docs/providers/nutanix/guides/writeonly_credentials.html) guide for upgrade caveats.
+
 ## Example
 
 ```hcl
@@ -44,7 +46,7 @@ The following arguments are supported:
 - `first_name`: (Optional) The first name of the user.
 - `last_name`: (Optional) The last name of the user.
 - `email`: (Optional) The email address of the user.
-- `password`: (Optional, Sensitive) The password of the user.
+- `password`: (Optional, WriteOnly) The password of the user.
 
 ### aggregated_quota
 

@@ -86,11 +86,15 @@ func ResourceNutanixRestoreSourceV2() *schema.Resource {
 															"access_key_id": {
 																Type:         schema.TypeString,
 																Required:     true,
+																Sensitive:    true,
+																WriteOnly:    true,
 																ValidateFunc: validation.StringIsNotEmpty,
 															},
 															"secret_access_key": {
 																Type:         schema.TypeString,
 																Required:     true,
+																Sensitive:    true,
+																WriteOnly:    true,
 																ValidateFunc: validation.StringIsNotEmpty,
 															},
 														},
@@ -179,6 +183,8 @@ func ResourceNutanixRestoreSourceV2Create(ctx context.Context, d *schema.Resourc
 
 		objectStoreLocationBody := management.NewObjectStoreLocation()
 
+		overlayObjectStoreAccessKeyCredentials(d, providerConfig,
+			"location.0.object_store_location.0.provider_config.0.credentials.0")
 		objectStoreLocationBody.ProviderConfig = expandProviderConfig(providerConfig)
 		objectStoreLocationBody.BackupPolicy = expandBackupPolicy(backupPolicy)
 

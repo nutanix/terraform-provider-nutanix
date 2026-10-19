@@ -36,14 +36,15 @@ func ResourceNutanixLocalDomainV2() *schema.Resource {
 						"api_key": {
 							Type:      schema.TypeString,
 							Required:  true,
-							ForceNew:  true,
 							Sensitive: true,
+							// WriteOnly cannot combine with ForceNew.
+							WriteOnly: true,
 						},
 						"key_id": {
 							Type:      schema.TypeString,
 							Required:  true,
-							ForceNew:  true,
 							Sensitive: true,
+							WriteOnly: true,
 						},
 					},
 				},
@@ -96,7 +97,18 @@ func ResourceNutanixLocalDomainV2Create(ctx context.Context, d *schema.ResourceD
 
 	body := management.NewLocalDomainRegistrationSpec()
 	if v, ok := d.GetOk("credentials"); ok {
-		body.Credentials = expandLocalDomainRegistrationCredentials(v.([]interface{}))
+		creds := v.([]interface{})
+		if len(creds) > 0 && creds[0] != nil {
+			if credMap, ok := creds[0].(map[string]interface{}); ok {
+				if apiKey, ok := commonUtils.GetWriteOnlyString(d, "credentials.0.api_key"); ok {
+					credMap["api_key"] = apiKey
+				}
+				if keyID, ok := commonUtils.GetWriteOnlyString(d, "credentials.0.key_id"); ok {
+					credMap["key_id"] = keyID
+				}
+			}
+		}
+		body.Credentials = expandLocalDomainRegistrationCredentials(creds)
 	}
 	if v, ok := d.GetOk("domain_ext_id"); ok {
 		body.DomainExtId = utils.StringPtr(v.(string))

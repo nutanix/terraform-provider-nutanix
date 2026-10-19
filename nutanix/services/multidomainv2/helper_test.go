@@ -53,7 +53,10 @@ func testLocalDomainV2CheckDestroy(state *terraform.State) error {
 }
 
 func testRegisteredDomainV2CheckDestroy(state *terraform.State) error {
-	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	conn, err := testAccNCClient()
+	if err != nil {
+		return fmt.Errorf("error creating NC client for registered-domain destroy check: %w", err)
+	}
 	client := conn.NCDomainManagementAPI.RegisteredDomains
 	ctx := context.Background()
 
@@ -70,6 +73,13 @@ func testRegisteredDomainV2CheckDestroy(state *terraform.State) error {
 		}
 	}
 	return nil
+}
+
+func testNCPCRegistrationCheckDestroy(state *terraform.State) error {
+	if err := testLocalDomainV2CheckDestroy(state); err != nil {
+		return err
+	}
+	return testRegisteredDomainV2CheckDestroy(state)
 }
 
 func testProjectV2CheckDestroy(state *terraform.State) error {

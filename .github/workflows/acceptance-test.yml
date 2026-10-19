@@ -46,7 +46,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25.13"
+          go-version: "1.27.2"
           check-latest: true
           cache: false
 
@@ -100,6 +100,10 @@ jobs:
             echo "NUTANIX_INSECURE=${{ secrets.NUTANIX_INSECURE }}" >> $GITHUB_ENV
             echo "NUTANIX_PORT=${{ secrets.NUTANIX_PORT }}" >> $GITHUB_ENV
             echo "NUTANIX_ENDPOINT=${{ secrets.NUTANIX_ENDPOINT }}" >> $GITHUB_ENV
+            echo "NUTANIX_CENTRAL_ENDPOINT=${{ secrets.NUTANIX_CENTRAL_ENDPOINT }}" >> $GITHUB_ENV
+            echo "NUTANIX_DOMAIN_NAME=${{ secrets.NUTANIX_DOMAIN_NAME }}" >> $GITHUB_ENV
+            echo "NUTANIX_TENANT_NAME=${{ secrets.NUTANIX_TENANT_NAME }}" >> $GITHUB_ENV
+            echo "NUTANIX_USE_NC_IAM=${{ secrets.NUTANIX_USE_NC_IAM }}" >> $GITHUB_ENV
             echo "NUTANIX_STORAGE_CONTAINER=${{ secrets.NUTANIX_STORAGE_CONTAINER }}" >> $GITHUB_ENV
             echo "FOUNDATION_ENDPOINT=${{ secrets.FOUNDATION_ENDPOINT }}" >> $GITHUB_ENV
             echo "FOUNDATION_PORT=${{ secrets.FOUNDATION_PORT }}" >> $GITHUB_ENV

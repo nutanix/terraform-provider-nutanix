@@ -95,7 +95,6 @@ func ResourceNutanixRegisteredDomainV2() *schema.Resource {
 			"registration_config": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
 				Elem:     schemaRegisteredDomainRegistrationConfig(),
 			},
@@ -172,21 +171,21 @@ func schemaRegisteredDomainRegistrationConfig() *schema.Resource {
 			"credentials": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"api_key": {
 							Type:      schema.TypeString,
 							Optional:  true,
-							Computed:  true,
 							Sensitive: true,
+							// WriteOnly cannot nest under Computed blocks; omit secrets from flatten.
+							WriteOnly: true,
 						},
 						"key_id": {
 							Type:      schema.TypeString,
 							Optional:  true,
-							Computed:  true,
 							Sensitive: true,
+							WriteOnly: true,
 						},
 					},
 				},
@@ -256,25 +255,27 @@ func ResourceNutanixRegisteredDomainV2Create(ctx context.Context, d *schema.Reso
 		if err != nil {
 			return diag.Errorf("error while listing registered domains: %v", err)
 		}
-
-		if listResp.Data != nil {
-			registeredDomains, ok := listResp.Data.GetValue().([]config.RegisteredDomain)
-			if !ok {
-				return diag.Errorf("unexpected registered domains list response")
-			}
+		registeredDomains, ok := listResp.Data.GetValue().([]config.RegisteredDomain)
+		if !ok {
+			return diag.Errorf("unexpected registered domains list response type: %T", listResp.Data.GetValue())
+		}
+		if len(registeredDomains) == 0 {
+			log.Printf("[DEBUG] Registered domain %q not yet available (empty list), retrying...", domainName)
+		} else {
 			for _, registeredDomain := range registeredDomains {
 				if utils.StringValue(registeredDomain.Name) == domainName {
 					d.SetId(utils.StringValue(registeredDomain.ExtId))
 					return ResourceNutanixRegisteredDomainV2Read(ctx, d, meta)
 				}
 			}
+			// Domain with exact name not found in results
+			log.Printf("[DEBUG] Registered domain %q not found in %d results, retrying...", domainName, len(registeredDomains))
 		}
-
 		select {
 		case <-ctx.Done():
 			return diag.FromErr(ctx.Err())
 		case <-timeout.C:
-			return diag.Errorf("registered domain %q did not appear within 3 minutes", domainName)
+			return diag.Errorf("registered domain %q did not appear within 3 minutes; the create task may have failed or the domain name did not match", domainName)
 		case <-ticker.C:
 		}
 	}
@@ -293,7 +294,7 @@ func ResourceNutanixRegisteredDomainV2Read(ctx context.Context, d *schema.Resour
 	}
 
 	rd := resp.Data.GetValue().(config.RegisteredDomain)
-	return diag.FromErr(setRegisteredDomainToResourceData(d, &rd))
+	return diag.FromErr(setRegisteredDomainToResourceData(d, &rd, false))
 }
 
 func ResourceNutanixRegisteredDomainV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -323,8 +324,7 @@ func ResourceNutanixRegisteredDomainV2Update(ctx context.Context, d *schema.Reso
 		updateSpecNew.LocationExtId = getSpec.LocationExtId
 	}
 
-	// Domain ExtId is same as ExtId.
-	updateSpecNew.DomainExtId = getSpec.ExtId
+	updateSpecNew.DomainExtId = getSpec.DomainExtId
 
 	getRespBeforeUpdate, err := conn.RegisteredDomains.GetRegisteredDomainById(ctx, &getReq)
 	if err != nil {
@@ -456,7 +456,22 @@ func expandRegisteredDomain(d *schema.ResourceData) *config.RegisteredDomain {
 		body.PlatformData = expandRegisteredDomainPlatformData(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("registration_config"); ok {
-		body.RegistrationConfig = expandRegisteredDomainRegistrationConfig(v.([]interface{}))
+		regCfg := v.([]interface{})
+		if len(regCfg) > 0 && regCfg[0] != nil {
+			if cfgMap, ok := regCfg[0].(map[string]interface{}); ok {
+				if creds, ok := cfgMap["credentials"].([]interface{}); ok && len(creds) > 0 && creds[0] != nil {
+					if credMap, ok := creds[0].(map[string]interface{}); ok {
+						if apiKey, ok := commonUtils.GetWriteOnlyString(d, "registration_config.0.credentials.0.api_key"); ok {
+							credMap["api_key"] = apiKey
+						}
+						if keyID, ok := commonUtils.GetWriteOnlyString(d, "registration_config.0.credentials.0.key_id"); ok {
+							credMap["key_id"] = keyID
+						}
+					}
+				}
+			}
+		}
+		body.RegistrationConfig = expandRegisteredDomainRegistrationConfig(regCfg)
 	}
 	if v, ok := d.GetOk("tunnel"); ok {
 		body.Tunnel = expandRegisteredDomainTunnel(v.([]interface{}))
@@ -564,8 +579,9 @@ func expandRegisteredDomainTunnel(in []interface{}) *config.DomainTunnel {
 }
 
 // setRegisteredDomainToResourceData maps a RegisteredDomain onto the resource /
-// singular datasource schema. Both surfaces share the identical field set.
-func setRegisteredDomainToResourceData(d *schema.ResourceData, rd *config.RegisteredDomain) error {
+// singular datasource schema. When withSecrets is true (datasource), api_key and
+// key_id are populated as Sensitive; when false (resource / WriteOnly), omitted.
+func setRegisteredDomainToResourceData(d *schema.ResourceData, rd *config.RegisteredDomain, withSecrets bool) error {
 	if err := d.Set("name", utils.StringValue(rd.Name)); err != nil {
 		return err
 	}
@@ -599,7 +615,7 @@ func setRegisteredDomainToResourceData(d *schema.ResourceData, rd *config.Regist
 	if err := d.Set("platform_data", flattenRegisteredDomainPlatformData(rd.PlatformData)); err != nil {
 		return err
 	}
-	if err := d.Set("registration_config", flattenRegisteredDomainRegistrationConfig(rd.RegistrationConfig)); err != nil {
+	if err := d.Set("registration_config", flattenRegisteredDomainRegistrationConfig(rd.RegistrationConfig, withSecrets)); err != nil {
 		return err
 	}
 	if err := d.Set("tunnel", flattenRegisteredDomainTunnel(rd.Tunnel)); err != nil {
@@ -653,7 +669,7 @@ func flattenRegisteredDomainPlatformData(pd *config.PlatformData) []map[string]i
 	}
 }
 
-func flattenRegisteredDomainRegistrationConfig(rc *config.RegistrationConfig) []map[string]interface{} {
+func flattenRegisteredDomainRegistrationConfig(rc *config.RegistrationConfig, withSecrets bool) []map[string]interface{} {
 	if rc == nil {
 		return []map[string]interface{}{}
 	}
@@ -662,21 +678,23 @@ func flattenRegisteredDomainRegistrationConfig(rc *config.RegistrationConfig) []
 			"domain_ext_id": utils.StringValue(rc.DomainExtId),
 			"target_url":    utils.StringValue(rc.TargetUrl),
 			"tenant_ext_id": utils.StringValue(rc.TenantExtId),
-			"credentials":   flattenRegistrationCredentials(rc.Credentials),
+			"credentials":   flattenRegistrationCredentials(rc.Credentials, withSecrets),
 		},
 	}
 }
 
-func flattenRegistrationCredentials(rc *import7.RegistrationCredentials) []map[string]interface{} {
+func flattenRegistrationCredentials(rc *import7.RegistrationCredentials, withSecrets bool) []map[string]interface{} {
 	if rc == nil {
 		return []map[string]interface{}{}
 	}
-	return []map[string]interface{}{
-		{
+	if withSecrets {
+		return []map[string]interface{}{{
 			"api_key": utils.StringValue(rc.ApiKey),
 			"key_id":  utils.StringValue(rc.KeyId),
-		},
+		}}
 	}
+	// api_key and key_id are WriteOnly; omit secret values from resource state.
+	return []map[string]interface{}{{}}
 }
 
 func flattenRegisteredDomainTunnel(t *config.DomainTunnel) []map[string]interface{} {

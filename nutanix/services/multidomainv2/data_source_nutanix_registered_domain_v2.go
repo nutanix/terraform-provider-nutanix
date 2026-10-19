@@ -175,7 +175,7 @@ func DatasourceNutanixRegisteredDomainV2Read(ctx context.Context, d *schema.Reso
 	}
 
 	rd := resp.Data.GetValue().(config.RegisteredDomain)
-	if err := setRegisteredDomainToResourceData(d, &rd); err != nil {
+	if err := setRegisteredDomainToResourceData(d, &rd, true); err != nil {
 		return diag.FromErr(err)
 	}
 

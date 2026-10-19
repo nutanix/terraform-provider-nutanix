@@ -31,7 +31,7 @@ const datasourceNameLocationsList = "data.nutanix_locations_v2.locations_list"
 
 func TestAccV2NutanixLocationsDatasource_List(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		PreCheck:  func() { acc.TestAccNCPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -48,7 +48,7 @@ func TestAccV2NutanixLocationsDatasource_List(t *testing.T) {
 
 func TestAccV2NutanixLocationsDatasource_WithLimitAndFilter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		PreCheck:  func() { acc.TestAccNCPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -65,7 +65,7 @@ func TestAccV2NutanixLocationsDatasource_WithLimitAndFilter(t *testing.T) {
 
 func TestAccV2NutanixLocationsDatasource_WithOrderBy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		PreCheck:  func() { acc.TestAccNCPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -82,7 +82,7 @@ func TestAccV2NutanixLocationsDatasource_WithOrderBy(t *testing.T) {
 func TestAccV2NutanixLocationsDatasource_WithInvalidFilter(t *testing.T) {
 	randomUUID := utils.GenUUID()
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		PreCheck:  func() { acc.TestAccNCPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{

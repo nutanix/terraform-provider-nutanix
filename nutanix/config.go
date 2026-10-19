@@ -26,6 +26,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/objectstores"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/sdkconfig"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/security"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/service_provider"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
@@ -142,6 +143,11 @@ func (c *Config) Client() (*Client, error) {
 		DomainName:             c.DomainName,
 		TenantName:             c.TenantName,
 		UseNCIAM:               c.UseNCIAM,
+	}
+	if configCreds.NutanixCentralEndpoint != "" {
+		configCreds.Endpoint = sdkconfig.ResolveEndpoint(configCreds, sdkconfig.ServiceTypePC)
+		configCreds.URL = fmt.Sprintf("%s:%s", configCreds.Endpoint, configCreds.Port)
+		log.Printf("[DEBUG] NC mode enabled; using %q as the Prism Central endpoint for v3 clients", configCreds.Endpoint)
 	}
 
 	v3Client, err := v3.NewV3Client(configCreds)

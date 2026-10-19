@@ -11,6 +11,7 @@ import (
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authn"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/request/directoryservices"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -62,6 +63,7 @@ func ResourceNutanixDirectoryServicesV2() *schema.Resource {
 							Type:      schema.TypeString,
 							Sensitive: true,
 							Required:  true,
+							WriteOnly: true,
 						},
 					},
 				},
@@ -205,7 +207,15 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 		input.DirectoryType = &p
 	}
 	if serviceAcc, ok := d.GetOk("service_account"); ok {
-		input.ServiceAccount = expandDsServiceAccount(serviceAcc)
+		sa := serviceAcc.([]interface{})
+		if len(sa) > 0 && sa[0] != nil {
+			if saMap, ok := sa[0].(map[string]interface{}); ok {
+				if pw, ok := common.GetWriteOnlyString(d, "service_account.0.password"); ok {
+					saMap["password"] = pw
+				}
+			}
+		}
+		input.ServiceAccount = expandDsServiceAccount(sa)
 	}
 	if ldap, ok := d.GetOk("open_ldap_configuration"); ok {
 		input.OpenLdapConfiguration = expandOpenLdapConfig(ldap)
@@ -665,10 +675,8 @@ func flattenDsServiceAccountForResource(pr *import1.DsServiceAccount) []map[stri
 		accs := make([]map[string]interface{}, 0)
 		acc := make(map[string]interface{})
 
-		// password is not returned in the response
-		// so we are using the password from the configuration as it required for update
+		// password is WriteOnly; never persist it from API/config into state.
 		acc["username"] = pr.Username
-		acc["password"] = pr.Password
 
 		accs = append(accs, acc)
 		return accs

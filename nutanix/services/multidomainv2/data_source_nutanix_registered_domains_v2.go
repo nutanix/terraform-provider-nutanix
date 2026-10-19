@@ -115,7 +115,7 @@ func flattenRegisteredDomains(registeredDomains []config.RegisteredDomain) []map
 			"registration_state":    flattenRegistrationState(rd.RegistrationState),
 			"registered_time":       utils.TimeStringValue(rd.RegisteredTime),
 			"platform_data":         flattenRegisteredDomainPlatformData(rd.PlatformData),
-			"registration_config":   flattenRegisteredDomainRegistrationConfig(rd.RegistrationConfig),
+			"registration_config":   flattenRegisteredDomainRegistrationConfig(rd.RegistrationConfig, true),
 			"tunnel":                flattenRegisteredDomainTunnel(rd.Tunnel),
 			"tenant_id":             utils.StringValue(rd.TenantId),
 			"links":                 flattenLinks(rd.Links),

@@ -91,7 +91,8 @@ func ResourceNutanixTenantV2() *schema.Resource {
 							Type:      schema.TypeString,
 							Required:  true,
 							Sensitive: true,
-							ForceNew:  true,
+							// WriteOnly cannot combine with ForceNew; password is create-time only.
+							WriteOnly: true,
 						},
 					},
 				},

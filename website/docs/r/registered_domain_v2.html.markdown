@@ -10,6 +10,8 @@ description: |-
 
 Creates a new registered domain and saves it to database. A registered domain represents a Prism Central (PC) instance registered with a Nutanix Central (NC) instance.
 
+> **WriteOnly credentials:** `registration_config.credentials.api_key`, `registration_config.credentials.key_id` are write-only. They are never stored in Terraform state. Re-supply them in configuration on every apply. Do not use `lifecycle.ignore_changes` on these attributes. See the [WriteOnly Credentials](/docs/providers/nutanix/guides/writeonly_credentials.html) guide for upgrade caveats.
+
 ## Example Usage
 
 ```hcl
@@ -72,8 +74,8 @@ The `registration_config` attribute supports the following:
 
 The `credentials` attribute supports the following:
 
-* `api_key`:- (Optional, Sensitive) API key which is used by Prism Central as authentication for Nutanix Central communication.
-* `key_id`:- (Optional) This is used by Prism Central to form authentication token for Nutanix Central communication.
+* `api_key`:- (Optional, WriteOnly) API key which is used by Prism Central as authentication for Nutanix Central communication.
+* `key_id`:- (Optional, WriteOnly) This is used by Prism Central to form authentication token for Nutanix Central communication.
 
 ### Tunnel
 

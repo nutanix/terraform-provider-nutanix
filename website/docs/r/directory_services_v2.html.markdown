@@ -12,6 +12,8 @@ description: |-
 
 Provides a resource to Create a Directory Service.
 
+> **WriteOnly credentials:** `service_account.password` is write-only. It is never stored in Terraform state. Re-supply it in configuration on every apply. Do not use `lifecycle.ignore_changes` on this attribute. See the [WriteOnly Credentials](/docs/providers/nutanix/guides/writeonly_credentials.html) guide for upgrade caveats.
+
 ## Example Usage
 
 ```hcl
@@ -26,11 +28,6 @@ resource "nutanix_directory_services_v2" "active-directory" {
     password = "password"
   }
   white_listed_groups = ["example"]
-  lifecycle {
-    ignore_changes = [
-      service_account.0.password,
-    ]
-  }
 }
 
 # Create Directory Service with user defined project
@@ -45,11 +42,6 @@ resource "nutanix_directory_services_v2" "active-directory" {
     password = "password"
   }
   white_listed_groups = ["example"]
-  lifecycle {
-    ignore_changes = [
-      service_account.0.password,
-    ]
-  }
 }
 
 
@@ -65,11 +57,6 @@ resource "nutanix_directory_services_v2" "active-directory" {
   }
   share_with_all_projects = true
   white_listed_groups = ["example"]
-  lifecycle {
-    ignore_changes = [
-      service_account.0.password,
-    ]
-  }
 }
 
 # Create Directory Service Shared with Projects
@@ -84,11 +71,6 @@ resource "nutanix_directory_services_v2" "active-directory" {
   }
   shared_with_projects = ["Project1_UUID", "Project2_UUID"]
   white_listed_groups = ["example"]
-  lifecycle {
-    ignore_changes = [
-      service_account.0.password,
-    ]
-  }
 }
 ```
 
@@ -116,7 +98,7 @@ The following arguments are supported:
 The service_account attribute supports the following:
 
 * `username`: -(Required) Username to connect to the Directory Service.
-* `password`: -(Required) Password to connect to the Directory Service.
+* `password`: -(Required, WriteOnly) Password to connect to the Directory Service.
 
 
 ### Open Ldap Configuration

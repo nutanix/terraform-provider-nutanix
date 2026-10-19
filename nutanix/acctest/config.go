@@ -53,6 +53,10 @@ type DomainConfig struct {
 	ExtID                 string                `json:"ext_id"`
 	WhiteListedGroups     []string              `json:"white_listed_groups"`
 	DomainUsersUsergroups DomainUsersUsergroups `json:"domain_users_usergroups"`
+	// UserGroups is the tenant_membership_ad fixture shape (users / user_groups
+	// keyed by AD principal name). Distinct from DomainUsersUsergroups, which
+	// is the primary/secondary AD field name.
+	UserGroups DomainUsersUsergroups `json:"user_groups"`
 }
 
 // SubnetConfig models a reusable subnet fixture.
@@ -153,8 +157,9 @@ type TestConfig struct {
 // IAMConfig models the "iam" domain (consumed by iamv2, vmmv2, microsegv2).
 type IAMConfig struct {
 	DirectoryServicesMain struct {
-		PrimaryAD   DomainConfig `json:"primary_ad"`
-		SecondaryAD DomainConfig `json:"secondary_ad"`
+		PrimaryAD          DomainConfig `json:"primary_ad"`
+		SecondaryAD        DomainConfig `json:"secondary_ad"`
+		TenantMembershipAD DomainConfig `json:"tenant_membership_ad"`
 	} `json:"directory_services_main"`
 	Users struct {
 		Name                        string `json:"name"`
@@ -353,11 +358,16 @@ func Config(t *testing.T) TestConfig {
 
 // MustConfig is like Config but does not require a *testing.T. It is intended
 // for package-level initialization (e.g. `var testVars = acctest.MustConfig()`)
-// and panics if the config cannot be loaded — mirroring the previous
-// loadVars/os.Exit(1) behavior in each package's TestMain.
+// and panics if the config cannot be loaded when acceptance tests are enabled
+// (TF_ACC set) — mirroring the previous loadVars/os.Exit(1) behavior.
+// When TF_ACC is unset (unit tests / CI PreChecks), a missing config returns a
+// zero value so packages can compile and run without local Acc fixtures.
 func MustConfig() TestConfig {
 	loadOnce.Do(loadConfig)
 	if loadErr != nil {
+		if os.Getenv("TF_ACC") == "" {
+			return TestConfig{}
+		}
 		panic(fmt.Sprintf("acctest: %v", loadErr))
 	}
 	return loadedConfig

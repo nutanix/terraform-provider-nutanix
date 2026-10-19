@@ -97,6 +97,22 @@
         "dns": "",
         "ext_id": "",
         "url": ""
+      },
+      "tenant_membership_ad": {
+        "name": "jpmorgan.lab.local",
+        "directory_service_name": "jpmorgan.lab.local",
+        "username": "Administrator@jpmorgan.lab.local",
+        "password": "nutanix/4u",
+        "dns": "10.99.5.81",
+        "url": "ldaps://10.99.5.81:10642",
+        "user_groups": {
+          "users": {
+            "jpmorgan_user_001": ""
+          },
+          "user_groups": {
+            "jpmorgan_user_group_2": ""
+          }
+        }
       }
     },
     "users": {
@@ -172,7 +188,7 @@
   "vmm": {
     "integration_vm": "",
     "subnet_name": "",
-    "assigned_ip": "",
+    "assigned_ip": "10.44.76.45",
     "unattend_xml": "",
     "subnet": {
       "network_id": 0,
@@ -185,8 +201,8 @@
     "ngt": {
       "ngt_upgrade_vm_name": "",
       "credential": {
-        "username": "",
-        "password": ""
+        "username": "nutanix",
+        "password": "nutanix/4u"
       }
     },
     "ngt_vm": {
