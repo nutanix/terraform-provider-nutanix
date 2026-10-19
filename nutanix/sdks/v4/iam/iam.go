@@ -24,7 +24,8 @@ func NewIamClient(credentials client.Credentials) (*Client, error) {
 	var baseClient *iam.ApiClient
 
 	pcClient := iam.NewApiClient()
-	if cfg := sdkconfig.ConfigureV4Client(credentials, pcClient); cfg != nil {
+	// Use IAM-specific endpoint resolution for NC Admin/Tenant Admin scenarios
+	if cfg := sdkconfig.ConfigureV4ClientForIAM(credentials, pcClient); cfg != nil {
 		pcClient.Host = cfg.Host
 		pcClient.Port = cfg.Port
 		pcClient.Username = cfg.Username

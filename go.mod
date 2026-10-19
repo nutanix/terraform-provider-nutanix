@@ -1,6 +1,6 @@
 module github.com/terraform-providers/terraform-provider-nutanix
 
-go 1.25.13
+go 1.27.2
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
@@ -10,22 +10,23 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.1
 	github.com/jinzhu/copier v0.4.0
 	github.com/masterzen/winrm v0.0.0-20260407182533-5570be7f80cf
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17 v17.7.0-25731
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17 v17.7.0-25608
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17 v17.7.0-25633
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17 v17.7.0-25753
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17 v17.7.0-25703
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17 v17.7.0-25317
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17 v17.7.0-25728
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17 v17.7.0-25403
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17 v17.7.0-24560
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17 v17.7.0-25814
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17 v17.7.0-25307
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17 v17.7.0-25255
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17 v17.7.0-25738
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17 v17.6.0-23290
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17 v17.6.0-23301
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17 v17.7.0-23284
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17 v17.6.0-23296
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17 v17.6.0-23298
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17 v17.6.0-23294
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17 v17.6.0-23303
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17 v17.7.0-22181
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17 v17.6.0-23299
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17 v17.6.0-24901
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17 v17.7.0-22528
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17 v17.4.0-24085
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17 v17.6.0-23287
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17 v17.7.0-22521
 	github.com/spf13/cast v1.10.0
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.57.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -87,12 +88,12 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/zclconf/go-cty v1.18.1 // indirect
-	golang.org/x/mod v0.38.0 // indirect
-	golang.org/x/net v0.58.0 // indirect
-	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
-	golang.org/x/tools v0.48.0 // indirect
+	golang.org/x/mod v0.41.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
+	golang.org/x/tools v0.49.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260610212136-7ab31c22f7ad // indirect
 	google.golang.org/grpc v1.83.2 // indirect

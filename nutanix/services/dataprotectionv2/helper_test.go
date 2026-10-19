@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/request/protectionpolicies"
+	dpConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/config"
+	protectedResources "github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17/models/dataprotection/v4/request/protectedresources"
 	import3 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17/models/prism/v4/request/categories"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/ahv/config"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/request/vm"
@@ -55,6 +57,95 @@ func waitForVMToBeProtected(resourceName, attributeName, desiredValue string, ma
 		}
 
 		return fmt.Errorf("VM: failed to reach desired value for attribute %q: expected %q, got %q after %d retries", attributeName, desiredValue, lastValue, maxRetries)
+	}
+}
+
+// waitForProtectedResourceAvailable polls GET protected-resources/{ext_id} until it succeeds
+// (HTTP 200 / no error). After success, sleeps settleTime so replication can stabilize
+// before promote/restore (same pattern as Ansible's post-protection wait).
+//
+// If expectedRPOSeconds is set (e.g. 60 for minutely restore), also wait until a
+// replication_states entry reports that recovery_point_objective_seconds. Magneto
+// restore rejects entities that are only sync-protected (RPO=0).
+func waitForProtectedResourceAvailable(resourceName string, maxRetries int, retryInterval, settleTime time.Duration, expectedRPOSeconds ...int64) resource.TestCheckFunc {
+	var wantRPO int64
+	checkRPO := false
+	if len(expectedRPOSeconds) > 0 {
+		wantRPO = expectedRPOSeconds[0]
+		checkRPO = true
+	}
+
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", resourceName)
+		}
+		extID := rs.Primary.ID
+		if extID == "" {
+			return fmt.Errorf("resource %s has empty id", resourceName)
+		}
+
+		conn := acc.TestAccProvider.Meta().(*conns.Client)
+		client := conn.DataProtectionAPI.ProtectedResource
+		ctx := context.Background()
+
+		var lastErr error
+		var lastRPOs []int64
+		for i := 0; i < maxRetries; i++ {
+			req := protectedResources.GetProtectedResourceByIdRequest{
+				ExtId: utils.StringPtr(extID),
+			}
+			resp, err := client.GetProtectedResourceById(ctx, &req)
+			if err != nil {
+				lastErr = err
+				log.Printf("[DEBUG] Waiting for protected resource %s (attempt %d/%d): %v", extID, i+1, maxRetries, err)
+				time.Sleep(retryInterval)
+				continue
+			}
+
+			if checkRPO {
+				pr := resp.Data.GetValue().(dpConfig.ProtectedResource)
+				lastRPOs = lastRPOs[:0]
+				for _, st := range pr.ReplicationStates {
+					lastRPOs = append(lastRPOs, utils.Int64Value(st.RecoveryPointObjectiveSeconds))
+				}
+				// Magneto restore checks the protection-policy schedule (minutely / RPO=60),
+				// not that replication_states is already populated. UI can show Protected
+				// with Sync Status empty while replication_states stays [] for a long time.
+				// Only fail-fast if states are present but report a different RPO (e.g. sync 0).
+				if len(lastRPOs) > 0 {
+					matched := false
+					for _, rpo := range lastRPOs {
+						if rpo == wantRPO {
+							matched = true
+							break
+						}
+					}
+					if !matched {
+						lastErr = fmt.Errorf("replication_states RPO %v, want %d", lastRPOs, wantRPO)
+						log.Printf("[DEBUG] Waiting for protected resource %s minutely RPO (attempt %d/%d): %v", extID, i+1, maxRetries, lastErr)
+						time.Sleep(retryInterval)
+						continue
+					}
+				} else {
+					log.Printf("[DEBUG] Protected resource %s GET ok with empty replication_states (attempt %d/%d); proceeding (expect policy RPO=%d)",
+						extID, i+1, maxRetries, wantRPO)
+				}
+			}
+
+			log.Printf("[DEBUG] Protected resource %s is available (attempt %d/%d); settling %s", extID, i+1, maxRetries, settleTime)
+			if settleTime > 0 {
+				time.Sleep(settleTime)
+			}
+			return nil
+		}
+
+		if checkRPO {
+			return fmt.Errorf("protected resource %s not ready with RPO=%d after %d retries (~%s): last error: %v",
+				extID, wantRPO, maxRetries, time.Duration(maxRetries)*retryInterval, lastErr)
+		}
+		return fmt.Errorf("protected resource %s not available after %d retries (~%s): last error: %v",
+			extID, maxRetries, time.Duration(maxRetries)*retryInterval, lastErr)
 	}
 }
 

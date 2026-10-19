@@ -115,11 +115,15 @@ func ResourceNutanixBackupTargetV2() *schema.Resource {
 															"access_key_id": {
 																Type:         schema.TypeString,
 																Required:     true,
+																Sensitive:    true,
+																WriteOnly:    true,
 																ValidateFunc: validation.StringIsNotEmpty,
 															},
 															"secret_access_key": {
 																Type:         schema.TypeString,
 																Required:     true,
+																Sensitive:    true,
+																WriteOnly:    true,
 																ValidateFunc: validation.StringIsNotEmpty,
 															},
 														},
@@ -213,6 +217,8 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 
 		objectStoreLocationBody := management.NewObjectStoreLocation()
 
+		overlayObjectStoreAccessKeyCredentials(d, providerConfig,
+			"location.0.object_store_location.0.provider_config.0.credentials.0")
 		objectStoreLocationBody.ProviderConfig = expandProviderConfig(providerConfig)
 		objectStoreLocationBody.BackupPolicy = expandBackupPolicy(backupPolicy)
 
@@ -396,28 +402,13 @@ func flattenResourceObjectStoreLocation(objectStoreLocation *management.ObjectSt
 	objectStoreLocationMap["provider_config"] = flattenProviderConfig(objectStoreLocation.ProviderConfig)
 	objectStoreLocationMap["backup_policy"] = flattenBackupPolicy(objectStoreLocation.BackupPolicy)
 
-	// extract the credentials from the state file since they are not returned in the response
-	locationI, ok := d.([]interface{})
-
-	if !ok || len(locationI) == 0 {
-		// no previous state, just return flattened response
-		return []map[string]interface{}{objectStoreLocationMap}
+	// credentials.access_key_id / secret_access_key are WriteOnly; never rehydrate into state.
+	if providerConfigs, ok := objectStoreLocationMap["provider_config"].([]map[string]interface{}); ok && len(providerConfigs) > 0 {
+		delete(providerConfigs[0], "credentials")
 	}
 
-	location, ok := locationI[0].(map[string]interface{})
-	if !ok {
-		return []map[string]interface{}{objectStoreLocationMap}
-	}
-
-	objectStoreLocationI := location["object_store_location"].([]interface{})[0].(map[string]interface{})
-	providerConfig := objectStoreLocationI["provider_config"].([]interface{})[0].(map[string]interface{})
-	credentials := providerConfig["credentials"].([]interface{})
-	objectStoreLocationMap["provider_config"].([]map[string]interface{})[0]["credentials"] = credentials
-
-	objectStoreLocationList := make([]map[string]interface{}, 0)
-	objectStoreLocationList = append(objectStoreLocationList, objectStoreLocationMap)
-
-	return objectStoreLocationList
+	_ = d // prior state intentionally unused for secrets
+	return []map[string]interface{}{objectStoreLocationMap}
 }
 
 func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -473,6 +464,8 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 
 			objectStoreLocationBody := management.NewObjectStoreLocation()
 
+			overlayObjectStoreAccessKeyCredentials(d, providerConfig,
+				"location.0.object_store_location.0.provider_config.0.credentials.0")
 			objectStoreLocationBody.ProviderConfig = expandProviderConfig(providerConfig)
 			objectStoreLocationBody.BackupPolicy = expandBackupPolicy(backupPolicy)
 
@@ -595,22 +588,28 @@ func ResourceNutanixBackupTargetV2Delete(ctx context.Context, d *schema.Resource
 }
 
 func expandProviderConfig(providerConfig interface{}) *management.OneOfObjectStoreLocationProviderConfig {
-	if len(providerConfig.([]interface{})) == 0 {
+	if providerConfig == nil {
 		return nil
 	}
-	providerConfigI := providerConfig.([]interface{})
-
-	if len(providerConfigI) == 0 {
+	providerConfigI, ok := providerConfig.([]interface{})
+	if !ok || len(providerConfigI) == 0 || providerConfigI[0] == nil {
 		return nil
 	}
 
-	providerConfigMap := providerConfigI[0].(map[string]interface{})
+	providerConfigMap, ok := providerConfigI[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
 
 	providerConfigObj := management.NewOneOfObjectStoreLocationProviderConfig()
 
 	awsS3Config := management.NewAWSS3Config()
-	awsS3Config.BucketName = utils.StringPtr(providerConfigMap["bucket_name"].(string))
-	awsS3Config.Region = utils.StringPtr(providerConfigMap["region"].(string))
+	if bucketName, ok := providerConfigMap["bucket_name"].(string); ok {
+		awsS3Config.BucketName = utils.StringPtr(bucketName)
+	}
+	if region, ok := providerConfigMap["region"].(string); ok {
+		awsS3Config.Region = utils.StringPtr(region)
+	}
 	awsS3Config.Credentials = expandAccessKeyCredentials(providerConfigMap["credentials"])
 
 	if err := providerConfigObj.SetValue(*awsS3Config); err != nil {
@@ -621,27 +620,90 @@ func expandProviderConfig(providerConfig interface{}) *management.OneOfObjectSto
 }
 
 func expandAccessKeyCredentials(credentials interface{}) *management.AccessKeyCredentials {
-	if len(credentials.([]interface{})) == 0 {
+	if credentials == nil {
+		return nil
+	}
+	credentialsList, ok := credentials.([]interface{})
+	if !ok || len(credentialsList) == 0 || credentialsList[0] == nil {
 		return nil
 	}
 
-	credentialsMap := credentials.([]interface{})[0].(map[string]interface{})
-	accessKeyCredentials := management.AccessKeyCredentials{
-		AccessKeyId:     utils.StringPtr(credentialsMap["access_key_id"].(string)),
-		SecretAccessKey: utils.StringPtr(credentialsMap["secret_access_key"].(string)),
+	credentialsMap, ok := credentialsList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	accessKeyCredentials := management.AccessKeyCredentials{}
+	hasCreds := false
+	if accessKeyID, ok := credentialsMap["access_key_id"].(string); ok && accessKeyID != "" {
+		accessKeyCredentials.AccessKeyId = utils.StringPtr(accessKeyID)
+		hasCreds = true
+	}
+	if secretAccessKey, ok := credentialsMap["secret_access_key"].(string); ok && secretAccessKey != "" {
+		accessKeyCredentials.SecretAccessKey = utils.StringPtr(secretAccessKey)
+		hasCreds = true
+	}
+	if !hasCreds {
+		return nil
 	}
 	return &accessKeyCredentials
 }
 
+// overlayObjectStoreAccessKeyCredentials copies WriteOnly access key fields from
+// raw config into the provider_config credentials map used by expand helpers.
+// WriteOnly blocks may arrive as []interface{}{nil} or an empty map; ensure a
+// writable credentials map exists before injecting keys.
+func overlayObjectStoreAccessKeyCredentials(d *schema.ResourceData, providerConfig interface{}, credPathPrefix string) {
+	pcList, ok := providerConfig.([]interface{})
+	if !ok || len(pcList) == 0 || pcList[0] == nil {
+		return
+	}
+	pcMap, ok := pcList[0].(map[string]interface{})
+	if !ok {
+		return
+	}
+
+	accessKeyID, hasAccessKey := common.GetWriteOnlyString(d, credPathPrefix+".access_key_id")
+	secretAccessKey, hasSecret := common.GetWriteOnlyString(d, credPathPrefix+".secret_access_key")
+	if !hasAccessKey && !hasSecret {
+		return
+	}
+
+	creds, ok := pcMap["credentials"].([]interface{})
+	if !ok || len(creds) == 0 {
+		creds = []interface{}{map[string]interface{}{}}
+	}
+	credMap, ok := creds[0].(map[string]interface{})
+	if !ok || credMap == nil {
+		credMap = map[string]interface{}{}
+	}
+	if hasAccessKey {
+		credMap["access_key_id"] = accessKeyID
+	}
+	if hasSecret {
+		credMap["secret_access_key"] = secretAccessKey
+	}
+	creds[0] = credMap
+	pcMap["credentials"] = creds
+}
+
 func expandBackupPolicy(policy interface{}) *management.BackupPolicy {
-	if len(policy.([]interface{})) == 0 {
+	if policy == nil {
+		return nil
+	}
+	policyList, ok := policy.([]interface{})
+	if !ok || len(policyList) == 0 || policyList[0] == nil {
 		return nil
 	}
 
-	policyI := policy.([]interface{})[0].(map[string]interface{})
+	policyI, ok := policyList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
 
-	backupPolicy := management.BackupPolicy{
-		RpoInMinutes: utils.IntPtr(policyI["rpo_in_minutes"].(int)),
+	backupPolicy := management.BackupPolicy{}
+	if rpo, ok := policyI["rpo_in_minutes"].(int); ok {
+		backupPolicy.RpoInMinutes = utils.IntPtr(rpo)
 	}
 
 	return &backupPolicy

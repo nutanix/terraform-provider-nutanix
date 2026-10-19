@@ -82,20 +82,19 @@ func TestAccV2NutanixPromoteProtectedResourceDatasource_GetProtectedVG(t *testin
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testCheckDestroyProtectedResourceAndCleanup,
 		Steps: []resource.TestStep{
-			// create protection policy and protected VG
+			// create protection policy and protected VG; poll until protected-resource GET succeeds
 			{
 				Config: testCreateProtectedResourceVgConfig(vgName, ppName, description, r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(vgResourceName, "id"),
 					resource.TestCheckResourceAttr(vgResourceName, "name", vgName),
+					waitForProtectedResourceAvailable(vgResourceName, maxRetries, retryInterval, sleepTime),
 				),
 			},
 			//Get protected VG
 			{
 				PreConfig: func() {
 					fmt.Printf("Step 2: Get protected VG details\n")
-					//delay 7 minutes to allow the VG to be protected
-					time.Sleep(7 * time.Minute)
 				},
 				Config: testCreateProtectedResourceVgConfig(vgName, ppName, description, r) +
 					testGetProtectedResourceVgConfig(),
@@ -131,6 +130,15 @@ locals {
   clusterExtId = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
   config = jsondecode(file("%[1]s"))
   availability_zone = local.config.availability_zone
+}
+
+data "nutanix_storage_containers_v2" "ssc" {
+  filter = "clusterExtId eq '${local.clusterExtId}' and name eq 'SelfServiceContainer'"
+  limit  = 1
+}
+
+locals {
+  sourceStorageContainerExtId = data.nutanix_storage_containers_v2.ssc.storage_containers[0].ext_id
 }
 
 # Create Category
@@ -203,6 +211,9 @@ resource "nutanix_virtual_machine_v2" "test" {
     backing_info {
       vm_disk {
         disk_size_bytes = 1073741824 # 1 GiB
+        storage_container {
+          ext_id = local.sourceStorageContainerExtId
+        }
       }
     }
   }
@@ -246,6 +257,15 @@ locals {
   	availability_zone = local.config.availability_zone
 }
 
+data "nutanix_storage_containers_v2" "ssc" {
+  filter = "clusterExtId eq '${local.clusterExtId}' and name eq 'SelfServiceContainer'"
+  limit  = 1
+}
+
+locals {
+  sourceStorageContainerExtId = data.nutanix_storage_containers_v2.ssc.storage_containers[0].ext_id
+}
+
 resource "nutanix_category_v2" "test" {
   key = "tf-test-category-pp-get-vg-%[5]d"
   value = "category_pp_protected_vg_%[5]d"
@@ -256,46 +276,24 @@ resource "nutanix_protection_policy_v2" "test" {
   name        = "%[4]s"
   description = "%[3]s"
 
+  # Sync policy (RPO=0) — matches Ansible promote/get path; async never becomes
+  # available in the protected-resources API within a reasonable test window.
   replication_configurations {
     source_location_label = "source"
     remote_location_label = "target"
     schedule {
-      recovery_point_objective_time_seconds         = 60
       recovery_point_type                           = "CRASH_CONSISTENT"
-      sync_replication_auto_suspend_timeout_seconds = 300
-      retention {
-        auto_rollup_retention {
-          local {
-            snapshot_interval_type = "DAILY"
-            frequency              = 1
-          }
-          remote {
-            snapshot_interval_type = "DAILY"
-            frequency              = 1
-          }
-        }
-      }
+      recovery_point_objective_time_seconds         = 0
+      sync_replication_auto_suspend_timeout_seconds = 10
     }
   }
   replication_configurations {
     source_location_label = "target"
     remote_location_label = "source"
     schedule {
-      recovery_point_objective_time_seconds         = 60
       recovery_point_type                           = "CRASH_CONSISTENT"
-      sync_replication_auto_suspend_timeout_seconds = 300
-      retention {
-        auto_rollup_retention {
-          local {
-            snapshot_interval_type = "DAILY"
-            frequency              = 1
-          }
-          remote {
-            snapshot_interval_type = "DAILY"
-            frequency              = 1
-          }
-        }
-      }
+      recovery_point_objective_time_seconds         = 0
+      sync_replication_auto_suspend_timeout_seconds = 10
     }
   }
 
@@ -327,6 +325,15 @@ resource "nutanix_volume_group_v2" "test" {
   name                               = "%[2]s"
   description                        = "%[3]s"
   cluster_reference                  = local.clusterExtId
+  disks {
+    disk_size_bytes = 1073741824 # 1 GiB
+    index           = 1
+    disk_data_source_reference {
+      name        = "vg-disk-%[2]s"
+      ext_id      = local.sourceStorageContainerExtId
+      entity_type = "STORAGE_CONTAINER"
+    }
+  }
   depends_on = [
     nutanix_protection_policy_v2.test
   ]

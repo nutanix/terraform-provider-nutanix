@@ -53,7 +53,7 @@ func DatasourceNutanixFetchRestorePointV2() *schema.Resource {
 						"config": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem:     schemaForPcConfig(),
+							Elem:     schemaForPcConfig(false),
 						},
 						"is_registered_with_hosting_cluster": {
 							Type:     schema.TypeBool,

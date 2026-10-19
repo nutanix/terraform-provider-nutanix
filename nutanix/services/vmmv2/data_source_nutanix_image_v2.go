@@ -77,8 +77,9 @@ func DatasourceNutanixImageV4() *schema.Resource {
 													Computed: true,
 												},
 												"password": {
-													Type:     schema.TypeString,
-													Computed: true,
+													Type:      schema.TypeString,
+													Computed:  true,
+													Sensitive: true,
 												},
 											},
 										},
