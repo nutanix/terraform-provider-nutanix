@@ -3,7 +3,7 @@ package networkingv2
 import (
 	"testing"
 
-	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17/models/microseg/v4/config"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
 )
 
 func TestUnitFlattenServiceGroupsEntities(t *testing.T) {

@@ -5,9 +5,9 @@ import (
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/common/v1/response"
-	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/datapolicies/v4/config"
-	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17/models/dataprotection/v4/common"
+	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/common/v1/response"
+	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/datapolicies/v4/config"
+	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/dataprotection/v4/common"
 	"github.com/stretchr/testify/require"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )

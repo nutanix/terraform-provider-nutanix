@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	vmmConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/config"
+	vmmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/config"
 )
 
 func TestUnitFlattenTemplatePlacementPolicies(t *testing.T) {

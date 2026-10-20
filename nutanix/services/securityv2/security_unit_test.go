@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	commonCfg "github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/common/v1/config"
-	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/common/v1/response"
-	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/security/v4/config"
-	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17/models/security/v4/report"
+	commonCfg "github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/models/common/v1/config"
+	"github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/models/common/v1/response"
+	"github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/models/security/v4/config"
+	"github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4/models/security/v4/report"
 	"github.com/stretchr/testify/require"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )

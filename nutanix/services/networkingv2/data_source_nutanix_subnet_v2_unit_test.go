@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	config "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/common/v1/config"
-	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/common/v1/response"
-	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	config "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/response"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
 )
 
 func TestUnitFlattenLinks(t *testing.T) {

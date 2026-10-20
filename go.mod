@@ -10,20 +10,20 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.1
 	github.com/jinzhu/copier v0.4.0
 	github.com/masterzen/winrm v0.0.0-20260407182533-5570be7f80cf
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v17 v17.6.0-23290
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/datapolicies-go-client/v17 v17.6.0-23301
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v17 v17.7.0-23284
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17 v17.6.0-23296
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17 v17.6.0-23298
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v17 v17.6.0-23294
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17 v17.6.0-23303
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17 v17.7.0-22181
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/objects-go-client/v17 v17.6.0-23299
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v17 v17.6.0-24901
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/security-go-client/v17 v17.7.0-22528
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17 v17.4.0-24085
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17 v17.6.0-23287
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17 v17.7.0-22521
+	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.3.2
+	github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4 v4.3.2
+	github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4 v4.4.2
+	github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4 v4.1.3-beta.3
+	github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.3.2
+	github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.3.2
+	github.com/nutanix/ntnx-api-golang-clients/multidomain-go-client/v4 v4.4.2-beta.1
+	github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.4.2
+	github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4 v4.1.2
+	github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.4.2
+	github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4 v4.2.1
+	github.com/nutanix/ntnx-api-golang-clients/tenancy-go-client/v4 v4.0.2-alpha.1
+	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.3.2
+	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.3.2
 	github.com/spf13/cast v1.10.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.57.0

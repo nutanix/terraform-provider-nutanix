@@ -2,8 +2,8 @@ package multidomainv2
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	multidomainConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/models/multidomain/v4/config"
-	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/models/multidomain/v4/management"
+	multidomainConfig "github.com/nutanix/ntnx-api-golang-clients/multidomain-go-client/v4/models/multidomain/v4/config"
+	"github.com/nutanix/ntnx-api-golang-clients/multidomain-go-client/v4/models/multidomain/v4/management"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 

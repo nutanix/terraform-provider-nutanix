@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	multidomainClient "github.com/nutanix-core/ntnx-api-golang-sdk-internal/multidomain-go-client/v17/client"
+	multidomainClient "github.com/nutanix/ntnx-api-golang-clients/multidomain-go-client/v4/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 )
 

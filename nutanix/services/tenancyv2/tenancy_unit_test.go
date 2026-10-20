@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17/models/common/v1/response"
-	import5 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17/models/iam/v4/authz"
-	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/tenancy-go-client/v17/models/tenancy/v4/config"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/tenancy-go-client/v4/models/common/v1/response"
+	import5 "github.com/nutanix/ntnx-api-golang-clients/tenancy-go-client/v4/models/iam/v4/authz"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/tenancy-go-client/v4/models/tenancy/v4/config"
 	"github.com/stretchr/testify/require"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"

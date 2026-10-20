@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	import7 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/vmm/v4/images/config"
+	import7 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/images/config"
 )
 
 func TestUnitExpandRateLimitClusterEntityFilter(t *testing.T) {

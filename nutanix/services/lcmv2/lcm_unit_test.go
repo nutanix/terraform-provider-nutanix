@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	lcmConfigPkg "github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/common/v1/config"
-	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/common/v1/response"
-	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/lifecycle/v4/common"
-	lcmEntityPkg "github.com/nutanix-core/ntnx-api-golang-sdk-internal/lifecycle-go-client/v17/models/lifecycle/v4/resources"
+	lcmConfigPkg "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/common/v1/config"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/common/v1/response"
+	"github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/common"
+	lcmEntityPkg "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/resources"
 	"github.com/stretchr/testify/require"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )

@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	config "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/common/v1/config"
-	volumesClientResponse "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/common/v1/response"
-	volumesClient "github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v17/models/volumes/v4/config"
+	config "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/common/v1/config"
+	volumesClientResponse "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/common/v1/response"
+	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
 	"github.com/stretchr/testify/require"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )

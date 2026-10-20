@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	catalogConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v17/models/catalogCommon/v1/config"
+	catalogConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/catalogCommon/v1/config"
 )
 
 func TestUnitExpandCategoriesFilter(t *testing.T) {

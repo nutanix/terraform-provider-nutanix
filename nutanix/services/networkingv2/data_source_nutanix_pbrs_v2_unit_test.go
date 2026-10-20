@@ -3,7 +3,7 @@ package networkingv2
 import (
 	"testing"
 
-	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v17/models/networking/v4/config"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
 )
 
 func TestUnitFlattenRoutingEntities(t *testing.T) {

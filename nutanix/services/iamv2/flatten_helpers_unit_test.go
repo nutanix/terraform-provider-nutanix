@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	iamCommonConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/common/v1/config"
-	iamResponse "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/common/v1/response"
-	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authn"
-	iamConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v17/models/iam/v4/authz"
+	iamCommonConfig "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/common/v1/config"
+	iamResponse "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/common/v1/response"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
+	iamConfig "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
 	"github.com/stretchr/testify/require"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
