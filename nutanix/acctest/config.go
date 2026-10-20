@@ -233,7 +233,10 @@ type VMMConfig struct {
 	IntegrationVM string `json:"integration_vm"`
 	AssignedIP    string `json:"assigned_ip"`
 	UnattendXML   string `json:"unattend_xml"`
-	Subnet        struct {
+	// DHCPSubnetName names a subnet whose guests get their address from DHCP
+	// after boot (not IPAM-managed). The wait_for_ip tests are skipped without it.
+	DHCPSubnetName string `json:"dhcp_subnet_name"`
+	Subnet         struct {
 		NetworkID int    `json:"network_id"`
 		IP        string `json:"ip"`
 		Prefix    int    `json:"prefix"`
