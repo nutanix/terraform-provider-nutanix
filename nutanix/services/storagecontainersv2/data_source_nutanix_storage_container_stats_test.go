@@ -2,7 +2,6 @@ package storagecontainersv2_test
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 	"time"
@@ -17,8 +16,6 @@ const datasourceNameStorageStatsInfo = "data.nutanix_storage_container_stats_inf
 func TestAccV2NutanixStorageStatsInfoDataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-storage-container-%d", r)
-	path, _ := os.Getwd()
-	filepath := path + "/../../../test_config_v2.json"
 
 	// Start time is now
 	startTime := time.Now()
@@ -35,7 +32,7 @@ func TestAccV2NutanixStorageStatsInfoDataSource_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testStorageContainerConfig(filepath, name) + testStorageStatsDatasourceV2Config(startTimeFormatted, endTimeFormatted),
+				Config: testStorageContainerConfig(name) + testStorageStatsDatasourceV2Config(startTimeFormatted, endTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameStorageStatsInfo, "container_ext_id"),
 				),
@@ -47,8 +44,6 @@ func TestAccV2NutanixStorageStatsInfoDataSource_Basic(t *testing.T) {
 func TestAccV2NutanixStorageStatsInfoDataSource_SampleInterval(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-storage-container-%d", r)
-	path, _ := os.Getwd()
-	filepath := path + "/../../../test_config_v2.json"
 
 	// Start time is now
 	startTime := time.Now()
@@ -65,7 +60,7 @@ func TestAccV2NutanixStorageStatsInfoDataSource_SampleInterval(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testStorageContainerConfig(filepath, name) + testStorageStatsDatasourceV2SampleInterval(startTimeFormatted, endTimeFormatted, 2),
+				Config: testStorageContainerConfig(name) + testStorageStatsDatasourceV2SampleInterval(startTimeFormatted, endTimeFormatted, 2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameStorageStatsInfo, "container_ext_id"),
 				),
@@ -77,8 +72,6 @@ func TestAccV2NutanixStorageStatsInfoDataSource_SampleInterval(t *testing.T) {
 func TestAccV2NutanixStorageStatsInfoDataSource_StatType(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-storage-container-%d", r)
-	path, _ := os.Getwd()
-	filepath := path + "/../../../test_config_v2.json"
 
 	// Start time is now
 	startTime := time.Now()
@@ -95,7 +88,7 @@ func TestAccV2NutanixStorageStatsInfoDataSource_StatType(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testStorageContainerConfig(filepath, name) + testStorageStatsDatasourceV2StatType(startTimeFormatted, endTimeFormatted, "COUNT"),
+				Config: testStorageContainerConfig(name) + testStorageStatsDatasourceV2StatType(startTimeFormatted, endTimeFormatted, "COUNT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameStorageStatsInfo, "container_ext_id"),
 				),
@@ -181,7 +174,7 @@ func TestAccV2NutanixStorageStatsInfoDataSource_MissingRequiredArgs(t *testing.T
 	})
 }
 
-func testStorageContainerConfig(filepath, name string) string {
+func testStorageContainerConfig(name string) string {
 	return fmt.Sprintf(`
 
 		data "nutanix_clusters_v2" "clusters" {}
@@ -191,20 +184,18 @@ func testStorageContainerConfig(filepath, name string) string {
 				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
 				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
-			config = (jsondecode(file("%[1]s")))
-			storage_container = local.config.storage_container			
 		}
 
 		resource "nutanix_storage_containers_v2" "test" {
-			name = "%[2]s"
+			name = "%[1]s"
 			cluster_ext_id = local.cluster
-			logical_advertised_capacity_bytes = local.storage_container.logical_advertised_capacity_bytes
-			logical_explicit_reserved_capacity_bytes = local.storage_container.logical_explicit_reserved_capacity_bytes
-			replication_factor = local.storage_container.replication_factor
+			logical_advertised_capacity_bytes = 1073741824000
+			logical_explicit_reserved_capacity_bytes = 20
+			replication_factor = 1
 			nfs_whitelist_addresses {
 				ipv4  {
-					value = local.storage_container.nfs_whitelist_addresses.ipv4.value
-					prefix_length = local.storage_container.nfs_whitelist_addresses.ipv4.prefix_length
+					value = "192.168.14.0"
+					prefix_length = 32
 				}
 			}
 			erasure_code = "OFF"
@@ -217,7 +208,7 @@ func testStorageContainerConfig(filepath, name string) string {
 			is_software_encryption_enabled = false
 		}
 		
-	`, filepath, name)
+	`, name)
 }
 
 func testStorageStatsDatasourceV2Config(startTime, endTime string) string {

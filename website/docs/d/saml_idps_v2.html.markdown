@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_saml_identity_providers_v2"
+page_title: "NUTANIX: nutanix_saml_identity_providers_v2 (Beta)"
 sidebar_current: "docs-nutanix-datasource-saml-identity-providers-v2"
 description: |-
   Provides a datasource to retrieve all the  all SAML Identity Provider(s).
 ---
 
-# nutanix_saml_identity_providers_v2
+# nutanix_saml_identity_providers_v2 (Beta)
+
+-> **Note:** This data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The data source and its behavior may change in future releases as the SDK API evolves.
 
 Provides a datasource to retrieve all the SAML Identity Provider(s).
 
@@ -73,6 +75,9 @@ The identity_providers  attribute element contains the following attributes:
 * `links`: - A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 * `idp_metadata`: - Type of the User Group. LDAP (User Group belonging to a Directory Service (Open LDAP/AD)),  SAML (User Group belonging to a SAML IDP.)
 * `name`: - Unique name of the IDP.
+* `project_ext_id`: - Project reference for the SAML Identity Provider.
+* `shared_with_projects`: - List of projects with which the SAML Identity Provider is shared.
+* `share_with_all_projects`: - Flag indicating whether the SAML Identity Provider is shared with all projects or not.
 * `username_attr`: - SAML assertion Username attribute element.
 * `email_attr`: - SAML assertion email attribute element.
 * `groups_attr`: - SAML assertion groups attribute element.
@@ -111,4 +116,4 @@ The idp_metadata attribute supports the following:
     * `persistent`: -  Uses persistent name identifier as NameID format.
     * `entity`: -  Uses identifier of an entity as NameID format.
 
-See detailed information in [Nutanix List SAML identity providers v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/SAMLIdentityProviders/operation/listSamlIdentityProviders).
+See detailed information in [Nutanix List SAML identity providers v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.1.b3#tag/SAMLIdentityProviders/operation/listSamlIdentityProviders).

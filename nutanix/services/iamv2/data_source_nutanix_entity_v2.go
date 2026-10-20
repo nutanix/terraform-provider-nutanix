@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	iamResponse "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/common/v1/response"
 	iamConfig "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/request/entities"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -151,8 +152,11 @@ func DatasourceNutanixEntityV2Read(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.Client).IamAPI
 
 	extID := d.Get("ext_id").(string)
+	getEntityByIDRequest := import1.GetEntityByIdRequest{
+		ExtId: utils.StringPtr(extID),
+	}
 
-	resp, err := conn.EntityAPIInstance.GetEntityById(utils.StringPtr(extID))
+	resp, err := conn.EntityAPIInstance.GetEntityById(ctx, &getEntityByIDRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching entity: %v", err)
 	}
@@ -262,7 +266,7 @@ func flattenAttributeList(attrList []iamConfig.AttributeEntity) []map[string]int
 
 		attrValues := attr.AttributeValues
 		if attrValues == nil {
-			attrValues = []string{}
+			attrValues = []interface{}{}
 		}
 		m := map[string]interface{}{
 			"tenant_id":          utils.StringValue(attr.TenantId),

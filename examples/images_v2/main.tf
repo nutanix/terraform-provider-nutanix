@@ -7,17 +7,6 @@ terraform {
   }
 }
 
-
-#pull all clusters data
-data "nutanix_clusters_v2" "clusters" {}
-
-#create local variable pointing to desired cluster
-locals {
-  cluster_ext_id = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-  ][0]
-}
 #defining nutanix configuration
 provider "nutanix" {
   username = var.nutanix_username
@@ -26,9 +15,11 @@ provider "nutanix" {
   port     = 9440
   insecure = true
 }
-# create image from vm disk source
+
+#pull all clusters data
 data "nutanix_clusters_v2" "clusters" {}
 
+#create local variable pointing to desired cluster
 locals {
   cluster_ext_id = [
     for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
@@ -86,6 +77,8 @@ resource "nutanix_images_v2" "image-vm-disk" {
   source {
     vm_disk_source {
       ext_id = nutanix_virtual_machine_v2.vm.disks.0.ext_id
+      # Providing ext_id attribute without the corresponding 'vm_ext_id' is a deprecated practice and will not be supported in a future release. So from release 2.5.0, it's recommend to set the vm_ext_id attribute as well.
+      vm_ext_id = nutanix_virtual_machine_v2.vm.ext_id
     }
   }
   cluster_location_ext_ids = [

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
@@ -28,17 +29,19 @@ func TestAccV2NutanixRolesDatasource_Basic(t *testing.T) {
 }
 
 func TestAccV2NutanixRolesDatasource_WithFilter(t *testing.T) {
+	roleDisplayName := fmt.Sprintf("tf-test-role-display-name-%d", acctest.RandInt())
+	roleDescription := "tf test role description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testRolesDatasourceV4WithFilterConfig(filepath),
+				Config: testRolesDatasourceV4WithFilterConfig(roleDisplayName, roleDescription),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameRoles, "roles.#"),
 					resource.TestCheckResourceAttr(datasourceNameRoles, "roles.#", "1"),
-					resource.TestCheckResourceAttr(datasourceNameRoles, "roles.0.display_name", testVars.Iam.Roles.DisplayName),
-					resource.TestCheckResourceAttr(datasourceNameRoles, "roles.0.description", testVars.Iam.Roles.Description),
+					resource.TestCheckResourceAttr(datasourceNameRoles, "roles.0.display_name", roleDisplayName),
+					resource.TestCheckResourceAttr(datasourceNameRoles, "roles.0.description", roleDescription),
 				),
 			},
 		},
@@ -46,12 +49,14 @@ func TestAccV2NutanixRolesDatasource_WithFilter(t *testing.T) {
 }
 
 func TestAccV2NutanixRolesDatasource_WithLimit(t *testing.T) {
+	roleDisplayName := fmt.Sprintf("tf-test-role-display-name-%d", acctest.RandInt())
+	roleDescription := "tf test role description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testRolesDatasourceV4WithLimitConfig(filepath),
+				Config: testRolesDatasourceV4WithLimitConfig(roleDisplayName, roleDescription),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameRoles, "roles.#"),
 					resource.TestCheckResourceAttr(datasourceNameRoles, "roles.#", "1"),
@@ -83,21 +88,16 @@ func testRolesDatasourceV4Config() string {
 	`
 }
 
-func testRolesDatasourceV4WithFilterConfig(filepath string) string {
+func testRolesDatasourceV4WithFilterConfig(displayName, description string) string {
 	return fmt.Sprintf(`
-
-	locals{
-		config = (jsondecode(file("%s")))
-		roles = local.config.iam.roles
-	}
 
 	data "nutanix_operations_v2" "test" {
 	  filter = "startswith(displayName, 'Create_')"
 	}
 
 	resource "nutanix_roles_v2" "test" {
-		display_name = local.roles.display_name
-		description  = local.roles.description
+		display_name = "%[1]s"
+		description  = "%[2]s"
 		operations = [
 			data.nutanix_operations_v2.test.operations[0].ext_id,
 			data.nutanix_operations_v2.test.operations[1].ext_id,
@@ -108,25 +108,20 @@ func testRolesDatasourceV4WithFilterConfig(filepath string) string {
   	}
 
 	  data "nutanix_roles_v2" "test" {
-		filter     = "displayName eq '${local.roles.display_name}'"
+		filter     = "displayName eq '${nutanix_roles_v2.test.display_name}'"
 		depends_on = [resource.nutanix_roles_v2.test]
 	  }
-	`, filepath)
+	`, displayName, description)
 }
 
-func testRolesDatasourceV4WithLimitConfig(filepath string) string {
+func testRolesDatasourceV4WithLimitConfig(displayName, description string) string {
 	return fmt.Sprintf(`
-		locals{
-			config = (jsondecode(file("%s")))
-			roles = local.config.iam.roles
-		}
-
 		data "nutanix_operations_v2" "test" {
 		  filter = "startswith(displayName, 'Create_')"
 		}
 		resource "nutanix_roles_v2" "test" {
-			display_name = local.roles.display_name
-			description  = local.roles.description
+			display_name = "%[1]s"
+			description  = "%[2]s"
 			operations = [
 				data.nutanix_operations_v2.test.operations[0].ext_id,
 				data.nutanix_operations_v2.test.operations[1].ext_id,
@@ -140,7 +135,7 @@ func testRolesDatasourceV4WithLimitConfig(filepath string) string {
 			limit     = 1
 			depends_on = [resource.nutanix_roles_v2.test]
 		}
-	`, filepath)
+	`, displayName, description)
 }
 
 func testRolesDatasourceV4WithInvalidFilterConfig() string {

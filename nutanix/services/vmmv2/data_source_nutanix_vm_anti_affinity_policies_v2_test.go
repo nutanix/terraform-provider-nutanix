@@ -66,11 +66,16 @@ func TestAccV2NutanixVMAntiAffinityPoliciesDatasource_WithInvalidFilters(t *test
 }
 
 func testPreConfig(name, desc, count string) string {
+	// Randomize the category key/value per run so repeated runs don't collide
+	// with categories left over from earlier runs.
+	catSuffix := acc.RandIntBetween(1, 100000)
 	return fmt.Sprintf(`
 		resource "nutanix_category_v2" "vm_category" {
 		    count = %[3]s
-		    key = "vm-anti-affinity-vm-category"
-			value = "vm-anti-affinity-vm-category-value-${count.index}"
+		    # Include count.index so each of the %[3]s categories is unique; a
+		    # category is keyed by (key,value) and duplicates are rejected (CTGRS-50023).
+		    key = "vm-anti-affinity-vm-category-%[4]d-${count.index}"
+			value = "vm-anti-affinity-vm-category-value-%[4]d-${count.index}"
 		}
 
 		resource "nutanix_vm_anti_affinity_policy_v2" "test" {
@@ -79,7 +84,7 @@ func testPreConfig(name, desc, count string) string {
 			description = "%[2]s"
 			categories = [ nutanix_category_v2.vm_category[count.index].id ]
 		}
-	`, name, desc, count)
+	`, name, desc, count, catSuffix)
 }
 
 func testVMAntiAffinityPoliciesV2() string {

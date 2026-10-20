@@ -68,8 +68,14 @@ func TestConfig_Client(t *testing.T) {
 				t.Errorf("Config.Client() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got == tt.want {
-				t.Errorf("Config.Client() = %v, want %v", got, tt.want)
+			if got == nil {
+				t.Fatalf("Config.Client() = nil, want non-nil client")
+			}
+			// Client() memoizes fully constructed clients keyed by the connection
+			// parameters, so two Configs with identical parameters must return the
+			// same cached *Client instance.
+			if got != tt.want {
+				t.Errorf("Config.Client() = %p, want cached instance %p", got, tt.want)
 			}
 		})
 	}

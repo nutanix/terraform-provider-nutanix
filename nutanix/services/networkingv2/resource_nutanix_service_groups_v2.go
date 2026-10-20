@@ -3,14 +3,17 @@ package networkingv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/request/servicegroups"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import5 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/request/tasks"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -127,6 +130,11 @@ func ResourceNutanixServiceGroupsV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -149,10 +157,16 @@ func ResourceNutanixServiceGroupsV2Create(ctx context.Context, d *schema.Resourc
 		spec.UdpServices = expandUDPPortRangeSpec(udp.([]interface{}))
 	}
 	if icmp, ok := d.GetOk("icmp_services"); ok {
-		spec.IcmpServices = expandIcmpTypeCodeSpec(icmp.([]interface{}))
+		spec.IcmpServices = expandIcmpTypeCodeSpec(d, "icmp_services", icmp.([]interface{}))
+	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		spec.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
 
-	resp, err := conn.ServiceGroupAPIInstance.CreateServiceGroup(spec)
+	createServiceGroupRequest := import2.CreateServiceGroupRequest{
+		Body: spec,
+	}
+	resp, err := conn.ServiceGroupAPIInstance.CreateServiceGroup(ctx, &createServiceGroupRequest)
 	if err != nil {
 		return diag.Errorf("error while creating service groups : %v", err)
 	}
@@ -176,7 +190,10 @@ func ResourceNutanixServiceGroupsV2Create(ctx context.Context, d *schema.Resourc
 	}
 
 	// Get UUID from TASK API
-	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	getTaskByIdRequest := import5.GetTaskByIdRequest{
+		ExtId: utils.StringPtr(*taskUUID),
+	}
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &getTaskByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching service group task: %v", err)
 	}
@@ -196,7 +213,10 @@ func ResourceNutanixServiceGroupsV2Create(ctx context.Context, d *schema.Resourc
 func ResourceNutanixServiceGroupsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	resp, err := conn.ServiceGroupAPIInstance.GetServiceGroupById(utils.StringPtr(d.Id()))
+	getServiceGroupByIdRequest := import2.GetServiceGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ServiceGroupAPIInstance.GetServiceGroupById(ctx, &getServiceGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching service groups : %v", err)
 	}
@@ -240,14 +260,23 @@ func ResourceNutanixServiceGroupsV2Read(ctx context.Context, d *schema.ResourceD
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
 func ResourceNutanixServiceGroupsV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
+	}
 	conn := meta.(*conns.Client).MicroSegAPI
 	updatedSpec := import1.ServiceGroup{}
 
-	resp, err := conn.ServiceGroupAPIInstance.GetServiceGroupById(utils.StringPtr(d.Id()))
+	getServiceGroupByIdRequest := import2.GetServiceGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ServiceGroupAPIInstance.GetServiceGroupById(ctx, &getServiceGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching service groups : %v", err)
 	}
@@ -273,13 +302,17 @@ func ResourceNutanixServiceGroupsV2Update(ctx context.Context, d *schema.Resourc
 		updatedSpec.UdpServices = expandUDPPortRangeSpec(d.Get("udp_services").([]interface{}))
 	}
 	if d.HasChange("icmp_services") {
-		updatedSpec.IcmpServices = expandIcmpTypeCodeSpec(d.Get("icmp_services").([]interface{}))
+		updatedSpec.IcmpServices = expandIcmpTypeCodeSpec(d, "icmp_services", d.Get("icmp_services").([]interface{}))
 	}
 
 	// removing read only attribute from spec
 	updatedSpec.IsSystemDefined = nil
 
-	updatedResp, err := conn.ServiceGroupAPIInstance.UpdateServiceGroupById(utils.StringPtr(d.Id()), &updatedSpec, args)
+	updateServiceGroupByIdRequest := import2.UpdateServiceGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+		Body:  &updatedSpec,
+	}
+	updatedResp, err := conn.ServiceGroupAPIInstance.UpdateServiceGroupById(ctx, &updateServiceGroupByIdRequest, args)
 	if err != nil {
 		return diag.Errorf("error while updating service groups : %v", err)
 	}
@@ -307,7 +340,10 @@ func ResourceNutanixServiceGroupsV2Update(ctx context.Context, d *schema.Resourc
 func ResourceNutanixServiceGroupsV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).MicroSegAPI
 
-	resp, err := conn.ServiceGroupAPIInstance.DeleteServiceGroupById(utils.StringPtr(d.Id()))
+	deleteServiceGroupByIdRequest := import2.DeleteServiceGroupByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.ServiceGroupAPIInstance.DeleteServiceGroupById(ctx, &deleteServiceGroupByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while deleting service group: %v", err)
 	}
@@ -374,7 +410,19 @@ func expandUDPPortRangeSpec(pr []interface{}) []import1.UdpPortRangeSpec {
 	return nil
 }
 
-func expandIcmpTypeCodeSpec(pr []interface{}) []import1.IcmpTypeCodeSpec {
+// expandIcmpTypeCodeSpec builds the ICMP spec payload. basePath is the raw
+// config path of the icmp_services list (e.g. "icmp_services" or
+// "rules.0.spec.0.application_rule_spec.0.icmp_services") so we can tell
+// whether the user explicitly set type/code.
+//
+// The microseg v4.2 API rejects a spec that sets is_all_allowed=true while
+// also carrying a specific type/code (MIC-30302 on service-groups, MIC-30113
+// on network-security-policies). Terraform's schema-driven d.Get fills unset
+// optional ints with 0, so a plain map check would always emit type:0/code:0
+// and trip that validation. We therefore only serialize type/code when they
+// are explicitly present in config, which also honors the valid specific case
+// type=0/code=0 without forcing it on wildcard specs.
+func expandIcmpTypeCodeSpec(d *schema.ResourceData, basePath string, pr []interface{}) []import1.IcmpTypeCodeSpec {
 	if len(pr) > 0 {
 		icmps := make([]import1.IcmpTypeCodeSpec, len(pr))
 
@@ -382,14 +430,15 @@ func expandIcmpTypeCodeSpec(pr []interface{}) []import1.IcmpTypeCodeSpec {
 			icmp := import1.IcmpTypeCodeSpec{}
 			val := v.(map[string]interface{})
 
-			if allAllow, ok := val["is_all_allowed"]; ok {
-				icmp.IsAllAllowed = utils.BoolPtr(allAllow.(bool))
+			if common.IsExplicitlySet(d, fmt.Sprintf("%s.%d.is_all_allowed", basePath, k)) {
+				allAllow := d.Get(fmt.Sprintf("%s.%d.is_all_allowed", basePath, k)).(bool)
+				icmp.IsAllAllowed = utils.BoolPtr(allAllow)
 			}
-			if code, ok := val["code"]; ok {
-				icmp.Code = utils.IntPtr(code.(int))
+			if common.IsExplicitlySet(d, fmt.Sprintf("%s.%d.type", basePath, k)) {
+				icmp.Type = utils.IntPtr(val["type"].(int))
 			}
-			if types, ok := val["type"]; ok {
-				icmp.Type = utils.IntPtr(types.(int))
+			if common.IsExplicitlySet(d, fmt.Sprintf("%s.%d.code", basePath, k)) {
+				icmp.Code = utils.IntPtr(val["code"].(int))
 			}
 			icmps[k] = icmp
 		}

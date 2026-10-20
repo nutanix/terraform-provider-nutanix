@@ -75,13 +75,14 @@ The following attributes are exported:
 - `name`: Route name.
 - `description`: BGP session description.
 - `destination`: Destination IP Subnet Configuration.
-- `next_hop` : Route nexthop.
+- `next_hop` : Route nexthop(s). Supports multiple entries.
 - `route_table_reference`: Route table reference.
 - `vpc_reference`: VPC reference.
 - `external_routing_domain_reference`: External routing domain associated with this route table.
 - `route_type`: Route type. Acceptable values are "STATIC", "LOCAL", "DYNAMIC"
 - `is_active`: Indicates whether the route is active in the forwarding plane.
 - `priority`: Route priority. A higher value implies greater preference is assigned to the route.
+- `project_ext_id`: External identifier of the project associated with the Route.
 
 ### metadata
 
@@ -115,4 +116,4 @@ The following attributes are exported:
 - `value`: value of IP address
 - `prefix_length`: The prefix length of the network to which this host IPv4/IPv6 address belongs.
 
-See detailed information in [Nutanix List Routes By Route Table Id v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.3#tag/Routes/operation/listRoutesByRouteTableId).
+See detailed information in [Nutanix List Routes By Route Table Id v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.4#tag/Routes/operation/listRoutesByRouteTableId).

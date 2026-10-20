@@ -13,6 +13,10 @@ Create a Template from the given VM identifier. A Template stores the VM configu
 ## Example
 
 ```hcl
+
+# Create a template with user defined project
+# Create a NEW template: the version_source MUST reference a VM (template_vm_reference).
+# Per the API contract, when creating a new template the source can only be a VM.
 resource "nutanix_template_v2" "temp-1"{
     template_name = "example_template"
     template_description = "create example template"
@@ -40,7 +44,14 @@ resource "nutanix_template_v2" "temp-1"{
         }
     }
 }
-# to update template and override the existing configuration, we will use template_version_reference
+# To add a NEW VERSION to an EXISTING template and override its configuration, use
+# template_version_reference. This is an UPDATE on a template already managed by
+# Terraform (create it as above, or `terraform import` a pre-existing one first).
+#
+# IMPORTANT: template_vm_reference and template_version_reference are mutually exclusive
+# (ExactlyOneOf). Specify ONLY ONE of them. Providing both fails at `terraform apply` with
+# "Invalid combination of arguments". When updating, version_name and version_description
+# are required.
   resource "nutanix_template_v2" "temp-1"{
     template_name = "example_template"
     template_description = "create example template"
@@ -49,9 +60,6 @@ resource "nutanix_template_v2" "temp-1"{
       version_description = "updating version from initial to 2.0.0"
       is_active_version   = true
       version_source {
-        template_vm_reference {
-          ext_id = "8a938cc5-282b-48c4-81be-de22de145d07"
-        }
         template_version_reference {
           version_id = "ab520e1d-4950-1db1-917f-a9e2ea35b8e3"
         override_vm_config {
@@ -95,6 +103,7 @@ The following arguments are supported:
 * `template_description`: (Optional) The user defined description of a Template.
 * `template_version_spec`: (Required) A model that represents an object instance that is accessible through an API endpoint. Instances of this type get an extId field that contains the globally unique identifier for that instance. Externally accessible instances are always tenant aware and, therefore, extend the TenantAwareModel
 * `guest_update_status`: (Optional) Status of a guest update.
+* `project_ext_id`: (Optional) The external identifier of the project with which the template is associated.
 
 
 ### template_version_spec
@@ -103,12 +112,12 @@ The template_version_spec block supports the following:
 * `version_name`: (Optional) The user defined name of a Template Version. Version name `Required` when updating a Template Version.
 * `version_description`: (Optional) The user defined description of a Template Version. Version description `Required` when updating a Template Version.
 * `vm_spec`: (Optional) Specification for a VM.
-* `version_source`: (Required) Source of the created Template Version. The source can either be a VM when creating a new Template Version or an existing Version within a Template when creating a new Version. Either `template_vm_reference` or `template_version_reference` .
+* `version_source`: (Required) Source of the created Template Version. When creating a **new template**, the source must be a VM (`template_vm_reference`). When creating a **new version** of an existing template (an update), the source can be either a VM (`template_vm_reference`) or an existing version within the template (`template_version_reference`). Specify exactly **one** of `template_vm_reference` or `template_version_reference` - they are mutually exclusive.
 * `version_source_discriminator`: (Optional) Source type of the template version created. It can be either a VM or a template version.
 * `is_active_version`: (Optional) Default: `true`  Specify whether to mark the template version as active or not. The newly created version during template creation, update, or guest OS update is set to active by default unless specified otherwise.
 * `is_gc_override_enabled`: (Optional) Allow or disallow overriding guest customization during template deployment.
-* `version_source.template_vm_reference`: (Optional) Template VM Reference
-* `version_source.template_version_reference`: (Optional) Template Version Reference
+* `version_source.template_vm_reference`: (Optional) Template VM Reference. Used to source a version from a VM. This is the **only** valid source when creating a new template. Mutually exclusive with `template_version_reference`.
+* `version_source.template_version_reference`: (Optional) Template Version Reference. Used to source a new version from an existing version of the template (update only). Mutually exclusive with `template_vm_reference`.
 
 
 ### version_source.template_vm_reference
@@ -353,4 +362,4 @@ resource "nutanix_template_v2" "import_template" {}
 terraform import nutanix_template_v2.import_template <UUID>
 ```
 
-See detailed information in [Nutanix Create Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.2#tag/Templates/operation/createTemplate).
+See detailed information in [Nutanix Create Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.3#tag/Templates/operation/createTemplate).

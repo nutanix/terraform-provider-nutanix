@@ -3,12 +3,15 @@ package iamv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/request/directoryservices"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -146,6 +149,24 @@ func ResourceNutanixDirectoryServicesV2() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"project_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"shared_with_projects": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"share_with_all_projects": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -207,11 +228,17 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 		}
 		input.WhiteListedGroups = whitelistedGrpListStr
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		input.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 
 	aJSON, _ := json.MarshalIndent(input, "", " ")
 	log.Println("[DEBUG] Directory Service create payload: ", string(aJSON))
 
-	resp, err := conn.DirectoryServiceAPIInstance.CreateDirectoryService(input)
+	createDirectoryServiceRequest := import2.CreateDirectoryServiceRequest{
+		Body: input,
+	}
+	resp, err := conn.DirectoryServiceAPIInstance.CreateDirectoryService(ctx, &createDirectoryServiceRequest)
 	if err != nil {
 		return diag.Errorf("error while creating directory services : %v", err)
 	}
@@ -219,13 +246,41 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 	getResp := resp.Data.GetValue().(import1.DirectoryService)
 
 	d.SetId(utils.StringValue(getResp.ExtId))
-	return ResourceNutanixDirectoryServicesV2Read(ctx, d, meta)
+
+	var diags diag.Diagnostics
+
+	// Handle sharing with projects after creation
+	if shareWithAll, ok := d.GetOk("share_with_all_projects"); ok && shareWithAll.(bool) {
+		if err := shareDirectoryServiceWithAllProjects(ctx, conn, d); err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Directory service created but sharing with all projects failed.",
+				Detail:   fmt.Sprintf("error while sharing directory service with all projects: %v", err),
+			})
+		}
+	} else if sharedProjects, ok := d.GetOk("shared_with_projects"); ok {
+		projectsSet := sharedProjects.(*schema.Set)
+		for _, projectID := range projectsSet.List() {
+			if err := shareDirectoryServiceWithProject(ctx, conn, d, projectID.(string)); err != nil {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Directory service created but sharing with project failed.",
+					Detail:   fmt.Sprintf("error while sharing directory service with project %s: %v", projectID.(string), err),
+				})
+			}
+		}
+	}
+
+	return append(diags, ResourceNutanixDirectoryServicesV2Read(ctx, d, meta)...)
 }
 
 func ResourceNutanixDirectoryServicesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	resp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(utils.StringPtr(d.Id()))
+	getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -290,132 +345,217 @@ func ResourceNutanixDirectoryServicesV2Read(ctx context.Context, d *schema.Resou
 	if err := d.Set("created_by", getResp.CreatedBy); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("project_ext_id", getResp.ProjectExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("shared_with_projects", getResp.SharedWithProjects); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("share_with_all_projects", getResp.IsSharedWithAllProjects); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
 func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 	updatedSpec := import1.DirectoryService{}
+	var diags diag.Diagnostics
 
-	readResp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(utils.StringPtr(d.Id()))
-	if err != nil {
-		return diag.Errorf("error while fetching Directory service : %v", err)
-	}
-	// get etag value from read response to pass in update request If-Match header, Required for update request
-	etagValue := conn.SamlIdentityAPIInstance.ApiClient.GetEtag(readResp)
-	headers := make(map[string]interface{})
-	headers["If-Match"] = utils.StringPtr(etagValue)
-
-	updatedSpec = readResp.Data.GetValue().(import1.DirectoryService)
-
-	// service account required for update
-	// expand service account from row config as it required for update and
-	// password is saved as sensitive value
-	rawConfig := d.GetRawConfig()
-	configMap := rawConfig.AsValueMap()
-
-	val, exists := configMap["service_account"]
-	if !exists || val.IsNull() || !val.IsKnown() {
-		return diag.Errorf("service_account is missing or unknown")
-	}
-
-	if !val.Type().IsTupleType() && !val.Type().IsListType() {
-		return diag.Errorf("service_account is not a list")
-	}
-
-	serviceAccounts := make([]interface{}, 0)
-
-	// Extract each element from the list
-	for _, item := range val.AsValueSlice() {
-		if item.IsNull() || !item.IsKnown() || !item.Type().IsObjectType() {
-			continue
-		}
-
-		account := make(map[string]interface{})
-		for key, value := range item.AsValueMap() {
-			if value.IsNull() || !value.IsKnown() {
-				continue
+	// Handle share_with_all_projects changes
+	if d.HasChange("share_with_all_projects") {
+		shareWithAll := d.Get("share_with_all_projects").(bool)
+		if shareWithAll {
+			if err := shareDirectoryServiceWithAllProjects(ctx, conn, d); err != nil {
+				return diag.Errorf("error while sharing directory service with all projects: %v", err)
 			}
-			account[key] = value.AsString()
+		} else {
+			if err := unshareDirectoryServiceWithAllProjects(ctx, conn, d); err != nil {
+				return diag.Errorf("error while unsharing directory service with all projects: %v", err)
+			}
 		}
-
-		serviceAccounts = append(serviceAccounts, account)
 	}
 
-	updatedSpec.ServiceAccount = expandDsServiceAccount(serviceAccounts)
+	// Handle shared_with_projects changes
+	if d.HasChange("shared_with_projects") {
+		if d.Get("share_with_all_projects") == true {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "Directory service is shared with all projects, skipping individual project share/unshare operations",
+			})
+		} else {
+			oldProjects, newProjects := d.GetChange("shared_with_projects")
+			oldSet := oldProjects.(*schema.Set)
+			newSet := newProjects.(*schema.Set)
+
+			// Unshare with removed projects
+			removedProjects := oldSet.Difference(newSet)
+			for _, projectID := range removedProjects.List() {
+				if err := unshareDirectoryServiceWithProject(ctx, conn, d, projectID.(string)); err != nil {
+					return diag.Errorf("error while unsharing directory service with project %s: %v", projectID.(string), err)
+				}
+			}
+
+			// Share with new projects
+			addedProjects := newSet.Difference(oldSet)
+			for _, projectID := range addedProjects.List() {
+				if err := shareDirectoryServiceWithProject(ctx, conn, d, projectID.(string)); err != nil {
+					return diag.Errorf("error while sharing directory service with project %s: %v", projectID.(string), err)
+				}
+			}
+		}
+	}
 
 	if d.HasChange("name") {
-		updatedSpec.Name = utils.StringPtr(d.Get("name").(string))
+		return diag.Errorf("error while updating directory service name: name cannot be modified.")
 	}
-	if d.HasChange("url") {
-		updatedSpec.Url = utils.StringPtr(d.Get("url").(string))
+	if d.HasChange("project_ext_id") {
+		return diag.Errorf("error while updating project_ext_id: Update of project_ext_id is not supported")
 	}
-	if d.HasChange("secondary_urls") {
-		secUrls := d.Get("secondary_urls")
-		secondaryUrlsList := secUrls.([]interface{})
-		secondaryUrlsListStr := make([]string, len(secondaryUrlsList))
-		for i, v := range secondaryUrlsList {
-			secondaryUrlsListStr[i] = v.(string)
+
+	specFields := []string{"url", "secondary_urls", "domain_name", "directory_type",
+		"open_ldap_configuration", "group_search_type", "white_listed_groups"}
+	hasSpecChanges := false
+	for _, field := range specFields {
+		if d.HasChange(field) {
+			hasSpecChanges = true
+			break
 		}
-		updatedSpec.SecondaryUrls = secondaryUrlsListStr
 	}
-	if d.HasChange("domain_name") {
-		updatedSpec.DomainName = utils.StringPtr(d.Get("domain_name").(string))
-	}
-	if d.HasChange("directory_type") {
-		const two, three = 2, 3
-		subMap := map[string]interface{}{
-			"ACTIVE_DIRECTORY": two,
-			"OPEN_LDAP":        three,
+
+	if hasSpecChanges {
+		getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
+			ExtId: utils.StringPtr(d.Id()),
 		}
-		pInt := subMap[d.Get("directory_type").(string)]
-		p := import1.DirectoryType(pInt.(int))
-
-		updatedSpec.DirectoryType = &p
-	}
-	if d.HasChange("open_ldap_configuration") {
-		updatedSpec.OpenLdapConfiguration = expandOpenLdapConfig(d.Get("open_ldap_configuration"))
-	}
-	if d.HasChange("group_search_type") {
-		const two, three = 2, 3
-		subMap := map[string]interface{}{
-			"NON_RECURSIVE": two,
-			"RECURSIVE":     three,
+		readResp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
+		if err != nil {
+			return diag.Errorf("error while fetching Directory service : %v", err)
 		}
-		pInt := subMap[d.Get("group_search_type").(string)]
-		p := import1.GroupSearchType(pInt.(int))
-		updatedSpec.GroupSearchType = &p
-	}
-	if d.HasChange("white_listed_groups") {
-		whitelistedGrp := d.Get("white_listed_groups")
-		whitelistedGrpList := whitelistedGrp.([]interface{})
-		whitelistedGrpListStr := make([]string, len(whitelistedGrpList))
-		for i, v := range whitelistedGrpList {
-			whitelistedGrpListStr[i] = v.(string)
+
+		updatedSpec = readResp.Data.GetValue().(import1.DirectoryService)
+
+		// service account required for update; expand from raw config as
+		// password is stored as a sensitive value
+		rawConfig := d.GetRawConfig()
+		configMap := rawConfig.AsValueMap()
+
+		val, exists := configMap["service_account"]
+		if !exists || val.IsNull() || !val.IsKnown() {
+			return diag.Errorf("service_account is missing or unknown")
 		}
-		updatedSpec.WhiteListedGroups = whitelistedGrpListStr
+
+		if !val.Type().IsTupleType() && !val.Type().IsListType() {
+			return diag.Errorf("service_account is not a list")
+		}
+
+		serviceAccounts := make([]interface{}, 0)
+
+		for _, item := range val.AsValueSlice() {
+			if item.IsNull() || !item.IsKnown() || !item.Type().IsObjectType() {
+				continue
+			}
+
+			account := make(map[string]interface{})
+			for key, value := range item.AsValueMap() {
+				if value.IsNull() || !value.IsKnown() {
+					continue
+				}
+				account[key] = value.AsString()
+			}
+
+			serviceAccounts = append(serviceAccounts, account)
+		}
+
+		updatedSpec.ServiceAccount = expandDsServiceAccount(serviceAccounts)
+
+		if d.HasChange("url") {
+			updatedSpec.Url = utils.StringPtr(d.Get("url").(string))
+		}
+		if d.HasChange("secondary_urls") {
+			secUrls := d.Get("secondary_urls")
+			secondaryUrlsList := secUrls.([]interface{})
+			secondaryUrlsListStr := make([]string, len(secondaryUrlsList))
+			for i, v := range secondaryUrlsList {
+				secondaryUrlsListStr[i] = v.(string)
+			}
+			updatedSpec.SecondaryUrls = secondaryUrlsListStr
+		}
+		if d.HasChange("domain_name") {
+			updatedSpec.DomainName = utils.StringPtr(d.Get("domain_name").(string))
+		}
+		if d.HasChange("directory_type") {
+			const two, three = 2, 3
+			subMap := map[string]interface{}{
+				"ACTIVE_DIRECTORY": two,
+				"OPEN_LDAP":        three,
+			}
+			pInt := subMap[d.Get("directory_type").(string)]
+			p := import1.DirectoryType(pInt.(int))
+
+			updatedSpec.DirectoryType = &p
+		}
+		if d.HasChange("open_ldap_configuration") {
+			updatedSpec.OpenLdapConfiguration = expandOpenLdapConfig(d.Get("open_ldap_configuration"))
+		}
+		if d.HasChange("group_search_type") {
+			const two, three = 2, 3
+			subMap := map[string]interface{}{
+				"NON_RECURSIVE": two,
+				"RECURSIVE":     three,
+			}
+			pInt := subMap[d.Get("group_search_type").(string)]
+			p := import1.GroupSearchType(pInt.(int))
+			updatedSpec.GroupSearchType = &p
+		}
+		if d.HasChange("white_listed_groups") {
+			whitelistedGrp := d.Get("white_listed_groups")
+			whitelistedGrpList := whitelistedGrp.([]interface{})
+			whitelistedGrpListStr := make([]string, len(whitelistedGrpList))
+			for i, v := range whitelistedGrpList {
+				whitelistedGrpListStr[i] = v.(string)
+			}
+			updatedSpec.WhiteListedGroups = whitelistedGrpListStr
+		}
+
+		aJSON, _ := json.MarshalIndent(updatedSpec, "", " ")
+		log.Println("[DEBUG] Directory Service update payload: ", string(aJSON))
+
+		updateDirectoryServiceByIdRequest := import2.UpdateDirectoryServiceByIdRequest{
+			ExtId: utils.StringPtr(d.Id()),
+			Body:  &updatedSpec,
+		}
+
+		readRespById, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
+		if err != nil {
+			return diag.Errorf("error while fetching Directory service : %v", err)
+		}
+		headers := make(map[string]interface{})
+		etagValue := conn.DirectoryServiceAPIInstance.ApiClient.GetEtag(readRespById)
+		headers["If-Match"] = utils.StringPtr(etagValue)
+
+		updatedResp, err := conn.DirectoryServiceAPIInstance.UpdateDirectoryServiceById(ctx, &updateDirectoryServiceByIdRequest, headers)
+		if err != nil {
+			return diag.Errorf("error while updating directory services: %v", err)
+		}
+
+		updatedResponse := updatedResp.Data.GetValue().(import1.DirectoryService)
+
+		if updatedResponse.ExtId != nil {
+			log.Println("[DEBUG] updated the directory services")
+		}
 	}
 
-	aJSON, _ := json.MarshalIndent(updatedSpec, "", " ")
-	log.Println("[DEBUG] Directory Service update payload: ", string(aJSON))
-
-	updatedResp, err := conn.DirectoryServiceAPIInstance.UpdateDirectoryServiceById(utils.StringPtr(d.Id()), &updatedSpec, headers)
-	if err != nil {
-		return diag.Errorf("error while updating directory services: %v", err)
-	}
-
-	updatedResponse := updatedResp.Data.GetValue().(import1.DirectoryService)
-
-	if updatedResponse.ExtId != nil {
-		log.Println("[DEBUG] updated the directory services")
-	}
-	return ResourceNutanixDirectoryServicesV2Read(ctx, d, meta)
+	readDiags := ResourceNutanixDirectoryServicesV2Read(ctx, d, meta)
+	return append(diags, readDiags...)
 }
 
 func ResourceNutanixDirectoryServicesV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	readResp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(utils.StringPtr(d.Id()))
+	getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	readResp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching Directory service : %v", err)
 	}
@@ -424,7 +564,10 @@ func ResourceNutanixDirectoryServicesV2Delete(ctx context.Context, d *schema.Res
 	headers := make(map[string]interface{})
 	headers["If-Match"] = utils.StringPtr(etagValue)
 
-	resp, err := conn.DirectoryServiceAPIInstance.DeleteDirectoryServiceById(utils.StringPtr(d.Id()), headers)
+	deleteDirectoryServiceByIdRequest := import2.DeleteDirectoryServiceByIdRequest{
+		ExtId: utils.StringPtr(d.Id()),
+	}
+	resp, err := conn.DirectoryServiceAPIInstance.DeleteDirectoryServiceById(ctx, &deleteDirectoryServiceByIdRequest, headers)
 	if err != nil {
 		return diag.Errorf("error while deleting directory services : %v", err)
 	}
@@ -530,5 +673,134 @@ func flattenDsServiceAccountForResource(pr *import1.DsServiceAccount) []map[stri
 		accs = append(accs, acc)
 		return accs
 	}
+	return nil
+}
+
+// Helper functions for sharing/unsharing directory service with projects
+func shareDirectoryServiceWithProject(ctx context.Context, conn *iam.Client, d *schema.ResourceData, projectID string) error {
+	if d.Get("share_with_all_projects") == true {
+		log.Printf("[WARN] Directory service is shared with all projects, skipping share with specific project %s", projectID)
+		return nil
+	}
+	directoryServiceExtID := utils.StringPtr(d.Id())
+	shareDirectoryServiceRequest := import2.ShareDirectoryServiceRequest{
+		ExtId: directoryServiceExtID,
+		Body: &import1.DirectoryServiceShareRequest{
+			ProjectExtId: utils.StringPtr(projectID),
+		},
+	}
+
+	getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
+		ExtId: directoryServiceExtID,
+	}
+	readResp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching directory service: %v", err)
+	}
+
+	// get etag value from read response to pass in update request If-Match header, Required for update request
+	etagValue := conn.DirectoryServiceAPIInstance.ApiClient.GetEtag(readResp)
+	headers := make(map[string]interface{})
+	headers["If-Match"] = utils.StringPtr(etagValue)
+
+	// call share directory service api
+	_, err = conn.DirectoryServiceAPIInstance.ShareDirectoryService(ctx, &shareDirectoryServiceRequest, headers)
+	if err != nil {
+		return fmt.Errorf("error while sharing directory service with project %s: %v", projectID, err)
+	}
+
+	log.Printf("[DEBUG] Sharing directory service %v with project %v is success", utils.StringValue(directoryServiceExtID), projectID)
+	return nil
+}
+
+func unshareDirectoryServiceWithProject(ctx context.Context, conn *iam.Client, d *schema.ResourceData, projectID string) error {
+	if d.Get("share_with_all_projects") == true {
+		log.Printf("[WARN] Directory service is shared with all projects, skipping unshare with specific project %s", projectID)
+		return nil
+	}
+	directoryServiceExtID := utils.StringPtr(d.Id())
+	unshareDirectoryServiceRequest := import2.UnshareDirectoryServiceRequest{
+		ExtId: directoryServiceExtID,
+		Body: &import1.DirectoryServiceUnshareRequest{
+			ProjectExtId: utils.StringPtr(projectID),
+		},
+	}
+
+	getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
+		ExtId: directoryServiceExtID,
+	}
+	readResp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching directory service: %v", err)
+	}
+
+	etagValue := conn.DirectoryServiceAPIInstance.ApiClient.GetEtag(readResp)
+	headers := make(map[string]interface{})
+	headers["If-Match"] = utils.StringPtr(etagValue)
+
+	// call unshare directory service api
+	_, err = conn.DirectoryServiceAPIInstance.UnshareDirectoryService(ctx, &unshareDirectoryServiceRequest, headers)
+	if err != nil {
+		return fmt.Errorf("error while unsharing directory service with project %s: %v", projectID, err)
+	}
+
+	log.Printf("[DEBUG] Unsharing directory service %v with project %v is success", utils.StringValue(directoryServiceExtID), projectID)
+	return nil
+}
+
+func shareDirectoryServiceWithAllProjects(ctx context.Context, conn *iam.Client, d *schema.ResourceData) error {
+	directoryServiceExtID := utils.StringPtr(d.Id())
+	shareAllDirectoryServiceRequest := import2.ShareAllDirectoryServiceRequest{
+		ExtId: directoryServiceExtID,
+	}
+
+	getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
+		ExtId: directoryServiceExtID,
+	}
+	readResp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching directory service: %v", err)
+	}
+
+	etagValue := conn.DirectoryServiceAPIInstance.ApiClient.GetEtag(readResp)
+	headers := make(map[string]interface{})
+	headers["If-Match"] = utils.StringPtr(etagValue)
+
+	// call share all directory service api
+	_, err = conn.DirectoryServiceAPIInstance.ShareAllDirectoryService(
+		ctx, &shareAllDirectoryServiceRequest, headers)
+	if err != nil {
+		return fmt.Errorf("error while sharing directory service with all projects: %v", err)
+	}
+
+	log.Printf("[DEBUG] Sharing directory service %v with all projects is success", utils.StringValue(directoryServiceExtID))
+	return nil
+}
+
+func unshareDirectoryServiceWithAllProjects(ctx context.Context, conn *iam.Client, d *schema.ResourceData) error {
+	directoryServiceExtID := utils.StringPtr(d.Id())
+	unshareAllDirectoryServiceRequest := import2.UnshareAllDirectoryServiceRequest{
+		ExtId: directoryServiceExtID,
+	}
+
+	getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
+		ExtId: directoryServiceExtID,
+	}
+	readResp, err := conn.DirectoryServiceAPIInstance.GetDirectoryServiceById(ctx, &getDirectoryServiceByIdRequest)
+	if err != nil {
+		return fmt.Errorf("error while fetching directory service: %v", err)
+	}
+
+	etagValue := conn.DirectoryServiceAPIInstance.ApiClient.GetEtag(readResp)
+	headers := make(map[string]interface{})
+	headers["If-Match"] = utils.StringPtr(etagValue)
+
+	// call unshare all directory service api
+	_, err = conn.DirectoryServiceAPIInstance.UnshareAllDirectoryService(ctx, &unshareAllDirectoryServiceRequest, headers)
+	if err != nil {
+		return fmt.Errorf("error while unsharing directory service with all projects: %v", err)
+	}
+
+	log.Printf("[DEBUG] Unsharing directory service %v with all projects is success", utils.StringValue(directoryServiceExtID))
 	return nil
 }
