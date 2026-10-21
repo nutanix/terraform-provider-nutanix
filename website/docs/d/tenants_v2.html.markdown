@@ -26,4 +26,4 @@ The following attributes are exported:
 
 - `tenants`: List of tenants. Each element exports the same attributes as the `nutanix_tenant_v2` data source.
 
-See detailed information in [Nutanix List Tenants V4](https://developers.nutanix.com/).
+See detailed information in [Nutanix List Tenants V4](https://developers.nutanix.com/api-reference?namespace=tenancy&version=v4.0.a1#tag/Tenants/operation/listTenants).

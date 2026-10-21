@@ -69,4 +69,4 @@ The following attributes are exported:
 
 - `state`: The state of the tenant.
 
-See detailed information in [Nutanix Create Tenant V4](https://developers.nutanix.com/).
+See detailed information in [Nutanix Create Tenant V4](https://developers.nutanix.com/api-reference?namespace=tenancy&version=v4.0.a1#tag/Tenants/operation/createTenant).

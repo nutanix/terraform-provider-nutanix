@@ -24,4 +24,4 @@ The following arguments are supported:
 
 * `ext_id`:- (Required) External identifier of the registered domain.
 
-See detailed information in [Nutanix Registered Domain V2](https://developers.nutanix.com/api-reference?namespace=multidomain&version=v4.0).
+See detailed information in [Nutanix Registered Domain V2](https://developers.nutanix.com/api-reference?namespace=multidomain&version=v4.4.b1#tag/RegisteredDomains/operation/refreshApiCredentials).

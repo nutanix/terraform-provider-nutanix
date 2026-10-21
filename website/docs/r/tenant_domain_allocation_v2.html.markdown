@@ -96,4 +96,4 @@ The following attributes are exported:
 
 - `state`: The state of the domain allocation.
 
-See detailed information in [Nutanix Create Tenant Domain Allocation V4](https://developers.nutanix.com/).
+See detailed information in [Nutanix Create Tenant Domain Allocation V4](http://developers.nutanix.com/api-reference?namespace=tenancy&version=v4.0.a1#tag/Tenants/operation/createTenantDomainAllocation).

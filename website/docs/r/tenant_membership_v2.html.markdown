@@ -83,4 +83,4 @@ resource "nutanix_tenant_membership_v2" "import_membership" {}
 terraform import nutanix_tenant_membership_v2.import_membership <UUID>
 ```
 
-See detailed information in [Nutanix Create Domain Membership v4](https://developers.nutanix.com/api-reference?namespace=tenancy&version=v4.0.a2).
+See detailed information in [Nutanix Create Domain Membership v4](https://developers.nutanix.com/api-reference?namespace=tenancy&version=v4.0.a1#tag/Membership/operation/createDomainMembership).

@@ -30,4 +30,4 @@ The following attributes are exported:
 
 - `domain_allocations`: List of domain allocations. Each element exports the same attributes as the `nutanix_tenant_domain_allocation_v2` data source.
 
-See detailed information in [Nutanix List Tenant Domain Allocations V4](https://developers.nutanix.com/).
+See detailed information in [Nutanix List Tenant Domain Allocations V4](https://developers.nutanix.com/api-reference?namespace=tenancy&version=v4.0.a1#tag/Tenants/operation/listTenantDomainAllocations).

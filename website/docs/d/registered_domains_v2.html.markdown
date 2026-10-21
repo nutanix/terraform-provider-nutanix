@@ -38,4 +38,4 @@ The following attributes are exported:
 
 * `registered_domains`:- List of registered domains. Each element supports the same attributes as the [nutanix_registered_domain_v2](registered_domain_v2.html) datasource.
 
-See detailed information in [Nutanix Registered Domains V2](https://developers.nutanix.com/api-reference?namespace=multidomain&version=v4.0).
+See detailed information in [Nutanix Registered Domains V2](https://developers.nutanix.com/api-reference?namespace=multidomain&version=v4.4.b1#tag/RegisteredDomains/operation/listRegisteredDomains).

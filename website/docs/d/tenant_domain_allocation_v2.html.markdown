@@ -45,4 +45,4 @@ The following attributes are exported:
 - `resource_group`: The resource group of the project.
 - `state`: The state of the project.
 
-See detailed information in [Nutanix Get Tenant Domain Allocation V4](https://developers.nutanix.com/).
+See detailed information in [Nutanix Get Tenant Domain Allocation V4](https://developers.nutanix.com/api-reference?namespace=tenancy&version=v4.0.a1#tag/Tenants/operation/listTenantDomainAllocations).

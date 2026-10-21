@@ -46,4 +46,4 @@ The following attributes are exported:
 * `state_info`:- The current lifecycle state of the membership.
   * `state`:- The membership state. Valid values: `"PENDING"`, `"ACTIVE"`, `"ERROR"`, `"DELETING"`.
 
-See detailed information in [Nutanix Get Domain Membership v4](https://developers.nutanix.com/api-reference?namespace=tenancy&version=v4.0.a2).
+See detailed information in [Nutanix Get Domain Membership v4](https://developers.nutanix.com/api-reference?namespace=tenancy&version=v4.0.a1#tag/Membership/operation/getDomainMembershipById).

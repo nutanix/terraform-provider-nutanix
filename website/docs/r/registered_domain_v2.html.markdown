@@ -107,4 +107,4 @@ Registered domains can be imported using their `ext_id`, e.g.
 terraform import nutanix_registered_domain_v2.example <ext_id>
 ```
 
-See detailed information in [Nutanix Registered Domain V2](https://developers.nutanix.com/api-reference?namespace=multidomain&version=v4.0).
+See detailed information in [Nutanix Registered Domain V2](https://developers.nutanix.com/api-reference?namespace=multidomain&version=v4.4.b1#tag/RegisteredDomains/operation/createRegisteredDomain).

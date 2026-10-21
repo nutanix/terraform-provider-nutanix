@@ -70,4 +70,4 @@ The `coordinates` attribute exports the following:
 * `latitude`:- The latitude part of the location.
 * `longitude`:- The longitude part of the location.
 
-See detailed information in [Nutanix Get Local Domain V4](https://developers.nutanix.com/api-reference?namespace=multidomain&version=v4.0).
+See detailed information in [Nutanix Get Local Domain V4](https://developers.nutanix.com/api-reference?namespace=multidomain&version=v4.4.b1#tag/LocalDomain/operation/getLocalDomain).

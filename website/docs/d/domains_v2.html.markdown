@@ -23,3 +23,5 @@ data "nutanix_domains_v2" "example" {}
 - `domains.ext_id`: External identifier of the allowed-domain association.
 - `domains.tenant_id`: Identifier of the tenant that owns the domain association.
 - `domains.links`: HATEOAS links for the domain association.
+
+See detailed information in [Nutanix List All Domains v4](https://developers.nutanix.com/api-reference?namespace=tenancy&version=v4.0.a1#tag/Tenants/operation/listDomains).
