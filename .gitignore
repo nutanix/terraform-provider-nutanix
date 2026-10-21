@@ -43,9 +43,8 @@ build.sh
 __pycache__/
 *.pyc
 
-# generated run artifacts from the testenv tooling
-testenv/logs/
-testenv/results/
+# Private lab tooling — never publish to open source (see nutanix-opensource-release skill).
+testenv/
 
 # AI generated files
 AGENTS.md
