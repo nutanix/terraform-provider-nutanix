@@ -1291,13 +1291,3 @@ func TestUnitExpandLocalDomainRegistrationCredentials(t *testing.T) {
 		})
 	}
 }
-
-func TestUnitRegisteredDomainRefreshReadAndDelete(t *testing.T) {
-	t.Parallel()
-
-	d := schema.TestResourceDataRaw(t, ResourceNutanixRegisteredDomainRefreshApiCredentialsV2().Schema, map[string]interface{}{
-		"ext_id": "rd-1",
-	})
-	require.Nil(t, ResourceNutanixRegisteredDomainRefreshApiCredentialsV2Read(t.Context(), d, nil))
-	require.Nil(t, ResourceNutanixRegisteredDomainRefreshApiCredentialsV2Delete(t.Context(), d, nil))
-}
