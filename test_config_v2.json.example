@@ -97,6 +97,22 @@
         "dns": "",
         "ext_id": "",
         "url": ""
+      },
+      "tenant_membership_ad": {
+        "name": "",
+        "directory_service_name": "",
+        "username": "Adminis",
+        "password": "",
+        "dns": "",
+        "url": "",
+        "user_groups": {
+          "users": {
+            "jpmorgan_user_001": ""
+          },
+          "user_groups": {
+            "jpmorgan_user_group_2": ""
+          }
+        }
       }
     },
     "users": {
@@ -172,7 +188,7 @@
   "vmm": {
     "integration_vm": "",
     "subnet_name": "",
-    "assigned_ip": "",
+    "assigned_ip": "10.44.76.45",
     "unattend_xml": "",
     "subnet": {
       "network_id": 0,
@@ -185,8 +201,8 @@
     "ngt": {
       "ngt_upgrade_vm_name": "",
       "credential": {
-        "username": "",
-        "password": ""
+        "username": "nutanix",
+        "password": "nutanix/4u"
       }
     },
     "ngt_vm": {
@@ -225,6 +241,9 @@
       ""
     ]
   },
+  "tenancy": {
+    "domain_ext_id": ""
+  },
   "prism": {
     "deploy_pc": {
       "pe_ip": "",
@@ -250,7 +269,7 @@
       "pe_ip": ""
     },
     "pc_restore": {
-      "skip_pc_restore_test": false
+      "skip_pc_restore_test": true
     }
   },
   "security": {

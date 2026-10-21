@@ -10,6 +10,8 @@ description: |-
 
 Configures IPMI IP address on BMC of nodes.
 
+> **WriteOnly credentials:** `ipmi_password` is write-only. It is never stored in Terraform state. Re-supply it in configuration on every apply. Do not use `lifecycle.ignore_changes` on this attribute. See the [WriteOnly Credentials](/docs/providers/nutanix/guides/writeonly_credentials.html) guide for upgrade caveats.
+
 ## Example Usage
 
 ```hcl
@@ -39,7 +41,7 @@ resource "nutanix_foundation_ipmi_config" "impi-1" {
 The following arguments are supported:
 
 * `ipmi_user`: - (Required) IPMI username.
-* `ipmi_password`: - (Required) IPMI password.
+* `ipmi_password`: - (Required, WriteOnly) IPMI password.
 * `ipmi_netmask`: - (Required) IPMI netmask.
 * `ipmi_gateway`: - (Required) IPMI gateway.
 * `blocks`: - (Required) List of blocks.

@@ -8,7 +8,6 @@ import (
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/request/operations"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -147,20 +146,22 @@ func flattenOperationType(pr *import1.OperationType) string {
 }
 
 func flattenAssociatedEndpointList(pr []import1.AssociatedEndpoint) []map[string]interface{} {
-	if len(pr) > 0 {
-		endpoints := make([]map[string]interface{}, len(pr))
-		for _, v := range pr {
-			endpoint := make(map[string]interface{})
-
-			endpoint["api_version"] = common.FlattenPtrEnum(v.ApiVersion)
-			endpoint["endpoint_url"] = v.EndpointUrl
-			endpoint["http_method"] = flattenHTTPMethod(v.HttpMethod)
-
-			endpoints = append(endpoints, endpoint)
-		}
-		return endpoints
+	if len(pr) == 0 {
+		return nil
 	}
-	return nil
+	endpoints := make([]map[string]interface{}, len(pr))
+	for i, v := range pr {
+		apiVersion := ""
+		if v.ApiVersion != nil {
+			apiVersion = v.ApiVersion.GetName()
+		}
+		endpoints[i] = map[string]interface{}{
+			"api_version":  apiVersion,
+			"endpoint_url": utils.StringValue(v.EndpointUrl),
+			"http_method":  flattenHTTPMethod(v.HttpMethod),
+		}
+	}
+	return endpoints
 }
 
 func flattenHTTPMethod(pr *import1.HttpMethod) string {

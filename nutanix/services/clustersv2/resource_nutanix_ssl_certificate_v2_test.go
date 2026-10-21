@@ -122,8 +122,10 @@ func testAccSSLCertificateConfig() string {
 			public_certificate = local.ssl_certificate.public_certificate
 			ca_chain = local.ssl_certificate.ca_chain
 			private_key_algorithm = "RSA_2048"
+			# Do not ignore_changes WriteOnly attrs (private_key/passphrase): they
+			# are never in state, and ignoring them can yield null config on apply.
 			lifecycle {
-				ignore_changes = [ private_key, passphrase, ca_chain ]
+				ignore_changes = [ ca_chain ]
 			}
 		}
 	`, filepath)

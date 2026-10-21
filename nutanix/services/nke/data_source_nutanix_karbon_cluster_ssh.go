@@ -86,8 +86,9 @@ func KarbonClusterSSHConfigElementDataSourceMap() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"private_key": {
-			Type:     schema.TypeString,
-			Computed: true,
+			Type:      schema.TypeString,
+			Computed:  true,
+			Sensitive: true,
 		},
 		"username": {
 			Type:     schema.TypeString,

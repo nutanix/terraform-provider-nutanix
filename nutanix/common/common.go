@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/go-cty/cty/convert"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
@@ -94,6 +95,9 @@ func DiffStringSets(oldSet, newSet []string) (added, removed []string) {
 // IsExplicitlySet defined to determine whether a particular key (or configuration attribute) within a Terraform resource configuration has been explicitly set by the user.
 // Returns a Boolean (true or false). true indicates that the key was explicitly set with a non-null value; false implies it was either not set, is unknown, or explicitly set to null.
 func IsExplicitlySet(d *schema.ResourceData, key string) bool {
+	if d == nil {
+		return false
+	}
 	rawConfig := d.GetRawConfig() // Get raw Terraform config as cty.Value
 	if rawConfig.IsNull() || !rawConfig.IsKnown() {
 		return false // If rawConfig is null/unknown, key wasn't explicitly set
@@ -112,6 +116,9 @@ func IsExplicitlySet(d *schema.ResourceData, key string) bool {
 // (e.g. at least one nested attribute or block set). Used to prefer legacy blocks when the user only set
 // legacy fields and the new block is present in config as an empty block (e.g. from schema default).
 func IsNonEmptyBlockExplicitlySet(d *schema.ResourceData, key string) bool {
+	if d == nil {
+		return false
+	}
 	rawConfig := d.GetRawConfig()
 	if rawConfig.IsNull() || !rawConfig.IsKnown() {
 		return false
@@ -179,8 +186,18 @@ func getRawConfigValueAtPath(root cty.Value, path string) (cty.Value, bool) {
 		// Handle list/tuple index (e.g. "node_params.0.foo")
 		if idx, err := strconv.Atoi(p); err == nil {
 			t := cur.Type()
-			if !(t.IsListType() || t.IsTupleType()) {
-				return cty.NilVal, false
+			if !t.IsListType() && !t.IsTupleType() {
+				// DynamicPseudoType values (e.g. from jsondecode/locals) need conversion
+				// to their concrete type before navigation.
+				if t == cty.DynamicPseudoType && cur.IsKnown() && !cur.IsNull() {
+					if converted, convErr := convert.Convert(cur, cty.List(cty.DynamicPseudoType)); convErr == nil {
+						cur = converted
+						t = cur.Type()
+					}
+				}
+				if !t.IsListType() && !t.IsTupleType() {
+					return cty.NilVal, false
+				}
 			}
 
 			lenVal := cur.Length()
@@ -200,6 +217,16 @@ func getRawConfigValueAtPath(root cty.Value, path string) (cty.Value, bool) {
 
 		// Handle object/map attribute (top-level and nested)
 		t := cur.Type()
+		if !t.IsObjectType() && !t.IsMapType() {
+			// DynamicPseudoType values (e.g. from jsondecode/locals) need conversion
+			// to their concrete type before attribute navigation.
+			if t == cty.DynamicPseudoType && cur.IsKnown() && !cur.IsNull() {
+				if converted, convErr := convert.Convert(cur, cty.Map(cty.DynamicPseudoType)); convErr == nil {
+					cur = converted
+					t = cur.Type()
+				}
+			}
+		}
 		if t.IsObjectType() || t.IsMapType() {
 			m := cur.AsValueMap()
 			child, exists := m[p]
@@ -247,6 +274,40 @@ func IsConfigListEmpty(d *schema.ResourceData, path string) bool {
 func IsRawConfigAvailable(d *schema.ResourceData) bool {
 	rc := d.GetRawConfig()
 	return !rc.IsNull() && rc.IsKnown() && rc.Type() != cty.NilType
+}
+
+// GetWriteOnlyString reads a WriteOnly attribute from raw Terraform config.
+// WriteOnly values are not available via ResourceData.Get / GetOk; providers
+// must use GetRawConfig. path uses dotted form with list indexes, e.g.
+// "credentials.0.password" or
+// "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.credentials.0.authentication.0.password".
+// Returns ("", false) when missing, null, unknown, empty, or not convertible to string.
+// Values from jsondecode/locals may arrive as DynamicPseudoType; those are
+// converted to string before reading.
+func GetWriteOnlyString(d *schema.ResourceData, path string) (string, bool) {
+	if d == nil || path == "" {
+		return "", false
+	}
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return "", false
+	}
+	val, ok := getRawConfigValueAtPath(rawConfig, path)
+	if !ok || val.IsNull() || !val.IsKnown() {
+		return "", false
+	}
+	if !val.Type().Equals(cty.String) {
+		converted, err := convert.Convert(val, cty.String)
+		if err != nil || converted.IsNull() || !converted.IsKnown() {
+			return "", false
+		}
+		val = converted
+	}
+	s := val.AsString()
+	if s == "" {
+		return "", false
+	}
+	return s, true
 }
 
 // IsConfigListEmptyOrMissing returns true if the raw config has no value at path (block omitted),

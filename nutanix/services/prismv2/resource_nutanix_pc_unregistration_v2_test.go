@@ -41,9 +41,35 @@ locals {
   unregister = local.config.prism.unregister
 }
 
+resource "nutanix_pc_registration_v2" "remote_pc" {
+  pc_ext_id = local.pcExtID
+
+  remote_cluster {
+    domain_manager_remote_cluster_spec {
+      cloud_type = "ONPREM_CLOUD"
+
+      remote_cluster {
+        address {
+          ipv4 {
+            value = local.config.availability_zone.remote_pc_ip
+          }
+        }
+
+        credentials {
+          authentication {
+            username = local.config.username_for_test
+            password = local.config.password_for_test
+          }
+        }
+      }
+    }
+  }
+}
+
 resource "nutanix_pc_unregistration_v2" "test"{
   pc_ext_id = local.pcExtID # local pc ext id
   ext_id = local.unregister.pc_ext_id # remote pc ext id
+  depends_on = [nutanix_pc_registration_v2.remote_pc]
 }
 `, filepath)
 }

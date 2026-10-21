@@ -26,7 +26,7 @@ func setup() (*http.ServeMux, *Client, *httptest.Server) {
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
 
-	client, _ := NewClient(&Credentials{"", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", nil}, testUserAgent, testAbsolutePath, false)
+	client, _ := NewClient(&Credentials{Username: "username", Password: "password", Insecure: true}, testUserAgent, testAbsolutePath, false)
 	client.BaseURL, _ = url.Parse(server.URL)
 
 	return mux, client, server
@@ -37,7 +37,7 @@ func setupWithAPIKey() (*http.ServeMux, *Client, *httptest.Server) {
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
 
-	client, _ := NewClient(&Credentials{"", "", "", "", "", true, false, "", "", "", nil, "", "", "", "test-api-key", nil}, testUserAgent, testAbsolutePath, false)
+	client, _ := NewClient(&Credentials{Insecure: true, APIKey: "test-api-key"}, testUserAgent, testAbsolutePath, false)
 	client.BaseURL, _ = url.Parse(server.URL)
 
 	return mux, client, server
@@ -52,14 +52,14 @@ func setupWithCustomHeaders() (*http.ServeMux, *Client, *httptest.Server) {
 		"CF-Access-Client-Id":     "test-client-id",
 		"CF-Access-Client-Secret": "test-client-secret",
 	}
-	client, _ := NewClient(&Credentials{"", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", customHeaders}, testUserAgent, testAbsolutePath, false)
+	client, _ := NewClient(&Credentials{Username: "username", Password: "password", Insecure: true, CustomHeaders: customHeaders}, testUserAgent, testAbsolutePath, false)
 	client.BaseURL, _ = url.Parse(server.URL)
 
 	return mux, client, server
 }
 
 func TestNewClient(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", nil}, testUserAgent, testAbsolutePath, false)
+	c, err := NewClient(&Credentials{URL: "foo.com", Username: "username", Password: "password", Insecure: true}, testUserAgent, testAbsolutePath, false)
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -76,7 +76,7 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestNewBaseClient(t *testing.T) {
-	c, err := NewBaseClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", nil}, testAbsolutePath, true)
+	c, err := NewBaseClient(&Credentials{URL: "foo.com", Username: "username", Password: "password", Insecure: true}, testAbsolutePath, true)
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -93,7 +93,7 @@ func TestNewBaseClient(t *testing.T) {
 }
 
 func TestNewRequest(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", nil}, testUserAgent, testAbsolutePath, false)
+	c, err := NewClient(&Credentials{URL: "foo.com", Username: "username", Password: "password", Insecure: true}, testUserAgent, testAbsolutePath, false)
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -116,7 +116,7 @@ func TestNewRequest(t *testing.T) {
 }
 
 func TestNewUploadRequest(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", nil}, testUserAgent, testAbsolutePath, true)
+	c, err := NewClient(&Credentials{URL: "foo.com", Username: "username", Password: "password", Insecure: true}, testUserAgent, testAbsolutePath, true)
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -158,7 +158,7 @@ func TestNewUploadRequest(t *testing.T) {
 }
 
 func TestNewUnAuthRequest(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", nil}, testUserAgent, testAbsolutePath, true)
+	c, err := NewClient(&Credentials{URL: "foo.com", Username: "username", Password: "password", Insecure: true}, testUserAgent, testAbsolutePath, true)
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -196,7 +196,7 @@ func TestNewUnAuthRequest(t *testing.T) {
 }
 
 func TestNewUnAuthFormEncodedRequest(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", nil}, testUserAgent, testAbsolutePath, true)
+	c, err := NewClient(&Credentials{URL: "foo.com", Username: "username", Password: "password", Insecure: true}, testUserAgent, testAbsolutePath, true)
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -238,7 +238,7 @@ func TestNewUnAuthFormEncodedRequest(t *testing.T) {
 }
 
 func TestNewUnAuthUploadRequest(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", "", "", nil}, testUserAgent, testAbsolutePath, true)
+	c, err := NewClient(&Credentials{URL: "foo.com", Username: "username", Password: "password", Insecure: true}, testUserAgent, testAbsolutePath, true)
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -785,7 +785,7 @@ func TestApplyAuthHeaders_Priority(t *testing.T) {
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
-	client, _ := NewClient(&Credentials{"", "", "", "", "", true, false, "", "", "", nil, "", "", "", "test-api-key", nil}, testUserAgent, testAbsolutePath, false)
+	client, _ := NewClient(&Credentials{Insecure: true, APIKey: "test-api-key"}, testUserAgent, testAbsolutePath, false)
 	client.BaseURL, _ = url.Parse(server.URL)
 
 	// Set cookies to simulate session auth

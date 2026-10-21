@@ -34,6 +34,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/securityv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/selfservice"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/storagecontainersv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/tenancyv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/vmmv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/volumesv2"
@@ -87,6 +88,20 @@ func Provider() *schema.Provider {
 			"service tokens. Headers can also be set via environment variables with\n" +
 			"the NUTANIX_HEADER_ prefix (e.g., NUTANIX_HEADER_CF_ACCESS_CLIENT_ID\n" +
 			"becomes Cf-Access-Client-Id). Config values take precedence over env vars.",
+
+		"nutanix_central_endpoint": "Nutanix Cloud (NC) endpoint base. Used for NC Admin, Tenant Admin, and\n" +
+			"Service Provider Admin scenarios. This is the base domain for NC services\n" +
+			"(e.g., 'nconprem-10-102-176-12.ccpnx.com').",
+
+		"domain_name": "Domain name for the Prism Central instance. Used to construct the\n" +
+			"PC endpoint URL as <domain_name>.domains.<nutanix_central_endpoint> for NC Admin and\n" +
+			"Tenant Admin scenarios.",
+
+		"tenant_name": "Tenant name for Tenant Admin scenarios. Required when operating as\n" +
+			"a Tenant Admin to manage tenant-specific resources.",
+
+		"use_nc_iam": "When true, IAM-related calls use the NC IAM endpoint (iam.services.<nutanix_central_endpoint>)\n" +
+			"instead of the PC IAM endpoint. Applicable for NC Admin and Tenant Admin scenarios.",
 	}
 
 	// Nutanix provider schema
@@ -184,6 +199,30 @@ func Provider() *schema.Provider {
 				Sensitive:   true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Description: descriptions["custom_headers"],
+			},
+			"nutanix_central_endpoint": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_CENTRAL_ENDPOINT", nil),
+				Description: descriptions["nutanix_central_endpoint"],
+			},
+			"domain_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_DOMAIN_NAME", nil),
+				Description: descriptions["domain_name"],
+			},
+			"tenant_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_TENANT_NAME", nil),
+				Description: descriptions["tenant_name"],
+			},
+			"use_nc_iam": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_USE_NC_IAM", false),
+				Description: descriptions["use_nc_iam"],
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
@@ -343,6 +382,8 @@ func Provider() *schema.Provider {
 			"nutanix_protection_policies_v2":                                 datapoliciesv2.DatasourceNutanixProtectionPoliciesV2(),
 			"nutanix_storage_policy_v2":                                      datapoliciesv2.DataSourceNutanixStoragePolicyV2(),
 			"nutanix_storage_policies_v2":                                    datapoliciesv2.DataSourceNutanixStoragePoliciesV2(),
+			"nutanix_tenant_membership_v2":                                   tenancyv2.DataSourceNutanixTenantMembershipV2(),
+			"nutanix_tenant_memberships_v2":                                  tenancyv2.DataSourceNutanixTenantMembershipsV2(),
 			"nutanix_image_v2":                                               vmmv2.DatasourceNutanixImageV4(),
 			"nutanix_images_v2":                                              vmmv2.DatasourceNutanixImagesV4(),
 			"nutanix_ova_v2":                                                 vmmv2.DatasourceNutanixOvaV2(),
@@ -402,12 +443,22 @@ func Provider() *schema.Provider {
 			"nutanix_projects_v2":                   multidomainv2.DatasourceNutanixProjectsV2(),
 			"nutanix_resource_group_v2":             multidomainv2.DatasourceNutanixResourceGroupV2(),
 			"nutanix_resource_groups_v2":            multidomainv2.DatasourceNutanixResourceGroupsV2(),
+			"nutanix_local_domain_v2":               multidomainv2.DatasourceNutanixLocalDomainV2(),
+			"nutanix_registered_domain_v2":          multidomainv2.DatasourceNutanixRegisteredDomainV2(),
+			"nutanix_registered_domains_v2":         multidomainv2.DatasourceNutanixRegisteredDomainsV2(),
+			"nutanix_locations_v2":                  multidomainv2.DatasourceNutanixLocationsV2(),
 			"nutanix_entity_group_v2":               microsegv2.DatasourceNutanixEntityGroupV2(),
 			"nutanix_entity_groups_v2":              microsegv2.DatasourceNutanixEntityGroupsV2(),
 			"nutanix_directory_server_config_v2":    microsegv2.DatasourceNutanixDirectoryServerConfigV2(),
 			"nutanix_directory_server_configs_v2":   microsegv2.DatasourceNutanixDirectoryServerConfigsV2(),
 			"nutanix_ad_group_category_mapping_v2":  microsegv2.DatasourceNutanixCategoryMappingV2(),
 			"nutanix_ad_group_category_mappings_v2": microsegv2.DatasourceNutanixCategoryMappingsV2(),
+			// tenancy
+			"nutanix_tenant_v2":                    tenancyv2.DatasourceNutanixTenantV2(),
+			"nutanix_tenants_v2":                   tenancyv2.DatasourceNutanixTenantsV2(),
+			"nutanix_domains_v2":                   tenancyv2.DatasourceNutanixDomainsV2(),
+			"nutanix_tenant_domain_allocation_v2":  tenancyv2.DatasourceNutanixTenantDomainAllocationV2(),
+			"nutanix_tenant_domain_allocations_v2": tenancyv2.DatasourceNutanixTenantDomainAllocationsV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
@@ -506,6 +557,7 @@ func Provider() *schema.Provider {
 			"nutanix_restore_protected_resource_v2":           dataprotectionv2.ResourceNutanixRestoreProtectedResourceV2(),
 			"nutanix_protection_policy_v2":                    datapoliciesv2.ResourceNutanixProtectionPoliciesV2(),
 			"nutanix_storage_policy_v2":                       datapoliciesv2.ResourceNutanixStoragePoliciesV2(),
+			"nutanix_tenant_membership_v2":                    tenancyv2.ResourceNutanixTenantMembershipV2(),
 			"nutanix_vm_revert_v2":                            vmmv2.ResourceNutanixRevertVMRecoveryPointV2(),
 			"nutanix_virtual_machine_v2":                      vmmv2.ResourceNutanixVirtualMachineV2(),
 			"nutanix_vm_shutdown_action_v2":                   vmmv2.ResourceNutanixVmsShutdownActionV2(),
@@ -551,11 +603,17 @@ func Provider() *schema.Provider {
 			"nutanix_key_management_server_v2":                securityv2.ResourceNutanixKeyManagementServerV2(),
 			"nutanix_project_v2":                              multidomainv2.ResourceNutanixProjectV2(),
 			"nutanix_resource_group_v2":                       multidomainv2.ResourceNutanixResourceGroupV2(),
+			"nutanix_registered_domain_v2":                    multidomainv2.ResourceNutanixRegisteredDomainV2(),
+			"nutanix_local_domain_v2":                         multidomainv2.ResourceNutanixLocalDomainV2(),
 			"nutanix_entity_group_v2":                         microsegv2.ResourceNutanixEntityGroupV2(),
 			"nutanix_directory_server_config_v2":              microsegv2.ResourceNutanixDirectoryServerConfigV2(),
 			"nutanix_ad_group_category_mapping_v2":            microsegv2.ResourceNutanixCategoryMappingV2(),
 			"nutanix_network_security_policy_import_v2":       microsegv2.ResourceNutanixNetworkSecurityPolicyImportV2(),
 			"nutanix_network_security_policy_export_v2":       microsegv2.ResourceNutanixNetworkSecurityPolicyExportV2(),
+			// tenancy
+			"nutanix_tenant_v2":                   tenancyv2.ResourceNutanixTenantV2(),
+			"nutanix_add_domain_v2":               tenancyv2.ResourceNutanixAddDomainV2(),
+			"nutanix_tenant_domain_allocation_v2": tenancyv2.ResourceNutanixTenantDomainAllocationV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
@@ -680,6 +738,11 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		RequiredFields:     requiredProviderFields,
 		APIKey:             apiKey,
 		CustomHeaders:      customHeaders,
+		// Nutanix Central (NC) multi-tenancy configuration
+		NutanixCentralEndpoint: d.Get("nutanix_central_endpoint").(string),
+		DomainName:             d.Get("domain_name").(string),
+		TenantName:             d.Get("tenant_name").(string),
+		UseNCIAM:               d.Get("use_nc_iam").(bool),
 	}
 	c, err := config.Client()
 	if err != nil {
