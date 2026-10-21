@@ -72,6 +72,64 @@ resource "nutanix_directory_services_v2" "active-directory" {
   shared_with_projects = ["Project1_UUID", "Project2_UUID"]
   white_listed_groups = ["example"]
 }
+
+# Create Directory Service with user defined project
+resource "nutanix_directory_services_v2" "active-directory" {
+  name           = "example_active_directory"
+  url            = "ldap://10.xx.xx.xx:xxxx"
+  directory_type = "ACTIVE_DIRECTORY"
+  domain_name    = "nutanix.com"
+  project_ext_id = "<project_uuid>"
+  service_account {
+    username = "username"
+    password = "password"
+  }
+  white_listed_groups = ["example"]
+  lifecycle {
+    ignore_changes = [
+      service_account.0.password,
+    ]
+  }
+}
+
+
+# Create Directory Service Shared with All Projects
+resource "nutanix_directory_services_v2" "active-directory" {
+  name           = "example_active_directory"
+  url            = "ldap://10.xx.xx.xx:xxxx"
+  directory_type = "ACTIVE_DIRECTORY"
+  domain_name    = "nutanix.com"
+  service_account {
+    username = "username"
+    password = "password"
+  }
+  share_with_all_projects = true
+  white_listed_groups = ["example"]
+  lifecycle {
+    ignore_changes = [
+      service_account.0.password,
+    ]
+  }
+}
+
+# Create Directory Service Shared with Projects
+resource "nutanix_directory_services_v2" "active-directory" {
+  name           = "example_active_directory"
+  url            = "ldap://10.xx.xx.xx:xxxx"
+  directory_type = "ACTIVE_DIRECTORY"
+  domain_name    = "nutanix.com"
+  service_account {
+    username = "username"
+    password = "password"
+  }
+  shared_with_projects = ["Project1_UUID", "Project2_UUID"]
+  white_listed_groups = ["example"]
+  lifecycle {
+    ignore_changes = [
+      service_account.0.password,
+    ]
+  }
+}
 ```
 
 ## Argument Reference
