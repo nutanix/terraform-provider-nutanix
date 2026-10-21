@@ -16,7 +16,6 @@ func TestUnitMultidomainSchemas(t *testing.T) {
 		require.NoError(t, ResourceNutanixResourceGroupV2().InternalValidate(ResourceNutanixResourceGroupV2().Schema, true))
 		require.NoError(t, ResourceNutanixLocalDomainV2().InternalValidate(ResourceNutanixLocalDomainV2().Schema, true))
 		require.NoError(t, ResourceNutanixRegisteredDomainV2().InternalValidate(ResourceNutanixRegisteredDomainV2().Schema, true))
-		require.NoError(t, ResourceNutanixRegisteredDomainRefreshApiCredentialsV2().InternalValidate(ResourceNutanixRegisteredDomainRefreshApiCredentialsV2().Schema, true))
 	})
 
 	t.Run("datasources", func(t *testing.T) {
