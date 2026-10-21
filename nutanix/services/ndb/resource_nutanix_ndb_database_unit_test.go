@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
 )
 
 // MockEraService is a mock implementation of the era.Service interface
