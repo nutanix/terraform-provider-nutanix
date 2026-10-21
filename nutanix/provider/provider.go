@@ -604,7 +604,6 @@ func Provider() *schema.Provider {
 			"nutanix_project_v2":                                   multidomainv2.ResourceNutanixProjectV2(),
 			"nutanix_resource_group_v2":                            multidomainv2.ResourceNutanixResourceGroupV2(),
 			"nutanix_registered_domain_v2":                         multidomainv2.ResourceNutanixRegisteredDomainV2(),
-			"nutanix_registered_domain_refresh_api_credentials_v2": multidomainv2.ResourceNutanixRegisteredDomainRefreshApiCredentialsV2(),
 			"nutanix_local_domain_v2":                              multidomainv2.ResourceNutanixLocalDomainV2(),
 			"nutanix_entity_group_v2":                              microsegv2.ResourceNutanixEntityGroupV2(),
 			"nutanix_directory_server_config_v2":                   microsegv2.ResourceNutanixDirectoryServerConfigV2(),
