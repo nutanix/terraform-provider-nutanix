@@ -62,8 +62,9 @@ func DatasourceNutanixKeyManagementServerV2() *schema.Resource {
 										Computed: true,
 									},
 									"truncated_client_secret": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Type:      schema.TypeString,
+										Computed:  true,
+										Sensitive: true,
 									},
 									"credential_expiry_date": {
 										Type:     schema.TypeString,
@@ -235,11 +236,10 @@ func flattenAccessInformation(accessInfo interface{}) ([]map[string]interface{},
 	case config.KmipAccessInformation:
 		// NOTE: Do not log sensitive fields (e.g. cert_pem/private_key/ca_pem).
 		log.Printf("[DEBUG] flattenAccessInformation: handling KmipAccessInformation (endpoints=%d)", len(v.Endpoints))
+		// Omit WriteOnly secrets (ca_pem/cert_pem/private_key) from resource state.
+		// Data sources may still expose truncated/non-secret fields only.
 		kmip := map[string]interface{}{
-			"ca_name":     utils.StringValue(v.CaName),
-			"ca_pem":      utils.StringValue(v.CaPem),
-			"cert_pem":    utils.StringValue(v.CertPem),
-			"private_key": utils.StringValue(v.PrivateKey),
+			"ca_name": utils.StringValue(v.CaName),
 			"endpoint_url": func() []interface{} {
 				result := make([]interface{}, 0, len(v.Endpoints))
 				for _, e := range v.Endpoints {

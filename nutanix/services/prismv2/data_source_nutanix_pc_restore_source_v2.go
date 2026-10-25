@@ -74,8 +74,9 @@ func DatasourceNutanixRestoreSourceV2() *schema.Resource {
 													Computed: true,
 												},
 												"credentials": {
-													Type:     schema.TypeList,
-													Computed: true,
+													Type:      schema.TypeList,
+													Computed:  true,
+													Sensitive: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"access_key_id": {
@@ -83,8 +84,9 @@ func DatasourceNutanixRestoreSourceV2() *schema.Resource {
 																Computed: true,
 															},
 															"secret_access_key": {
-																Type:     schema.TypeString,
-																Computed: true,
+																Type:      schema.TypeString,
+																Computed:  true,
+																Sensitive: true,
 															},
 														},
 													},
@@ -219,6 +221,12 @@ func flattenRestoreSourceObjectStoreLocation(objectStoreLocation management.Obje
 	objectStoreLocationMap := make(map[string]interface{})
 	objectStoreLocationMap["provider_config"] = flattenProviderConfig(objectStoreLocation.ProviderConfig)
 	//objectStoreLocationMap["backup_policy"] = flattenBackupPolicy(objectStoreLocation.BackupPolicy)
+
+	// access_key_id / secret_access_key are WriteOnly on the resource schema;
+	// never rehydrate credentials from the API response into state.
+	if providerConfigs, ok := objectStoreLocationMap["provider_config"].([]map[string]interface{}); ok && len(providerConfigs) > 0 {
+		delete(providerConfigs[0], "credentials")
+	}
 
 	objectStoreLocationList := make([]map[string]interface{}, 0)
 	objectStoreLocationList = append(objectStoreLocationList, objectStoreLocationMap)

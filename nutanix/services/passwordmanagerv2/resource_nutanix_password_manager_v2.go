@@ -50,12 +50,16 @@ func ResourceNutanixPasswordManagerV2() *schema.Resource {
 				Required: true,
 			},
 			"current_password": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				WriteOnly: true,
 			},
 			"new_password": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
+				WriteOnly: true,
 			},
 		},
 	}
@@ -66,11 +70,12 @@ func resourceNutanixPasswordManagerV2Create(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.Client).ClusterAPI
 	extID := utils.StringPtr(d.Get("ext_id").(string))
 	body := &clusterConfig.ChangePasswordSpec{}
-	if currPassword, ok := d.GetOk("current_password"); ok {
-		body.CurrentPassword = utils.StringPtr(currPassword.(string))
+	// WriteOnly attrs are not available via GetOk; read from raw config.
+	if currPassword, ok := common.GetWriteOnlyString(d, "current_password"); ok {
+		body.CurrentPassword = utils.StringPtr(currPassword)
 	}
-	if newPassword, ok := d.GetOk("new_password"); ok {
-		body.NewPassword = utils.StringPtr(newPassword.(string))
+	if newPassword, ok := common.GetWriteOnlyString(d, "new_password"); ok {
+		body.NewPassword = utils.StringPtr(newPassword)
 	}
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")

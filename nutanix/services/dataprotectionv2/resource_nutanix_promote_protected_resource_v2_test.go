@@ -90,7 +90,7 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVG(t *testing.T) {
 		},
 		CheckDestroy: testCheckDestroyProtectedResourceAndCleanup,
 		Steps: []resource.TestStep{
-			//// create protection policy and protected vg
+			// create cluster, sync PP, VG + category; wait until protected-resource is ready
 			{
 				Config: testPromoteProtectedResourceVGAndProtectionPolicyConfig(clusterName, vgName, ppName, description, categoryKey, categoryValue),
 				Check: resource.ComposeTestCheckFunc(
@@ -109,6 +109,20 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVG(t *testing.T) {
 					resource.TestCheckResourceAttrSet(vgResourceName, "id"),
 					resource.TestCheckResourceAttr(vgResourceName, "name", vgName),
 					resource.TestCheckResourceAttr(vgResourceName, "description", description),
+					// poll GET protected-resources until ready, then settle (no blind sleep)
+					waitForProtectedResourceAvailable(vgResourceName, maxRetries, retryInterval, sleepTime),
+				),
+			},
+			// promote protected VG after readiness
+			{
+				PreConfig: func() {
+					fmt.Println("Step 2: Promote Protected VG")
+				},
+				Config: testPromoteProtectedResourceVGAndProtectionPolicyConfig(clusterName, vgName, ppName, description, categoryKey, categoryValue) +
+					testPromoteProtectedResourceVGConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNamePromoteProtectedResource, "id"),
+					resource.TestCheckResourceAttrSet(resourceNamePromoteProtectedResource, "ext_id"),
 				),
 			},
 		},
@@ -135,6 +149,15 @@ locals {
   clusterExtId = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
   config = jsondecode(file("%[1]s"))
   availability_zone = local.config.availability_zone
+}
+
+data "nutanix_storage_containers_v2" "ssc" {
+  filter = "clusterExtId eq '${local.clusterExtId}' and name eq 'SelfServiceContainer'"
+  limit  = 1
+}
+
+locals {
+  sourceStorageContainerExtId = data.nutanix_storage_containers_v2.ssc.storage_containers[0].ext_id
 }
 
 # Create Category
@@ -209,6 +232,9 @@ resource "nutanix_virtual_machine_v2" "test" {
     backing_info {
       vm_disk {
         disk_size_bytes = 1073741824 # 1 GiB
+        storage_container {
+          ext_id = local.sourceStorageContainerExtId
+        }
       }
     }
   }
@@ -263,16 +289,17 @@ data "nutanix_virtual_machines_v2" "promoted-vm" {
 `, remoteHostProviderConfig)
 }
 
-// testPromoteProtectedResourceVGAndProtectionPolicyConfig returns the configuration for promoting a protected VG
+// testPromoteProtectedResourceVGAndProtectionPolicyConfig returns the setup for a sync-protected VG.
+// Promote is applied in a second test step via testPromoteProtectedResourceVGConfig after
+// waitForProtectedResourceAvailable confirms the protected-resource API is ready.
 // Steps:
 // 1. Create a new cluster
 // 2. Register the cluster to PC
 // 3. Modify the firewall rules between the new cluster and the PC cluster
 // 4. Create a category
-// 5. Create a protection policy
+// 5. Create a sync protection policy (RPO=0)
 // 6. Create a volume group
 // 7. Associate the category to the volume group
-// 8. Promote the protected resource (VG)
 func testPromoteProtectedResourceVGAndProtectionPolicyConfig(clusterName, vgName, ppName, description, categoryKey, categoryValue string) string {
 	return fmt.Sprintf(`
 
@@ -302,17 +329,81 @@ locals {
   username         = local.config.pe_username
   password         = local.config.pe_password
 
-  resetClusterPassword = "/home/nutanix/prism/cli/ncli user reset-password user-name=${local.username} password=${local.password}"
+  # Bound ncli so a hung Prism CLI cannot stall the whole apply (SSH ConnectTimeout
+  # only covers TCP connect; after ESTABLISHED, ncli can block indefinitely).
+  resetClusterPassword = "timeout 60 /home/nutanix/prism/cli/ncli user reset-password user-name=${local.username} password=${local.password}"
 
-  remoteClusterSSHCommand = "sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no ${local.config.ssh_pe_username}@${local.remoteClusterIP}"
-  localClusterSSHCommand  = "sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no ${local.config.ssh_pe_username}@${local.localClusterIP}"
+  remoteClusterSSHCommand = "sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o PubkeyAuthentication=no -o ConnectTimeout=10 ${local.config.ssh_pe_username}@${local.remoteClusterIP}"
+  localClusterSSHCommand  = "sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o PubkeyAuthentication=no -o ConnectTimeout=10 ${local.config.ssh_pe_username}@${local.localClusterIP}"
 
-  resetClusterPasswordCommand = "${local.remoteClusterSSHCommand} '${local.resetClusterPassword}'"
+  # Retry: PE SSH/ncli often not ready immediately after cluster create; force password auth so sshpass is not defeated by agent keys.
+  # Acc-test HCL does not unescape $$ → $; use single $ for shell ($i, $?, $rc, $(...)).
+  # Fresh RDM PEs often already use pe_password — ncli then fails with "differ by at least 4 characters"; treat that as OK.
+  resetClusterPasswordCommand = <<-EOT
+    set +e
+    for i in $(seq 1 20); do
+      echo "PE SSH/ncli reset attempt $i/20 on ${local.remoteClusterIP}..."
+      out=$(${local.remoteClusterSSHCommand} '${local.resetClusterPassword}' 2>&1)
+      rc=$?
+      echo "$out"
+      if [ "$rc" -eq 0 ]; then
+        echo "PE SSH/ncli reset succeeded"
+        exit 0
+      fi
+      if echo "$out" | grep -qiE 'differ by at least 4 characters from previous password|not be from last [0-9]+ passwords'; then
+        echo "PE admin password already matches target; continuing"
+        exit 0
+      fi
+      echo "PE SSH/ncli reset attempt $i failed (rc=$rc), retrying in 15s..."
+      sleep 15
+    done
+    echo "PE SSH/ncli reset failed after retries"
+    exit 1
+  EOT
 
-  # Commands to modify the firewall rules between the clusters
-  modifyFirewallRulesCommand       = "/usr/local/nutanix/cluster/bin/modify_firewall -f -r"
-  modifyLocalClusterFirewallRules  = "${local.localClusterSSHCommand} '${local.modifyFirewallRulesCommand} ${local.remoteClusterIP},${local.remoteClusterVIP} -p 2030,2036,2073,2090,8740 -i eth0'"
-  modifyRemoteClusterFirewallRules = "${local.remoteClusterSSHCommand} '${local.modifyFirewallRulesCommand} ${local.localClusterIP},${local.localClusterVIP}  -p 2030,2036,2073,2090,8740 -i eth0'"
+  # Commands to modify the firewall rules between the clusters.
+  # When TF_LOG is DEBUG/TRACE, echo stdout/stderr and exit code (command text redacted — no SSH password).
+  modifyFirewallRulesCommand = "/usr/local/nutanix/cluster/bin/modify_firewall -f -r"
+  modifyLocalClusterFirewallRules  = <<-EOT
+    set -euo pipefail
+    debug=0
+    case "$TF_LOG" in *DEBUG*|*TRACE*|*debug*|*trace*) debug=1 ;; esac
+    if [ "$debug" -eq 1 ]; then
+      echo "[DEBUG] modify_firewall on local PE ${local.localClusterIP} (allow ${local.remoteClusterIP},${local.remoteClusterVIP} ports 2030,2036,2073,2090,8740)"
+    fi
+    set +e
+    out=$(${local.localClusterSSHCommand} '${local.modifyFirewallRulesCommand} ${local.remoteClusterIP},${local.remoteClusterVIP} -p 2030,2036,2073,2090,8740 -i eth0' 2>&1)
+    rc=$?
+    set -e
+    if [ "$debug" -eq 1 ]; then
+      echo "[DEBUG] modify_firewall local PE output:"
+      echo "$out"
+      echo "[DEBUG] modify_firewall local PE exit_code=$rc"
+    elif [ "$rc" -ne 0 ]; then
+      echo "$out" >&2
+    fi
+    exit $rc
+  EOT
+  modifyRemoteClusterFirewallRules = <<-EOT
+    set -euo pipefail
+    debug=0
+    case "$TF_LOG" in *DEBUG*|*TRACE*|*debug*|*trace*) debug=1 ;; esac
+    if [ "$debug" -eq 1 ]; then
+      echo "[DEBUG] modify_firewall on remote PE ${local.remoteClusterIP} (allow ${local.localClusterIP},${local.localClusterVIP} ports 2030,2036,2073,2090,8740)"
+    fi
+    set +e
+    out=$(${local.remoteClusterSSHCommand} '${local.modifyFirewallRulesCommand} ${local.localClusterIP},${local.localClusterVIP} -p 2030,2036,2073,2090,8740 -i eth0' 2>&1)
+    rc=$?
+    set -e
+    if [ "$debug" -eq 1 ]; then
+      echo "[DEBUG] modify_firewall remote PE output:"
+      echo "$out"
+      echo "[DEBUG] modify_firewall remote PE exit_code=$rc"
+    elif [ "$rc" -ne 0 ]; then
+      echo "$out" >&2
+    fi
+    exit $rc
+  EOT
 
   # KB 12749: a PE cannot be unregistered while it still has synchronously
   # protected entities. Deleting the policy/removing the category above only
@@ -375,8 +466,7 @@ resource "nutanix_cluster_v2" "test" {
 
   # Reset the cluster password
   provisioner "local-exec" {
-    command    = local.resetClusterPasswordCommand
-    on_failure = continue
+    command = local.resetClusterPasswordCommand
   }
   # Set lifecycle to ignore changes
   lifecycle {
@@ -406,11 +496,10 @@ resource "nutanix_pc_registration_v2" "node-registration" {
       }
     }
   }
-  # Modify the firewall rules on Remote cluster
+  # Modify the firewall rules on Remote cluster (fail apply if SSH/firewall fails)
   provisioner "local-exec" {
-    command    = local.modifyRemoteClusterFirewallRules
-    when       = create
-    on_failure = continue
+    command = local.modifyRemoteClusterFirewallRules
+    when    = create
   }
   depends_on = [nutanix_cluster_v2.test]
 }
@@ -460,10 +549,9 @@ resource "nutanix_category_v2" "test" {
   key   = "%[6]s"
   value = "%[7]s"
 
-  # Modify the firewall rules on Local cluster
+  # Modify the firewall rules on Local cluster (fail apply if SSH/firewall fails)
   provisioner "local-exec" {
-    command    = local.modifyLocalClusterFirewallRules
-    on_failure = continue
+    command = local.modifyLocalClusterFirewallRules
   }
   depends_on = [nutanix_pc_registration_v2.node-registration, nutanix_cluster_v2.test]
 }
@@ -556,16 +644,17 @@ resource "nutanix_associate_category_to_volume_group_v2" "test" {
   categories {
     ext_id = nutanix_category_v2.test.id
   }
-  provisioner "local-exec" {
-    # sleep 9 min to wait for the vg to be protected
-    command    = "sleep 540"
-  }
 }
+
+`, filepath, clusterName, vgName, ppName, description, categoryKey, categoryValue)
+}
+
+func testPromoteProtectedResourceVGConfig() string {
+	return `
 
 resource "nutanix_promote_protected_resource_v2" "test" {
   ext_id = nutanix_volume_group_v2.test.id
   depends_on = [nutanix_associate_category_to_volume_group_v2.test]
 }
-
-`, filepath, clusterName, vgName, ppName, description, categoryKey, categoryValue)
+`
 }

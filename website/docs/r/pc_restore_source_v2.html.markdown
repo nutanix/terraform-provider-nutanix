@@ -12,6 +12,8 @@ description: |-
 
 > The restore source is auto-deleted after sometime, nutanix_pc_restore_source_v2 resource is auto-create new restore source if it was deleted, so notice that the id of the restore source resource will be different after recreation. and for update restore source, it will create a new restore source with the new configuration
 
+> **WriteOnly credentials:** object store `credentials.access_key_id` and `credentials.secret_access_key` are write-only. They are never stored in Terraform state. Re-supply them in configuration on every apply. Do not use `lifecycle.ignore_changes` on these attributes. When credentials are re-applied, `ext_id` may change (API recreate). See the [WriteOnly Credentials](/docs/providers/nutanix/guides/writeonly_credentials.html) guide for upgrade caveats.
+
 Create a restore source pointing to a cluster or object store to restore the domain manager. The created restore source is intended to be deleted after use. If the restore source is not deleted using the deleteRestoreSource API, then it is auto-deleted after sometime. Also note that a restore source will not contain a backup policy. It is only used to access the backup data at the location from where the Prism Central may be restored. Credentials used to access the restore source are not validated at the time of creation of the restore source. They are validated when the restore source is used to fetch data.
 
 
@@ -64,11 +66,6 @@ resource "nutanix_pc_restore_source_v2" "object-store-location"{
       }
     }
   }
-  lifecycle {
-    ignore_changes = [
-      location[0].object_store_location[0].provider_config[0].credentials
-    ]
-  }
 }
 
 ```
@@ -119,8 +116,8 @@ The `provider_config` argument supports the following:
 
 The `credentials` argument supports the following:
 
-- `access_key_id`: -(Required) Access key ID for the object store provided for backup target.
-- `secret_access_key`: -(Required) Secret access key for the object store provided for backup target.
+- `access_key_id`: -(Required, WriteOnly) Access key ID for the object store provided for backup target.
+- `secret_access_key`: -(Required, WriteOnly) Secret access key for the object store provided for backup target.
 
 ##### Backup Policy
 

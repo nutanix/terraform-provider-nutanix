@@ -136,7 +136,7 @@
 	],
 	"onboard_nodes": [
 		{
-			"node_serial": "ABC12345D6E"
+			"node_serial": ""
 		}
 	]
 }

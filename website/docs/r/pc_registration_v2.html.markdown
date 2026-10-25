@@ -12,6 +12,7 @@ description: |-
 
 Provides a resource to Registers a domain manager (Prism Central) instance to other entities like PE and PC. This process is asynchronous, creating a registration task and returning its UUID.
 
+> **WriteOnly credentials:** remote cluster `authentication.password` is write-only. It is never stored in Terraform state. Re-supply it in configuration on every apply. Do not use `lifecycle.ignore_changes` on this attribute. See the [WriteOnly Credentials](/docs/providers/nutanix/guides/writeonly_credentials.html) guide for upgrade caveats.
 
 ## Example Usage
 
@@ -148,6 +149,6 @@ The credentials argument supports the following:
 The authentication argument supports the following:
 
 * `username`: -(Required)  Username required for the basic auth scheme. As per RFC 2617 usernames might be case sensitive.
-* `password`: -(Required)  Password required for the basic auth scheme.
+* `password`: -(Required, WriteOnly)  Password required for the basic auth scheme.
 
 See detailed information in [Nutanix Register a PC Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.4#tag/DomainManager/operation/register).

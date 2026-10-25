@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/foundation"
 )
 
@@ -23,9 +24,11 @@ func ResourceNutanixFoundationIPMIConfig() *schema.Resource {
 				ForceNew: true,
 			},
 			"ipmi_password": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
+				// WriteOnly cannot combine with ForceNew.
+				WriteOnly: true,
 			},
 			"ipmi_netmask": {
 				Type:     schema.TypeString,
@@ -98,7 +101,8 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 	if !ok {
 		return diag.Errorf("%s", getRequiredErrorMessage("ipmi_user"))
 	}
-	ipmiPass, ok := d.GetOk("ipmi_password")
+	// WriteOnly: not available via GetOk.
+	ipmiPass, ok := common.GetWriteOnlyString(d, "ipmi_password")
 	if !ok {
 		return diag.Errorf("%s", getRequiredErrorMessage("ipmi_password"))
 	}
@@ -111,7 +115,7 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("%s", getRequiredErrorMessage("ipmi_gateway"))
 	}
 	inpSpec.IpmiUser = ipmiUser.(string)
-	inpSpec.IpmiPassword = ipmiPass.(string)
+	inpSpec.IpmiPassword = ipmiPass
 	inpSpec.IpmiNetmask = ipmiNetmask.(string)
 	inpSpec.IpmiGateway = ipmiGateway.(string)
 
@@ -191,9 +195,7 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 	if setErr := d.Set("ipmi_user", resp.IpmiUser); setErr != nil {
 		return diag.FromErr(err)
 	}
-	if setErr := d.Set("ipmi_password", resp.IpmiPassword); setErr != nil {
-		return diag.FromErr(err)
-	}
+	// ipmi_password is WriteOnly; do not persist API/response value into state.
 	if setErr := d.Set("ipmi_gateway", resp.IpmiGateway); setErr != nil {
 		return diag.FromErr(err)
 	}

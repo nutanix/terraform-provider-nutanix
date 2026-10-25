@@ -56,8 +56,9 @@ func ResourceLcmUpgradeV2() *schema.Resource {
 							Required: true,
 						},
 						"password": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:      schema.TypeString,
+							Required:  true,
+							Sensitive: true,
 						},
 					},
 				},
