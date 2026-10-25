@@ -306,7 +306,7 @@ type PrismConfig struct {
 		PeIP string `json:"pe_ip"`
 	} `json:"restore_source"`
 	Unregister struct {
-		PcExtID string `json:"pc_ext_id"`
+		PcIP string `json:"pc_ip"`
 	} `json:"unregister"`
 	PCRestore struct {
 		SkipPCRestoreTest bool `json:"skip_pc_restore_test"`

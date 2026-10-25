@@ -257,7 +257,7 @@
       }
     },
     "unregister": {
-      "pc_ext_id": ""
+      "pc_ip": "",
     },
     "bucket": {
       "name": "",
