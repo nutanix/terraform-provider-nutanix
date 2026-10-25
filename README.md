@@ -19,7 +19,7 @@ Modules based on Terraform Nutanix Provider can be found here : [Modules](https:
 ### Requirements
 
 * [Terraform](https://www.terraform.io/downloads.html) 0.12+
-* [Go](https://golang.org/doc/install) 1.25.13 (to build the provider plugin)
+* [Go](https://golang.org/doc/install) 1.27.3 (to build the provider plugin)
 * This provider uses [SDKv2](https://www.terraform.io/plugin/sdkv2/sdkv2-intro) from release 1.3.0
 
 ## Introducing Nutanix Terraform Provider Version v2.5.0
