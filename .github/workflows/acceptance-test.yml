@@ -46,7 +46,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25.13"
+          go-version: "1.27.3"
           check-latest: true
           cache: false
 
@@ -74,10 +74,12 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y unzip sshpass
 
-      - name: Setup Terraform v1.10.5
+      # Write-only attributes require Terraform >= 1.11. 1.10 rejects non-null
+      # values such as ssl certificate passphrase and private_key.
+      - name: Setup Terraform v1.11.4
         run: |
           set -e  # Exit on error
-          TERRAFORM_VERSION="1.10.5"
+          TERRAFORM_VERSION="1.11.4"
           curl -fsSL -o terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
 
           if [ ! -f terraform.zip ]; then
