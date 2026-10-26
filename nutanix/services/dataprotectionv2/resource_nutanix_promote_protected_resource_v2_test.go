@@ -363,9 +363,12 @@ locals {
 
   # Commands to modify the firewall rules between the clusters.
   # When TF_LOG is DEBUG/TRACE, echo stdout/stderr and exit code (command text redacted — no SSH password).
+  # local-exec runs under /bin/sh (dash on the Ubuntu acceptance runner). dash
+  # rejects "set -o pipefail", and these scripts have no pipelines. "set -u" is
+  # also omitted: TF_LOG is often unset, and an unset expansion would abort.
   modifyFirewallRulesCommand = "/usr/local/nutanix/cluster/bin/modify_firewall -f -r"
   modifyLocalClusterFirewallRules  = <<-EOT
-    set -euo pipefail
+    set -e
     debug=0
     case "$TF_LOG" in *DEBUG*|*TRACE*|*debug*|*trace*) debug=1 ;; esac
     if [ "$debug" -eq 1 ]; then
@@ -385,7 +388,7 @@ locals {
     exit $rc
   EOT
   modifyRemoteClusterFirewallRules = <<-EOT
-    set -euo pipefail
+    set -e
     debug=0
     case "$TF_LOG" in *DEBUG*|*TRACE*|*debug*|*trace*) debug=1 ;; esac
     if [ "$debug" -eq 1 ]; then
