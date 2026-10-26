@@ -329,84 +329,17 @@ locals {
   username         = local.config.pe_username
   password         = local.config.pe_password
 
-  # Bound ncli so a hung Prism CLI cannot stall the whole apply (SSH ConnectTimeout
-  # only covers TCP connect; after ESTABLISHED, ncli can block indefinitely).
-  resetClusterPassword = "timeout 60 /home/nutanix/prism/cli/ncli user reset-password user-name=${local.username} password=${local.password}"
+  resetClusterPassword = "/home/nutanix/prism/cli/ncli user reset-password user-name=${local.username} password=${local.password}"
 
-  remoteClusterSSHCommand = "sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o PubkeyAuthentication=no -o ConnectTimeout=10 ${local.config.ssh_pe_username}@${local.remoteClusterIP}"
-  localClusterSSHCommand  = "sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o PubkeyAuthentication=no -o ConnectTimeout=10 ${local.config.ssh_pe_username}@${local.localClusterIP}"
+  remoteClusterSSHCommand = "sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no ${local.config.ssh_pe_username}@${local.remoteClusterIP}"
+  localClusterSSHCommand  = "sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no ${local.config.ssh_pe_username}@${local.localClusterIP}"
 
-  # Retry: PE SSH/ncli often not ready immediately after cluster create; force password auth so sshpass is not defeated by agent keys.
-  # Acc-test HCL does not unescape $$ → $; use single $ for shell ($i, $?, $rc, $(...)).
-  # Fresh RDM PEs often already use pe_password — ncli then fails with "differ by at least 4 characters"; treat that as OK.
-  resetClusterPasswordCommand = <<-EOT
-    set +e
-    for i in $(seq 1 20); do
-      echo "PE SSH/ncli reset attempt $i/20 on ${local.remoteClusterIP}..."
-      out=$(${local.remoteClusterSSHCommand} '${local.resetClusterPassword}' 2>&1)
-      rc=$?
-      echo "$out"
-      if [ "$rc" -eq 0 ]; then
-        echo "PE SSH/ncli reset succeeded"
-        exit 0
-      fi
-      if echo "$out" | grep -qiE 'differ by at least 4 characters from previous password|not be from last [0-9]+ passwords'; then
-        echo "PE admin password already matches target; continuing"
-        exit 0
-      fi
-      echo "PE SSH/ncli reset attempt $i failed (rc=$rc), retrying in 15s..."
-      sleep 15
-    done
-    echo "PE SSH/ncli reset failed after retries"
-    exit 1
-  EOT
+  resetClusterPasswordCommand = "${local.remoteClusterSSHCommand} '${local.resetClusterPassword}'"
 
-  # Commands to modify the firewall rules between the clusters.
-  # When TF_LOG is DEBUG/TRACE, echo stdout/stderr and exit code (command text redacted — no SSH password).
-  # local-exec runs under /bin/sh (dash on the Ubuntu acceptance runner). dash
-  # rejects "set -o pipefail", and these scripts have no pipelines. "set -u" is
-  # also omitted: TF_LOG is often unset, and an unset expansion would abort.
-  modifyFirewallRulesCommand = "/usr/local/nutanix/cluster/bin/modify_firewall -f -r"
-  modifyLocalClusterFirewallRules  = <<-EOT
-    set -e
-    debug=0
-    case "$TF_LOG" in *DEBUG*|*TRACE*|*debug*|*trace*) debug=1 ;; esac
-    if [ "$debug" -eq 1 ]; then
-      echo "[DEBUG] modify_firewall on local PE ${local.localClusterIP} (allow ${local.remoteClusterIP},${local.remoteClusterVIP} ports 2030,2036,2073,2090,8740)"
-    fi
-    set +e
-    out=$(${local.localClusterSSHCommand} '${local.modifyFirewallRulesCommand} ${local.remoteClusterIP},${local.remoteClusterVIP} -p 2030,2036,2073,2090,8740 -i eth0' 2>&1)
-    rc=$?
-    set -e
-    if [ "$debug" -eq 1 ]; then
-      echo "[DEBUG] modify_firewall local PE output:"
-      echo "$out"
-      echo "[DEBUG] modify_firewall local PE exit_code=$rc"
-    elif [ "$rc" -ne 0 ]; then
-      echo "$out" >&2
-    fi
-    exit $rc
-  EOT
-  modifyRemoteClusterFirewallRules = <<-EOT
-    set -e
-    debug=0
-    case "$TF_LOG" in *DEBUG*|*TRACE*|*debug*|*trace*) debug=1 ;; esac
-    if [ "$debug" -eq 1 ]; then
-      echo "[DEBUG] modify_firewall on remote PE ${local.remoteClusterIP} (allow ${local.localClusterIP},${local.localClusterVIP} ports 2030,2036,2073,2090,8740)"
-    fi
-    set +e
-    out=$(${local.remoteClusterSSHCommand} '${local.modifyFirewallRulesCommand} ${local.localClusterIP},${local.localClusterVIP} -p 2030,2036,2073,2090,8740 -i eth0' 2>&1)
-    rc=$?
-    set -e
-    if [ "$debug" -eq 1 ]; then
-      echo "[DEBUG] modify_firewall remote PE output:"
-      echo "$out"
-      echo "[DEBUG] modify_firewall remote PE exit_code=$rc"
-    elif [ "$rc" -ne 0 ]; then
-      echo "$out" >&2
-    fi
-    exit $rc
-  EOT
+  # Commands to modify the firewall rules between the clusters
+  modifyFirewallRulesCommand       = "/usr/local/nutanix/cluster/bin/modify_firewall -f -r"
+  modifyLocalClusterFirewallRules  = "${local.localClusterSSHCommand} '${local.modifyFirewallRulesCommand} ${local.remoteClusterIP},${local.remoteClusterVIP} -p 2030,2036,2073,2090,8740 -i eth0'"
+  modifyRemoteClusterFirewallRules = "${local.remoteClusterSSHCommand} '${local.modifyFirewallRulesCommand} ${local.localClusterIP},${local.localClusterVIP}  -p 2030,2036,2073,2090,8740 -i eth0'"
 
   # KB 12749: a PE cannot be unregistered while it still has synchronously
   # protected entities. Deleting the policy/removing the category above only
@@ -547,6 +480,17 @@ locals {
   newClusterExtId = data.nutanix_clusters_v2.new-cls.cluster_entities.0.ext_id
 }
 
+# Sync VG protection needs at least one disk; empty VGs never get a dormant
+# secondary (Castor: "Dormant VG config not found" on promote).
+data "nutanix_storage_containers_v2" "ssc" {
+  filter = "clusterExtId eq '${local.clusterExtId}' and name eq 'SelfServiceContainer'"
+  limit  = 1
+}
+
+locals {
+  sourceStorageContainerExtId = data.nutanix_storage_containers_v2.ssc.storage_containers[0].ext_id
+}
+
 # Create Category
 resource "nutanix_category_v2" "test" {
   key   = "%[6]s"
@@ -635,6 +579,15 @@ resource "nutanix_volume_group_v2" "test" {
   name              = "%[3]s"
   description       = "%[5]s"
   cluster_reference = local.clusterExtId
+  disks {
+    disk_size_bytes = 1073741824 # 1 GiB
+    index           = 1
+    disk_data_source_reference {
+      name        = "vg-disk-%[3]s"
+      ext_id      = local.sourceStorageContainerExtId
+      entity_type = "STORAGE_CONTAINER"
+    }
+  }
   lifecycle {
     ignore_changes = [cluster_reference]
   }
