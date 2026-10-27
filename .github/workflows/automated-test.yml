@@ -34,4 +34,9 @@ jobs:
         run: make tools && make vulncheck
 
       - name: ✅ Run Tests
-        run: make test
+        # Acc configs are gitignored; seed from examples so unit TestMain/MustConfig can load.
+        run: |
+          cp -n test_config.json.example test_config.json
+          cp -n test_config_v2.json.example test_config_v2.json
+          cp -n test_foundation_config.json.example test_foundation_config.json
+          make test
