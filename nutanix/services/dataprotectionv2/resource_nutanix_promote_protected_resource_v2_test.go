@@ -331,8 +331,10 @@ locals {
 
   resetClusterPassword = "/home/nutanix/prism/cli/ncli user reset-password user-name=${local.username} password=${local.password}"
 
-  remoteClusterSSHCommand = "sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no ${local.config.ssh_pe_username}@${local.remoteClusterIP}"
-  localClusterSSHCommand  = "sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no ${local.config.ssh_pe_username}@${local.localClusterIP}"
+  # UserKnownHostsFile=/dev/null is required: StrictHostKeyChecking=no alone still
+  # fails when known_hosts has a stale key for a reimaged PE (CI runners reuse hosts).
+  remoteClusterSSHCommand = "sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o PubkeyAuthentication=no ${local.config.ssh_pe_username}@${local.remoteClusterIP}"
+  localClusterSSHCommand  = "sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o PubkeyAuthentication=no ${local.config.ssh_pe_username}@${local.localClusterIP}"
 
   resetClusterPasswordCommand = "${local.remoteClusterSSHCommand} '${local.resetClusterPassword}'"
 
