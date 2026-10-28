@@ -3,7 +3,6 @@ package dataprotectionv2_test
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -247,22 +246,6 @@ resource "nutanix_virtual_machine_v2" "test"{
 }
 
 func testRestoreProtectedResourceVMConfig() string {
-	remotePcIP := testVars.AvailabilityZone.RemotePcIP
-	username := os.Getenv("NUTANIX_USERNAME")
-	password := os.Getenv("NUTANIX_PASSWORD")
-	port, _ := strconv.Atoi(os.Getenv("NUTANIX_PORT"))
-	insecure, _ := strconv.ParseBool(os.Getenv("NUTANIX_INSECURE"))
-	remoteHostProviderConfig := fmt.Sprintf(`
-provider "nutanix-2" {
-  username = "%[1]s"
-  password = "%[2]s"
-  endpoint = "%[3]s"
-  insecure = %[4]t
-  port     = %[5]d
-}
-
-`, username, password, remotePcIP, insecure, port)
-
 	return fmt.Sprintf(
 		`
 
@@ -287,7 +270,7 @@ resource "nutanix_restore_protected_resource_v2" "test" {
 }
 
 
-`, remoteHostProviderConfig)
+`, remotePCProviderConfig(testVars.AvailabilityZone.RemotePcIP))
 }
 
 func testRestoreProtectedResourceVGAndProtectionPolicyConfig(vgName, ppName, description string, r int) string {
@@ -412,22 +395,6 @@ resource "nutanix_associate_category_to_volume_group_v2" "test" {
 }
 
 func testRestoreProtectedResourceVGConfig() string {
-	remotePcIP := testVars.AvailabilityZone.RemotePcIP
-	username := os.Getenv("NUTANIX_USERNAME")
-	password := os.Getenv("NUTANIX_PASSWORD")
-	port, _ := strconv.Atoi(os.Getenv("NUTANIX_PORT"))
-	insecure, _ := strconv.ParseBool(os.Getenv("NUTANIX_INSECURE"))
-	remoteHostProviderConfig := fmt.Sprintf(`
-provider "nutanix-2" {
-  username = "%[1]s"
-  password = "%[2]s"
-  endpoint = "%[3]s"
-  insecure = %[4]t
-  port     = %[5]d
-}
-
-`, username, password, remotePcIP, insecure, port)
-
 	return fmt.Sprintf(
 		`
 
@@ -451,5 +418,5 @@ resource "nutanix_restore_protected_resource_v2" "test" {
   ]
 }
 
-`, remoteHostProviderConfig)
+`, remotePCProviderConfig(testVars.AvailabilityZone.RemotePcIP))
 }

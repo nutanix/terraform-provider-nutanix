@@ -213,6 +213,32 @@ func SkipIfV3FlowNextGen(t *testing.T) resource.ErrorCheckFunc {
 	}
 }
 
+// PCEndpointHost returns the hostname used for Prism Central API calls in
+// acceptance-test helpers (e.g. local-exec curl polls). Matches provider
+// routing in sdkconfig.ResolveEndpoint for PC service calls:
+//
+//   - NC mode (NUTANIX_CENTRAL_ENDPOINT set): <NUTANIX_DOMAIN_NAME>.domains.<NUTANIX_CENTRAL_ENDPOINT>
+//   - Direct PC (traditional): NUTANIX_ENDPOINT
+//
+// NC wins when both endpoints are set, same as the provider.
+func PCEndpointHost() string {
+	if central := os.Getenv("NUTANIX_CENTRAL_ENDPOINT"); central != "" {
+		if domain := os.Getenv("NUTANIX_DOMAIN_NAME"); domain != "" {
+			return domain + ".domains." + central
+		}
+		return central
+	}
+	return os.Getenv("NUTANIX_ENDPOINT")
+}
+
+// PCEndpointPort returns NUTANIX_PORT, defaulting to 9440 when unset.
+func PCEndpointPort() string {
+	if p := os.Getenv("NUTANIX_PORT"); p != "" {
+		return p
+	}
+	return "9440"
+}
+
 func RandIntBetween(min, max int) int {
 	rand.Seed(time.Now().UnixNano())
 	return rand.Intn(max-min) + min

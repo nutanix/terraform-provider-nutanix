@@ -2275,6 +2275,10 @@ func ResourceNutanixVirtualMachineV2Delete(ctx context.Context, d *schema.Resour
 		}
 		readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
 		if err != nil {
+			if isVmmNotFoundErr(err) {
+				log.Printf("[DEBUG] VM %s already gone before delete; treating as success", vmExtID)
+				return nil
+			}
 			return diag.Errorf("error while reading vm : %v", err)
 		}
 		args := make(map[string]interface{})
@@ -2285,6 +2289,10 @@ func ResourceNutanixVirtualMachineV2Delete(ctx context.Context, d *schema.Resour
 		}
 		resp, err := conn.VMAPIInstance.DeleteVmById(ctx, &deleteVmByIdRequest, args)
 		if err != nil {
+			if isVmmNotFoundErr(err) {
+				log.Printf("[DEBUG] VM %s already gone on delete request; treating as success", vmExtID)
+				return nil
+			}
 			if attempt < maxAttempts && isVmmEtagMismatchErr(err) {
 				log.Printf("[DEBUG] VM delete rejected due to ETag mismatch (attempt %d/%d). Retrying with refreshed ETag. error: %s",
 					attempt, maxAttempts, err)
@@ -2304,6 +2312,11 @@ func ResourceNutanixVirtualMachineV2Delete(ctx context.Context, d *schema.Resour
 		}
 
 		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+			if isVmmNotFoundErr(errWaitTask) {
+				log.Printf("[DEBUG] VM %s already gone during delete task %s; treating as success",
+					vmExtID, utils.StringValue(taskUUID))
+				return nil
+			}
 			if attempt < maxAttempts && isVmmEtagMismatchErr(errWaitTask) {
 				log.Printf("[DEBUG] VM delete failed due to ETag mismatch (attempt %d/%d). Retrying with refreshed ETag. Task UUID: %s, error: %s",
 					attempt, maxAttempts, utils.StringValue(taskUUID), errWaitTask)
