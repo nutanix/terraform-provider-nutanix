@@ -385,8 +385,8 @@ func deleteRestoredVg(vgName string) resource.TestCheckFunc {
 // Captured during PromoteVG Check so CheckDestroy can unregister after terraform
 // destroy (null_resource may no longer expose triggers in the post-destroy state).
 var (
-	promoteVGPCExtID             string
-	promoteVGRemoteClusterExtID  string
+	promoteVGPCExtID            string
+	promoteVGRemoteClusterExtID string
 )
 
 // capturePromoteVGUnregisterIDs stores PC + remote PE ext IDs from
