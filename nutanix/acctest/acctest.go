@@ -136,6 +136,17 @@ func TestAccNCPreCheck(t *testing.T) {
 	TestAccPreCheck(t)
 }
 
+func TestAccNCPreCheckPEWorkflow(t *testing.T) {
+	t.Helper()
+	if os.Getenv("NUTANIX_CENTRAL_ENDPOINT") != "" || os.Getenv("NUTANIX_DOMAIN_NAME") != "" {
+		t.Skip("PC skipping PE workflow tests as it is not supported in NC mode")
+	}
+	if os.Getenv("NUTANIX_ENDPOINT") == "" {
+		t.Skip("NUTANIX_ENDPOINT should be set for PE workflow tests")
+	}
+	TestAccPreCheck(t)
+}
+
 // TestAccTenantAdminPreCheck verifies the environment required by the Tenant
 // Admin acceptance tests that route entirely through Nutanix Central (NC).
 //

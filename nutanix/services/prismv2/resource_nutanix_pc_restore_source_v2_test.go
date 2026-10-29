@@ -15,7 +15,7 @@ const resourceNameRestoreSourceObjectStoreLocation = "nutanix_pc_restore_source_
 
 func TestAccV2NutanixRestoreSourceResource_ClusterLocation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		PreCheck:                 func() { acc.TestAccNCPreCheckPEWorkflow(t) },
 		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// List backup targets and Create if backup target not exists
@@ -43,7 +43,7 @@ func TestAccV2NutanixRestoreSourceResource_ObjectStoreLocation(t *testing.T) {
 		t.Skip("Skipping test due to missing bucket configuration")
 	}
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		PreCheck:                 func() { acc.TestAccNCPreCheckPEWorkflow(t) },
 		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// List backup targets and Create if backup target not exists
