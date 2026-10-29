@@ -93,31 +93,83 @@ jobs:
           terraform version
 
       - name: Set environment variables
+        env:
+          # Single dotenv-style secret (same format as local .env). Keep
+          # V4_CONFIG / PC_CONFIG / FOUNDATION_CONFIG as separate secrets
+          # for the JSON fixture files.
+          ACC_TEST_ENV: ${{ secrets.ENV }}
         run: |
-            echo "NUTANIX_PE_PASSWORD=${{ secrets.NUTANIX_PE_PASSWORD }}" >> $GITHUB_ENV
-            echo "NUTANIX_PE_USERNAME=${{ secrets.NUTANIX_PE_USERNAME }}" >> $GITHUB_ENV
-            echo "NUTANIX_USERNAME=${{ secrets.NUTANIX_USERNAME }}" >> $GITHUB_ENV
-            echo "NUTANIX_PASSWORD=${{ secrets.NUTANIX_PASSWORD }}" >> $GITHUB_ENV
-            echo "NUTANIX_API_KEY=${{ secrets.NUTANIX_API_KEY }}" >> $GITHUB_ENV
-            echo "NUTANIX_INSECURE=${{ secrets.NUTANIX_INSECURE }}" >> $GITHUB_ENV
-            echo "NUTANIX_PORT=${{ secrets.NUTANIX_PORT }}" >> $GITHUB_ENV
-            echo "NUTANIX_ENDPOINT=${{ secrets.NUTANIX_ENDPOINT }}" >> $GITHUB_ENV
-            echo "NUTANIX_CENTRAL_ENDPOINT=${{ secrets.NUTANIX_CENTRAL_ENDPOINT }}" >> $GITHUB_ENV
-            echo "NUTANIX_DOMAIN_NAME=${{ secrets.NUTANIX_DOMAIN_NAME }}" >> $GITHUB_ENV
-            echo "NUTANIX_TENANT_NAME=${{ secrets.NUTANIX_TENANT_NAME }}" >> $GITHUB_ENV
-            echo "NUTANIX_USE_NC_IAM=${{ secrets.NUTANIX_USE_NC_IAM }}" >> $GITHUB_ENV
-            echo "NUTANIX_STORAGE_CONTAINER=${{ secrets.NUTANIX_STORAGE_CONTAINER }}" >> $GITHUB_ENV
-            echo "FOUNDATION_ENDPOINT=${{ secrets.FOUNDATION_ENDPOINT }}" >> $GITHUB_ENV
-            echo "FOUNDATION_PORT=${{ secrets.FOUNDATION_PORT }}" >> $GITHUB_ENV
-            echo "NOS_IMAGE_TEST_URL=${{ secrets.NOS_IMAGE_TEST_URL }}" >> $GITHUB_ENV
-            echo "NDB_ENDPOINT=${{ secrets.NDB_ENDPOINT }}" >> $GITHUB_ENV
-            echo "NDB_PASSWORD=${{ secrets.NDB_PASSWORD }}" >> $GITHUB_ENV
-            echo "NDB_USERNAME=${{ secrets.NDB_USERNAME }}" >> $GITHUB_ENV
-            echo "PROTECTION_RULES_TEST_FLAG=${{ secrets.PROTECTION_RULES_TEST_FLAG }}" >> $GITHUB_ENV
-            echo "CGO_ENABLED=${{ secrets.CGO_ENABLED }}" >> $GITHUB_ENV
-            echo "TF_LOG_SDK_HELPER_RESOURCE=OFF" >> $GITHUB_ENV
-            echo "TF_LOG_SDK=OFF" >> $GITHUB_ENV
-            echo "TF_LOG_CORE=OFF" >> $GITHUB_ENV
+            set -euo pipefail
+
+            if [ -z "${ACC_TEST_ENV}" ]; then
+              echo "ERROR: repository secret ENV is missing or empty."
+              echo "Create Actions secret ENV with the same KEY=VALUE content as local .env"
+              echo "(TF_ACC, NUTANIX_*, NDB_*, etc.). JSON fixtures stay in V4_CONFIG / PC_CONFIG."
+              exit 1
+            fi
+
+            ENV_FILE="${RUNNER_TEMP}/acc-test.env"
+            printf '%s\n' "$ACC_TEST_ENV" > "$ENV_FILE"
+
+            # Parse dotenv into GITHUB_ENV. Whitespace-only and "" / '' → empty.
+            # Skips blank lines and full-line comments. Strips optional quotes
+            # and unquoted trailing " # comment" (same style as local .env).
+            while IFS= read -r line || [ -n "$line" ]; do
+              # trim CR
+              line="${line%$'\r'}"
+              # skip blank / comment lines
+              trimmed="${line#"${line%%[![:space:]]*}"}"
+              [ -z "$trimmed" ] && continue
+              case "$trimmed" in
+                \#*) continue ;;
+              esac
+
+              case "$trimmed" in
+                *=*) ;;
+                *) continue ;;
+              esac
+
+              key="${trimmed%%=*}"
+              val="${trimmed#*=}"
+              # trim key
+              key="${key#"${key%%[![:space:]]*}"}"
+              key="${key%"${key##*[![:space:]]}"}"
+              [ -z "$key" ] && continue
+              case "$key" in
+                [A-Za-z_]*) ;;
+                *) continue ;;
+              esac
+
+              # trim value leading space
+              val="${val#"${val%%[![:space:]]*}"}"
+              # strip unquoted trailing inline comment
+              if [[ "$val" != \"*\" && "$val" != \'*\' ]]; then
+                val="${val%%\#*}"
+                val="${val%"${val##*[![:space:]]}"}"
+              fi
+              # strip surrounding quotes
+              if [[ "$val" == \"*\" && "$val" == *\" ]]; then
+                val="${val:1:${#val}-2}"
+              elif [[ "$val" == \'*\' && "$val" == *\' ]]; then
+                val="${val:1:${#val}-2}"
+              fi
+              # whitespace-only → empty (GitHub secret placeholder " ")
+              val_trim="${val#"${val%%[![:space:]]*}"}"
+              val_trim="${val_trim%"${val_trim##*[![:space:]]}"}"
+              if [ -z "$val_trim" ]; then
+                val=""
+              fi
+
+              echo "${key}=${val}" >> "$GITHUB_ENV"
+            done < "$ENV_FILE"
+
+            # Defaults for noisy TF SDK logs if not set in ENV secret
+            grep -q '^TF_LOG_SDK_HELPER_RESOURCE=' "$GITHUB_ENV" 2>/dev/null || echo "TF_LOG_SDK_HELPER_RESOURCE=OFF" >> "$GITHUB_ENV"
+            grep -q '^TF_LOG_SDK=' "$GITHUB_ENV" 2>/dev/null || echo "TF_LOG_SDK=OFF" >> "$GITHUB_ENV"
+            grep -q '^TF_LOG_CORE=' "$GITHUB_ENV" 2>/dev/null || echo "TF_LOG_CORE=OFF" >> "$GITHUB_ENV"
+
+            echo "Loaded acceptance-test env from secret ENV (keys only):"
+            awk -F= '/^[A-Za-z_][A-Za-z0-9_]*=/{print " - " $1}' "$GITHUB_ENV" | sort -u
 
       - name: Check gofmt
         run: |
