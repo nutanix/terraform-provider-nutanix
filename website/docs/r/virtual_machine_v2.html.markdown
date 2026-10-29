@@ -150,6 +150,65 @@ resource "nutanix_virtual_machine_v2" "vm-3" {
   power_state = "ON"
 }
 
+# Wait for the guest to report a non-link-local IPv4 address before the resource
+# completes, skipping the APIPA address (169.254.0.0/16) a guest can assign itself before
+# DHCP finishes. The VM boots an image with an OS that obtains an address; a VM without
+# one waits out the timeout.
+resource "nutanix_virtual_machine_v2" "vm-wait-for-ip" {
+  name                 = "example-vm-wait-for-ip"
+  num_cores_per_socket = 1
+  num_sockets          = 1
+  cluster {
+    ext_id = "1cefd0f5-6d38-4c9b-a07c-bdd2db004224"
+  }
+  disks {
+    disk_address {
+      bus_type = "SCSI"
+      index    = 0
+    }
+    backing_info {
+      vm_disk {
+        data_source {
+          reference {
+            image_reference {
+              image_ext_id = "c2a6d4b1-3f8e-4a57-9b0d-6e1f2a3b4c5d"
+            }
+          }
+        }
+      }
+    }
+  }
+  boot_config {
+    legacy_boot {
+      boot_device {
+        boot_device_disk {
+          disk_address {
+            bus_type = "SCSI"
+            index    = 0
+          }
+        }
+      }
+    }
+  }
+  nics {
+    nic_network_info {
+      virtual_ethernet_nic_network_info {
+        nic_type = "NORMAL_NIC"
+        subnet {
+          ext_id = "7f66e20f-67f4-473f-96bb-c4fcfd487f16"
+        }
+        vlan_mode = "ACCESS"
+      }
+    }
+  }
+  power_state = "ON"
+
+  # Defaults shown explicitly. Use wait_for_ip_timeout = 0 to disable the wait, or
+  # wait_for_ip_routable = false to also accept an APIPA address.
+  wait_for_ip_timeout  = 5
+  wait_for_ip_routable = true
+}
+
 ```
 
 ## Lifecycle Behavior
@@ -210,6 +269,8 @@ The following arguments are supported:
 * `gpus`: (Optional) GPUs attached to the VM.
 * `serial_ports`: (Optional) Serial ports configured on the VM.
 * `protection_type`: (Optional) The type of protection applied on a VM. Valid values "PD_PROTECTED", "UNPROTECTED", "RULE_PROTECTED".
+* `wait_for_ip_timeout`: (Optional) Minutes to wait, when the VM is created with `power_state = "ON"`, for any of its NICs to report a usable IPv4 address, so the address is in state when create returns. A NIC with a static or IPAM-assigned IPv4 address counts as reporting one, so on such a subnet the wait ends at once. `0` disables the wait; the maximum is `15`, so the wait fits within create's 20 minute limit, and the wait is shortened if create has already used enough of that limit that the full wait would not fit. Timing out is not an error. Only used at create; changing it later has no effect on the VM. Defaults to `5`.
+* `wait_for_ip_routable`: (Optional) When waiting for an IP (see `wait_for_ip_timeout`), ignore IPv4 link-local (APIPA, `169.254.0.0/16`) addresses, which a guest can assign itself before DHCP completes. This is the only check made: unlike the vSphere provider's `wait_for_guest_net_routable`, it does not test the address against a default gateway. A VM that only ever reports an APIPA address therefore waits the full `wait_for_ip_timeout`. The wait ends once a non-link-local address is reported on any NIC; the learned address lists may still include an APIPA entry at that point, so select the address you need rather than taking the first one, for example `[for a in nutanix_virtual_machine_v2.vm.nics[0].network_info[0].ipv4_info[0].learned_ip_addresses : a.value if !startswith(a.value, "169.254.")][0]`. Set to `false` to accept an APIPA address too. Only used at create. Defaults to `true`.
 
 
 ### Source

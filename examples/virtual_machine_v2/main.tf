@@ -444,6 +444,68 @@ resource "nutanix_virtual_machine_v2" "example-13" {
   power_state = "OFF"
 }
 
+# create a virtual machine that waits for the guest to report a non-link-local IPv4 address.
+#
+# A guest can assign itself an APIPA/link-local address (169.254.0.0/16) before DHCP
+# completes. wait_for_ip_routable makes the create-time wait skip those and keep polling
+# until another address is reported. The VM boots an image with an OS that obtains an
+# address; a VM without one waits out the timeout.
+resource "nutanix_virtual_machine_v2" "example-14" {
+  name                 = "example-14"
+  description          = "vm example that waits for a routable ip"
+  num_cores_per_socket = 1
+  num_sockets          = 1
+  cluster {
+    ext_id = local.cluster_ext_id
+  }
+  disks {
+    disk_address {
+      bus_type = "SCSI"
+      index    = 0
+    }
+    backing_info {
+      vm_disk {
+        data_source {
+          reference {
+            image_reference {
+              image_ext_id = data.nutanix_images_v2.vm-image.images[0].ext_id
+            }
+          }
+        }
+      }
+    }
+  }
+  boot_config {
+    legacy_boot {
+      boot_device {
+        boot_device_disk {
+          disk_address {
+            bus_type = "SCSI"
+            index    = 0
+          }
+        }
+      }
+    }
+  }
+  nics {
+    nic_network_info {
+      virtual_ethernet_nic_network_info {
+        nic_type = "NORMAL_NIC"
+        subnet {
+          ext_id = data.nutanix_subnets_v2.vm-subnet.subnets[0].ext_id
+        }
+        vlan_mode = "ACCESS"
+      }
+    }
+  }
+  power_state = "ON"
+
+  # Defaults shown explicitly. Set wait_for_ip_timeout = 0 to disable the wait, or
+  # wait_for_ip_routable = false to also accept an APIPA address.
+  wait_for_ip_timeout  = 5
+  wait_for_ip_routable = true
+}
+
 
 # list all virtual machines
 data "nutanix_virtual_machines_v2" "vms" {}
