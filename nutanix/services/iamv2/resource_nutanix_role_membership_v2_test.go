@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/request/rolemembership"
@@ -31,7 +32,7 @@ func TestAccV2NutanixRoleMembershipResource_basic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixRoleMembershipV2Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixRoleMembershipV2Config(),
+				Config: testAccNutanixRoleMembershipV2Config(fmt.Sprintf("tf-test-project-%d", acctest.RandInt())),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameProjectAdmin, "ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameProjectAdmin, "role_ext_id"),
@@ -215,7 +216,7 @@ func testAccCheckNutanixRoleMembershipV2Destroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNutanixRoleMembershipV2Config() string {
+func testAccNutanixRoleMembershipV2Config(projectName string) string {
 	secondaryAD := testVars.Iam.DirectoryServicesMain.SecondaryAD
 	userExtID := secondaryAD.DomainUsersUsergroups.Users["ssptest1@qa.nucalm.io"]
 	userGroupExtID := secondaryAD.DomainUsersUsergroups.UserGroups["dnd_approval_group_1"]
@@ -238,7 +239,7 @@ func testAccNutanixRoleMembershipV2Config() string {
 	}
 
 	resource "nutanix_project_v2" "test" {
-		name = "test"
+		name = "%s"
 		description = "test"
 	}
 
@@ -281,5 +282,5 @@ func testAccNutanixRoleMembershipV2Config() string {
 		filter = "extId eq '${nutanix_project_v2.test.ext_id}'"
 		depends_on = [nutanix_role_membership_v2.project_admin_role, nutanix_role_membership_v2.developer_role]
 	}
-`, userExtID, idpExtID, userGroupExtID, idpExtID)
+`, projectName, userExtID, idpExtID, userGroupExtID, idpExtID)
 }

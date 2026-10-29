@@ -218,8 +218,9 @@ func DataSourceNutanixVirtualMachine() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"ngt_credentials": {
-				Type:     schema.TypeMap,
-				Computed: true,
+				Type:      schema.TypeMap,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"num_vcpus_per_socket": {
 				Type:     schema.TypeInt,
@@ -836,8 +837,9 @@ func resourceNutanixDatasourceVirtualMachineInstanceResourceV0() *schema.Resourc
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"ngt_credentials": {
-				Type:     schema.TypeMap,
-				Computed: true,
+				Type:      schema.TypeMap,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"num_vcpus_per_socket": {
 				Type:     schema.TypeInt,

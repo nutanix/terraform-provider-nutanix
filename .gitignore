@@ -43,10 +43,14 @@ build.sh
 __pycache__/
 *.pyc
 
-# generated run artifacts from the testenv tooling
-testenv/logs/
-testenv/results/
+# Private lab tooling — never publish to open source (see nutanix-opensource-release skill).
+testenv/
 
 # AI generated files
 AGENTS.md
 
+# Local Acc test configs (filled with env-specific / secret values).
+# Copy from the matching *.example templates and fill in locally.
+test_config.json
+test_config_v2.json
+test_foundation_config.json

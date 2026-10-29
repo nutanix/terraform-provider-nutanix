@@ -21,6 +21,7 @@ require (
 	github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4 v4.1.2
 	github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.4.2
 	github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4 v4.2.1
+	github.com/nutanix/ntnx-api-golang-clients/tenancy-go-client/v4 v4.0.2-alpha.1
 	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.3.2
 	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.3.2
 	github.com/spf13/cast v1.10.0
@@ -30,7 +31,7 @@ require (
 )
 
 require (
-	github.com/Azure/go-ntlmssp v0.0.0-20221128193559-754e69321358 // indirect
+	github.com/Azure/go-ntlmssp v0.1.1 // indirect
 	github.com/ChrisTrenkamp/goxpath v0.0.0-20210404020558-97928f7e12b6 // indirect
 	github.com/PaesslerAG/gval v1.2.4 // indirect
 	github.com/ProtonMail/go-crypto v1.4.1 // indirect
@@ -41,7 +42,7 @@ require (
 	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fatih/color v1.18.0 // indirect
-	github.com/go-git/go-git/v5 v5.19.1 // indirect
+	github.com/go-git/go-git/v5 v5.19.2 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/golang/protobuf v1.5.4 // indirect

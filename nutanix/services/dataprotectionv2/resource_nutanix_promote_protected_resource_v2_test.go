@@ -3,7 +3,6 @@ package dataprotectionv2_test
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"testing"
 	"time"
 
@@ -59,6 +58,11 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVm(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceNamePromotedVM, "vms.0.name", vmResourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceNamePromotedVM, "vms.0.num_cores_per_socket", vmResourceName, "num_cores_per_socket"),
 					resource.TestCheckResourceAttrPair(datasourceNamePromotedVM, "vms.0.num_sockets", vmResourceName, "num_sockets"),
+					// Sync promote removes the source VM (or races to). Drop it from
+					// state so post-test destroy does not fail with "VM not found".
+					dropResourceFromState(vmResourceName),
+					// Clean up the promoted VM on the remote PC.
+					deleteRestoredVM(vmName),
 				),
 			},
 		},
@@ -71,32 +75,48 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVG(t *testing.T) {
 	// variables for the test
 	vgName := fmt.Sprintf("tf-test-protected-vg-promote-%d", r)
 	ppName := fmt.Sprintf("tf-test-protected-policy-promote-vg-%d", r)
-	clusterName := fmt.Sprintf("tf-test-cluster-pp-%d", r)
 	description := "create a new protected VG and promote it"
 	categoryKey := fmt.Sprintf("tf-test-category-pp-promote-vg-%d", r)
 	categoryValue := fmt.Sprintf("tf_test_category_pp_promote_vg_%d", r)
 
 	// resource names for the test
-	newClusterDataSourceName := "data.nutanix_clusters_v2.new-cls"
 	categoryResourceName := "nutanix_category_v2.test"
 	protectionPolicyResourceName := "nutanix_protection_policy_v2.test"
 	vgResourceName := "nutanix_volume_group_v2.test"
+	registrationResourceName := "nutanix_pc_registration_v2.node-registration"
+
+	// Always tear down PE registration / blacklist state after the test,
+	// including when apply fails before CheckDestroy can capture ext IDs
+	// (e.g. "remote cluster is blacklisted for registration").
+	t.Cleanup(func() {
+		if err := ensurePromoteVGRemotePEClean(); err != nil {
+			t.Logf("PromoteVG post-test PE cleanup: %v", err)
+		}
+	})
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		PreCheck: func() {
+			acc.TestAccPreCheck(t)
+			// Seed PC/PE UUIDs and clear leftover blacklist/registration from a
+			// prior run so this attempt can register the remote PE again.
+			seedPromoteVGCleanupIDs()
+			if err := ensurePromoteVGRemotePEClean(); err != nil {
+				t.Logf("PromoteVG pre-test PE cleanup: %v", err)
+			}
+			seedPromoteVGCleanupIDs()
+		},
 		Providers: acc.TestAccProviders,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"null": {Source: "hashicorp/null"},
 		},
-		CheckDestroy: testCheckDestroyProtectedResourceAndCleanup,
+		CheckDestroy: testCheckDestroyPromoteVGAndUnregister,
 		Steps: []resource.TestStep{
-			//// create protection policy and protected vg
+			// register existing remote PE, sync PP, VG + category; wait until protected-resource is ready
 			{
-				Config: testPromoteProtectedResourceVGAndProtectionPolicyConfig(clusterName, vgName, ppName, description, categoryKey, categoryValue),
+				Config: testPromoteProtectedResourceVGAndProtectionPolicyConfig(vgName, ppName, description, categoryKey, categoryValue),
 				Check: resource.ComposeTestCheckFunc(
-					// cluster check
-					resource.TestCheckResourceAttrSet(newClusterDataSourceName, "cluster_entities.0.ext_id"),
-					resource.TestCheckResourceAttr(newClusterDataSourceName, "cluster_entities.0.name", clusterName),
+					resource.TestCheckResourceAttrSet(registrationResourceName, "id"),
+					capturePromoteVGUnregisterIDs(),
 					// category check
 					resource.TestCheckResourceAttrSet(categoryResourceName, "id"),
 					resource.TestCheckResourceAttr(categoryResourceName, "key", categoryKey),
@@ -109,6 +129,20 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVG(t *testing.T) {
 					resource.TestCheckResourceAttrSet(vgResourceName, "id"),
 					resource.TestCheckResourceAttr(vgResourceName, "name", vgName),
 					resource.TestCheckResourceAttr(vgResourceName, "description", description),
+					// poll GET protected-resources until ready, then settle (no blind sleep)
+					waitForProtectedResourceAvailable(vgResourceName, maxRetries, retryInterval, sleepTime),
+				),
+			},
+			// promote protected VG after readiness
+			{
+				PreConfig: func() {
+					fmt.Println("Step 2: Promote Protected VG")
+				},
+				Config: testPromoteProtectedResourceVGAndProtectionPolicyConfig(vgName, ppName, description, categoryKey, categoryValue) +
+					testPromoteProtectedResourceVGConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNamePromoteProtectedResource, "id"),
+					resource.TestCheckResourceAttrSet(resourceNamePromoteProtectedResource, "ext_id"),
 				),
 			},
 		},
@@ -135,6 +169,15 @@ locals {
   clusterExtId = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
   config = jsondecode(file("%[1]s"))
   availability_zone = local.config.availability_zone
+}
+
+data "nutanix_storage_containers_v2" "ssc" {
+  filter = "clusterExtId eq '${local.clusterExtId}' and name eq 'SelfServiceContainer'"
+  limit  = 1
+}
+
+locals {
+  sourceStorageContainerExtId = data.nutanix_storage_containers_v2.ssc.storage_containers[0].ext_id
 }
 
 # Create Category
@@ -209,6 +252,9 @@ resource "nutanix_virtual_machine_v2" "test" {
     backing_info {
       vm_disk {
         disk_size_bytes = 1073741824 # 1 GiB
+        storage_container {
+          ext_id = local.sourceStorageContainerExtId
+        }
       }
     }
   }
@@ -222,23 +268,6 @@ resource "nutanix_virtual_machine_v2" "test" {
 }
 
 func testPromoteProtectedResourceVMConfig() string {
-	remotePcIP := testVars.AvailabilityZone.RemotePcIP
-
-	username := os.Getenv("NUTANIX_USERNAME")
-	password := os.Getenv("NUTANIX_PASSWORD")
-	port, _ := strconv.Atoi(os.Getenv("NUTANIX_PORT"))
-	insecure, _ := strconv.ParseBool(os.Getenv("NUTANIX_INSECURE"))
-	remoteHostProviderConfig := fmt.Sprintf(`
-provider "nutanix-2" {
-  username = "%[1]s"
-  password = "%[2]s"
-  endpoint = "%[3]s"
-  insecure = %[4]t
-  port     = %[5]d
-}
-
-`, username, password, remotePcIP, insecure, port)
-
 	return fmt.Sprintf(
 		`
 
@@ -260,20 +289,31 @@ data "nutanix_virtual_machines_v2" "promoted-vm" {
   depends_on = [nutanix_promote_protected_resource_v2.test]
 }
 
-`, remoteHostProviderConfig)
+`, remotePCProviderConfig(testVars.AvailabilityZone.RemotePcIP))
 }
 
-// testPromoteProtectedResourceVGAndProtectionPolicyConfig returns the configuration for promoting a protected VG
+// testPromoteProtectedResourceVGAndProtectionPolicyConfig returns the setup for a sync-protected VG.
+// Promote is applied in a second test step via testPromoteProtectedResourceVGConfig after
+// waitForProtectedResourceAvailable confirms the protected-resource API is ready.
+// The remote PE already has a cluster; this config only registers it to PC (and
+// CheckDestroy unregisters it after stretch params clear).
 // Steps:
-// 1. Create a new cluster
-// 2. Register the cluster to PC
-// 3. Modify the firewall rules between the new cluster and the PC cluster
-// 4. Create a category
-// 5. Create a protection policy
-// 6. Create a volume group
-// 7. Associate the category to the volume group
-// 8. Promote the protected resource (VG)
-func testPromoteProtectedResourceVGAndProtectionPolicyConfig(clusterName, vgName, ppName, description, categoryKey, categoryValue string) string {
+// 1. Register the existing remote PE cluster to PC
+// 2. Modify the firewall rules between the remote PE and the local PE
+// 3. Create a category
+// 4. Create a sync protection policy (RPO=0)
+// 5. Create a volume group
+// 6. Associate the category to the volume group
+func testPromoteProtectedResourceVGAndProtectionPolicyConfig(vgName, ppName, description, categoryKey, categoryValue string) string {
+	// Resolve PC host once for both direct-PC and NC setups so local-exec
+	// polls hit the same endpoint the provider uses (see acc.PCEndpointHost).
+	pcHost := acc.PCEndpointHost()
+	pcPort := acc.PCEndpointPort()
+	// Use acceptance-test credentials (env), not test_config pc_username —
+	// on NC, local admin from JSON is not valid against the domain FQDN.
+	pcUser := os.Getenv("NUTANIX_USERNAME")
+	pcPass := os.Getenv("NUTANIX_PASSWORD")
+
 	return fmt.Sprintf(`
 
 # list Clusters
@@ -292,9 +332,13 @@ locals {
   availability_zone = local.config.availability_zone
   data_protection   = local.config.data_protection
 
-  randomNum = 99
+  # PC API host/creds for local-exec polls: same host + auth as the provider
+  # (direct PC or NC <domain>.domains.<central>).
+  pc_host     = "%[7]s"
+  pc_port     = "%[8]s"
+  pc_username = "%[9]s"
+  pc_password = "%[10]s"
 
-  # Commands to reset the cluster password
   localClusterIP   = local.data_protection.local_cluster_pe
   localClusterVIP  = local.data_protection.local_cluster_vip
   remoteClusterIP  = local.data_protection.remote_cluster_pe
@@ -302,12 +346,10 @@ locals {
   username         = local.config.pe_username
   password         = local.config.pe_password
 
-  resetClusterPassword = "/home/nutanix/prism/cli/ncli user reset-password user-name=${local.username} password=${local.password}"
-
-  remoteClusterSSHCommand = "sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no ${local.config.ssh_pe_username}@${local.remoteClusterIP}"
-  localClusterSSHCommand  = "sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no ${local.config.ssh_pe_username}@${local.localClusterIP}"
-
-  resetClusterPasswordCommand = "${local.remoteClusterSSHCommand} '${local.resetClusterPassword}'"
+  # UserKnownHostsFile=/dev/null is required: StrictHostKeyChecking=no alone still
+  # fails when known_hosts has a stale key for a reimaged PE (CI runners reuse hosts).
+  remoteClusterSSHCommand = "sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o PubkeyAuthentication=no ${local.config.ssh_pe_username}@${local.remoteClusterIP}"
+  localClusterSSHCommand  = "sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o PubkeyAuthentication=no ${local.config.ssh_pe_username}@${local.localClusterIP}"
 
   # Commands to modify the firewall rules between the clusters
   modifyFirewallRulesCommand       = "/usr/local/nutanix/cluster/bin/modify_firewall -f -r"
@@ -318,75 +360,13 @@ locals {
   # protected entities. Deleting the policy/removing the category above only
   # *starts* unprotection; the stretch params take time (~10 min) to clear from
   # the target PE. Poll the target PE until stretch_params_printer reports no
-  # remaining stretch params (bounded ~15 min) before the cluster/registration is
-  # destroyed, instead of a fixed sleep that can under-wait and trigger
+  # remaining stretch params (bounded ~15 min) before CheckDestroy unregisters
+  # the PE, instead of a fixed sleep that can under-wait and trigger
   # "error_code 50 / Unregistration failure".
   waitForStretchClearedOnTarget = "${local.remoteClusterSSHCommand} 'source /etc/profile >/dev/null 2>&1; for i in $(seq 1 60); do o=$(stretch_params_printer 2>/dev/null); if [ -z \"$o\" ]; then echo \"stretch params cleared on target PE\"; exit 0; fi; echo \"waiting for stretch params to clear ($i/60)\"; sleep 15; done; echo \"WARN: timed out (~15m) waiting for stretch params to clear\"; exit 0'"
 }
 
-# check if the nodes is un configured or not
-resource "nutanix_clusters_discover_unconfigured_nodes_v2" "test-discover-cluster-node" {
-  ext_id       = local.pcExtId
-  address_type = "IPV4"
-  ip_filter_list {
-    ipv4 {
-      value = local.remoteClusterIP
-    }
-  }
-
-  ## check if the node is  un configured or not
-  lifecycle {
-    postcondition {
-      condition     = length(self.unconfigured_nodes) == 1
-      error_message = "The node ${local.remoteClusterIP} are not unconfigured"
-    }
-  }
-
-  depends_on = [data.nutanix_clusters_v2.clusters]
-}
-
-# create a new cluster
-resource "nutanix_cluster_v2" "test" {
-  name = "%[2]s"
-  nodes {
-    node_list {
-      controller_vm_ip {
-        ipv4 {
-          value = local.remoteClusterIP
-        }
-      }
-    }
-  }
-  config {
-    cluster_function = ["AOS"]
-    cluster_arch     = "X86_64"
-    fault_tolerance_state {
-      domain_awareness_level = "DISK"
-    }
-    redundancy_factor = 1
-  }
-  network {
-    external_address {
-      ipv4 {
-        value = local.remoteClusterVIP
-      }
-    }
-  }
-
-  # Reset the cluster password
-  provisioner "local-exec" {
-    command    = local.resetClusterPasswordCommand
-    on_failure = continue
-  }
-  # Set lifecycle to ignore changes
-  lifecycle {
-    ignore_changes = [network.0.smtp_server.0.server.0.password, links, categories, config.0.cluster_function]
-  }
-  depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node]
-}
-
-
-# register the cluster to pc
+# Register the existing remote PE cluster to PC (node already has a cluster).
 resource "nutanix_pc_registration_v2" "node-registration" {
   pc_ext_id = local.pcExtId
   remote_cluster {
@@ -406,78 +386,87 @@ resource "nutanix_pc_registration_v2" "node-registration" {
       }
     }
   }
-  # Modify the firewall rules on Remote cluster
+  # Modify the firewall rules on Remote cluster (fail apply if SSH/firewall fails)
   provisioner "local-exec" {
-    command    = local.modifyRemoteClusterFirewallRules
-    when       = create
-    on_failure = continue
+    command = local.modifyRemoteClusterFirewallRules
+    when    = create
   }
-  depends_on = [nutanix_cluster_v2.test]
 }
 
 # After registering the remote PE to PC, Prism Central takes a few seconds to
-# list the newly registered cluster. Poll the clusters API until it appears so
-# the data.nutanix_clusters_v2.new-cls lookup below doesn't read an empty list
-# (which surfaced as "Invalid index" on cluster_entities.0.ext_id).
+# list the newly registered cluster. Poll until the remote PE IP appears so the
+# new-cls lookup below can resolve local.newClusterExtId.
 resource "null_resource" "wait_cluster_registered" {
   triggers = {
-    cluster_name = nutanix_cluster_v2.test.name
+    remote_pe = local.remoteClusterIP
   }
 
   provisioner "local-exec" {
-    command = <<-EOT
-      for i in $(seq 1 60); do
-        if curl -ksS -u "${local.config.pc_username}:${local.config.pc_password}" \
-             "https://$NUTANIX_ENDPOINT:$NUTANIX_PORT/api/clustermgmt/v4.0/config/clusters" \
-             | grep -q "\"${self.triggers.cluster_name}\""; then
-          echo "cluster ${self.triggers.cluster_name} is now listed on PC"
-          exit 0
-        fi
-        echo "waiting for cluster ${self.triggers.cluster_name} to appear on PC (attempt $i)"
-        sleep 5
-      done
-      echo "ERROR: timed out waiting for cluster ${self.triggers.cluster_name} to appear on PC"
-      exit 1
-    EOT
+    # Single-line command (same pattern as cluster entity tests): use $(seq)
+    # with one $, and $$i so Terraform leaves a shell $i. Heredoc + $$(seq)
+    # was passed through literally and broke /bin/sh.
+    command = "for i in $(seq 1 60); do if curl -ksSf -u '${local.pc_username}:${local.pc_password}' 'https://${local.pc_host}:${local.pc_port}/api/clustermgmt/v4.3/config/clusters' | grep -q '${self.triggers.remote_pe}'; then echo 'remote PE ${self.triggers.remote_pe} is now listed on PC'; exit 0; fi; echo \"waiting for remote PE ${self.triggers.remote_pe} to appear on PC (attempt $$i)\"; sleep 5; done; echo 'ERROR: timed out waiting for remote PE ${self.triggers.remote_pe} to appear on PC'; exit 1"
   }
 
   depends_on = [nutanix_pc_registration_v2.node-registration]
 }
 
-# create a category, protection policy, volume group and associate it to the volume group
-# list Clusters
+# Resolve the registered remote PE by CVM IP / VIP (cluster name is unknown
+# because we did not create it in this test).
 data "nutanix_clusters_v2" "new-cls" {
-  filter = "name eq '${nutanix_cluster_v2.test.name}'"
+  filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
   depends_on = [null_resource.wait_cluster_registered]
 }
 
 locals {
-  newClusterExtId = data.nutanix_clusters_v2.new-cls.cluster_entities.0.ext_id
+  remote_cluster_matches = [
+    for c in data.nutanix_clusters_v2.new-cls.cluster_entities : c.ext_id
+    if(
+      length([
+        for n in try(c.nodes[0].node_list, []) : n
+        if try(n.controller_vm_ip[0].ipv4[0].value, "") == local.remoteClusterIP
+      ]) > 0
+      || try(c.network[0].external_address[0].ipv4[0].value, "") == local.remoteClusterVIP
+    )
+  ]
+  newClusterExtId = local.remote_cluster_matches[0]
+}
+
+# Sync VG protection needs at least one disk; empty VGs never get a dormant
+# secondary (Castor: "Dormant VG config not found" on promote).
+data "nutanix_storage_containers_v2" "ssc" {
+  filter = "clusterExtId eq '${local.clusterExtId}' and name eq 'SelfServiceContainer'"
+  limit  = 1
+}
+
+locals {
+  sourceStorageContainerExtId = data.nutanix_storage_containers_v2.ssc.storage_containers[0].ext_id
 }
 
 # Create Category
 resource "nutanix_category_v2" "test" {
-  key   = "%[6]s"
-  value = "%[7]s"
+  key   = "%[5]s"
+  value = "%[6]s"
 
-  # Modify the firewall rules on Local cluster
+  # Modify the firewall rules on Local cluster (fail apply if SSH/firewall fails)
   provisioner "local-exec" {
-    command    = local.modifyLocalClusterFirewallRules
-    on_failure = continue
+    command = local.modifyLocalClusterFirewallRules
   }
-  depends_on = [nutanix_pc_registration_v2.node-registration, nutanix_cluster_v2.test]
+  depends_on = [nutanix_pc_registration_v2.node-registration]
 }
 
-# Before the cluster/registration is destroyed, wait until the target PE has no
-# synchronously protected entities left (stretch params cleared) so it can be
-# unregistered cleanly (KB 12749). A destroy-time provisioner may only reference
-# "self", so the poll command is captured in triggers and read via self.triggers.
-# depends_on ties this to the cluster/registration (so it is destroyed before
-# them), and the protection policy depends on it (so it is destroyed after the
-# policy, i.e. only once unprotection has been triggered by the policy delete).
+# Before CheckDestroy unregisters the PE, wait until the target has no
+# synchronously protected entities left (stretch params cleared) so unregister
+# succeeds (KB 12749). A destroy-time provisioner may only reference "self", so
+# the poll command and PE/PC ext IDs are captured in triggers.
+# depends_on ties this to the registration (destroyed before it), and the
+# protection policy depends on it (destroyed after the policy, i.e. only once
+# unprotection has been triggered by the policy delete).
 resource "null_resource" "wait_stretch_cleared" {
   triggers = {
-    wait_cmd = local.waitForStretchClearedOnTarget
+    wait_cmd              = local.waitForStretchClearedOnTarget
+    pc_ext_id             = local.pcExtId
+    remote_cluster_ext_id = local.newClusterExtId
   }
 
   provisioner "local-exec" {
@@ -486,12 +475,12 @@ resource "null_resource" "wait_stretch_cleared" {
     on_failure = continue
   }
 
-  depends_on = [nutanix_pc_registration_v2.node-registration, nutanix_cluster_v2.test]
+  depends_on = [nutanix_pc_registration_v2.node-registration, null_resource.wait_cluster_registered]
 }
 
 resource "nutanix_protection_policy_v2" "test" {
-  name        = "%[4]s"
-  description = "%[5]s"
+  name        = "%[3]s"
+  description = "%[4]s"
 
   replication_configurations {
     source_location_label = "source"
@@ -541,9 +530,18 @@ resource "nutanix_protection_policy_v2" "test" {
 }
 
 resource "nutanix_volume_group_v2" "test" {
-  name              = "%[3]s"
-  description       = "%[5]s"
+  name              = "%[2]s"
+  description       = "%[4]s"
   cluster_reference = local.clusterExtId
+  disks {
+    disk_size_bytes = 1073741824 # 1 GiB
+    index           = 1
+    disk_data_source_reference {
+      name        = "vg-disk-%[2]s"
+      ext_id      = local.sourceStorageContainerExtId
+      entity_type = "STORAGE_CONTAINER"
+    }
+  }
   lifecycle {
     ignore_changes = [cluster_reference]
   }
@@ -556,16 +554,17 @@ resource "nutanix_associate_category_to_volume_group_v2" "test" {
   categories {
     ext_id = nutanix_category_v2.test.id
   }
-  provisioner "local-exec" {
-    # sleep 9 min to wait for the vg to be protected
-    command    = "sleep 540"
-  }
 }
+
+`, filepath, vgName, ppName, description, categoryKey, categoryValue, pcHost, pcPort, pcUser, pcPass)
+}
+
+func testPromoteProtectedResourceVGConfig() string {
+	return `
 
 resource "nutanix_promote_protected_resource_v2" "test" {
   ext_id = nutanix_volume_group_v2.test.id
   depends_on = [nutanix_associate_category_to_volume_group_v2.test]
 }
-
-`, filepath, clusterName, vgName, ppName, description, categoryKey, categoryValue)
+`
 }

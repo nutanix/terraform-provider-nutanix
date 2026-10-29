@@ -2261,41 +2261,71 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 func ResourceNutanixVirtualMachineV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
-
-	getVmByIdRequest := import3.GetVmByIdRequest{
-		ExtId: utils.StringPtr(d.Id()),
-	}
-	readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
-	if err != nil {
-		return diag.Errorf("error while reading vm : %v", err)
-	}
-	// Extract E-Tag Header
-	args := make(map[string]interface{})
-	args["If-Match"] = getEtagHeader(readResp, conn)
-
-	deleteVmByIdRequest := import3.DeleteVmByIdRequest{
-		ExtId: utils.StringPtr(d.Id()),
-	}
-	resp, err := conn.VMAPIInstance.DeleteVmById(ctx, &deleteVmByIdRequest, args)
-	if err != nil {
-		return diag.Errorf("error while deleting vm : %v", err)
-	}
-	TaskRef := resp.Data.GetValue().(import1.TaskReference)
-	taskUUID := TaskRef.ExtId
-
-	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the task to complete
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutDelete),
-	}
+	vmExtID := d.Id()
 
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for vm (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
+	// Delete is async. After NGT uninstall (or other guest-tools ops), the VM ETag can
+	// change between GET and task execution, causing If-Match / VM_ETAG_MISMATCH.
+	// Re-fetch the latest ETag and retry.
+	const maxAttempts = 5
+	var taskUUID *string
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		getVmByIdRequest := import3.GetVmByIdRequest{
+			ExtId: utils.StringPtr(vmExtID),
+		}
+		readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
+		if err != nil {
+			if isVmmNotFoundErr(err) {
+				log.Printf("[DEBUG] VM %s already gone before delete; treating as success", vmExtID)
+				return nil
+			}
+			return diag.Errorf("error while reading vm : %v", err)
+		}
+		args := make(map[string]interface{})
+		args["If-Match"] = getEtagHeader(readResp, conn)
+
+		deleteVmByIdRequest := import3.DeleteVmByIdRequest{
+			ExtId: utils.StringPtr(vmExtID),
+		}
+		resp, err := conn.VMAPIInstance.DeleteVmById(ctx, &deleteVmByIdRequest, args)
+		if err != nil {
+			if isVmmNotFoundErr(err) {
+				log.Printf("[DEBUG] VM %s already gone on delete request; treating as success", vmExtID)
+				return nil
+			}
+			if attempt < maxAttempts && isVmmEtagMismatchErr(err) {
+				log.Printf("[DEBUG] VM delete rejected due to ETag mismatch (attempt %d/%d). Retrying with refreshed ETag. error: %s",
+					attempt, maxAttempts, err)
+				time.Sleep(2 * time.Second)
+				continue
+			}
+			return diag.Errorf("error while deleting vm : %v", err)
+		}
+		TaskRef := resp.Data.GetValue().(import1.TaskReference)
+		taskUUID = TaskRef.ExtId
+
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+			Timeout: d.Timeout(schema.TimeoutDelete),
+		}
+
+		if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+			if isVmmNotFoundErr(errWaitTask) {
+				log.Printf("[DEBUG] VM %s already gone during delete task %s; treating as success",
+					vmExtID, utils.StringValue(taskUUID))
+				return nil
+			}
+			if attempt < maxAttempts && isVmmEtagMismatchErr(errWaitTask) {
+				log.Printf("[DEBUG] VM delete failed due to ETag mismatch (attempt %d/%d). Retrying with refreshed ETag. Task UUID: %s, error: %s",
+					attempt, maxAttempts, utils.StringValue(taskUUID), errWaitTask)
+				time.Sleep(2 * time.Second)
+				continue
+			}
+			return diag.Errorf("error waiting for vm (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
+		}
+		break
 	}
 	return nil
 }

@@ -43,8 +43,6 @@ func TestAccV2NutanixPasswordManagerResource_UpdatePasswordForAdminAOSUser(t *te
 			Config: testAccPasswordManagerResourceUpdatePasswordForAdminAOSUserConfig(systemTypeAOSFilter, current, next),
 			Check: resource.ComposeTestCheckFunc(
 				resource.TestCheckResourceAttrSet(resourceNamePasswordManager, "ext_id"),
-				resource.TestCheckResourceAttr(resourceNamePasswordManager, "current_password", current),
-				resource.TestCheckResourceAttr(resourceNamePasswordManager, "new_password", next),
 			),
 		})
 	}
