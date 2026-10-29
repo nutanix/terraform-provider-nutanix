@@ -384,6 +384,8 @@ func deleteRestoredVg(vgName string) resource.TestCheckFunc {
 
 // Captured during PromoteVG Check so CheckDestroy can unregister after terraform
 // destroy (null_resource may no longer expose triggers in the post-destroy state).
+// Also seeded in PreCheck via SSH so cleanup still runs when apply fails before
+// capturePromoteVGUnregisterIDs (e.g. registration blacklisted).
 var (
 	promoteVGPCExtID            string
 	promoteVGRemoteClusterExtID string
@@ -409,29 +411,138 @@ func capturePromoteVGUnregisterIDs() resource.TestCheckFunc {
 	}
 }
 
+// seedPromoteVGCleanupIDs resolves PC/PE UUIDs over SSH so CheckDestroy /
+// t.Cleanup can unregister even when registration fails before state capture.
+func seedPromoteVGCleanupIDs() {
+	if promoteVGRemoteClusterExtID == "" {
+		if pe, err := remotePEClusterUUID(); err == nil {
+			promoteVGRemoteClusterExtID = pe
+			log.Printf("[DEBUG] Seeded PromoteVG remote PE UUID from SSH: %s", pe)
+		} else {
+			log.Printf("[WARN] Could not seed remote PE UUID: %v", err)
+		}
+	}
+	if promoteVGPCExtID == "" {
+		if pc, err := pcClusterUUIDFromSSH(); err == nil {
+			promoteVGPCExtID = pc
+			log.Printf("[DEBUG] Seeded PromoteVG PC UUID from SSH: %s", pc)
+		} else {
+			log.Printf("[WARN] Could not seed PC UUID: %v", err)
+		}
+	}
+}
+
+// ensurePromoteVGRemotePEClean best-effort clears leftover PE registration /
+// blacklist state so the next PromoteVG run can register again. Safe to call
+// from PreCheck and t.Cleanup (idempotent soft-OK ncli steps). Does not require
+// terraform state or a successful prior capture.
+func ensurePromoteVGRemotePEClean() error {
+	seedPromoteVGCleanupIDs()
+	pcExtID, remoteClusterExtID, err := resolvePromoteVGCleanupIDs()
+	if err != nil {
+		return err
+	}
+
+	// If the provider is already configured and the PE is still listed, prefer
+	// the Unregister API before the force ncli/cleanup path.
+	if meta := acc.TestAccProvider.Meta(); meta != nil {
+		if conn, ok := meta.(*conns.Client); ok && conn != nil {
+			ctx := context.Background()
+			if active, aerr := promoteVGPEActivelyRegistered(ctx, conn, remoteClusterExtID); aerr == nil && active {
+				if uerr := unregisterPromoteVGRemotePEAPI(ctx, conn, pcExtID, remoteClusterExtID); uerr != nil {
+					log.Printf("[WARN] PromoteVG API unregister during ensure-clean: %v (continuing with ncli cleanup)", uerr)
+				}
+			}
+		}
+	}
+
+	if err := clearPartialUnregisterState(pcExtID, remoteClusterExtID); err != nil {
+		return err
+	}
+	clearPromoteVGUnregisterIDs()
+	return nil
+}
+
 // testCheckDestroyPromoteVGAndUnregister cleans up leftover PP/category resources,
 // then unregisters the remote PE that PromoteVG registered for the test.
 // pc_registration_v2 Delete is a no-op, so unregister must be explicit. Stretch
 // params are cleared first by null_resource.wait_stretch_cleared's destroy
 // provisioner (KB 12749).
 func testCheckDestroyPromoteVGAndUnregister(state *terraform.State) error {
-	if err := testCheckDestroyProtectedResourceAndCleanup(state); err != nil {
-		return err
+	cleanupErr := testCheckDestroyProtectedResourceAndCleanup(state)
+	unregErr := unregisterPromoteVGRemotePE()
+	if cleanupErr != nil {
+		return cleanupErr
 	}
-	return unregisterPromoteVGRemotePE()
+	return unregErr
+}
+
+func resolvePromoteVGCleanupIDs() (pcExtID, peExtID string, err error) {
+	peExtID = promoteVGRemoteClusterExtID
+	if peExtID == "" {
+		peExtID, err = remotePEClusterUUID()
+		if err != nil {
+			return "", "", fmt.Errorf("remote PE UUID: %w", err)
+		}
+	}
+	pcExtID = promoteVGPCExtID
+	if pcExtID == "" {
+		if meta := acc.TestAccProvider.Meta(); meta != nil {
+			if conn, ok := meta.(*conns.Client); ok && conn != nil {
+				if id, e := listPCDomainManagerExtID(conn); e == nil && id != "" {
+					pcExtID = id
+				}
+			}
+		}
+	}
+	if pcExtID == "" {
+		pcExtID, err = pcClusterUUIDFromSSH()
+		if err != nil {
+			return "", "", fmt.Errorf("PC UUID: %w", err)
+		}
+	}
+	return pcExtID, peExtID, nil
 }
 
 func unregisterPromoteVGRemotePE() error {
-	pcExtID := promoteVGPCExtID
-	remoteClusterExtID := promoteVGRemoteClusterExtID
-	if remoteClusterExtID == "" || pcExtID == "" {
-		log.Printf("[DEBUG] No remote PE ext_id captured; skipping unregister")
-		return nil
+	pcExtID, remoteClusterExtID, err := resolvePromoteVGCleanupIDs()
+	if err != nil {
+		log.Printf("[WARN] PromoteVG cleanup IDs unavailable (%v); attempting SSH-only cleanup", err)
+		seedPromoteVGCleanupIDs()
+		pcExtID, remoteClusterExtID, err = resolvePromoteVGCleanupIDs()
+		if err != nil {
+			return fmt.Errorf("cannot clean remote PE after PromoteVG: %w", err)
+		}
 	}
 
-	conn := acc.TestAccProvider.Meta().(*conns.Client)
-	ctx := context.Background()
+	if meta := acc.TestAccProvider.Meta(); meta != nil {
+		if conn, ok := meta.(*conns.Client); ok && conn != nil {
+			ctx := context.Background()
+			active, aerr := promoteVGPEActivelyRegistered(ctx, conn, remoteClusterExtID)
+			if aerr != nil {
+				log.Printf("[WARN] Could not verify PE registration state: %v", aerr)
+			}
+			if aerr == nil && active {
+				if uerr := unregisterPromoteVGRemotePEAPI(ctx, conn, pcExtID, remoteClusterExtID); uerr != nil {
+					if isUnregisterPRI55102(uerr) {
+						return handlePromoteVGUnregisterPRI55102(ctx, conn, pcExtID, remoteClusterExtID, uerr)
+					}
+					log.Printf("[WARN] Unregister API failed for PE %s: %v (continuing with ncli cleanup)", remoteClusterExtID, uerr)
+				}
+			}
+		}
+	}
 
+	// Always clear partial multicluster + registration blacklist so the next
+	// run can register again (pc.2024.1+ blacklists after unregister).
+	if err := clearPartialUnregisterState(pcExtID, remoteClusterExtID); err != nil {
+		return fmt.Errorf("failed clearing PE/PC registration state for %s: %v", remoteClusterExtID, err)
+	}
+	clearPromoteVGUnregisterIDs()
+	return nil
+}
+
+func unregisterPromoteVGRemotePEAPI(ctx context.Context, conn *conns.Client, pcExtID, remoteClusterExtID string) error {
 	getReq := domainmanagerReq.GetDomainManagerByIdRequest{
 		ExtId: utils.StringPtr(pcExtID),
 	}
@@ -451,10 +562,7 @@ func unregisterPromoteVGRemotePE() error {
 	}
 	resp, err := conn.PrismAPI.DomainManagerAPIInstance.Unregister(ctx, &unregisterReq, args)
 	if err != nil {
-		if isUnregisterPRI55102(err) {
-			return handlePromoteVGUnregisterPRI55102(ctx, conn, remoteClusterExtID, err)
-		}
-		return fmt.Errorf("error unregistering remote PE %s: %v", remoteClusterExtID, err)
+		return err
 	}
 
 	taskRef := resp.Data.GetValue().(prismConfig.TaskReference)
@@ -469,11 +577,6 @@ func unregisterPromoteVGRemotePE() error {
 		return fmt.Errorf("error waiting for remote PE unregister (%s): %v", taskUUID, err)
 	}
 	log.Printf("[DEBUG] Remote PE %s unregistered from PC %s\n", remoteClusterExtID, pcExtID)
-	// Unregister API can leave partial PE/PC multicluster state (PRI-55102 on later runs).
-	if err := clearPartialUnregisterState(pcExtID, remoteClusterExtID); err != nil {
-		return fmt.Errorf("remote PE %s unregistered, but failed clearing partial unregister state: %v", remoteClusterExtID, err)
-	}
-	clearPromoteVGUnregisterIDs()
 	return nil
 }
 
@@ -489,7 +592,7 @@ func isUnregisterPRI55102(err error) bool {
 // handlePromoteVGUnregisterPRI55102 treats PRI-55102 as "already unregistered"
 // when the PE is not in active registration, then clears leftover ncli cluster
 // state so the next run can register again. Payload IDs are not swapped.
-func handlePromoteVGUnregisterPRI55102(ctx context.Context, conn *conns.Client, remoteClusterExtID string, unregisterErr error) error {
+func handlePromoteVGUnregisterPRI55102(ctx context.Context, conn *conns.Client, pcExtID, remoteClusterExtID string, unregisterErr error) error {
 	active, verifyErr := promoteVGPEActivelyRegistered(ctx, conn, remoteClusterExtID)
 	if verifyErr != nil {
 		return fmt.Errorf("unregister returned PRI-55102 for PE %s, but could not verify registration state: %v (unregister err: %v)",
@@ -501,12 +604,28 @@ func handlePromoteVGUnregisterPRI55102(ctx context.Context, conn *conns.Client, 
 	}
 
 	log.Printf("[DEBUG] PRI-55102 for PE %s: not actively registered; clearing partial unregister state", remoteClusterExtID)
-	if err := clearPartialUnregisterState(promoteVGPCExtID, remoteClusterExtID); err != nil {
+	if err := clearPartialUnregisterState(pcExtID, remoteClusterExtID); err != nil {
 		return fmt.Errorf("PRI-55102 for PE %s (already unregistered), but failed clearing partial unregister state: %v",
 			remoteClusterExtID, err)
 	}
 	clearPromoteVGUnregisterIDs()
 	return nil
+}
+
+func listPCDomainManagerExtID(conn *conns.Client) (string, error) {
+	ctx := context.Background()
+	resp, err := conn.PrismAPI.DomainManagerAPIInstance.ListDomainManagers(ctx, &domainmanagerReq.ListDomainManagersRequest{})
+	if err != nil {
+		return "", err
+	}
+	if resp.Data == nil {
+		return "", fmt.Errorf("ListDomainManagers returned no data")
+	}
+	pcs := resp.Data.GetValue().([]prismConfig.DomainManager)
+	if len(pcs) == 0 || pcs[0].ExtId == nil {
+		return "", fmt.Errorf("ListDomainManagers returned empty list")
+	}
+	return utils.StringValue(pcs[0].ExtId), nil
 }
 
 // promoteVGPEActivelyRegistered returns false when the PE is gone from the
@@ -560,6 +679,8 @@ func clusterStateAbsent(out string, err error) bool {
 	return strings.Contains(msg, "cannot be retrieved") ||
 		strings.Contains(msg, "not found") ||
 		strings.Contains(msg, "No cluster") ||
+		strings.Contains(msg, "NoNode") ||
+		strings.Contains(msg, "KeeperErrorCode") ||
 		strings.Contains(lower, "never added to prism central") ||
 		strings.Contains(lower, "not registered")
 }
@@ -568,16 +689,23 @@ func ncliSoftOK(out string, err error) bool {
 	if err == nil {
 		return true
 	}
+	lower := strings.ToLower(out + " " + err.Error())
 	return clusterStateAbsent(out, err) ||
-		strings.Contains(strings.ToLower(out), "already")
+		strings.Contains(lower, "already") ||
+		strings.Contains(lower, "never added")
 }
 
-// clearPartialUnregisterState cleans both sides after an unregister-only test
-// (no blacklist-removal). Sequence:
-//  1. PE: remove-from-multicluster ... force=true local_only=true
+// clearPartialUnregisterState cleans both sides after unregister so the same
+// lab PE can be re-registered on the next run. Sequence:
+//  1. PE: remove-from-multicluster ... force=true (full, not local_only)
 //  2. PE: remove-from-multicluster ... cleanup_only=true (auto-confirm Y)
 //  3. PC: delete-cluster-state ... skip_prechecks=true
-//  4. Verify PE no longer lists PC_UUID and PC no longer lists PE_UUID
+//  4. PE: zkrm /appliance/physical/blacklisted
+//     PC: zkrm /appliance/physical/blacklist
+//     (pc.2024.1+ / AOS 6.8+ PE decommissioning blacklist; unregistration_cleanup.py
+//     alone does not clear these ZK nodes — without zkrm the next register fails
+//     with "remote cluster is blacklisted for registration")
+//  5. Verify PE no longer lists PC_UUID and PC no longer lists PE_UUID
 func clearPartialUnregisterState(pcExtID, remoteClusterExtID string) error {
 	peIP := testVars.DataProtection.RemoteClusterPE
 	pcIP, err := pcSSHHostForCleanup()
@@ -586,21 +714,21 @@ func clearPartialUnregisterState(pcExtID, remoteClusterExtID string) error {
 	}
 	peUser := testVars.PEUsername
 	pePass := testVars.PEPassword
-	if peIP == "" || peUser == "" || pePass == "" || pcExtID == "" {
-		return fmt.Errorf("missing pe/pc cleanup inputs (remote_cluster_pe/pe_username/pe_password/pc_ext_id)")
+	if peIP == "" || peUser == "" || pePass == "" || pcExtID == "" || remoteClusterExtID == "" {
+		return fmt.Errorf("missing pe/pc cleanup inputs (remote_cluster_pe/pe_username/pe_password/pc_ext_id/pe_ext_id)")
 	}
 	pePassQ := strings.ReplaceAll(pePass, `'`, `'\''`)
 
-	// 1. Clear PE-side registration locally (PC already dropped the PE).
+	// 1. Force-unregister PC from the PE (soft-OK if never registered).
 	step1 := fmt.Sprintf(
-		"source /etc/profile; /home/nutanix/prism/cli/ncli multicluster remove-from-multicluster external-ip-address-or-svm-ips=%s username=%s password='%s' force=true local_only=true",
+		"source /etc/profile; /home/nutanix/prism/cli/ncli multicluster remove-from-multicluster external-ip-address-or-svm-ips=%s username=%s password='%s' force=true",
 		pcIP, peUser, pePassQ,
 	)
-	log.Printf("[DEBUG] Partial-unregister cleanup step 1 (PE local_only) pe=%s pc=%s", peIP, pcIP)
+	log.Printf("[DEBUG] Partial-unregister cleanup step 1 (PE force remove-from-multicluster) pe=%s pc=%s", peIP, pcIP)
 	out1, err1 := runPESSH(step1)
 	log.Printf("[DEBUG] step1 output: %s", out1)
 	if !ncliSoftOK(out1, err1) {
-		return fmt.Errorf("PE local_only remove-from-multicluster: %v (output: %s)", err1, out1)
+		return fmt.Errorf("PE force remove-from-multicluster: %v (output: %s)", err1, out1)
 	}
 
 	// 2. PE-side cleanup_only. ncli uses System.console().readLine() (needs a
@@ -626,15 +754,20 @@ func clearPartialUnregisterState(pcExtID, remoteClusterExtID string) error {
 		return fmt.Errorf("PC delete-cluster-state: %v (output: %s)", err3, out3)
 	}
 
-	// 4. Verify both sides.
+	// 4. Clear PE/PC registration blacklist ZK nodes so re-register works.
+	if err := clearRegistrationBlacklistZK(); err != nil {
+		return err
+	}
+
+	// 5. Verify both sides.
 	peState, peErr := runPESSH("/home/nutanix/prism/cli/ncli multicluster get-cluster-state")
-	log.Printf("[DEBUG] step4 PE get-cluster-state: %s", peState)
+	log.Printf("[DEBUG] step5 PE get-cluster-state: %s", peState)
 	if peErr == nil && strings.Contains(peState, pcExtID) {
 		return fmt.Errorf("after cleanup, PE still lists PC %s in get-cluster-state", pcExtID)
 	}
 
 	pcState, pcErr := runPCNcli(fmt.Sprintf("multicluster get-cluster-state cluster-id=%s", remoteClusterExtID))
-	log.Printf("[DEBUG] step4 PC get-cluster-state: %s", pcState)
+	log.Printf("[DEBUG] step5 PC get-cluster-state: %s", pcState)
 	if pcErr == nil && (ncliFieldTrue(pcState, "Remote Connection Exists") || ncliFieldTrue(pcState, "Is Multicluster")) {
 		return fmt.Errorf("after cleanup, PC still shows PE %s as actively registered: %s", remoteClusterExtID, pcState)
 	}
@@ -646,6 +779,84 @@ func clearPartialUnregisterState(pcExtID, remoteClusterExtID string) error {
 	return nil
 }
 
+// clearRegistrationBlacklistZK removes the PE/PC ZK blacklist nodes that block
+// re-registration after unregister on modern PC/AOS (PE decommissioning).
+func clearRegistrationBlacklistZK() error {
+	log.Printf("[DEBUG] Partial-unregister cleanup step 4a (PE zkrm /appliance/physical/blacklisted)")
+	outPE, errPE := runPESSH("source /etc/profile; zkrm /appliance/physical/blacklisted")
+	log.Printf("[DEBUG] step4a PE zkrm output: %s", outPE)
+	if !zkrmSoftOK(outPE, errPE) {
+		return fmt.Errorf("PE zkrm blacklisted: %v (output: %s)", errPE, outPE)
+	}
+
+	log.Printf("[DEBUG] Partial-unregister cleanup step 4b (PC zkrm /appliance/physical/blacklist)")
+	outPC, errPC := runPCSSH("source /etc/profile; zkrm /appliance/physical/blacklist")
+	log.Printf("[DEBUG] step4b PC zkrm output: %s", outPC)
+	if !zkrmSoftOK(outPC, errPC) {
+		return fmt.Errorf("PC zkrm blacklist: %v (output: %s)", errPC, outPC)
+	}
+	return nil
+}
+
+func zkrmSoftOK(out string, err error) bool {
+	if err == nil {
+		return true
+	}
+	lower := strings.ToLower(out + " " + err.Error())
+	// Node already absent is success for idempotent cleanup.
+	return strings.Contains(lower, "no node") ||
+		strings.Contains(lower, "not exist") ||
+		strings.Contains(lower, "not found") ||
+		strings.Contains(lower, "nonode")
+}
+
+func remotePEClusterUUID() (string, error) {
+	out, err := runPESSH("source /etc/profile >/dev/null 2>&1; /home/nutanix/prism/cli/ncli cluster info")
+	if err != nil && ncliClusterUUID(out) == "" {
+		return "", fmt.Errorf("PE ncli cluster info: %v (output: %s)", err, out)
+	}
+	id := ncliClusterUUID(out)
+	if id == "" {
+		return "", fmt.Errorf("PE ncli cluster info: could not parse cluster UUID (output: %s)", out)
+	}
+	return id, nil
+}
+
+func pcClusterUUIDFromSSH() (string, error) {
+	out, err := runPCNcli("cluster info")
+	if err != nil && ncliClusterUUID(out) == "" {
+		return "", fmt.Errorf("PC ncli cluster info: %v (output: %s)", err, out)
+	}
+	id := ncliClusterUUID(out)
+	if id == "" {
+		return "", fmt.Errorf("PC ncli cluster info: could not parse cluster UUID (output: %s)", out)
+	}
+	return id, nil
+}
+
+func ncliClusterUUID(out string) string {
+	for _, field := range []string{"Cluster Uuid", "Cluster Id", "Id"} {
+		if v := ncliFieldValue(out, field); v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+func ncliFieldValue(out, field string) string {
+	for _, line := range strings.Split(out, "\n") {
+		if !strings.Contains(line, field) {
+			continue
+		}
+		parts := strings.SplitN(line, ":", 2)
+		if len(parts) < 2 {
+			continue
+		}
+		return strings.TrimSpace(parts[1])
+	}
+	return ""
+}
+
 func runPESSH(remoteCmd string) (string, error) {
 	peIP := testVars.DataProtection.RemoteClusterPE
 	user := testVars.SshPeUsername
@@ -653,8 +864,11 @@ func runPESSH(remoteCmd string) (string, error) {
 	if peIP == "" || user == "" || pass == "" {
 		return "", fmt.Errorf("ssh_pe_username/ssh_pe_password/remote_cluster_pe missing from test_config_v2.json")
 	}
+	// Prefer password auth only: pubkey retries can exhaust MaxAuthTries and
+	// surface as intermittent "Permission denied" on lab PEs.
 	cmd := exec.Command("sshpass", "-p", pass,
 		"ssh", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null",
+		"-o", "PreferredAuthentications=password", "-o", "PubkeyAuthentication=no",
 		fmt.Sprintf("%s@%s", user, peIP),
 		remoteCmd,
 	)
@@ -662,7 +876,7 @@ func runPESSH(remoteCmd string) (string, error) {
 	return string(out), err
 }
 
-func runPCNcli(ncliArgs string) (string, error) {
+func runPCSSH(remoteCmd string) (string, error) {
 	host, err := pcSSHHostForCleanup()
 	if err != nil {
 		return "", err
@@ -674,11 +888,16 @@ func runPCNcli(ncliArgs string) (string, error) {
 	}
 	cmd := exec.Command("sshpass", "-p", pass,
 		"ssh", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null",
+		"-o", "PreferredAuthentications=password", "-o", "PubkeyAuthentication=no",
 		fmt.Sprintf("%s@%s", user, host),
-		"/home/nutanix/prism/cli/ncli "+ncliArgs,
+		remoteCmd,
 	)
 	out, err := cmd.CombinedOutput()
 	return string(out), err
+}
+
+func runPCNcli(ncliArgs string) (string, error) {
+	return runPCSSH("/home/nutanix/prism/cli/ncli " + ncliArgs)
 }
 
 // pcSSHHostForCleanup resolves the PC CVM address for ncli SSH.

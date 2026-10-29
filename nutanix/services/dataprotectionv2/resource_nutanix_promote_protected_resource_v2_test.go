@@ -85,8 +85,26 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVG(t *testing.T) {
 	vgResourceName := "nutanix_volume_group_v2.test"
 	registrationResourceName := "nutanix_pc_registration_v2.node-registration"
 
+	// Always tear down PE registration / blacklist state after the test,
+	// including when apply fails before CheckDestroy can capture ext IDs
+	// (e.g. "remote cluster is blacklisted for registration").
+	t.Cleanup(func() {
+		if err := ensurePromoteVGRemotePEClean(); err != nil {
+			t.Logf("PromoteVG post-test PE cleanup: %v", err)
+		}
+	})
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		PreCheck: func() {
+			acc.TestAccPreCheck(t)
+			// Seed PC/PE UUIDs and clear leftover blacklist/registration from a
+			// prior run so this attempt can register the remote PE again.
+			seedPromoteVGCleanupIDs()
+			if err := ensurePromoteVGRemotePEClean(); err != nil {
+				t.Logf("PromoteVG pre-test PE cleanup: %v", err)
+			}
+			seedPromoteVGCleanupIDs()
+		},
 		Providers: acc.TestAccProviders,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"null": {Source: "hashicorp/null"},
