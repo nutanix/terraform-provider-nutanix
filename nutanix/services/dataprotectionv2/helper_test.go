@@ -682,20 +682,36 @@ func runPCNcli(ncliArgs string) (string, error) {
 }
 
 // pcSSHHostForCleanup resolves the PC CVM address for ncli SSH.
-// Direct PC uses NUTANIX_ENDPOINT; NC often embeds the IP in the central
-// hostname (e.g. nconprem-10-44-76-117...).
+// Prefer an IP extracted from NUTANIX_CENTRAL_ENDPOINT (NC embeds it as
+// nconprem-10-44-76-117...). Fall back to NUTANIX_ENDPOINT only when it looks
+// like a usable SSH host (bare IP / simple hostname) — not an empty-quoted
+// dotenv value ("") or an NC domain FQDN (*.domains.*), both of which make
+// OpenSSH fail with "hostname contains invalid characters" or Permission denied.
 func pcSSHHostForCleanup() (string, error) {
-	if ep := os.Getenv("NUTANIX_ENDPOINT"); ep != "" {
+	if central := strings.TrimSpace(os.Getenv("NUTANIX_CENTRAL_ENDPOINT")); central != "" {
+		central = strings.Trim(central, `"'`)
+		if ip := ipv4FromDashedHostname(central); ip != "" {
+			return ip, nil
+		}
+	}
+	ep := strings.Trim(strings.TrimSpace(os.Getenv("NUTANIX_ENDPOINT")), `"'`)
+	if ep != "" && !strings.Contains(ep, ".domains.") && !strings.ContainsAny(ep, `"'/`) {
 		return ep, nil
 	}
-	central := os.Getenv("NUTANIX_CENTRAL_ENDPOINT")
-	if central == "" {
-		return "", fmt.Errorf("set NUTANIX_ENDPOINT or NUTANIX_CENTRAL_ENDPOINT to resolve PC SSH host")
+	if ep != "" {
+		if ip := ipv4FromDashedHostname(ep); ip != "" {
+			return ip, nil
+		}
 	}
-	re := regexp.MustCompile(`(\d{1,3})-(\d{1,3})-(\d{1,3})-(\d{1,3})`)
-	m := re.FindStringSubmatch(central)
+	return "", fmt.Errorf("set NUTANIX_ENDPOINT (PC IP) or NUTANIX_CENTRAL_ENDPOINT (with embedded IP) to resolve PC SSH host")
+}
+
+var dashedIPv4RE = regexp.MustCompile(`(\d{1,3})-(\d{1,3})-(\d{1,3})-(\d{1,3})`)
+
+func ipv4FromDashedHostname(s string) string {
+	m := dashedIPv4RE.FindStringSubmatch(s)
 	if m == nil {
-		return "", fmt.Errorf("cannot extract PC IP from NUTANIX_CENTRAL_ENDPOINT=%q", central)
+		return ""
 	}
-	return fmt.Sprintf("%s.%s.%s.%s", m[1], m[2], m[3], m[4]), nil
+	return fmt.Sprintf("%s.%s.%s.%s", m[1], m[2], m[3], m[4])
 }
