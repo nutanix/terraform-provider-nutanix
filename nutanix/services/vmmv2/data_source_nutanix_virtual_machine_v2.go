@@ -574,6 +574,10 @@ func DatasourceNutanixVirtualMachineV4() *schema.Resource {
 																Type:     schema.TypeBool,
 																Computed: true,
 															},
+															"serial_id": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
 														},
 													},
 												},
@@ -860,6 +864,10 @@ func DatasourceNutanixVirtualMachineV4() *schema.Resource {
 													Type:     schema.TypeBool,
 													Computed: true,
 												},
+												"serial_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
 											},
 										},
 									},
@@ -1013,6 +1021,10 @@ func DatasourceNutanixVirtualMachineV4() *schema.Resource {
 									},
 									"is_migration_in_progress": {
 										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"serial_id": {
+										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
@@ -1899,6 +1911,9 @@ func flattenVMDisk(pr *config.VmDisk) []map[string]interface{} {
 		if pr.IsMigrationInProgress != nil {
 			disks["is_migration_in_progress"] = pr.IsMigrationInProgress
 		}
+		if pr.SerialId != nil {
+			disks["serial_id"] = pr.SerialId
+		}
 
 		vmDiskList = append(vmDiskList, disks)
 		return vmDiskList
@@ -2353,6 +2368,9 @@ func flattenOneOfDiskBackingInfo(pr *config.OneOfDiskBackingInfo) []map[string]i
 			}
 			if vmDiskVal.IsMigrationInProgress != nil {
 				vmDiskObj["is_migration_in_progress"] = vmDiskVal.IsMigrationInProgress
+			}
+			if vmDiskVal.SerialId != nil {
+				vmDiskObj["serial_id"] = vmDiskVal.SerialId
 			}
 			log.Printf("[DEBUG] vmDiskObj: %v", vmDiskObj)
 
