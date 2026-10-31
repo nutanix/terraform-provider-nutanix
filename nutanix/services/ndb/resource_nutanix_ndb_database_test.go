@@ -1,12 +1,17 @@
 package ndb_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
+	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
 )
 
 const resourceNameDB = "nutanix_ndb_database.acctest-managed"
@@ -20,8 +25,9 @@ func TestAccEra_basic(t *testing.T) {
 	updatedName := fmt.Sprintf("test-pg-inst-tf-updated-%d", r)
 	updatedesc := "this is updated desc"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccEraPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccEraPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixNDBDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEraDatabaseConfig(name, desc, vmName, sshKey, r),
@@ -55,8 +61,9 @@ func TestAccEraDatabaseProvisionHA(t *testing.T) {
 	desc := "this is desc"
 	sshKey := testVars.SSHKey
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccEraPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccEraPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixNDBDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEraDatabaseHAConfig(name, desc, sshKey, r),
@@ -80,8 +87,9 @@ func TestAccEra_SchemaValidationwithCreateDBserver(t *testing.T) {
 	vmName := fmt.Sprintf("testvm-%d", r)
 	sshKey := testVars.SSHKey
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccEraPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccEraPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixNDBDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEraDatabaseSchemaValidationConfig(name, desc, vmName, sshKey, r),
@@ -98,8 +106,9 @@ func TestAccEra_SchemaValidationwithCreateDBserverFalse(t *testing.T) {
 	vmName := fmt.Sprintf("testvm-%d", r)
 	sshKey := testVars.SSHKey
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccEraPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccEraPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixNDBDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEraDatabaseSchemaValidationConfigWithoutCreateDBserver(name, desc, vmName, sshKey, r),
@@ -141,6 +150,8 @@ func testAccEraDatabaseConfig(name, desc, vmName, sshKey string, r int) string {
 		clusters = {
 			for p in data.nutanix_ndb_clusters.clusters.clusters: p.name => p
 		}
+		// Use NDBCluster if it exists, otherwise pick the first available cluster
+		target_cluster = contains(keys(local.clusters), "NDBCluster") ? local.clusters.NDBCluster : data.nutanix_ndb_clusters.clusters.clusters[0]
 	}
 
 	resource "nutanix_ndb_database" "acctest-managed" {
@@ -159,7 +170,7 @@ func testAccEraDatabaseConfig(name, desc, vmName, sshKey string, r int) string {
 			db_password =  "password"
 			database_names= "testdb1"
 		}
-		nxclusterid= local.clusters.NDBCluster.id
+		nxclusterid= local.target_cluster.id
 		sshpublickey= "%[4]s"
 		nodes{
 				vmname= "%[3]s"
@@ -236,6 +247,8 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string, r int) string {
 		clusters = {
 			for p in data.nutanix_ndb_clusters.clusters.clusters: p.name => p
 		}
+		// Use NDBCluster if it exists, otherwise pick the first available cluster
+		target_cluster = contains(keys(local.clusters), "NDBCluster") ? local.clusters.NDBCluster : data.nutanix_ndb_clusters.clusters.clusters[0]
 	}
 
 	resource "nutanix_ndb_database" "acctest-managed" {
@@ -267,7 +280,7 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string, r int) string {
 				patroni_cluster_name = "ha-patroni-cluster"
 			}
 		}
-		nxclusterid= local.clusters.NDBCluster.id
+		nxclusterid= local.target_cluster.id
 		sshpublickey= "%[3]s"
 		nodes{
 			properties{
@@ -275,7 +288,7 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string, r int) string {
 				value = "haproxy"
 			}
 			vmname =  "ha-cls_haproxy-%[4]d"
-			nx_cluster_id =  local.clusters.NDBCluster.id
+			nx_cluster_id =  local.target_cluster.id
 		}
 		nodes{
 			properties{
@@ -293,7 +306,7 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string, r int) string {
 			vmname = "ha-cls-1%[4]d"
 			networkprofileid=local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id
 			computeprofileid= local.compute_profiles["DEFAULT_OOB_SMALL_COMPUTE"].id
-			nx_cluster_id=  local.clusters.NDBCluster.id
+			nx_cluster_id=  local.target_cluster.id
 		}
 		nodes{
 			properties{
@@ -311,7 +324,7 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string, r int) string {
 			vmname = "ha-cls-2%[4]d"
 			networkprofileid=local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id
 			computeprofileid= local.compute_profiles["DEFAULT_OOB_SMALL_COMPUTE"].id
-			nx_cluster_id=  local.clusters.NDBCluster.id
+			nx_cluster_id=  local.target_cluster.id
 		}
 
 		nodes{
@@ -330,7 +343,7 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string, r int) string {
 			vmname = "ha-cls-3%[4]d"
 			networkprofileid=local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id
 			computeprofileid= local.compute_profiles["DEFAULT_OOB_SMALL_COMPUTE"].id
-			nx_cluster_id= local.clusters.NDBCluster.id
+			nx_cluster_id= local.target_cluster.id
 		}
 		timemachineinfo {
 			name= "test-pg-inst-%[4]d"
@@ -340,7 +353,7 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string, r int) string {
 				primary_sla{
 				  sla_id= local.slas["DEFAULT_OOB_BRONZE_SLA"].id
 				  nx_cluster_ids=  [
-					local.clusters.NDBCluster.id
+					local.target_cluster.id
 				  ]
 				}
 			  }
@@ -411,6 +424,8 @@ func testAccEraDatabaseSchemaValidationConfig(name, desc, vmName, sshKey string,
 		clusters = {
 			for p in data.nutanix_ndb_clusters.clusters.clusters: p.name => p
 		}
+		// Use NDBCluster if it exists, otherwise pick the first available cluster
+		target_cluster = contains(keys(local.clusters), "NDBCluster") ? local.clusters.NDBCluster : data.nutanix_ndb_clusters.clusters.clusters[0]
 	}
 
 	resource "nutanix_ndb_database" "acctest-managed" {
@@ -424,7 +439,7 @@ func testAccEraDatabaseSchemaValidationConfig(name, desc, vmName, sshKey string,
 			db_password =  "password"
 			database_names= "testdb1"
 		}
-		nxclusterid= local.clusters.NDBCluster.id
+		nxclusterid= local.target_cluster.id
 		sshpublickey= "%[4]s"
 		nodes{
 				vmname= "%[3]s"
@@ -523,4 +538,42 @@ func testAccEraDatabaseSchemaValidationConfigWithoutCreateDBserver(name, desc, v
 			createdbserver=false
 		}
 	`, name, desc, vmName, sshKey, r)
+}
+
+func testAccCheckNutanixNDBDatabaseDestroy(s *terraform.State) error {
+	conn := acc.TestAccProvider.Meta().(*conns.Client).Era
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "nutanix_ndb_database" {
+			continue
+		}
+
+		// 1. Check if Database still exists
+		_, err := conn.Service.GetDatabaseInstance(context.Background(), rs.Primary.ID)
+		if err == nil {
+			return fmt.Errorf("NDB Database %s still exists", rs.Primary.ID)
+		}
+
+		// 2. Check if associated DB Server VMs still exist
+		for k, v := range rs.Primary.Attributes {
+			if strings.Contains(k, "dbserver_id") && v != "" {
+				_, err := conn.Service.ReadDBServerVM(context.Background(), v)
+				if err == nil {
+					return fmt.Errorf("NDB DB Server VM %s still exists", v)
+				}
+			}
+			// 3. Check if associated DB Server Cluster (DPC) still exists
+			if k == "dbserver_logical_cluster_id" && v != "" {
+				_, err := conn.Service.GetDBServerVM(context.Background(), &era.DBServerFilterRequest{
+					DbserverClusterID: &v,
+				})
+				// If GetDBServerVM doesn't return an error for a DPC, it might still exist
+				if err == nil {
+					return fmt.Errorf("NDB DB Server Cluster %s still exists", v)
+				}
+			}
+		}
+	}
+
+	return nil
 }
