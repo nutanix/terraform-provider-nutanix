@@ -708,31 +708,22 @@ func deleteDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	dbID := d.Id()
+	createdbserver := d.Get("createdbserver").(bool)
+	deleteLogicalCluster := d.Get("delete_logical_cluster").(bool)
 
-	req := &era.DeleteDatabaseRequest{}
+	// 1. Capture DPC and VM IDs live BEFORE starting deletion
+	vmIDs, dbServerClusterID := captureDatabaseNodeIDs(ctx, d, conn)
 
-	if delete, ok := d.GetOk("delete"); ok {
-		req.Delete = delete.(bool)
-	}
+	log.Printf("[INFO] NDB Cleanup: Cleanup plan for Database %s (DPC: %s, VMs: %v)", dbID, dbServerClusterID, vmIDs)
 
-	if remove, ok := d.GetOk("remove"); ok {
-		req.Remove = remove.(bool)
-	}
-
-	if softremove, ok := d.GetOk("soft_remove"); ok {
-		req.Softremove = softremove.(bool)
-	}
-
-	if forced, ok := d.GetOk("forced"); ok {
-		req.Forced = forced.(bool)
-	}
-
-	if deltms, ok := d.GetOk("delete_time_machine"); ok {
-		req.Deletetimemachine = deltms.(bool)
-	}
-
-	if dellogicalcls, ok := d.GetOk("delete_logical_cluster"); ok {
-		req.Deletelogicalcluster = dellogicalcls.(bool)
+	// 2. Perform standard Database Deletion
+	req := &era.DeleteDatabaseRequest{
+		Delete:               d.Get("delete").(bool),
+		Remove:               d.Get("remove").(bool),
+		Softremove:           d.Get("soft_remove").(bool),
+		Forced:               d.Get("forced").(bool),
+		Deletetimemachine:    d.Get("delete_time_machine").(bool),
+		Deletelogicalcluster: deleteLogicalCluster,
 	}
 
 	res, err := conn.Service.DeleteDatabase(ctx, req, dbID)
@@ -740,30 +731,112 @@ func deleteDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.FromErr(err)
 	}
 
-	log.Printf("Operation to delete instance with id %s has started, operation id: %s", dbID, res.Operationid)
-	opID := res.Operationid
+	if err := waitForOperation(ctx, conn, res.Operationid, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return diag.FromErr(err)
+	}
+	log.Printf("NDB database with %s id is deleted successfully", dbID)
+
+	// 3. Handle cleanup for orphaned VMs/DPCs (Workaround for NDB API limitation in HA)
+	deleteFlag := d.Get("delete").(bool)
+	if deleteFlag && createdbserver && deleteLogicalCluster {
+		if err := cleanupOrphanedNodes(ctx, d, conn, dbServerClusterID, vmIDs); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	return nil
+}
+
+// captureDatabaseNodeIDs fetches VM and DPC IDs from the resource state and NDB API
+func captureDatabaseNodeIDs(ctx context.Context, d *schema.ResourceData, conn *era.Client) ([]string, string) {
+	var vmIDs []string
+	var dbServerClusterID string
+
+	if nodes, ok := d.Get("database_nodes").([]interface{}); ok {
+		for _, node := range nodes {
+			nodeMap, ok := node.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			vmID, _ := nodeMap["dbserver_id"].(string)
+			if vmID == "" {
+				continue
+			}
+			vmIDs = append(vmIDs, vmID)
+
+			// If DPC ID is not found yet, try fetching it live from the first VM
+			if dbServerClusterID == "" {
+				vmResp, err := conn.Service.ReadDBServerVM(ctx, vmID)
+				if err == nil && vmResp != nil && vmResp.DbserverClusterID != nil {
+					dbServerClusterID = *vmResp.DbserverClusterID
+				}
+			}
+		}
+	}
+	return vmIDs, dbServerClusterID
+}
+
+// waitForOperation polls for an NDB operation to complete
+func waitForOperation(ctx context.Context, conn *era.Client, opID string, timeout time.Duration) error {
 	if opID == "" {
-		return diag.Errorf("error: operation ID is an empty string")
+		return fmt.Errorf("operation ID is empty")
 	}
-	opReq := era.GetOperationRequest{
-		OperationID: opID,
-	}
-
-	log.Printf("polling for operation with id: %s\n", opID)
-
-	// Poll for operation here - Cluster GET Call
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING"},
 		Target:  []string{"COMPLETED", "FAILED"},
-		Refresh: eraRefresh(ctx, conn, opReq),
-		Timeout: d.Timeout(schema.TimeoutDelete),
+		Refresh: eraRefresh(ctx, conn, era.GetOperationRequest{OperationID: opID}),
+		Timeout: timeout,
 		Delay:   eraDelay,
 	}
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
 
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for db Instance (%s) to delete: %s", res.Entityid, errWaitTask)
+// cleanupOrphanedNodes handles explicit deletion of HA Clusters (DPCs) and remaining VMs
+func cleanupOrphanedNodes(ctx context.Context, d *schema.ResourceData, conn *era.Client, dpcID string, vmIDs []string) error {
+	// 1. Try HA DB Server Cluster (DPC) cleanup first
+	if dpcID != "" {
+		log.Printf("[INFO] NDB Cleanup: Triggering DPC cleanup for %s", dpcID)
+		dpcReq := &era.DeleteDPCRequest{
+			Delete: true,
+			DBServers: era.DPCDBServersOptions{
+				Delete:            true,
+				DeleteVgs:         true,
+				DeleteVmSnapshots: true,
+			},
+		}
+		dpcRes, err := conn.Service.DeleteDBServerCluster(ctx, dpcReq, dpcID)
+		if err != nil {
+			return fmt.Errorf("DPC cleanup failed to trigger for %s: %s", dpcID, err)
+		}
+		if dpcRes != nil && dpcRes.Operationid != "" {
+			if err := waitForOperation(ctx, conn, dpcRes.Operationid, d.Timeout(schema.TimeoutDelete)); err != nil {
+				return fmt.Errorf("DPC %s cleanup operation failed: %s", dpcID, err)
+			}
+			log.Printf("[INFO] NDB Cleanup: DPC %s deleted successfully", dpcID)
+			return nil // Success, individual VMs are gone too
+		}
 	}
-	log.Printf("NDB database with %s id is deleted successfully", d.Id())
+
+	// 2. Fallback: individual VM cleanup for remaining nodes
+	for _, vmID := range vmIDs {
+		log.Printf("[INFO] NDB Cleanup: Triggering fallback VM cleanup for %s", vmID)
+		vmReq := &era.DeleteDBServerVMRequest{
+			Delete:            true,
+			DeleteVgs:         true,
+			DeleteVMSnapshots: true,
+		}
+		vmRes, err := conn.Service.DeleteDBServerVM(ctx, vmReq, vmID)
+		if err != nil {
+			return fmt.Errorf("VM %s cleanup failed to trigger: %s", vmID, err)
+		}
+		if vmRes != nil && vmRes.Operationid != "" {
+			if err := waitForOperation(ctx, conn, vmRes.Operationid, d.Timeout(schema.TimeoutDelete)); err != nil {
+				return fmt.Errorf("VM %s cleanup operation failed: %s", vmID, err)
+			}
+			log.Printf("[INFO] NDB Cleanup: VM cleanup successfully for %s", vmID)
+		}
+	}
 	return nil
 }
 
@@ -946,8 +1019,9 @@ func eraRefresh(ctx context.Context, conn *era.Client, opID era.GetOperationRequ
 		if err != nil {
 			return nil, "FAILED", err
 		}
-		if *opRes.Status == "5" || *opRes.Status == "4" {
-			if *opRes.Status == "5" {
+		// Status 5: COMPLETED, Status 17: WARNING (consider as COMPLETED for TF)
+		if *opRes.Status == "5" || *opRes.Status == "17" || *opRes.Status == "4" {
+			if *opRes.Status == "5" || *opRes.Status == "17" {
 				return opRes, "COMPLETED", nil
 			}
 			return opRes, "FAILED",
