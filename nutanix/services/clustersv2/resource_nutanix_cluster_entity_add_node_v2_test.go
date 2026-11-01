@@ -186,9 +186,7 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
 	}
 
   provisioner "local-exec" {
-    command = "ssh-keygen -f ~/.ssh/known_hosts -R ${local.clusters.nodes[1]};   sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no ${local.config.ssh_pe_username}@${local.clusters.nodes[1]} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.config.pe_username} password=${local.config.pe_password}'"
-
-    on_failure = continue
+    command = "for i in $(seq 1 20); do sshpass -p '${local.config.ssh_pe_password}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o PubkeyAuthentication=no -o ConnectTimeout=10 ${local.config.ssh_pe_username}@${local.clusters.nodes[1]} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.config.pe_username} password=${local.config.pe_password}' && exit 0; echo \"PE SSH/ncli reset attempt $$i failed, retrying in 15s...\"; sleep 15; done; echo \"PE SSH/ncli reset failed after retries\"; exit 1"
   }
 
   lifecycle {

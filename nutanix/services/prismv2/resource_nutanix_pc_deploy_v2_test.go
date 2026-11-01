@@ -23,7 +23,7 @@ func TestAccV2NutanixDeployPcResource_Basic(t *testing.T) {
 	name := fmt.Sprintf("tf-test-deploy-pc-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		PreCheck:                 func() { acc.TestAccNCPreCheckPEWorkflow(t) },
 		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

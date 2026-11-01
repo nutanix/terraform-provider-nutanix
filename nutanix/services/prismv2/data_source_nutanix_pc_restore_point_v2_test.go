@@ -13,7 +13,7 @@ const datasourceNameRestorePoint = "data.nutanix_pc_restore_point_v2.test"
 func TestAccV2NutanixRestorePointDatasource_FetchRestorePointClusterLocation(t *testing.T) {
 	var backupTargetExtID, domainManagerExtID = new(string), new(string)
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		PreCheck:                 func() { acc.TestAccNCPreCheckPEWorkflow(t) },
 		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// List backup targets and create if backup target not exists
@@ -85,7 +85,7 @@ func TestAccV2NutanixRestorePointDatasource_FetchRestorePointObjectStoreLocation
 
 	var backupTargetExtID, domainManagerExtID = new(string), new(string)
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		PreCheck:                 func() { acc.TestAccNCPreCheckPEWorkflow(t) },
 		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// List backup targets and create if backup target not exists
@@ -147,45 +147,6 @@ func TestAccV2NutanixRestorePointDatasource_FetchRestorePointObjectStoreLocation
 			},
 		},
 	})
-}
-
-func testAccCheckBackupTargetLastSyncTimeConfig() string {
-	return `
-# list Clusters
-data "nutanix_clusters_v2" "cls" {
-	filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')"
-}
-
-data "nutanix_clusters_v2" "clusters" {}
-
-
-locals {
-  domainManagerExtId = data.nutanix_clusters_v2.cls.cluster_entities.0.ext_id
-  clusterExtId = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-  ][0]
-}
-
-data "nutanix_pc_backup_targets_v2" "test" {
-  domain_manager_ext_id = local.domainManagerExtId
-}
-
-output "domainManagerExtID" {
-  value = local.domainManagerExtId
-}
-
-output "clusterExtID" {
-  value = local.clusterExtId
-}
-
-
-data "nutanix_pc_backup_target_v2" "test" {
-  domain_manager_ext_id = local.domainManagerExtId
-  ext_id = data.nutanix_pc_backup_targets_v2.test.backup_targets.0.ext_id
-}
-
-	`
 }
 
 func testAccFetchRestorePointClusterLocationConfig() string {

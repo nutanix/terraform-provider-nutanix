@@ -451,9 +451,10 @@ func userInfoSchema() *schema.Schema {
 					Computed: true,
 				},
 				"password": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
+					Type:      schema.TypeString,
+					Optional:  true,
+					Computed:  true,
+					Sensitive: true,
 				},
 				"cluster_name": {
 					Type:     schema.TypeString,

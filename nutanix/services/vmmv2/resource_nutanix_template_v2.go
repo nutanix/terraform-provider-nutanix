@@ -1971,9 +1971,10 @@ func schemaForTemplateUser() *schema.Resource {
 				Computed: true,
 			},
 			"password": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"is_force_reset_password_enabled": {
 				Type:     schema.TypeBool,

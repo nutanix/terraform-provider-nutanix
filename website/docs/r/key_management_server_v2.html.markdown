@@ -10,6 +10,8 @@ description: |-
 
 Creates a new key management server with the specified access credentials.
 
+> **WriteOnly credentials:** `client_secret`, `cert_pem`, `private_key`, and `ca_pem` are write-only. They are never stored in Terraform state. Re-supply them in configuration on every apply. Do not use `lifecycle.ignore_changes` on these attributes. See the [WriteOnly Credentials](/docs/providers/nutanix/guides/writeonly_credentials.html) guide for upgrade caveats.
+
 ## Example
 
 ```hcl
@@ -24,12 +26,6 @@ resource "nutanix_key_management_server_v2" "kms"{
       client_secret          = "7Z3uQ~vO4trhXk8B5M9qjwgT1pR2uC9yD1zF0wX3"
       credential_expiry_date = "2026-09-01"
     }
-  }
-  lifecycle {
-    ignore_changes = [
-      access_information[0].client_secret,
-      access_information[0].key_id
-    ]
   }
 }
 ```
@@ -56,7 +52,7 @@ The `azure_key_vault` supports the following:
 - `key_id`: - (Required) Master key identifier for the Azure Key Vault.
 - `tenant_id`: - (Required) Tetant identifier for the Azure Key Vault.
 - `client_id`: - (Required) Client identifier for the Azure Key Vault.
-- `client_secret`: - (Required) Client secret for the Azure Key Vault.
+- `client_secret`: - (Required, WriteOnly) Client secret for the Azure Key Vault.
 - `credential_expiry_date`: - (Required) When the client secret is going to expire.
 
 #### kmip_key_vault
@@ -64,9 +60,9 @@ The `azure_key_vault` supports the following:
 The `kmip_key_vault` supports the following:
 
 - `ca_name`: - (Required) Name of the CA.
-- `ca_pem`: - (Required) CA PEM.
-- `cert_pem`: - (Required) Cert PEM.
-- `private_key`: - (Required) Private key.
+- `ca_pem`: - (Required, WriteOnly) CA PEM.
+- `cert_pem`: - (Required, WriteOnly) Cert PEM.
+- `private_key`: - (Required, WriteOnly) Private key.
 - `endpoints`: - (Required) List of endpoints of the External Key Manager server.
   - `ip_address`: - (Required) IP address of the External Key Manager server.
     - `ipv4`: - (Optional) IPv4 address of the External Key Manager server.

@@ -76,6 +76,7 @@ func ResourceNutanixVolumeGroupIscsiClientV2() *schema.Resource {
 				Description: "iSCSI initiator client secret in case of CHAP authentication. This field should not be provided in case the authentication type is not set to CHAP..",
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 			},
 			"enabled_authentications": {
 				Description:  "The authentication type enabled for the Volume Group. This is an optional field. If omitted, authentication is not configured for the Volume Group. If this is set to CHAP, the target/client secret must be provided.",

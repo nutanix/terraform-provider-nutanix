@@ -10,6 +10,8 @@ Images node(s) and optionally creates clusters.
 
 Images node(s) and optionally creates clusters.
 
+> **WriteOnly credentials:** `ipmi_password`, `ucsm_password`, `xs_master_password`, `hypervisor_password`, `unc_password`, `fc_settings.fc_metadata.api_key`, and node-level `ipmi_password` are write-only. They are never stored in Terraform state. Re-supply them in configuration on every apply. Do not use `lifecycle.ignore_changes` on these attributes. See the [WriteOnly Credentials](/docs/providers/nutanix/guides/writeonly_credentials.html) guide for upgrade caveats.
+
 ## Example Usage
 
 ```hcl
@@ -124,7 +126,7 @@ The following arguments are supported:
 * `ipmi_netmask`: - (Required incase using IPMI based imaging either here or inside node spec) default IPMI netmask
 * `ipmi_gateway`: - (Required incase using IPMI based imaging either here or inside node spec) default IPMI gateway
 * `ipmi_user` : - (Required incase using IPMI based imaging either here or inside node spec) IPMI username.
-* `ipmi_password` : - (Required incase using IPMI based imaging either here or inside node spec) IPMI password.
+* `ipmi_password` : - (Required incase using IPMI based imaging either here or inside node spec, WriteOnly) IPMI password.
 * `cvm_gateway` : - (Required) CVM gateway.
 * `cvm_netmask` : - (Required) CVM netmask.
 * `hypervisor_gateway` : - (Required) Hypervisor gateway.
@@ -136,11 +138,11 @@ The following arguments are supported:
 * `hyperv_external_vnic` : - Hyperv External virtual network adapter name.
 * `xen_config_type` : - xen config types.
 * `ucsm_ip` : - UCSM IP address.
-* `ucsm_password` : - UCSM password.
+* `ucsm_password` : - (WriteOnly) UCSM password.
 * `hypervisor_iso` : - Hypervisor ISO.
 * `unc_path` : - UNC Path.
 * `fc_settings` : - Foundation Central specific settings.
-* `xs_master_password` : - xen server master password.
+* `xs_master_password` : - (WriteOnly) xen server master password.
 * `svm_rescue_args` : - Arguments to be passed to svm_rescue for AOS installation. Ensure that the arguments provided are supported by the AOS version used for imaging.
 * `xs_master_ip` : - xen server master IP address.
 * `hyperv_external_vswitch` : - Hyperv External vswitch name.
@@ -151,8 +153,8 @@ The following arguments are supported:
 * `hyperv_product_key` : - Hyperv product key.
 * `unc_username` : - UNC username.
 * `install_script` : - install script.
-* `hypervisor_password` : - Hypervisor password.
-* `unc_password` : - UNC password.
+* `hypervisor_password` : - (WriteOnly) Hypervisor password.
+* `unc_password` : - (WriteOnly) UNC password.
 * `xs_master_username` : - xen server master username.
 * `skip_hypervisor` : - If hypervisor installation should be skipped.
 * `ucsm_user` : - UCSM username.
@@ -169,8 +171,8 @@ The following arguments are supported for each block:
 The following arguments are supported for each node:
 * `ipmi_netmask` :- (Required incase using IPMI based imaging either here or outside blocks) IPMI netmask for this node
 * `ipmi_gateway` :- (Required incase using IPMI based imaging either here or outside blocks) IPMI gateway for this node 
-* `ipmi_password` :- (Required incase using IPMI based imaging either here or outside blocks) IPMI username
-* `ipmi_user` :- (Required incase using IPMI based imaging either here or outside blocks) IPMI password
+* `ipmi_password` :- (Required incase using IPMI based imaging either here or outside blocks, WriteOnly) IPMI password
+* `ipmi_user` :- (Required incase using IPMI based imaging either here or outside blocks) IPMI username
 * `ipmi_ip` :- (Required) IPMI IP address.
 * `hypervisor_hostname` :- (Required) Hypervisor Hostname.
 * `hypervisor_ip` :- (Required) Hypervisor IP address.
@@ -256,7 +258,7 @@ The following arguments are supported:
 
 * `fc_metadata` :- Foundation Central metadata which will be transferred to the newly imaged node.
 * `fc_metadata.fc_ip` :- IP address of foundation central.
-* `fc_metadata.api_key` :- api_key which the node uses to register itself with foundation central.
+* `fc_metadata.api_key` :- (WriteOnly) api_key which the node uses to register itself with foundation central.
 * `foundation_central` :- If this attribute is set to True, FC workflow will be invoked.
 
 

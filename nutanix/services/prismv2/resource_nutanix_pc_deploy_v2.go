@@ -3,6 +3,7 @@ package prismv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
@@ -40,7 +41,7 @@ func ResourceNutanixDeployPcV2() *schema.Resource {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
-				Elem:     schemaForPcConfig(),
+				Elem:     schemaForPcConfig(true),
 			},
 			"network": {
 				Type:     schema.TypeList,
@@ -63,6 +64,7 @@ func ResourceNutanixDeployPcV2Create(ctx context.Context, d *schema.ResourceData
 	deployPcBody := config.NewDomainManager()
 
 	if configData, ok := d.GetOk("config"); ok {
+		overlayPCConfigCredentialPasswords(d, configData)
 		deployPcBody.Config = expandPCConfig(configData)
 	}
 	if networkData, ok := d.GetOk("network"); ok {
@@ -130,7 +132,20 @@ func ResourceNutanixDeployPcV2Delete(ctx context.Context, d *schema.ResourceData
 
 // schema Functions
 
-func schemaForPcConfig() *schema.Resource {
+// schemaForPcConfig builds the PC config block schema.
+// writeOnlyCredentials must be true only for managed resources where the
+// credentials block is not under a Computed parent (e.g. deploy). Shared
+// computed/data-source schemas must pass false — WriteOnly cannot nest under Computed.
+func schemaForPcConfig(writeOnlyCredentials bool) *schema.Resource {
+	passwordSchema := &schema.Schema{
+		Type:      schema.TypeString,
+		Required:  true,
+		Sensitive: true,
+	}
+	if writeOnlyCredentials {
+		// Not persisted in plan/state (Terraform >= 1.11).
+		passwordSchema.WriteOnly = true
+	}
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"should_enable_lockdown_mode": {
@@ -243,21 +258,18 @@ func schemaForPcConfig() *schema.Resource {
 				},
 			},
 			"credentials": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 5, //nolint:gomnd
+				Type:      schema.TypeList,
+				Optional:  true,
+				Sensitive: true,
+				MinItems:  1,
+				MaxItems:  5, //nolint:gomnd
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"username": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"password": {
-							Type:      schema.TypeString,
-							Required:  true,
-							Sensitive: true,
-						},
+						"password": passwordSchema,
 					},
 				},
 			},
@@ -912,6 +924,36 @@ func expandCredentials(credentials []interface{}) []commonConfig.BasicAuth {
 		credentialsList = append(credentialsList, *credentialObj)
 	}
 	return credentialsList
+}
+
+// overlayPCConfigCredentialPasswords copies WriteOnly credential passwords from
+// raw config into the config nested maps used by expandPCConfig.
+func overlayPCConfigCredentialPasswords(d *schema.ResourceData, configData interface{}) {
+	cfgList, ok := configData.([]interface{})
+	if !ok || len(cfgList) == 0 || cfgList[0] == nil {
+		return
+	}
+	cfgMap, ok := cfgList[0].(map[string]interface{})
+	if !ok {
+		return
+	}
+	creds, ok := cfgMap["credentials"].([]interface{})
+	if !ok {
+		return
+	}
+	for i, cred := range creds {
+		if cred == nil {
+			continue
+		}
+		credMap, ok := cred.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		path := fmt.Sprintf("config.0.credentials.%d.password", i)
+		if pw, ok := common.GetWriteOnlyString(d, path); ok {
+			credMap["password"] = pw
+		}
+	}
 }
 
 func expandResourceConfig(resourceConfig interface{}) *config.DomainManagerResourceConfig {

@@ -99,6 +99,7 @@ func ResourceNutanixKeyManagementServerV2() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										Sensitive:    true,
+										WriteOnly:    true,
 										ValidateFunc: validation.StringLenBetween(8, 256),
 									},
 									"credential_expiry_date": {
@@ -110,8 +111,9 @@ func ResourceNutanixKeyManagementServerV2() *schema.Resource {
 										),
 									},
 									"truncated_client_secret": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Type:      schema.TypeString,
+										Computed:  true,
+										Sensitive: true,
 									},
 								},
 							},
@@ -127,11 +129,13 @@ func ResourceNutanixKeyManagementServerV2() *schema.Resource {
 										Type:      schema.TypeString,
 										Required:  true,
 										Sensitive: true,
+										WriteOnly: true,
 									},
 									"private_key": {
 										Type:      schema.TypeString,
 										Required:  true,
 										Sensitive: true,
+										WriteOnly: true,
 									},
 									"ca_name": {
 										Type:     schema.TypeString,
@@ -141,6 +145,7 @@ func ResourceNutanixKeyManagementServerV2() *schema.Resource {
 										Type:      schema.TypeString,
 										Required:  true,
 										Sensitive: true,
+										WriteOnly: true,
 									},
 									"endpoint_url": {
 										Type:     schema.TypeSet,
@@ -177,7 +182,9 @@ func ResourceNutanixKeyManagementServerV2Create(ctx context.Context, d *schema.R
 		body.Name = utils.StringPtr(name.(string))
 	}
 	if accessInfo, ok := d.GetOk("access_information"); ok {
-		accessInfoVal, expandErr := expandAccessInformation(accessInfo.([]interface{}))
+		accessInfoList := accessInfo.([]interface{})
+		overlayKMSWriteOnlySecrets(d, accessInfoList)
+		accessInfoVal, expandErr := expandAccessInformation(accessInfoList)
 		if expandErr != nil {
 			return diag.FromErr(expandErr)
 		}
@@ -268,14 +275,7 @@ func ResourceNutanixKeyManagementServerV2Read(ctx context.Context, d *schema.Res
 	if flattenErr != nil {
 		return diag.FromErr(flattenErr)
 	}
-	// Preserve sensitive values from config/state (API may not return them).
-	// This avoids perpetual diffs for required sensitive fields like client_secret.
-	if v, ok := d.GetOk("access_information.0.azure_key_vault.0.client_secret"); ok && len(accessInfo) > 0 {
-		if azureList, ok2 := accessInfo[0]["azure_key_vault"].([]map[string]interface{}); ok2 && len(azureList) > 0 {
-			azureList[0]["client_secret"] = v.(string)
-			accessInfo[0]["azure_key_vault"] = azureList
-		}
-	}
+	// client_secret / private_key are WriteOnly; do not rehydrate them into state.
 	if err := d.Set("access_information", accessInfo); err != nil {
 		return diag.FromErr(err)
 	}
@@ -324,7 +324,9 @@ func ResourceNutanixKeyManagementServerV2Update(ctx context.Context, d *schema.R
 	// Update access_information if it has changed
 	if d.HasChange("access_information") {
 		if v, ok := d.GetOk("access_information"); ok {
-			accessInfo, expandErr := expandAccessInformation(v.([]interface{}))
+			accessInfoList := v.([]interface{})
+			overlayKMSWriteOnlySecrets(d, accessInfoList)
+			accessInfo, expandErr := expandAccessInformation(accessInfoList)
 			if expandErr != nil {
 				return diag.FromErr(expandErr)
 			}
@@ -473,6 +475,34 @@ func ResourceNutanixKeyManagementServerV2Delete(ctx context.Context, d *schema.R
 	log.Printf("[DEBUG] Delete Key Management Server Task Details: %s", string(aJSON))
 
 	return nil
+}
+
+// overlayKMSWriteOnlySecrets copies WriteOnly secret fields from raw config into
+// the access_information nested maps used by expandAccessInformation.
+func overlayKMSWriteOnlySecrets(d *schema.ResourceData, accessInfo []interface{}) {
+	if len(accessInfo) == 0 || accessInfo[0] == nil {
+		return
+	}
+	accessMap, ok := accessInfo[0].(map[string]interface{})
+	if !ok {
+		return
+	}
+	if azureList, ok := accessMap["azure_key_vault"].([]interface{}); ok && len(azureList) > 0 && azureList[0] != nil {
+		if azureMap, ok := azureList[0].(map[string]interface{}); ok {
+			if v, ok := common.GetWriteOnlyString(d, "access_information.0.azure_key_vault.0.client_secret"); ok {
+				azureMap["client_secret"] = v
+			}
+		}
+	}
+	if kmipList, ok := accessMap["kmip_key_vault"].([]interface{}); ok && len(kmipList) > 0 && kmipList[0] != nil {
+		if kmipMap, ok := kmipList[0].(map[string]interface{}); ok {
+			for _, field := range []string{"ca_pem", "cert_pem", "private_key"} {
+				if v, ok := common.GetWriteOnlyString(d, "access_information.0.kmip_key_vault.0."+field); ok {
+					kmipMap[field] = v
+				}
+			}
+		}
+	}
 }
 
 func expandAccessInformation(accessInfo []interface{}) (interface{}, error) {

@@ -83,8 +83,10 @@ func ResourceNutanixClusterPCRegistrationV2() *schema.Resource {
 																			Required: true,
 																		},
 																		"password": {
-																			Type:     schema.TypeString,
-																			Required: true,
+																			Type:      schema.TypeString,
+																			Required:  true,
+																			Sensitive: true,
+																			WriteOnly: true,
 																		},
 																	},
 																},
@@ -138,8 +140,10 @@ func ResourceNutanixClusterPCRegistrationV2() *schema.Resource {
 																			Required: true,
 																		},
 																		"password": {
-																			Type:     schema.TypeString,
-																			Required: true,
+																			Type:      schema.TypeString,
+																			Required:  true,
+																			Sensitive: true,
+																			WriteOnly: true,
 																		},
 																	},
 																},
@@ -183,7 +187,7 @@ func ResourceNutanixClusterPCRegistrationV2() *schema.Resource {
 			"config": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     schemaForPcConfig(),
+				Elem:     schemaForPcConfig(false),
 			},
 			"is_registered_with_hosting_cluster": {
 				Type:     schema.TypeBool,
@@ -251,6 +255,10 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 		log.Printf("[DEBUG] %v is selected\n", domainManagerRemoteClusterData)
 		domainManagerRemoteClusterObj := prismManagment.NewDomainManagerRemoteClusterSpec()
 		if remoteClusterData := domainManagerRemoteClusterData["remote_cluster"].([]interface{})[0].(map[string]interface{}); remoteClusterData != nil {
+			// WriteOnly password is empty via d.Get; overlay from raw config.
+			overlayRemoteClusterAuthPassword(d,
+				"remote_cluster.0.domain_manager_remote_cluster_spec.0.remote_cluster.0.credentials.0.authentication.0.password",
+				remoteClusterData)
 			domainManagerRemoteClusterObj.RemoteCluster = expandDomainManagerRemoteCluster(remoteClusterData)
 		}
 		if cloudType, ok := domainManagerRemoteClusterData["cloud_type"].(string); ok {
@@ -269,6 +277,10 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 		log.Printf("[DEBUG] %v is selected", aosRemoteClusterData)
 		aosRemoteClusterObj := prismManagment.NewAOSRemoteClusterSpec()
 		if remoteClusterData := aosRemoteClusterData["remote_cluster"].([]interface{})[0].(map[string]interface{}); remoteClusterData != nil {
+			// WriteOnly password is empty via d.Get; overlay from raw config.
+			overlayRemoteClusterAuthPassword(d,
+				"remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.credentials.0.authentication.0.password",
+				remoteClusterData)
 			aosRemoteClusterObj.RemoteCluster = expandDomainManagerRemoteCluster(remoteClusterData)
 		}
 		err = remoteClusterBodySpec.SetValue(*aosRemoteClusterObj)
@@ -398,6 +410,32 @@ func ResourceNutanixClusterPCRegistrationV2Update(ctx context.Context, d *schema
 
 func ResourceNutanixClusterPCRegistrationV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
+}
+
+// overlayRemoteClusterAuthPassword copies a WriteOnly authentication password
+// from raw config into the nested credentials map used by expand helpers.
+func overlayRemoteClusterAuthPassword(d *schema.ResourceData, path string, remoteClusterData map[string]interface{}) {
+	password, ok := common.GetWriteOnlyString(d, path)
+	if !ok || remoteClusterData == nil {
+		return
+	}
+	creds, ok := remoteClusterData["credentials"].([]interface{})
+	if !ok || len(creds) == 0 || creds[0] == nil {
+		return
+	}
+	credMap, ok := creds[0].(map[string]interface{})
+	if !ok {
+		return
+	}
+	auth, ok := credMap["authentication"].([]interface{})
+	if !ok || len(auth) == 0 || auth[0] == nil {
+		return
+	}
+	authMap, ok := auth[0].(map[string]interface{})
+	if !ok {
+		return
+	}
+	authMap["password"] = password
 }
 
 func expandDomainManagerRemoteCluster(cluster map[string]interface{}) *prismManagment.RemoteClusterSpec {

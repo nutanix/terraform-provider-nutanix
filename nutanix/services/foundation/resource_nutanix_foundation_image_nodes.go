@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/foundation"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -60,9 +61,10 @@ func ResourceFoundationImageNodes() *schema.Resource {
 				ForceNew: true,
 			},
 			"ipmi_password": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				WriteOnly: true,
 			},
 			"cvm_gateway": {
 				Type:     schema.TypeString,
@@ -85,9 +87,10 @@ func ResourceFoundationImageNodes() *schema.Resource {
 				ForceNew: true,
 			},
 			"ucsm_password": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				WriteOnly: true,
 			},
 			"hypervisor_iso": {
 				Type:     schema.TypeList,
@@ -208,9 +211,10 @@ func ResourceFoundationImageNodes() *schema.Resource {
 										ForceNew: true,
 									},
 									"api_key": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
+										Type:      schema.TypeString,
+										Required:  true,
+										Sensitive: true,
+										WriteOnly: true,
 									},
 								},
 							},
@@ -224,9 +228,10 @@ func ResourceFoundationImageNodes() *schema.Resource {
 				},
 			},
 			"xs_master_password": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				WriteOnly: true,
 			},
 			"svm_rescue_args": {
 				Type:     schema.TypeList,
@@ -645,9 +650,10 @@ func ResourceFoundationImageNodes() *schema.Resource {
 										ForceNew: true,
 									},
 									"ipmi_password": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
+										Type:      schema.TypeString,
+										Optional:  true,
+										Sensitive: true,
+										WriteOnly: true,
 									},
 									"ipmi_user": {
 										Type:     schema.TypeString,
@@ -686,14 +692,16 @@ func ResourceFoundationImageNodes() *schema.Resource {
 				ForceNew: true,
 			},
 			"hypervisor_password": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				WriteOnly: true,
 			},
 			"unc_password": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				WriteOnly: true,
 			},
 			"xs_master_username": {
 				Type:     schema.TypeString,
@@ -762,9 +770,8 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 	if ok {
 		request.LayoutEggUUID = (layoutEggUUID.(string))
 	}
-	ipmiPass, ok := d.GetOk("ipmi_password")
-	if ok {
-		request.IpmiPassword = ipmiPass.(string)
+	if ipmiPass, ok := common.GetWriteOnlyString(d, "ipmi_password"); ok {
+		request.IpmiPassword = ipmiPass
 	}
 	if ipmiNetmask, ipmiNetOk := d.GetOk("ipmi_netmask"); ipmiNetOk {
 		request.IPMINetmask = ipmiNetmask.(string)
@@ -792,9 +799,8 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 		request.UcsmIP = (ucsmIP.(string))
 	}
 
-	ucsmPassword, ok := d.GetOk("ucsm_password")
-	if ok {
-		request.UcsmPassword = (ucsmPassword.(string))
+	if ucsmPassword, ok := common.GetWriteOnlyString(d, "ucsm_password"); ok {
+		request.UcsmPassword = ucsmPassword
 	}
 
 	uncPath, ok := d.GetOk("unc_path")
@@ -807,9 +813,8 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 		request.HypervisorNetmask = (hypervisorNetmask.(string))
 	}
 
-	xsMasterPassword, ok := d.GetOk("xs_master_password")
-	if ok {
-		request.XsMasterPassword = (xsMasterPassword.(string))
+	if xsMasterPassword, ok := common.GetWriteOnlyString(d, "xs_master_password"); ok {
+		request.XsMasterPassword = xsMasterPassword
 	}
 
 	cvmNetmask, ok := d.GetOk("cvm_netmask")
@@ -857,14 +862,12 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 		request.IpmiUser = (ipmiUser.(string))
 	}
 
-	hypervisorPassword, ok := d.GetOk("hypervisor_password")
-	if ok {
-		request.HypervisorPassword = (hypervisorPassword.(string))
+	if hypervisorPassword, ok := common.GetWriteOnlyString(d, "hypervisor_password"); ok {
+		request.HypervisorPassword = hypervisorPassword
 	}
 
-	uncPassword, ok := d.GetOk("unc_password")
-	if ok {
-		request.UncPassword = (uncPassword.(string))
+	if uncPassword, ok := common.GetWriteOnlyString(d, "unc_password"); ok {
+		request.UncPassword = uncPassword
 	}
 
 	xsMasterUsername, ok := d.GetOk("xs_master_username")
@@ -1030,7 +1033,10 @@ func expandFcSetting(d *schema.ResourceData) (*foundation.FcSettings, error) {
 			if val, ok := fcmeta["fc_ip"]; ok {
 				fcMetadata.FcIP = (val.(string))
 			}
-			if val, ok := fcmeta["api_key"]; ok {
+			if apiKey, ok := common.GetWriteOnlyString(d, "fc_settings.0.fc_metadata.0.api_key"); ok {
+				fcMetadata.APIKey = apiKey
+			} else if val, ok := fcmeta["api_key"]; ok {
+				// Fallback for unit tests that call expand without raw config.
 				fcMetadata.APIKey = val.(string)
 			}
 			fc.FcMetadata = fcMetadata
@@ -1328,7 +1334,7 @@ func expandNodes(pr interface{}) []*foundation.Node {
 			nodeList.IpmiUser = (ipmiUser.(string))
 		}
 		if ipmiPassword, ok := node["ipmi_password"]; ok {
-			nodeList.IpmiPassword = (ipmiPassword.(string))
+			nodeList.IpmiPassword = ipmiPassword.(string)
 		}
 		nodes[i] = nodeList
 	}
@@ -1346,6 +1352,16 @@ func expandBlocks(d *schema.ResourceData) ([]*foundation.Block, error) {
 			entry := v.(map[string]interface{})
 
 			if nodes, nodesok := entry["nodes"]; nodesok {
+				if nodeList, ok := nodes.([]interface{}); ok {
+					for ni, n := range nodeList {
+						if nm, ok := n.(map[string]interface{}); ok {
+							path := fmt.Sprintf("blocks.%d.nodes.%d.ipmi_password", k, ni)
+							if pw, ok := common.GetWriteOnlyString(d, path); ok {
+								nm["ipmi_password"] = pw
+							}
+						}
+					}
+				}
 				block.Nodes = expandNodes(nodes)
 			}
 

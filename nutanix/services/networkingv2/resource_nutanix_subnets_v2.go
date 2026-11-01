@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -1649,16 +1650,30 @@ func shareSubnetWithProject(ctx context.Context, meta interface{}, conn *network
 
 	// calling group API to poll for completion of task
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the subnet to be updated
+	// Wait for the share task itself to succeed. Create uses TimeoutCreate
+	// but share runs after create with TimeoutUpdate; fall back to create
+	// timeout when update is unset so create+share still has a bound.
+	timeout := d.Timeout(schema.TimeoutUpdate)
+	if timeout == 0 {
+		timeout = d.Timeout(schema.TimeoutCreate)
+	}
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
+		Timeout: timeout,
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return fmt.Errorf("%w", errWaitTask)
+		return fmt.Errorf("error waiting for share subnet task (%s) to succeed: %w",
+			utils.StringValue(taskUUID), errWaitTask)
+	}
+
+	// Task SUCCEEDED is not enough for VMM CreateVm: networking/VMM can still
+	// race and report "subnet is not found" until SharedWithProjects reflects
+	// the project. Poll GET subnet until the association is visible.
+	if err := waitForSubnetProjectShareState(ctx, conn, d.Id(), projectID, true, timeout); err != nil {
+		return err
 	}
 
 	log.Printf("[DEBUG] Sharing subnet %s with project %s success", d.Id(), projectID)
@@ -1699,18 +1714,79 @@ func unshareSubnetWithProject(ctx context.Context, meta interface{}, conn *netwo
 	// calling group API to poll for completion of task
 	taskconn := meta.(*conns.Client).PrismAPI
 
-	// Wait for the subnet to be updated
+	timeout := d.Timeout(schema.TimeoutUpdate)
+	if timeout == 0 {
+		timeout = d.Timeout(schema.TimeoutCreate)
+	}
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: common.TaskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
+		Timeout: timeout,
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return fmt.Errorf("%w", errWaitTask)
+		return fmt.Errorf("error waiting for unshare subnet task (%s) to succeed: %w",
+			utils.StringValue(taskUUID), errWaitTask)
+	}
+
+	if err := waitForSubnetProjectShareState(ctx, conn, d.Id(), projectID, false, timeout); err != nil {
+		return err
 	}
 
 	log.Printf("[DEBUG] Unsharing subnet %s with project %s success", d.Id(), projectID)
 	return nil
+}
+
+// waitForSubnetProjectShareState re-reads the subnet until SharedWithProjects
+// matches the expected share/unshare outcome. Needed because Prism task
+// SUCCEEDED can race ahead of VMM subnet discovery / project association.
+func waitForSubnetProjectShareState(ctx context.Context, conn *networking.Client, subnetExtID, projectID string, expectShared bool, timeout time.Duration) error {
+	if timeout == 0 {
+		timeout = 5 * time.Minute
+	}
+	want := "absent"
+	if expectShared {
+		want = "present"
+	}
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"pending"},
+		Target:  []string{"ready"},
+		Refresh: func() (interface{}, string, error) {
+			getReq := import5.GetSubnetByIdRequest{
+				ExtId: utils.StringPtr(subnetExtID),
+			}
+			resp, err := conn.SubnetAPIInstance.GetSubnetById(ctx, &getReq)
+			if err != nil {
+				log.Printf("[DEBUG] Waiting for subnet %s project %s share state (%s): get error: %v",
+					subnetExtID, projectID, want, err)
+				return nil, "pending", nil
+			}
+			subnet := resp.Data.GetValue().(import1.Subnet)
+			shared := subnetSharedWithProject(subnet.SharedWithProjects, projectID)
+			log.Printf("[DEBUG] Subnet %s SharedWithProjects=%v; project %s shared=%v (want %s)",
+				subnetExtID, subnet.SharedWithProjects, projectID, shared, want)
+			if shared == expectShared {
+				return subnet, "ready", nil
+			}
+			return nil, "pending", nil
+		},
+		Timeout:    timeout,
+		Delay:      2 * time.Second,
+		MinTimeout: 2 * time.Second,
+	}
+	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
+		return fmt.Errorf("timed out waiting for subnet %s project %s share association to be %s: %w",
+			subnetExtID, projectID, want, err)
+	}
+	return nil
+}
+
+func subnetSharedWithProject(shared []string, projectID string) bool {
+	for _, p := range shared {
+		if p == projectID {
+			return true
+		}
+	}
+	return false
 }
