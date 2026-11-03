@@ -378,6 +378,7 @@ The `disks` attribute supports the following:
 * `storage_config`: (Optional) Storage configuration for VM disks
 * `storage_config.is_flash_mode_enabled`: Indicates whether the virtual disk is pinned to the hot tier or not.
 * `data_source`: (Optional) A reference to a disk or image that contains the contents of a disk.
+* `serial_id`: (Computed) The disk serial ID, used to identify the disk in the hypervisor. The guest OS sees it in the disk's SCSI identity, for example `/dev/disk/by-id/scsi-SNUTANIX_VDISK_<serial_id>` on Linux, so it can be used to map a Terraform disk to a guest device.
 
 ### backing_info.vm_disk.data_source
 * `reference`: (Required) Reference to image or vm disk

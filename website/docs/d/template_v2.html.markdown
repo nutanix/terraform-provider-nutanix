@@ -180,6 +180,7 @@ The links attribute supports the following:
 * `storage_config.is_flash_mode_enabled`: Indicates whether the virtual disk is pinned to the hot tier or not.
 * `data_source`: A reference to a disk or image that contains the contents of a disk.
 * `is_migration_in_progress`: Indicates if the disk is undergoing migration to another container.
+* `serial_id`: The disk serial ID, used to identify the disk in the hypervisor. The guest OS sees it in the disk's SCSI identity, for example `/dev/disk/by-id/scsi-SNUTANIX_VDISK_<serial_id>` on Linux.
 
 
 ### vtpm_config
@@ -218,6 +219,7 @@ The links attribute supports the following:
 * `storage_config.is_flash_mode_enabled`: Indicates whether the virtual disk is pinned to the hot tier or not.
 * `data_source`: A reference to a disk or image that contains the contents of a disk.
 * `is_migration_in_progress`: Indicates if the disk is undergoing migration to another container.
+* `serial_id`: The disk serial ID, used to identify the disk in the hypervisor. The guest OS sees it in the disk's SCSI identity, for example `/dev/disk/by-id/scsi-SNUTANIX_VDISK_<serial_id>` on Linux.
 
 ### backing_info.vm_disk.data_source
 * `reference`: Reference to image or vm disk

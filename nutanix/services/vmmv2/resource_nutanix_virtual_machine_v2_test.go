@@ -140,6 +140,7 @@ func TestAccV2NutanixVmsResource_DiskWithDatasource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.index", "0"),
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.backing_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.backing_info.0.vm_disk.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "disks.0.backing_info.0.vm_disk.0.serial_id"),
 					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
 				),
 			},
