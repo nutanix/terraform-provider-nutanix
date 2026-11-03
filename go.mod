@@ -1,6 +1,6 @@
 module github.com/terraform-providers/terraform-provider-nutanix
 
-go 1.25.13
+go 1.27.3
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
@@ -10,22 +10,22 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.1
 	github.com/jinzhu/copier v0.4.0
 	github.com/masterzen/winrm v0.0.0-20260407182533-5570be7f80cf
-	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.3.1
-	github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4 v4.3.1
-	github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4 v4.4.1
-	github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4 v4.1.2-beta.3
-	github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.3.1
-	github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.3.1
-	github.com/nutanix/ntnx-api-golang-clients/multidomain-go-client/v4 v4.4.1-beta.1
-	github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.4.1
-	github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4 v4.1.1
-	github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.4.1
-	github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4 v4.1.2
-	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.3.1
-	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.3.1
+	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.3.2
+	github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4 v4.3.2
+	github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4 v4.4.2
+	github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4 v4.1.3-beta.3
+	github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.3.2
+	github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.3.2
+	github.com/nutanix/ntnx-api-golang-clients/multidomain-go-client/v4 v4.4.2-beta.1
+	github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.4.2
+	github.com/nutanix/ntnx-api-golang-clients/objects-go-client/v4 v4.1.2
+	github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.4.2
+	github.com/nutanix/ntnx-api-golang-clients/security-go-client/v4 v4.2.1
+	github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4 v4.3.2
+	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.3.2
 	github.com/spf13/cast v1.10.0
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/crypto v0.54.0
+	golang.org/x/crypto v0.57.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -87,15 +87,15 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/zclconf/go-cty v1.18.1 // indirect
-	golang.org/x/mod v0.37.0 // indirect
-	golang.org/x/net v0.57.0 // indirect
-	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.40.0 // indirect
-	golang.org/x/tools v0.47.0 // indirect
+	golang.org/x/mod v0.41.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
+	golang.org/x/tools v0.49.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260610212136-7ab31c22f7ad // indirect
-	google.golang.org/grpc v1.82.1 // indirect
+	google.golang.org/grpc v1.83.2 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

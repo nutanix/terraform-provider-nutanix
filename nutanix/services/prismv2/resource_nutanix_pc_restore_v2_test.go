@@ -30,7 +30,7 @@ func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
 
 	pcDetails := make(map[string]interface{})
 
-	t.Run("pre request: backup target and restore source ", func(t *testing.T) {
+	if !t.Run("pre request: backup target and restore source ", func(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreventPostDestroyRefresh: true,
 			PreCheck:                  func() { acc.TestAccPreCheck(t) },
@@ -59,10 +59,19 @@ func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
 				},
 			},
 		})
-	})
+	}) {
+		t.Fatalf("pre-request setup failed; restore IDs were not populated")
+	}
+
+	if restoreSourceExtID == nil || *restoreSourceExtID == "" {
+		t.Fatal("restoreSourceExtID was not populated")
+	}
+	if domainManagerExtID == nil || *domainManagerExtID == "" {
+		t.Fatal("domainManagerExtID was not populated")
+	}
 
 	// fetch the restore point and extract the pc details
-	t.Run("power of PC", func(t *testing.T) {
+	if !t.Run("power of PC", func(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreventPostDestroyRefresh: true,
 			PreCheck:                  func() { acc.TestAccPreCheck(t) },
@@ -110,7 +119,9 @@ func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
 				},
 			},
 		})
-	})
+	}) {
+		t.Fatalf("power off PC sub-test failed; restorePcConfig was not populated")
+	}
 
 	// Restore PC Sub-test Case
 	t.Run("PC restore test: ", func(t *testing.T) {
@@ -159,7 +170,7 @@ func TestAccV2NutanixRestorePCResource_ObjectRestoreSourceRestorePC(t *testing.T
 
 	pcDetails := make(map[string]interface{})
 
-	t.Run("pre request: backup target and restore source ", func(t *testing.T) {
+	if !t.Run("pre request: backup target and restore source ", func(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreventPostDestroyRefresh: true,
 			PreCheck:                  func() { acc.TestAccPreCheck(t) },
@@ -188,10 +199,19 @@ func TestAccV2NutanixRestorePCResource_ObjectRestoreSourceRestorePC(t *testing.T
 				},
 			},
 		})
-	})
+	}) {
+		t.Fatalf("pre-request setup failed; restore IDs were not populated")
+	}
+
+	if restoreSourceExtID == nil || *restoreSourceExtID == "" {
+		t.Fatal("restoreSourceExtID was not populated")
+	}
+	if domainManagerExtID == nil || *domainManagerExtID == "" {
+		t.Fatal("domainManagerExtID was not populated")
+	}
 
 	// fetch the restore point and extract the pc details
-	t.Run("power off PC: ", func(t *testing.T) {
+	if !t.Run("power off PC: ", func(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreventPostDestroyRefresh: true,
 			PreCheck:                  func() { acc.TestAccPreCheck(t) },
@@ -239,7 +259,9 @@ func TestAccV2NutanixRestorePCResource_ObjectRestoreSourceRestorePC(t *testing.T
 				},
 			},
 		})
-	})
+	}) {
+		t.Fatalf("power off PC sub-test failed; restorePcConfig was not populated")
+	}
 
 	// Restore PC Sub-test Case
 	t.Run("PC restore test: ", func(t *testing.T) {

@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_resource_groups_v2"
+page_title: "NUTANIX: nutanix_resource_groups_v2 (Beta)"
 sidebar_current: "docs-nutanix-datasource-resource-groups-v2"
 description: |-
   List the resource groups defined on the system.
 ---
 
-# nutanix_resource_groups_v2
+# nutanix_resource_groups_v2 (Beta)
+
+-> **Note:** This data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The data source and its behavior may change in future releases as the SDK API evolves.
 
 List the resource groups defined on the system.
 

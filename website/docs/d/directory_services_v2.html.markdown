@@ -6,7 +6,7 @@ description: |-
     This operation retrieves a list of all Directory Service(s).
 ---
 
-# nutanix_pbr
+# nutanix_directory_services_v2
 
 Provides a datasource to retrieve all Directory Service(s).
 

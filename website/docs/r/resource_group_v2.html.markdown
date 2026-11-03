@@ -1,12 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_resource_group_v2"
+page_title: "NUTANIX: nutanix_resource_group_v2 (Beta)"
 sidebar_current: "docs-nutanix-resource-resource-group-v2"
 description: |-
   Creates and manages a resource group.
 ---
 
-# nutanix_resource_group_v2
+# nutanix_resource_group_v2 (Beta)
+
+-> **Note:** This resource is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
 
 Creates and manages a resource group.
 

@@ -300,7 +300,7 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 
 	body.RemoteCluster = remoteClusterBodySpec
 
-	aJSON, _ := json.Marshal(body)
+	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] PC Registration Request Body: %s", string(aJSON))
 
 	registerRequest := import3.RegisterRequest{

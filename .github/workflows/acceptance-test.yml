@@ -6,6 +6,8 @@ on:
 jobs:
   Acceptance-Tests:
     runs-on: self-hosted
+    # Default job limit is 6h. Self-hosted runners allow up to 5 days.
+    timeout-minutes: 1440
     if: github.event_name == 'repository_dispatch'
     steps:
       - name: Trigger Event
@@ -19,9 +21,9 @@ jobs:
       - name: Install base tooling
         run: |
           export DEBIAN_FRONTEND=noninteractive
-          apt-get update
-          apt-get install -y --no-install-recommends \
-            curl ca-certificates git unzip sshpass build-essential sudo nmap
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            curl ca-certificates git unzip sshpass jq build-essential sudo nmap
 
       - name: Pull Request Info
         run: |
@@ -44,9 +46,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25.13"
+          go-version: "1.27.3"
           check-latest: true
-          cache: true # Enables module caching
+          cache: false
 
       - name: Verify Go Installation
         run: |
@@ -58,14 +60,10 @@ jobs:
           echo "GOPATH=$HOME/go" >> $GITHUB_ENV
           echo "PATH=$HOME/go/bin:$PATH" >> $GITHUB_ENV
 
-      - name: Cache Go Modules
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/go/pkg/mod
-          key: go-mod-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            go-mod-${{ runner.os }}-
+      # Module cache is off (setup-go cache: false). A separate actions/cache
+      # on ~/go/pkg/mod conflicts on self-hosted runners
+      # when the directory already exists ("tar: Cannot open: File exists") and
+      # actions/cache@v3 also triggers the Node 20 deprecation warning.
 
       - name: Install Dependencies
         run: |
@@ -74,12 +72,14 @@ jobs:
 
       - name: Install unzip and sshpass
         run: |
-          sudo apt-get update && sudo apt-get install -y unzip sshpass
+          sudo apt-get update && sudo apt-get install -y unzip sshpass jq
 
-      - name: Setup Terraform v1.10.5
+      # Write-only attributes require Terraform >= 1.11. 1.10 rejects non-null
+      # values such as ssl certificate passphrase and private_key.
+      - name: Setup Terraform v1.11.4
         run: |
           set -e  # Exit on error
-          TERRAFORM_VERSION="1.10.5"
+          TERRAFORM_VERSION="1.11.4"
           curl -fsSL -o terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
 
           if [ ! -f terraform.zip ]; then
@@ -93,27 +93,83 @@ jobs:
           terraform version
 
       - name: Set environment variables
+        env:
+          # Single dotenv-style secret (same format as local .env). Keep
+          # V4_CONFIG / PC_CONFIG / FOUNDATION_CONFIG as separate secrets
+          # for the JSON fixture files.
+          ACC_TEST_ENV: ${{ secrets.ENV }}
         run: |
-            echo "NUTANIX_PE_PASSWORD=${{ secrets.NUTANIX_PE_PASSWORD }}" >> $GITHUB_ENV
-            echo "NUTANIX_PE_USERNAME=${{ secrets.NUTANIX_PE_USERNAME }}" >> $GITHUB_ENV
-            echo "NUTANIX_USERNAME=${{ secrets.NUTANIX_USERNAME }}" >> $GITHUB_ENV
-            echo "NUTANIX_PASSWORD=${{ secrets.NUTANIX_PASSWORD }}" >> $GITHUB_ENV
-            echo "NUTANIX_API_KEY=${{ secrets.NUTANIX_API_KEY }}" >> $GITHUB_ENV
-            echo "NUTANIX_INSECURE=${{ secrets.NUTANIX_INSECURE }}" >> $GITHUB_ENV
-            echo "NUTANIX_PORT=${{ secrets.NUTANIX_PORT }}" >> $GITHUB_ENV
-            echo "NUTANIX_ENDPOINT=${{ secrets.NUTANIX_ENDPOINT }}" >> $GITHUB_ENV
-            echo "NUTANIX_STORAGE_CONTAINER=${{ secrets.NUTANIX_STORAGE_CONTAINER }}" >> $GITHUB_ENV
-            echo "FOUNDATION_ENDPOINT=${{ secrets.FOUNDATION_ENDPOINT }}" >> $GITHUB_ENV
-            echo "FOUNDATION_PORT=${{ secrets.FOUNDATION_PORT }}" >> $GITHUB_ENV
-            echo "NOS_IMAGE_TEST_URL=${{ secrets.NOS_IMAGE_TEST_URL }}" >> $GITHUB_ENV
-            echo "NDB_ENDPOINT=${{ secrets.NDB_ENDPOINT }}" >> $GITHUB_ENV
-            echo "NDB_PASSWORD=${{ secrets.NDB_PASSWORD }}" >> $GITHUB_ENV
-            echo "NDB_USERNAME=${{ secrets.NDB_USERNAME }}" >> $GITHUB_ENV
-            echo "PROTECTION_RULES_TEST_FLAG=${{ secrets.PROTECTION_RULES_TEST_FLAG }}" >> $GITHUB_ENV
-            echo "CGO_ENABLED=${{ secrets.CGO_ENABLED }}" >> $GITHUB_ENV
-            echo "TF_LOG_SDK_HELPER_RESOURCE=OFF" >> $GITHUB_ENV
-            echo "TF_LOG_SDK=OFF" >> $GITHUB_ENV
-            echo "TF_LOG_CORE=OFF" >> $GITHUB_ENV
+            set -euo pipefail
+
+            if [ -z "${ACC_TEST_ENV}" ]; then
+              echo "ERROR: repository secret ENV is missing or empty."
+              echo "Create Actions secret ENV with the same KEY=VALUE content as local .env"
+              echo "(TF_ACC, NUTANIX_*, NDB_*, etc.). JSON fixtures stay in V4_CONFIG / PC_CONFIG."
+              exit 1
+            fi
+
+            ENV_FILE="${RUNNER_TEMP}/acc-test.env"
+            printf '%s\n' "$ACC_TEST_ENV" > "$ENV_FILE"
+
+            # Parse dotenv into GITHUB_ENV. Whitespace-only and "" / '' → empty.
+            # Skips blank lines and full-line comments. Strips optional quotes
+            # and unquoted trailing " # comment" (same style as local .env).
+            while IFS= read -r line || [ -n "$line" ]; do
+              # trim CR
+              line="${line%$'\r'}"
+              # skip blank / comment lines
+              trimmed="${line#"${line%%[![:space:]]*}"}"
+              [ -z "$trimmed" ] && continue
+              case "$trimmed" in
+                \#*) continue ;;
+              esac
+
+              case "$trimmed" in
+                *=*) ;;
+                *) continue ;;
+              esac
+
+              key="${trimmed%%=*}"
+              val="${trimmed#*=}"
+              # trim key
+              key="${key#"${key%%[![:space:]]*}"}"
+              key="${key%"${key##*[![:space:]]}"}"
+              [ -z "$key" ] && continue
+              case "$key" in
+                [A-Za-z_]*) ;;
+                *) continue ;;
+              esac
+
+              # trim value leading space
+              val="${val#"${val%%[![:space:]]*}"}"
+              # strip unquoted trailing inline comment
+              if [[ "$val" != \"*\" && "$val" != \'*\' ]]; then
+                val="${val%%\#*}"
+                val="${val%"${val##*[![:space:]]}"}"
+              fi
+              # strip surrounding quotes
+              if [[ "$val" == \"*\" && "$val" == *\" ]]; then
+                val="${val:1:${#val}-2}"
+              elif [[ "$val" == \'*\' && "$val" == *\' ]]; then
+                val="${val:1:${#val}-2}"
+              fi
+              # whitespace-only → empty (GitHub secret placeholder " ")
+              val_trim="${val#"${val%%[![:space:]]*}"}"
+              val_trim="${val_trim%"${val_trim##*[![:space:]]}"}"
+              if [ -z "$val_trim" ]; then
+                val=""
+              fi
+
+              echo "${key}=${val}" >> "$GITHUB_ENV"
+            done < "$ENV_FILE"
+
+            # Defaults for noisy TF SDK logs if not set in ENV secret
+            grep -q '^TF_LOG_SDK_HELPER_RESOURCE=' "$GITHUB_ENV" 2>/dev/null || echo "TF_LOG_SDK_HELPER_RESOURCE=OFF" >> "$GITHUB_ENV"
+            grep -q '^TF_LOG_SDK=' "$GITHUB_ENV" 2>/dev/null || echo "TF_LOG_SDK=OFF" >> "$GITHUB_ENV"
+            grep -q '^TF_LOG_CORE=' "$GITHUB_ENV" 2>/dev/null || echo "TF_LOG_CORE=OFF" >> "$GITHUB_ENV"
+
+            echo "Loaded acceptance-test env from secret ENV (keys only):"
+            awk -F= '/^[A-Za-z_][A-Za-z0-9_]*=/{print " - " $1}' "$GITHUB_ENV" | sort -u
 
       - name: Check gofmt
         run: |
@@ -134,44 +190,78 @@ jobs:
         run: |
               echo "tests_executed=tests_execution_not_successful" >> $GITHUB_OUTPUT
               args="${{ github.event.client_payload.slash_command.args }}"
-              providers=(${args})
-              index=0
-              n=${#providers[@]}
-              runFlag=""
-              for provider in $args
-              do 
-                  if [ "$provider" = "foundation" ]
-                      then 
-                          runFlag+="TestAccFoundation*"
-                  elif [ "$provider" = "foundation_central" ]
-                      then
-                          runFlag+="TestAccFC*"
-                  elif [ "$provider" = "karbon" ]
-                      then
-                          runFlag+="TestAccKarbon*"
-                  elif [ "$provider" = "v3" ]
-                      then
-                          runFlag+="TestAccNutanix*"
-                  elif [ "$provider" = "v4" ]
-                      then
-                          runFlag+="TestAccV2Nutanix*"
-                  elif [ "$provider" = "lcm" ]
-                      then
-                          runFlag+="TestAccV2NutanixLcm*"
-                  elif [ "$provider" = "era" ]
-                      then
-                          runFlag+="TestAccEra*"
-                  else
-                      echo "running individual testcase/package"
-                      runFlag+="$provider"
+
+              # Treat '|' the same as space. Comments like:
+              #   /ok-to-test TestA| TestB| TestC
+              # must not become -run='TestA||TestB||TestC'.
+              normalized_args="${args//|/ }"
+
+              package_path="./..."
+              next_is_package=false
+              cover_scope=""
+              scope_label=""
+              tokens=()
+              for arg in $normalized_args; do
+                  if [[ "$next_is_package" == true ]]; then
+                      package_path="./nutanix/services/$arg"
+                      cover_scope="package"
+                      next_is_package=false
+                      echo "📦 Running tests only in package: $package_path"
+                      continue
                   fi
-                  if [ $index -lt $((n-1)) ]
-                      then
-                          runFlag+="|"
+                  if [[ "$arg" == "-p" ]]; then
+                      next_is_package=true
+                      continue
+                  fi
+                  [[ -z "$arg" ]] && continue
+                  tokens+=("$arg")
+              done
+
+              runFlag=""
+              n=${#tokens[@]}
+              index=0
+              for provider in "${tokens[@]}"; do
+                  case "$provider" in
+                      foundation)
+                          mapped="TestAccFoundation*"
+                          [[ -z "$cover_scope" ]] && cover_scope="foundation"
+                          ;;
+                      foundation_central)
+                          mapped="TestAccFC*"
+                          [[ -z "$cover_scope" ]] && cover_scope="foundation_central"
+                          ;;
+                      karbon)
+                          mapped="TestAccKarbon*"
+                          [[ -z "$cover_scope" ]] && cover_scope="karbon"
+                          ;;
+                      v3)
+                          mapped="TestAccNutanix*"
+                          [[ -z "$cover_scope" ]] && cover_scope="v3"
+                          ;;
+                      v4)
+                          mapped="TestAccV2Nutanix*"
+                          [[ -z "$cover_scope" ]] && cover_scope="v4"
+                          ;;
+                      lcm)
+                          mapped="TestAccV2NutanixLcm*"
+                          [[ -z "$cover_scope" ]] && cover_scope="lcm"
+                          ;;
+                      era)
+                          mapped="TestAccEra*"
+                          [[ -z "$cover_scope" ]] && cover_scope="era"
+                          ;;
+                      *)
+                          echo "running individual testcase/package"
+                          mapped="$provider"
+                          ;;
+                  esac
+                  runFlag+="$mapped"
+                  if [ $index -lt $((n-1)) ]; then
+                      runFlag+="|"
                   fi
                   index=$((index+1))
               done
-             
+
               echo "==> Setup Foundation Config"
               echo '${{ secrets.FOUNDATION_CONFIG }}' > test_foundation_config.json
               echo "==> Setup PC Config"
@@ -179,35 +269,49 @@ jobs:
               echo "==> Setup V4 Config"
               echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
               echo "==> Running testcases..."
-              package_path="./..."  # default if no -p argument is passed
 
-              # Extract `-p <package>` argument from the slash command, if provided
-              for arg in $args; do
-                  if [[ "$arg" == "-p" ]]; then
-                      next_is_package=true
-                      continue
-                  fi
-                  if [[ "$next_is_package" == true ]]; then
-                      package_path="./nutanix/services/$arg"
-                      next_is_package=false
-                      echo "📦 Running tests only in package: $package_path"
-                      break
-                  fi
-              done
-
-              # If -p was provided, ignore runFlag since it contains arg polluted by '-p'
               if [[ "$package_path" != "./..." ]]; then
-                  # Package provided → run all tests in that package
-                  TESTARGS="-run=."
+                  if [[ -n "$runFlag" ]]; then
+                      TESTARGS="-run=${runFlag}"
+                  else
+                      TESTARGS="-run=."
+                  fi
               else
-                  # No package provided → run only the tests specified in runFlag
+                  if [[ -z "$runFlag" ]]; then
+                      echo "Error: no test names or provider aliases given."
+                      echo "Separate test names with spaces (the workflow joins them with '|'):"
+                      echo "  /ok-to-test TestAccFoo TestAccBar"
+                      echo "  /ok-to-test v4"
+                      exit 1
+                  fi
                   TESTARGS="-run=${runFlag}"
               fi
 
-               echo "TESTARGS = $TESTARGS"  
+              # Fail closed: empty '|' alternatives match ALL tests.
+              run_pattern="${TESTARGS#-run=}"
+              if [[ "$run_pattern" == *"||"* || "$run_pattern" == "|"* || "$run_pattern" == *"|" ]]; then
+                  echo "Error: -run pattern '$run_pattern' has an empty '|'-alternative."
+                  echo "That regexp matches every test. Use spaces between names, not 'Name| Name'."
+                  echo "  /ok-to-test TestAccFoo TestAccBar"
+                  exit 1
+              fi
 
-              TF_LOG="ERROR" TF_ACC=1 GOTRACEBACK=all go test "$package_path" -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count | tee test_output.log
-              
+              # Same denominator as `make acc-test -- --report`.
+              chmod +x scripts/resolve-acc-coverpkg.sh
+              resolved="$(./scripts/resolve-acc-coverpkg.sh "$package_path" "$cover_scope" "$run_pattern")"
+              coverpkg="$(printf '%s\n' "$resolved" | sed -n '1p')"
+              scope_label="$(printf '%s\n' "$resolved" | sed -n '2p')"
+
+              echo "TESTARGS = $TESTARGS"
+              echo "Package path = $package_path"
+              echo "Coverpkg = $coverpkg"
+              echo "Coverage scope = $scope_label"
+              echo "SCOPE_LABEL=$scope_label" >> "$GITHUB_ENV"
+
+              rm -f c.out
+              TF_LOG="ERROR" TF_ACC=1 GOTRACEBACK=all go test "$package_path" -v ${TESTARGS} -timeout 23h \
+                -coverprofile c.out -covermode=atomic -coverpkg="$coverpkg" | tee test_output.log
+
               set +e  # Ignore failures
 
               # Ensure log file exists
@@ -258,6 +362,40 @@ jobs:
                   [ "$TOTAL_SKIPPED" -gt 0 ] && SKIP_PERCENT=$((TOTAL_SKIPPED * 100 / UNIQUE_TESTS))
               fi
 
+              # Fetch PC / AOS versions via ncli (same approach as nutanix.ansible ok-to-test-command)
+              CONFIG_FILE="test_config_v2.json"
+              NCLI="/home/nutanix/prism/cli/ncli"
+              VERSION_CMD="$NCLI cluster info | grep -i Version | grep -vi NCC"
+              SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10"
+
+              PC_VERSION_INFO="Failed to fetch PC version"
+              AOS_VERSION_INFO="Failed to fetch AOS version"
+
+              if [ -f "$CONFIG_FILE" ]; then
+                  PC_SSH_USER=$(jq -r '.ssh_pc_username // "nutanix"' "$CONFIG_FILE")
+                  PC_SSH_PASS=$(jq -r '.ssh_pc_password // empty' "$CONFIG_FILE")
+                  PE_SSH_USER=$(jq -r '.ssh_pe_username // "nutanix"' "$CONFIG_FILE")
+                  PE_SSH_PASS=$(jq -r '.ssh_pe_password // empty' "$CONFIG_FILE")
+                  PE_IP=$(jq -r '.data_protection.local_cluster_pe // empty' "$CONFIG_FILE")
+
+                  if [ -n "$NUTANIX_ENDPOINT" ] && [ -n "$PC_SSH_PASS" ]; then
+                      PC_VERSION_INFO=$(sshpass -p "$PC_SSH_PASS" \
+                        ssh $SSH_OPTS "$PC_SSH_USER@$NUTANIX_ENDPOINT" \
+                        "$VERSION_CMD" 2>/dev/null || echo "Failed to fetch PC version")
+                  fi
+
+                  if [ -n "$PE_IP" ] && [ -n "$PE_SSH_PASS" ]; then
+                      AOS_VERSION_INFO=$(sshpass -p "$PE_SSH_PASS" \
+                        ssh $SSH_OPTS "$PE_SSH_USER@$PE_IP" \
+                        "$VERSION_CMD" 2>/dev/null || echo "Failed to fetch AOS version")
+                  else
+                      AOS_VERSION_INFO="PE IP not configured"
+                  fi
+              else
+                  PC_VERSION_INFO="test_config_v2.json not found"
+                  AOS_VERSION_INFO="test_config_v2.json not found"
+              fi
+
               # Write summary to a file (each test appears only once, under its last result)
               {
                 echo "==================================================🧪 TEST SUMMARY 🧪================================================================================="
@@ -293,6 +431,12 @@ jobs:
                     echo "🎉💃 No tests skipped 🕺🎉"
                 fi
                 echo "==================================================================================================================================================="
+                echo ""
+                echo "PC Version:"
+                echo "$PC_VERSION_INFO"
+                echo ""
+                echo "AOS Version:"
+                echo "$AOS_VERSION_INFO"
                 echo ""
 
               } > test_summary.txt
@@ -331,23 +475,47 @@ jobs:
                   exit 0
               fi
 
-      # Code Coverage Check only if tests executed successfully
+      # Same coverage reporting as `make acc-test` (scripts/report-acc-coverage.sh)
       - name: Code Coverage Check
         if: ${{ always() && steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
-        run:  |
-              echo "Code coverage: Checking if code coverage is above threshold..."
-              export TESTCOV_THRESHOLD=50
-              echo "Threshold: $TESTCOV_THRESHOLD %"
-              totalCoverage=`go tool cover -func=c.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
-              echo "Current test coverage : $totalCoverage %"
-              if (( $(echo "$totalCoverage $TESTCOV_THRESHOLD" | awk '{print ($1 > $2)}') )); then
-                  echo "CODE_COVERAGE_OUTPUT=Line code coverage is $totalCoverage" >> $GITHUB_ENV
-                  echo "Line coverage is $totalCoverage"
-              else
-                  echo "CODE_COVERAGE_OUTPUT=Current line coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD). Kindly add more acceptance tests." >> $GITHUB_ENV
-                  echo "Current coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD)."
-              fi
-      
+        env:
+          TESTCOV_THRESHOLD: "85"
+        run: |
+          set -euo pipefail
+          chmod +x scripts/report-acc-coverage.sh
+          ./scripts/report-acc-coverage.sh c.out test_output.log \
+            "${SCOPE_LABEL:-acceptance tests}"
+
+      - name: Generate coverage HTML report
+        if: ${{ always() && steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
+        run: |
+          set -euo pipefail
+          if [[ ! -s c.out ]]; then
+            echo "c.out missing or empty; skipping HTML report"
+            exit 0
+          fi
+          # Prefer files already written by report-acc-coverage.sh; regenerate if needed.
+          if [[ ! -f coverage-report/coverage.html ]]; then
+            mkdir -p coverage-report
+            go tool cover -html=c.out -o coverage-report/coverage.html
+            go tool cover -func=c.out > coverage-report/coverage.txt
+            cp c.out coverage-report/c.out
+          fi
+          echo "Coverage HTML: coverage-report/coverage.html"
+          tail -5 coverage-report/coverage.txt
+
+      - name: Upload coverage report artifact
+        if: ${{ always() && steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: acc-coverage-report
+          path: |
+            coverage-report/coverage.html
+            coverage-report/coverage.txt
+            coverage-report/c.out
+          if-no-files-found: warn
+          retention-days: 14
+
       # Post build status along with test summary as a comment only if tests executed successfully
       - name: Post build status and test summary
         if: ${{ always() && steps.test-execution.outputs.tests_executed == 'tests_execution_successful' }}
@@ -358,6 +526,7 @@ jobs:
             - 🧪 **`Build Status: `** `${{ job.status }}`
             - 📌 **`GitHub Action: `** [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
             - 📊 **`Code Coverage: `** `${{ env.CODE_COVERAGE_OUTPUT }}`
+            - 📂 **`Coverage report:`** download the `acc-coverage-report` artifact from the Actions run (open `coverage.html` locally for green/red line view)
             - 📝 **`Test Summary: `**
             ```txt
             ${{ steps.test-execution.outputs.summary_content }}

@@ -188,7 +188,7 @@ The following arguments are supported:
 * `use_project_internal` - (Optional) flag to use project internal for user role mapping
 * `cluster_uuid` - (Optional) The UUID of cluster. (Required when using project_internal flag).
 * `enable_collab` - (Optional) flag to allow collaboration of projects. (Use with project_internal flag)
-* `enable_directory_and_identity_provider_shortlist` - (Optional) flag to shortlist the directory services and identity providers associated with the project. Defaults to `true`.
+* `enable_directory_and_identity_provider_shortlist` - (Optional) flag to shortlist the directory services and identity providers associated with the project. If omitted, Prism Central's default is used.
 
 ### Resource Domain (Deprecated)
 * `resource_domain` - (Deprecated) Not supported starting from provider version `2.4.0` and ignored by the provider. Remove it from your configuration/scripts.

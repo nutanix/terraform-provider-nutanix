@@ -1,3 +1,5 @@
+# Beta: nutanix_project_v2, nutanix_projects_v2, nutanix_resource_group_v2, and nutanix_resource_groups_v2 are currently in Beta.
+
 terraform {
   required_providers {
     nutanix = {

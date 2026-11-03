@@ -81,7 +81,20 @@ func DatasourceNutanixRoleMembershipsV2Read(ctx context.Context, d *schema.Resou
 	if err != nil {
 		return diag.Errorf("error while fetching role memberships: %v", err)
 	}
-	membershipsList := resp.Data.GetValue().([]iamConfig.RoleMembershipProjection)
+	if resp == nil || resp.Data == nil {
+		return diag.Errorf("error while fetching role memberships: empty response")
+	}
+
+	var membershipsList []iamConfig.RoleMembershipProjection
+	switch v := resp.Data.GetValue().(type) {
+	case []iamConfig.RoleMembershipProjection:
+		membershipsList = v
+	case []iamConfig.RoleMembership:
+		membershipsList = convertRoleMembershipsToProjections(v)
+	default:
+		return diag.Errorf("unexpected type %T for List Role Memberships response", resp.Data.GetValue())
+	}
+
 	if len(membershipsList) == 0 {
 		if err := d.Set("role_memberships", []map[string]interface{}{}); err != nil {
 			return diag.FromErr(err)
@@ -100,6 +113,31 @@ func DatasourceNutanixRoleMembershipsV2Read(ctx context.Context, d *schema.Resou
 
 	d.SetId(resource.UniqueId())
 	return nil
+}
+
+func convertRoleMembershipsToProjections(memberships []iamConfig.RoleMembership) []iamConfig.RoleMembershipProjection {
+	if len(memberships) == 0 {
+		return nil
+	}
+	result := make([]iamConfig.RoleMembershipProjection, len(memberships))
+	for i, m := range memberships {
+		result[i] = iamConfig.RoleMembershipProjection{
+			CreatedBy:               m.CreatedBy,
+			CreatedTime:             m.CreatedTime,
+			ExtId:                   m.ExtId,
+			IdentityExtId:           m.IdentityExtId,
+			IdentityType:            m.IdentityType,
+			IdpExtId:                m.IdpExtId,
+			LastUpdatedTime:         m.LastUpdatedTime,
+			Links:                   m.Links,
+			ProjectExtId:            m.ProjectExtId,
+			RoleExtId:               m.RoleExtId,
+			ScopeTemplateName:       m.ScopeTemplateName,
+			ScopeTemplateNameValues: m.ScopeTemplateNameValues,
+			TenantId:                m.TenantId,
+		}
+	}
+	return result
 }
 
 func flattenRoleMembershipEntities(memberships []iamConfig.RoleMembershipProjection) []interface{} {

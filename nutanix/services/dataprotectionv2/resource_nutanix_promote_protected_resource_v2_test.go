@@ -117,17 +117,22 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVG(t *testing.T) {
 
 func testPromoteProtectedResourceVMAndProtectionPolicyConfig(vmName, ppName, description string, r int) string {
 	return fmt.Sprintf(`
+
+locals {
+  pcFilter            = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')"
+  aosFilter           = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
+}
+
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
 # list Clusters
-data "nutanix_clusters_v2" "clusters" {}
+data "nutanix_clusters_v2" "clusters" {
+  filter = local.aosFilter
+}
 
 locals {
-  clusterExtId = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-  ][0]
+  clusterExtId = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
   config = jsondecode(file("%[1]s"))
   availability_zone = local.config.availability_zone
 }

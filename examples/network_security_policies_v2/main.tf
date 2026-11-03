@@ -2,7 +2,7 @@ terraform {
   required_providers {
     nutanix = {
       source  = "nutanix/nutanix"
-      version = "2.0.0"
+      version = ">=2.5.0"
     }
   }
 }
@@ -33,6 +33,21 @@ locals {
 #list all categories
 data "nutanix_categories_v2" "category-list" {}
 
+
+# Entity group that can be used as the secured group for an APPLICATION rule.
+# Use either secured_group_category_references or secured_group_entity_group_reference
+# in a rule spec, not both.
+resource "nutanix_entity_group_v2" "secured_group" {
+  name        = "tf-secured-group"
+  description = "secured group for the application policy"
+  allowed_config {
+    entities {
+      type              = "VM"
+      selected_by       = "CATEGORY_EXT_ID"
+      reference_ext_ids = [data.nutanix_categories_v2.category-list.categories.0.ext_id]
+    }
+  }
+}
 
 #creating subnet without IP pool
 resource "nutanix_subnet_v2" "vlan-112" {
@@ -130,6 +145,28 @@ resource "nutanix_network_security_policy_v2" "global-application-nsp" {
     }
   }
   is_hitlog_enabled = false
+}
+
+# Network Security Policy APPLICATION Rule using an entity group as the secured group.
+resource "nutanix_network_security_policy_v2" "entity-group-application-nsp" {
+  name        = "entity_group_application_policy"
+  description = "Application policy with secured group entity group reference"
+  type        = "APPLICATION"
+  state       = "SAVE"
+  scope       = "GLOBAL"
+  rules {
+    description = "entity group secured group rule"
+    type        = "APPLICATION"
+    spec {
+      application_rule_spec {
+        secured_group_entity_group_reference = nutanix_entity_group_v2.secured_group.id
+        src_allow_spec                       = "ALL"
+        is_all_protocol_allowed              = true
+      }
+    }
+  }
+  is_hitlog_enabled = false
+  depends_on        = [nutanix_entity_group_v2.secured_group]
 }
 
 # Network Security Policy APPLICATION Rule and INTRA_GROUP Rule (VPC_LIST scope)
@@ -310,6 +347,7 @@ data "nutanix_network_security_policies_v2" "list-nsps" {
     nutanix_network_security_policy_v2.isolation-nsp,
     nutanix_network_security_policy_v2.multi-env-isolation-nsp,
     nutanix_network_security_policy_v2.global-application-nsp,
+    nutanix_network_security_policy_v2.entity-group-application-nsp,
   ]
 }
 

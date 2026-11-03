@@ -1,13 +1,14 @@
 package networkingv2
 
 import (
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	config "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func expandFlexRuleSpec(l []interface{}) *import1.FlexRuleSpec {
+func expandFlexRuleSpec(d *schema.ResourceData, basePath string, l []interface{}) *import1.FlexRuleSpec {
 	if len(l) == 0 {
 		return nil
 	}
@@ -48,7 +49,7 @@ func expandFlexRuleSpec(l []interface{}) *import1.FlexRuleSpec {
 		flex.UdpServices = expandUDPPortRangeSpec(v)
 	}
 	if v, ok := val["icmp_services"].([]interface{}); ok && len(v) > 0 {
-		flex.IcmpServices = expandIcmpTypeCodeSpec(v)
+		flex.IcmpServices = expandIcmpTypeCodeSpec(d, basePath+".0.flex_rule_spec.0.icmp_services", v)
 	}
 	if v, ok := val["icmpv6_services"].([]interface{}); ok && len(v) > 0 {
 		flex.IcmpV6Services = expandIcmpV6TypeCodeSpec(v)

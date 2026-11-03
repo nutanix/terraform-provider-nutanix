@@ -13,18 +13,25 @@ test: fmtcheck
 
 testacc: fmtcheck
 	@echo "==> Running testcases..."
-	@echo "TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=count"
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=count
+	@echo "TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=atomic"
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 500m -coverprofile c.out -covermode=atomic
 
 # Acceptance tests with .env loaded (same as /ok-to-test). Loads .env from repo root before running.
 # Output to ACC_TEST_LOG only; summary appended at end. Matches workflow logic from acceptance-test.yml.
+# Coverage (c.out + coverage-report/coverage.html) is generated only when --report is passed.
+# Scope follows the run when reporting:
+#   make acc-test v4 -- --report              → cover all *v2 service packages (overall v4)
+#   make acc-test v3 -- --report              → cover non-*v2 service packages (overall v3)
+#   make acc-test networkingv2 -- --report    → cover that package only
+#   make acc-test p=iamv2 ... -- --report     → cover that package only
 # Usage:
 #   make acc-test networkingv2                                         # all tests in package networkingv2 (auto-detected)
-#   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic    # single test in specific package
+#   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic    # coverage is the whole package, not one file
 #   make acc-test p=networkingv2                                       # all tests in package (explicit)
 #   make acc-test p=networkingv2 TestAccV2NutanixSubnetResource_Basic  # single test in specific package (explicit)
 #   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic o=test_logs_nf.log
 #   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic -- -o test_logs_nf.log
+#   make acc-test networkingv2 TestAccV2NutanixSubnetResource_Basic -- --report
 #   make acc-test v4                                                   # all TestAccV2Nutanix* tests
 #   make acc-test v3                                                   # all TestAccNutanix* tests
 #   make acc-test TestAccV2NutanixSubnetResource_Basic                 # single test (searches all packages)
@@ -33,17 +40,26 @@ testacc: fmtcheck
 _acc_goals := $(filter-out acc-test,$(MAKECMDGOALS))
 _acc_single := $(if $(filter 1,$(words $(_acc_goals))),$(firstword $(_acc_goals)),)
 ACC_TEST_LOG ?= $(if $(o),$(o),$(if $(_acc_single),test_output_$(_acc_single).log,test_output.log))
+ACC_COVER_PROFILE ?= c.out
+# ACC_TEST_LOG sanitization: regex/multi-test -run patterns are unsafe as filenames.
 acc-test:
 	@bash -c '\
 		logfile="$(ACC_TEST_LOG)"; \
+		case "$$logfile" in *[\|\*\?\(\)\[\]\{\}\\]*|*" "*) logfile="test_output.log" ;; esac; \
+		if [ "$${#logfile}" -gt 180 ]; then logfile="test_output.log"; fi; \
+		cover_profile="$(ACC_COVER_PROFILE)"; \
 		args="$(filter-out acc-test,$(MAKECMDGOALS))"; \
 		package_path="./..."; \
 		run_flag=""; \
+		cover_scope=""; \
+		scope_label=""; \
+		want_report=0; \
 		expect_log_arg=0; \
 		[ -f .env ] && set -a && . ./.env && set +a; \
 		export TF_ACC=1 GOTRACEBACK=all GOFLAGS="-mod=mod"; \
 		if [ -n "$(p)" ]; then \
 			package_path="./nutanix/services/$(p)"; \
+			cover_scope="package"; \
 		fi; \
 		for arg in $$args; do \
 			if [ "$$expect_log_arg" = "1" ]; then \
@@ -55,19 +71,21 @@ acc-test:
 				--) continue ;; \
 				-o|--output) expect_log_arg=1; continue ;; \
 				-o=*|--output=*) logfile="$${arg#*=}"; continue ;; \
+				--report|-report) want_report=1; continue ;; \
 			esac; \
 			if [ -d "nutanix/services/$$arg" ]; then \
 				package_path="./nutanix/services/$$arg"; \
+				cover_scope="package"; \
 				continue; \
 			fi; \
 			case "$$arg" in \
-				foundation) pattern="TestAccFoundation*" ;; \
-				foundation_central) pattern="TestAccFC*" ;; \
-				karbon) pattern="TestAccKarbon*" ;; \
-				v3) pattern="TestAccNutanix*" ;; \
-				v4) pattern="TestAccV2Nutanix*" ;; \
-				lcm) pattern="TestAccV2NutanixLcm*" ;; \
-				era) pattern="TestAccEra*" ;; \
+				foundation) pattern="TestAccFoundation*"; [ -z "$$cover_scope" ] && cover_scope="foundation" ;; \
+				foundation_central) pattern="TestAccFC*"; [ -z "$$cover_scope" ] && cover_scope="foundation_central" ;; \
+				karbon) pattern="TestAccKarbon*"; [ -z "$$cover_scope" ] && cover_scope="karbon" ;; \
+				v3) pattern="TestAccNutanix*"; [ -z "$$cover_scope" ] && cover_scope="v3" ;; \
+				v4) pattern="TestAccV2Nutanix*"; [ -z "$$cover_scope" ] && cover_scope="v4" ;; \
+				lcm) pattern="TestAccV2NutanixLcm*"; [ -z "$$cover_scope" ] && cover_scope="lcm" ;; \
+				era) pattern="TestAccEra*"; [ -z "$$cover_scope" ] && cover_scope="era" ;; \
 				fmt|fmtcheck|lint|tools|build|test) continue ;; \
 				*) pattern="$$arg" ;; \
 			esac; \
@@ -81,6 +99,10 @@ acc-test:
 			echo "acc-test: missing file name after -o/--output" >&2; \
 			exit 1; \
 		fi; \
+		coverpkg=""; \
+		resolved="$$("$(CURDIR)/scripts/resolve-acc-coverpkg.sh" "$$package_path" "$$cover_scope" "$$run_flag")"; \
+		coverpkg="$$(printf '%s\n' "$$resolved" | sed -n '1p')"; \
+		scope_label="$$(printf '%s\n' "$$resolved" | sed -n '2p')"; \
 		: > "$$logfile"; \
 		echo "==> Loading .env and running acceptance tests (output to $$logfile only; summary at end)..." >> "$$logfile"; \
 		if [ -n "$(p)" ]; then \
@@ -97,11 +119,27 @@ acc-test:
 		fi; \
 		echo "==> TESTARGS = $$test_args" >> "$$logfile"; \
 		echo "==> Package path = $$package_path" >> "$$logfile"; \
-		go test "$$package_path" -v $$test_args -timeout 500m -count=1 -mod=mod 2>&1 | while IFS= read -r line; do echo "$$line" >> "$$logfile"; done; \
+		cover_args=""; \
+		if [ "$$want_report" = "1" ]; then \
+			echo "==> Cover profile = $$cover_profile" >> "$$logfile"; \
+			echo "==> Coverpkg = $$coverpkg" >> "$$logfile"; \
+			echo "==> Coverage scope = $$scope_label" >> "$$logfile"; \
+			rm -f "$$cover_profile"; \
+			cover_args="-coverprofile=$$cover_profile -covermode=atomic -coverpkg=$$coverpkg"; \
+		else \
+			echo "==> Coverage report skipped (pass --report to generate)" >> "$$logfile"; \
+		fi; \
+		go test "$$package_path" -v $$test_args -timeout 500m -count=1 -mod=mod $$cover_args \
+			2>&1 | while IFS= read -r line; do echo "$$line" >> "$$logfile"; done; \
 		if [ -f "$$logfile" ] && grep -qE "^--- (PASS|FAIL|SKIP):" "$$logfile" 2>/dev/null; then \
 			"$(CURDIR)/scripts/acc-test-summary.sh" "$$logfile"; \
 		fi; \
-		echo "==> Log file: $$logfile"'
+		echo "==> Log file: $$logfile"; \
+		if [ "$$want_report" = "1" ]; then \
+			"$(CURDIR)/scripts/report-acc-coverage.sh" "$$cover_profile" "$$logfile" "$$scope_label" "$${run_flag:-.}" "$$package_path"; \
+			echo "==> Coverage profile: $$cover_profile"; \
+			echo "==> Coverage HTML: coverage-report/coverage.html"; \
+		fi'
 
 # Format and check targets: defined before the % pattern so "make fmt" runs only fmt, not acc-test.
 fmt:
@@ -195,5 +233,10 @@ endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
 .NOTPARALLEL:
+
+# Allow `make acc-test volumesv2` / `make acc-test v4` style args without Make
+# treating them as missing targets after acc-test completes.
+%:
+	@:
 
 .PHONY: default build test testacc acc-test fmt fmtcheck errcheck lint tools vulncheck vet test-compile cibuild citest website website-lint website-test

@@ -32,6 +32,7 @@ package vmmv2_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
@@ -49,6 +50,10 @@ const datasourceNameVmStartupPolicy = "data.nutanix_vm_startup_policy_v2.test_ds
 const datasourceNameVmStartupPolicies = "data.nutanix_vm_startup_policies_v2.test_list"
 
 func TestAccV2NutanixVmStartupPolicyResource_Basic(t *testing.T) {
+	// if the test is running using NUTANIX_API_KEY, skip the test
+	if os.Getenv("NUTANIX_API_KEY") != "" {
+		t.Skip("Skipping test as it not supported using NUTANIX_API_KEY")
+	}
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vm-startup-policy-%d", r)
 	updatedName := fmt.Sprintf("test-vm-startup-policy-%d-updated", r)
@@ -119,6 +124,10 @@ func TestAccV2NutanixVmStartupPolicyResource_Basic(t *testing.T) {
 }
 
 func TestAccV2NutanixVmStartupPolicyResource_GuestBootup(t *testing.T) {
+	// if the test is running using NUTANIX_API_KEY, skip the test
+	if os.Getenv("NUTANIX_API_KEY") != "" {
+		t.Skip("Skipping test as it not supported using NUTANIX_API_KEY")
+	}
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vm-startup-policy-gb-%d", r)
 	desc := "test vm startup policy with guest bootup"
@@ -579,6 +588,10 @@ func testVspValidationConfig_DuplicateGuestBootup() string {
 // Step 4 (Add new group): group0=[cat3,cat4], group1=[cat2], group2=[cat5]      — group2 added
 // Step 5 (Remove existing group): group0=[cat3,cat4], group2=[cat5]             — group1 removed
 func TestAccV2NutanixVmStartupPolicyResource_GroupCategoryUpdates(t *testing.T) {
+	// if the test is running using NUTANIX_API_KEY, skip the test
+	if os.Getenv("NUTANIX_API_KEY") != "" {
+		t.Skip("Skipping test as it not supported using NUTANIX_API_KEY")
+	}
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vsp-grp-upd-%d", r)
 	desc := "test group category updates"

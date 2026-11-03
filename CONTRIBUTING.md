@@ -99,7 +99,6 @@ For running integration tests:
     export NUTANIX_INSECURE=true
     export NUTANIX_PORT=9440
     export NUTANIX_ENDPOINT="<pc-ip>"
-    export NUTANIX_STORAGE_CONTAINER="<storage-container-uuid-for-vm-tests>"
     export FOUNDATION_ENDPOINT="<foundation-vm-ip-for-foundation-related-tests>"
     export FOUNDATION_PORT=8000
     export NOS_IMAGE_TEST_URL="<test-image-url>"

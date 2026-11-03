@@ -2,6 +2,7 @@ package vmmv2_test
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"testing"
@@ -258,6 +259,10 @@ resource "nutanix_ova_v2" "test" {
 }
 
 func TestAccV2NutanixOvaResource_ProjectAssociation(t *testing.T) {
+	// if the test is running using NUTANIX_API_KEY, skip the test
+	if os.Getenv("NUTANIX_API_KEY") != "" {
+		t.Skip("Skipping test as it not supported using NUTANIX_API_KEY")
+	}
 	r := acctest.RandInt()
 	vmName := fmt.Sprintf("tf-ova-pa-vm-%d", r)
 	vmDesc := "ova project association vm"
