@@ -9,3 +9,9 @@ const AllowVersionNegotiation = true
 
 // DefaultPort is the default Prism Central port used by v4 SDK clients when no port is provided.
 const DefaultPort = 9440
+
+// Valid TCP port range, used to reject malformed port configuration.
+const (
+	minPort = 1
+	maxPort = 65535
+)

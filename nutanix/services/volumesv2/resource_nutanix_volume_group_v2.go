@@ -251,7 +251,7 @@ func ResourceNutanixVolumeGroupV2() *schema.Resource {
 }
 
 func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[INFO_VG] Creating Volume Group")
+	log.Printf("[DEBUG] Creating Volume Group")
 	conn := meta.(*conns.Client).VolumeAPI
 
 	body := volumesClient.VolumeGroup{}
@@ -654,8 +654,6 @@ func expandIscsiFeatures(iscsiFeaturesList interface{}) *volumesClient.IscsiFeat
 		if enabledAuthentications, ok := val["enabled_authentications"]; ok {
 			iscsiFeature.EnabledAuthentications = common.ExpandEnum[volumesClient.AuthenticationType](enabledAuthentications.(string))
 		}
-		log.Printf("[INFO_VG] iscsiFeature.EnabledAuthentications: %v", *iscsiFeature.EnabledAuthentications)
-		log.Printf("[INFO_VG] iscsiFeature.TargetSecret: %v", *iscsiFeature.TargetSecret)
 		return iscsiFeature
 	}
 	return nil

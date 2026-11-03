@@ -1219,7 +1219,7 @@ func testVmsV4Config(name, desc string) string {
 func testVmsV4ConfigWithDisk(r int, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {
-			filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"		
+			filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
 		}
 
 		resource "nutanix_subnet_v2" "subnet" {

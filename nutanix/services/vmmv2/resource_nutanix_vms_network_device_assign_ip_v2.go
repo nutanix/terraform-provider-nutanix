@@ -68,23 +68,12 @@ func ResourceNutanixVmsNetworkDeviceAssignIPV2Create(ctx context.Context, d *sch
 		body.IpAddress = expandIPv4Address(ipAddress)
 	}
 
-	getVmByIdRequest := import3.GetVmByIdRequest{
-		ExtId: utils.StringPtr(vmExtID.(string)),
-	}
-	readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
-	if err != nil {
-		return diag.Errorf("error while reading vm : %v", err)
-	}
-	// Extract E-Tag Header
-	args := make(map[string]interface{})
-	args["If-Match"] = getEtagHeader(readResp, conn)
-
 	assignIpByIdRequest := import3.AssignIpByIdRequest{
 		VmExtId: utils.StringPtr(vmExtID.(string)),
 		ExtId:   utils.StringPtr(extID.(string)),
 		Body:    &body,
 	}
-	resp, err := conn.VMAPIInstance.AssignIpById(ctx, &assignIpByIdRequest, args)
+	resp, err := conn.VMAPIInstance.AssignIpById(ctx, &assignIpByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while assigning IP : %v", err)
 	}
@@ -137,22 +126,11 @@ func ResourceNutanixVmsNetworkDeviceAssignIPV2Delete(ctx context.Context, d *sch
 	vmExtID := d.Get("vm_ext_id")
 	extID := d.Get("ext_id")
 
-	getVmByIdRequest := import3.GetVmByIdRequest{
-		ExtId: utils.StringPtr(vmExtID.(string)),
-	}
-	readResp, err := conn.VMAPIInstance.GetVmById(ctx, &getVmByIdRequest)
-	if err != nil {
-		return diag.Errorf("error while reading vm : %v", err)
-	}
-	// Extract E-Tag Header
-	args := make(map[string]interface{})
-	args["If-Match"] = getEtagHeader(readResp, conn)
-
 	releaseIpByIdRequest := import3.ReleaseIpByIdRequest{
 		VmExtId: utils.StringPtr(vmExtID.(string)),
 		ExtId:   utils.StringPtr(extID.(string)),
 	}
-	resp, err := conn.VMAPIInstance.ReleaseIpById(ctx, &releaseIpByIdRequest, args)
+	resp, err := conn.VMAPIInstance.ReleaseIpById(ctx, &releaseIpByIdRequest)
 	if err != nil {
 		return diag.Errorf("error while releasing IP : %v", err)
 	}

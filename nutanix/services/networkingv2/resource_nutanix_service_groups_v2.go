@@ -162,6 +162,9 @@ func ResourceNutanixServiceGroupsV2Create(ctx context.Context, d *schema.Resourc
 	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
 		spec.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
+	if projectExtID, ok := d.GetOk("project_ext_id"); ok {
+		spec.ProjectExtId = utils.StringPtr(projectExtID.(string))
+	}
 
 	createServiceGroupRequest := import2.CreateServiceGroupRequest{
 		Body: spec,
