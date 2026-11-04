@@ -17,8 +17,9 @@ func TestAccEra_Clonebasic(t *testing.T) {
 	vmName := fmt.Sprintf("testvm-%d", r)
 	sshKey := testVars.SSHKey
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccEraPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccEraPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixNDBDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEraCloneConfig(name, desc, vmName, sshKey),
@@ -60,6 +61,8 @@ func testAccEraCloneConfig(name, desc, vmName, sshKey string) string {
 		clusters = {
 			for p in data.nutanix_ndb_clusters.clusters.clusters: p.name => p
 		}
+		// Use NDBCluster if it exists, otherwise pick the first available cluster
+		target_cluster = contains(keys(local.clusters), "NDBCluster") ? local.clusters.NDBCluster : data.nutanix_ndb_clusters.clusters.clusters[0]
 	}
 
 	data "nutanix_ndb_time_machines" "test1" {}
@@ -76,7 +79,7 @@ func testAccEraCloneConfig(name, desc, vmName, sshKey string) string {
 		time_machine_id = data.nutanix_ndb_time_machine.test.id
 		name = "%[1]s"
 		description = "%[2]s"
-		nx_cluster_id = local.clusters.NDBCluster.id
+		nx_cluster_id = local.target_cluster.id
 		ssh_public_key = "%[4]s"
 		snapshot_id = data.nutanix_ndb_tms_capability.test.last_continuous_snapshot.0.id
 		create_dbserver = true
@@ -87,7 +90,7 @@ func testAccEraCloneConfig(name, desc, vmName, sshKey string) string {
 		  	vm_name="%[3]s"
 		  	compute_profile_id =  local.compute_profiles["DEFAULT_OOB_SMALL_COMPUTE"].id
 			network_profile_id = local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id
-			nx_cluster_id = local.clusters.NDBCluster.id
+			nx_cluster_id = local.target_cluster.id
 		}
 		postgresql_info{
 		  vm_name="%[3]s"
