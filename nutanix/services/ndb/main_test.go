@@ -66,13 +66,19 @@ func loadVars(filepath string, varStuct interface{}) {
 	// Read config.json from home current path
 	configData, err := os.ReadFile(filepath)
 	if err != nil {
-		log.Printf("Got this error while reading config.json: %s", err.Error())
-		os.Exit(1)
+		// Fallback to test_config_v2.json if test_config.json is not found
+		log.Printf("Could not find %s, trying test_config_v2.json...", filepath)
+		configData, err = os.ReadFile("../../../test_config_v2.json")
+		if err != nil {
+			log.Printf("Got this error while reading config file: %s", err.Error())
+			// Don't exit yet, we might have env vars
+			return
+		}
 	}
 
 	err = json.Unmarshal(configData, varStuct)
 	if err != nil {
-		log.Printf("Got this error while unmarshalling config.json: %s", err.Error())
+		log.Printf("Got this error while unmarshalling config file: %s", err.Error())
 		os.Exit(1)
 	}
 }
@@ -80,6 +86,15 @@ func loadVars(filepath string, varStuct interface{}) {
 func TestMain(m *testing.M) {
 	log.Println("Do some crazy stuff before tests!")
 	loadVars("../../../test_config.json", &testVars)
+
+	// Fallback for SSH Key from Environment Variables if JSON is empty
+	if testVars.SSHKey == "" {
+		if envKey := os.Getenv("NDB_SSH_KEY"); envKey != "" {
+			testVars.SSHKey = envKey
+		} else if envKey := os.Getenv("SSH_KEY"); envKey != "" {
+			testVars.SSHKey = envKey
+		}
+	}
 
 	os.Exit(m.Run())
 }
