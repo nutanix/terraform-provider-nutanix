@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Cloud Platform.
 
-NOTE: The latest version of the Nutanix provider is [v2.5.0](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.5.0).
+NOTE: The latest version of the Nutanix provider is [v2.5.1](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.5.1).
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 
@@ -22,9 +22,19 @@ Modules based on Terraform Nutanix Provider can be found here : [Modules](https:
 * [Go](https://golang.org/doc/install) 1.27.3 (to build the provider plugin)
 * This provider uses [SDKv2](https://www.terraform.io/plugin/sdkv2/sdkv2-intro) from release 1.3.0
 
-## Introducing Nutanix Terraform Provider Version v2.5.0
+## Introducing Nutanix Terraform Provider Version v2.5.1
 
-We're excited to announce the release of Nutanix Terraform Provider Version 2.5.0!
+We're excited to announce the release of Nutanix Terraform Provider Version 2.5.1!
+
+### What's New in v2.5.1
+
+* **New Resource Support**
+  * **Add Domain (Tenancy) (Alpha)**: Add an existing domain to the allowed-domain list for Nutanix Central tenancy. [#1182](https://github.com/nutanix/terraform-provider-nutanix/issues/1182)
+  * **Tenant (Tenancy) (Alpha)**: Create and manage tenants. [#1183](https://github.com/nutanix/terraform-provider-nutanix/issues/1183)
+  * **Tenant Membership (Tenancy) (Alpha)**: Manage tenant memberships for users within domains. [#1184](https://github.com/nutanix/terraform-provider-nutanix/issues/1184)
+  * **Tenant Domain Allocation (Tenancy) (Alpha)**: Manage domain allocations for tenants. [#1185](https://github.com/nutanix/terraform-provider-nutanix/issues/1185)
+
+  -> **Note:** Items marked **(Alpha)** are currently in the Alpha stage and are not recommended for production use. Use them in production environments at your own risk.
 
 ### What's New in v2.5.0
 
@@ -42,9 +52,9 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.5.
   * **VM Guest Customization Profile (VMM)**: Create, update, read, and delete guest customization profiles for virtual machines. [#1132](https://github.com/nutanix/terraform-provider-nutanix/issues/1132)
   * **VM Startup Policy (VMM)**: Create, update, read, and delete VM startup policies for controlling VM power-on sequencing. [#1174](https://github.com/nutanix/terraform-provider-nutanix/issues/1174)
   * **Image Rate Limit Policy (VMM)**: Create, update, read, and delete image rate limit policies. [#1173](https://github.com/nutanix/terraform-provider-nutanix/issues/1173)
-  * **Template Placement Policy (VMM)**: Create, update, read, and delete template placement policies. [#1172](https://github.com/nutanix/terraform-provider-nutanix/issues/1172)
-
-  -> **Note:** Items marked **(Beta)** follow this disclaimer: This resource/data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
+   * **Template Placement Policy (VMM)**: Create, update, read, and delete template placement policies. [#1172](https://github.com/nutanix/terraform-provider-nutanix/issues/1172)
+   
+   -> **Note:** Items marked **(Beta)** follow this disclaimer: This resource/data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
 
 * **Enhancements:**
   * Add support for Project Share / Unshare / Association across entities (Projects 2.0 model where each entity owns its project association). [#1114](https://github.com/nutanix/terraform-provider-nutanix/issues/1114)
@@ -79,18 +89,18 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.5.
 
 ### Software Requirements
 
-The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.5.0, ensure your Nutanix environment meets the following software requirements:
+The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.5.1, ensure your Nutanix environment meets the following software requirements:
 
 * Self Service version: 4.4.0, 4.4.0.1 (Required only for running Self Service based resource and data source)
 * AOS Version: 7.5.1, 7.6, 7.6.0.6 or later
 * Prism Central Version: pc7.5, pc7.5.1, pc7.6, pc7.6.0.6 or later
-* Nutanix Terraform Provider Version: 2.5.0
+* Nutanix Terraform Provider Version: 2.5.1
 
 ## Compatibility Matrix
 
 | Terraform Version | AOS Version | PC version | Other software versions | Supported |
 | :--- | :--- | :--- | :--- | :--- |
-| 2.5.0 | 7.5.1, 7.6, 7.6.0.6 or later | pc7.5, pc7.5.1, pc7.6, pc7.6.0.6 or later | Self Service v4.4.0, v4.4.0.1 | yes |
+| 2.5.1 | 7.5.1, 7.6, 7.6.0.6 or later | pc7.5, pc7.5.1, pc7.6, pc7.6.0.6 or later | Self Service v4.4.0, v4.4.0.1 | yes |
 | 2.4.2 | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
 | 2.4.1 (⚠️ Deprecated/Invalid) | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
 | 2.4.0 | 7.5 | pc7.5 or later | Self Service  v4.3.0 | yes |
@@ -134,7 +144,7 @@ Long term, once this is upstream, no pre-compiled binaries will be needed, as te
 
 The following keys can be used to configure the provider.
 
-* **endpoint** - (Required) IP address for the Nutanix Prism Central.
+* **endpoint** - (Optional) IP address for the Nutanix Prism Central. Required for Prism Central / Prism Element workflows that do not use Nutanix Central.
 * **username** - (Optional) Username for Nutanix Prism Central. Could be local cluster auth (e.g. `auth`) or directory auth. Required if `api_key` is not set.
 * **password** - (Optional) Password for the provided username. Required if `api_key` is not set.
 * **api_key** - (Optional) API key for Prism Central authentication. Can be used as an alternative to `username`/`password` when connecting to a Prism Central instance. **Not supported by Prism Elements**, which requires `username` and `password`. When set, the `X-Ntnx-Api-Key` header is used instead of Basic Authentication.
@@ -142,6 +152,10 @@ The following keys can be used to configure the provider.
 * **insecure** - (Optional) Explicitly allow the provider to perform insecure SSL requests. If omitted, default value is false.
 * **wait_timeout** - (Optional) Set if you know that the creation or update of a resource may take long time (minutes).
 * **custom_headers** - (Optional) Map of custom HTTP headers to add to all API requests. Useful for environments that require additional headers such as Cloudflare Access service tokens. Headers can also be set via environment variables with the `NUTANIX_HEADER_` prefix (e.g. `NUTANIX_HEADER_CF_ACCESS_CLIENT_ID` becomes `Cf-Access-Client-Id`). Values defined in config take precedence over environment variables.
+* **nutanix_central_endpoint** - (Optional) Nutanix Central (NC) endpoint base used for NC Admin, Tenant Admin, and Service Provider Admin scenarios (for example `nconprem-10-102-176-12.ccpnx.com`). Can also be set via the `NUTANIX_CENTRAL_ENDPOINT` environment variable.
+* **domain_name** - (Optional) Domain name for the Prism Central instance. Used to construct the PC endpoint as `<domain_name>.domains.<nutanix_central_endpoint>` for NC Admin and Tenant Admin scenarios. Can also be set via the `NUTANIX_DOMAIN_NAME` environment variable.
+* **tenant_name** - (Optional) Tenant name for Tenant Admin scenarios. Required when operating as a Tenant Admin to manage tenant-specific resources. Can also be set via the `NUTANIX_TENANT_NAME` environment variable.
+* **use_nc_iam** - (Optional) When `true`, IAM-related calls use the NC IAM endpoint (`iam.services.<nutanix_central_endpoint>`) instead of the PC IAM endpoint. Applicable for NC Admin and Tenant Admin scenarios. Can also be set via the `NUTANIX_USE_NC_IAM` environment variable. Defaults to `false`.
 
 ```hcl
 # Basic authentication
@@ -165,6 +179,17 @@ provider "nutanix" {
     "Cf-Access-Client-Id"     = "my-client-id"
     "Cf-Access-Client-Secret" = "my-client-secret"
   }
+}
+
+# Nutanix Central (NC) Admin / Tenant Admin
+provider "nutanix" {
+  username                 = "admin"
+  password                 = "myPassword"
+  nutanix_central_endpoint = "nconprem-example.ccpnx.com"
+  domain_name              = "pc-domain"
+  tenant_name              = "example-tenant" # Tenant Admin scenarios
+  use_nc_iam               = true
+  insecure                 = true
 }
 ```
 
@@ -213,6 +238,7 @@ provider "nutanix" {
 From foundation getting released in 1.5.0-beta, provider configuration will accommodate Prism Central and foundation API connection details. **It will show warnings for disabled API connections as per the attributes given in provider configuration in above mentioned format**. The below are the required attributes for corresponding provider components:
 
 * `endpoint` and either (`username` + `password`) or `api_key` are required for using Prism Central & Karbon based resources and data sources.
+* `nutanix_central_endpoint` (with either `username` + `password` or `api_key`) is required for Nutanix Central tenancy scenarios. Use `domain_name` when targeting a specific PC domain, `tenant_name` for Tenant Admin, and `use_nc_iam` when IAM calls should go to NC IAM.
 * `foundation_endpoint` is required field for using Foundation based resources and data sources
 * `ndb_username`, `ndb_password` and `ndb_endpoint` are required fields for using NDB based resources and data sources
 
@@ -350,6 +376,12 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | - | nutanix_vm_startup_policy_v2 |
 | - | nutanix_image_rate_limit_policy_v2 |
 | - | nutanix_template_placement_policy_v2 |
+| - | nutanix_registered_domain_v2 (Beta) |
+| - | nutanix_local_domain_v2 (Beta) |
+| - | nutanix_add_domain_v2 (Alpha) |
+| - | nutanix_tenant_v2 (Alpha) |
+| - | nutanix_tenant_membership_v2 (Alpha) |
+| - | nutanix_tenant_domain_allocation_v2 (Alpha) |
 
 ## Data Sources
 
@@ -545,6 +577,17 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | - | nutanix_image_rate_limit_policy_v2 |
 | - | nutanix_template_placement_policies_v2 |
 | - | nutanix_template_placement_policy_v2 |
+| - | nutanix_registered_domain_v2 (Beta) |
+| - | nutanix_registered_domains_v2 (Beta) |
+| - | nutanix_local_domain_v2 (Beta) |
+| - | nutanix_locations_v2 (Beta) |
+| - | nutanix_domains_v2 |
+| - | nutanix_tenant_v2 |
+| - | nutanix_tenants_v2 |
+| - | nutanix_tenant_membership_v2 |
+| - | nutanix_tenant_memberships_v2 |
+| - | nutanix_tenant_domain_allocation_v2 |
+| - | nutanix_tenant_domain_allocations_v2 |
 
 ## Developing the provider
 
