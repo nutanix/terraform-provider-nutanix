@@ -8,8 +8,9 @@ package tenancyv2_test
 // grow cumulatively, so step N contains everything from step N-1 plus the next
 // resource. This mirrors how a tenant admin actually stands up an environment:
 //
-//	VM workflow:      image -> transit VPC + overlay subnet -> VM(from image+subnet) ->
-//	                  install NGT -> attach categories -> template(from VM) -> deploy template
+//	VM workflow:      image -> existing VLAN subnet (vmm.subnet_name / vlan.800) ->
+//	                  VM(from image+subnet) -> install NGT -> attach categories ->
+//	                  template(from VM) -> deploy template
 //	VM actions:       VM -> guest customization update -> assign IP -> clone -> shutdown
 //	Network workflow: transit VPC + overlay external subnet -> REGULAR VPC ->
 //	                  address group -> entity group -> service group ->
@@ -189,37 +190,34 @@ locals {
 // ===========================================================================
 // Workflow 1: VM / Compute
 //
-//	image -> transit VPC + overlay subnet -> VM(from image+subnet) -> install NGT -> attach categories
+//	image -> existing VLAN subnet (test_config_v2.json vmm.subnet_name /
+//	vlan.800) -> VM(from image+subnet) -> install NGT -> attach categories
 //	-> template(from VM) -> deploy template
 //
-// The steps grow cumulatively, so each step re-declares everything created in
-// the previous step. This is the workflow described in the request.
+// NGT install needs guest reachability, so this workflow attaches the VM NIC
+// to the pre-provisioned VLAN from fixtures rather than creating an overlay
+// subnet. The steps grow cumulatively.
 // ===========================================================================
 
 func TestAccTenantAdminVMWorkflow(t *testing.T) {
 	r := acctest.RandInt()
 	imageName := fmt.Sprintf("tf-ta-image-%d", r)
-	subnetName := fmt.Sprintf("tf-ta-subnet-%d", r)
 	vmName := fmt.Sprintf("tf-ta-vm-%d", r)
 	tplName := fmt.Sprintf("tf-ta-template-%d", r)
+	vlanName := testVars.VMM.SubnetName
+	if vlanName == "" {
+		t.Skip("skipping VM/NGT workflow: vmm.subnet_name is empty in test_config_v2.json")
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccTenantAdminPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				// Step 1: create image + subnet
-				Config: taVMWorkflowConfig(r, imageName, subnetName, vmName, tplName, vmwStageInfra),
+				// Step 1: create image + look up VLAN subnet for NGT reachability
+				Config: taVMWorkflowConfig(r, imageName, vmName, tplName, vmwStageInfra),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(taImageResource, "name", imageName),
-					resource.TestCheckResourceAttr(taTransitVPCRes, "vpc_type", "TRANSIT"),
-					resource.TestCheckResourceAttr(taExtSubnetRes, "subnet_type", "OVERLAY"),
-					resource.TestCheckResourceAttr(taExtSubnetRes, "is_external", "true"),
-					resource.TestCheckResourceAttr(taExtSubnetRes, "is_nat_enabled", "true"),
-					resource.TestCheckResourceAttr(taVPCResource, "vpc_type", "REGULAR"),
-					resource.TestCheckResourceAttr(taSubnetResource, "name", subnetName),
-					resource.TestCheckResourceAttr(taSubnetResource, "subnet_type", "OVERLAY"),
-					resource.TestCheckResourceAttr(taSubnetResource, "is_external", "false"),
 					resource.TestCheckResourceAttrPair(taImageResource, "project_ext_id", projectDataSource, "projects.0.ext_id"),
 
 					// Image: single data source vs resource (deep).
@@ -236,24 +234,18 @@ func TestAccTenantAdminVMWorkflow(t *testing.T) {
 					resource.TestCheckResourceAttrPair(taImagesDS, "images.0.type", taImageResource, "type"),
 					resource.TestCheckResourceAttrPair(taImagesDS, "images.0.project_ext_id", taImageResource, "project_ext_id"),
 
-					// Subnet: single data source vs resource (deep).
-					resource.TestCheckResourceAttrPair(taSubnetDS, "ext_id", taSubnetResource, "id"),
-					resource.TestCheckResourceAttrPair(taSubnetDS, "name", taSubnetResource, "name"),
-					resource.TestCheckResourceAttrPair(taSubnetDS, "description", taSubnetResource, "description"),
-					resource.TestCheckResourceAttrPair(taSubnetDS, "subnet_type", taSubnetResource, "subnet_type"),
-					resource.TestCheckResourceAttrPair(taSubnetDS, "vpc_reference", taSubnetResource, "vpc_reference"),
-					resource.TestCheckResourceAttrPair(taSubnetDS, "is_external", taSubnetResource, "is_external"),
-					// Subnet: plural data source vs resource (deep).
+					// VLAN subnet from fixtures (vmm.subnet_name / vlan.800).
 					resource.TestCheckResourceAttr(taSubnetsDS, "subnets.#", "1"),
-					resource.TestCheckResourceAttrPair(taSubnetsDS, "subnets.0.ext_id", taSubnetResource, "id"),
-					resource.TestCheckResourceAttrPair(taSubnetsDS, "subnets.0.name", taSubnetResource, "name"),
-					resource.TestCheckResourceAttrPair(taSubnetsDS, "subnets.0.subnet_type", taSubnetResource, "subnet_type"),
-					resource.TestCheckResourceAttrPair(taSubnetsDS, "subnets.0.vpc_reference", taSubnetResource, "vpc_reference"),
+					resource.TestCheckResourceAttr(taSubnetsDS, "subnets.0.name", vlanName),
+					resource.TestCheckResourceAttrSet(taSubnetsDS, "subnets.0.ext_id"),
+					resource.TestCheckResourceAttrPair(taSubnetDS, "ext_id", taSubnetsDS, "subnets.0.ext_id"),
+					resource.TestCheckResourceAttrPair(taSubnetDS, "name", taSubnetsDS, "subnets.0.name"),
+					resource.TestCheckResourceAttrPair(taSubnetDS, "subnet_type", taSubnetsDS, "subnets.0.subnet_type"),
 				),
 			},
 			{
-				// Step 2: create the VM from the image + subnet
-				Config: taVMWorkflowConfig(r, imageName, subnetName, vmName, tplName, vmwStageVM),
+				// Step 2: create the VM from the image + VLAN subnet
+				Config: taVMWorkflowConfig(r, imageName, vmName, tplName, vmwStageVM),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(taVMResource, "name", vmName),
 					resource.TestCheckResourceAttrPair(taVMResource, "project.0.ext_id", projectDataSource, "projects.0.ext_id"),
@@ -276,7 +268,7 @@ func TestAccTenantAdminVMWorkflow(t *testing.T) {
 			},
 			{
 				// Step 3: install NGT on the VM
-				Config: taVMWorkflowConfig(r, imageName, subnetName, vmName, tplName, vmwStageNGT),
+				Config: taVMWorkflowConfig(r, imageName, vmName, tplName, vmwStageNGT),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(taNGTResource, "ext_id"),
 
@@ -289,7 +281,7 @@ func TestAccTenantAdminVMWorkflow(t *testing.T) {
 			},
 			{
 				// Step 4: attach categories to the VM (in-place update)
-				Config: taVMWorkflowConfig(r, imageName, subnetName, vmName, tplName, vmwStageCategories),
+				Config: taVMWorkflowConfig(r, imageName, vmName, tplName, vmwStageCategories),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(taVMResource, "categories.#", "2"),
 					resource.TestCheckResourceAttrPair("nutanix_category_v2.cat.0", "project_ext_id", projectDataSource, "projects.0.ext_id"),
@@ -309,7 +301,7 @@ func TestAccTenantAdminVMWorkflow(t *testing.T) {
 			},
 			{
 				// Step 5: create a template from the VM
-				Config: taVMWorkflowConfig(r, imageName, subnetName, vmName, tplName, vmwStageTemplate),
+				Config: taVMWorkflowConfig(r, imageName, vmName, tplName, vmwStageTemplate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(taTemplateRes, "template_name", tplName),
 					resource.TestCheckResourceAttrPair(taTemplateRes, "project_ext_id", projectDataSource, "projects.0.ext_id"),
@@ -328,7 +320,7 @@ func TestAccTenantAdminVMWorkflow(t *testing.T) {
 			},
 			{
 				// Step 6: deploy the template
-				Config: taVMWorkflowConfig(r, imageName, subnetName, vmName, tplName, vmwStageDeploy),
+				Config: taVMWorkflowConfig(r, imageName, vmName, tplName, vmwStageDeploy),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(taDeployResource, "number_of_vms", "1"),
 					resource.TestCheckResourceAttrSet(taDeployResource, "ext_id"),
@@ -353,7 +345,7 @@ const (
 
 // taVMWorkflowConfig builds the cumulative VM workflow config up to the given
 // stage. Categories are attached to the VM from the "categories" stage onward.
-func taVMWorkflowConfig(r int, imageName, subnetName, vmName, tplName string, stage vmwStage) string {
+func taVMWorkflowConfig(r int, imageName, vmName, tplName string, stage vmwStage) string {
 	cfg := tenantAdminBaseConfig()
 
 	// Categories are declared from the categories stage onward so they can be
@@ -363,10 +355,10 @@ func taVMWorkflowConfig(r int, imageName, subnetName, vmName, tplName string, st
 		cfg += taWorkflowCategories(r)
 	}
 
-	// Image + transit VPC + overlay subnet always present. Tenant admins
-	// cannot create VLAN subnets; overlay requires a VPC first.
+	// Image + existing VLAN (vmm.subnet_name). NGT needs guest reachability on
+	// a routable VLAN rather than a freshly created overlay subnet.
 	cfg += taWorkflowImage(imageName)
-	cfg += taWorkflowSubnet(subnetName, r%200+10)
+	cfg += taWorkflowVLANSubnet()
 
 	if stage >= vmwStageVM {
 		cfg += taWorkflowVM(vmName, withCategories)
@@ -431,84 +423,24 @@ data "nutanix_images_v2" "images" {
 `, imageName)
 }
 
-func taWorkflowSubnet(subnetName string, thirdOctet int) string {
-	return fmt.Sprintf(`
-resource "nutanix_vpc_v2" "transit" {
-  name           = "%[1]s-transit"
-  description    = "tenant admin transit vpc for overlay external subnet"
-  vpc_type       = "TRANSIT"
-  project_ext_id = local.project_ext_id
-}
-
-# Overlay external NAT lives on the TRANSIT VPC. VMs must not attach here.
-resource "nutanix_subnet_v2" "ext" {
-  name           = "%[1]s-ext"
-  description    = "tenant admin overlay external NAT network"
-  vpc_reference  = nutanix_vpc_v2.transit.id
-  subnet_type    = "OVERLAY"
-  is_external    = true
-  is_nat_enabled = true
-  project_ext_id = local.project_ext_id
-  ip_config {
-    ipv4 {
-      ip_subnet {
-        ip { value = "10.57.%[2]d.0" }
-        prefix_length = 24
-      }
-      default_gateway_ip { value = "10.57.%[2]d.1" }
-      pool_list {
-        start_ip { value = "10.57.%[2]d.2" }
-        end_ip   { value = "10.57.%[2]d.20" }
-      }
-    }
-  }
-  depends_on = [nutanix_vpc_v2.transit]
-}
-
-resource "nutanix_vpc_v2" "vpc" {
-  name           = "%[1]s-vpc"
-  description    = "tenant admin regular vpc for vm overlay subnet"
-  vpc_type       = "REGULAR"
-  project_ext_id = local.project_ext_id
-  external_subnets {
-    subnet_reference = nutanix_subnet_v2.ext.id
-  }
-  depends_on = [nutanix_subnet_v2.ext]
-}
-
-# Internal overlay on the REGULAR VPC — this is the VM NIC attachment target.
-resource "nutanix_subnet_v2" "subnet" {
-  name           = "%[1]s"
-  description    = "tenant admin overlay subnet for vm nics"
-  vpc_reference  = nutanix_vpc_v2.vpc.id
-  subnet_type    = "OVERLAY"
-  project_ext_id = local.project_ext_id
-  ip_config {
-    ipv4 {
-      ip_subnet {
-        ip { value = "192.168.%[2]d.0" }
-        prefix_length = 24
-      }
-      default_gateway_ip { value = "192.168.%[2]d.1" }
-      pool_list {
-        start_ip { value = "192.168.%[2]d.10" }
-        end_ip   { value = "192.168.%[2]d.20" }
-      }
-    }
-  }
-  depends_on = [nutanix_vpc_v2.vpc]
-}
-
-# Single + plural data sources for the (internal) subnet, verified against the resource.
-data "nutanix_subnet_v2" "subnet" {
-  ext_id = nutanix_subnet_v2.subnet.id
-}
-
+// taWorkflowVLANSubnet looks up the pre-provisioned VLAN used by the VM/NGT
+// workflow (test_config_v2.json -> vmm.subnet_name, typically "vlan.800").
+func taWorkflowVLANSubnet() string {
+	return `
+# NGT needs a routable VLAN; Tenant Admin cannot create VLAN subnets, so reuse
+# the fixture from local.vmm.subnet_name (e.g. vlan.800).
 data "nutanix_subnets_v2" "subnets" {
-  filter     = "name eq '${nutanix_subnet_v2.subnet.name}'"
-  depends_on = [nutanix_subnet_v2.subnet]
+  filter = "name eq '${local.vmm.subnet_name}'"
 }
-`, subnetName, thirdOctet)
+
+data "nutanix_subnet_v2" "subnet" {
+  ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+}
+
+locals {
+  ta_vm_subnet_ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+}
+`
 }
 
 func taWorkflowVM(vmName string, withCategories bool) string {
@@ -568,7 +500,7 @@ resource "nutanix_virtual_machine_v2" "vm" {
           should_assign_ip = true
         }
         subnet {
-          ext_id = nutanix_subnet_v2.subnet.id
+          ext_id = local.ta_vm_subnet_ext_id
         }
         vlan_mode = "ACCESS"
       }
@@ -588,12 +520,14 @@ resource "nutanix_virtual_machine_v2" "vm" {
   power_state = "ON"
   %[2]s
   lifecycle {
+    # API does not echo ipv4_config.should_assign_ip after create, so the next
+    # plan tries to re-add the whole ipv4_config block (non-empty plan).
     ignore_changes = [
       guest_tools,
-      nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.ipv4_config.0.should_assign_ip,
+      nics.0.nic_network_info.0.virtual_ethernet_nic_network_info.0.ipv4_config,
     ]
   }
-  depends_on = [nutanix_images_v2.image, nutanix_subnet_v2.subnet]
+  depends_on = [nutanix_images_v2.image, data.nutanix_subnet_v2.subnet]
 }
 
 # Single + plural data sources for the VM, verified against the resource.
@@ -699,7 +633,7 @@ resource "nutanix_deploy_templates_v2" "deploy" {
             should_assign_ip = true
           }
           subnet {
-            ext_id = nutanix_subnet_v2.subnet.id
+            ext_id = local.ta_vm_subnet_ext_id
           }
           vlan_mode = "ACCESS"
         }

@@ -236,6 +236,7 @@ type NicProfileConfig struct {
 // VMMConfig models the "vmm" domain.
 type VMMConfig struct {
 	IntegrationVM string `json:"integration_vm"`
+	SubnetName    string `json:"subnet_name"`
 	AssignedIP    string `json:"assigned_ip"`
 	UnattendXML   string `json:"unattend_xml"`
 	Subnet        struct {
