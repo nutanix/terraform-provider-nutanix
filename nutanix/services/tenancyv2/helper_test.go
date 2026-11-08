@@ -3,12 +3,19 @@ package tenancyv2_test
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/http"
+	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	iamAuthn "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
+	iamUserGroupsReq "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/request/usergroups"
+	iamUsersReq "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/request/users"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/tenancy-go-client/v4/models/tenancy/v4/config"
 	import3 "github.com/nutanix/ntnx-api-golang-clients/tenancy-go-client/v4/models/tenancy/v4/request/membership"
 
@@ -95,6 +102,188 @@ func testAccCheckNutanixTenantMembershipV2Destroy(s *terraform.State) error {
 		}
 	}
 	return nil
+}
+
+// testAccCleanupDirectoryServiceIdentities deletes IAM users and user groups
+// still associated with the directory service identified by resourceName.
+// Membership deletion leaves those identities behind; deleting the directory
+// service while they exist returns IAM-21016.
+func testAccCleanupDirectoryServiceIdentities(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("not found: %s", resourceName)
+		}
+		dsExtID := rs.Primary.ID
+		if v := rs.Primary.Attributes["ext_id"]; v != "" {
+			dsExtID = v
+		}
+		if dsExtID == "" {
+			return fmt.Errorf("%s has empty ext_id", resourceName)
+		}
+		conn := acc.TestAccProvider.Meta().(*conns.Client)
+		return cleanupDirectoryServiceIdentities(context.Background(), conn, dsExtID)
+	}
+}
+
+func cleanupDirectoryServiceIdentities(ctx context.Context, conn *conns.Client, dsExtID string) error {
+	filter := fmt.Sprintf("idpId eq '%s'", dsExtID)
+	log.Printf("[DEBUG] Cleaning IAM identities for directory service %s", dsExtID)
+
+	if err := deleteIAMUsersByIdp(ctx, conn, filter); err != nil {
+		return err
+	}
+	if err := deleteIAMUserGroupsByIdp(ctx, conn, filter); err != nil {
+		return err
+	}
+	return nil
+}
+
+func deleteIAMUsersByIdp(ctx context.Context, conn *conns.Client, filter string) error {
+	listReq := iamUsersReq.ListUsersRequest{
+		Filter_: utils.StringPtr(filter),
+		Limit_:  utils.IntPtr(100),
+	}
+	resp, err := conn.IamAPI.UsersAPIInstance.ListUsers(ctx, &listReq)
+	if err != nil {
+		return fmt.Errorf("list users for directory service cleanup: %w", err)
+	}
+	if resp == nil || resp.Data == nil {
+		return nil
+	}
+	users, ok := resp.Data.GetValue().([]iamAuthn.User)
+	if !ok {
+		return fmt.Errorf("unexpected ListUsers data type %T", resp.Data.GetValue())
+	}
+	for _, user := range users {
+		if user.ExtId == nil || *user.ExtId == "" {
+			continue
+		}
+		if err := deleteIAMUserByExtID(ctx, conn, *user.ExtId); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func deleteIAMUserGroupsByIdp(ctx context.Context, conn *conns.Client, filter string) error {
+	listReq := iamUserGroupsReq.ListUserGroupsRequest{
+		Filter_: utils.StringPtr(filter),
+		Limit_:  utils.IntPtr(100),
+	}
+	resp, err := conn.IamAPI.UserGroupsAPIInstance.ListUserGroups(ctx, &listReq)
+	if err != nil {
+		return fmt.Errorf("list user groups for directory service cleanup: %w", err)
+	}
+	if resp == nil || resp.Data == nil {
+		return nil
+	}
+	groups, ok := resp.Data.GetValue().([]iamAuthn.UserGroup)
+	if !ok {
+		return fmt.Errorf("unexpected ListUserGroups data type %T", resp.Data.GetValue())
+	}
+	for _, group := range groups {
+		if group.ExtId == nil || *group.ExtId == "" {
+			continue
+		}
+		if err := deleteIAMUserGroupByExtID(ctx, conn, *group.ExtId); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func deleteIAMUserGroupByExtID(ctx context.Context, conn *conns.Client, extID string) error {
+	getReq := iamUserGroupsReq.GetUserGroupByIdRequest{ExtId: utils.StringPtr(extID)}
+	readResp, err := conn.IamAPI.UserGroupsAPIInstance.GetUserGroupById(ctx, &getReq)
+	if err != nil {
+		if isIAMNotFoundErr(err) {
+			return nil
+		}
+		return fmt.Errorf("get user group %s before delete: %w", extID, err)
+	}
+	etag := conn.IamAPI.UserGroupsAPIInstance.ApiClient.GetEtag(readResp)
+	headers := map[string]interface{}{"If-Match": utils.StringPtr(etag)}
+	delReq := iamUserGroupsReq.DeleteUserGroupByIdRequest{ExtId: utils.StringPtr(extID)}
+	if _, err := conn.IamAPI.UserGroupsAPIInstance.DeleteUserGroupById(ctx, &delReq, headers); err != nil {
+		if isIAMNotFoundErr(err) {
+			return nil
+		}
+		// Tenant Admin often lacks IAM v4 user-group delete (IAM-20003); fall back to v3.
+		if isIAMUnauthorizedErr(err) && conn.API != nil && conn.API.V3 != nil {
+			if _, v3err := conn.API.V3.DeleteUserGroup(ctx, extID); v3err == nil || isIAMNotFoundErr(v3err) {
+				log.Printf("[DEBUG] Deleted IAM user group %s via v3 fallback", extID)
+				return nil
+			} else if v3err != nil {
+				return fmt.Errorf("delete user group %s (v4: %v; v3 fallback: %w)", extID, err, v3err)
+			}
+		}
+		return fmt.Errorf("delete user group %s: %w", extID, err)
+	}
+	log.Printf("[DEBUG] Deleted IAM user group %s", extID)
+	return nil
+}
+
+// deleteIAMUserByExtID issues DELETE /iam/v4.1.b3/authn/users/{extId}. The IAM
+// Go client does not expose DeleteUserById, so this uses CallApiWithContext.
+func deleteIAMUserByExtID(ctx context.Context, conn *conns.Client, extID string) error {
+	getReq := iamUsersReq.GetUserByIdRequest{ExtId: utils.StringPtr(extID)}
+	readResp, err := conn.IamAPI.UsersAPIInstance.GetUserById(ctx, &getReq)
+	if err != nil {
+		if isIAMNotFoundErr(err) {
+			return nil
+		}
+		return fmt.Errorf("get user %s before delete: %w", extID, err)
+	}
+	etag := conn.IamAPI.UsersAPIInstance.ApiClient.GetEtag(readResp)
+	uri := "/api/iam/v4.1.b3/authn/users/" + url.PathEscape(extID)
+	headerParams := map[string]string{}
+	if etag != "" {
+		headerParams["If-Match"] = etag
+	}
+	authNames := []string{"apiKeyAuthScheme", "basicAuthScheme"}
+	_, err = conn.IamAPI.UsersAPIInstance.ApiClient.CallApiWithContext(
+		ctx,
+		&uri,
+		http.MethodDelete,
+		nil,
+		url.Values{},
+		headerParams,
+		url.Values{},
+		[]string{"application/json"},
+		[]string{},
+		authNames,
+	)
+	if err != nil {
+		if isIAMNotFoundErr(err) {
+			return nil
+		}
+		return fmt.Errorf("delete user %s: %w", extID, err)
+	}
+	log.Printf("[DEBUG] Deleted IAM user %s", extID)
+	return nil
+}
+
+func isIAMNotFoundErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	s := fmt.Sprint(err)
+	return strings.Contains(s, "404") ||
+		strings.Contains(s, "ENTITY_NOT_FOUND") ||
+		strings.Contains(s, "RESOURCE_NOT_FOUND") ||
+		strings.Contains(s, "does not exist") ||
+		strings.Contains(s, "not found")
+}
+
+func isIAMUnauthorizedErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	s := fmt.Sprint(err)
+	return strings.Contains(s, "IAM-20003") ||
+		strings.Contains(s, "unauthorized") ||
+		strings.Contains(s, "403")
 }
 
 // testAccCheckNutanixTenantV2Destroy verifies that every managed tenant has been

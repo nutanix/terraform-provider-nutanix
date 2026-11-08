@@ -17,7 +17,8 @@ package tenancyv2_test
 //	IAM workflow:     service account -> user API key (create, update, delete)
 //	Membership:       create AD (nutanix_directory_services_v2) ->
 //	                  Tenant Admin role (nutanix_roles_v2) ->
-//	                  directory search (user + user group) -> two tenant memberships
+//	                  directory search (user) -> USER tenant membership
+//	                  (GROUP membership disabled: IAM-20003 / IAM-21016)
 //
 // Gating:
 //   - Every test is guarded by acc.TestAccTenantAdminPreCheck, which SKIPS unless
@@ -1562,13 +1563,24 @@ data "nutanix_user_keys_v2" "keys" {
 //
 //	create nutanix_directory_services_v2 (AD create) ->
 //	Tenant Admin role (nutanix_roles_v2) -> directory search for
-//	one user and one user group -> two nutanix_tenant_membership_v2 resources
+//	one user -> nutanix_tenant_membership_v2 (USER)
+//
+// GROUP domain membership is intentionally disabled for now: resolving a
+// GROUP membership materializes an IAM user group that Tenant Admin cannot
+// delete (IAM-20003), which then blocks directory-service delete with
+// IAM-21016. Re-enable the group resource/checks once user-group cleanup is
+// permitted (or AD is looked up via data source and not destroyed here).
+//
+// Teardown order (required to avoid IAM-21016 on AD delete):
+//	1. delete tenant membership (provider waits for 404)
+//	2. delete IAM users still associated with the directory service
+//	3. delete nutanix_directory_services_v2
 //
 // This is the membership section of terraform/Tenant Admin Workflows/main.tf.
 // That example looks up an existing directory service; this workflow still
 // creates the AD first, then uses the same membership path: registered
-// domain, the first Tenant Admin role, userPrincipalName / distinguishedName
-// from directory search, and identity_details on the two memberships.
+// domain, the first Tenant Admin role, userPrincipalName from directory
+// search, and identity_details on the user membership.
 //
 // Fixtures come from iam.directory_services_main.tenant_membership_ad in
 // test_config_v2.json. The directory-service name is generated (the IAM API
@@ -1598,7 +1610,6 @@ func TestAccTenantAdminMembershipWorkflow(t *testing.T) {
 					resource.TestCheckResourceAttr(taDirectorySvcRes, "url", ad.URL),
 					resource.TestCheckResourceAttr(taDirectorySvcRes, "service_account.0.username", ad.Username),
 					// resource.TestCheckResourceAttrSet(taDirectorySvcRes, "service_account.0.password"),
-					resource.TestCheckResourceAttr(taDirectorySvcRes, "white_listed_groups.0", groupQuery),
 
 					resource.TestCheckResourceAttrPair(taDirectorySvcDS, "ext_id", taDirectorySvcRes, "id"),
 					resource.TestCheckResourceAttrPair(taDirectorySvcDS, "name", taDirectorySvcRes, "name"),
@@ -1613,9 +1624,9 @@ func TestAccTenantAdminMembershipWorkflow(t *testing.T) {
 				),
 			},
 			{
-				// Step 2: search AD for the user and the user group, then
-				// create Tenant Admin memberships for both.
-				Config: taTenantConsumerMembershipConfig(dsName, userQuery, groupQuery, tmStageMembership),
+				// Step 2: search AD for the user, then create a Tenant Admin
+				// USER membership. GROUP membership is commented out below.
+				Config: taTenantConsumerMembershipConfig(dsName, userQuery, groupQuery, tmStageUserMembership),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(taRolesDS, "roles.0.ext_id"),
 					resource.TestCheckResourceAttrSet(taRolesDS, "roles.0.display_name"),
@@ -1628,26 +1639,29 @@ func TestAccTenantAdminMembershipWorkflow(t *testing.T) {
 					resource.TestCheckResourceAttrSet(taUserSearchDS, "search_results.0.entity_type"),
 					resource.TestCheckResourceAttrSet(taUserSearchDS, "search_results.0.attributes.#"),
 
-					resource.TestCheckResourceAttr(taGroupSearchDS, "query", groupQuery),
-					resource.TestCheckResourceAttrPair(taGroupSearchDS, "directory_service_ext_id", taDirectorySvcsDS, "directory_services.0.ext_id"),
-					resource.TestCheckResourceAttrSet(taGroupSearchDS, "search_results.#"),
-					resource.TestCheckResourceAttrSet(taGroupSearchDS, "search_results.0.name"),
-					resource.TestCheckResourceAttrSet(taGroupSearchDS, "search_results.0.entity_type"),
-					resource.TestCheckResourceAttrSet(taGroupSearchDS, "search_results.0.attributes.#"),
+					// GROUP search / membership checks disabled — see workflow header.
+					// resource.TestCheckResourceAttr(taGroupSearchDS, "query", groupQuery),
+					// resource.TestCheckResourceAttrPair(taGroupSearchDS, "directory_service_ext_id", taDirectorySvcsDS, "directory_services.0.ext_id"),
+					// resource.TestCheckResourceAttrSet(taGroupSearchDS, "search_results.#"),
+					// resource.TestCheckResourceAttrSet(taGroupSearchDS, "search_results.0.name"),
+					// resource.TestCheckResourceAttrSet(taGroupSearchDS, "search_results.0.entity_type"),
+					// resource.TestCheckResourceAttrSet(taGroupSearchDS, "search_results.0.attributes.#"),
 
 					resource.TestCheckResourceAttrSet(taUserMembershipRes, "ext_id"),
+					resource.TestCheckResourceAttr(taUserMembershipRes, "state_info.0.state", "ACTIVE"),
 					resource.TestCheckResourceAttrPair(taUserMembershipRes, "domain_ext_id", taDomainsDS, "registered_domains.0.domain_ext_id"),
 					resource.TestCheckResourceAttrPair(taUserMembershipRes, "role_ext_id", taRolesDS, "roles.0.ext_id"),
 					resource.TestCheckResourceAttr(taUserMembershipRes, "identity_details.0.type", "USER"),
 					resource.TestCheckResourceAttrSet(taUserMembershipRes, "identity_details.0.principal_value"),
 					resource.TestCheckResourceAttrPair(taUserMembershipRes, "identity_details.0.identity_provider_ext_id", taDirectorySvcsDS, "directory_services.0.ext_id"),
 
-					resource.TestCheckResourceAttrSet(taGroupMembershipRes, "ext_id"),
-					resource.TestCheckResourceAttrPair(taGroupMembershipRes, "domain_ext_id", taDomainsDS, "registered_domains.0.domain_ext_id"),
-					resource.TestCheckResourceAttrPair(taGroupMembershipRes, "role_ext_id", taRolesDS, "roles.0.ext_id"),
-					resource.TestCheckResourceAttr(taGroupMembershipRes, "identity_details.0.type", "GROUP"),
-					resource.TestCheckResourceAttrSet(taGroupMembershipRes, "identity_details.0.principal_value"),
-					resource.TestCheckResourceAttrPair(taGroupMembershipRes, "identity_details.0.identity_provider_ext_id", taDirectorySvcsDS, "directory_services.0.ext_id"),
+					// resource.TestCheckResourceAttrSet(taGroupMembershipRes, "ext_id"),
+					// resource.TestCheckResourceAttr(taGroupMembershipRes, "state_info.0.state", "ACTIVE"),
+					// resource.TestCheckResourceAttrPair(taGroupMembershipRes, "domain_ext_id", taDomainsDS, "registered_domains.0.domain_ext_id"),
+					// resource.TestCheckResourceAttrPair(taGroupMembershipRes, "role_ext_id", taRolesDS, "roles.0.ext_id"),
+					// resource.TestCheckResourceAttr(taGroupMembershipRes, "identity_details.0.type", "GROUP"),
+					// resource.TestCheckResourceAttrSet(taGroupMembershipRes, "identity_details.0.principal_value"),
+					// resource.TestCheckResourceAttrPair(taGroupMembershipRes, "identity_details.0.identity_provider_ext_id", taDirectorySvcsDS, "directory_services.0.ext_id"),
 
 					resource.TestCheckResourceAttrPair(taUserMembershipDS, "ext_id", taUserMembershipRes, "ext_id"),
 					resource.TestCheckResourceAttrPair(taUserMembershipDS, "domain_ext_id", taUserMembershipRes, "domain_ext_id"),
@@ -1655,13 +1669,31 @@ func TestAccTenantAdminMembershipWorkflow(t *testing.T) {
 					resource.TestCheckResourceAttrPair(taUserMembershipDS, "identity_details.0.principal_value", taUserMembershipRes, "identity_details.0.principal_value"),
 					resource.TestCheckResourceAttrPair(taUserMembershipDS, "identity_details.0.type", taUserMembershipRes, "identity_details.0.type"),
 
-					resource.TestCheckResourceAttrPair(taGroupMembershipDS, "ext_id", taGroupMembershipRes, "ext_id"),
-					resource.TestCheckResourceAttrPair(taGroupMembershipDS, "domain_ext_id", taGroupMembershipRes, "domain_ext_id"),
-					resource.TestCheckResourceAttrPair(taGroupMembershipDS, "role_ext_id", taGroupMembershipRes, "role_ext_id"),
-					resource.TestCheckResourceAttrPair(taGroupMembershipDS, "identity_details.0.principal_value", taGroupMembershipRes, "identity_details.0.principal_value"),
-					resource.TestCheckResourceAttrPair(taGroupMembershipDS, "identity_details.0.type", taGroupMembershipRes, "identity_details.0.type"),
+					// resource.TestCheckResourceAttrPair(taGroupMembershipDS, "ext_id", taGroupMembershipRes, "ext_id"),
+					// resource.TestCheckResourceAttrPair(taGroupMembershipDS, "domain_ext_id", taGroupMembershipRes, "domain_ext_id"),
+					// resource.TestCheckResourceAttrPair(taGroupMembershipDS, "role_ext_id", taGroupMembershipRes, "role_ext_id"),
+					// resource.TestCheckResourceAttrPair(taGroupMembershipDS, "identity_details.0.principal_value", taGroupMembershipRes, "identity_details.0.principal_value"),
+					// resource.TestCheckResourceAttrPair(taGroupMembershipDS, "identity_details.0.type", taGroupMembershipRes, "identity_details.0.type"),
 
-					checkAttributeLength(taMembershipsDS, "memberships", 2),
+					checkAttributeLength(taMembershipsDS, "memberships", 1),
+				),
+			},
+			// Step 3 (drop GROUP membership first) disabled with GROUP membership.
+			// {
+			// 	Config: taTenantConsumerMembershipConfig(dsName, userQuery, groupQuery, tmStageUserMembership),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		resource.TestCheckResourceAttrSet(taUserMembershipRes, "ext_id"),
+			// 		resource.TestCheckResourceAttr(taUserMembershipRes, "state_info.0.state", "ACTIVE"),
+			// 	),
+			// },
+			{
+				// Step 3: drop USER membership, then remove IAM users that
+				// membership resolved against the directory service. Final
+				// destroy can then delete the AD without IAM-21016.
+				Config: taTenantConsumerMembershipConfig(dsName, userQuery, groupQuery, tmStageAD),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(taDirectorySvcRes, "ext_id"),
+					testAccCleanupDirectoryServiceIdentities(taDirectorySvcRes),
 				),
 			},
 		},
@@ -1673,8 +1705,9 @@ func TestAccTenantAdminMembershipWorkflow(t *testing.T) {
 type tmStage int
 
 const (
-	tmStageAD         tmStage = iota + 1 // create directory service
-	tmStageMembership                    // + role, searches, user and group memberships
+	tmStageAD             tmStage = iota + 1 // create directory service
+	tmStageUserMembership                    // + role, searches, user membership only
+	tmStageMembership                        // + group membership (disabled in workflow; see header)
 )
 
 func taTenantMembershipADQueries(t *testing.T) (userQuery, groupQuery string) {
@@ -1700,14 +1733,17 @@ func firstMapKey(m map[string]string) string {
 
 func taTenantConsumerMembershipConfig(dsName, userQuery, groupQuery string, stage tmStage) string {
 	cfg := tenantAdminBaseConfig()
-	cfg += taWorkflowDirectoryService(dsName, groupQuery)
-	if stage >= tmStageMembership {
-		cfg += taWorkflowTenantConsumerMemberships(userQuery, groupQuery)
+	cfg += taWorkflowDirectoryService(dsName)
+	if stage >= tmStageUserMembership {
+		cfg += taWorkflowTenantConsumerMemberships(userQuery, groupQuery, stage >= tmStageMembership)
 	}
 	return cfg
 }
 
-func taWorkflowDirectoryService(dsName, whitelistGroup string) string {
+func taWorkflowDirectoryService(dsName string) string {
+	// Omit white_listed_groups: whitelisting materializes an IAM user group that
+	// Tenant Admin cannot delete (IAM-20003), which then blocks AD delete with
+	// IAM-21016. Membership still resolves the LDAP group via identity_details.
 	return fmt.Sprintf(`
 locals {
   tm_ad = local.config.iam.directory_services_main.tenant_membership_ad
@@ -1722,7 +1758,6 @@ resource "nutanix_directory_services_v2" "ad" {
     username = local.tm_ad.username
     password = local.tm_ad.password
   }
-  white_listed_groups = ["%[2]s"]
   lifecycle {
     ignore_changes = [
       service_account.0.password,
@@ -1738,11 +1773,11 @@ data "nutanix_directory_services_v2" "ad" {
   filter     = "name eq '${nutanix_directory_services_v2.ad.name}'"
   depends_on = [nutanix_directory_services_v2.ad]
 }
-`, dsName, whitelistGroup)
+`, dsName)
 }
 
-func taWorkflowTenantConsumerMemberships(userQuery, groupQuery string) string {
-	return fmt.Sprintf(`
+func taWorkflowTenantConsumerMemberships(userQuery, groupQuery string, includeGroup bool) string {
+	cfg := fmt.Sprintf(`
 data "nutanix_registered_domains_v2" "domains" {}
 
 data "nutanix_roles_v2" "roles" {
@@ -1805,33 +1840,51 @@ resource "nutanix_tenant_membership_v2" "user" {
   }
 }
 
-resource "nutanix_tenant_membership_v2" "group" {
-  domain_ext_id = local.domain_ext_id
-  role_ext_id   = local.tenant_admin_role_ext_id
-
-  identity_details {
-    identity_provider_ext_id = data.nutanix_directory_services_v2.ad.directory_services[0].ext_id
-    principal_value          = local.group_principal_name
-    type                     = "GROUP"
-  }
-}
-
 data "nutanix_tenant_membership_v2" "user" {
   ext_id = nutanix_tenant_membership_v2.user.ext_id
 }
-
-data "nutanix_tenant_membership_v2" "group" {
-  ext_id = nutanix_tenant_membership_v2.group.ext_id
-}
-
-data "nutanix_tenant_memberships_v2" "memberships" {
-  filter = "domainExtId eq '${local.domain_ext_id}'"
-  depends_on = [
-    nutanix_tenant_membership_v2.user,
-    nutanix_tenant_membership_v2.group,
-  ]
-}
 `, userQuery, groupQuery)
+
+	// GROUP domain membership disabled: IAM resolves an IAM user group that
+	// Tenant Admin cannot delete (IAM-20003), which then blocks AD delete
+	// (IAM-21016). Keep the HCL below for when cleanup/RBAC allows re-enable.
+	if includeGroup {
+		cfg += `
+# resource "nutanix_tenant_membership_v2" "group" {
+#   domain_ext_id = local.domain_ext_id
+#   role_ext_id   = local.tenant_admin_role_ext_id
+#
+#   identity_details {
+#     identity_provider_ext_id = data.nutanix_directory_services_v2.ad.directory_services[0].ext_id
+#     principal_value          = local.group_principal_name
+#     type                     = "GROUP"
+#   }
+#
+#   depends_on = [nutanix_tenant_membership_v2.user]
+# }
+#
+# data "nutanix_tenant_membership_v2" "group" {
+#   ext_id = nutanix_tenant_membership_v2.group.ext_id
+# }
+#
+# data "nutanix_tenant_memberships_v2" "memberships" {
+#   filter = "domainExtId eq '${local.domain_ext_id}'"
+#   depends_on = [
+#     nutanix_tenant_membership_v2.user,
+#     nutanix_tenant_membership_v2.group,
+#   ]
+# }
+`
+	}
+
+	cfg += `
+data "nutanix_tenant_memberships_v2" "memberships" {
+  filter     = "domainExtId eq '${local.domain_ext_id}'"
+  depends_on = [nutanix_tenant_membership_v2.user]
+}
+`
+
+	return cfg
 }
 
 // ===========================================================================
