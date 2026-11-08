@@ -6,7 +6,9 @@ description: |-
   Adds an allowed domain to Nutanix Central tenancy.
 ---
 
-# nutanix_add_domain_v2
+# nutanix_add_domain_v2 (Alpha)
+
+> **Alpha**: This resource is currently in the Alpha stage and is not recommended for production use. Use it in production environments at your own risk.
 
 Adds an existing domain to the allowed-domain list for Nutanix Central tenancy.
 

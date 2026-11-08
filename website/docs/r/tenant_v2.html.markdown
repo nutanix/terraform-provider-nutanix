@@ -6,11 +6,15 @@ description: |-
   Creates a new tenant.
 ---
 
-# nutanix_tenant_v2
+# nutanix_tenant_v2 (Alpha)
+
+> **Alpha**: This resource is currently in the Alpha stage and is not recommended for production use. Use it in production environments at your own risk.
 
 Creates a new tenant.
 
 > **WriteOnly credentials:** `admin_info.password` is write-only. It is never stored in Terraform state. Re-supply it in configuration on every apply. Do not use `lifecycle.ignore_changes` on this attribute. See the [WriteOnly Credentials](/docs/providers/nutanix/guides/writeonly_credentials.html) guide for upgrade caveats.
+
+> **Note (KB-22890):** Calls to Nutanix Central may return **404** when the SP FQDN Host header includes an explicit `:443` port. This can affect Terraform and other API clients. Until a fix ships, add both `<host>` and `<host>:443` to `ALLOWED_CALLBACK_HOSTS` on the Dion service and restart it. Details: [KB article](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA0VO000000EVaD0AW).
 
 ## Example
 

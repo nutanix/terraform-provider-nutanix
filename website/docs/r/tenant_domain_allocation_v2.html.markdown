@@ -6,7 +6,9 @@ description: |-
   Creates a new domain allocation for a tenant.
 ---
 
-# nutanix_tenant_domain_allocation_v2
+# nutanix_tenant_domain_allocation_v2 (Alpha)
+
+> **Alpha**: This resource is currently in the Alpha stage and is not recommended for production use. Use it in production environments at your own risk.
 
 Creates a new domain allocation for a tenant.
 
