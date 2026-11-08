@@ -164,7 +164,23 @@ func ResourceNutanixTenantV2Create(ctx context.Context, d *schema.ResourceData, 
 		body.Description = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("admin_info"); ok {
-		body.AdminInfo = expandLocalUserInfo(v.([]interface{}))
+		adminList := v.([]interface{})
+		// WriteOnly password is omitted from GetOk nested maps; overlay from raw config.
+		if len(adminList) > 0 && adminList[0] != nil {
+			if m, ok := adminList[0].(map[string]interface{}); ok {
+				mCopy := make(map[string]interface{}, len(m)+1)
+				for k, val := range m {
+					mCopy[k] = val
+				}
+				if pwd, ok := common.GetWriteOnlyString(d, "admin_info.0.password"); ok {
+					mCopy["password"] = pwd
+				} else {
+					return diag.Errorf("admin_info.password is required but was empty (WriteOnly value not available from config)")
+				}
+				adminList = []interface{}{mCopy}
+			}
+		}
+		body.AdminInfo = expandLocalUserInfo(adminList)
 	}
 
 	createTenantRequest := import4.CreateTenantRequest{
@@ -234,20 +250,9 @@ func ResourceNutanixTenantV2Read(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 
-	// admin_info: the API never returns the password, so preserve the configured
-	// value while updating the other fields from the response.
-	adminInfo := flattenLocalUserInfo(getResp.AdminInfo)
-	if adminInfo != nil {
-		if v, ok := d.GetOk("admin_info"); ok {
-			configured := v.([]interface{})
-			if len(configured) > 0 && configured[0] != nil {
-				if pwd, ok := configured[0].(map[string]interface{})["password"]; ok {
-					adminInfo[0]["password"] = pwd
-				}
-			}
-		}
-	}
-	if err := d.Set("admin_info", adminInfo); err != nil {
+	// admin_info.password is WriteOnly and never returned by the API; do not
+	// attempt to rehydrate it into state.
+	if err := d.Set("admin_info", flattenLocalUserInfo(getResp.AdminInfo)); err != nil {
 		return diag.FromErr(err)
 	}
 

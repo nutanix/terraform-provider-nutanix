@@ -96,19 +96,23 @@ func ResourceNutanixLocalDomainV2Create(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.Client).MultidomainAPI
 
 	body := management.NewLocalDomainRegistrationSpec()
-	if v, ok := d.GetOk("credentials"); ok {
-		creds := v.([]interface{})
-		if len(creds) > 0 && creds[0] != nil {
-			if credMap, ok := creds[0].(map[string]interface{}); ok {
-				if apiKey, ok := commonUtils.GetWriteOnlyString(d, "credentials.0.api_key"); ok {
-					credMap["api_key"] = apiKey
-				}
-				if keyID, ok := commonUtils.GetWriteOnlyString(d, "credentials.0.key_id"); ok {
-					credMap["key_id"] = keyID
-				}
-			}
+	// WriteOnly nested attrs are omitted from GetOk (appears as [<nil>]); read
+	// secrets from raw config via GetWriteOnlyString and build the creds map.
+	if _, ok := d.GetOk("credentials"); ok {
+		credMap := map[string]interface{}{}
+		if apiKey, ok := commonUtils.GetWriteOnlyString(d, "credentials.0.api_key"); ok {
+			credMap["api_key"] = apiKey
 		}
-		body.Credentials = expandLocalDomainRegistrationCredentials(creds)
+		if keyID, ok := commonUtils.GetWriteOnlyString(d, "credentials.0.key_id"); ok {
+			credMap["key_id"] = keyID
+		}
+		log.Printf("[DEBUG] Credentials present: api_key_set=%t key_id_set=%t",
+			credMap["api_key"] != nil && credMap["api_key"] != "",
+			credMap["key_id"] != nil && credMap["key_id"] != "")
+		if len(credMap) == 0 {
+			return diag.Errorf("credentials.api_key and credentials.key_id are required but were empty (WriteOnly values not available from config)")
+		}
+		body.Credentials = expandLocalDomainRegistrationCredentials([]interface{}{credMap})
 	}
 	if v, ok := d.GetOk("domain_ext_id"); ok {
 		body.DomainExtId = utils.StringPtr(v.(string))
