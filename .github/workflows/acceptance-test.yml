@@ -46,7 +46,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25.13"
+          go-version: "1.27.3"
           check-latest: true
           cache: false
 
@@ -72,12 +72,14 @@ jobs:
 
       - name: Install unzip and sshpass
         run: |
-          sudo apt-get update && sudo apt-get install -y unzip sshpass
+          sudo apt-get update && sudo apt-get install -y unzip sshpass jq
 
-      - name: Setup Terraform v1.10.5
+      # Write-only attributes require Terraform >= 1.11. 1.10 rejects non-null
+      # values such as ssl certificate passphrase and private_key.
+      - name: Setup Terraform v1.11.4
         run: |
           set -e  # Exit on error
-          TERRAFORM_VERSION="1.10.5"
+          TERRAFORM_VERSION="1.11.4"
           curl -fsSL -o terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
 
           if [ ! -f terraform.zip ]; then
@@ -91,27 +93,83 @@ jobs:
           terraform version
 
       - name: Set environment variables
+        env:
+          # Single dotenv-style secret (same format as local .env). Keep
+          # V4_CONFIG / PC_CONFIG / FOUNDATION_CONFIG as separate secrets
+          # for the JSON fixture files.
+          ACC_TEST_ENV: ${{ secrets.ENV }}
         run: |
-            echo "NUTANIX_PE_PASSWORD=${{ secrets.NUTANIX_PE_PASSWORD }}" >> $GITHUB_ENV
-            echo "NUTANIX_PE_USERNAME=${{ secrets.NUTANIX_PE_USERNAME }}" >> $GITHUB_ENV
-            echo "NUTANIX_USERNAME=${{ secrets.NUTANIX_USERNAME }}" >> $GITHUB_ENV
-            echo "NUTANIX_PASSWORD=${{ secrets.NUTANIX_PASSWORD }}" >> $GITHUB_ENV
-            echo "NUTANIX_API_KEY=${{ secrets.NUTANIX_API_KEY }}" >> $GITHUB_ENV
-            echo "NUTANIX_INSECURE=${{ secrets.NUTANIX_INSECURE }}" >> $GITHUB_ENV
-            echo "NUTANIX_PORT=${{ secrets.NUTANIX_PORT }}" >> $GITHUB_ENV
-            echo "NUTANIX_ENDPOINT=${{ secrets.NUTANIX_ENDPOINT }}" >> $GITHUB_ENV
-            echo "NUTANIX_STORAGE_CONTAINER=${{ secrets.NUTANIX_STORAGE_CONTAINER }}" >> $GITHUB_ENV
-            echo "FOUNDATION_ENDPOINT=${{ secrets.FOUNDATION_ENDPOINT }}" >> $GITHUB_ENV
-            echo "FOUNDATION_PORT=${{ secrets.FOUNDATION_PORT }}" >> $GITHUB_ENV
-            echo "NOS_IMAGE_TEST_URL=${{ secrets.NOS_IMAGE_TEST_URL }}" >> $GITHUB_ENV
-            echo "NDB_ENDPOINT=${{ secrets.NDB_ENDPOINT }}" >> $GITHUB_ENV
-            echo "NDB_PASSWORD=${{ secrets.NDB_PASSWORD }}" >> $GITHUB_ENV
-            echo "NDB_USERNAME=${{ secrets.NDB_USERNAME }}" >> $GITHUB_ENV
-            echo "PROTECTION_RULES_TEST_FLAG=${{ secrets.PROTECTION_RULES_TEST_FLAG }}" >> $GITHUB_ENV
-            echo "CGO_ENABLED=${{ secrets.CGO_ENABLED }}" >> $GITHUB_ENV
-            echo "TF_LOG_SDK_HELPER_RESOURCE=OFF" >> $GITHUB_ENV
-            echo "TF_LOG_SDK=OFF" >> $GITHUB_ENV
-            echo "TF_LOG_CORE=OFF" >> $GITHUB_ENV
+            set -euo pipefail
+
+            if [ -z "${ACC_TEST_ENV}" ]; then
+              echo "ERROR: repository secret ENV is missing or empty."
+              echo "Create Actions secret ENV with the same KEY=VALUE content as local .env"
+              echo "(TF_ACC, NUTANIX_*, NDB_*, etc.). JSON fixtures stay in V4_CONFIG / PC_CONFIG."
+              exit 1
+            fi
+
+            ENV_FILE="${RUNNER_TEMP}/acc-test.env"
+            printf '%s\n' "$ACC_TEST_ENV" > "$ENV_FILE"
+
+            # Parse dotenv into GITHUB_ENV. Whitespace-only and "" / '' → empty.
+            # Skips blank lines and full-line comments. Strips optional quotes
+            # and unquoted trailing " # comment" (same style as local .env).
+            while IFS= read -r line || [ -n "$line" ]; do
+              # trim CR
+              line="${line%$'\r'}"
+              # skip blank / comment lines
+              trimmed="${line#"${line%%[![:space:]]*}"}"
+              [ -z "$trimmed" ] && continue
+              case "$trimmed" in
+                \#*) continue ;;
+              esac
+
+              case "$trimmed" in
+                *=*) ;;
+                *) continue ;;
+              esac
+
+              key="${trimmed%%=*}"
+              val="${trimmed#*=}"
+              # trim key
+              key="${key#"${key%%[![:space:]]*}"}"
+              key="${key%"${key##*[![:space:]]}"}"
+              [ -z "$key" ] && continue
+              case "$key" in
+                [A-Za-z_]*) ;;
+                *) continue ;;
+              esac
+
+              # trim value leading space
+              val="${val#"${val%%[![:space:]]*}"}"
+              # strip unquoted trailing inline comment
+              if [[ "$val" != \"*\" && "$val" != \'*\' ]]; then
+                val="${val%%\#*}"
+                val="${val%"${val##*[![:space:]]}"}"
+              fi
+              # strip surrounding quotes
+              if [[ "$val" == \"*\" && "$val" == *\" ]]; then
+                val="${val:1:${#val}-2}"
+              elif [[ "$val" == \'*\' && "$val" == *\' ]]; then
+                val="${val:1:${#val}-2}"
+              fi
+              # whitespace-only → empty (GitHub secret placeholder " ")
+              val_trim="${val#"${val%%[![:space:]]*}"}"
+              val_trim="${val_trim%"${val_trim##*[![:space:]]}"}"
+              if [ -z "$val_trim" ]; then
+                val=""
+              fi
+
+              echo "${key}=${val}" >> "$GITHUB_ENV"
+            done < "$ENV_FILE"
+
+            # Defaults for noisy TF SDK logs if not set in ENV secret
+            grep -q '^TF_LOG_SDK_HELPER_RESOURCE=' "$GITHUB_ENV" 2>/dev/null || echo "TF_LOG_SDK_HELPER_RESOURCE=OFF" >> "$GITHUB_ENV"
+            grep -q '^TF_LOG_SDK=' "$GITHUB_ENV" 2>/dev/null || echo "TF_LOG_SDK=OFF" >> "$GITHUB_ENV"
+            grep -q '^TF_LOG_CORE=' "$GITHUB_ENV" 2>/dev/null || echo "TF_LOG_CORE=OFF" >> "$GITHUB_ENV"
+
+            echo "Loaded acceptance-test env from secret ENV (keys only):"
+            awk -F= '/^[A-Za-z_][A-Za-z0-9_]*=/{print " - " $1}' "$GITHUB_ENV" | sort -u
 
       - name: Check gofmt
         run: |
@@ -304,6 +362,40 @@ jobs:
                   [ "$TOTAL_SKIPPED" -gt 0 ] && SKIP_PERCENT=$((TOTAL_SKIPPED * 100 / UNIQUE_TESTS))
               fi
 
+              # Fetch PC / AOS versions via ncli (same approach as nutanix.ansible ok-to-test-command)
+              CONFIG_FILE="test_config_v2.json"
+              NCLI="/home/nutanix/prism/cli/ncli"
+              VERSION_CMD="$NCLI cluster info | grep -i Version | grep -vi NCC"
+              SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10"
+
+              PC_VERSION_INFO="Failed to fetch PC version"
+              AOS_VERSION_INFO="Failed to fetch AOS version"
+
+              if [ -f "$CONFIG_FILE" ]; then
+                  PC_SSH_USER=$(jq -r '.ssh_pc_username // "nutanix"' "$CONFIG_FILE")
+                  PC_SSH_PASS=$(jq -r '.ssh_pc_password // empty' "$CONFIG_FILE")
+                  PE_SSH_USER=$(jq -r '.ssh_pe_username // "nutanix"' "$CONFIG_FILE")
+                  PE_SSH_PASS=$(jq -r '.ssh_pe_password // empty' "$CONFIG_FILE")
+                  PE_IP=$(jq -r '.data_protection.local_cluster_pe // empty' "$CONFIG_FILE")
+
+                  if [ -n "$NUTANIX_ENDPOINT" ] && [ -n "$PC_SSH_PASS" ]; then
+                      PC_VERSION_INFO=$(sshpass -p "$PC_SSH_PASS" \
+                        ssh $SSH_OPTS "$PC_SSH_USER@$NUTANIX_ENDPOINT" \
+                        "$VERSION_CMD" 2>/dev/null || echo "Failed to fetch PC version")
+                  fi
+
+                  if [ -n "$PE_IP" ] && [ -n "$PE_SSH_PASS" ]; then
+                      AOS_VERSION_INFO=$(sshpass -p "$PE_SSH_PASS" \
+                        ssh $SSH_OPTS "$PE_SSH_USER@$PE_IP" \
+                        "$VERSION_CMD" 2>/dev/null || echo "Failed to fetch AOS version")
+                  else
+                      AOS_VERSION_INFO="PE IP not configured"
+                  fi
+              else
+                  PC_VERSION_INFO="test_config_v2.json not found"
+                  AOS_VERSION_INFO="test_config_v2.json not found"
+              fi
+
               # Write summary to a file (each test appears only once, under its last result)
               {
                 echo "==================================================🧪 TEST SUMMARY 🧪================================================================================="
@@ -339,6 +431,12 @@ jobs:
                     echo "🎉💃 No tests skipped 🕺🎉"
                 fi
                 echo "==================================================================================================================================================="
+                echo ""
+                echo "PC Version:"
+                echo "$PC_VERSION_INFO"
+                echo ""
+                echo "AOS Version:"
+                echo "$AOS_VERSION_INFO"
                 echo ""
 
               } > test_summary.txt
