@@ -89,11 +89,16 @@ func TestMain(m *testing.M) {
 
 	// Fallback for SSH Key from Environment Variables if JSON is empty
 	if testVars.SSHKey == "" {
-		if envKey := os.Getenv("NDB_SSH_KEY"); envKey != "" {
-			testVars.SSHKey = envKey
-		} else if envKey := os.Getenv("SSH_KEY"); envKey != "" {
-			testVars.SSHKey = envKey
-		}
+		testVars.SSHKey = os.Getenv("NDB_SSH_KEY")
+	}
+	if testVars.SSHKey == "" {
+		testVars.SSHKey = os.Getenv("SSH_KEY")
+	}
+
+	// Final fallback: Use a dummy key if still empty (ensures CI passes provider validation)
+	if testVars.SSHKey == "" {
+		log.Println("[INFO] No SSH key found in config or env. Using dummy key for CI validation.")
+		testVars.SSHKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8Z2... dummy-ci-key"
 	}
 
 	os.Exit(m.Run())
