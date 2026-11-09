@@ -2,10 +2,9 @@ package networkingv2
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
-
+	
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -422,8 +421,7 @@ func ResourceNutanixPbrsV2Create(ctx context.Context, d *schema.ResourceData, me
 		Body: &inputSpec,
 	}
 
-	aJSON, _ := json.MarshalIndent(inputSpec, "", "  ")
-	log.Printf("[DEBUG] Create Routing Policy Payload: %s", string(aJSON))
+	log.Printf("[DEBUG] Create Routing Policy Payload: %s", utils.SanitizeForLogging(inputSpec))
 
 	resp, err := conn.RoutingPolicy.CreateRoutingPolicy(ctx, &createRoutingPolicyRequest)
 	if err != nil {

@@ -2,7 +2,6 @@ package iamv2
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -231,8 +230,7 @@ func resourceNutanixUserKeyV2Create(ctx context.Context, d *schema.ResourceData,
 	}
 	getResp := resp.Data.GetValue().(import1.Key)
 
-	aJSON, _ := json.MarshalIndent(getResp, "", "  ")
-	log.Printf("[DEBUG] Created User Key: %s", aJSON)
+	log.Printf("[DEBUG] Created User Key: %s", utils.SanitizeForLogging(getResp))
 	d.SetId(utils.StringValue(getResp.ExtId))
 
 	if err := d.Set("key_details", flattenKeyDetails(getResp.KeyDetails)); err != nil {
@@ -261,8 +259,7 @@ func resourceNutanixUserKeyV2Read(ctx context.Context, d *schema.ResourceData, m
 
 	keyConfig := resp.Data.GetValue().(import1.Key)
 
-	aJSON, _ := json.MarshalIndent(keyConfig, "", "  ")
-	log.Printf("[DEBUG] Retrieved User Key: %s", aJSON)
+	log.Printf("[DEBUG] Retrieved User Key: %s", utils.SanitizeForLogging(keyConfig))
 
 	if err := d.Set("tenant_id", keyConfig.TenantId); err != nil {
 		return diag.Errorf("error while setting tenant_id: %v", err)

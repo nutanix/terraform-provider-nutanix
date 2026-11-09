@@ -2,7 +2,6 @@ package tenancyv2
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -113,8 +112,7 @@ func dataSourceNutanixTenantMembershipV2Read(ctx context.Context, d *schema.Reso
 	}
 
 	getResp := resp.Data.GetValue().(import1.Membership)
-	aJSON, _ := json.MarshalIndent(getResp, "", "  ")
-	log.Printf("[DEBUG] Get Tenant Membership Response: %s", string(aJSON))
+	log.Printf("[DEBUG] Get Tenant Membership Response: %s", utils.SanitizeForLogging(getResp))
 
 	d.SetId(utils.StringValue(getResp.ExtId))
 

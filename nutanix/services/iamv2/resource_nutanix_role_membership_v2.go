@@ -2,9 +2,8 @@ package iamv2
 
 import (
 	"context"
-	"encoding/json"
 	"log"
-
+	
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	iamConfig "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
@@ -136,8 +135,7 @@ func ResourceNutanixRoleMembershipV2Create(ctx context.Context, d *schema.Resour
 	createRequest := import1.CreateRoleMembershipRequest{
 		Body: &body,
 	}
-	Json, _ := json.MarshalIndent(createRequest, "", "  ")
-	log.Printf("[DEBUG] Create Role Membership Request Body: %s", string(Json))
+	log.Printf("[DEBUG] Create Role Membership Request Body: %s", utils.SanitizeForLogging(createRequest))
 	resp, err := conn.RoleMembershipAPIInstance.CreateRoleMembership(ctx, &createRequest)
 	if err != nil {
 		return diag.Errorf("error while creating role membership: %v", err)

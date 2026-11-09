@@ -2,9 +2,8 @@ package iamv2
 
 import (
 	"context"
-	"encoding/json"
 	"log"
-
+	
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -75,8 +74,7 @@ func DatasourceNutanixRoleMembershipsV2Read(ctx context.Context, d *schema.Resou
 	if v, ok := d.GetOk("select"); ok {
 		listRequest.Select_ = utils.StringPtr(v.(string))
 	}
-	Json, _ := json.MarshalIndent(listRequest, "", "  ")
-	log.Printf("[DEBUG] List Role Memberships Request Body: %s", string(Json))
+	log.Printf("[DEBUG] List Role Memberships Request Body: %s", utils.SanitizeForLogging(listRequest))
 	resp, err := conn.RoleMembershipAPIInstance.ListRoleMemberships(ctx, &listRequest)
 	if err != nil {
 		return diag.Errorf("error while fetching role memberships: %v", err)
