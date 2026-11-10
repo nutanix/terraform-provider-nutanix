@@ -45,6 +45,7 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.5.
 
 * **Enhancements**
   * Expose computed `serial_id` on VM disks (`vm_disk`) so Terraform can map a managed disk to the guest device path `/dev/disk/by-id/scsi-SNUTANIX_VDISK_<serialId>`. [#1262](https://github.com/nutanix/terraform-provider-nutanix/pull/1262)
+  * Improve documentation readability and formatting consistency (for example `nutanix_cluster_v2` guidance text). [#1276](https://github.com/nutanix/terraform-provider-nutanix/issues/1276)
 
 * **Testing & Coverage**
   * Add unit tests for service packages (`TestUnit` schema / flatten-expand coverage without a live cluster). [#1254](https://github.com/nutanix/terraform-provider-nutanix/issues/1254)
