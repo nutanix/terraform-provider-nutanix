@@ -2,7 +2,6 @@ package tenancyv2
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -148,8 +147,7 @@ func ResourceNutanixTenantMembershipV2Create(ctx context.Context, d *schema.Reso
 	createRequest := import3.CreateDomainMembershipRequest{
 		Body: &inputSpec,
 	}
-	aJSON, _ := json.MarshalIndent(createRequest, "", " ")
-	log.Printf("[DEBUG] Tenant Membership create payload: %s", string(aJSON))
+	log.Printf("[DEBUG] Tenant Membership create payload: %s", utils.SanitizeForLogging(createRequest))
 
 	resp, err := conn.TenantMembershipAPIInstance.CreateDomainMembership(ctx, &createRequest)
 	if err != nil {

@@ -2,7 +2,6 @@ package networkingv2
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -581,8 +580,7 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	createSubnetRequest := import5.CreateSubnetRequest{
 		Body: &inputSpec,
 	}
-	aJSON, _ := json.MarshalIndent(createSubnetRequest, "", " ")
-	log.Printf("[DEBUG] Subnet create payload : %s", string(aJSON))
+	log.Printf("[DEBUG] Subnet create payload : %s", utils.SanitizeForLogging(createSubnetRequest))
 	resp, err := conn.SubnetAPIInstance.CreateSubnet(ctx, &createSubnetRequest)
 	if err != nil {
 		return diag.Errorf("error while creating subnets : %v", err)
@@ -615,8 +613,7 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("error while fetching subnet task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(import2.Task)
-	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Create Subnet Task Details: %s", string(aJSON))
+	log.Printf("[DEBUG] Create Subnet Task Details: %s", utils.SanitizeForLogging(taskDetails))
 
 	var subnetExtID *string
 	for _, entity := range taskDetails.EntitiesAffected {
@@ -899,8 +896,7 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 		updateSpecChanged = true
 	}
 	if updateSpecChanged {
-		aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
-		log.Printf("[DEBUG] Update Subnet Request: %s", string(aJSON))
+		log.Printf("[DEBUG] Update Subnet Request: %s", utils.SanitizeForLogging(updateSpec))
 
 		updateSubnetRequest := import5.UpdateSubnetByIdRequest{
 			ExtId: utils.StringPtr(d.Id()),

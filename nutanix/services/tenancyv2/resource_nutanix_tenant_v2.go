@@ -2,7 +2,6 @@ package tenancyv2
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"time"
 
@@ -186,8 +185,7 @@ func ResourceNutanixTenantV2Create(ctx context.Context, d *schema.ResourceData, 
 	createTenantRequest := import4.CreateTenantRequest{
 		Body: &body,
 	}
-	aJSON, _ := json.MarshalIndent(createTenantRequest, "", "  ")
-	log.Printf("[DEBUG] Tenant create payload: %s", string(aJSON))
+	log.Printf("[DEBUG] Tenant create payload: %s", utils.SanitizeForLogging(createTenantRequest))
 
 	resp, err := conn.TenantManagementAPIInstance.CreateTenant(ctx, &createTenantRequest)
 	if err != nil {

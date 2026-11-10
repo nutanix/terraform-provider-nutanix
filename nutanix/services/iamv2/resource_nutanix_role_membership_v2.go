@@ -2,7 +2,6 @@ package iamv2
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -136,8 +135,7 @@ func ResourceNutanixRoleMembershipV2Create(ctx context.Context, d *schema.Resour
 	createRequest := import1.CreateRoleMembershipRequest{
 		Body: &body,
 	}
-	Json, _ := json.MarshalIndent(createRequest, "", "  ")
-	log.Printf("[DEBUG] Create Role Membership Request Body: %s", string(Json))
+	log.Printf("[DEBUG] Create Role Membership Request Body: %s", utils.SanitizeForLogging(createRequest))
 	resp, err := conn.RoleMembershipAPIInstance.CreateRoleMembership(ctx, &createRequest)
 	if err != nil {
 		return diag.Errorf("error while creating role membership: %v", err)

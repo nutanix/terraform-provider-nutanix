@@ -2,7 +2,6 @@ package tenancyv2
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -265,8 +264,7 @@ func ResourceNutanixTenantDomainAllocationV2Create(ctx context.Context, d *schem
 		TenantExtId: tenantExtID,
 		Body:        &body,
 	}
-	aJSON, _ := json.MarshalIndent(createRequest, "", "  ")
-	log.Printf("[DEBUG] Tenant domain allocation create payload: %s", string(aJSON))
+	log.Printf("[DEBUG] Tenant domain allocation create payload: %s", utils.SanitizeForLogging(createRequest))
 
 	resp, err := conn.TenantManagementAPIInstance.CreateTenantDomainAllocation(ctx, &createRequest)
 	if err != nil {
@@ -368,8 +366,7 @@ func ResourceNutanixTenantDomainAllocationV2Update(ctx context.Context, d *schem
 		ExtId:       utils.StringPtr(d.Id()),
 		Body:        &body,
 	}
-	aJSON, _ := json.MarshalIndent(updateRequest, "", "  ")
-	log.Printf("[DEBUG] Tenant domain allocation update payload: %s", string(aJSON))
+	log.Printf("[DEBUG] Tenant domain allocation update payload: %s", utils.SanitizeForLogging(updateRequest))
 
 	_, err = conn.TenantManagementAPIInstance.UpdateTenantDomainAllocationById(ctx, &updateRequest, args)
 	if err != nil {
@@ -544,11 +541,7 @@ func updateTenantDomainAllocationExternalNetworkConnection(
 		DomainAllocationExtId: utils.StringPtr(d.Id()),
 		Body:                  connection.Config,
 	}
-	aJSON, err := json.MarshalIndent(updateRequest, "", "  ")
-	if err != nil {
-		return fmt.Errorf("error serializing tenant external network connection update: %w", err)
-	}
-	log.Printf("[DEBUG] Tenant domain allocation external network connection update payload: %s", string(aJSON))
+	log.Printf("[DEBUG] Tenant domain allocation external network connection update payload: %s", utils.SanitizeForLogging(updateRequest))
 
 	updateResp, err := conn.TenantManagementAPIInstance.UpdateTenantExternalNetworkConnection(ctx, &updateRequest, args)
 	if err != nil {

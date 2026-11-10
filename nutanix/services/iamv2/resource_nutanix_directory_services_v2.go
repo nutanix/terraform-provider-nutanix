@@ -247,8 +247,7 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 		input.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
 
-	aJSON, _ := json.MarshalIndent(input, "", " ")
-	log.Println("[DEBUG] Directory Service create payload: ", string(aJSON))
+	log.Println("[DEBUG] Directory Service create payload: ", utils.SanitizeForLogging(input))
 
 	createDirectoryServiceRequest := import2.CreateDirectoryServiceRequest{
 		Body: input,
@@ -532,8 +531,7 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 			updatedSpec.WhiteListedGroups = whitelistedGrpListStr
 		}
 
-		aJSON, _ := json.MarshalIndent(updatedSpec, "", " ")
-		log.Println("[DEBUG] Directory Service update payload: ", string(aJSON))
+		log.Println("[DEBUG] Directory Service update payload: ", utils.SanitizeForLogging(updatedSpec))
 
 		updateDirectoryServiceByIdRequest := import2.UpdateDirectoryServiceByIdRequest{
 			ExtId: utils.StringPtr(d.Id()),

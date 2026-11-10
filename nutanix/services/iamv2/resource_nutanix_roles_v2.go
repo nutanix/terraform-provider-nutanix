@@ -2,7 +2,6 @@ package iamv2
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -177,8 +176,7 @@ func ResourceNutanixRolesV4Create(ctx context.Context, d *schema.ResourceData, m
 	createRoleRequest := import2.CreateRoleRequest{
 		Body: body,
 	}
-	aJSON, _ := json.MarshalIndent(createRoleRequest, "", "  ")
-	log.Printf("[DEBUG] Create Role Request Body: %s", string(aJSON))
+	log.Printf("[DEBUG] Create Role Request Body: %s", utils.SanitizeForLogging(createRoleRequest))
 	resp, err := conn.RolesAPIInstance.CreateRole(ctx, &createRoleRequest)
 	if err != nil {
 		return diag.Errorf("error while creating role: %v", err)
@@ -350,8 +348,7 @@ func ResourceNutanixRolesV4Update(ctx context.Context, d *schema.ResourceData, m
 		Body:  &updatedSpec,
 	}
 
-	aJSON, _ := json.MarshalIndent(updateRoleByIdRequest, "", "  ")
-	log.Printf("[DEBUG] Update Role Request Body: %s", string(aJSON))
+	log.Printf("[DEBUG] Update Role Request Body: %s", utils.SanitizeForLogging(updateRoleByIdRequest))
 
 	updateResp, err := conn.RolesAPIInstance.UpdateRoleById(ctx, &updateRoleByIdRequest, headers)
 	if err != nil {

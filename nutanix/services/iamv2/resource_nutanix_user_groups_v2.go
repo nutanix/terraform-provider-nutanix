@@ -2,7 +2,6 @@ package iamv2
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"regexp"
 	"strings"
@@ -128,8 +127,7 @@ func ResourceNutanixUserGroupsV4Create(ctx context.Context, d *schema.ResourceDa
 		Body: input,
 	}
 
-	aJSON, _ := json.MarshalIndent(createUserGroupRequest, "", "  ")
-	log.Printf("[DEBUG] Create User Group Body: %s", string(aJSON))
+	log.Printf("[DEBUG] Create User Group Body: %s", utils.SanitizeForLogging(createUserGroupRequest))
 
 	resp, err := conn.UserGroupsAPIInstance.CreateUserGroup(ctx, &createUserGroupRequest)
 	if err != nil {

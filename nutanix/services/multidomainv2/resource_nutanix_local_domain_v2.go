@@ -2,7 +2,6 @@ package multidomainv2
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -127,8 +126,7 @@ func ResourceNutanixLocalDomainV2Create(ctx context.Context, d *schema.ResourceD
 		body.TenantExtId = utils.StringPtr(v.(string))
 	}
 
-	aJSON, _ := json.MarshalIndent(body, "", "  ")
-	log.Printf("[DEBUG] Register LocalDomain Body: %s", string(aJSON))
+	log.Printf("[DEBUG] Register LocalDomain Body: %s", utils.SanitizeForLogging(body))
 
 	registerReq := localdomainReq.RegisterLocalDomainRequest{
 		Body: body,

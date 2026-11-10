@@ -2,7 +2,6 @@ package networkingv2
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -438,8 +437,7 @@ func resourceNutanixVirtualSwitchV2StandardCreate(ctx context.Context, d *schema
 		Body: &inputSpec,
 	}
 
-	aJSON, _ := json.MarshalIndent(createReq, "", " ")
-	log.Printf("[DEBUG] VirtualSwitch create payload: %s", string(aJSON))
+	log.Printf("[DEBUG] VirtualSwitch create payload: %s", utils.SanitizeForLogging(createReq))
 
 	resp, err := conn.VirtualSwitchAPI.CreateVirtualSwitch(ctx, &createReq)
 	if err != nil {
@@ -492,8 +490,7 @@ func resourceNutanixVirtualSwitchV2CreateFromBridge(ctx context.Context, d *sche
 		Body: &bridge,
 	}
 
-	aJSON, _ := json.MarshalIndent(migrateReq, "", " ")
-	log.Printf("[DEBUG] VirtualSwitch migrate payload: %s", string(aJSON))
+	log.Printf("[DEBUG] VirtualSwitch migrate payload: %s", utils.SanitizeForLogging(migrateReq))
 
 	resp, err := conn.BridgesAPI.MigrateBridge(ctx, &migrateReq)
 	if err != nil {
@@ -731,8 +728,7 @@ func resourceNutanixVirtualSwitchV2Update(ctx context.Context, d *schema.Resourc
 			Body:  &updateSpec,
 		}
 
-		aJSON, _ := json.MarshalIndent(updateReq, "", " ")
-		log.Printf("[DEBUG] VirtualSwitch update payload: %s", string(aJSON))
+		log.Printf("[DEBUG] VirtualSwitch update payload: %s", utils.SanitizeForLogging(updateReq))
 
 		resp, err := conn.VirtualSwitchAPI.UpdateVirtualSwitchById(ctx, &updateReq, args)
 		if err != nil {
