@@ -2,7 +2,6 @@ package multidomainv2
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -219,8 +218,7 @@ func ResourceNutanixRegisteredDomainV2Create(ctx context.Context, d *schema.Reso
 
 	body := expandRegisteredDomain(d)
 
-	aJSON, _ := json.MarshalIndent(body, "", "  ")
-	log.Printf("[DEBUG] Create RegisteredDomain Body: %s", string(aJSON))
+	log.Printf("[DEBUG] Create RegisteredDomain Body: %s", utils.SanitizeForLogging(body))
 
 	createReq := import1.CreateRegisteredDomainRequest{
 		Body: body,
@@ -339,8 +337,7 @@ func ResourceNutanixRegisteredDomainV2Update(ctx context.Context, d *schema.Reso
 		Body:  updateSpecNew,
 	}
 
-	aJSON, _ := json.MarshalIndent(updateSpecNew, "", "  ")
-	log.Printf("[DEBUG] Update RegisteredDomain Body: %s", string(aJSON))
+	log.Printf("[DEBUG] Update RegisteredDomain Body: %s", utils.SanitizeForLogging(updateReq))
 	updateResp, err := conn.RegisteredDomains.UpdateRegisteredDomainById(ctx, &updateReq, args)
 	if err != nil {
 		return diag.Errorf("error updating RegisteredDomain: %v", err)

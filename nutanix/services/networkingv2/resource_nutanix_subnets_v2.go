@@ -2,7 +2,6 @@ package networkingv2
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -613,8 +612,8 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return diag.Errorf("error while fetching subnet task: %v", err)
 	}
-		taskDetails := taskResp.Data.GetValue().(import2.Task)
-		log.Printf("[DEBUG] Create Subnet Task Details: %s", utils.SanitizeForLogging(taskDetails))
+	taskDetails := taskResp.Data.GetValue().(import2.Task)
+	log.Printf("[DEBUG] Create Subnet Task Details: %s", utils.SanitizeForLogging(taskDetails))
 
 	var subnetExtID *string
 	for _, entity := range taskDetails.EntitiesAffected {

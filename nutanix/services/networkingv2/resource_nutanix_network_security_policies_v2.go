@@ -670,7 +670,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 		return diag.Errorf("error while fetching network security policy task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(import2.Task)
-		log.Printf("[DEBUG] Create Network Security Policy Task Details: %s", utils.SanitizeForLogging(taskDetails))
+	log.Printf("[DEBUG] Create Network Security Policy Task Details: %s", utils.SanitizeForLogging(taskDetails))
 
 	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeSecurityPolicy, "Network security policy")
 	if err != nil {
@@ -849,7 +849,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema
 	if d.HasChange("vpc_reference") {
 		updatedSpec.VpcReferences = common.ExpandListOfString(d.Get("vpc_reference").([]interface{}))
 	}
-		log.Printf("[DEBUG] Update Network Security Policy Payload: %s", utils.SanitizeForLogging(updatedSpec))
+	log.Printf("[DEBUG] Update Network Security Policy Payload: %s", utils.SanitizeForLogging(updatedSpec))
 
 	updateNetworkSecurityPolicyByIdRequest := import3.UpdateNetworkSecurityPolicyByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),

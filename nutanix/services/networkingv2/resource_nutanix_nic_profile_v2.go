@@ -6,7 +6,7 @@ import (
 	"log"
 	"sort"
 	"time"
-	
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -271,8 +271,8 @@ func ResourceNutanixNicProfileV2Delete(ctx context.Context, d *schema.ResourceDa
 		return diag.Errorf("error while deleting NIC profile: %v", err)
 	}
 
-		taskVal := resp.Data.GetValue()
-		log.Printf("[DEBUG] Delete NIC Profile Task Details: %s", utils.SanitizeForLogging(taskVal))
+	taskVal := resp.Data.GetValue()
+	log.Printf("[DEBUG] Delete NIC Profile Task Details: %s", utils.SanitizeForLogging(taskVal))
 
 	taskRef, err := extractNicProfileTaskReference(taskVal, "delete nic profile")
 	if err != nil {

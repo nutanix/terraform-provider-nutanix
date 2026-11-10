@@ -285,7 +285,7 @@ func ResourceNutanixRoutesV2Create(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("error while fetching route task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
-		log.Printf("[DEBUG] Create Route Task Details: %s", utils.SanitizeForLogging(taskDetails))
+	log.Printf("[DEBUG] Create Route Task Details: %s", utils.SanitizeForLogging(taskDetails))
 
 	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeRoute, "Route")
 	if err != nil {
@@ -403,7 +403,7 @@ func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("error while fetching route update task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
-		log.Printf("[DEBUG] Update Route Task Details: %s", utils.SanitizeForLogging(taskDetails))
+	log.Printf("[DEBUG] Update Route Task Details: %s", utils.SanitizeForLogging(taskDetails))
 
 	return ResourceNutanixRoutesV2Read(ctx, d, meta)
 }
