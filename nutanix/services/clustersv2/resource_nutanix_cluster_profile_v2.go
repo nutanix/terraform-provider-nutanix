@@ -6,6 +6,7 @@ import (
 	"log"
 	"regexp"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,7 +23,7 @@ import (
 )
 
 func ResourceNutanixClusterProfileV2() *schema.Resource {
-	return &schema.Resource{
+	r := &schema.Resource{
 		CreateContext: ResourceNutanixClusterProfileV2Create,
 		ReadContext:   ResourceNutanixClusterProfileV2Read,
 		UpdateContext: ResourceNutanixClusterProfileV2Update,
@@ -567,14 +568,46 @@ func ResourceNutanixClusterProfileV2() *schema.Resource {
 							Computed: true,
 						},
 						"config_drifts": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeList,
 							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
 			},
 		},
 	}
+
+	// Version 0 stored config_drifts as a string, including "" for compliant clusters.
+	stateTypesV0 := r.CoreConfigSchema().ImpliedType().AttributeTypes()
+	clusterTypesV0 := stateTypesV0["clusters"].ElementType().AttributeTypes()
+	clusterTypesV0["config_drifts"] = cty.String
+	stateTypesV0["clusters"] = cty.List(cty.Object(clusterTypesV0))
+	r.SchemaVersion = 1
+	r.StateUpgraders = []schema.StateUpgrader{{
+		Type:    cty.Object(stateTypesV0),
+		Upgrade: resourceNutanixClusterProfileV2StateUpgradeV0,
+		Version: 0,
+	}}
+	return r
+}
+
+func resourceNutanixClusterProfileV2StateUpgradeV0(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
+	clusters, _ := rawState["clusters"].([]interface{})
+	for _, cluster := range clusters {
+		clusterMap, ok := cluster.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		if drift, ok := clusterMap["config_drifts"].(string); ok {
+			drifts := []interface{}{}
+			if drift != "" {
+				drifts = append(drifts, drift)
+			}
+			clusterMap["config_drifts"] = drifts
+		}
+	}
+	return rawState, nil
 }
 
 func ResourceNutanixClusterProfileV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
