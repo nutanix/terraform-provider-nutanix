@@ -25,10 +25,22 @@
 * **Sensitive attributes**: Secret schema attributes (passwords, API keys, private keys, and related credentials) are marked `Sensitive: true` so Terraform redacts them from plan/show output. [#1266](https://github.com/nutanix/terraform-provider-nutanix/issues/1266)
 * **WriteOnly credentials**: High-risk credential attributes are `WriteOnly` (Terraform >= 1.11) so secrets are accepted from configuration and sent to the API, but are never persisted in Terraform state. [#1267](https://github.com/nutanix/terraform-provider-nutanix/issues/1267)
 
+**Enhancements:**
+
+* Expose computed `serial_id` on VM disks (`vm_disk`) so Terraform can map a managed disk to the guest device path `/dev/disk/by-id/scsi-SNUTANIX_VDISK_<serialId>`. [#1262](https://github.com/nutanix/terraform-provider-nutanix/pull/1262)
+* Improve documentation readability and formatting consistency (for example `nutanix_cluster_v2` guidance text). [#1276](https://github.com/nutanix/terraform-provider-nutanix/issues/1276)
+
 **Testing & Coverage:**
 
 * Add unit tests for service packages (`TestUnit` schema / flatten-expand coverage without a live cluster). [#1254](https://github.com/nutanix/terraform-provider-nutanix/issues/1254)
 * Report acceptance coverage as package statement total (`go tool cover` `total:` line, advisory >= 85%). [#1255](https://github.com/nutanix/terraform-provider-nutanix/issues/1255)
+
+**Fixed Bugs:**
+
+* Fix `nutanix_clusters_v2` / `nutanix_cluster_v2` failure when reading `network.management_server.type` (schema declared as `bool`, API returns enum). [#1229](https://github.com/nutanix/terraform-provider-nutanix/issues/1229)
+* Fix `nutanix_virtual_machine_v2` returning APIPA (`169.254.x.x`) learned IPs by waiting for a routable IP after power-on. [#871](https://github.com/nutanix/terraform-provider-nutanix/issues/871)
+* Fix `nutanix_cluster_profile_v2` refresh failure when reading `clusters[*].config_drifts` (schema declared as `string`, API returns a list). [#1252](https://github.com/nutanix/terraform-provider-nutanix/issues/1252)
+* Fix Self Service app resources ignoring provider `wait_timeout` and failing after ~20 minutes with `context deadline exceeded` (`nutanix_self_service_app_provision` and related action resources). [#1270](https://github.com/nutanix/terraform-provider-nutanix/issues/1270)
 
 > **Note:** Items marked **(Alpha)** are currently in the Alpha stage and are not recommended for production use. Use them in production environments at your own risk.
 

@@ -55,6 +55,7 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.5.
   * Fix `nutanix_clusters_v2` / `nutanix_cluster_v2` failure when reading `network.management_server.type` (schema declared as `bool`, API returns enum). [#1229](https://github.com/nutanix/terraform-provider-nutanix/issues/1229)
   * Fix `nutanix_virtual_machine_v2` returning APIPA (`169.254.x.x`) learned IPs by waiting for a routable IP after power-on. [#871](https://github.com/nutanix/terraform-provider-nutanix/issues/871)
   * Fix `nutanix_cluster_profile_v2` refresh failure when reading `clusters[*].config_drifts` (schema declared as `string`, API returns a list). [#1252](https://github.com/nutanix/terraform-provider-nutanix/issues/1252)
+  * Fix Self Service app resources ignoring provider `wait_timeout` and failing after ~20 minutes with `context deadline exceeded` (`nutanix_self_service_app_provision` and related action resources). [#1270](https://github.com/nutanix/terraform-provider-nutanix/issues/1270)
 
   -> **Note:** Items marked **(Alpha)** are currently in the Alpha stage and are not recommended for production use. Use them in production environments at your own risk.
 
