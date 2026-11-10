@@ -465,6 +465,15 @@ The resilient_capacity_warning_threshold_config attribute supports the following
 
 * `resilient_capacity_warning_threshold_percentage`: - (Optional, default `75`) Warning threshold percentage for resilient storage capacity.
 
+### Clusters
+
+The computed `clusters` attribute lists clusters attached to the profile. Each entry includes:
+
+* `ext_id`: - Cluster UUID.
+* `is_compliant`: - Whether the cluster complies with the profile.
+* `last_synced_time`: - Last synchronization time.
+* `config_drifts`: - List of configuration types that have drifted from the cluster profile. Empty when no configuration drift is reported.
+
 ## Import
 
 This helps to manage existing entities which are not created through terraform. Cluster profile can be imported using the `UUID`.  eg,
