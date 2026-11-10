@@ -28,11 +28,24 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.5.
 
 ### What's New in v2.5.1
 
-* **New Resource Support**
-  * **Add Domain (Tenancy) (Alpha)**: Add an existing domain to the allowed-domain list for Nutanix Central tenancy. [#1182](https://github.com/nutanix/terraform-provider-nutanix/issues/1182)
-  * **Tenant (Tenancy) (Alpha)**: Create and manage tenants. [#1183](https://github.com/nutanix/terraform-provider-nutanix/issues/1183)
-  * **Tenant Membership (Tenancy) (Alpha)**: Manage tenant memberships for users within domains. [#1184](https://github.com/nutanix/terraform-provider-nutanix/issues/1184)
-  * **Tenant Domain Allocation (Tenancy) (Alpha)**: Manage domain allocations for tenants. [#1185](https://github.com/nutanix/terraform-provider-nutanix/issues/1185)
+* **Nutanix Central Integration** — Starting in 2.5.1, the provider supports Nutanix Central (NC) authentication and the three tenancy admin workflows via `nutanix_central_endpoint` (with `domain_name` / `tenant_name` / `use_nc_iam` as needed). [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
+  * **Nutanix Central Admin**: Manage infrastructure on domains the NC Admin can access, and register Prism Central with Nutanix Central. See [`examples/nutanix_central_admin`](examples/nutanix_central_admin).
+  * **Service Provider Admin**: Manage tenants — create tenants, allow domains for tenancy, and allocate domains (capacity / networking) to tenants. See [`examples/service_provider_admin`](examples/service_provider_admin).
+  * **Service Provider Tenant Admin**: Manage memberships and create infrastructure on domains allocated to the tenant. See [`examples/service_provider_tenant_admin`](examples/service_provider_tenant_admin).
+
+* **New Resource Support (Tenancy) (Alpha)**
+  * **Add Domain**: Add an existing domain to the allowed-domain list for Nutanix Central tenancy. [#1182](https://github.com/nutanix/terraform-provider-nutanix/issues/1182)
+  * **Tenant**: Create and manage tenants. [#1183](https://github.com/nutanix/terraform-provider-nutanix/issues/1183)
+  * **Tenant Membership**: Manage tenant memberships for users within domains. [#1184](https://github.com/nutanix/terraform-provider-nutanix/issues/1184)
+  * **Tenant Domain Allocation**: Manage domain allocations for tenants. [#1185](https://github.com/nutanix/terraform-provider-nutanix/issues/1185)
+
+* **Security Enhancements**
+  * **Sensitive attributes**: Secret schema attributes (passwords, API keys, private keys, and related credentials) are marked `Sensitive: true` so Terraform redacts them from plan/show output. [#1266](https://github.com/nutanix/terraform-provider-nutanix/issues/1266)
+  * **WriteOnly credentials**: High-risk credential attributes are `WriteOnly` (Terraform >= 1.11) so secrets are accepted from configuration and sent to the API, but are never persisted in Terraform state. [#1267](https://github.com/nutanix/terraform-provider-nutanix/issues/1267)
+
+* **Testing & Coverage**
+  * Add unit tests for service packages (`TestUnit` schema / flatten-expand coverage without a live cluster). [#1254](https://github.com/nutanix/terraform-provider-nutanix/issues/1254)
+  * Report acceptance coverage as package statement total (`go tool cover` `total:` line, advisory >= 85%). [#1255](https://github.com/nutanix/terraform-provider-nutanix/issues/1255)
 
   -> **Note:** Items marked **(Alpha)** are currently in the Alpha stage and are not recommended for production use. Use them in production environments at your own risk.
 
@@ -101,6 +114,7 @@ The provider is used to interact with the many resources and data sources suppor
 | Terraform Version | AOS Version | PC version | Other software versions | Supported |
 | :--- | :--- | :--- | :--- | :--- |
 | 2.5.1 | 7.5.1, 7.6, 7.6.0.6 or later | pc7.5, pc7.5.1, pc7.6, pc7.6.0.6 or later | Self Service v4.4.0, v4.4.0.1 | yes |
+| 2.5.0 | 7.5.1, 7.6, 7.6.0.6 or later | pc7.5, pc7.5.1, pc7.6, pc7.6.0.6 or later | Self Service v4.4.0, v4.4.0.1 | yes |
 | 2.4.2 | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
 | 2.4.1 (⚠️ Deprecated/Invalid) | 7.5, 7.5.1 | pc7.5, pc 7.5.1 or later | Self Service v4.3.1 | yes |
 | 2.4.0 | 7.5 | pc7.5 or later | Self Service  v4.3.0 | yes |
@@ -152,7 +166,7 @@ The following keys can be used to configure the provider.
 * **insecure** - (Optional) Explicitly allow the provider to perform insecure SSL requests. If omitted, default value is false.
 * **wait_timeout** - (Optional) Set if you know that the creation or update of a resource may take long time (minutes).
 * **custom_headers** - (Optional) Map of custom HTTP headers to add to all API requests. Useful for environments that require additional headers such as Cloudflare Access service tokens. Headers can also be set via environment variables with the `NUTANIX_HEADER_` prefix (e.g. `NUTANIX_HEADER_CF_ACCESS_CLIENT_ID` becomes `Cf-Access-Client-Id`). Values defined in config take precedence over environment variables.
-* **nutanix_central_endpoint** - (Optional) Nutanix Central (NC) endpoint base used for NC Admin, Tenant Admin, and Service Provider Admin scenarios (for example `nconprem-10-102-176-12.ccpnx.com`). Can also be set via the `NUTANIX_CENTRAL_ENDPOINT` environment variable.
+* **nutanix_central_endpoint** - (Optional) Nutanix Central (NC) endpoint base used for NC Admin, Tenant Admin, and Service Provider Admin scenarios. Can also be set via the `NUTANIX_CENTRAL_ENDPOINT` environment variable. See the role-based examples under `examples/nutanix_central_admin`, `examples/service_provider_admin`, and `examples/service_provider_tenant_admin` for provider configuration per workflow.
 * **domain_name** - (Optional) Domain name for the Prism Central instance. Used to construct the PC endpoint as `<domain_name>.domains.<nutanix_central_endpoint>` for NC Admin and Tenant Admin scenarios. Can also be set via the `NUTANIX_DOMAIN_NAME` environment variable.
 * **tenant_name** - (Optional) Tenant name for Tenant Admin scenarios. Required when operating as a Tenant Admin to manage tenant-specific resources. Can also be set via the `NUTANIX_TENANT_NAME` environment variable.
 * **use_nc_iam** - (Optional) When `true`, IAM-related calls use the NC IAM endpoint (`iam.services.<nutanix_central_endpoint>`) instead of the PC IAM endpoint. Applicable for NC Admin and Tenant Admin scenarios. Can also be set via the `NUTANIX_USE_NC_IAM` environment variable. Defaults to `false`.
@@ -181,17 +195,17 @@ provider "nutanix" {
   }
 }
 
-# Nutanix Central (NC) Admin / Tenant Admin
+# Nutanix Central tenancy workflows — use vars; see examples/ for each persona
 provider "nutanix" {
-  username                 = "admin"
-  password                 = "myPassword"
-  nutanix_central_endpoint = "nconprem-example.ccpnx.com"
-  domain_name              = "pc-domain"
-  tenant_name              = "example-tenant" # Tenant Admin scenarios
-  use_nc_iam               = true
-  insecure                 = true
+  username                 = var.nutanix_username
+  password                 = var.nutanix_password
+  nutanix_central_endpoint = var.nutanix_central_endpoint
+  domain_name              = var.domain_name              # NC Admin / Tenant Admin
+  tenant_name              = var.tenant_name              # Tenant Admin
+  use_nc_iam               = true                         # Tenant Admin / IAM via NC
 }
 ```
+
 
 ## From terraform-provider-nutanix v1.5.0-beta
 
@@ -581,13 +595,13 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | - | nutanix_registered_domains_v2 (Beta) |
 | - | nutanix_local_domain_v2 (Beta) |
 | - | nutanix_locations_v2 (Beta) |
-| - | nutanix_domains_v2 |
-| - | nutanix_tenant_v2 |
-| - | nutanix_tenants_v2 |
-| - | nutanix_tenant_membership_v2 |
-| - | nutanix_tenant_memberships_v2 |
-| - | nutanix_tenant_domain_allocation_v2 |
-| - | nutanix_tenant_domain_allocations_v2 |
+| - | nutanix_domains_v2 (Alpha) |
+| - | nutanix_tenant_v2 (Alpha) |
+| - | nutanix_tenants_v2 (Alpha) |
+| - | nutanix_tenant_membership_v2 (Alpha) |
+| - | nutanix_tenant_memberships_v2 (Alpha) |
+| - | nutanix_tenant_domain_allocation_v2 (Alpha) |
+| - | nutanix_tenant_domain_allocations_v2 (Alpha) |
 
 ## Developing the provider
 

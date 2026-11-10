@@ -1,0 +1,22 @@
+# Copy this file locally and replace each placeholder with environment-specific values.
+nutanix_central_username = "admin"
+nutanix_central_password = "password"
+nutanix_central_endpoint = "<nutanix-central-fqdn>"
+
+nutanix_pc_username = "admin"
+nutanix_pc_password = "password"
+nutanix_pc_endpoint = "10.xx.xx.xx"
+
+registered_domain_name    = "example-registered-domain"
+registered_domain_fqdn    = "pc.example.com"
+domain_ext_id             = "00000000-0000-0000-0000-000000000000"
+location_ext_id           = "00000000-0000-0000-0000-000000000000"
+nc_target_url             = "https://nutanix-central.example.com"
+nc_tenant_ext_id          = "22222222-2222-2222-2222-222222222222"
+registered_domain_api_key = "REPLACE_WITH_API_KEY"
+registered_domain_key_id  = "example-key-id"
+tunnel_endpoint           = "https://tunnel.example.com"
+client_signing_request    = "REPLACE_WITH_CLIENT_SIGNING_REQUEST"
+nc_api_key                = "REPLACE_WITH_NUTANIX_CENTRAL_API_KEY"
+nc_key_id                 = "REPLACE_WITH_NUTANIX_CENTRAL_KEY_ID"
+nc_identity_provider_ext_id = "11111111-1111-1111-1111-111111111111"

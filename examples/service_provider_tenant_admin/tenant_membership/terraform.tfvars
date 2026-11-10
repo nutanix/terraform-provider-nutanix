@@ -1,0 +1,12 @@
+# Copy this file locally and replace each placeholder with environment-specific values.
+nutanix_username           = "tenant-admin"
+nutanix_password           = "password"
+nutanix_central_endpoint   = "<nutanix-central-fqdn>"
+domain_name                = "pc-domain"
+tenant_name                = "example-tenant"
+domain_ext_id              = "00000000-0000-0000-0000-000000000000"
+role_ext_id                = "00000000-0000-0000-0000-000000000001"
+identity_ext_id            = "00000000-0000-0000-0000-000000000002"
+identity_provider_ext_id   = "00000000-0000-0000-0000-000000000003"
+principal_value            = "user@example.com"
+identity_type              = "USER"
