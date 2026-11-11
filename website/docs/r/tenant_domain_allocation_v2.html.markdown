@@ -74,8 +74,8 @@ The following arguments are supported:
 #### quota
 
 - `ext_id`: (Optional) The external identifier of the quota for the placement target.
-- `memory`: (Optional) The amount of memory allocated as quota, in bytes.
-- `storage`: (Optional) The amount of storage allocated as quota, in bytes.
+- `memory`: (Optional) The amount of memory allocated as quota, in Giga bytes.
+- `storage`: (Optional) The amount of storage allocated as quota, in Giga bytes.
 - `vcpu`: (Optional) The number of vCPUs allocated as quota.
 
 #### resource_group
