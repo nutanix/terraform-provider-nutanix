@@ -53,6 +53,13 @@ terraform {
 #
 # Do not put the full tenant URL into nutanix_central_endpoint — use only the
 # service provider FQDN (the part after ".tenants.").
+#
+# Note:
+#   Calls to Nutanix Central may return 404 when the SP FQDN Host header includes
+#   an explicit :443 port. This can affect Terraform and other API clients. Until
+#   a fix ships, add both <host> and <host>:443 to ALLOWED_CALLBACK_HOSTS on the
+#   Dion service and restart it. Details:
+#   https://portal.nutanix.com/page/documents/kbs/details?targetId=kA0VO000000EVaD0AW
 
 provider "nutanix" {
   username                 = var.tenant_username
