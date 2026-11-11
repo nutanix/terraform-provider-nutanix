@@ -92,14 +92,6 @@ resource "nutanix_registered_domain_v2" "registered_domain" {
   name            = var.registered_domain_name
   location_ext_id = data.nutanix_locations_v2.registered_domain.locations[1].ext_id
 
-  # Domain registration must run only after AD, LDAP users and the admin
-  # authorization policies on both PC and NC have been configured.
-  depends_on = [
-    nutanix_authorization_policy_v2.pc_admin,
-    nutanix_authorization_policy_v2.nc_admin,
-    nutanix_authorization_policy_v2.service_provider_admin,
-  ]
-
   # API-issued; read via data.nutanix_registered_domain_v2.registration_creds.
   lifecycle {
     ignore_changes = [registration_config]
