@@ -101,7 +101,8 @@ func Provider() *schema.Provider {
 			"a Tenant Admin to manage tenant-specific resources.",
 
 		"use_nc_iam": "When true, IAM-related calls use the NC IAM endpoint (iam.services.<nutanix_central_endpoint>)\n" +
-			"instead of the PC IAM endpoint. Applicable for NC Admin and Tenant Admin scenarios.",
+    		"instead of the PC IAM endpoint. Enable this only when an NC Admin needs to use NC IAM features.",
+
 	}
 
 	// Nutanix provider schema

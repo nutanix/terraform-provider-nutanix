@@ -28,7 +28,7 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.5.
 
 ### What's New in v2.5.1
 
-- **Nutanix Central Integration** — Starting in 2.5.1, the provider supports Nutanix Central (NC) authentication and the three tenancy admin workflows via `nutanix_central_endpoint` (with `domain_name` / `tenant_name` / `use_nc_iam` as needed). [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
+- **Nutanix Central Integration** :
   - **Nutanix Central Admin**: Manage infrastructure on domains the NC Admin can access, and register Prism Central with Nutanix Central. See [`examples/nutanix_central/nutanix_central_admin`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/nutanix_central/nutanix_central_admin).
   - **Service Provider Admin**: Manage tenants — create tenants, allow domains for tenancy, and allocate domains (capacity / networking) to tenants. See [`examples/nutanix_central/service_provider_tenant_management`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/nutanix_central/service_provider_tenant_management).
   - **Service Provider Tenant Admin**: Manage memberships and create infrastructure on domains allocated to the tenant. See [`examples/nutanix_central/service_provider_tenant_admin`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/nutanix_central/service_provider_tenant_admin).
@@ -221,7 +221,6 @@ provider "nutanix" {
 From foundation getting released in 1.5.0-beta, provider configuration will accommodate Prism Central and foundation API connection details. **It will show warnings for disabled API connections as per the attributes given in provider configuration in above mentioned format**. The below are the required attributes for corresponding provider components:
 
 * `endpoint` and either (`username` + `password`) or `api_key` are required for using Prism Central & Karbon based resources and data sources.
-* `nutanix_central_endpoint` (with either `username` + `password` or `api_key`) is required for Nutanix Central tenancy scenarios. Use `domain_name` when targeting a specific PC domain, `tenant_name` for Tenant Admin, and `use_nc_iam` when IAM calls should go to NC IAM.
 * `foundation_endpoint` is required field for using Foundation based resources and data sources
 * `ndb_username`, `ndb_password` and `ndb_endpoint` are required fields for using NDB based resources and data sources
 

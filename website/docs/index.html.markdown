@@ -19,7 +19,7 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.5.
 
 ### What's New in v2.5.1
 
-- **Nutanix Central Integration** — Starting in 2.5.1, the provider supports Nutanix Central (NC) authentication and the three tenancy admin workflows via `nutanix_central_endpoint` (with `domain_name` / `tenant_name` / `use_nc_iam` as needed). [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
+- **Nutanix Central Integration** :
   - **Nutanix Central Admin**: Manage infrastructure on domains the NC Admin can access, and register Prism Central with Nutanix Central. See [`examples/nutanix_central/nutanix_central_admin`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/nutanix_central/nutanix_central_admin).
   - **Service Provider Admin**: Manage tenants — create tenants, allow domains for tenancy, and allocate domains (capacity / networking) to tenants. See [`examples/nutanix_central/service_provider_tenant_management`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/nutanix_central/service_provider_tenant_management).
   - **Service Provider Tenant Admin**: Manage memberships and create infrastructure on domains allocated to the tenant. See [`examples/nutanix_central/service_provider_tenant_admin`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/nutanix_central/service_provider_tenant_admin).
@@ -598,34 +598,6 @@ For example:
 | `NUTANIX_HEADER_X_CUSTOM_HEADER` | `X-Custom-Header` |
 
 Headers defined in the provider configuration take precedence over environment variables.
-
-### Nutanix Central (NC) Authentication
-
-For Nutanix Central tenancy workflows (NC Admin, Tenant Admin, Service Provider Admin), configure `nutanix_central_endpoint` instead of (or in addition to) a Prism Central `endpoint`. Use `domain_name` to target a PC domain, `tenant_name` for Tenant Admin operations, and `use_nc_iam` when IAM calls should go to NC IAM.
-
-Usage:
-
-```terraform
-provider "nutanix" {
-  username                 = var.nutanix_username
-  password                 = var.nutanix_password
-  nutanix_central_endpoint = var.nutanix_central_endpoint
-  domain_name              = var.domain_name
-  tenant_name              = var.tenant_name # Tenant Admin scenarios
-  use_nc_iam               = true
-  insecure                 = true
-}
-```
-
-Or using environment variables:
-```bash
-export NUTANIX_CENTRAL_ENDPOINT="<nutanix-central-fqdn>"
-export NUTANIX_DOMAIN_NAME="<domain-name>"
-export NUTANIX_TENANT_NAME="<tenant-name>"
-export NUTANIX_USE_NC_IAM="true"
-```
-
-Persona-specific provider examples (Service Provider Admin, Tenant Admin, and Nutanix Central Admin) live under the corresponding folders in [`examples/nutanix_central/`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/nutanix_central).
 
 ## Notes
 

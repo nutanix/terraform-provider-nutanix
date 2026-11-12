@@ -43,12 +43,12 @@ provider "nutanix" {
   port                     = 443
 }
 
-// Shortlist the domain. Which can be later assigned to tenant
+#  Shortlist the domain. Which can be later assigned to tenant
 resource "nutanix_add_domain_v2" "add_domain" {
   domain_ext_id = var.domain_ext_id
 }
 
-# Validate the domains shortlisted in SP.
+#  Validate the domains shortlisted in SP.
 data "nutanix_domains_v2" "registered_domain" {
   depends_on = [nutanix_add_domain_v2.add_domain]
 }
