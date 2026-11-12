@@ -74,6 +74,8 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.5.
   - Fix `nutanix_virtual_machine_v2` returning APIPA (`169.254.x.x`) learned IPs by waiting for a routable IP after power-on. [#871](https://github.com/nutanix/terraform-provider-nutanix/issues/871)
   - Fix `nutanix_cluster_profile_v2` refresh failure when reading `clusters[*].config_drifts` (schema declared as `string`, API returns a list). [#1252](https://github.com/nutanix/terraform-provider-nutanix/issues/1252)
   - Fix Self Service app resources ignoring provider `wait_timeout` and failing after ~20 minutes with `context deadline exceeded` (`nutanix_self_service_app_provision` and related action resources). [#1270](https://github.com/nutanix/terraform-provider-nutanix/issues/1270)
+  * Fixed an issue where destroying NDB databases could leave orphaned DB Server VMs and DB Server Clusters (DPCs). ([#1281](https://github.com/nutanix/terraform-provider-nutanix/issues/1281))
+
 
   -> **Note:** Items marked **(Alpha)** are currently in the Alpha stage and are not recommended for production use. Use them in production environments at your own risk.
 
@@ -146,7 +148,8 @@ The following keys can be used to configure the provider.
 * **nutanix_central_endpoint** - (Optional) Nutanix Central (NC) endpoint base used for NC Admin, Tenant Admin, and Service Provider Admin scenarios. Can also be set via the `NUTANIX_CENTRAL_ENDPOINT` environment variable. See the role-based examples under `examples/nutanix_central/nutanix_central_admin`, `examples/nutanix_central/service_provider_tenant_admin`, and `examples/nutanix_central/service_provider_tenant_management` for provider configuration per workflow.
 * **domain_name** - (Optional) Domain name for the Prism Central instance. Used to construct the PC endpoint as `<domain_name>.domains.<nutanix_central_endpoint>` for NC Admin and Tenant Admin scenarios. Can also be set via the `NUTANIX_DOMAIN_NAME` environment variable.
 * **tenant_name** - (Optional) Tenant name for Tenant Admin scenarios. Required when operating as a Tenant Admin to manage tenant-specific resources. Can also be set via the `NUTANIX_TENANT_NAME` environment variable.
-* **use_nc_iam** - (Optional) When `true`, IAM-related calls use the NC IAM endpoint (`iam.services.<nutanix_central_endpoint>`) instead of the PC IAM endpoint. Applicable for NC Admin and Tenant Admin scenarios. Can also be set via the `NUTANIX_USE_NC_IAM` environment variable. Defaults to `false`.
+* **use_nc_iam** - (Optional) When `true`, IAM-related calls use the NC IAM endpoint (`iam.services.<nutanix_central_endpoint>`) instead of the PC IAM endpoint. Enable this only when an NC Admin needs to use NC IAM features. This can also be specified with the `NUTANIX_USE_NC_IAM` environment variable. Defaults to `false`.
+
 
 ```hcl
 # Basic authentication
