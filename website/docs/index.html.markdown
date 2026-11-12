@@ -24,6 +24,8 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.5.
   - **Service Provider Admin**: Manage tenants — create tenants, allow domains for tenancy, and allocate domains (capacity / networking) to tenants. See [`examples/nutanix_central/service_provider_tenant_management`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/nutanix_central/service_provider_tenant_management).
   - **Service Provider Tenant Admin**: Manage memberships and create infrastructure on domains allocated to the tenant. See [`examples/nutanix_central/service_provider_tenant_admin`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/nutanix_central/service_provider_tenant_admin).
 
+  -> **Note For Service Provider Admin:** For Tenant Admin infrastructure workflows workaround need to be applied, please refer to [KB article](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA0VO000000EVaD0AW).
+
 - **New Resource Support**
   - **Service Provider Tenant Membership**: 
     - **Tenant Membership**: `nutanix_tenant_membership_v2` (Alpha) Manage tenant memberships for users within domains. [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
