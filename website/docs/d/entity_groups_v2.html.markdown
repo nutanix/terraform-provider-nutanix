@@ -82,7 +82,7 @@ Each element in `entity_groups` contains:
 
 ### allowed_config (list element)
 
-* `entities` - List of allowed entities. Each entity may contain `type`, `selected_by`, `addresses`, `ip_ranges`, `kube_entities`, `reference_ext_ids`, `fqdns`, `match_criteria`, `reference_string`.
+* `entities` - List of allowed entities. Each entity may contain `type`, `select_by` (and deprecated `selected_by`), `addresses`, `ip_ranges`, `kube_entities`, `reference_ext_ids`, `fqdns`, `match_criteria`, `reference_string`.
 
 ### except_config (list element)
 

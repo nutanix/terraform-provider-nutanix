@@ -45,6 +45,15 @@ func TestUnitExpandAllowedConfig(t *testing.T) {
 			name: "populated",
 			in: []interface{}{map[string]interface{}{
 				"entities": []interface{}{map[string]interface{}{
+					"select_by": "EXT_ID",
+					"type":      "VM",
+				}},
+			}},
+		},
+		{
+			name: "populated_selected_by_compat",
+			in: []interface{}{map[string]interface{}{
+				"entities": []interface{}{map[string]interface{}{
 					"selected_by": "EXT_ID",
 					"type":        "VM",
 				}},
@@ -77,7 +86,7 @@ func TestUnitExpandAllowedEntities(t *testing.T) {
 	t.Run("populated", func(t *testing.T) {
 		t.Parallel()
 		got := expandAllowedEntities([]interface{}{map[string]interface{}{
-			"selected_by":       "IP_VALUES",
+			"select_by":         "IP_VALUES",
 			"type":              "ADDRESS_GROUP",
 			"reference_ext_ids": []interface{}{"ref-1"},
 			"fqdns":             []interface{}{"example.test"},
@@ -108,6 +117,16 @@ func TestUnitExpandAllowedEntities(t *testing.T) {
 		require.NotNil(t, got[0].Addresses)
 		require.NotNil(t, got[0].IpRanges)
 	})
+	t.Run("select_by_prefers_over_selected_by", func(t *testing.T) {
+		t.Parallel()
+		got := expandAllowedEntities([]interface{}{map[string]interface{}{
+			"select_by":   "EXT_ID",
+			"selected_by": "IP_VALUES",
+			"type":        "VM",
+		}})
+		require.Len(t, got, 1)
+		require.Equal(t, "EXT_ID", got[0].SelectBy.GetName())
+	})
 }
 
 func TestUnitExpandExceptConfig(t *testing.T) {
@@ -124,8 +143,8 @@ func TestUnitExpandExceptConfig(t *testing.T) {
 			name: "populated",
 			in: []interface{}{map[string]interface{}{
 				"entities": []interface{}{map[string]interface{}{
-					"selected_by": "EXT_ID",
-					"type":        "ADDRESS_GROUP",
+					"select_by": "EXT_ID",
+					"type":      "ADDRESS_GROUP",
 				}},
 			}},
 		},
@@ -154,7 +173,7 @@ func TestUnitExpandExceptEntities(t *testing.T) {
 	t.Run("populated", func(t *testing.T) {
 		t.Parallel()
 		got := expandExceptEntities([]interface{}{map[string]interface{}{
-			"selected_by":       "EXT_ID",
+			"select_by":         "EXT_ID",
 			"type":              "ADDRESS_GROUP",
 			"reference_ext_ids": []interface{}{"ex-1"},
 		}})
@@ -286,6 +305,7 @@ func TestUnitFlattenAllowedConfig(t *testing.T) {
 			},
 			want: []map[string]interface{}{{
 				"entities": []map[string]interface{}{{
+					"select_by":         "EXT_ID",
 					"selected_by":       "EXT_ID",
 					"type":              "VM",
 					"addresses":         []map[string]interface{}(nil),
@@ -329,6 +349,7 @@ func TestUnitFlattenAllowedEntities(t *testing.T) {
 				Fqdns:           []string{"a.test"},
 			}},
 			want: []map[string]interface{}{{
+				"select_by":         "NAME",
 				"selected_by":       "NAME",
 				"type":              "SUBNET",
 				"addresses":         []map[string]interface{}(nil),
@@ -370,6 +391,7 @@ func TestUnitFlattenExceptConfig(t *testing.T) {
 			},
 			want: []map[string]interface{}{{
 				"entities": []map[string]interface{}{{
+					"select_by":         "EXT_ID",
 					"selected_by":       "EXT_ID",
 					"type":              "ADDRESS_GROUP",
 					"addresses":         []map[string]interface{}(nil),
@@ -407,6 +429,7 @@ func TestUnitFlattenExceptEntities(t *testing.T) {
 				ReferenceExtIds: []string{"ex-1"},
 			}},
 			want: []map[string]interface{}{{
+				"select_by":         "IP_VALUES",
 				"selected_by":       "IP_VALUES",
 				"type":              "ADDRESS_GROUP",
 				"addresses":         []map[string]interface{}(nil),

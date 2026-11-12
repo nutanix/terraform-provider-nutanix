@@ -28,13 +28,13 @@ resource "nutanix_entity_group_v2" "with_allowed" {
     # VM entities selected by category (valid pair: CATEGORY_EXT_ID, VM)
     entities {
       type             = "VM"
-      selected_by      = "CATEGORY_EXT_ID"
+      select_by      = "CATEGORY_EXT_ID"
       reference_ext_ids = ["category-uuid-1", "category-uuid-2"]
     }
-    # Address group by IP (valid pair: IP_VALUES, ADDRESS_GROUP). Only one entity per (selected_by, type)—combine addresses and ip_ranges in one block.
+    # Address group by IP (valid pair: IP_VALUES, ADDRESS_GROUP). Only one entity per (select_by, type)—combine addresses and ip_ranges in one block.
     entities {
       type        = "ADDRESS_GROUP"
-      selected_by = "IP_VALUES"
+      select_by = "IP_VALUES"
       addresses {
         ipv4_addresses {
           value         = "10.0.0.0"
@@ -65,7 +65,8 @@ resource "nutanix_entity_group_v2" "with_allowed" {
 
 * `entities` - (Optional) List of allowed entities. Each entity may contain:
   * `type` - (Required) The type of entity. Valid values: `KUBE_NAMESPACE`, `SUBNET`, `VM`, `VPC`, `KUBE_SERVICE`, `KUBE_CLUSTER`, `KUBE_PODS`, `ADDRESS_GROUP`.
-  * `selected_by` - (Optional) The selection method for the entity. Valid values: `IP_VALUES`, `EXT_ID`, `CATEGORY_EXT_ID`, `LABELS`, `NAME`, `REGEX`, `FQDN_VALUES`.
+  * `select_by` - (Optional) The selection method for the entity. Valid values: `IP_VALUES`, `EXT_ID`, `CATEGORY_EXT_ID`, `LABELS`, `NAME`, `REGEX`, `FQDN_VALUES`.
+  * `selected_by` - (Optional, Deprecated) Deprecated alias for `select_by`. Prefer `select_by`; `selected_by` will be removed in a future release.
   * `addresses` - (Optional) With `ipv4_addresses` block(s):
     * `value` - (Required) IPv4 address value.
     * `prefix_length` - (Optional) Prefix length.
@@ -73,17 +74,17 @@ resource "nutanix_entity_group_v2" "with_allowed" {
     * `start_ip` - (Required) Start IP of the range.
     * `end_ip` - (Required) End IP of the range.
   * `kube_entities` - (Optional) List of kube entity identifiers. Required when `type` is a kube type (`KUBE_NAMESPACE`, `KUBE_SERVICE`, `KUBE_CLUSTER`, or `KUBE_PODS`).
-  * `reference_ext_ids` - (Optional) List of reference external identifiers. Required when `selected_by` is `EXT_ID`.
-  * `fqdns` - (Optional) List of FQDNs. Required when `selected_by` is `FQDN_VALUES`.
+  * `reference_ext_ids` - (Optional) List of reference external identifiers. Required when `select_by` is `EXT_ID`.
+  * `fqdns` - (Optional) List of FQDNs. Required when `select_by` is `FQDN_VALUES`.
   * `match_criteria` - (Optional) Match criteria for regex-based entity selection. Valid values: `CONTAINS`, `STARTS_WITH`, `ENDS_WITH`, `EQUALS`.
-  * `reference_string` - (Optional) String pattern for matching entities. Required when `selected_by` is `REGEX`.
+  * `reference_string` - (Optional) String pattern for matching entities. Required when `select_by` is `REGEX`.
 
 ### except_config
 
 * `entities` - (Optional) List of except entities. Each entity may contain:
   * `addresses` - (Optional) With `ipv4_addresses` block(s).
   * `ip_ranges` - (Optional) With `ipv4_ranges` block(s).
-  * `reference_ext_ids` - (Optional) List of reference external identifiers. Required when `selected_by` is `EXT_ID`.
+  * `reference_ext_ids` - (Optional) List of reference external identifiers. Required when `select_by` is `EXT_ID`.
 
 ## Validation Requirements
 
@@ -96,11 +97,11 @@ The following validation rules apply to `allowed_config` entities:
 ### Conditional Requirements
 
 * `kube_entities` - Required when `type` is one of: `KUBE_NAMESPACE`, `KUBE_SERVICE`, `KUBE_CLUSTER`, or `KUBE_PODS`. Must not be empty.
-* `reference_ext_ids` - Required when `selected_by` is `EXT_ID`. Must not be empty.
+* `reference_ext_ids` - Required when `select_by` is `EXT_ID`. Must not be empty.
 
 ### Valid Combinations
 
-The combination of `selected_by` and `type` must be one of the following valid pairs:
+The combination of `select_by` and `type` must be one of the following valid pairs:
 
 * `(CATEGORY_EXT_ID, VM)`
 * `(EXT_ID, VM)`
@@ -118,9 +119,9 @@ The combination of `selected_by` and `type` must be one of the following valid p
 
 Any other combination will result in a validation error.
 
-### Duplicate (selected_by, type) Not Allowed
+### Duplicate (select_by, type) Not Allowed
 
-Within one entity group, you cannot have two entities with the same `(selected_by, type)` pair. For example, two entities both using `IP_VALUES` and `ADDRESS_GROUP` are invalid. Combine all addresses and ip_ranges into a single entity block when using `(IP_VALUES, ADDRESS_GROUP)`.
+Within one entity group, you cannot have two entities with the same `(select_by, type)` pair. For example, two entities both using `IP_VALUES` and `ADDRESS_GROUP` are invalid. Combine all addresses and ip_ranges into a single entity block when using `(IP_VALUES, ADDRESS_GROUP)`.
 
 ## Attributes Reference
 

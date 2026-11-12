@@ -65,7 +65,7 @@ resource "nutanix_entity_group_v2" "test" {
   allowed_config {
     entities {
       type             = "VM"
-      selected_by      = "CATEGORY_EXT_ID"
+      select_by      = "CATEGORY_EXT_ID"
       reference_ext_ids = [
         nutanix_category_v2.categories[0].id,
         nutanix_category_v2.categories[1].id

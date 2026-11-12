@@ -27,7 +27,7 @@ func TestAccV2NutanixEntityGroupResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameEntityGroupV2, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "name", name),
 					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "description", description),
-					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "allowed_config.0.entities.0.selected_by", "CATEGORY_EXT_ID"),
+					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "allowed_config.0.entities.0.select_by", "CATEGORY_EXT_ID"),
 					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "allowed_config.0.entities.0.type", "VM"),
 					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "allowed_config.0.entities.0.reference_ext_ids.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceNameEntityGroupV2, "allowed_config.0.entities.0.reference_ext_ids.0", "nutanix_category_v2.categories.0", "id"),
@@ -95,7 +95,7 @@ resource "nutanix_entity_group_v2" "test" {
   allowed_config {
     entities {
       type             = "VM"
-      selected_by      = "CATEGORY_EXT_ID"
+      select_by      = "CATEGORY_EXT_ID"
       reference_ext_ids = [
         nutanix_category_v2.categories[0].id,
         nutanix_category_v2.categories[1].id
@@ -122,7 +122,7 @@ resource "nutanix_entity_group_v2" "test" {
   allowed_config {
     entities {
       type             = "VM"
-      selected_by      = "CATEGORY_EXT_ID"
+      select_by      = "CATEGORY_EXT_ID"
       reference_ext_ids = [
         nutanix_category_v2.categories[0].id,
         nutanix_category_v2.categories[1].id
@@ -193,7 +193,7 @@ func TestAccV2NutanixEntityGroupResource_FqdnSelection(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameEntityGroupV2, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "name", name),
 					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "allowed_config.0.entities.0.type", "ADDRESS_GROUP"),
-					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "allowed_config.0.entities.0.selected_by", "FQDN_VALUES"),
+					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "allowed_config.0.entities.0.select_by", "FQDN_VALUES"),
 					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "allowed_config.0.entities.0.fqdns.#", "2"),
 					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "allowed_config.0.entities.0.fqdns.0", "example.com"),
 					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "allowed_config.0.entities.0.fqdns.1", "api.example.com"),
@@ -243,7 +243,7 @@ func TestAccV2NutanixEntityGroupResource_RegexSelection(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameEntityGroupV2, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "name", name),
 					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "allowed_config.0.entities.0.type", "VM"),
-					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "allowed_config.0.entities.0.selected_by", "REGEX"),
+					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "allowed_config.0.entities.0.select_by", "REGEX"),
 					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "allowed_config.0.entities.0.reference_string", "web-prod"),
 					resource.TestCheckResourceAttr(resourceNameEntityGroupV2, "allowed_config.0.entities.0.match_criteria", "STARTS_WITH"),
 				),
@@ -293,7 +293,7 @@ resource "nutanix_entity_group_v2" "test" {
   allowed_config {
     entities {
       type              = "VM"
-      selected_by       = "CATEGORY_EXT_ID"
+      select_by       = "CATEGORY_EXT_ID"
       reference_ext_ids = [
         nutanix_category_v2.categories[0].id,
         nutanix_category_v2.categories[1].id
@@ -343,7 +343,7 @@ resource "nutanix_entity_group_v2" "test" {
   allowed_config {
     entities {
       type        = "ADDRESS_GROUP"
-      selected_by = "FQDN_VALUES"
+      select_by = "FQDN_VALUES"
       fqdns       = %[3]s
     }
   }
@@ -360,7 +360,7 @@ resource "nutanix_entity_group_v2" "test" {
   allowed_config {
     entities {
       type             = "VM"
-      selected_by      = "REGEX"
+      select_by      = "REGEX"
       reference_string = "%[3]s"
       match_criteria   = "%[4]s"
     }
@@ -378,7 +378,7 @@ resource "nutanix_entity_group_v2" "test" {
   allowed_config {
     entities {
       type            = "VM"
-      selected_by     = "CATEGORY_EXT_ID"
+      select_by     = "CATEGORY_EXT_ID"
       reference_ext_ids = [
         "83cbf00d-782f-4efc-87c8-4129f5942aaa",
         "83cbf00d-782f-4efc-87c8-4129f5942bbb"
