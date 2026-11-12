@@ -80,6 +80,7 @@ type Service interface {
 	ReadDBServerVM(ctx context.Context, id string) (*DBServerVMResponse, error)
 	UpdateDBServerVM(ctx context.Context, body *UpdateDBServerVMRequest, dbserverid string) (*DBServerVMResponse, error)
 	DeleteDBServerVM(ctx context.Context, req *DeleteDBServerVMRequest, dbserverid string) (*DeleteDatabaseResponse, error)
+	DeleteDBServerCluster(ctx context.Context, req *DeleteDPCRequest, dbserverClusterId string) (*DeleteDatabaseResponse, error)
 	RegisterDBServerVM(ctx context.Context, body *DBServerRegisterInput) (*ProvisionDatabaseResponse, error)
 	GetDBServerVM(ctx context.Context, filter *DBServerFilterRequest) (*DBServerVMResponse, error)
 	ListDBServerVM(ctx context.Context) (*ListDBServerVMResponse, error)
@@ -950,6 +951,16 @@ func (sc ServiceClient) UpdateDBServerVM(ctx context.Context, body *UpdateDBServ
 	}
 
 	res := new(DBServerVMResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteDBServerCluster(ctx context.Context, req *DeleteDPCRequest, dbServerClusterID string) (*DeleteDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/dpcs/%s", dbServerClusterID), req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(DeleteDatabaseResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
