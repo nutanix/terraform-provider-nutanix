@@ -125,20 +125,14 @@ type waitTimeoutGetter interface {
 
 // ResolveWaitTimeout returns the effective wait duration for a long-running
 // operation. If meta exposes GetWaitTimeout() and the configured value is
-// positive, it is interpreted as minutes and compared with defaultTimeout;
-// the longer of the two wins. That way provider wait_timeout can extend a
-// resource wait but cannot accidentally shorten it (e.g. wait_timeout = 1
-// against a 60-minute Calm default). If unset/non-positive, defaultTimeout
-// is returned unchanged (typically d.Timeout(schema.TimeoutXxx)).
+// positive, it is interpreted as minutes and returned. Otherwise the caller's
+// defaultTimeout is returned unchanged (typically d.Timeout(schema.TimeoutXxx)).
 //
 // Unit contract: provider wait_timeout is expressed in MINUTES.
 func ResolveWaitTimeout(meta interface{}, defaultTimeout time.Duration) time.Duration {
 	if c, ok := meta.(waitTimeoutGetter); ok {
 		if wt := c.GetWaitTimeout(); wt > 0 {
-			providerTimeout := time.Duration(wt) * time.Minute
-			if providerTimeout > defaultTimeout {
-				return providerTimeout
-			}
+			return time.Duration(wt) * time.Minute
 		}
 	}
 	return defaultTimeout

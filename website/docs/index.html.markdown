@@ -519,7 +519,7 @@ The following arguments are used to configure the Nutanix Provider:
 * `insecure` - (Optional) This specifies whether to allow verify ssl certificates. This can also be specified with `NUTANIX_INSECURE`. Defaults to `false`.
 * `port` - (Optional) This is the port for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_PORT` environment variable. Defaults to `9440`.
 * `session_auth` - (Optional) This specifies whether to use [session authentication](#session-based-authentication). This can also be specified with the `NUTANIX_SESSION_AUTH` environment variable. Defaults to `true`
-* `wait_timeout` - (Optional) Timeout in minutes for long-running resource operations that honor provider wait settings. Can also be set with `NUTANIX_WAIT_TIMEOUT` (must be an integer `>= 1`). When set, it extends shorter per-resource waits but does not shorten longer resource defaults. Unset means each resource uses its own default. Also see [resource timeouts](#resource-timeouts).
+* `wait_timeout` - (Optional) This specifies the timeout on all resource operations in the provider in minutes. This can also be specified with the `NUTANIX_WAIT_TIMEOUT` environment variable. Defaults to `1`. Also see [resource timeouts](#resource-timeouts).
 * `proxy_url` - (Optional) This specifies the url to proxy through to access the Prism Elements or Prism Central endpoint. This can also be specified with the `NUTANIX_PROXY_URL` environment variable.
 * `nutanix_central_endpoint` - (Optional) Nutanix Central (NC) endpoint base used for NC Admin, Tenant Admin, and Service Provider Admin scenarios. This can also be specified with the `NUTANIX_CENTRAL_ENDPOINT` environment variable. See the role-based examples under `examples/nutanix_central/nutanix_central_admin`, `examples/nutanix_central/service_provider_tenant_management`, and `examples/nutanix_central/service_provider_tenant_admin` for provider configuration per workflow.
 * `domain_name` - (Optional) Domain name for the Prism Central instance. Used to construct the PC endpoint as `<domain_name>.domains.<nutanix_central_endpoint>` for NC Admin and Tenant Admin scenarios. This can also be specified with the `NUTANIX_DOMAIN_NAME` environment variable.
@@ -603,7 +603,7 @@ Headers defined in the provider configuration take precedence over environment v
 ## Notes
 
 ### Resource Timeouts
-Provider `wait_timeout` / `NUTANIX_WAIT_TIMEOUT` extends waits for resources that honor it (for example Self Service app resources and `nutanix_images_v2`). It does not shorten longer per-resource defaults. Many resources also support resource-level [`timeouts`](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts).
+Currently, the only way to set a timeout is using the `wait_timeout` argument or `NUTANIX_WAIT_TIMEOUT` environment variable. This will set a timeout for all operations on all resources. This provider currently doesn't support specifying [operation timeouts](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts).
 
 ## Nutanix Foundation (>=v1.5.0-beta)
 

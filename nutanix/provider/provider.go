@@ -6,12 +6,10 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/internal"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clusters"
@@ -68,9 +66,7 @@ func Provider() *schema.Provider {
 
 		"port": "Port for Nutanix Prism.",
 
-		"wait_timeout": "Optional timeout in minutes for long-running resource operations. " +
-			"When set, extends per-resource waits that would otherwise be shorter; it does not shorten longer resource defaults. " +
-			"Can also be set with NUTANIX_WAIT_TIMEOUT.",
+		"wait_timeout": "Set if you know that the creation o update of a resource may take long time (minutes)",
 
 		"endpoint": "URL for Nutanix Prism (e.g IP or FQDN for cluster VIP\n" +
 			"note, this is never the data services VIP, and should not be an\n" +
@@ -148,11 +144,10 @@ func Provider() *schema.Provider {
 				Description: descriptions["endpoint"],
 			},
 			"wait_timeout": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				DefaultFunc:  waitTimeoutDefaultFunc,
-				ValidateFunc: validation.IntAtLeast(1),
-				Description:  descriptions["wait_timeout"],
+				Type:        schema.TypeInt,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_WAIT_TIMEOUT", nil),
+				Description: descriptions["wait_timeout"],
 			},
 			"proxy_url": {
 				Type:        schema.TypeString,
@@ -620,24 +615,6 @@ func Provider() *schema.Provider {
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
-}
-
-// waitTimeoutDefaultFunc reads NUTANIX_WAIT_TIMEOUT as an integer number of
-// minutes. Empty/unset leaves the attribute unset (0). Invalid or non-positive
-// values return a clear error instead of relying on TypeInt string coercion.
-func waitTimeoutDefaultFunc() (interface{}, error) {
-	v := os.Getenv("NUTANIX_WAIT_TIMEOUT")
-	if v == "" {
-		return nil, nil
-	}
-	n, err := strconv.Atoi(v)
-	if err != nil {
-		return nil, fmt.Errorf("NUTANIX_WAIT_TIMEOUT must be an integer number of minutes, got %q: %w", v, err)
-	}
-	if n < 1 {
-		return nil, fmt.Errorf("NUTANIX_WAIT_TIMEOUT must be >= 1, got %d", n)
-	}
-	return n, nil
 }
 
 // This function used to fetch the configuration params given to our provider which
