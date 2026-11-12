@@ -21,7 +21,7 @@ func TestResolveWaitTimeout(t *testing.T) {
 		expected       time.Duration
 	}{
 		{
-			name:           "uses provider wait_timeout when positive",
+			name:           "uses provider wait_timeout when longer than default",
 			meta:           &fakeWaitTimeoutClient{wt: 90},
 			defaultTimeout: 30 * time.Minute,
 			expected:       90 * time.Minute,
@@ -39,10 +39,16 @@ func TestResolveWaitTimeout(t *testing.T) {
 			expected:       45 * time.Minute,
 		},
 		{
-			name:           "wait_timeout of 1 minute is honoured",
+			name:           "keeps resource default when provider wait_timeout is shorter",
 			meta:           &fakeWaitTimeoutClient{wt: 1},
 			defaultTimeout: 60 * time.Minute,
-			expected:       1 * time.Minute,
+			expected:       60 * time.Minute,
+		},
+		{
+			name:           "uses provider wait_timeout when equal to default",
+			meta:           &fakeWaitTimeoutClient{wt: 60},
+			defaultTimeout: 60 * time.Minute,
+			expected:       60 * time.Minute,
 		},
 		{
 			name:           "meta without wait_timeout accessor falls back to default",
