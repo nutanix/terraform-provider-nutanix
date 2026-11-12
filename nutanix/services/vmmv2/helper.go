@@ -3,6 +3,7 @@ package vmmv2
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -14,6 +15,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+const (
+	DefaultTimeoutCreate = 15 * time.Minute
+	DefaultTimeoutUpdate = 15 * time.Minute
+	DefaultTimeoutDelete = 15 * time.Minute
 )
 
 // ExpandDiskFunc converts a list of disk config (interface{}) to SDK disk types.
