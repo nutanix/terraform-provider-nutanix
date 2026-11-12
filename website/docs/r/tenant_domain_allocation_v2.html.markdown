@@ -6,7 +6,9 @@ description: |-
   Creates a new domain allocation for a tenant.
 ---
 
-# nutanix_tenant_domain_allocation_v2
+# nutanix_tenant_domain_allocation_v2 (Alpha)
+
+> **Alpha**: This resource is currently in the Alpha stage and is not recommended for production use. Use it in production environments at your own risk.
 
 Creates a new domain allocation for a tenant.
 
@@ -72,8 +74,8 @@ The following arguments are supported:
 #### quota
 
 - `ext_id`: (Optional) The external identifier of the quota for the placement target.
-- `memory`: (Optional) The amount of memory allocated as quota, in bytes.
-- `storage`: (Optional) The amount of storage allocated as quota, in bytes.
+- `memory`: (Optional) The amount of memory allocated as quota, in Giga bytes.
+- `storage`: (Optional) The amount of storage allocated as quota, in Giga bytes.
 - `vcpu`: (Optional) The number of vCPUs allocated as quota.
 
 #### resource_group
