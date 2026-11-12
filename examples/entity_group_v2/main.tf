@@ -30,7 +30,7 @@ resource "nutanix_entity_group_v2" "basic" {
   allowed_config {
     entities {
       type        = "VM"
-      selected_by = "CATEGORY_EXT_ID"
+      select_by = "CATEGORY_EXT_ID"
       reference_ext_ids = [
         nutanix_category_v2.categories[0].id,
         nutanix_category_v2.categories[1].id
@@ -40,7 +40,7 @@ resource "nutanix_entity_group_v2" "basic" {
 }
 
 # Entity group with allowed_config (addresses and ip_ranges) - alternative style
-# API requires type + selected_by per entity; (IP_VALUES, ADDRESS_GROUP). Only one entity per (selected_by, type) - combine addresses and ip_ranges in one block.
+# API requires type + select_by per entity; (IP_VALUES, ADDRESS_GROUP). Only one entity per (select_by, type) - combine addresses and ip_ranges in one block.
 resource "nutanix_entity_group_v2" "with_allowed" {
   name        = "entity_group_with_allowed"
   description = "Entity group with allowed entities (addresses and ip_ranges)"
@@ -48,7 +48,7 @@ resource "nutanix_entity_group_v2" "with_allowed" {
   allowed_config {
     entities {
       type        = "ADDRESS_GROUP"
-      selected_by = "IP_VALUES"
+      select_by = "IP_VALUES"
       addresses {
         ipv4_addresses {
           value         = "10.0.0.0"
@@ -66,7 +66,7 @@ resource "nutanix_entity_group_v2" "with_allowed" {
 }
 
 # Entity group selecting an ADDRESS_GROUP by FQDN (FQDN_VALUES selection).
-# fqdns is required when selected_by = "FQDN_VALUES". Valid pair: (FQDN_VALUES, ADDRESS_GROUP).
+# fqdns is required when select_by = "FQDN_VALUES". Valid pair: (FQDN_VALUES, ADDRESS_GROUP).
 # Matches TestAccNutanixEntityGroupV2Resource_FqdnSelection.
 resource "nutanix_entity_group_v2" "fqdn" {
   name        = "entity_group_fqdn"
@@ -75,7 +75,7 @@ resource "nutanix_entity_group_v2" "fqdn" {
   allowed_config {
     entities {
       type        = "ADDRESS_GROUP"
-      selected_by = "FQDN_VALUES"
+      select_by = "FQDN_VALUES"
       fqdns       = ["example.com", "api.example.com"]
     }
   }
@@ -93,7 +93,7 @@ resource "nutanix_entity_group_v2" "regex" {
   allowed_config {
     entities {
       type             = "VM"
-      selected_by      = "REGEX"
+      select_by      = "REGEX"
       reference_string = "web-prod"
       match_criteria   = "STARTS_WITH"
     }

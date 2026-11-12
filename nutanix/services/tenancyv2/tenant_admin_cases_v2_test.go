@@ -1034,7 +1034,7 @@ func TestAccTenantAdminNetworkWorkflow(t *testing.T) {
 					resource.TestCheckResourceAttr(taEntityGroupRes, "name", egName),
 					resource.TestCheckResourceAttrPair(taEntityGroupRes, "project_ext_id", projectDataSource, "projects.0.ext_id"),
 					resource.TestCheckResourceAttr(taEntityGroupRes, "allowed_config.0.entities.0.type", "ADDRESS_GROUP"),
-					resource.TestCheckResourceAttr(taEntityGroupRes, "allowed_config.0.entities.0.selected_by", "EXT_ID"),
+					resource.TestCheckResourceAttr(taEntityGroupRes, "allowed_config.0.entities.0.select_by", "EXT_ID"),
 
 					// Entity group: single data source vs resource (deep).
 					resource.TestCheckResourceAttrPair(taEntityGroupDS, "ext_id", taEntityGroupRes, "ext_id"),
@@ -1166,7 +1166,7 @@ resource "nutanix_entity_group_v2" "eg" {
   allowed_config {
     entities {
       type        = "ADDRESS_GROUP"
-      selected_by = "EXT_ID"
+      select_by = "EXT_ID"
       reference_ext_ids = [
         nutanix_address_groups_v2.ag.id,
       ]
