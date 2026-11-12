@@ -12,7 +12,7 @@ Launches a blueprint to create an application and perform system actions on appl
 
 ## Timeouts
 
-The default wait for create, update, and delete is **60 minutes**. Override with resource-level `timeouts` or the provider `wait_timeout` (minutes). Provider `wait_timeout` takes precedence when set.
+The default wait for create, update, and delete is **60 minutes**. Increase with resource-level `timeouts` or provider `wait_timeout` (minutes). Provider `wait_timeout` extends the wait when larger than the resource default; it does not shorten it.
 
 ```hcl
 provider "nutanix" {
