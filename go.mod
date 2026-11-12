@@ -1,6 +1,6 @@
 module github.com/terraform-providers/terraform-provider-nutanix
 
-go 1.27.3
+go 1.27.4
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1

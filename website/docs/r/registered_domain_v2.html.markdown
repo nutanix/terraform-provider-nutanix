@@ -6,7 +6,9 @@ description: |-
   Creates a new registered domain and saves it to database.
 ---
 
-# nutanix_registered_domain_v2
+# nutanix_registered_domain_v2 (Beta)
+
+-> **Note:** This resource is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
 
 Creates a new registered domain and saves it to database. A registered domain represents a Prism Central (PC) instance registered with a Nutanix Central (NC) instance.
 

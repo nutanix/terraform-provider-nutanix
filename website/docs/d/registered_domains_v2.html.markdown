@@ -6,7 +6,9 @@ description: |-
   List all registered domains.
 ---
 
-# nutanix_registered_domains_v2
+# nutanix_registered_domains_v2 (Beta)
+
+-> **Note:** This data source is in Beta because the underlying Nutanix SDK API is currently in Beta. The data source and its behavior may change in future releases as the SDK API evolves.
 
 List all registered domains.
 

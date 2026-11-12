@@ -6,7 +6,9 @@ description: |-
   Create a tenant membership for a user within a single domain.
 ---
 
-# nutanix_tenant_membership_v2
+# nutanix_tenant_membership_v2 (Alpha)
+
+> **Alpha**: This resource is currently in the Alpha stage and is not recommended for production use. Use it in production environments at your own risk.
 
 Creates a tenant membership for a user within a single domain. This operation is asynchronous and returns a membership reference.
 

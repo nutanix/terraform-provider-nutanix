@@ -6,7 +6,9 @@ description: |-
   Registers the domain with Nutanix Central, establishing a connection between Prism Central and their corresponding Nutanix Central components.
 ---
 
-# nutanix_local_domain_v2
+# nutanix_local_domain_v2 (Beta)
+
+-> **Note:** This resource is in Beta because the underlying Nutanix SDK API is currently in Beta. The resource and its behavior may change in future releases as the SDK API evolves.
 
 Registers the domain with Nutanix Central, establishing a connection between Prism Central and their corresponding Nutanix Central components. The local domain is a singleton entity: there is exactly one local domain per Prism Central. Creating this resource registers the domain and destroying it unregisters the domain from Nutanix Central.
 
