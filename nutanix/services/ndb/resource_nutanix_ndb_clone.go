@@ -589,34 +589,24 @@ func resourceNutanixNDBCloneDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	dbID := d.Id()
+	createdbserver := d.Get("create_dbserver").(bool)
+	deleteLogicalCluster := d.Get("delete_logical_cluster").(bool) || d.Get("remove_logical_cluster").(bool)
 
-	req := &era.DeleteDatabaseRequest{}
+	// 1. Capture DPC and VM IDs live BEFORE starting deletion
+	// This is a defensive measure: if NDB's standard cleanup removes the database object
+	// but orphans the infrastructure nodes, we must already have the IDs to trigger a manual wipe.
+	vmIDs, dbServerClusterID := captureDatabaseNodeIDs(ctx, d, conn)
 
-	if delete, ok := d.GetOk("delete"); ok {
-		req.Delete = delete.(bool)
-	}
+	log.Printf("[INFO] NDB Cleanup: Cleanup plan for Clone %s (DPC: %s, VMs: %v)", dbID, dbServerClusterID, vmIDs)
 
-	if remove, ok := d.GetOk("remove"); ok {
-		req.Remove = remove.(bool)
-	}
-
-	if softremove, ok := d.GetOk("soft_remove"); ok {
-		req.Softremove = softremove.(bool)
-	}
-
-	if forced, ok := d.GetOk("forced"); ok {
-		req.Forced = forced.(bool)
-	}
-
-	if deltms, ok := d.GetOk("delete_time_machine"); ok {
-		req.Deletetimemachine = deltms.(bool)
-	}
-
-	if dellogicalcls, ok := d.GetOk("delete_logical_cluster"); ok {
-		req.Deletelogicalcluster = dellogicalcls.(bool)
-	}
-	if remlogicalcls, ok := d.GetOk("remove_logical_cluster"); ok {
-		req.Deletelogicalcluster = remlogicalcls.(bool)
+	// 2. Perform standard Clone Deletion
+	req := &era.DeleteDatabaseRequest{
+		Delete:               d.Get("delete").(bool),
+		Remove:               d.Get("remove").(bool),
+		Softremove:           d.Get("soft_remove").(bool),
+		Forced:               d.Get("forced").(bool),
+		Deletetimemachine:    d.Get("delete_time_machine").(bool),
+		Deletelogicalcluster: deleteLogicalCluster,
 	}
 
 	res, err := conn.Service.DeleteClone(ctx, dbID, req)
@@ -624,30 +614,20 @@ func resourceNutanixNDBCloneDelete(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
-	log.Printf("Operation to unregister clone instance with id %s has started, operation id: %s", dbID, res.Operationid)
-	opID := res.Operationid
-	if opID == "" {
-		return diag.Errorf("error: operation ID is an empty string")
+	// Use specific cleanup refresh that handles Status 17 (Warning) gracefully
+	if err := waitForCleanupOperation(ctx, conn, res.Operationid, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return diag.FromErr(err)
 	}
-	opReq := era.GetOperationRequest{
-		OperationID: opID,
+	log.Printf("NDB clone with %s id is deleted successfully", dbID)
+
+	// 3. Handle cleanup for orphaned VMs/DPCs (Workaround for NDB API limitation in HA)
+	deleteFlag := d.Get("delete").(bool)
+	if deleteFlag && createdbserver && deleteLogicalCluster {
+		if err := cleanupOrphanedNodes(ctx, d, conn, dbServerClusterID, vmIDs); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
-	log.Printf("polling for operation with id: %s\n", opID)
-
-	// Poll for operation here - Cluster GET Call
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING"},
-		Target:  []string{"COMPLETED", "FAILED"},
-		Refresh: eraRefresh(ctx, conn, opReq),
-		Timeout: d.Timeout(schema.TimeoutDelete),
-		Delay:   eraDelay,
-	}
-
-	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for clone Instance (%s) to unregister: %s", res.Entityid, errWaitTask)
-	}
-	log.Printf("NDB clone with %s id is deleted successfully", d.Id())
 	return nil
 }
 
@@ -750,7 +730,7 @@ func expandClonesNodes(pr []interface{}) []*era.Nodes {
 				node.NewDBServerTimeZone = utils.StringPtr(v1.(string))
 			}
 			if v1, ok1 := val["properties"]; ok1 && len(v1.([]interface{})) > 0 {
-				node.Properties = v1.([]*era.NodesProperties)
+				node.Properties = expandClonesNodesProperties(v1.([]interface{}))
 			}
 
 			if v1, ok1 := val["dbserver_id"]; ok1 && len(v1.(string)) > 0 {
@@ -761,6 +741,23 @@ func expandClonesNodes(pr []interface{}) []*era.Nodes {
 		return nodes
 	}
 	return nil
+}
+
+func expandClonesNodesProperties(pr []interface{}) []*era.NodesProperties {
+	out := make([]*era.NodesProperties, 0)
+	for _, arg := range pr {
+		val := arg.(map[string]interface{})
+		p := &era.NodesProperties{}
+
+		if name, ok := val["name"]; ok {
+			p.Name = name.(string)
+		}
+		if value, ok := val["value"]; ok {
+			p.Value = value.(string)
+		}
+		out = append(out, p)
+	}
+	return out
 }
 
 func expandPostgreSQLCloneActionArgs(d *schema.ResourceData, pr []interface{}) []*era.Actionarguments {

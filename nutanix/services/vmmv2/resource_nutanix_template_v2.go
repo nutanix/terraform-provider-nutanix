@@ -952,6 +952,10 @@ func schemaForTemplateVMSpec() *schema.Schema {
 																	Type:     schema.TypeBool,
 																	Computed: true,
 																},
+																"serial_id": {
+																	Type:     schema.TypeString,
+																	Computed: true,
+																},
 															},
 														},
 													},
@@ -1139,6 +1143,10 @@ func schemaForTemplateVMSpec() *schema.Schema {
 														Optional: true,
 														Computed: true,
 													},
+													"serial_id": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
 												},
 											},
 										},
@@ -1217,6 +1225,10 @@ func schemaForTemplateVMSpec() *schema.Schema {
 										"data_source":       schemaForDataSource(),
 										"is_migration_in_progress": {
 											Type:     schema.TypeBool,
+											Computed: true,
+										},
+										"serial_id": {
+											Type:     schema.TypeString,
 											Computed: true,
 										},
 									},

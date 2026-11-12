@@ -2,13 +2,42 @@ package selfservice
 
 import (
 	"testing"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
 
 func TestUnitResourceNutanixCalmAppProvisionSchema(t *testing.T) {
 	t.Parallel()
 	require.NoError(t, ResourceNutanixCalmAppProvision().InternalValidate(ResourceNutanixCalmAppProvision().Schema, true))
+}
+
+func TestUnitSelfServiceResourcesHaveTimeouts(t *testing.T) {
+	t.Parallel()
+
+	want := DEFAULTWAITTIMEOUT * time.Minute
+	resources := map[string]*schema.Resource{
+		"provision":      ResourceNutanixCalmAppProvision(),
+		"patch":          ResourceNutanixCalmAppPatch(),
+		"custom_action":  ResourceNutanixCalmAppCustomAction(),
+		"recovery_point": ResourceNutanixCalmAppRecoveryPoint(),
+		"restore":        ResourceNutanixCalmAppRestore(),
+	}
+
+	for name, res := range resources {
+		name, res := name, res
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			require.NotNil(t, res.Timeouts, "Timeouts block must be set")
+			require.NotNil(t, res.Timeouts.Create)
+			require.NotNil(t, res.Timeouts.Update)
+			require.NotNil(t, res.Timeouts.Delete)
+			require.Equal(t, want, *res.Timeouts.Create)
+			require.Equal(t, want, *res.Timeouts.Update)
+			require.Equal(t, want, *res.Timeouts.Delete)
+		})
+	}
 }
 
 func TestUnitFlattenImageConfigName(t *testing.T) {

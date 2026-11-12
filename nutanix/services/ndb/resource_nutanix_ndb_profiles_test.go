@@ -144,6 +144,8 @@ func testAccEraProfileConfigBySoftware(name, desc string) string {
 			clusters = {
 				for p in data.nutanix_ndb_clusters.clusters.clusters: p.name => p
 			}
+			// Use NDBCluster if it exists, otherwise pick the first available cluster
+			target_cluster = contains(keys(local.clusters), "NDBCluster") ? local.clusters.NDBCluster : data.nutanix_ndb_clusters.clusters.clusters[0]
 		}
 		resource "nutanix_ndb_profile" "name12" {
 			name= "%[1]s"
@@ -156,7 +158,7 @@ func testAccEraProfileConfigBySoftware(name, desc string) string {
 					base_profile_version_name = "test1"
 					base_profile_version_description= "test1 desc"
 				}
-				available_cluster_ids= [local.clusters.NDBCluster.id]
+				available_cluster_ids= [local.target_cluster.id]
 			}
 			published = true
 		}
@@ -171,6 +173,8 @@ func testAccEraProfileConfigByNetwork(name, desc, subnet string) string {
 			clusters = {
 				for p in data.nutanix_ndb_clusters.clusters.clusters: p.name => p
 			}
+			// Use NDBCluster if it exists, otherwise pick the first available cluster
+			target_cluster = contains(keys(local.clusters), "NDBCluster") ? local.clusters.NDBCluster : data.nutanix_ndb_clusters.clusters.clusters[0]
 		}
 		resource "nutanix_ndb_profile" "acctest-managed-profile" {
 			name = "%[1]s"
@@ -184,7 +188,7 @@ func testAccEraProfileConfigByNetwork(name, desc, subnet string) string {
 					}
 				}
 				version_cluster_association{
-					nx_cluster_id = local.clusters.NDBCluster.id
+					nx_cluster_id = local.target_cluster.id
 				}
 			}
 			published = true
@@ -224,6 +228,8 @@ func testAccEraProfileConfigByNetworkHA(name, desc, subnet string) string {
 			clusters = {
 				for p in data.nutanix_ndb_clusters.clusters.clusters: p.name => p
 			}
+			// Use NDBCluster if it exists, otherwise pick the first available cluster
+			target_cluster = contains(keys(local.clusters), "NDBCluster") ? local.clusters.NDBCluster : data.nutanix_ndb_clusters.clusters.clusters[0]
 		}
 		resource "nutanix_ndb_profile" "acctest-managed-profile" {
 			name = "%[1]s"
@@ -235,7 +241,7 @@ func testAccEraProfileConfigByNetworkHA(name, desc, subnet string) string {
 				ha_instance{
 				 num_of_clusters= "1"
 				 vlan_name = ["%[3]s"]
-				 cluster_name = [local.clusters.NDBCluster.name]
+				 cluster_name = [local.target_cluster.name]
 				}
 			  }
 			}

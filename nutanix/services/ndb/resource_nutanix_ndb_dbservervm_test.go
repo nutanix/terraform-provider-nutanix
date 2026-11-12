@@ -82,6 +82,8 @@ func testAccEraDatabaseServerConfig(name, desc, sshKey string) string {
 		clusters = {
 			for p in data.nutanix_ndb_clusters.clusters.clusters: p.name => p
 		}
+		// Use NDBCluster if it exists, otherwise pick the first available cluster
+		target_cluster = contains(keys(local.clusters), "NDBCluster") ? local.clusters.NDBCluster : data.nutanix_ndb_clusters.clusters.clusters[0]
 	}
 
 	resource nutanix_ndb_dbserver_vm acctest-managed {
@@ -90,7 +92,7 @@ func testAccEraDatabaseServerConfig(name, desc, sshKey string) string {
 		software_profile_version_id =  local.software_profiles["POSTGRES_15.6_ROCKY_LINUX_8_OOB"].latest_version_id
 		compute_profile_id =  local.compute_profiles["DEFAULT_OOB_SMALL_COMPUTE"].id
 		network_profile_id = local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id
-		nx_cluster_id = local.clusters.NDBCluster.id
+		nx_cluster_id = local.target_cluster.id
 		vm_password = "pass"
 		postgres_database {
 			vm_name = "%[1]s"
@@ -128,6 +130,8 @@ func testAccEraDatabaseServerTMSConfig(name, desc, sshKey string) string {
 		clusters = {
 			for p in data.nutanix_ndb_clusters.clusters.clusters: p.name => p
 		}
+		// Use NDBCluster if it exists, otherwise pick the first available cluster
+		target_cluster = contains(keys(local.clusters), "NDBCluster") ? local.clusters.NDBCluster : data.nutanix_ndb_clusters.clusters.clusters[0]
 	}
 
 	data "nutanix_ndb_time_machines" "test1" {}
@@ -137,7 +141,7 @@ func testAccEraDatabaseServerTMSConfig(name, desc, sshKey string) string {
 		time_machine_id = data.nutanix_ndb_time_machines.test1.time_machines.0.id
 		compute_profile_id =  local.compute_profiles["DEFAULT_OOB_SMALL_COMPUTE"].id
 		network_profile_id = local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id
-		nx_cluster_id = local.clusters.NDBCluster.id
+		nx_cluster_id = local.target_cluster.id
 		vm_password = "pass"
 		postgres_database {
 			vm_name = "%[1]s"

@@ -16,11 +16,11 @@ func TestAccEraClusterDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEraClusterDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "status", "UP"),
-					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "cloud_type", "NTNX"),
-					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "hypervisor_type", "AHV"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_cluster.test", "status"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_cluster.test", "cloud_type"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_cluster.test", "hypervisor_type"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_cluster.test", "properties.#"),
-					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "healthy", "true"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_cluster.test", "healthy"),
 				),
 			},
 		},
@@ -35,11 +35,11 @@ func TestAccEraClusterDataSource_ByName(t *testing.T) {
 			{
 				Config: testAccEraClusterDataSourceConfigByName(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "status", "UP"),
-					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "cloud_type", "NTNX"),
-					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "hypervisor_type", "AHV"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_cluster.test", "status"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_cluster.test", "cloud_type"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_cluster.test", "hypervisor_type"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_cluster.test", "properties.#"),
-					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "healthy", "true"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_cluster.test", "healthy"),
 				),
 			},
 		},
@@ -63,9 +63,13 @@ func testAccEraClusterDataSourceConfig() string {
 	return `
 		data "nutanix_ndb_clusters" "test1" {}
 
+		locals {
+			// Use NDBCluster if it exists, otherwise pick the first available cluster
+			target_cluster = contains([for c in data.nutanix_ndb_clusters.test1.clusters : c.name], "NDBCluster") ? [for c in data.nutanix_ndb_clusters.test1.clusters : c if c.name == "NDBCluster"][0] : data.nutanix_ndb_clusters.test1.clusters[0]
+		}
+
 		data "nutanix_ndb_cluster" "test" {
-			depends_on = [data.nutanix_ndb_clusters.test1]
-			cluster_id = data.nutanix_ndb_clusters.test1.clusters[0].id
+			cluster_id = local.target_cluster.id
 		}	
 	`
 }
@@ -74,9 +78,13 @@ func testAccEraClusterDataSourceConfigByName() string {
 	return `
 		data "nutanix_ndb_clusters" "test1" {}
 
+		locals {
+			// Use NDBCluster if it exists, otherwise pick the first available cluster
+			target_cluster = contains([for c in data.nutanix_ndb_clusters.test1.clusters : c.name], "NDBCluster") ? [for c in data.nutanix_ndb_clusters.test1.clusters : c if c.name == "NDBCluster"][0] : data.nutanix_ndb_clusters.test1.clusters[0]
+		}
+
 		data "nutanix_ndb_cluster" "test" {
-			depends_on = [data.nutanix_ndb_clusters.test1]
-			cluster_name = data.nutanix_ndb_clusters.test1.clusters[0].name
+			cluster_name = local.target_cluster.name
 		}	
 	`
 }

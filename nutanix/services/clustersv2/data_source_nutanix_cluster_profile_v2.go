@@ -75,8 +75,9 @@ func DatasourceNutanixClusterProfileV2() *schema.Resource {
 							Computed: true,
 						},
 						"config_drifts": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeList,
 							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},

@@ -10,6 +10,10 @@ description: |-
 
 Run snapshot action in application to create recovery point.
 
+## Timeouts
+
+Default wait is **60 minutes**. Override with resource `timeouts` or provider `wait_timeout` (minutes); provider `wait_timeout` takes precedence when set.
+
 ## Example Usage
 
 ```hcl

@@ -29,6 +29,11 @@ func ResourceNutanixCalmAppProvision() *schema.Resource {
 		ReadContext:   resourceNutanixCalmAppProvisionRead,
 		UpdateContext: resourceNutanixCalmAppProvisionUpdate,
 		DeleteContext: resourceNutanixCalmAppProvisionDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+		},
 		Schema: map[string]*schema.Schema{
 			"bp_name": {
 				Type:          schema.TypeString,
@@ -473,7 +478,7 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 		Pending: []string{"running"},
 		Target:  []string{"success"},
 		Refresh: calmtaskStateRefreshFunc(ctx, conn, bpUUID, taskUUID),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: utils.ResolveWaitTimeout(meta, d.Timeout(schema.TimeoutCreate)),
 	}
 
 	var obj interface{}
@@ -495,7 +500,7 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 		Pending: []string{"provisioning"},
 		Target:  []string{"running"},
 		Refresh: calmappStateRefreshFunc(ctx, conn, applicationUUID),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: utils.ResolveWaitTimeout(meta, d.Timeout(schema.TimeoutCreate)),
 	}
 
 	if _, errWaitTask = appStateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -598,7 +603,7 @@ func resourceNutanixCalmAppProvisionUpdate(ctx context.Context, d *schema.Resour
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCESS"},
 		Refresh: RunlogStateRefreshFunc(ctx, conn, d.Id(), resp.RunlogUUID),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
+		Timeout: utils.ResolveWaitTimeout(meta, d.Timeout(schema.TimeoutUpdate)),
 		Delay:   delayDuration,
 	}
 
@@ -633,7 +638,7 @@ func resourceNutanixCalmAppProvisionDelete(ctx context.Context, d *schema.Resour
 		Pending: []string{"running", "deleting"},
 		Target:  []string{"deleted"},
 		Refresh: calmappStateRefreshFunc(ctx, conn, d.Id()),
-		Timeout: d.Timeout(schema.TimeoutDelete),
+		Timeout: utils.ResolveWaitTimeout(meta, d.Timeout(schema.TimeoutDelete)),
 	}
 
 	if _, errWaitTask := appStateConf.WaitForStateContext(ctx); errWaitTask != nil {
