@@ -10,13 +10,13 @@ description: |-
 
 Represents the Cluster entity. Provides the basic infrastructure for compute, storage and networking. This includes the operations that can be carried out on cluster and its subresources - host (node), rsyslog servers etc and actions that can be performed on cluster - add a node, remove a node, attach categories.
 
--> **Recommendations:** It is recommended to create and register the cluster with Prism Central as part of the same workflow. Cluster updates, importing, and destruction through Terraform are supported only when the cluster is registered with Prism Central. To register a cluster with Prism Central use Terraform resource nutanix_pc_registration_v2.
+-> **Note:** It is recommended to create and register the cluster with Prism Central as part of the same workflow. Cluster updates, importing, and destruction through Terraform are supported only when the cluster is registered with Prism Central. To register a cluster with Prism Central use Terraform resource nutanix_pc_registration_v2.
 
--> **Note:**: Cluster resource supports add/remove node operations. However, these operations require cluster to be registered with Prism Central.
+-> **Note:** Cluster resource supports add/remove node operations. However, these operations require cluster to be registered with Prism Central.
 
--> **Note:**: TThe cluster resource supports both associating and disassociating categories, allowing you to attach or detach categories on a cluster through Terraform. However, these operations require cluster to be registered with Prism Central.
+-> **Note:** The cluster resource supports both associating and disassociating categories, allowing you to attach or detach categories on a cluster through Terraform. However, these operations require cluster to be registered with Prism Central.
 
-**Note:**: The cluster resource supports both associating and disassociating cluster profile, allowing you to attach or detach cluster profile on a cluster through Terraform. However, these operations require cluster to be registered with Prism Central.
+-> **Note:** The cluster resource supports both associating and disassociating cluster profile, allowing you to attach or detach cluster profile on a cluster through Terraform. However, these operations require cluster to be registered with Prism Central.
 
 ## Example Usage:
 
@@ -205,7 +205,7 @@ resource "nutanix_cluster_v2" "cluster-with-categories" {
 ## Argument Reference
 
 The following arguments are supported:
-> after creating the cluster, you need to register the cluster with prism central to be able to use it.
+-> **Note:** After creating the cluster, you need to register the cluster with Prism Central to be able to use it.
 
 * `dryrun`: - (Optional) parameter that allows long-running operations to execute in a dry-run mode providing ability to identify trouble spots and system failures without performing the actual operation. Additionally this mode also offers a summary snapshot of the resultant system in order to better understand how things fit together. The operation runs in dry-run mode only if the provided value is true.
 * `name`: - (Required) The name for the vm.
@@ -519,22 +519,12 @@ resource "nutanix_cluster_v2" "import_cluster" {}
 terraform import nutanix_cluster_v2.import_cluster <UUID>
 ```
 
-## What happens when you do terraform destroy for nutanix_clusters_v2?  First thing, inorder to destroy the cluster from Terraform it need to be registered.
-```
-1. Internally, It deregisters the cluster and its nodes from Prism Central
+## Destroy behavior
 
-* The cluster and all its member nodes are gracefully deregistered from Prism Central.
+`nutanix_cluster_v2` must be registered with Prism Central before Terraform can destroy it.
 
-* This ensures the cluster is no longer visible in the PC inventory or associated with any management plane workflows.
+During destroy, the provider invokes Prism Central's cluster delete operation. The cluster and its member nodes are removed from Prism Central inventory, and the cluster configuration is removed from the nodes.
 
-2. Remove the clustering configuration on each node
-
-* Once deregistration completes, teardown of the cluster configuration on each node begins.
-
-* This effectively disbands the cluster, converting all participating nodes back into standalone (unconfigured) nodes.
-
-* At this stage, the nodes no longer share storage, network, or management metadata — they’re ready to be re-clustered or repurposed.
-
-```
+The nodes are then available for reconfiguration or reuse.
 
 See detailed information in [Nutanix Create Cluster V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.3#tag/Clusters/operation/createCluster).

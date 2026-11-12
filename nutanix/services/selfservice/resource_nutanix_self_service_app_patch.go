@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/selfservice"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func ResourceNutanixCalmAppPatch() *schema.Resource {
@@ -19,6 +20,11 @@ func ResourceNutanixCalmAppPatch() *schema.Resource {
 		ReadContext:   resourceNutanixCalmAppPatchRead,
 		UpdateContext: resourceNutanixCalmAppPatchUpdate,
 		DeleteContext: resourceNutanixCalmAppPatchDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+		},
 		Schema: map[string]*schema.Schema{
 			"app_uuid": {
 				Type:     schema.TypeString,
@@ -287,7 +293,7 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 		Pending: []string{"PENDING", "RUNNING", "POLICY_EXEC"},
 		Target:  []string{"SUCCESS"},
 		Refresh: RunlogStateRefreshFunc(ctx, conn, appUUID, runlogUUID),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
+		Timeout: utils.ResolveWaitTimeout(meta, d.Timeout(schema.TimeoutCreate)),
 		Delay:   delayDuration,
 	}
 

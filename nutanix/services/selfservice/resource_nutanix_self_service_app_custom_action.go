@@ -22,6 +22,11 @@ func ResourceNutanixCalmAppCustomAction() *schema.Resource {
 		ReadContext:   ResourceNutanixCalmAppCustomActionRead,
 		UpdateContext: ResourceNutanixCalmAppCustomActionUpdate,
 		DeleteContext: ResourceNutanixCalmAppCustomActionDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+		},
 		Schema: map[string]*schema.Schema{
 			"app_name": {
 				Type:     schema.TypeString,
@@ -137,7 +142,7 @@ func ResourceNutanixCalmAppCustomActionCreate(ctx context.Context, d *schema.Res
 		Pending: []string{"PENDING", "RUNNING", "POLICY_EXEC", "ABORTING", "APPROVAL"},
 		Target:  []string{"SUCCESS", "FAILURE", "WARNING", "ERROR", "SYS_FAILURE", "SYS_ERROR", "SYS_ABORTED", "TIMEOUT", "APPROVAL_FAILED"},
 		Refresh: ActionStateRefreshFunc(ctx, conn, appUUID, runlogUUID),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
+		Timeout: utils.ResolveWaitTimeout(meta, d.Timeout(schema.TimeoutCreate)),
 		Delay:   delayDuration,
 	}
 

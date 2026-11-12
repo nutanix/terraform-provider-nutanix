@@ -25,6 +25,11 @@ func ResourceNutanixCalmAppRecoveryPoint() *schema.Resource {
 		ReadContext:   resourceNutanixCalmAppRecoveryPointRead,
 		UpdateContext: resourceNutanixCalmAppRecoveryPointUpdate,
 		DeleteContext: resourceNutanixCalmAppRecoveryPointDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+		},
 		Schema: map[string]*schema.Schema{
 			"app_name": {
 				Type:     schema.TypeString,
@@ -163,7 +168,7 @@ func resourceNutanixCalmAppRecoveryPointCreate(ctx context.Context, d *schema.Re
 		Pending: []string{"PENDING", "RUNNING", "POLICY_EXEC", "ABORTING", "APPROVAL"},
 		Target:  []string{"SUCCESS", "FAILURE", "WARNING", "ERROR", "SYS_FAILURE", "SYS_ERROR", "SYS_ABORTED", "TIMEOUT", "APPROVAL_FAILED"},
 		Refresh: SnapshotStateRefreshFunc(ctx, conn, appUUID, runlogUUID),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
+		Timeout: utils.ResolveWaitTimeout(meta, d.Timeout(schema.TimeoutCreate)),
 		Delay:   delayDuration,
 	}
 	if _, errWaitTask := appStateConf.WaitForStateContext(ctx); errWaitTask != nil {
