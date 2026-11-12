@@ -139,8 +139,9 @@ func DatasourceNutanixUserV2() *schema.Resource {
 							Computed: true,
 						},
 						"secret_access_key": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:      schema.TypeString,
+							Computed:  true,
+							Sensitive: true,
 						},
 						"user_id": {
 							Type:     schema.TypeString,

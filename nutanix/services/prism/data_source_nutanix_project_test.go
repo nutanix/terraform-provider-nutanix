@@ -17,6 +17,7 @@ func TestAccNutanixProjectDataSourceByID_basic(t *testing.T) {
 	description := acctest.RandomWithPrefix("test-project-desc-dou")
 	categoryName := "Environment"
 	categoryVal := "Staging"
+	vlanID := acctest.RandIntRange(1000, 4094)
 
 	updateName := acctest.RandomWithPrefix("test-project-name-dou")
 	updateDescription := acctest.RandomWithPrefix("test-project-desc-dou")
@@ -29,7 +30,7 @@ func TestAccNutanixProjectDataSourceByID_basic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectDataSourceByIDConfig(subnetName, name, description, categoryName, categoryVal),
+				Config: testAccProjectDataSourceByIDConfig(subnetName, name, description, categoryName, categoryVal, vlanID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixProjectExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -39,7 +40,7 @@ func TestAccNutanixProjectDataSourceByID_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProjectDataSourceByIDConfig(subnetName, updateName, updateDescription, updateCategoryName, updateCategoryVal),
+				Config: testAccProjectDataSourceByIDConfig(subnetName, updateName, updateDescription, updateCategoryName, updateCategoryVal, vlanID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixProjectExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", updateName),
@@ -60,6 +61,7 @@ func TestAccNutanixProjectDataSourceByName_basic(t *testing.T) {
 	description := acctest.RandomWithPrefix("test-project-desc-dou")
 	categoryName := "Environment"
 	categoryVal := "Staging"
+	vlanID := acctest.RandIntRange(1000, 4094)
 
 	updateName := acctest.RandomWithPrefix("test-project-name-dou")
 	updateDescription := acctest.RandomWithPrefix("test-project-desc-dou")
@@ -72,7 +74,7 @@ func TestAccNutanixProjectDataSourceByName_basic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectDataSourceByNameConfig(subnetName, name, description, categoryName, categoryVal),
+				Config: testAccProjectDataSourceByNameConfig(subnetName, name, description, categoryName, categoryVal, vlanID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixProjectExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -82,7 +84,7 @@ func TestAccNutanixProjectDataSourceByName_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProjectDataSourceByNameConfig(subnetName, updateName, updateDescription, updateCategoryName, updateCategoryVal),
+				Config: testAccProjectDataSourceByNameConfig(subnetName, updateName, updateDescription, updateCategoryName, updateCategoryVal, vlanID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixProjectExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", updateName),
@@ -95,7 +97,7 @@ func TestAccNutanixProjectDataSourceByName_basic(t *testing.T) {
 	})
 }
 
-func testAccProjectDataSourceByIDConfig(subnetName, name, description, categoryName, categoryVal string) string {
+func testAccProjectDataSourceByIDConfig(subnetName, name, description, categoryName, categoryVal string, vlanID int) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -108,9 +110,9 @@ func testAccProjectDataSourceByIDConfig(subnetName, name, description, categoryN
 
 		resource "nutanix_subnet" "subnet" {
 			cluster_uuid       = local.cluster1
-			name               = "%s"
+			name               = "%[1]s"
 			description        = "Description of my unit test VLAN"
-			vlan_id            = 31
+			vlan_id            = %[6]d
 			subnet_type        = "VLAN"
 			subnet_ip          = "10.250.140.0"
 			default_gateway_ip = "10.250.140.1"
@@ -127,12 +129,12 @@ func testAccProjectDataSourceByIDConfig(subnetName, name, description, categoryN
 		}
 
 		resource "nutanix_project" "project_test" {
-			name        = "%s"
-			description = "%s"
+			name        = "%[2]s"
+			description = "%[3]s"
 
 			categories {
-				name  = "%s"
-				value = "%s"
+				name  = "%[4]s"
+				value = "%[5]s"
 			}
 
 			default_subnet_reference {
@@ -149,10 +151,10 @@ func testAccProjectDataSourceByIDConfig(subnetName, name, description, categoryN
 		data "nutanix_project" "test" {
 			project_id = nutanix_project.project_test.id
 		}
-	`, subnetName, name, description, categoryName, categoryVal)
+	`, subnetName, name, description, categoryName, categoryVal, vlanID)
 }
 
-func testAccProjectDataSourceByNameConfig(subnetName, name, description, categoryName, categoryVal string) string {
+func testAccProjectDataSourceByNameConfig(subnetName, name, description, categoryName, categoryVal string, vlanID int) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -165,9 +167,9 @@ func testAccProjectDataSourceByNameConfig(subnetName, name, description, categor
 
 		resource "nutanix_subnet" "subnet" {
 			cluster_uuid       = local.cluster1
-			name               = "%s"
+			name               = "%[1]s"
 			description        = "Description of my unit test VLAN"
-			vlan_id            = 31
+			vlan_id            = %[6]d
 			subnet_type        = "VLAN"
 			subnet_ip          = "10.250.140.0"
 			default_gateway_ip = "10.250.140.1"
@@ -184,12 +186,12 @@ func testAccProjectDataSourceByNameConfig(subnetName, name, description, categor
 		}
 
 		resource "nutanix_project" "project_test" {
-			name        = "%s"
-			description = "%s"
+			name        = "%[2]s"
+			description = "%[3]s"
 
 			categories {
-				name  = "%s"
-				value = "%s"
+				name  = "%[4]s"
+				value = "%[5]s"
 			}
 
 			default_subnet_reference {
@@ -206,5 +208,5 @@ func testAccProjectDataSourceByNameConfig(subnetName, name, description, categor
 		data "nutanix_project" "test" {
 			project_name = nutanix_project.project_test.name
 		}
-	`, subnetName, name, description, categoryName, categoryVal)
+	`, subnetName, name, description, categoryName, categoryVal, vlanID)
 }

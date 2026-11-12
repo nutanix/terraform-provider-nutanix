@@ -2,7 +2,6 @@ package networkingv2
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 
@@ -402,8 +401,7 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 	createVpcRequest := import2.CreateVpcRequest{
 		Body: &inputSpec,
 	}
-	aJSON, _ := json.MarshalIndent(createVpcRequest, "", " ")
-	log.Printf("[DEBUG] VPC create payload : %s", string(aJSON))
+	log.Printf("[DEBUG] VPC create payload : %s", utils.SanitizeForLogging(createVpcRequest))
 
 	resp, err := conn.VpcAPIInstance.CreateVpc(ctx, &createVpcRequest)
 	if err != nil {
@@ -437,8 +435,7 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("error while fetching VPC task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
-	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Create VPC Task Details: %s", string(aJSON))
+	log.Printf("[DEBUG] Create VPC Task Details: %s", utils.SanitizeForLogging(taskDetails))
 
 	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeVPC, "VPC")
 	if err != nil {
@@ -643,8 +640,7 @@ func ResourceNutanixVPCsV2Update(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if updateSpecChanged {
-		aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
-		log.Printf("[DEBUG] Update VPC Request: %s", string(aJSON))
+		log.Printf("[DEBUG] Update VPC Request: %s", utils.SanitizeForLogging(updateSpec))
 
 		readRespVpcById, err := conn.VpcAPIInstance.GetVpcById(ctx, &getVpcRequest)
 		if err != nil {

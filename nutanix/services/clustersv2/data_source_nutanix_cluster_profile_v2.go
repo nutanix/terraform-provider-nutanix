@@ -191,16 +191,18 @@ func DatasourceNutanixClusterProfileV2() *schema.Resource {
 										Computed: true,
 									},
 									"auth_key": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Type:      schema.TypeString,
+										Computed:  true,
+										Sensitive: true,
 									},
 									"priv_type": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 									"priv_key": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Type:      schema.TypeString,
+										Computed:  true,
+										Sensitive: true,
 									},
 								},
 							},
@@ -269,8 +271,9 @@ func DatasourceNutanixClusterProfileV2() *schema.Resource {
 										Computed: true,
 									},
 									"community_string": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Type:      schema.TypeString,
+										Computed:  true,
+										Sensitive: true,
 									},
 								},
 							},
@@ -364,8 +367,9 @@ func DatasourceNutanixClusterProfileV2() *schema.Resource {
 							Computed: true,
 						},
 						"encryption_key": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:      schema.TypeString,
+							Computed:  true,
+							Sensitive: true,
 						},
 						"encryption_key_id": {
 							Type:     schema.TypeInt,

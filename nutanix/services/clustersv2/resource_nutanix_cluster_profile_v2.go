@@ -172,6 +172,7 @@ func ResourceNutanixClusterProfileV2() *schema.Resource {
 									"auth_key": {
 										Type:         schema.TypeString,
 										Required:     true,
+										Sensitive:    true,
 										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[^']+$`), "cannot contain single quotes"),
 									},
 									"priv_type": {
@@ -184,6 +185,7 @@ func ResourceNutanixClusterProfileV2() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
+										Sensitive:    true,
 										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[^']+$`), "cannot contain single quotes"),
 									},
 								},
@@ -268,9 +270,10 @@ func ResourceNutanixClusterProfileV2() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(1, 64),
 									},
 									"community_string": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
+										Type:      schema.TypeString,
+										Optional:  true,
+										Computed:  true,
+										Sensitive: true,
 									},
 								},
 							},

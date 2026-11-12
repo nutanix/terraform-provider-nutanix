@@ -81,8 +81,9 @@ func DatasourceNutanixDirectoryServicesV2() *schema.Resource {
 										Computed: true,
 									},
 									"password": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Type:      schema.TypeString,
+										Computed:  true,
+										Sensitive: true,
 									},
 								},
 							},
@@ -203,8 +204,7 @@ func DatasourceNutanixDirectoryServicesV2Read(ctx context.Context, d *schema.Res
 	if v, ok := d.GetOk("select"); ok {
 		listDirectoryServicesRequest.Select_ = utils.StringPtr(v.(string))
 	}
-	aJSON, _ := json.MarshalIndent(listDirectoryServicesRequest, "", " ")
-	log.Println("[DEBUG] List Directory Services payload: ", string(aJSON))
+	log.Println("[DEBUG] List Directory Services payload: ", utils.SanitizeForLogging(listDirectoryServicesRequest))
 	resp, err := conn.DirectoryServiceAPIInstance.ListDirectoryServices(ctx, &listDirectoryServicesRequest)
 	if err != nil {
 		fmt.Println(err)

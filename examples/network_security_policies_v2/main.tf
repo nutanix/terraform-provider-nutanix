@@ -43,7 +43,7 @@ resource "nutanix_entity_group_v2" "secured_group" {
   allowed_config {
     entities {
       type              = "VM"
-      selected_by       = "CATEGORY_EXT_ID"
+      select_by       = "CATEGORY_EXT_ID"
       reference_ext_ids = [data.nutanix_categories_v2.category-list.categories.0.ext_id]
     }
   }
@@ -278,7 +278,7 @@ resource "nutanix_entity_group_v2" "flex_applied" {
   allowed_config {
     entities {
       type              = "VM"
-      selected_by       = "CATEGORY_EXT_ID"
+      select_by       = "CATEGORY_EXT_ID"
       reference_ext_ids = [data.nutanix_categories_v2.category-list.categories.0.ext_id]
     }
   }
@@ -290,7 +290,7 @@ resource "nutanix_entity_group_v2" "flex_src" {
   allowed_config {
     entities {
       type              = "VM"
-      selected_by       = "CATEGORY_EXT_ID"
+      select_by       = "CATEGORY_EXT_ID"
       reference_ext_ids = [data.nutanix_categories_v2.category-list.categories.1.ext_id]
     }
   }
@@ -302,7 +302,7 @@ resource "nutanix_entity_group_v2" "flex_dst" {
   allowed_config {
     entities {
       type              = "VM"
-      selected_by       = "CATEGORY_EXT_ID"
+      select_by       = "CATEGORY_EXT_ID"
       reference_ext_ids = [data.nutanix_categories_v2.category-list.categories.2.ext_id]
     }
   }

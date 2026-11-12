@@ -2,7 +2,6 @@ package networkingv2
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -158,8 +157,7 @@ func ResourceNutanixAddressGroupsV2Create(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("error while fetching address group task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
-	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Create Address Group Task Details: %s", string(aJSON))
+	log.Printf("[DEBUG] Create Address Group Task Details: %s", utils.SanitizeForLogging(taskDetails))
 
 	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeAddressGroup, "Address group")
 	if err != nil {

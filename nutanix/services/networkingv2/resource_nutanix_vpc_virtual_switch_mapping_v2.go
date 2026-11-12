@@ -2,7 +2,6 @@ package networkingv2
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -92,8 +91,7 @@ func resourceNutanixVpcVirtualSwitchMappingV2Create(ctx context.Context, d *sche
 		Body: &body,
 	}
 
-	aJSON, _ := json.MarshalIndent(createReq, "", " ")
-	log.Printf("[DEBUG] VpcVirtualSwitchMapping create payload: %s", string(aJSON))
+	log.Printf("[DEBUG] VpcVirtualSwitchMapping create payload: %s", utils.SanitizeForLogging(createReq))
 
 	resp, err := conn.VpcVirtualSwitchMappingsAPI.CreateVpcVirtualSwitchMapping(ctx, &createReq)
 	if err != nil {

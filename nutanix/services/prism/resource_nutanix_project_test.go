@@ -21,6 +21,7 @@ func TestAccNutanixProject_basic(t *testing.T) {
 	description := acctest.RandomWithPrefix("test-project-desc-dou")
 	categoryName := "Environment"
 	categoryVal := "Staging"
+	vlanID := acctest.RandIntRange(1000, 4094)
 
 	updateName := acctest.RandomWithPrefix("test-project-name-dou")
 	updateDescription := acctest.RandomWithPrefix("test-project-desc-dou")
@@ -33,7 +34,7 @@ func TestAccNutanixProject_basic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProjectConfig(subnetName, name, description, categoryName, categoryVal),
+				Config: testAccNutanixProjectConfig(subnetName, name, description, categoryName, categoryVal, vlanID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixProjectExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -43,7 +44,7 @@ func TestAccNutanixProject_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixProjectConfig(subnetName, updateName, updateDescription, updateCategoryName, updateCategoryVal),
+				Config: testAccNutanixProjectConfig(subnetName, updateName, updateDescription, updateCategoryName, updateCategoryVal, vlanID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixProjectExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", updateName),
@@ -64,6 +65,7 @@ func TestAccNutanixProject_importBasic(t *testing.T) {
 	description := acctest.RandomWithPrefix("test-project-desc-dou")
 	categoryName := "Environment"
 	categoryVal := "Staging"
+	vlanID := acctest.RandIntRange(1000, 4094)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
@@ -71,7 +73,7 @@ func TestAccNutanixProject_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProjectConfig(subnetName, name, description, categoryName, categoryVal),
+				Config: testAccNutanixProjectConfig(subnetName, name, description, categoryName, categoryVal, vlanID),
 			},
 			{
 				ResourceName:      resourceName,
@@ -91,6 +93,8 @@ func TestAccNutanixProject_withInternal(t *testing.T) {
 	description := acctest.RandomWithPrefix("test-project-desc-dou")
 	categoryName := "Environment"
 	categoryVal := "Staging"
+	// Distinct VLAN IDs so a leftover managed subnet on the cluster does not collide.
+	vlanID := acctest.RandIntRange(1000, 4000)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
@@ -98,7 +102,7 @@ func TestAccNutanixProject_withInternal(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProjectInternalConfig(subnetName, name, description, categoryName, categoryVal),
+				Config: testAccNutanixProjectInternalConfig(subnetName, name, description, categoryName, categoryVal, vlanID, vlanID+1, vlanID+2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -121,13 +125,15 @@ func TestAccNutanixProject_withInternalUpdate(t *testing.T) {
 
 	updatedName := acctest.RandomWithPrefix("test-project-updated")
 	updateDes := acctest.RandomWithPrefix("test-desc-got-updated")
+	// Keep the same VLAN IDs across both steps so the update does not recreate the subnet.
+	vlanID := acctest.RandIntRange(1000, 4000)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProjectInternalConfigUpdate(subnetName, name, description),
+				Config: testAccNutanixProjectInternalConfigUpdate(subnetName, name, description, vlanID, vlanID+1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -136,7 +142,7 @@ func TestAccNutanixProject_withInternalUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixProjectInternalConfigUpdate(subnetName, updatedName, updateDes),
+				Config: testAccNutanixProjectInternalConfigUpdate(subnetName, updatedName, updateDes, vlanID, vlanID+1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
 					resource.TestCheckResourceAttr(resourceName, "description", updateDes),
@@ -158,6 +164,7 @@ func TestAccNutanixProject_withInternalWithACPTest(t *testing.T) {
 	description := acctest.RandomWithPrefix("test-project-desc-dou")
 	categoryName := "Environment"
 	categoryVal := "Staging"
+	vlanID := acctest.RandIntRange(1000, 4094)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
@@ -165,7 +172,7 @@ func TestAccNutanixProject_withInternalWithACPTest(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal, principalName, directoryServiceUUID),
+				Config: testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal, principalName, directoryServiceUUID, vlanID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -191,6 +198,7 @@ func TestAccNutanixProject_withInternalWithACPUserGroup(t *testing.T) {
 	description := acctest.RandomWithPrefix("test-project-desc-dou")
 	categoryName := "Environment"
 	categoryVal := "Staging"
+	vlanID := acctest.RandIntRange(1000, 4094)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
@@ -198,7 +206,7 @@ func TestAccNutanixProject_withInternalWithACPUserGroup(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, description, categoryName, categoryVal, ad.ExtID, groupName, groupUUID),
+				Config: testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, description, categoryName, categoryVal, ad.ExtID, groupName, groupUUID, vlanID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -258,7 +266,7 @@ func testAccCheckNutanixProjectDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNutanixProjectConfig(subnetName, name, description, categoryName, categoryVal string) string {
+func testAccNutanixProjectConfig(subnetName, name, description, categoryName, categoryVal string, vlanID int) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -271,9 +279,9 @@ func testAccNutanixProjectConfig(subnetName, name, description, categoryName, ca
 
 		resource "nutanix_subnet" "subnet" {
 			cluster_uuid       = local.cluster1
-			name               = "%s"
+			name               = "%[1]s"
 			description        = "Description of my unit test VLAN"
-			vlan_id            = 31
+			vlan_id            = %[6]d
 			subnet_type        = "VLAN"
 			subnet_ip          = "10.250.140.0"
 			default_gateway_ip = "10.250.140.1"
@@ -290,12 +298,12 @@ func testAccNutanixProjectConfig(subnetName, name, description, categoryName, ca
 		}
 
 		resource "nutanix_project" "project_test" {
-			name        = "%s"
-			description = "%s"
+			name        = "%[2]s"
+			description = "%[3]s"
 
 			categories {
-				name  = "%s"
-				value = "%s"
+				name  = "%[4]s"
+				value = "%[5]s"
 			}
 
 			default_subnet_reference {
@@ -307,10 +315,10 @@ func testAccNutanixProjectConfig(subnetName, name, description, categoryName, ca
 
 			api_version = "3.1"
 		}
-	`, subnetName, name, description, categoryName, categoryVal)
+	`, subnetName, name, description, categoryName, categoryVal, vlanID)
 }
 
-func testAccNutanixProjectInternalConfig(subnetName, name, description, categoryName, categoryVal string) string {
+func testAccNutanixProjectInternalConfig(subnetName, name, description, categoryName, categoryVal string, vlanID, vlanID2, externalVlanID int) string {
 	subnetName2 := acctest.RandomWithPrefix("test-subnet2")
 	externalSubnetName := acctest.RandomWithPrefix("acctest-ext-subnet")
 	vpcName := acctest.RandomWithPrefix("acctest-managed-vpc")
@@ -329,7 +337,7 @@ func testAccNutanixProjectInternalConfig(subnetName, name, description, category
 			cluster_uuid       = local.cluster1
 			name               = "%[1]s"
 			description        = "Description of my unit test VLAN"
-			vlan_id            = 31
+			vlan_id            = %[9]d
 			subnet_type        = "VLAN"
 			subnet_ip          = "10.250.140.0"
 			default_gateway_ip = "10.250.140.1"
@@ -349,7 +357,7 @@ func testAccNutanixProjectInternalConfig(subnetName, name, description, category
 			cluster_uuid       = local.cluster1
 			name               = "%[2]s"
 			description        = "Description of my second unit test VLAN"
-			vlan_id            = 32
+			vlan_id            = %[10]d
 			subnet_type        = "VLAN"
 			subnet_ip          = "10.250.141.0"
 			default_gateway_ip = "10.250.141.1"
@@ -360,7 +368,7 @@ func testAccNutanixProjectInternalConfig(subnetName, name, description, category
 			cluster_uuid              = local.cluster1
 			name                      = "%[3]s"
 			description               = "Description of my unit test VLAN"
-			vlan_id                   = 876
+			vlan_id                   = %[11]d
 			subnet_type               = "VLAN"
 			subnet_ip                 = "10.250.144.0"
 			default_gateway_ip        = "10.250.144.1"
@@ -429,10 +437,10 @@ func testAccNutanixProjectInternalConfig(subnetName, name, description, category
 				uuid = nutanix_vpc.acctest-managed.id
 			}
 		}
-	`, subnetName, subnetName2, externalSubnetName, vpcName, name, description, categoryName, categoryVal)
+	`, subnetName, subnetName2, externalSubnetName, vpcName, name, description, categoryName, categoryVal, vlanID, vlanID2, externalVlanID)
 }
 
-func testAccNutanixProjectInternalConfigUpdate(subnetName, name, description string) string {
+func testAccNutanixProjectInternalConfigUpdate(subnetName, name, description string, vlanID, externalVlanID int) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -445,9 +453,9 @@ func testAccNutanixProjectInternalConfigUpdate(subnetName, name, description str
 
 		resource "nutanix_subnet" "subnet" {
 			cluster_uuid       = local.cluster1
-			name               = "%s"
+			name               = "%[1]s"
 			description        = "Description of my unit test VLAN"
-			vlan_id            = 31
+			vlan_id            = %[4]d
 			subnet_type        = "VLAN"
 			subnet_ip          = "10.250.140.0"
 			default_gateway_ip = "10.250.140.1"
@@ -467,7 +475,7 @@ func testAccNutanixProjectInternalConfigUpdate(subnetName, name, description str
 			cluster_uuid = local.cluster1
 			name        = "acctest-subnet-updated"
 			description = "Description of my unit test VLAN"
-			vlan_id     = 876
+			vlan_id     = %[5]d
 			subnet_type = "VLAN"
 			subnet_ip          = "10.250.144.0"
 		  default_gateway_ip = "10.250.144.1"
@@ -477,8 +485,8 @@ func testAccNutanixProjectInternalConfigUpdate(subnetName, name, description str
 		}
 
 		resource "nutanix_project" "project_test" {
-			name        = "%s"
-			description = "%s"
+			name        = "%[2]s"
+			description = "%[3]s"
 
 			default_subnet_reference {
 				uuid = nutanix_subnet.subnet.metadata.uuid
@@ -493,10 +501,10 @@ func testAccNutanixProjectInternalConfigUpdate(subnetName, name, description str
 				uuid=nutanix_subnet.subnet.metadata.uuid
 			}
 		}
-	`, subnetName, name, description)
+	`, subnetName, name, description, vlanID, externalVlanID)
 }
 
-func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal, principalName, directoryServiceUUID string) string {
+func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal, principalName, directoryServiceUUID string, vlanID int) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -511,7 +519,7 @@ func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, c
 			cluster_uuid       = local.cluster1
 			name               = "%[1]s"
 			description        = "Description of my unit test VLAN"
-			vlan_id            = 31
+			vlan_id            = %[9]d
 			subnet_type        = "VLAN"
 			subnet_ip          = "10.250.140.0"
 			default_gateway_ip = "10.250.140.1"
@@ -596,10 +604,10 @@ func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, c
 				ignore_changes = [acp]
 			}
 		}
-	`, subnetName, name, description, categoryName, categoryVal, testVars.Permissions[0].UUID, principalName, directoryServiceUUID)
+	`, subnetName, name, description, categoryName, categoryVal, testVars.Permissions[0].UUID, principalName, directoryServiceUUID, vlanID)
 }
 
-func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, description, categoryName, categoryVal, directoryServiceExtID, groupName, groupUUID string) string {
+func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, description, categoryName, categoryVal, directoryServiceExtID, groupName, groupUUID string, vlanID int) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -614,7 +622,7 @@ func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, descr
 			cluster_uuid       = local.cluster1
 			name               = "%[1]s"
 			description        = "Description of my unit test VLAN"
-			vlan_id            = 31
+			vlan_id            = %[10]d
 			subnet_type        = "VLAN"
 			subnet_ip          = "10.250.140.0"
 			default_gateway_ip = "10.250.140.1"
@@ -691,5 +699,5 @@ func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, descr
 				ignore_changes = [acp]
 			}
 		}
-	`, subnetName, name, description, categoryName, categoryVal, testVars.Permissions[0].UUID, groupName, groupUUID, directoryServiceExtID)
+	`, subnetName, name, description, categoryName, categoryVal, testVars.Permissions[0].UUID, groupName, groupUUID, directoryServiceExtID, vlanID)
 }

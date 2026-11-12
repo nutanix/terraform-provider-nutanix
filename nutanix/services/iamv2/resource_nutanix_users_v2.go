@@ -2,7 +2,6 @@ package iamv2
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"time"
 
@@ -167,8 +166,9 @@ func ResourceNutanixUserV2() *schema.Resource {
 							Computed: true,
 						},
 						"secret_access_key": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:      schema.TypeString,
+							Computed:  true,
+							Sensitive: true,
 						},
 						"user_id": {
 							Type:     schema.TypeString,
@@ -285,8 +285,7 @@ func resourceNutanixUserV2Create(ctx context.Context, d *schema.ResourceData, me
 		spec.AdditionalAttributes = expandKVPair(addAttr.([]interface{}))
 	}
 
-	aJSON, _ := json.MarshalIndent(spec, "", "  ")
-	log.Printf("[DEBUG] create user spec: %s", aJSON)
+	log.Printf("[DEBUG] create user spec: %s", utils.SanitizeForLogging(spec))
 
 	createUserRequest := import2.CreateUserRequest{
 		Body: spec,
@@ -315,8 +314,7 @@ func resourceNutanixUserV2Read(ctx context.Context, d *schema.ResourceData, meta
 
 	getResp := resp.Data.GetValue().(import1.User)
 
-	aJSON, _ := json.MarshalIndent(getResp, "", "  ")
-	log.Printf("[DEBUG] resourceNutanixUserV2Read: get user response: %s", aJSON)
+	log.Printf("[DEBUG] resourceNutanixUserV2Read: get user response: %s", utils.SanitizeForLogging(getResp))
 
 	if err = d.Set("ext_id", getResp.ExtId); err != nil {
 		return diag.Errorf("error setting ext_id for user %s: %s", d.Id(), err)
@@ -496,8 +494,7 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 	args := make(map[string]interface{})
 	args["If-Match"] = utils.StringPtr(etagValue)
 
-	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
-	log.Printf("[DEBUG] update user spec: %s", aJSON)
+	log.Printf("[DEBUG] update user spec: %s", utils.SanitizeForLogging(updateSpec))
 
 	updateUserByIdRequest := import2.UpdateUserByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),

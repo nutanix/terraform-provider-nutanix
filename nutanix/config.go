@@ -26,7 +26,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/objectstores"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/sdkconfig"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/security"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/service_provider"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/volumes"
 )
@@ -52,6 +54,12 @@ type Config struct {
 	NdbPassword        string
 	APIKey             string            // API key for authentication (alternative to username/password)
 	CustomHeaders      map[string]string // Custom headers to add to all requests (e.g., for Cloudflare Access)
+
+	// Nutanix Cloud (NC) multi-tenancy configuration
+	NutanixCentralEndpoint string // NC base endpoint (e.g., "nconprem-10-102-176-12.ccpnx.com")
+	DomainName             string // Domain name for PC (constructs: <domain_name>.domains.<nutanix_central_endpoint>)
+	TenantName             string // Tenant name for Tenant Admin scenarios
+	UseNCIAM               bool   // When true, use NC IAM endpoint (iam.services.<nutanix_central_endpoint>) for IAM calls
 }
 
 // clientCache memoizes fully constructed *Client instances for the lifetime of
@@ -79,6 +87,10 @@ func (c *Config) cacheKey() string {
 		c.Endpoint, c.Username, c.Password, c.Port, c.Insecure, c.SessionAuth,
 		c.WaitTimeout, c.ProxyURL, c.FoundationEndpoint, c.FoundationPort,
 		c.NdbEndpoint, c.NdbUsername, c.NdbPassword, c.APIKey)
+
+	// NC multi-tenancy fields
+	fmt.Fprintf(&b, "%s\x00%s\x00%s\x00%t\x00",
+		c.NutanixCentralEndpoint, c.DomainName, c.TenantName, c.UseNCIAM)
 
 	// Custom headers, serialized in a deterministic (sorted) order.
 	headerKeys := make([]string, 0, len(c.CustomHeaders))
@@ -111,22 +123,31 @@ func (c *Config) Client() (*Client, error) {
 	}
 
 	configCreds := client.Credentials{
-		URL:                fmt.Sprintf("%s:%s", c.Endpoint, c.Port),
-		Endpoint:           c.Endpoint,
-		Username:           c.Username,
-		Password:           c.Password,
-		Port:               c.Port,
-		Insecure:           c.Insecure,
-		SessionAuth:        c.SessionAuth,
-		ProxyURL:           c.ProxyURL,
-		FoundationEndpoint: c.FoundationEndpoint,
-		FoundationPort:     c.FoundationPort,
-		NdbEndpoint:        c.NdbEndpoint,
-		NdbUsername:        c.NdbUsername,
-		NdbPassword:        c.NdbPassword,
-		RequiredFields:     c.RequiredFields,
-		APIKey:             c.APIKey,
-		CustomHeaders:      c.CustomHeaders,
+		URL:                    fmt.Sprintf("%s:%s", c.Endpoint, c.Port),
+		Endpoint:               c.Endpoint,
+		Username:               c.Username,
+		Password:               c.Password,
+		Port:                   c.Port,
+		Insecure:               c.Insecure,
+		SessionAuth:            c.SessionAuth,
+		ProxyURL:               c.ProxyURL,
+		FoundationEndpoint:     c.FoundationEndpoint,
+		FoundationPort:         c.FoundationPort,
+		NdbEndpoint:            c.NdbEndpoint,
+		NdbUsername:            c.NdbUsername,
+		NdbPassword:            c.NdbPassword,
+		RequiredFields:         c.RequiredFields,
+		APIKey:                 c.APIKey,
+		CustomHeaders:          c.CustomHeaders,
+		NutanixCentralEndpoint: c.NutanixCentralEndpoint,
+		DomainName:             c.DomainName,
+		TenantName:             c.TenantName,
+		UseNCIAM:               c.UseNCIAM,
+	}
+	if configCreds.NutanixCentralEndpoint != "" {
+		configCreds.Endpoint = sdkconfig.ResolveEndpoint(configCreds, sdkconfig.ServiceTypePC)
+		configCreds.URL = fmt.Sprintf("%s:%s", configCreds.Endpoint, configCreds.Port)
+		log.Printf("[DEBUG] NC mode enabled; using %q as the Prism Central endpoint for v3 clients", configCreds.Endpoint)
 	}
 
 	v3Client, err := v3.NewV3Client(configCreds)
@@ -205,28 +226,38 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	NCDomainManagementClient, err := multidomain.NewNCDomainManagementClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
+	ServiceProviderManagementClient, err := service_provider.NewServiceProviderManagementClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 
 	builtClient := &Client{
-		WaitTimeout:         c.WaitTimeout,
-		API:                 v3Client,
-		KarbonAPI:           karbonClient,
-		FoundationClientAPI: foundationClient,
-		FoundationCentral:   fcClient,
-		Era:                 eraClient,
-		NetworkingAPI:       networkingClient,
-		PrismAPI:            prismClient,
-		MicroSegAPI:         microsegClient,
-		IamAPI:              iamClient,
-		ClusterAPI:          clustersClient,
-		VolumeAPI:           volumeClient,
-		DataProtectionAPI:   dataprotectionClient,
-		VmmAPI:              vmmClient,
-		DataPoliciesAPI:     dataPoliciesClient,
-		LcmAPI:              LcmClient,
-		CalmAPI:             calmClient,
-		ObjectStoreAPI:      ObjectStoreClient,
-		SecurityAPI:         SecurityClient,
-		MultidomainAPI:      MultidomainClient,
+		WaitTimeout:                  c.WaitTimeout,
+		API:                          v3Client,
+		KarbonAPI:                    karbonClient,
+		FoundationClientAPI:          foundationClient,
+		FoundationCentral:            fcClient,
+		Era:                          eraClient,
+		NetworkingAPI:                networkingClient,
+		PrismAPI:                     prismClient,
+		MicroSegAPI:                  microsegClient,
+		IamAPI:                       iamClient,
+		ClusterAPI:                   clustersClient,
+		VolumeAPI:                    volumeClient,
+		DataProtectionAPI:            dataprotectionClient,
+		VmmAPI:                       vmmClient,
+		DataPoliciesAPI:              dataPoliciesClient,
+		LcmAPI:                       LcmClient,
+		CalmAPI:                      calmClient,
+		ObjectStoreAPI:               ObjectStoreClient,
+		SecurityAPI:                  SecurityClient,
+		MultidomainAPI:               MultidomainClient,
+		NCDomainManagementAPI:        NCDomainManagementClient,
+		ServiceProviderManagementAPI: ServiceProviderManagementClient,
 	}
 
 	clientCache[key] = builtClient
@@ -235,26 +266,28 @@ func (c *Config) Client() (*Client, error) {
 
 // Client represents the nutanix API client
 type Client struct {
-	API                 *v3.Client
-	KarbonAPI           *karbon.Client
-	FoundationClientAPI *foundation.Client
-	WaitTimeout         int64
-	FoundationCentral   *foundation_central.Client
-	Era                 *era.Client
-	NetworkingAPI       *networking.Client
-	PrismAPI            *prism.Client
-	MicroSegAPI         *microseg.Client
-	IamAPI              *iam.Client
-	ClusterAPI          *clusters.Client
-	VolumeAPI           *volumes.Client
-	DataProtectionAPI   *dataprotection.Client
-	VmmAPI              *vmm.Client
-	DataPoliciesAPI     *datapolicies.Client
-	LcmAPI              *lcm.Client
-	CalmAPI             *selfservice.Client
-	ObjectStoreAPI      *objectstores.Client
-	SecurityAPI         *security.Client
-	MultidomainAPI      *multidomain.Client
+	API                          *v3.Client
+	KarbonAPI                    *karbon.Client
+	FoundationClientAPI          *foundation.Client
+	WaitTimeout                  int64
+	FoundationCentral            *foundation_central.Client
+	Era                          *era.Client
+	NetworkingAPI                *networking.Client
+	PrismAPI                     *prism.Client
+	MicroSegAPI                  *microseg.Client
+	IamAPI                       *iam.Client
+	ClusterAPI                   *clusters.Client
+	VolumeAPI                    *volumes.Client
+	DataProtectionAPI            *dataprotection.Client
+	VmmAPI                       *vmm.Client
+	DataPoliciesAPI              *datapolicies.Client
+	LcmAPI                       *lcm.Client
+	CalmAPI                      *selfservice.Client
+	ObjectStoreAPI               *objectstores.Client
+	SecurityAPI                  *security.Client
+	MultidomainAPI               *multidomain.Client
+	NCDomainManagementAPI        *multidomain.NCDomainManagementClient
+	ServiceProviderManagementAPI *service_provider.ServiceProviderManagementClient
 }
 
 // GetWaitTimeout returns the provider-level wait_timeout in minutes.

@@ -8,7 +8,12 @@ default: build
 build: fmtcheck
 	go install
 
+# Acc fixtures are gitignored (local secrets). Unit tests still load them via
+# TestMain/MustConfig, so seed from committed *.example templates when absent.
 test: fmtcheck
+	@test -f test_config.json || cp test_config.json.example test_config.json
+	@test -f test_config_v2.json || cp test_config_v2.json.example test_config_v2.json
+	@test -f test_foundation_config.json || cp test_foundation_config.json.example test_foundation_config.json
 	go test --tags=unit $(TEST) -timeout=30s -parallel=4
 
 testacc: fmtcheck
@@ -37,7 +42,7 @@ testacc: fmtcheck
 #   make acc-test TestAccV2NutanixSubnetResource_Basic                 # single test (searches all packages)
 #   make acc-test TestAccV2NutanixSubnet TestAccV2NutanixVpc           # multiple tests (combined with |)
 # Note: Don't use -p flag (it's a Make built-in). Use p= or just the package name directly.
-_acc_goals := $(filter-out acc-test,$(MAKECMDGOALS))
+_acc_goals := $(filter-out acc-test report --report -report,$(MAKECMDGOALS))
 _acc_single := $(if $(filter 1,$(words $(_acc_goals))),$(firstword $(_acc_goals)),)
 ACC_TEST_LOG ?= $(if $(o),$(o),$(if $(_acc_single),test_output_$(_acc_single).log,test_output.log))
 ACC_COVER_PROFILE ?= c.out
@@ -69,6 +74,7 @@ acc-test:
 			fi; \
 			case "$$arg" in \
 				--) continue ;; \
+				report|--report|-report) report=1; continue ;; \
 				-o|--output) expect_log_arg=1; continue ;; \
 				-o=*|--output=*) logfile="$${arg#*=}"; continue ;; \
 				--report|-report) want_report=1; continue ;; \
@@ -182,7 +188,8 @@ tools:
 
 vulncheck:
 	@echo "==> Running vulnerability check..."
-	@govulncheck ./...
+	@GOFLAGS=-mod=mod go install golang.org/x/vuln/cmd/govulncheck@latest
+	@GOFLAGS=-mod=mod "$$(go env GOPATH)/bin/govulncheck" ./...
 
 vet:
 	@echo "go vet ."

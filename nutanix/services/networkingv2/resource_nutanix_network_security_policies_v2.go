@@ -628,8 +628,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 		spec.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
 
-	aJSON, _ := json.MarshalIndent(spec, "", "  ")
-	log.Printf("[DEBUG] Create Network Security Policy Payload: %s", string(aJSON))
+	log.Printf("[DEBUG] Create Network Security Policy Payload: %s", utils.SanitizeForLogging(spec))
 
 	createNetworkSecurityPolicyRequest := import3.CreateNetworkSecurityPolicyRequest{
 		Body: &spec,
@@ -657,8 +656,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 		// Fetch and log the task details to aid debugging of the failed create.
 		if taskResp, err := taskconn.TaskRefAPI.GetTaskById(ctx, &import5.GetTaskByIdRequest{ExtId: taskUUID}); err == nil {
 			taskDetails := taskResp.Data.GetValue().(import2.Task)
-			aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-			log.Printf("[DEBUG] Create Network Security Policy Failed Task Details: %s", string(aJSON))
+			log.Printf("[DEBUG] Create Network Security Policy Failed Task Details: %s", utils.SanitizeForLogging(taskDetails))
 		}
 		return diag.Errorf("error waiting for network security policy (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
@@ -672,8 +670,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 		return diag.Errorf("error while fetching network security policy task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(import2.Task)
-	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Create Network Security Policy Task Details: %s", string(aJSON))
+	log.Printf("[DEBUG] Create Network Security Policy Task Details: %s", utils.SanitizeForLogging(taskDetails))
 
 	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeSecurityPolicy, "Network security policy")
 	if err != nil {
@@ -852,8 +849,7 @@ func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema
 	if d.HasChange("vpc_reference") {
 		updatedSpec.VpcReferences = common.ExpandListOfString(d.Get("vpc_reference").([]interface{}))
 	}
-	aJSON, _ := json.MarshalIndent(updatedSpec, "", "  ")
-	log.Printf("[DEBUG] Update Network Security Policy Payload: %s", string(aJSON))
+	log.Printf("[DEBUG] Update Network Security Policy Payload: %s", utils.SanitizeForLogging(updatedSpec))
 
 	updateNetworkSecurityPolicyByIdRequest := import3.UpdateNetworkSecurityPolicyByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),

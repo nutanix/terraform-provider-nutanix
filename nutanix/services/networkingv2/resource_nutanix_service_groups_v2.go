@@ -2,7 +2,6 @@ package networkingv2
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 
@@ -198,8 +197,7 @@ func ResourceNutanixServiceGroupsV2Create(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("error while fetching service group task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
-	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
-	log.Printf("[DEBUG] Create Service Group Task Details: %s", string(aJSON))
+	log.Printf("[DEBUG] Create Service Group Task Details: %s", utils.SanitizeForLogging(taskDetails))
 
 	uuid, err := common.ExtractEntityUUIDFromTask(taskDetails, utils.RelEntityTypeServiceGroup, "Service group")
 	if err != nil {

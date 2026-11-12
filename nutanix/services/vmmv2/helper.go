@@ -3,6 +3,7 @@ package vmmv2
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -14,6 +15,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+const (
+	DefaultTimeoutCreate = 15 * time.Minute
+	DefaultTimeoutUpdate = 15 * time.Minute
+	DefaultTimeoutDelete = 15 * time.Minute
 )
 
 // ExpandDiskFunc converts a list of disk config (interface{}) to SDK disk types.
@@ -34,6 +41,21 @@ func isVmmEtagMismatchErr(err error) bool {
 	return strings.Contains(msg, "If-Match header value passed") ||
 		strings.Contains(msg, "VM_ETAG_MISMATCH") ||
 		strings.Contains(msg, "VMM-30303")
+}
+
+// isVmmNotFoundErr reports whether err indicates the VM is already gone.
+// Sync promote can delete the source VM while a terraform destroy delete-task
+// is still running; treat that as successful destroy.
+func isVmmNotFoundErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "because it is not found") ||
+		strings.Contains(msg, "could not find the entity") ||
+		strings.Contains(msg, "entity not found") ||
+		strings.Contains(msg, "\"code\":\"404\"") ||
+		(strings.Contains(msg, "not found") && strings.Contains(msg, "vm"))
 }
 
 // StripDataSourceFromDiskBackingInfo removes the data_source key from a disk's backing_info.vm_disk map.

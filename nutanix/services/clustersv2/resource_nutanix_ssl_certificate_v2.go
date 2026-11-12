@@ -37,11 +37,13 @@ func ResourceNutanixSSLCertificateV2() *schema.Resource {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
+				WriteOnly: true,
 			},
 			"private_key": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
+				WriteOnly: true,
 			},
 			"public_certificate": {
 				Type:     schema.TypeString,
@@ -83,11 +85,16 @@ func ResourceNutanixSSLCertificateV2Create(ctx context.Context, d *schema.Resour
 	// Build the update payload
 	updateSpec := config.NewSSLCertificate()
 
-	if value, ok := utils.IsStringSetAndNotEmpty(d.Get("passphrase")); ok {
+	// WriteOnly secrets must be read from raw config (not d.Get).
+	if value, ok := common.GetWriteOnlyString(d, "passphrase"); ok {
 		updateSpec.Passphrase = utils.StringPtr(value)
+	} else {
+		logWriteOnlyLookupMiss(d, "passphrase")
 	}
-	if value, ok := utils.IsStringSetAndNotEmpty(d.Get("private_key")); ok {
+	if value, ok := common.GetWriteOnlyString(d, "private_key"); ok {
 		updateSpec.PrivateKey = utils.StringPtr(value)
+	} else {
+		logWriteOnlyLookupMiss(d, "private_key")
 	}
 	if value, ok := utils.IsStringSetAndNotEmpty(d.Get("public_certificate")); ok {
 		updateSpec.PublicCertificate = utils.StringPtr(value)
@@ -219,4 +226,25 @@ func ResourceNutanixSSLCertificateV2Update(ctx context.Context, d *schema.Resour
 
 func ResourceNutanixSSLCertificateV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
+}
+
+// logWriteOnlyLookupMiss logs why a WriteOnly secret was not read from raw config
+// (null/unknown/missing/type). Never logs the secret value.
+func logWriteOnlyLookupMiss(d *schema.ResourceData, attr string) {
+	raw := d.GetRawConfig()
+	if raw.IsNull() || !raw.IsKnown() {
+		log.Printf("[DEBUG] WriteOnly %q lookup miss: raw config null=%v known=%v", attr, raw.IsNull(), raw.IsKnown())
+		return
+	}
+	m := raw.AsValueMap()
+	v, ok := m[attr]
+	if !ok {
+		keys := make([]string, 0, len(m))
+		for k := range m {
+			keys = append(keys, k)
+		}
+		log.Printf("[DEBUG] WriteOnly %q lookup miss: attr absent; raw keys=%v", attr, keys)
+		return
+	}
+	log.Printf("[DEBUG] WriteOnly %q lookup miss: null=%v known=%v type=%s", attr, v.IsNull(), v.IsKnown(), v.Type().FriendlyName())
 }

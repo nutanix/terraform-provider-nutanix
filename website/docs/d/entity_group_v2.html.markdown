@@ -51,7 +51,8 @@ The following attributes are exported:
 
 * `entities` - List of allowed entities. Each entity may contain:
   * `type` - The type of entity (e.g. VM, ADDRESS_GROUP).
-  * `selected_by` - The selection method (e.g. CATEGORY_EXT_ID, IP_VALUES, REGEX, FQDN_VALUES).
+  * `select_by` - The selection method (e.g. CATEGORY_EXT_ID, IP_VALUES, REGEX, FQDN_VALUES).
+  * `selected_by` - Deprecated alias for `select_by`.
   * `addresses` - With `ipv4_addresses` (value, prefix_length).
   * `ip_ranges` - With `ipv4_ranges` (start_ip, end_ip).
   * `kube_entities` - List of kube entities.

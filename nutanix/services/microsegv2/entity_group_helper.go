@@ -8,6 +8,17 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+// entitySelectBy returns select_by if set, otherwise falls back to deprecated selected_by.
+func entitySelectBy(m map[string]interface{}) string {
+	if v, ok := m["select_by"].(string); ok && v != "" {
+		return v
+	}
+	if v, ok := m["selected_by"].(string); ok && v != "" {
+		return v
+	}
+	return ""
+}
+
 func expandAllowedConfig(l []interface{}) *import2.AllowedConfig {
 	if len(l) == 0 {
 		return nil
@@ -27,7 +38,7 @@ func expandAllowedEntities(l []interface{}) []import2.AllowedEntity {
 	for _, e := range l {
 		m := e.(map[string]interface{})
 		ent := import2.AllowedEntity{}
-		if v, ok := m["selected_by"].(string); ok {
+		if v := entitySelectBy(m); v != "" {
 			ent.SelectBy = common.ExpandEnum[import2.AllowedSelectBy](v)
 		}
 		if v, ok := m["type"].(string); ok {
@@ -78,7 +89,7 @@ func expandExceptEntities(l []interface{}) []import2.ExceptEntity {
 	for _, e := range l {
 		m := e.(map[string]interface{})
 		ent := import2.ExceptEntity{}
-		if v, ok := m["selected_by"].(string); ok {
+		if v := entitySelectBy(m); v != "" {
 			ent.SelectBy = common.ExpandEnum[import2.ExceptSelectBy](v)
 		}
 		if v, ok := m["type"].(string); ok {
@@ -185,8 +196,10 @@ func flattenAllowedEntities(entities []import2.AllowedEntity) []map[string]inter
 	}
 	result := make([]map[string]interface{}, 0, len(entities))
 	for _, e := range entities {
+		selectBy := e.SelectBy.GetName()
 		m := map[string]interface{}{
-			"selected_by":       e.SelectBy.GetName(),
+			"select_by":         selectBy,
+			"selected_by":       selectBy,
 			"type":              e.Type.GetName(),
 			"addresses":         flattenAddresses(e.Addresses),
 			"ip_ranges":         flattenIpRanges(e.IpRanges),
@@ -220,8 +233,10 @@ func flattenExceptEntities(entities []import2.ExceptEntity) []map[string]interfa
 	}
 	result := make([]map[string]interface{}, 0, len(entities))
 	for _, e := range entities {
+		selectBy := e.SelectBy.GetName()
 		m := map[string]interface{}{
-			"selected_by":       e.SelectBy.GetName(),
+			"select_by":         selectBy,
+			"selected_by":       selectBy,
 			"type":              e.Type.GetName(),
 			"addresses":         flattenAddresses(e.Addresses),
 			"ip_ranges":         flattenIpRanges(e.IpRanges),

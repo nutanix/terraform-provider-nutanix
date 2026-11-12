@@ -605,7 +605,7 @@ func testNetworkSecurityConfigWithEntityGroupReference(name, desc string) string
 		allowed_config {
 			entities {
 				type              = "VM"
-				selected_by       = "CATEGORY_EXT_ID"
+				select_by       = "CATEGORY_EXT_ID"
 				reference_ext_ids = [
 					data.nutanix_categories_v2.test.categories.0.ext_id,
 					data.nutanix_categories_v2.test.categories.1.ext_id,
@@ -645,7 +645,7 @@ func testNetworkSecurityConfigSecuredGroupBothSet(name, desc string) string {
 		allowed_config {
 			entities {
 				type              = "VM"
-				selected_by       = "CATEGORY_EXT_ID"
+				select_by       = "CATEGORY_EXT_ID"
 				reference_ext_ids = [
 					data.nutanix_categories_v2.test.categories.0.ext_id,
 					data.nutanix_categories_v2.test.categories.1.ext_id,
@@ -1028,7 +1028,7 @@ func testNetworkSecurityConfigWithFlexRule(name, desc, action, direction string,
 		allowed_config {
 			entities {
 				type              = "VM"
-				selected_by       = "CATEGORY_EXT_ID"
+				select_by       = "CATEGORY_EXT_ID"
 				reference_ext_ids = [nutanix_category_v2.flex[0].id]
 			}
 		}
@@ -1041,7 +1041,7 @@ func testNetworkSecurityConfigWithFlexRule(name, desc, action, direction string,
 		allowed_config {
 			entities {
 				type              = "VM"
-				selected_by       = "CATEGORY_EXT_ID"
+				select_by       = "CATEGORY_EXT_ID"
 				reference_ext_ids = [nutanix_category_v2.flex[1].id]
 			}
 		}
@@ -1055,7 +1055,7 @@ func testNetworkSecurityConfigWithFlexRule(name, desc, action, direction string,
 		allowed_config {
 			entities {
 				type              = "VM"
-				selected_by       = "CATEGORY_EXT_ID"
+				select_by       = "CATEGORY_EXT_ID"
 				reference_ext_ids = [nutanix_category_v2.flex[2].id]
 			}
 		}

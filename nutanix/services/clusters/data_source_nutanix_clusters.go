@@ -250,8 +250,9 @@ func DataSourceNutanixClusters() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"credentials": {
-										Type:     schema.TypeMap,
-										Computed: true,
+										Type:      schema.TypeMap,
+										Computed:  true,
+										Sensitive: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
@@ -280,8 +281,9 @@ func DataSourceNutanixClusters() *schema.Resource {
 							Computed: true,
 						},
 						"smtp_server_credentials": {
-							Type:     schema.TypeMap,
-							Computed: true,
+							Type:      schema.TypeMap,
+							Computed:  true,
+							Sensitive: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -324,8 +326,9 @@ func DataSourceNutanixClusters() *schema.Resource {
 							Computed: true,
 						},
 						"domain_server_credentials": {
-							Type:     schema.TypeMap,
-							Computed: true,
+							Type:      schema.TypeMap,
+							Computed:  true,
+							Sensitive: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -908,8 +911,9 @@ func resourceNutanixDatasourceClustersResourceV0() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"credentials": {
-										Type:     schema.TypeMap,
-										Computed: true,
+										Type:      schema.TypeMap,
+										Computed:  true,
+										Sensitive: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
@@ -938,8 +942,9 @@ func resourceNutanixDatasourceClustersResourceV0() *schema.Resource {
 							Computed: true,
 						},
 						"smtp_server_credentials": {
-							Type:     schema.TypeMap,
-							Computed: true,
+							Type:      schema.TypeMap,
+							Computed:  true,
+							Sensitive: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -982,8 +987,9 @@ func resourceNutanixDatasourceClustersResourceV0() *schema.Resource {
 							Computed: true,
 						},
 						"domain_server_credentials": {
-							Type:     schema.TypeMap,
-							Computed: true,
+							Type:      schema.TypeMap,
+							Computed:  true,
+							Sensitive: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},

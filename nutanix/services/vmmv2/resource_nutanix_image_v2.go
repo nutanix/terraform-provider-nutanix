@@ -43,7 +43,11 @@ func ResourceNutanixImageV4() *schema.Resource {
 			}
 			return nil
 		},
-
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DefaultTimeoutCreate),
+			Update: schema.DefaultTimeout(DefaultTimeoutUpdate),
+			Delete: schema.DefaultTimeout(DefaultTimeoutDelete),
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -107,8 +111,9 @@ func ResourceNutanixImageV4() *schema.Resource {
 													Required: true,
 												},
 												"password": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:      schema.TypeString,
+													Required:  true,
+													Sensitive: true,
 												},
 											},
 										},

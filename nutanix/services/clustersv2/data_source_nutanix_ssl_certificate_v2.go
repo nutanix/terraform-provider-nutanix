@@ -24,8 +24,9 @@ func DatasourceNutanixSSLCertificateV2() *schema.Resource {
 				Required: true,
 			},
 			"passphrase": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"private_key": {
 				Type:      schema.TypeString,

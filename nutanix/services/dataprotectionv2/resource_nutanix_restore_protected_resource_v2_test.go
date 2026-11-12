@@ -3,13 +3,10 @@ package dataprotectionv2_test
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -23,7 +20,7 @@ func TestAccV2NutanixRestoreProtectedResourceResource_RestoreVm(t *testing.T) {
 	r := acctest.RandIntRange(1, 100)
 	vmName := fmt.Sprintf("tf-test-protected-vm-restore-%d", r)
 	ppName := fmt.Sprintf("tf-test-protected-policy-restore-vm-%d", r)
-	description := "create a new protected vm and restore it"
+	description := "Protected VM for restore"
 
 	vmResourceName := "nutanix_virtual_machine_v2.test"
 
@@ -38,7 +35,9 @@ func TestAccV2NutanixRestoreProtectedResourceResource_RestoreVm(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(vmResourceName, "id"),
 					resource.TestCheckResourceAttr(vmResourceName, "name", vmName),
-					waitForVMToBeProtected(vmResourceName, "protection_type", "RULE_PROTECTED", maxRetries, retryInterval, sleepTime),
+					// Ansible: wait until protection_type == RULE_PROTECTED, then pause 300s.
+					waitForVMToBeProtected(vmResourceName, "protection_type", "RULE_PROTECTED", maxRetries, retryInterval, 0),
+					waitForProtectedResourceAvailable(vmResourceName, maxRetries, retryInterval, sleepTime),
 				),
 			},
 			//restore protected vm
@@ -52,7 +51,7 @@ func TestAccV2NutanixRestoreProtectedResourceResource_RestoreVm(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRestoreProtectedResource, "cluster_ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameRestoreProtectedResource, "ext_id"),
-					// Clean up the promoted vm
+					// Clean up the restored vm
 					deleteRestoredVM(vmName),
 				),
 			},
@@ -67,8 +66,8 @@ func TestAccV2NutanixRestoreProtectedResourceResource_RestoreVG(t *testing.T) {
 	}
 	r := acctest.RandIntRange(1, 100)
 	vgName := fmt.Sprintf("tf-test-protected-vg-restore-%d", r)
-	ppName := fmt.Sprintf("tf-test-protected-policy-promote-vg-%d", r)
-	description := "create a new protected vg and promote it"
+	ppName := fmt.Sprintf("tf-test-protected-policy-restore-vg-%d", r)
+	description := "Volume group for restore"
 
 	vgResourceName := "nutanix_volume_group_v2.test"
 	resource.Test(t, resource.TestCase{
@@ -76,18 +75,14 @@ func TestAccV2NutanixRestoreProtectedResourceResource_RestoreVG(t *testing.T) {
 		ProtoV5ProviderFactories: acc.TestAccProtoV5ProviderFactories,
 		CheckDestroy:             testCheckDestroyProtectedResourceAndCleanup,
 		Steps: []resource.TestStep{
-			// create protection policy and protected vm
+			// create protection policy and protected vg (Ansible: Create Volume group to be restored)
 			{
 				Config: testRestoreProtectedResourceVGAndProtectionPolicyConfig(vgName, ppName, description, r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(vgResourceName, "id"),
 					resource.TestCheckResourceAttr(vgResourceName, "name", vgName),
-					//wait 7 minutes for the VG to be protected
-					func(s *terraform.State) error {
-						// wait 7 min for the VG to be protected
-						time.Sleep(7 * time.Minute)
-						return nil
-					},
+					// Ansible: pause 300s after protect before restore.
+					waitForProtectedResourceAvailable(vgResourceName, maxRetries, retryInterval, sleepTime),
 				),
 			},
 			//restore protected vg
@@ -126,23 +121,35 @@ locals {
   	availability_zone = local.config.availability_zone
 }
 
+data "nutanix_storage_containers_v2" "ssc" {
+  filter = "clusterExtId eq '${local.clusterExtId}' and name eq 'SelfServiceContainer'"
+  limit  = 1
+}
+
+locals {
+  sourceStorageContainerExtId = data.nutanix_storage_containers_v2.ssc.storage_containers[0].ext_id
+}
+
+# Mirrors Ansible category_ext_id_2 + "Create auto retention protection policy"
+# (ntnx_protection_policies_v2/tasks/protection_policies.yml) used for restore VM/VG.
 resource "nutanix_category_v2" "test" {
   key = "tf-test-category-pp-restore-vm-%[5]d"
   value = "tf_test_category_pp_restore_vm_%[5]d"
-  description = "category for protection policy and protected vm"
+  description = "category for restore auto-retention protection policy"
 }
 
 resource "nutanix_protection_policy_v2" "test" {
   name        = "%[4]s"
   description = "%[3]s"
 
+  # Ansible auto-retention PP: RPO=60 (minutely), CRASH_CONSISTENT, DAILY rollup, suspend=300.
+  # Restore VM uses this category (not sync RPO=0 — that is promote-only in Ansible).
   replication_configurations {
     source_location_label = "source"
     remote_location_label = "target"
     schedule {
-      recovery_point_objective_time_seconds         = 60
-      recovery_point_type                           = "CRASH_CONSISTENT"
-      sync_replication_auto_suspend_timeout_seconds = 300
+      recovery_point_type                   = "CRASH_CONSISTENT"
+      recovery_point_objective_time_seconds = 60
       retention {
         auto_rollup_retention {
           local {
@@ -155,15 +162,15 @@ resource "nutanix_protection_policy_v2" "test" {
           }
         }
       }
+      sync_replication_auto_suspend_timeout_seconds = 300
     }
   }
   replication_configurations {
     source_location_label = "target"
     remote_location_label = "source"
     schedule {
-      recovery_point_objective_time_seconds         = 60
-      recovery_point_type                           = "CRASH_CONSISTENT"
-      sync_replication_auto_suspend_timeout_seconds = 300
+      recovery_point_type                   = "CRASH_CONSISTENT"
+      recovery_point_objective_time_seconds = 60
       retention {
         auto_rollup_retention {
           local {
@@ -176,6 +183,7 @@ resource "nutanix_protection_policy_v2" "test" {
           }
         }
       }
+      sync_replication_auto_suspend_timeout_seconds = 300
     }
   }
 
@@ -183,16 +191,27 @@ resource "nutanix_protection_policy_v2" "test" {
     domain_manager_ext_id = data.nutanix_pcs_v2.pcs-list.pcs[0].ext_id
     label                 = "source"
     is_primary            = true
+    replication_sub_location {
+      cluster_ext_ids {
+        cluster_ext_ids = [local.clusterExtId]
+      }
+    }
   }
   replication_locations {
     domain_manager_ext_id = local.availability_zone.pc_ext_id
     label                 = "target"
     is_primary            = false
+    replication_sub_location {
+      cluster_ext_ids {
+        cluster_ext_ids = [local.availability_zone.cluster_ext_id]
+      }
+    }
   }
 
   category_ids = [nutanix_category_v2.test.id]
 }
 
+# Ansible: Create a Protected VM to be restored (category_ext_id_2, disk 26843545600).
 resource "nutanix_virtual_machine_v2" "test"{
 	name= "%[2]s"
 	description =  "%[3]s"
@@ -204,7 +223,21 @@ resource "nutanix_virtual_machine_v2" "test"{
   categories {
 	  ext_id = nutanix_category_v2.test.id
   }
-	power_state = "ON"
+  disks {
+    disk_address {
+      bus_type = "SCSI"
+      index    = 0
+    }
+    backing_info {
+      vm_disk {
+        disk_size_bytes = 26843545600
+        storage_container {
+          ext_id = local.sourceStorageContainerExtId
+        }
+      }
+    }
+  }
+  power_state = "ON"
 
 	depends_on = [nutanix_protection_policy_v2.test]
 }
@@ -213,35 +246,31 @@ resource "nutanix_virtual_machine_v2" "test"{
 }
 
 func testRestoreProtectedResourceVMConfig() string {
-	remotePcIP := testVars.AvailabilityZone.RemotePcIP
-	username := os.Getenv("NUTANIX_USERNAME")
-	password := os.Getenv("NUTANIX_PASSWORD")
-	port, _ := strconv.Atoi(os.Getenv("NUTANIX_PORT"))
-	insecure, _ := strconv.ParseBool(os.Getenv("NUTANIX_INSECURE"))
-	remoteHostProviderConfig := fmt.Sprintf(`
-provider "nutanix-2" {
-  username = "%[1]s"
-  password = "%[2]s"
-  endpoint = "%[3]s"
-  insecure = %[4]t
-  port     = %[5]d
-}
-
-`, username, password, remotePcIP, insecure, port)
-
 	return fmt.Sprintf(
 		`
 
 %[1]s
 
+data "nutanix_protected_resource_v2" "restore_ready" {
+  ext_id = nutanix_virtual_machine_v2.test.id
+
+  depends_on = [
+    nutanix_virtual_machine_v2.test
+  ]
+}
+
 resource "nutanix_restore_protected_resource_v2" "test" {
   provider = nutanix-2
   ext_id = nutanix_virtual_machine_v2.test.id
   cluster_ext_id = local.availability_zone.cluster_ext_id
+
+  depends_on = [
+    data.nutanix_protected_resource_v2.restore_ready
+  ]
 }
 
 
-`, remoteHostProviderConfig)
+`, remotePCProviderConfig(testVars.AvailabilityZone.RemotePcIP))
 }
 
 func testRestoreProtectedResourceVGAndProtectionPolicyConfig(vgName, ppName, description string, r int) string {
@@ -261,10 +290,12 @@ locals {
   	availability_zone = local.config.availability_zone
 }
 
+# Mirrors Ansible category_ext_id_2 + auto-retention PP used for restore VG
+# (same policy as restore VM; promote VG uses sync category4 instead).
 resource "nutanix_category_v2" "test" {
   key = "tf-test-category-pp-restore-vg-%[5]d"
   value = "tf_test_category_pp_restore_vg_%[5]d"
-  description = "category for protection policy and protected vm"
+  description = "category for restore auto-retention protection policy"
 }
 
 resource "nutanix_protection_policy_v2" "test" {
@@ -275,9 +306,8 @@ resource "nutanix_protection_policy_v2" "test" {
     source_location_label = "source"
     remote_location_label = "target"
     schedule {
-      recovery_point_objective_time_seconds         = 60
-      recovery_point_type                           = "CRASH_CONSISTENT"
-      sync_replication_auto_suspend_timeout_seconds = 300
+      recovery_point_type                   = "CRASH_CONSISTENT"
+      recovery_point_objective_time_seconds = 60
       retention {
         auto_rollup_retention {
           local {
@@ -290,15 +320,15 @@ resource "nutanix_protection_policy_v2" "test" {
           }
         }
       }
+      sync_replication_auto_suspend_timeout_seconds = 300
     }
   }
   replication_configurations {
     source_location_label = "target"
     remote_location_label = "source"
     schedule {
-      recovery_point_objective_time_seconds         = 60
-      recovery_point_type                           = "CRASH_CONSISTENT"
-      sync_replication_auto_suspend_timeout_seconds = 300
+      recovery_point_type                   = "CRASH_CONSISTENT"
+      recovery_point_objective_time_seconds = 60
       retention {
         auto_rollup_retention {
           local {
@@ -311,6 +341,7 @@ resource "nutanix_protection_policy_v2" "test" {
           }
         }
       }
+      sync_replication_auto_suspend_timeout_seconds = 300
     }
   }
 
@@ -318,27 +349,45 @@ resource "nutanix_protection_policy_v2" "test" {
     domain_manager_ext_id = data.nutanix_pcs_v2.pcs-list.pcs[0].ext_id
     label                 = "source"
     is_primary            = true
+    replication_sub_location {
+      cluster_ext_ids {
+        cluster_ext_ids = [local.clusterExtId]
+      }
+    }
   }
   replication_locations {
     domain_manager_ext_id = local.availability_zone.pc_ext_id
     label                 = "target"
     is_primary            = false
+    replication_sub_location {
+      cluster_ext_ids {
+        cluster_ext_ids = [local.availability_zone.cluster_ext_id]
+      }
+    }
   }
 
   category_ids = [nutanix_category_v2.test.id]
 }
 
+# Ansible: Create Volume group to be restored (name/description/cluster_reference only).
 resource "nutanix_volume_group_v2" "test" {
-  name                               = "%[2]s"
-  description                        = "%[3]s"
-  cluster_reference                  = local.clusterExtId
+  name              = "%[2]s"
+  description       = "%[3]s"
+  cluster_reference = local.clusterExtId
+  depends_on        = [nutanix_protection_policy_v2.test]
 }
 
+# Ansible: Associate category with second VG (category_ext_id_2, entity_type CATEGORY).
 resource "nutanix_associate_category_to_volume_group_v2" "test" {
   ext_id = nutanix_volume_group_v2.test.id
   categories {
-    ext_id = nutanix_category_v2.test.id
+    ext_id      = nutanix_category_v2.test.id
+    entity_type = "CATEGORY"
   }
+  depends_on = [
+    nutanix_protection_policy_v2.test,
+    nutanix_volume_group_v2.test,
+  ]
 }
 
 
@@ -346,32 +395,28 @@ resource "nutanix_associate_category_to_volume_group_v2" "test" {
 }
 
 func testRestoreProtectedResourceVGConfig() string {
-	remotePcIP := testVars.AvailabilityZone.RemotePcIP
-	username := os.Getenv("NUTANIX_USERNAME")
-	password := os.Getenv("NUTANIX_PASSWORD")
-	port, _ := strconv.Atoi(os.Getenv("NUTANIX_PORT"))
-	insecure, _ := strconv.ParseBool(os.Getenv("NUTANIX_INSECURE"))
-	remoteHostProviderConfig := fmt.Sprintf(`
-provider "nutanix-2" {
-  username = "%[1]s"
-  password = "%[2]s"
-  endpoint = "%[3]s"
-  insecure = %[4]t
-  port     = %[5]d
-}
-
-`, username, password, remotePcIP, insecure, port)
-
 	return fmt.Sprintf(
 		`
 
 %[1]s
 
-resource "nutanix_restore_protected_resource_v2" "test" {
-  provider = nutanix-2
+data "nutanix_protected_resource_v2" "restore_ready" {
   ext_id = nutanix_volume_group_v2.test.id
-  cluster_ext_id = local.availability_zone.cluster_ext_id
+
+  depends_on = [
+    nutanix_associate_category_to_volume_group_v2.test
+  ]
 }
 
-`, remoteHostProviderConfig)
+resource "nutanix_restore_protected_resource_v2" "test" {
+  provider       = nutanix-2
+  ext_id         = nutanix_volume_group_v2.test.id
+  cluster_ext_id = local.availability_zone.cluster_ext_id
+
+  depends_on = [
+    data.nutanix_protected_resource_v2.restore_ready
+  ]
+}
+
+`, remotePCProviderConfig(testVars.AvailabilityZone.RemotePcIP))
 }

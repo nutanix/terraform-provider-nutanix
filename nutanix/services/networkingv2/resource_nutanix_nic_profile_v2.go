@@ -2,7 +2,6 @@ package networkingv2
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"sort"
@@ -52,8 +51,7 @@ func ResourceNutanixNicProfileV2Create(ctx context.Context, d *schema.ResourceDa
 		Body: &inputSpec,
 	}
 
-	aJSON, _ := json.MarshalIndent(createRequest, "", "  ")
-	log.Printf("[DEBUG] Create NIC Profile Payload: %s", string(aJSON))
+	log.Printf("[DEBUG] Create NIC Profile Payload: %s", utils.SanitizeForLogging(createRequest))
 
 	resp, err := conn.NicProfilesAPI.CreateNicProfile(ctx, &createRequest)
 	if err != nil {
@@ -61,8 +59,7 @@ func ResourceNutanixNicProfileV2Create(ctx context.Context, d *schema.ResourceDa
 	}
 
 	taskVal := resp.Data.GetValue()
-	aJSON, _ = json.MarshalIndent(taskVal, "", "  ")
-	log.Printf("[DEBUG] Create NIC Profile Task Details: %s", string(aJSON))
+	log.Printf("[DEBUG] Create NIC Profile Task Details: %s", utils.SanitizeForLogging(taskVal))
 
 	taskRef, err := extractNicProfileTaskReference(taskVal, "create nic profile")
 	if err != nil {
@@ -234,8 +231,7 @@ func ResourceNutanixNicProfileV2Update(ctx context.Context, d *schema.ResourceDa
 			Body:  &updateSpec,
 		}
 
-		aJSON, _ := json.MarshalIndent(updateRequest, "", "  ")
-		log.Printf("[DEBUG] Update NIC Profile Payload: %s", string(aJSON))
+		log.Printf("[DEBUG] Update NIC Profile Payload: %s", utils.SanitizeForLogging(updateRequest))
 
 		updateResp, err := conn.NicProfilesAPI.UpdateNicProfileById(ctx, &updateRequest)
 		if err != nil {
@@ -243,8 +239,7 @@ func ResourceNutanixNicProfileV2Update(ctx context.Context, d *schema.ResourceDa
 		}
 
 		taskVal := updateResp.Data.GetValue()
-		aJSON, _ = json.MarshalIndent(taskVal, "", "  ")
-		log.Printf("[DEBUG] Update NIC Profile Task Details: %s", string(aJSON))
+		log.Printf("[DEBUG] Update NIC Profile Task Details: %s", utils.SanitizeForLogging(taskVal))
 
 		taskRef, err := extractNicProfileTaskReference(taskVal, "update nic profile")
 		if err != nil {
@@ -277,8 +272,7 @@ func ResourceNutanixNicProfileV2Delete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	taskVal := resp.Data.GetValue()
-	aJSON, _ := json.MarshalIndent(taskVal, "", "  ")
-	log.Printf("[DEBUG] Delete NIC Profile Task Details: %s", string(aJSON))
+	log.Printf("[DEBUG] Delete NIC Profile Task Details: %s", utils.SanitizeForLogging(taskVal))
 
 	taskRef, err := extractNicProfileTaskReference(taskVal, "delete nic profile")
 	if err != nil {
@@ -344,8 +338,7 @@ func associateHostNicToNicProfile(ctx context.Context, meta interface{}, nicProf
 		},
 	}
 
-	aJSON, _ := json.MarshalIndent(request, "", "  ")
-	log.Printf("[DEBUG] Associate Host NIC to NIC Profile Payload: %s", string(aJSON))
+	log.Printf("[DEBUG] Associate Host NIC to NIC Profile Payload: %s", utils.SanitizeForLogging(request))
 
 	resp, err := conn.NicProfilesAPI.AssociateHostNicToNicProfile(ctx, &request)
 	if err != nil {
@@ -374,8 +367,7 @@ func disassociateHostNicFromNicProfile(ctx context.Context, meta interface{}, ni
 		},
 	}
 
-	aJSON, _ := json.MarshalIndent(request, "", "  ")
-	log.Printf("[DEBUG] Disassociate Host NIC from NIC Profile Payload: %s", string(aJSON))
+	log.Printf("[DEBUG] Disassociate Host NIC from NIC Profile Payload: %s", utils.SanitizeForLogging(request))
 
 	resp, err := conn.NicProfilesAPI.DisassociateHostNicFromNicProfile(ctx, &request)
 	if err != nil {

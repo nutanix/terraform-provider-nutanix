@@ -87,8 +87,9 @@ func DatasourceNutanixUserKeyV2() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"api_key": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Type:      schema.TypeString,
+										Computed:  true,
+										Sensitive: true,
 									},
 								},
 							},
@@ -99,12 +100,14 @@ func DatasourceNutanixUserKeyV2() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"secret_key": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Type:      schema.TypeString,
+										Computed:  true,
+										Sensitive: true,
 									},
 									"access_key": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Type:      schema.TypeString,
+										Computed:  true,
+										Sensitive: true,
 									},
 								},
 							},

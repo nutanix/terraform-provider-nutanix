@@ -1,0 +1,5 @@
+nutanix_central_endpoint = "nconprem-10-44-76-35.ccpnx.com"
+tenant_password          = "example_password"
+tenant_username          = "example_user_101@example.com"
+tenant_name              = "example-tenant"
+domain_name              = "example.com"

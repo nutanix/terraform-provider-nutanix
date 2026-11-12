@@ -5,12 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/request/directoryservices"
+	usergroupsReq "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/request/usergroups"
+	usersReq "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/request/users"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -62,6 +68,7 @@ func ResourceNutanixDirectoryServicesV2() *schema.Resource {
 							Type:      schema.TypeString,
 							Sensitive: true,
 							Required:  true,
+							WriteOnly: true,
 						},
 					},
 				},
@@ -205,7 +212,15 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 		input.DirectoryType = &p
 	}
 	if serviceAcc, ok := d.GetOk("service_account"); ok {
-		input.ServiceAccount = expandDsServiceAccount(serviceAcc)
+		sa := serviceAcc.([]interface{})
+		if len(sa) > 0 && sa[0] != nil {
+			if saMap, ok := sa[0].(map[string]interface{}); ok {
+				if pw, ok := common.GetWriteOnlyString(d, "service_account.0.password"); ok {
+					saMap["password"] = pw
+				}
+			}
+		}
+		input.ServiceAccount = expandDsServiceAccount(sa)
 	}
 	if ldap, ok := d.GetOk("open_ldap_configuration"); ok {
 		input.OpenLdapConfiguration = expandOpenLdapConfig(ldap)
@@ -232,8 +247,7 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 		input.ProjectExtId = utils.StringPtr(projectExtID.(string))
 	}
 
-	aJSON, _ := json.MarshalIndent(input, "", " ")
-	log.Println("[DEBUG] Directory Service create payload: ", string(aJSON))
+	log.Println("[DEBUG] Directory Service create payload: ", utils.SanitizeForLogging(input))
 
 	createDirectoryServiceRequest := import2.CreateDirectoryServiceRequest{
 		Body: input,
@@ -517,8 +531,7 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 			updatedSpec.WhiteListedGroups = whitelistedGrpListStr
 		}
 
-		aJSON, _ := json.MarshalIndent(updatedSpec, "", " ")
-		log.Println("[DEBUG] Directory Service update payload: ", string(aJSON))
+		log.Println("[DEBUG] Directory Service update payload: ", utils.SanitizeForLogging(updatedSpec))
 
 		updateDirectoryServiceByIdRequest := import2.UpdateDirectoryServiceByIdRequest{
 			ExtId: utils.StringPtr(d.Id()),
@@ -550,7 +563,14 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 }
 
 func ResourceNutanixDirectoryServicesV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).IamAPI
+	client := meta.(*conns.Client)
+	conn := client.IamAPI
+
+	// Membership / whitelist flows leave IAM users and user groups bound to the
+	// directory service (idpId). Deleting the DS while they remain returns IAM-21016.
+	if err := cleanupDirectoryServiceIdentities(ctx, client, d.Id()); err != nil {
+		return diag.Errorf("error while cleaning identities for directory service %s: %v", d.Id(), err)
+	}
 
 	getDirectoryServiceByIdRequest := import2.GetDirectoryServiceByIdRequest{
 		ExtId: utils.StringPtr(d.Id()),
@@ -576,6 +596,154 @@ func ResourceNutanixDirectoryServicesV2Delete(ctx context.Context, d *schema.Res
 		log.Println("[DEBUG] Directory Services deleted successfully.")
 	}
 	return nil
+}
+
+// cleanupDirectoryServiceIdentities deletes IAM users and user groups whose
+// idpId matches the directory service. Required before DS delete (IAM-21016).
+func cleanupDirectoryServiceIdentities(ctx context.Context, client *conns.Client, dsExtID string) error {
+	filter := fmt.Sprintf("idpId eq '%s'", dsExtID)
+	log.Printf("[DEBUG] Cleaning IAM identities for directory service %s", dsExtID)
+
+	if err := deleteIAMUsersByIdp(ctx, client, filter); err != nil {
+		return err
+	}
+	return deleteIAMUserGroupsByIdp(ctx, client, filter)
+}
+
+func deleteIAMUsersByIdp(ctx context.Context, client *conns.Client, filter string) error {
+	listReq := usersReq.ListUsersRequest{
+		Filter_: utils.StringPtr(filter),
+		Limit_:  utils.IntPtr(100),
+	}
+	resp, err := client.IamAPI.UsersAPIInstance.ListUsers(ctx, &listReq)
+	if err != nil {
+		return fmt.Errorf("list users: %w", err)
+	}
+	if resp == nil || resp.Data == nil {
+		return nil
+	}
+	users, ok := resp.Data.GetValue().([]import1.User)
+	if !ok {
+		return fmt.Errorf("unexpected ListUsers data type %T", resp.Data.GetValue())
+	}
+	for _, user := range users {
+		if user.ExtId == nil || *user.ExtId == "" {
+			continue
+		}
+		if err := deleteIAMUserByExtID(ctx, client, *user.ExtId); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func deleteIAMUserGroupsByIdp(ctx context.Context, client *conns.Client, filter string) error {
+	listReq := usergroupsReq.ListUserGroupsRequest{
+		Filter_: utils.StringPtr(filter),
+		Limit_:  utils.IntPtr(100),
+	}
+	resp, err := client.IamAPI.UserGroupsAPIInstance.ListUserGroups(ctx, &listReq)
+	if err != nil {
+		return fmt.Errorf("list user groups: %w", err)
+	}
+	if resp == nil || resp.Data == nil {
+		return nil
+	}
+	groups, ok := resp.Data.GetValue().([]import1.UserGroup)
+	if !ok {
+		return fmt.Errorf("unexpected ListUserGroups data type %T", resp.Data.GetValue())
+	}
+	for _, group := range groups {
+		if group.ExtId == nil || *group.ExtId == "" {
+			continue
+		}
+		if err := deleteIAMUserGroupByExtID(ctx, client, *group.ExtId); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func deleteIAMUserGroupByExtID(ctx context.Context, client *conns.Client, extID string) error {
+	getReq := usergroupsReq.GetUserGroupByIdRequest{ExtId: utils.StringPtr(extID)}
+	readResp, err := client.IamAPI.UserGroupsAPIInstance.GetUserGroupById(ctx, &getReq)
+	if err != nil {
+		if isDirectoryServiceIdentityGone(err) {
+			return nil
+		}
+		return fmt.Errorf("get user group %s: %w", extID, err)
+	}
+	etag := client.IamAPI.UserGroupsAPIInstance.ApiClient.GetEtag(readResp)
+	headers := map[string]interface{}{"If-Match": utils.StringPtr(etag)}
+	delReq := usergroupsReq.DeleteUserGroupByIdRequest{ExtId: utils.StringPtr(extID)}
+	if _, err := client.IamAPI.UserGroupsAPIInstance.DeleteUserGroupById(ctx, &delReq, headers); err != nil {
+		if isDirectoryServiceIdentityGone(err) {
+			return nil
+		}
+		if isDirectoryServiceIdentityUnauthorized(err) && client.API != nil && client.API.V3 != nil {
+			if _, v3err := client.API.V3.DeleteUserGroup(ctx, extID); v3err == nil || isDirectoryServiceIdentityGone(v3err) {
+				log.Printf("[DEBUG] Deleted IAM user group %s via v3 fallback", extID)
+				return nil
+			} else if v3err != nil {
+				return fmt.Errorf("delete user group %s (v4: %v; v3: %w)", extID, err, v3err)
+			}
+		}
+		return fmt.Errorf("delete user group %s: %w", extID, err)
+	}
+	log.Printf("[DEBUG] Deleted IAM user group %s", extID)
+	return nil
+}
+
+func deleteIAMUserByExtID(ctx context.Context, client *conns.Client, extID string) error {
+	getReq := usersReq.GetUserByIdRequest{ExtId: utils.StringPtr(extID)}
+	readResp, err := client.IamAPI.UsersAPIInstance.GetUserById(ctx, &getReq)
+	if err != nil {
+		if isDirectoryServiceIdentityGone(err) {
+			return nil
+		}
+		return fmt.Errorf("get user %s: %w", extID, err)
+	}
+	etag := client.IamAPI.UsersAPIInstance.ApiClient.GetEtag(readResp)
+	uri := "/api/iam/v4.1.b3/authn/users/" + url.PathEscape(extID)
+	headerParams := map[string]string{}
+	if etag != "" {
+		headerParams["If-Match"] = etag
+	}
+	_, err = client.IamAPI.UsersAPIInstance.ApiClient.CallApiWithContext(
+		ctx, &uri, http.MethodDelete, nil, url.Values{}, headerParams, url.Values{},
+		[]string{"application/json"}, []string{},
+		[]string{"apiKeyAuthScheme", "basicAuthScheme"},
+	)
+	if err != nil {
+		if isDirectoryServiceIdentityGone(err) {
+			return nil
+		}
+		return fmt.Errorf("delete user %s: %w", extID, err)
+	}
+	log.Printf("[DEBUG] Deleted IAM user %s", extID)
+	return nil
+}
+
+func isDirectoryServiceIdentityGone(err error) bool {
+	if err == nil {
+		return false
+	}
+	s := fmt.Sprint(err)
+	return strings.Contains(s, "404") ||
+		strings.Contains(s, "ENTITY_NOT_FOUND") ||
+		strings.Contains(s, "RESOURCE_NOT_FOUND") ||
+		strings.Contains(s, "does not exist") ||
+		strings.Contains(s, "not found")
+}
+
+func isDirectoryServiceIdentityUnauthorized(err error) bool {
+	if err == nil {
+		return false
+	}
+	s := fmt.Sprint(err)
+	return strings.Contains(s, "IAM-20003") ||
+		strings.Contains(s, "unauthorized") ||
+		strings.Contains(s, "403")
 }
 
 func expandDsServiceAccount(pr interface{}) *import1.DsServiceAccount {
@@ -665,10 +833,8 @@ func flattenDsServiceAccountForResource(pr *import1.DsServiceAccount) []map[stri
 		accs := make([]map[string]interface{}, 0)
 		acc := make(map[string]interface{})
 
-		// password is not returned in the response
-		// so we are using the password from the configuration as it required for update
+		// password is WriteOnly; never persist it from API/config into state.
 		acc["username"] = pr.Username
-		acc["password"] = pr.Password
 
 		accs = append(accs, acc)
 		return accs

@@ -44,10 +44,17 @@ var (
 func resourceSchemaForAllowedEntity() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
+			"select_by": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(AllowedSelectedByEnums, false),
+			},
 			"selected_by": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
+				Deprecated:   "Use `select_by` instead. `selected_by` will be removed in a future release.",
 				ValidateFunc: validation.StringInSlice(AllowedSelectedByEnums, false),
 			},
 			"type": {
@@ -175,10 +182,17 @@ func resourceSchemaForExceptConfig() *schema.Schema {
 func resourceSchemaForExceptEntity() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
+			"select_by": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(ExceptSelectedByEnums, false),
+			},
 			"selected_by": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
+				Deprecated:   "Use `select_by` instead. `selected_by` will be removed in a future release.",
 				ValidateFunc: validation.StringInSlice(ExceptSelectedByEnums, false),
 			},
 			"type": {
@@ -292,9 +306,14 @@ func schemaForAllowedConfig() *schema.Schema {
 func schemaForAllowedEntity() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"selected_by": {
+			"select_by": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"selected_by": {
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "Use `select_by` instead. `selected_by` will be removed in a future release.",
 			},
 			"type": {
 				Type:     schema.TypeString,
@@ -400,9 +419,14 @@ func schemaForExceptConfig() *schema.Schema {
 func schemaForExceptEntity() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"selected_by": {
+			"select_by": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"selected_by": {
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "Use `select_by` instead. `selected_by` will be removed in a future release.",
 			},
 			"type": {
 				Type:     schema.TypeString,

@@ -10,6 +10,7 @@ import (
 type Client struct {
 	Projects          *api.ProjectsServiceApi
 	ResourceGroups    *api.ResourceGroupsServiceApi
+	LocalDomain       *api.LocalDomainServiceApi
 	APIClientInstance *multidomainClient.ApiClient
 }
 
@@ -17,6 +18,7 @@ func NewMultidomainClient(credentials client.Credentials) (*Client, error) {
 	var baseClient *multidomainClient.ApiClient
 
 	pcClient := multidomainClient.NewApiClient()
+
 	if cfg := sdkconfig.ConfigureV4Client(credentials, pcClient); cfg != nil {
 		pcClient.Host = cfg.Host
 		pcClient.Port = cfg.Port
@@ -29,6 +31,7 @@ func NewMultidomainClient(credentials client.Credentials) (*Client, error) {
 	return &Client{
 		Projects:          api.NewProjectsServiceApi(baseClient),
 		ResourceGroups:    api.NewResourceGroupsServiceApi(baseClient),
+		LocalDomain:       api.NewLocalDomainServiceApi(baseClient),
 		APIClientInstance: baseClient,
 	}, nil
 

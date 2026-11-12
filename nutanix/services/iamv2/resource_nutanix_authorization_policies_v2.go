@@ -192,8 +192,7 @@ func ResourceNutanixAuthPoliciesV2Create(ctx context.Context, d *schema.Resource
 		Body: input,
 	}
 
-	aJSON, _ := json.MarshalIndent(createAuthorizationPolicyRequest, "", "  ")
-	log.Printf("[DEBUG] Create Authorization Policy Request Body: %s", string(aJSON))
+	log.Printf("[DEBUG] Create Authorization Policy Request Body: %s", utils.SanitizeForLogging(createAuthorizationPolicyRequest))
 
 	resp, err := conn.AuthAPIInstance.CreateAuthorizationPolicy(ctx, &createAuthorizationPolicyRequest)
 	if err != nil {
@@ -332,8 +331,7 @@ func ResourceNutanixAuthPoliciesV2Update(ctx context.Context, d *schema.Resource
 		Body:  &updatedSpec,
 	}
 
-	aJSON, _ := json.MarshalIndent(updateAuthorizationPolicyByIdRequest, "", "  ")
-	log.Printf("[DEBUG] Update Authorization Policy Request Body: %s", string(aJSON))
+	log.Printf("[DEBUG] Update Authorization Policy Request Body: %s", utils.SanitizeForLogging(updateAuthorizationPolicyByIdRequest))
 
 	updatedResp, err := conn.AuthAPIInstance.UpdateAuthorizationPolicyById(ctx, &updateAuthorizationPolicyByIdRequest, headers)
 	if err != nil {
