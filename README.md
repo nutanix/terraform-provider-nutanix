@@ -28,34 +28,50 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.5.
 
 ### What's New in v2.5.1
 
-* **Nutanix Central Integration** — Starting in 2.5.1, the provider supports Nutanix Central (NC) authentication and the three tenancy admin workflows via `nutanix_central_endpoint` (with `domain_name` / `tenant_name` / `use_nc_iam` as needed). [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
-  * **Nutanix Central Admin**: Manage infrastructure on domains the NC Admin can access, and register Prism Central with Nutanix Central. See [`examples/nutanix_central_admin`](examples/nutanix_central_admin).
-  * **Service Provider Admin**: Manage tenants — create tenants, allow domains for tenancy, and allocate domains (capacity / networking) to tenants. See [`examples/service_provider_admin`](examples/service_provider_admin).
-  * **Service Provider Tenant Admin**: Manage memberships and create infrastructure on domains allocated to the tenant. See [`examples/service_provider_tenant_admin`](examples/service_provider_tenant_admin).
+- **Nutanix Central Integration** — Starting in 2.5.1, the provider supports Nutanix Central (NC) authentication and the three tenancy admin workflows via `nutanix_central_endpoint` (with `domain_name` / `tenant_name` / `use_nc_iam` as needed). [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
+  - **Nutanix Central Admin**: Manage infrastructure on domains the NC Admin can access, and register Prism Central with Nutanix Central. See [`examples/nutanix_central/nutanix_central_admin`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/nutanix_central/nutanix_central_admin).
+  - **Service Provider Admin**: Manage tenants — create tenants, allow domains for tenancy, and allocate domains (capacity / networking) to tenants. See [`examples/nutanix_central/service_provider_tenant_management`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/nutanix_central/service_provider_tenant_management).
+  - **Service Provider Tenant Admin**: Manage memberships and create infrastructure on domains allocated to the tenant. See [`examples/nutanix_central/service_provider_tenant_admin`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/nutanix_central/service_provider_tenant_admin).
 
-* **New Resource Support (Tenancy) (Alpha)**
-  * **Add Domain**: Add an existing domain to the allowed-domain list for Nutanix Central tenancy. [#1182](https://github.com/nutanix/terraform-provider-nutanix/issues/1182)
-  * **Tenant**: Create and manage tenants. [#1183](https://github.com/nutanix/terraform-provider-nutanix/issues/1183)
-  * **Tenant Membership**: Manage tenant memberships for users within domains. [#1184](https://github.com/nutanix/terraform-provider-nutanix/issues/1184)
-  * **Tenant Domain Allocation**: Manage domain allocations for tenants. [#1185](https://github.com/nutanix/terraform-provider-nutanix/issues/1185)
+- **New Resource Support**
+  - **Service Provider Tenant Membership**: 
+    - **Tenant Membership**: `nutanix_tenant_membership_v2` (Alpha) Manage tenant memberships for users within domains. [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
+  - **Service Provider Tenant Management**: 
+    - **Tenant**:`nutanix_tenant_v2` (Alpha) Create and manage tenants. [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
+    - **Add Domain**: `nutanix_add_domain_v2` (Alpha) Add an existing domain to the allowed-domain list for Nutanix Central tenancy. [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
+    - **Tenant Domain Allocation**: `nutanix_tenant_domain_allocation_v2`(Alpha) Manage domain allocations for tenants. [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
+  - **Nutanix Central Domain Registration** :
+    - **Registered Domain**: `nutanix_registered_domain_v2` (Beta) Configure and manage registered domains in Nutanix Central. [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
+    - **Local Domain**: `nutanix_local_domain_v2` (Beta)  Configure and manage operations on the local domain. [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
 
-* **Security Enhancements**
-  * **Sensitive attributes**: Secret schema attributes (passwords, API keys, private keys, and related credentials) are marked `Sensitive: true` so Terraform redacts them from plan/show output. [#1266](https://github.com/nutanix/terraform-provider-nutanix/issues/1266)
-  * **WriteOnly credentials**: High-risk credential attributes are `WriteOnly` (Terraform >= 1.11) so secrets are accepted from configuration and sent to the API, but are never persisted in Terraform state. [#1267](https://github.com/nutanix/terraform-provider-nutanix/issues/1267)
+- **New Data Sources:**
+  - **Service Provider Tenant Membership**:
+    - `nutanix_tenant_membership_v2` / `nutanix_tenant_memberships_v2` — (Alpha) Read a tenant membership or list memberships.
+  - **Service Provider Tenant Management**:
+    - `nutanix_tenant_v2` / `nutanix_tenants_v2` — (Alpha) Read a tenant or list tenants.
+    - `nutanix_domains_v2` — (Alpha) List allowed domains in Nutanix Central tenancy.
+    - `nutanix_tenant_domain_allocation_v2` / `nutanix_tenant_domain_allocations_v2` — (Alpha) Read a tenant domain allocation or list allocations.
+  - **Nutanix Central Domain Registration** :  
+    - `nutanix_locations_v2` - (Beta) List locations.
+    - `nutanix_registered_domain_v2` - (Beta) / `nutanix_registered_domains_v2` - (Beta) Read the Registrered Domain or List all registered domains.
 
-* **Enhancements**
-  * Expose computed `serial_id` on VM disks (`vm_disk`) so Terraform can map a managed disk to the guest device path `/dev/disk/by-id/scsi-SNUTANIX_VDISK_<serialId>`. [#1262](https://github.com/nutanix/terraform-provider-nutanix/pull/1262)
-  * Improve documentation readability and formatting consistency (for example `nutanix_cluster_v2` guidance text). [#1276](https://github.com/nutanix/terraform-provider-nutanix/issues/1276)
+- **Security Enhancements**
+  - **Sensitive attributes**: Secret schema attributes (passwords, API keys, private keys, and related credentials) are marked `Sensitive: true` so Terraform redacts them from plan/show output. [#1266](https://github.com/nutanix/terraform-provider-nutanix/issues/1266)
+  - **WriteOnly credentials**: High-risk credential attributes are `WriteOnly` (Terraform >= 1.11) so secrets are accepted from configuration and sent to the API, but are never persisted in Terraform state. [#1267](https://github.com/nutanix/terraform-provider-nutanix/issues/1267)
 
-* **Testing & Coverage**
-  * Add unit tests for service packages (`TestUnit` schema / flatten-expand coverage without a live cluster). [#1254](https://github.com/nutanix/terraform-provider-nutanix/issues/1254)
-  * Report acceptance coverage as package statement total (`go tool cover` `total:` line, advisory >= 85%). [#1255](https://github.com/nutanix/terraform-provider-nutanix/issues/1255)
+- **Enhancements**
+  - Expose computed `serial_id` on VM disks (`vm_disk`) so Terraform can map a managed disk to the guest device path `/dev/disk/by-id/scsi-SNUTANIX_VDISK_<serialId>`. [#1262](https://github.com/nutanix/terraform-provider-nutanix/pull/1262)
+  - Improve documentation readability and formatting consistency (for example `nutanix_cluster_v2` guidance text). [#1276](https://github.com/nutanix/terraform-provider-nutanix/issues/1276)
 
-* **Fixed Bugs**
-  * Fix `nutanix_clusters_v2` / `nutanix_cluster_v2` failure when reading `network.management_server.type` (schema declared as `bool`, API returns enum). [#1229](https://github.com/nutanix/terraform-provider-nutanix/issues/1229)
-  * Fix `nutanix_virtual_machine_v2` returning APIPA (`169.254.x.x`) learned IPs by waiting for a routable IP after power-on. [#871](https://github.com/nutanix/terraform-provider-nutanix/issues/871)
-  * Fix `nutanix_cluster_profile_v2` refresh failure when reading `clusters[*].config_drifts` (schema declared as `string`, API returns a list). [#1252](https://github.com/nutanix/terraform-provider-nutanix/issues/1252)
-  * Fix Self Service app resources ignoring provider `wait_timeout` and failing after ~20 minutes with `context deadline exceeded` (`nutanix_self_service_app_provision` and related action resources). [#1270](https://github.com/nutanix/terraform-provider-nutanix/issues/1270)
+- **Testing & Coverage**
+  - Add unit tests for service packages (`TestUnit` schema / flatten-expand coverage without a live cluster). [#1254](https://github.com/nutanix/terraform-provider-nutanix/issues/1254)
+  - Report acceptance coverage as package statement total (`go tool cover` `total:` line, advisory >= 85%). [#1255](https://github.com/nutanix/terraform-provider-nutanix/issues/1255)
+
+- **Fixed Bugs**
+  - Fix `nutanix_clusters_v2` / `nutanix_cluster_v2` failure when reading `network.management_server.type` (schema declared as `bool`, API returns enum). [#1229](https://github.com/nutanix/terraform-provider-nutanix/issues/1229)
+  - Fix `nutanix_virtual_machine_v2` returning APIPA (`169.254.x.x`) learned IPs by waiting for a routable IP after power-on. [#871](https://github.com/nutanix/terraform-provider-nutanix/issues/871)
+  - Fix `nutanix_cluster_profile_v2` refresh failure when reading `clusters[*].config_drifts` (schema declared as `string`, API returns a list). [#1252](https://github.com/nutanix/terraform-provider-nutanix/issues/1252)
+  - Fix Self Service app resources ignoring provider `wait_timeout` and failing after ~20 minutes with `context deadline exceeded` (`nutanix_self_service_app_provision` and related action resources). [#1270](https://github.com/nutanix/terraform-provider-nutanix/issues/1270)
 
   -> **Note:** Items marked **(Alpha)** are currently in the Alpha stage and are not recommended for production use. Use them in production environments at your own risk.
 
@@ -176,7 +192,7 @@ The following keys can be used to configure the provider.
 * **insecure** - (Optional) Explicitly allow the provider to perform insecure SSL requests. If omitted, default value is false.
 * **wait_timeout** - (Optional) Set if you know that the creation or update of a resource may take long time (minutes).
 * **custom_headers** - (Optional) Map of custom HTTP headers to add to all API requests. Useful for environments that require additional headers such as Cloudflare Access service tokens. Headers can also be set via environment variables with the `NUTANIX_HEADER_` prefix (e.g. `NUTANIX_HEADER_CF_ACCESS_CLIENT_ID` becomes `Cf-Access-Client-Id`). Values defined in config take precedence over environment variables.
-* **nutanix_central_endpoint** - (Optional) Nutanix Central (NC) endpoint base used for NC Admin, Tenant Admin, and Service Provider Admin scenarios. Can also be set via the `NUTANIX_CENTRAL_ENDPOINT` environment variable. See the role-based examples under `examples/nutanix_central_admin`, `examples/service_provider_admin`, and `examples/service_provider_tenant_admin` for provider configuration per workflow.
+* **nutanix_central_endpoint** - (Optional) Nutanix Central (NC) endpoint base used for NC Admin, Tenant Admin, and Service Provider Admin scenarios. Can also be set via the `NUTANIX_CENTRAL_ENDPOINT` environment variable. See the role-based examples under `examples/nutanix_central/nutanix_central_admin`, `examples/nutanix_central/service_provider_tenant_admin`, and `examples/nutanix_central/service_provider_tenant_management` for provider configuration per workflow.
 * **domain_name** - (Optional) Domain name for the Prism Central instance. Used to construct the PC endpoint as `<domain_name>.domains.<nutanix_central_endpoint>` for NC Admin and Tenant Admin scenarios. Can also be set via the `NUTANIX_DOMAIN_NAME` environment variable.
 * **tenant_name** - (Optional) Tenant name for Tenant Admin scenarios. Required when operating as a Tenant Admin to manage tenant-specific resources. Can also be set via the `NUTANIX_TENANT_NAME` environment variable.
 * **use_nc_iam** - (Optional) When `true`, IAM-related calls use the NC IAM endpoint (`iam.services.<nutanix_central_endpoint>`) instead of the PC IAM endpoint. Applicable for NC Admin and Tenant Admin scenarios. Can also be set via the `NUTANIX_USE_NC_IAM` environment variable. Defaults to `false`.
@@ -203,16 +219,6 @@ provider "nutanix" {
     "Cf-Access-Client-Id"     = "my-client-id"
     "Cf-Access-Client-Secret" = "my-client-secret"
   }
-}
-
-# Nutanix Central tenancy workflows — use vars; see examples/ for each persona
-provider "nutanix" {
-  username                 = var.nutanix_username
-  password                 = var.nutanix_password
-  nutanix_central_endpoint = var.nutanix_central_endpoint
-  domain_name              = var.domain_name              # NC Admin / Tenant Admin
-  tenant_name              = var.tenant_name              # Tenant Admin
-  use_nc_iam               = true                         # Tenant Admin / IAM via NC
 }
 ```
 

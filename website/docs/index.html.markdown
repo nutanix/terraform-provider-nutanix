@@ -20,15 +20,31 @@ We're excited to announce the release of Nutanix Terraform Provider Version 2.5.
 ### What's New in v2.5.1
 
 - **Nutanix Central Integration** — Starting in 2.5.1, the provider supports Nutanix Central (NC) authentication and the three tenancy admin workflows via `nutanix_central_endpoint` (with `domain_name` / `tenant_name` / `use_nc_iam` as needed). [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
-  - **Nutanix Central Admin**: Manage infrastructure on domains the NC Admin can access, and register Prism Central with Nutanix Central. See [`examples/nutanix_central_admin`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/nutanix_central_admin).
-  - **Service Provider Admin**: Manage tenants — create tenants, allow domains for tenancy, and allocate domains (capacity / networking) to tenants. See [`examples/service_provider_admin`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/service_provider_admin).
-  - **Service Provider Tenant Admin**: Manage memberships and create infrastructure on domains allocated to the tenant. See [`examples/service_provider_tenant_admin`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/service_provider_tenant_admin).
+  - **Nutanix Central Admin**: Manage infrastructure on domains the NC Admin can access, and register Prism Central with Nutanix Central. See [`examples/nutanix_central/nutanix_central_admin`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/nutanix_central/nutanix_central_admin).
+  - **Service Provider Admin**: Manage tenants — create tenants, allow domains for tenancy, and allocate domains (capacity / networking) to tenants. See [`examples/nutanix_central/service_provider_tenant_management`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/nutanix_central/service_provider_tenant_management).
+  - **Service Provider Tenant Admin**: Manage memberships and create infrastructure on domains allocated to the tenant. See [`examples/nutanix_central/service_provider_tenant_admin`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/nutanix_central/service_provider_tenant_admin).
 
-- **New Resource Support (Tenancy) (Alpha)**
-  - **Add Domain**: Add an existing domain to the allowed-domain list for Nutanix Central tenancy. [#1182](https://github.com/nutanix/terraform-provider-nutanix/issues/1182)
-  - **Tenant**: Create and manage tenants. [#1183](https://github.com/nutanix/terraform-provider-nutanix/issues/1183)
-  - **Tenant Membership**: Manage tenant memberships for users within domains. [#1184](https://github.com/nutanix/terraform-provider-nutanix/issues/1184)
-  - **Tenant Domain Allocation**: Manage domain allocations for tenants. [#1185](https://github.com/nutanix/terraform-provider-nutanix/issues/1185)
+- **New Resource Support**
+  - **Service Provider Tenant Membership**: 
+    - **Tenant Membership**: `nutanix_tenant_membership_v2` (Alpha) Manage tenant memberships for users within domains. [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
+  - **Service Provider Tenant Management**: 
+    - **Tenant**:`nutanix_tenant_v2` (Alpha) Create and manage tenants. [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
+    - **Add Domain**: `nutanix_add_domain_v2` (Alpha) Add an existing domain to the allowed-domain list for Nutanix Central tenancy. [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
+    - **Tenant Domain Allocation**: `nutanix_tenant_domain_allocation_v2`(Alpha) Manage domain allocations for tenants. [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
+  - **Nutanix Central Domain Registration** :
+    - **Registered Domain**: `nutanix_registered_domain_v2` (Beta) Configure and manage registered domains in Nutanix Central. [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
+    - **Local Domain**: `nutanix_local_domain_v2` (Beta)  Configure and manage operations on the local domain. [#1264](https://github.com/nutanix/terraform-provider-nutanix/issues/1264)
+
+- **New Data Sources:**
+  - **Service Provider Tenant Membership**:
+    - `nutanix_tenant_membership_v2` / `nutanix_tenant_memberships_v2` — (Alpha) Read a tenant membership or list memberships.
+  - **Service Provider Tenant Management**:
+    - `nutanix_tenant_v2` / `nutanix_tenants_v2` — (Alpha) Read a tenant or list tenants.
+    - `nutanix_domains_v2` — (Alpha) List allowed domains in Nutanix Central tenancy.
+    - `nutanix_tenant_domain_allocation_v2` / `nutanix_tenant_domain_allocations_v2` — (Alpha) Read a tenant domain allocation or list allocations.
+  - **Nutanix Central Domain Registration** :  
+    - `nutanix_locations_v2` - (Beta) List locations.
+    - `nutanix_registered_domain_v2` - (Beta) / `nutanix_registered_domains_v2` - (Beta) Read the Registrered Domain or List all registered domains.
 
 - **Security Enhancements**
   - **Sensitive attributes**: Secret schema attributes (passwords, API keys, private keys, and related credentials) are marked `Sensitive: true` so Terraform redacts them from plan/show output. [#1266](https://github.com/nutanix/terraform-provider-nutanix/issues/1266)
@@ -549,7 +565,7 @@ The following arguments are used to configure the Nutanix Provider:
 * `session_auth` - (Optional) This specifies whether to use [session authentication](#session-based-authentication). This can also be specified with the `NUTANIX_SESSION_AUTH` environment variable. Defaults to `true`
 * `wait_timeout` - (Optional) This specifies the timeout on all resource operations in the provider in minutes. This can also be specified with the `NUTANIX_WAIT_TIMEOUT` environment variable. Defaults to `1`. Also see [resource timeouts](#resource-timeouts).
 * `proxy_url` - (Optional) This specifies the url to proxy through to access the Prism Elements or Prism Central endpoint. This can also be specified with the `NUTANIX_PROXY_URL` environment variable.
-* `nutanix_central_endpoint` - (Optional) Nutanix Central (NC) endpoint base used for NC Admin, Tenant Admin, and Service Provider Admin scenarios. This can also be specified with the `NUTANIX_CENTRAL_ENDPOINT` environment variable. See the role-based examples under `examples/nutanix_central_admin`, `examples/service_provider_admin`, and `examples/service_provider_tenant_admin` for provider configuration per workflow.
+* `nutanix_central_endpoint` - (Optional) Nutanix Central (NC) endpoint base used for NC Admin, Tenant Admin, and Service Provider Admin scenarios. This can also be specified with the `NUTANIX_CENTRAL_ENDPOINT` environment variable. See the role-based examples under `examples/nutanix_central/nutanix_central_admin`, `examples/nutanix_central/service_provider_tenant_management`, and `examples/nutanix_central/service_provider_tenant_admin` for provider configuration per workflow.
 * `domain_name` - (Optional) Domain name for the Prism Central instance. Used to construct the PC endpoint as `<domain_name>.domains.<nutanix_central_endpoint>` for NC Admin and Tenant Admin scenarios. This can also be specified with the `NUTANIX_DOMAIN_NAME` environment variable.
 * `tenant_name` - (Optional) Tenant name for Tenant Admin scenarios. Required when operating as a Tenant Admin to manage tenant-specific resources. This can also be specified with the `NUTANIX_TENANT_NAME` environment variable.
 * `use_nc_iam` - (Optional) When `true`, IAM-related calls use the NC IAM endpoint (`iam.services.<nutanix_central_endpoint>`) instead of the PC IAM endpoint. Applicable for NC Admin and Tenant Admin scenarios. This can also be specified with the `NUTANIX_USE_NC_IAM` environment variable. Defaults to `false`.
@@ -653,7 +669,7 @@ export NUTANIX_TENANT_NAME="<tenant-name>"
 export NUTANIX_USE_NC_IAM="true"
 ```
 
-Persona-specific provider examples (Service Provider Admin, Tenant Admin, and Nutanix Central Admin) live under the corresponding folders in [`examples/`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples).
+Persona-specific provider examples (Service Provider Admin, Tenant Admin, and Nutanix Central Admin) live under the corresponding folders in [`examples/nutanix_central/`](https://github.com/nutanix/terraform-provider-nutanix/tree/master/examples/nutanix_central).
 
 ## Notes
 
