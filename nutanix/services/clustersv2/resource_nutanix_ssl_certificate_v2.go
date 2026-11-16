@@ -3,6 +3,7 @@ package clustersv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
@@ -23,6 +24,7 @@ import (
 
 func ResourceNutanixSSLCertificateV2() *schema.Resource {
 	return &schema.Resource{
+		CustomizeDiff: validateSSLCertificatePrivateKeyVersion,
 		CreateContext: ResourceNutanixSSLCertificateV2Create,
 		ReadContext:   ResourceNutanixSSLCertificateV2Read,
 		UpdateContext: ResourceNutanixSSLCertificateV2Update,
@@ -44,6 +46,12 @@ func ResourceNutanixSSLCertificateV2() *schema.Resource {
 				Optional:  true,
 				Sensitive: true,
 				WriteOnly: true,
+			},
+			"private_key_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "Increment to upload a changed write-only private key with its matching certificate.",
 			},
 			"public_certificate": {
 				Type:     schema.TypeString,
@@ -106,9 +114,7 @@ func ResourceNutanixSSLCertificateV2Create(ctx context.Context, d *schema.Resour
 		updateSpec.PrivateKeyAlgorithm = common.ExpandEnum[config.PrivateKeyAlgorithm](value)
 	}
 
-	// Log the update payload
-	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
-	log.Printf("[DEBUG] SSL certificate update payload: %s", string(aJSON))
+	// Do not log the payload: it contains the private key and optional passphrase.
 
 	// Call the update API
 	updateSSLCertificateRequest := import2.UpdateSSLCertificateRequest{
@@ -144,7 +150,7 @@ func ResourceNutanixSSLCertificateV2Create(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error while fetching SSL certificate task: %v", err)
 	}
 	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
-	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Update SSL Certificate Task Details: %s", string(aJSON))
 
 	d.SetId(utils.StringValue(taskDetails.ExtId))
@@ -247,4 +253,15 @@ func logWriteOnlyLookupMiss(d *schema.ResourceData, attr string) {
 		return
 	}
 	log.Printf("[DEBUG] WriteOnly %q lookup miss: null=%v known=%v type=%s", attr, v.IsNull(), v.IsKnown(), v.Type().FriendlyName())
+}
+
+func validateSSLCertificatePrivateKeyVersion(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	raw := d.GetRawConfig()
+	if raw.IsNull() || !raw.IsKnown() {
+		return nil
+	}
+	if d.Get("private_key_version").(int) > 0 && raw.GetAttr("private_key").IsNull() {
+		return fmt.Errorf("private_key must be configured when private_key_version is set")
+	}
+	return nil
 }
