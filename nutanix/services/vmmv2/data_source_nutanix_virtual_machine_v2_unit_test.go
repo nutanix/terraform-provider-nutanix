@@ -59,10 +59,16 @@ func TestUnitFlattenCPUFeature(t *testing.T) {
 		require.Nil(t, got)
 	})
 
-	t.Run("populated", func(t *testing.T) {
+	t.Run("hardware_virtualization", func(t *testing.T) {
+		t.Parallel()
+		got := flattenCPUFeature([]config.CpuFeature{config.CpuFeature(2)})
+		require.Equal(t, []interface{}{"HARDWARE_VIRTUALIZATION"}, got)
+	})
+
+	t.Run("unknown_feature_ignored", func(t *testing.T) {
 		t.Parallel()
 		got := flattenCPUFeature([]config.CpuFeature{config.CpuFeature(1)})
-		_ = got
+		require.Empty(t, got)
 	})
 
 }
